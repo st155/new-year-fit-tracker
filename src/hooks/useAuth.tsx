@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
+        console.log('Setting session:', !!session);
+        console.log('Setting user:', !!session?.user);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -113,10 +115,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('Starting sign in process for:', email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+
+    console.log('Sign in result:', { error: !!error, message: error?.message });
 
     if (error) {
       toast({
@@ -124,6 +129,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: error.message,
         variant: "destructive"
       });
+    } else {
+      console.log('Sign in successful, should trigger auth state change');
     }
 
     return { error };
