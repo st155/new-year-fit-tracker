@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, Target, Users, LogOut, Settings, Home, Calendar } from "lucide-react";
+import { Trophy, Target, Users, LogOut, Settings, Home, Calendar, TrendingUp } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardHeaderProps {
@@ -95,7 +95,21 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 <Calendar className="h-4 w-4 mr-1" />
                 Челленджи
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <Button 
+                variant={location.pathname === '/progress' ? "default" : "ghost"}
+                size="sm" 
+                onClick={() => navigate('/progress')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <TrendingUp className="h-4 w-4 mr-1" />
+                Прогресс
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/profile')}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <Settings className="h-4 w-4" />
               </Button>
               <Button 

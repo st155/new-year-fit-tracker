@@ -1,12 +1,15 @@
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare } from "lucide-react";
+import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface QuickActionsProps {
   userRole: "participant" | "trainer";
 }
 
 export function QuickActions({ userRole }: QuickActionsProps) {
+  const navigate = useNavigate();
+
   if (userRole === "trainer") {
     return (
       <FitnessCard className="p-6">
@@ -63,8 +66,12 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           Обновить цели
         </Button>
         
-        <Button variant="secondary" className="h-12 justify-start">
-          <BarChart3 className="w-4 h-4 mr-2" />
+        <Button 
+          variant="secondary" 
+          className="h-12 justify-start"
+          onClick={() => navigate('/progress')}
+        >
+          <TrendingUp className="w-4 h-4 mr-2" />
           Мой прогресс
         </Button>
       </div>
