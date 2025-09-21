@@ -88,7 +88,7 @@ const Index = () => {
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in">
       <DashboardHeader 
         userName={userName}
         userRole={userRole}
@@ -98,9 +98,11 @@ const Index = () => {
       />
       
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <StatsGrid userRole={userRole} />
+        <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <StatsGrid userRole={userRole} />
+        </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
           <div className="lg:col-span-2">
             <GoalsSection userRole={userRole} />
           </div>

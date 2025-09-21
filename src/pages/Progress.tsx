@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { FitnessCard } from "@/components/ui/fitness-card";
+import { PhotoUpload } from "@/components/ui/photo-upload";
+import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -47,7 +50,8 @@ const ProgressPage = () => {
   const [measurementForm, setMeasurementForm] = useState({
     value: '',
     notes: '',
-    measurement_date: new Date().toISOString().split('T')[0]
+    measurement_date: new Date().toISOString().split('T')[0],
+    photo_url: ''
   });
 
   useEffect(() => {
@@ -123,7 +127,8 @@ const ProgressPage = () => {
           value: parseFloat(measurementForm.value),
           unit: selectedGoal.target_unit,
           measurement_date: measurementForm.measurement_date,
-          notes: measurementForm.notes
+          notes: measurementForm.notes,
+          photo_url: measurementForm.photo_url
         });
 
       if (error) throw error;
@@ -134,7 +139,7 @@ const ProgressPage = () => {
       });
 
       setIsAddDialogOpen(false);
-      setMeasurementForm({ value: '', notes: '', measurement_date: new Date().toISOString().split('T')[0] });
+      setMeasurementForm({ value: '', notes: '', measurement_date: new Date().toISOString().split('T')[0], photo_url: '' });
       setSelectedGoal(null);
       fetchGoalsAndMeasurements();
     } catch (error) {
@@ -222,62 +227,84 @@ const ProgressPage = () => {
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="goal-select">Цель</Label>
-                    <Select onValueChange={(value) => {
-                      const goal = goals.find(g => g.id === value);
-                      setSelectedGoal(goal || null);
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите цель" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {goals.map((goal) => (
-                          <SelectItem key={goal.id} value={goal.id}>
-                            {goal.goal_name} ({goal.target_unit})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <Tabs defaultValue="measurement" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="measurement">Измерение</TabsTrigger>
+                    <TabsTrigger value="photo">Фото прогресса</TabsTrigger>
+                  </TabsList>
 
-                  <div>
-                    <Label htmlFor="value">Результат</Label>
-                    <Input
-                      id="value"
-                      type="number"
-                      step="0.1"
-                      placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
-                      value={measurementForm.value}
-                      onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
-                    />
-                  </div>
+                  <TabsContent value="measurement" className="space-y-4">
+                    <div>
+                      <Label htmlFor="goal-select">Цель</Label>
+                      <Select onValueChange={(value) => {
+                        const goal = goals.find(g => g.id === value);
+                        setSelectedGoal(goal || null);
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите цель" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {goals.map((goal) => (
+                            <SelectItem key={goal.id} value={goal.id}>
+                              {goal.goal_name} ({goal.target_unit})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div>
-                    <Label htmlFor="date">Дата измерения</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={measurementForm.measurement_date}
-                      onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="value">Результат</Label>
+                      <Input
+                        id="value"
+                        type="number"
+                        step="0.1"
+                        placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
+                        value={measurementForm.value}
+                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="notes">Заметки (опционально)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Добавьте заметки о тренировке или условиях измерения..."
-                      value={measurementForm.notes}
-                      onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="date">Дата измерения</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={measurementForm.measurement_date}
+                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notes">Заметки (опционально)</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Добавьте заметки о тренировке или условиях измерения..."
+                        value={measurementForm.notes}
+                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="photo" className="space-y-4">
+                    <div>
+                      <Label className="text-base font-medium">Фото прогресса</Label>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Добавьте фото для отслеживания визуального прогресса
+                      </p>
+                      <PhotoUpload
+                        onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
+                        existingPhotoUrl={measurementForm.photo_url}
+                        label="Добавить фото измерения"
+                      />
+                    </div>
+                  </TabsContent>
 
                   <Button onClick={addMeasurement} className="w-full bg-gradient-primary hover:opacity-90">
+                    <Plus className="h-4 w-4 mr-2" />
                     Добавить измерение
                   </Button>
-                </div>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </div>
@@ -285,13 +312,17 @@ const ProgressPage = () => {
 
         {/* Сетка целей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {goals.map((goal) => {
+          {goals.map((goal, index) => {
             const progress = getProgressPercentage(goal);
             const trend = getTrend(goal);
             const latestMeasurement = goal.measurements?.[0];
 
             return (
-              <FitnessCard key={goal.id} className="p-6">
+              <FitnessCard 
+                key={goal.id} 
+                className={`p-6 animate-fade-in hover-scale transition-all duration-300`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -345,6 +376,9 @@ const ProgressPage = () => {
             );
           })}
         </div>
+
+        {/* Галерея прогресса */}
+        <ProgressGallery />
 
         {/* Недавние измерения */}
         <Card>

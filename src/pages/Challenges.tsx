@@ -125,12 +125,16 @@ const Challenges = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {challenges.map((challenge) => {
+          {challenges.map((challenge, index) => {
             const isParticipant = userChallenges.includes(challenge.id);
             const daysRemaining = getDaysRemaining(challenge.end_date);
             
             return (
-              <Card key={challenge.id} className="flex flex-col">
+              <Card 
+                key={challenge.id} 
+                className="flex flex-col animate-fade-in hover-scale transition-all duration-300" 
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-xl text-foreground">
