@@ -177,47 +177,209 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     processingPhase = 'download';
     const downloadStart = Date.now();
     
-    // Для файлов больше 50MB отклоняем обработку (чтобы избежать превышения памяти)
-    if (listedSize && listedSize > 50 * 1024 * 1024) {
-      await logError(supabase, userId, 'apple_health_file_too_large', 'File size exceeds processing limit', {
+    // Для файлов больше 200MB используем экстремально оптимизированную обработку
+    if (listedSize && listedSize > 200 * 1024 * 1024) {
+      await logError(supabase, userId, 'apple_health_ultra_large_processing', 'Starting ultra-optimized processing for very large file', {
         requestId,
-        fileSizeMB: Math.round(listedSize / 1024 / 1024),
-        maxSizeMB: 50,
-        message: 'Apple Health files larger than 50MB cannot be processed due to memory limitations. Please export a smaller date range.'
+        fileSizeMB: Math.round(listedSize / 1024 / 1024)
       });
 
-      // Создаем сообщение об ошибке для пользователя
-      const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-        p_user_id: userId,
-        p_metric_name: 'AppleHealthImportError',
-        p_metric_category: 'error',
-        p_unit: 'status',
-        p_source: 'apple_health'
-      });
+      // Получаем signed URL для стриминга без загрузки в память Edge Function
+      const { data: signedUrlData, error: urlError } = await supabase.storage
+        .from('apple-health-uploads')
+        .createSignedUrl(filePath, 3600); // 1 час на обработку
 
-      if (metricId) {
-        await supabase.from('metric_values').insert({
-          user_id: userId,
-          metric_id: metricId,
-          value: 0,
-          measurement_date: new Date().toISOString().split('T')[0],
-          source_data: {
-            fileName: fileName,
-            fileSize: listedSize,
-            error: 'File too large',
-            fileSizeMB: Math.round(listedSize / 1024 / 1024),
-            maxSizeMB: 50,
-            requestId
-          },
-          external_id: `apple_health_error_${requestId}`,
-          notes: `Apple Health file too large: ${Math.round(listedSize / 1024 / 1024)}MB (max: 50MB). Please export a smaller date range from Apple Health.`
-        });
+      if (urlError || !signedUrlData?.signedUrl) {
+        throw new Error(`Failed to create signed URL: ${urlError?.message}`);
       }
 
-      // Удаляем слишком большой файл
-      await supabase.storage.from('apple-health-uploads').remove([filePath]);
-      
-      throw new Error(`File size ${Math.round(listedSize / 1024 / 1024)}MB exceeds maximum limit of 50MB. Please export a smaller date range from Apple Health.`);
+      await logError(supabase, userId, 'apple_health_streaming_start', 'Starting streaming processing of ultra large file', {
+        requestId,
+        fileSizeMB: Math.round(listedSize / 1024 / 1024),
+        method: 'external_streaming'
+      });
+
+      // Стриминговая обработка через fetch с минимальным использованием памяти
+      try {
+        const response = await fetch(signedUrlData.signedUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No reader available for streaming');
+        }
+
+        let xmlBuffer = '';
+        let recordsFound = 0;
+        let recordsProcessed = 0;
+        const decoder = new TextDecoder();
+        const maxRecordsPerBatch = 25; // Очень маленькие батчи для экономии памяти
+        let currentBatch: any[] = [];
+
+        await logError(supabase, userId, 'apple_health_streaming_active', 'Streaming processing active', {
+          requestId,
+          maxRecordsPerBatch
+        });
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Декодируем часть файла
+          const chunk = decoder.decode(value, { stream: true });
+          xmlBuffer += chunk;
+
+          // Ищем завершенные XML записи в буфере
+          let recordStart = xmlBuffer.indexOf('<Record ');
+          while (recordStart !== -1) {
+            const recordEnd = xmlBuffer.indexOf('/>', recordStart);
+            if (recordEnd === -1) break; // Запись не завершена, ждем следующий chunk
+
+            const recordXml = xmlBuffer.slice(recordStart, recordEnd + 2);
+            recordsFound++;
+
+            // Парсим атрибуты записи без DOM парсера для экономии памяти
+            const typeMatch = recordXml.match(/type="([^"]+)"/);
+            const valueMatch = recordXml.match(/value="([^"]+)"/);
+            const startDateMatch = recordXml.match(/startDate="([^"]+)"/);
+            const unitMatch = recordXml.match(/unit="([^"]+)"/);
+            const sourceMatch = recordXml.match(/sourceName="([^"]+)"/);
+
+            if (typeMatch && valueMatch && startDateMatch) {
+              const value = parseFloat(valueMatch[1]);
+              if (!isNaN(value)) {
+                currentBatch.push({
+                  user_id: userId,
+                  record_type: typeMatch[1],
+                  value: value,
+                  unit: unitMatch?.[1] || '',
+                  start_date: startDateMatch[1],
+                  end_date: startDateMatch[1], // Упрощаем для экономии памяти
+                  source_name: sourceMatch?.[1] || 'Apple Health',
+                  metadata: {
+                    imported_from: 'apple_health_streaming',
+                    request_id: requestId,
+                    batch_number: Math.floor(recordsProcessed / maxRecordsPerBatch) + 1
+                  }
+                });
+              }
+            }
+
+            // Сохраняем батч при достижении лимита
+            if (currentBatch.length >= maxRecordsPerBatch) {
+              const { error: batchError } = await supabase
+                .from('health_records')
+                .insert(currentBatch);
+                
+              if (!batchError) {
+                recordsProcessed += currentBatch.length;
+              }
+
+              currentBatch = []; // Очищаем память
+
+              // Логируем прогресс каждые 1000 записей
+              if (recordsProcessed % 1000 === 0) {
+                await logError(supabase, userId, 'apple_health_streaming_progress', 'Streaming progress update', {
+                  requestId,
+                  recordsFound,
+                  recordsProcessed,
+                  memoryEfficient: true
+                });
+              }
+            }
+
+            // Удаляем обработанную запись из буфера
+            xmlBuffer = xmlBuffer.slice(recordEnd + 2);
+            recordStart = xmlBuffer.indexOf('<Record ');
+          }
+
+          // Ограничиваем размер буфера чтобы не переполнить память
+          if (xmlBuffer.length > 1024 * 1024) { // 1MB буфер макс
+            // Оставляем только последнюю часть, которая может содержать неполную запись
+            const lastRecordStart = xmlBuffer.lastIndexOf('<Record ');
+            if (lastRecordStart !== -1) {
+              xmlBuffer = xmlBuffer.slice(lastRecordStart);
+            } else {
+              xmlBuffer = xmlBuffer.slice(-50000); // Оставляем последние 50KB
+            }
+          }
+        }
+
+        // Сохраняем оставшиеся записи
+        if (currentBatch.length > 0) {
+          const { error: batchError } = await supabase
+            .from('health_records')
+            .insert(currentBatch);
+            
+          if (!batchError) {
+            recordsProcessed += currentBatch.length;
+          }
+        }
+
+        await logError(supabase, userId, 'apple_health_streaming_complete', 'Streaming processing completed', {
+          requestId,
+          recordsFound,
+          recordsProcessed,
+          fileSizeMB: Math.round(listedSize / 1024 / 1024)
+        });
+
+        // Создаем агрегированные дневные сводки
+        const endDate = new Date();
+        for (let d = 7; d >= 0; d--) { // Только последние 7 дней для экономии ресурсов
+          const date = new Date(endDate);
+          date.setDate(date.getDate() - d);
+          const dateStr = date.toISOString().split('T')[0];
+          
+          await supabase.rpc('aggregate_daily_health_data', {
+            p_user_id: userId,
+            p_date: dateStr
+          });
+        }
+
+        // Создаем метрику успешного импорта
+        const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'AppleHealthImport',
+          p_metric_category: 'import',
+          p_unit: 'records',
+          p_source: 'apple_health'
+        });
+
+        if (metricId) {
+          await supabase.from('metric_values').insert({
+            user_id: userId,
+            metric_id: metricId,
+            value: recordsProcessed,
+            measurement_date: new Date().toISOString().split('T')[0],
+            source_data: {
+              fileName: fileName,
+              fileSize: listedSize,
+              importDate: new Date().toISOString(),
+              requestId,
+              recordsImported: recordsProcessed,
+              totalRecordsFound: recordsFound,
+              fileType: 'ultra_large_streaming',
+              processingMethod: 'memory_optimized_streaming'
+            },
+            external_id: `apple_health_streaming_${requestId}`,
+            notes: `Apple Health ultra-large file streaming import: ${recordsProcessed}/${recordsFound} records processed from ${Math.round(listedSize / 1024 / 1024)}MB file using memory-optimized streaming`
+          });
+        }
+
+        // Удаляем файл после успешной обработки
+        await supabase.storage.from('apple-health-uploads').remove([filePath]);
+        return;
+
+      } catch (streamError) {
+        await logError(supabase, userId, 'apple_health_streaming_error', 'Streaming processing failed', {
+          requestId,
+          error: streamError.message,
+          fileSizeMB: Math.round(listedSize / 1024 / 1024)
+        });
+        throw streamError;
+      }
     }
 
     // Для файлов меньше 100MB - полная обработка

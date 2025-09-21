@@ -31,6 +31,15 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     const sizeMB = Math.round(file.size / 1024 / 1024);
     setLastFileSizeMB(sizeMB);
 
+    // Информируем о больших файлах
+    if (sizeMB > 200) {
+      toast({
+        title: 'Большой файл Apple Health',
+        description: `Размер файла: ${sizeMB}MB. Обработка может занять несколько минут. Используется оптимизированный алгоритм для больших файлов.`,
+        variant: 'default'
+      });
+    }
+
     // Проверка размера файла (макс 2GB)
     const maxSize = 2 * 1024 * 1024 * 1024; // 2GB в байтах
     if (file.size > maxSize) {
@@ -47,7 +56,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       
       toast({
         title: 'Файл слишком большой',
-        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 2048MB`,
+        description: `Размер файла: ${sizeMB}MB. Максимальный размер: 2048MB`,
         variant: 'destructive'
       });
       return;
