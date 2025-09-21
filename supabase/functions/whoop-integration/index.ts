@@ -15,6 +15,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
+const ENABLE_VO2MAX = false;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -615,14 +616,18 @@ async function syncWhoopData(userId: string, accessToken: string) {
 
     // Пытаемся получить данные циклов для VO2Max (могут содержать cardio data)
     let cycleData = null;
-    try {
-      cycleData = await fetchWhoopData(accessToken, 'cycle', {
-        start: startDate,
-        end: endDate,
-      });
-      console.log('Cycle data received:', JSON.stringify(cycleData?.records?.slice(0,2), null, 2));
-    } catch (error: any) {
-      console.log('Cycle endpoint error:', error.message);
+    if (ENABLE_VO2MAX) {
+      try {
+        cycleData = await fetchWhoopData(accessToken, 'cycle', {
+          start: startDate,
+          end: endDate,
+        });
+        console.log('Cycle data received:', JSON.stringify(cycleData?.records?.slice(0,2), null, 2));
+      } catch (error: any) {
+        console.log('Cycle endpoint error:', error.message);
+      }
+    } else {
+      console.log('VO2Max sync disabled by feature flag');
     }
 
     // Сохраняем данные в базу
@@ -644,7 +649,7 @@ async function syncWhoopData(userId: string, accessToken: string) {
       savedRecords += await saveBodyData(userId, [bodyData]);
     }
 
-    if (cycleData?.records) {
+    if (ENABLE_VO2MAX && cycleData?.records) {
       savedRecords += await saveCycleData(userId, cycleData.records);
     }
 
@@ -771,6 +776,8 @@ async function saveSleepData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_performance`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -790,6 +797,8 @@ async function saveSleepData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_need`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -975,7 +984,7 @@ async function saveBodyData(userId: string, records: any[]) {
     }
 
     // Height (рост)
-    if (record.measurement_data.height_meter !== undefined) {
+    if (record.measurement_data?.height_meter !== undefined) {
       const heightCm = record.measurement_data.height_meter * 100;
       const metricId = await getOrCreateMetric(userId, 'Height', 'body', 'см', 'whoop');
       
@@ -988,6 +997,8 @@ async function saveBodyData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_height`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -995,7 +1006,7 @@ async function saveBodyData(userId: string, records: any[]) {
     }
 
     // Weight (вес)
-    if (record.measurement_data.weight_kilogram !== undefined) {
+    if (record.measurement_data?.weight_kilogram !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Weight', 'body', 'кг', 'whoop');
       
       const { error } = await supabase
@@ -1007,6 +1018,8 @@ async function saveBodyData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_weight`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
