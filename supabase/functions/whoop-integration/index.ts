@@ -256,15 +256,15 @@ async function handleSync(req: Request) {
   let refreshToken = body.tempTokens?.refresh_token;
   let expiresIn = body.tempTokens?.expires_in;
 
-  if (accessToken && refreshToken) {
-    // Сохраняем токены в базу данных
+  if (accessToken) {
+    // Сохраняем токены в базу данных (refresh может отсутствовать у Whoop)
     const { error: saveError } = await supabase
       .from('whoop_tokens')
       .upsert({
         user_id: user.id,
         access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+        refresh_token: refreshToken || null,
+        expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
         updated_at: new Date().toISOString()
       });
 
