@@ -94,6 +94,8 @@ async function handleCallback(req: Request) {
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
 
+  console.log('Callback received:', { code: !!code, state: !!state, error });
+
   if (error) {
     console.error('Whoop OAuth error:', error);
     const html = `
@@ -107,7 +109,7 @@ async function handleCallback(req: Request) {
             window.opener?.postMessage({
               type: 'whoop-auth-error',
               error: '${error}'
-            }, window.location.origin);
+            }, '*');
             window.close();
           </script>
         </body>
@@ -117,6 +119,7 @@ async function handleCallback(req: Request) {
   }
 
   if (!code || !state) {
+    console.error('Missing code or state:', { code: !!code, state: !!state });
     const html = `
       <!DOCTYPE html>
       <html>
@@ -128,7 +131,7 @@ async function handleCallback(req: Request) {
             window.opener?.postMessage({
               type: 'whoop-auth-error',
               error: 'Missing authorization code or state'
-            }, window.location.origin);
+            }, '*');
             window.close();
           </script>
         </body>
@@ -165,7 +168,7 @@ async function handleCallback(req: Request) {
             window.opener?.postMessage({
               type: 'whoop-auth-success',
               data: ${JSON.stringify(userInfo)}
-            }, window.location.origin);
+            }, '*');
             window.close();
           </script>
         </body>
@@ -186,7 +189,7 @@ async function handleCallback(req: Request) {
             window.opener?.postMessage({
               type: 'whoop-auth-error',
               error: '${error.message}'
-            }, window.location.origin);
+            }, '*');
             window.close();
           </script>
         </body>
