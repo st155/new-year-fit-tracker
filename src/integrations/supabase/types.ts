@@ -14,7 +14,277 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      body_composition: {
+        Row: {
+          body_fat_percentage: number | null
+          created_at: string
+          id: string
+          measurement_date: string
+          measurement_method: string | null
+          muscle_mass: number | null
+          photo_after_url: string | null
+          photo_before_url: string | null
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          body_fat_percentage?: number | null
+          created_at?: string
+          id?: string
+          measurement_date?: string
+          measurement_method?: string | null
+          muscle_mass?: number | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          body_fat_percentage?: number | null
+          created_at?: string
+          id?: string
+          measurement_date?: string
+          measurement_method?: string | null
+          muscle_mass?: number | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "body_composition_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          goal_name: string
+          goal_type: string
+          id: string
+          is_personal: boolean | null
+          target_unit: string | null
+          target_value: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          goal_name: string
+          goal_type: string
+          id?: string
+          is_personal?: boolean | null
+          target_unit?: string | null
+          target_value?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          goal_name?: string
+          goal_type?: string
+          id?: string
+          is_personal?: boolean | null
+          target_unit?: string | null
+          target_value?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      measurements: {
+        Row: {
+          created_at: string
+          goal_id: string
+          id: string
+          measurement_date: string
+          notes: string | null
+          photo_url: string | null
+          screenshot_url: string | null
+          unit: string
+          user_id: string
+          value: number
+          verified_by_trainer: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          goal_id: string
+          id?: string
+          measurement_date?: string
+          notes?: string | null
+          photo_url?: string | null
+          screenshot_url?: string | null
+          unit: string
+          user_id: string
+          value: number
+          verified_by_trainer?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string
+          id?: string
+          measurement_date?: string
+          notes?: string | null
+          photo_url?: string | null
+          screenshot_url?: string | null
+          unit?: string
+          user_id?: string
+          value?: number
+          verified_by_trainer?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurements_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "measurements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          trainer_role: boolean | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          trainer_role?: boolean | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          trainer_role?: boolean | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
