@@ -36,6 +36,8 @@ interface RecentData {
   sleepEfficiency?: number;
   strain?: number;
   heartRate?: number;
+  vo2Max?: number;
+  weight?: number;
   date: string;
 }
 
@@ -127,6 +129,12 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
             break;
           case 'Average Heart Rate':
             dataByDate[date].heartRate = metric.value;
+            break;
+          case 'VO2Max':
+            dataByDate[date].vo2Max = metric.value;
+            break;
+          case 'Weight':
+            dataByDate[date].weight = metric.value;
             break;
         }
       });
@@ -571,47 +579,67 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                         <span className="font-medium text-sm">{formatDate(data.date)}</span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        {data.recoveryScore && (
-                          <div className="flex items-center gap-2">
-                            {getMetricIcon('recovery')}
-                            <span className="text-muted-foreground">Восстановление:</span>
-                            <span className={`font-medium ${getMetricColor('recovery', data.recoveryScore)}`}>
-                              {data.recoveryScore}%
-                            </span>
-                          </div>
-                        )}
-                        
-                        {data.sleepEfficiency && (
-                          <div className="flex items-center gap-2">
-                            {getMetricIcon('sleep')}
-                            <span className="text-muted-foreground">Сон:</span>
-                            <span className={`font-medium ${getMetricColor('sleep', data.sleepEfficiency)}`}>
-                              {data.sleepEfficiency}%
-                            </span>
-                          </div>
-                        )}
-                        
-                        {data.strain && (
-                          <div className="flex items-center gap-2">
-                            {getMetricIcon('strain')}
-                            <span className="text-muted-foreground">Нагрузка:</span>
-                            <span className={`font-medium ${getMetricColor('strain', data.strain)}`}>
-                              {data.strain}
-                            </span>
-                          </div>
-                        )}
-                        
-                        {data.heartRate && (
-                          <div className="flex items-center gap-2">
-                            {getMetricIcon('heartRate')}
-                            <span className="text-muted-foreground">ЧСС:</span>
-                            <span className={`font-medium ${getMetricColor('heartRate', data.heartRate)}`}>
-                              {data.heartRate} bpm
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                       <div className="grid grid-cols-2 gap-3 text-sm">
+                         {data.recoveryScore && (
+                           <div className="flex items-center gap-2">
+                             {getMetricIcon('recovery')}
+                             <span className="text-muted-foreground">Восстановление:</span>
+                             <span className={`font-medium ${getMetricColor('recovery', data.recoveryScore)}`}>
+                               {data.recoveryScore}%
+                             </span>
+                           </div>
+                         )}
+                         
+                         {data.sleepEfficiency && (
+                           <div className="flex items-center gap-2">
+                             {getMetricIcon('sleep')}
+                             <span className="text-muted-foreground">Сон:</span>
+                             <span className={`font-medium ${getMetricColor('sleep', data.sleepEfficiency)}`}>
+                               {data.sleepEfficiency}%
+                             </span>
+                           </div>
+                         )}
+                         
+                         {data.strain && (
+                           <div className="flex items-center gap-2">
+                             {getMetricIcon('strain')}
+                             <span className="text-muted-foreground">Нагрузка:</span>
+                             <span className={`font-medium ${getMetricColor('strain', data.strain)}`}>
+                               {data.strain}
+                             </span>
+                           </div>
+                         )}
+                         
+                         {data.heartRate && (
+                           <div className="flex items-center gap-2">
+                             {getMetricIcon('heartRate')}
+                             <span className="text-muted-foreground">ЧСС:</span>
+                             <span className={`font-medium ${getMetricColor('heartRate', data.heartRate)}`}>
+                               {data.heartRate} bpm
+                             </span>
+                           </div>
+                         )}
+
+                         {data.vo2Max && (
+                           <div className="flex items-center gap-2">
+                             <Activity className="h-4 w-4" />
+                             <span className="text-muted-foreground">VO2Max:</span>
+                             <span className="font-medium text-blue-600">
+                               {data.vo2Max} мл/кг/мин
+                             </span>
+                           </div>
+                         )}
+
+                         {data.weight && (
+                           <div className="flex items-center gap-2">
+                             <Activity className="h-4 w-4" />
+                             <span className="text-muted-foreground">Вес:</span>
+                             <span className="font-medium text-green-600">
+                               {data.weight} кг
+                             </span>
+                           </div>
+                         )}
+                       </div>
                     </div>
                   ))}
                 </div>
