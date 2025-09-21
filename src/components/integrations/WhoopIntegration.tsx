@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ErrorLogger } from '@/lib/error-logger';
 import { Loader2, Activity, Heart, Moon, Dumbbell } from 'lucide-react';
 
 interface WhoopIntegrationProps {
@@ -45,6 +46,11 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       }
     } catch (error) {
       console.error('Error checking connection status:', error);
+      await ErrorLogger.logWhoopError(
+        'Failed to check Whoop connection status',
+        { error: error.message, userId },
+        userId
+      );
     }
   };
 
@@ -111,6 +117,11 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       }
     } catch (error) {
       console.error('Connection error:', error);
+      await ErrorLogger.logWhoopError(
+        'Failed to initiate Whoop connection',
+        { error: error.message, userId },
+        userId
+      );
       toast({
         title: 'Ошибка',
         description: 'Не удалось инициировать подключение к Whoop.',
@@ -144,6 +155,11 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       
     } catch (error) {
       console.error('Sync error:', error);
+      await ErrorLogger.logWhoopError(
+        'Failed to sync Whoop data',
+        { error: error.message, userId },
+        userId
+      );
       toast({
         title: 'Ошибка синхронизации',
         description: 'Не удалось синхронизировать данные с Whoop.',
@@ -173,6 +189,11 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       
     } catch (error) {
       console.error('Load data error:', error);
+      await ErrorLogger.logWhoopError(
+        'Failed to load Whoop data',
+        { error: error.message, userId },
+        userId
+      );
     }
   };
 

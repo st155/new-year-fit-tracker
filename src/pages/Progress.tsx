@@ -10,7 +10,9 @@ import { PhotoUpload } from "@/components/ui/photo-upload";
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { WhoopIntegration } from "@/components/integrations/WhoopIntegration";
 import { AppleHealthIntegration } from "@/components/integrations/AppleHealthIntegration";
+import { AppleHealthUpload } from "@/components/integrations/AppleHealthUpload";
 import { GarminIntegration } from "@/components/integrations/GarminIntegration";
+import { ErrorLogsViewer } from "@/components/ui/error-logs-viewer";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -361,7 +363,7 @@ const ProgressPage = () => {
                         <div className="space-y-4 pr-2">
                           <WhoopIntegration userId={user?.id || ''} />
                           
-                          <AppleHealthIntegration userId={user?.id || ''} />
+                          <AppleHealthUpload />
                           
                           <GarminIntegration userId={user?.id || ''} />
                         </div>
