@@ -28,7 +28,16 @@ export function PhotoUpload({
   const [dragActive, setDragActive] = useState(false);
 
   const handleFileSelect = async (file: File) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Ошибка",
+        description: "Необходимо войти в систему",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Starting file upload:', file.name, file.type, file.size);
 
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
@@ -62,19 +71,30 @@ export function PhotoUpload({
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      // Загружаем файл в Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('progress-photos')
-        .upload(filePath, file);
+      console.log('Uploading to path:', filePath);
 
-      if (uploadError) throw uploadError;
+      // Загружаем файл в Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('progress-photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', uploadData);
 
       // Получаем публичный URL
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('progress-photos')
         .getPublicUrl(filePath);
 
-      const photoUrl = data.publicUrl;
+      const photoUrl = urlData.publicUrl;
+      console.log('Public URL:', photoUrl);
 
       toast({
         title: "Успешно!",
@@ -86,7 +106,7 @@ export function PhotoUpload({
       console.error('Error uploading file:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось загрузить фото",
+        description: `Не удалось загрузить фото: ${error.message}`,
         variant: "destructive",
       });
       setPreviewUrl(existingPhotoUrl || null);

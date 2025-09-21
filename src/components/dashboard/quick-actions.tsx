@@ -51,17 +51,41 @@ export function QuickActions({ userRole }: QuickActionsProps) {
       </h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Button variant="fitness" className="h-12 justify-start">
+        <Button 
+          variant="fitness" 
+          className="h-12 justify-start"
+          onClick={() => {
+            // Создаем скрытый input для загрузки фото
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = () => {
+              if (input.files?.[0]) {
+                console.log('Photo selected:', input.files[0]);
+                // Здесь можно добавить логику загрузки
+              }
+            };
+            input.click();
+          }}
+        >
           <Camera className="w-4 h-4 mr-2" />
           Сделать фото
         </Button>
         
-        <Button variant="success" className="h-12 justify-start">
+        <Button 
+          variant="success" 
+          className="h-12 justify-start"
+          onClick={() => navigate('/progress')}
+        >
           <Upload className="w-4 h-4 mr-2" />
           Загрузить данные
         </Button>
         
-        <Button variant="accent" className="h-12 justify-start">
+        <Button 
+          variant="accent" 
+          className="h-12 justify-start"
+          onClick={() => navigate('/goals/create')}
+        >
           <Target className="w-4 h-4 mr-2" />
           Обновить цели
         </Button>

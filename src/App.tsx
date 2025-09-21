@@ -12,6 +12,7 @@ import ChallengeDetail from "./pages/ChallengeDetail";
 import CreateChallenge from "./pages/CreateChallenge";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
+import CreateGoal from "./pages/CreateGoal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/goals/create" element={
+              <ProtectedRoute>
+                <CreateGoal />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

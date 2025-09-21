@@ -55,6 +55,31 @@ const Challenges = () => {
     setJoiningChallenge(challengeId);
 
     try {
+      // Сначала проверяем, не участвует ли пользователь уже в этом челлендже
+      const { data: existingParticipation } = await supabase
+        .from('challenge_participants')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('challenge_id', challengeId)
+        .single();
+
+      if (existingParticipation) {
+        // Пользователь уже участвует, обновляем состояние
+        setUserChallenges(prev => {
+          if (!prev.includes(challengeId)) {
+            return [...prev, challengeId];
+          }
+          return prev;
+        });
+        
+        toast({
+          title: "Уже участвуете",
+          description: "Вы уже участвуете в этом челлендже"
+        });
+        return;
+      }
+
+      // Если не участвует, добавляем
       const { error } = await supabase
         .from('challenge_participants')
         .insert({

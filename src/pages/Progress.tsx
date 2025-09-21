@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ interface Measurement {
 
 const ProgressPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -212,101 +214,112 @@ const ProgressPage = () => {
               </p>
             </div>
 
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-primary hover:opacity-90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добавить измерение
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Добавить новое измерение</DialogTitle>
-                  <DialogDescription>
-                    Выберите цель и введите результат измерения
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <Tabs defaultValue="measurement" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="measurement">Измерение</TabsTrigger>
-                    <TabsTrigger value="photo">Фото прогресса</TabsTrigger>
-                  </TabsList>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => navigate('/goals/create')}
+                variant="outline"
+                className="bg-gradient-accent hover:opacity-90"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Новая цель
+              </Button>
 
-                  <TabsContent value="measurement" className="space-y-4">
-                    <div>
-                      <Label htmlFor="goal-select">Цель</Label>
-                      <Select onValueChange={(value) => {
-                        const goal = goals.find(g => g.id === value);
-                        setSelectedGoal(goal || null);
-                      }}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите цель" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {goals.map((goal) => (
-                            <SelectItem key={goal.id} value={goal.id}>
-                              {goal.goal_name} ({goal.target_unit})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="value">Результат</Label>
-                      <Input
-                        id="value"
-                        type="number"
-                        step="0.1"
-                        placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
-                        value={measurementForm.value}
-                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="date">Дата измерения</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={measurementForm.measurement_date}
-                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="notes">Заметки (опционально)</Label>
-                      <Textarea
-                        id="notes"
-                        placeholder="Добавьте заметки о тренировке или условиях измерения..."
-                        value={measurementForm.notes}
-                        onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="photo" className="space-y-4">
-                    <div>
-                      <Label className="text-base font-medium">Фото прогресса</Label>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Добавьте фото для отслеживания визуального прогресса
-                      </p>
-                      <PhotoUpload
-                        onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
-                        existingPhotoUrl={measurementForm.photo_url}
-                        label="Добавить фото измерения"
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <Button onClick={addMeasurement} className="w-full bg-gradient-primary hover:opacity-90">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-primary hover:opacity-90">
                     <Plus className="h-4 w-4 mr-2" />
                     Добавить измерение
                   </Button>
-                </Tabs>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Добавить новое измерение</DialogTitle>
+                    <DialogDescription>
+                      Выберите цель и введите результат измерения
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <Tabs defaultValue="measurement" className="space-y-4">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="measurement">Измерение</TabsTrigger>
+                      <TabsTrigger value="photo">Фото прогресса</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="measurement" className="space-y-4">
+                      <div>
+                        <Label htmlFor="goal-select">Цель</Label>
+                        <Select onValueChange={(value) => {
+                          const goal = goals.find(g => g.id === value);
+                          setSelectedGoal(goal || null);
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите цель" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {goals.map((goal) => (
+                              <SelectItem key={goal.id} value={goal.id}>
+                                {goal.goal_name} ({goal.target_unit})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="value">Результат</Label>
+                        <Input
+                          id="value"
+                          type="number"
+                          step="0.1"
+                          placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
+                          value={measurementForm.value}
+                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="date">Дата измерения</Label>
+                        <Input
+                          id="date"
+                          type="date"
+                          value={measurementForm.measurement_date}
+                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="notes">Заметки (опционально)</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Добавьте заметки о тренировке или условиях измерения..."
+                          value={measurementForm.notes}
+                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
+                        />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="photo" className="space-y-4">
+                      <div>
+                        <Label className="text-base font-medium">Фото прогресса</Label>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Добавьте фото для отслеживания визуального прогресса
+                        </p>
+                        <PhotoUpload
+                          onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
+                          existingPhotoUrl={measurementForm.photo_url}
+                          label="Добавить фото измерения"
+                        />
+                      </div>
+                    </TabsContent>
+
+                    <Button onClick={addMeasurement} className="w-full bg-gradient-primary hover:opacity-90">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить измерение
+                    </Button>
+                  </Tabs>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
 
@@ -320,7 +333,7 @@ const ProgressPage = () => {
             return (
               <FitnessCard 
                 key={goal.id} 
-                className={`p-6 animate-fade-in hover-scale transition-all duration-300`}
+                className="p-6 animate-fade-in hover-scale transition-all duration-300"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="space-y-4">
@@ -381,7 +394,7 @@ const ProgressPage = () => {
         <ProgressGallery />
 
         {/* Недавние измерения */}
-        <Card>
+        <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
