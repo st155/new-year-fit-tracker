@@ -106,7 +106,15 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      
+      // Более детальная обработка ошибок OpenAI
+      if (errorText.includes('insufficient_quota')) {
+        throw new Error('OpenAI API quota exceeded. Please check your billing details.');
+      } else if (errorText.includes('invalid_api_key')) {
+        throw new Error('Invalid OpenAI API key. Please check your configuration.');
+      } else {
+        throw new Error(`OpenAI API error: ${errorText}`);
+      }
     }
 
     const aiResponse = await response.json();
@@ -260,9 +268,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in analyze-fitness-data function:', error);
+    
+    // Более понятные сообщения об ошибках для пользователя
+    let errorMessage = 'Internal server error';
+    if (error.message?.includes('quota')) {
+      errorMessage = 'OpenAI API quota exceeded. Please contact support.';
+    } else if (error.message?.includes('api_key')) {
+      errorMessage = 'API configuration error. Please contact support.';
+    } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      errorMessage = 'Network error. Please try again later.';
+    }
+    
     return new Response(JSON.stringify({ 
-      error: 'Internal server error', 
-      details: error.message 
+      error: errorMessage,
+      details: error.message,
+      success: false
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
