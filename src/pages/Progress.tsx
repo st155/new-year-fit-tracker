@@ -13,6 +13,7 @@ import { AppleHealthIntegration } from "@/components/integrations/AppleHealthInt
 import { AppleHealthUpload } from "@/components/integrations/AppleHealthUpload";
 import { GarminIntegration } from "@/components/integrations/GarminIntegration";
 import { ErrorLogsViewer } from "@/components/ui/error-logs-viewer";
+import { AppTestSuite } from "@/components/ui/app-test-suite";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -255,11 +256,12 @@ const ProgressPage = () => {
                   </DialogHeader>
                   
                   <Tabs defaultValue="measurement" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
                       <TabsTrigger value="measurement" className="text-xs sm:text-sm">Ручной ввод</TabsTrigger>
                       <TabsTrigger value="photo" className="text-xs sm:text-sm">ИИ-анализ</TabsTrigger>
                       <TabsTrigger value="integrations" className="text-xs sm:text-sm">Интеграции</TabsTrigger>
                       <TabsTrigger value="manual-photo" className="text-xs sm:text-sm">Фото прогресса</TabsTrigger>
+                      <TabsTrigger value="test" className="text-xs sm:text-sm">Тестирование</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="measurement" className="space-y-4">
@@ -377,6 +379,10 @@ const ProgressPage = () => {
                           </ul>
                         </div>
                       </div>
+                    </TabsContent>
+
+                    <TabsContent value="test" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+                      <AppTestSuite />
                     </TabsContent>
 
                     <Button onClick={addMeasurement} className="w-full bg-gradient-primary hover:opacity-90">
@@ -502,6 +508,32 @@ const ProgressPage = () => {
 
         {/* Галерея прогресса */}
         <ProgressGallery />
+
+        {/* Системные функции */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Системные функции</CardTitle>
+            <CardDescription>
+              Тестирование, логи ошибок и диагностика приложения
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="logs" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="logs">Логи ошибок</TabsTrigger>
+                <TabsTrigger value="test">Тестирование</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="logs" className="space-y-4">
+                <ErrorLogsViewer />
+              </TabsContent>
+
+              <TabsContent value="test" className="space-y-4">
+                <AppTestSuite />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
         {/* Недавние измерения */}
         <Card className="mt-8">
