@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Moon, Zap, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Heart, Moon, Zap, Activity, Calendar } from 'lucide-react';
+import { format, subDays, subMonths } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 interface WhoopMetric {
@@ -17,6 +18,18 @@ interface WhoopMetric {
   notes?: string;
 }
 
+interface AggregatedMetric {
+  metric_name: string;
+  metric_category: string;
+  unit: string;
+  avg_value: number;
+  min_value: number;
+  max_value: number;
+  data_points: number;
+}
+
+type TimePeriod = '7d' | '30d' | '6m';
+
 interface WhoopMetricsProps {
   selectedDate: Date;
 }
@@ -24,13 +37,17 @@ interface WhoopMetricsProps {
 export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<WhoopMetric[]>([]);
+  const [aggregatedMetrics, setAggregatedMetrics] = useState<AggregatedMetric[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('7d');
   const [loading, setLoading] = useState(true);
+  const [aggregatedLoading, setAggregatedLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchWhoopMetrics();
+      fetchAggregatedMetrics();
     }
-  }, [user, selectedDate]);
+  }, [user, selectedDate, selectedPeriod]);
 
   const fetchWhoopMetrics = async () => {
     if (!user) return;
@@ -72,6 +89,80 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       console.error('Error fetching Whoop metrics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAggregatedMetrics = async () => {
+    if (!user) return;
+
+    try {
+      setAggregatedLoading(true);
+      
+      const endDate = new Date();
+      let startDate: Date;
+      
+      switch (selectedPeriod) {
+        case '7d':
+          startDate = subDays(endDate, 7);
+          break;
+        case '30d':
+          startDate = subDays(endDate, 30);
+          break;
+        case '6m':
+          startDate = subMonths(endDate, 6);
+          break;
+        default:
+          startDate = subDays(endDate, 7);
+      }
+
+      const { data } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner (
+            metric_name,
+            metric_category,
+            unit,
+            source
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.source', 'whoop')
+        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
+        .lte('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .order('measurement_date');
+
+      // Группируем и агрегируем данные
+      const grouped = data?.reduce((acc, item) => {
+        const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
+        if (!acc[key]) {
+          acc[key] = {
+            metric_name: item.user_metrics.metric_name,
+            metric_category: item.user_metrics.metric_category,
+            unit: item.user_metrics.unit,
+            values: [],
+          };
+        }
+        acc[key].values.push(item.value);
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      const aggregated = Object.values(grouped).map((group: any) => ({
+        metric_name: group.metric_name,
+        metric_category: group.metric_category,
+        unit: group.unit,
+        avg_value: group.values.reduce((sum: number, val: number) => sum + val, 0) / group.values.length,
+        min_value: Math.min(...group.values),
+        max_value: Math.max(...group.values),
+        data_points: group.values.length,
+      }));
+
+      setAggregatedMetrics(aggregated);
+    } catch (error) {
+      console.error('Error fetching aggregated Whoop metrics:', error);
+    } finally {
+      setAggregatedLoading(false);
     }
   };
 
@@ -140,7 +231,150 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
     return translations[metricName] || metricName;
   };
 
-  if (loading) {
+  const getPeriodLabel = (period: TimePeriod) => {
+    switch (period) {
+      case '7d':
+        return 'Неделя';
+      case '30d':
+        return 'Месяц';
+      case '6m':
+        return '6 месяцев';
+      default:
+        return 'Неделя';
+    }
+  };
+
+  const renderAggregatedMetrics = () => {
+    if (aggregatedLoading) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-2/3"></div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (aggregatedMetrics.length === 0) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center py-4">
+              Нет данных Whoop за выбранный период
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    const groupedAggregated = aggregatedMetrics.reduce((acc, metric) => {
+      const category = metric.metric_category;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(metric);
+      return acc;
+    }, {} as Record<string, AggregatedMetric[]>);
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={selectedPeriod === '7d' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPeriod('7d')}
+              >
+                Неделя
+              </Button>
+              <Button
+                variant={selectedPeriod === '30d' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPeriod('30d')}
+              >
+                Месяц
+              </Button>
+              <Button
+                variant={selectedPeriod === '6m' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedPeriod('6m')}
+              >
+                6 месяцев
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {Object.entries(groupedAggregated).map(([category, categoryMetrics]) => (
+              <div key={category} className="space-y-3">
+                <h4 className="font-medium flex items-center gap-2">
+                  {getMetricIcon(category, '')}
+                  {getCategoryTitle(category)}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categoryMetrics.map((metric, index) => (
+                    <div key={index} className="p-3 border rounded-lg space-y-2 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          {getMetricDisplayName(metric.metric_name)}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {metric.data_points} дней
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Среднее</span>
+                          <span className="font-medium">
+                            {metric.unit === '%' ? Math.round(metric.avg_value) : metric.avg_value.toFixed(1)} {metric.unit}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Диапазон</span>
+                          <span>
+                            {metric.unit === '%' ? Math.round(metric.min_value) : metric.min_value.toFixed(1)} - {metric.unit === '%' ? Math.round(metric.max_value) : metric.max_value.toFixed(1)} {metric.unit}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {metric.unit === '%' && (
+                        <Progress value={metric.avg_value} className="h-1.5" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  if (loading && aggregatedLoading) {
     return (
       <Card>
         <CardHeader>
@@ -157,21 +391,6 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
     );
   }
 
-  if (metrics.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Данные Whoop</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-center py-4">
-            Нет данных Whoop за выбранную дату
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const groupedMetrics = metrics.reduce((acc, metric) => {
     const category = metric.metric_category;
     if (!acc[category]) {
@@ -183,51 +402,75 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
 
   return (
     <div className="space-y-6">
-      {Object.entries(groupedMetrics).map(([category, categoryMetrics]) => (
-        <Card key={category}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {getMetricIcon(category, '')}
-              {getCategoryTitle(category)}
-              <Badge variant="secondary" className="ml-auto">
-                Whoop
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categoryMetrics.map((metric, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {getMetricDisplayName(metric.metric_name)}
-                    </span>
-                    {getMetricIcon(category, metric.metric_name)}
+      {/* Аггрегированные данные */}
+      {renderAggregatedMetrics()}
+      
+      {/* Данные за конкретный день */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Данные за {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+            <Badge variant="secondary" className="ml-auto">
+              Whoop
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-2/3"></div>
+            </div>
+          ) : metrics.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              Нет данных Whoop за выбранную дату
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(groupedMetrics).map(([category, categoryMetrics]) => (
+                <div key={category} className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    {getMetricIcon(category, '')}
+                    {getCategoryTitle(category)}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {categoryMetrics.map((metric, index) => (
+                      <div key={index} className="p-4 border rounded-lg space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            {getMetricDisplayName(metric.metric_name)}
+                          </span>
+                          {getMetricIcon(category, metric.metric_name)}
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span 
+                            className={`text-2xl font-bold ${getMetricColor(category, metric.value, metric.unit)}`}
+                          >
+                            {metric.unit === '%' ? Math.round(metric.value) : metric.value.toFixed(1)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {metric.unit}
+                          </span>
+                        </div>
+                        {metric.unit === '%' && (
+                          <Progress value={metric.value} className="h-2" />
+                        )}
+                        {metric.notes && (
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {metric.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span 
-                      className={`text-2xl font-bold ${getMetricColor(category, metric.value, metric.unit)}`}
-                    >
-                      {metric.unit === '%' ? Math.round(metric.value) : metric.value.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {metric.unit}
-                    </span>
-                  </div>
-                  {metric.unit === '%' && (
-                    <Progress value={metric.value} className="h-2" />
-                  )}
-                  {metric.notes && (
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {metric.notes}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
