@@ -148,12 +148,12 @@ async function handleCallback(req: Request) {
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Whoop Authorization Success</title>
         </head>
         <body>
           <script>
-            // Перенаправляем в приложение, где произойдет обмен кода на токены
             window.location.replace('${redirectUrl}');
           </script>
           <noscript>

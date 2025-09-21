@@ -155,18 +155,34 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       setAuthUrl(data.authUrl);
 
-      // Пытаемся открыть новую вкладку
-      const newWindow = window.open(data.authUrl, '_blank');
+      // Открываем popup окно для авторизации
+      const popup = window.open(
+        data.authUrl,
+        'whoop-auth',
+        'width=500,height=600,resizable=yes,scrollbars=yes'
+      );
       
-      // Проверяем, удалось ли открыть окно (на мобильных может блокироваться)
-      if (!newWindow || newWindow.closed) {
-        // Если не удалось - показываем ручную опцию
+      // Проверяем, удалось ли открыть окно
+      if (!popup || popup.closed) {
         setShowManualAuth(true);
         toast({
           title: 'Необходимо ручное открытие',
           description: 'Ваш браузер заблокировал всплывающие окна. Используйте кнопку "Открыть ссылку" ниже.',
         });
       } else {
+        // Проверяем закрытие popup
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            setIsConnecting(false);
+            // Проверяем статус подключения после закрытия popup
+            setTimeout(() => {
+              loadWhoopStatus();
+              loadRecentData();
+            }, 1000);
+          }
+        }, 1000);
+        
         toast({
           title: 'Перенаправление на Whoop',
           description: 'Завершите авторизацию в новой вкладке. После успешной авторизации данные будут автоматически синхронизированы.',
