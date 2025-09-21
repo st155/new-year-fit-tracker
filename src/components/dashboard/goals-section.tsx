@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, Trophy, Timer, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Goal {
   id: string;
@@ -32,6 +33,7 @@ interface GoalsSectionProps {
 }
 
 export function GoalsSection({ userRole }: GoalsSectionProps) {
+  const navigate = useNavigate();
   const sampleGoals: Goal[] = [
     {
       id: "1",
@@ -118,7 +120,11 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
           <Target className="w-5 h-5 text-primary" />
           <h3 className="text-xl font-bold">Мои цели</h3>
         </div>
-        <Button variant="fitness" size="sm">
+        <Button 
+          variant="fitness" 
+          size="sm"
+          onClick={() => navigate('/goals/create')}
+        >
           <Plus className="w-4 h-4 mr-1" />
           Добавить
         </Button>

@@ -9,6 +9,7 @@ import IntegrationsCard from "@/components/dashboard/integrations-card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { AppNavigation } from "@/components/navigation/AppNavigation";
 
 const Index = () => {
   const { user } = useAuth();
@@ -109,29 +110,36 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background animate-fade-in">
-      <DashboardHeader 
-        userName={userName}
-        userRole={userRole}
-        challengeProgress={challengeProgress}
-        daysLeft={Math.max(0, daysLeft)}
-        challengeTitle={activeChallenge?.title}
-      />
-      
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <StatsGrid userRole={userRole} />
-        </div>
+      {/* Fixed Navigation */}
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <AppNavigation />
+      </div>
+
+      <div className="pt-20">
+        <DashboardHeader 
+          userName={userName}
+          userRole={userRole}
+          challengeProgress={challengeProgress}
+          daysLeft={Math.max(0, daysLeft)}
+          challengeTitle={activeChallenge?.title}
+        />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <div className="lg:col-span-2">
-            <GoalsSection userRole={userRole} />
+        <div className="max-w-7xl mx-auto p-6 space-y-8">
+          <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <StatsGrid userRole={userRole} />
           </div>
           
-          <div className="space-y-6">
-            <ProgressOverview />
-            <IntegrationsCard />
-            <QuickActions userRole={userRole} />
-            <Leaderboard />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <div className="lg:col-span-2">
+              <GoalsSection userRole={userRole} />
+            </div>
+            
+            <div className="space-y-6">
+              <ProgressOverview />
+              <IntegrationsCard />
+              <QuickActions userRole={userRole} />
+              <Leaderboard />
+            </div>
           </div>
         </div>
       </div>
