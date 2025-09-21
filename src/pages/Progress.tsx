@@ -27,8 +27,6 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { HomeButton } from "@/components/ui/home-button";
-import { GoalCard } from "@/components/goals/GoalCard";
-import { WeightMeasurementDialog } from "@/components/measurements/WeightMeasurementDialog";
 
 interface Goal {
   id: string;
@@ -57,8 +55,6 @@ const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [showWeightDialog, setShowWeightDialog] = useState(false);
-  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -196,22 +192,6 @@ const ProgressPage = () => {
     const previous = goal.measurements[1].value;
     
     return latest > previous ? 'up' : 'down';
-  };
-
-  const handleAddMeasurement = (goalId: string) => {
-    const goal = goals.find(g => g.id === goalId);
-    if (goal && goal.goal_type === 'body_composition' && goal.target_unit === 'кг') {
-      setSelectedGoalId(goalId);
-      setShowWeightDialog(true);
-    } else {
-      setIsAddDialogOpen(true);
-    }
-  };
-
-  const handleMeasurementAdded = () => {
-    fetchGoalsAndMeasurements();
-    setShowWeightDialog(false);
-    setSelectedGoalId(null);
   };
 
   const getGoalTypeColor = (goalType: string) => {
@@ -420,16 +400,6 @@ const ProgressPage = () => {
                   </Tabs>
                 </DialogContent>
               </Dialog>
-
-              {/* Weight Measurement Dialog */}
-              {selectedGoalId && (
-                <WeightMeasurementDialog
-                  open={showWeightDialog}
-                  onOpenChange={setShowWeightDialog}
-                  goalId={selectedGoalId}
-                  onMeasurementAdded={handleMeasurementAdded}
-                />
-              )}
             </div>
           </div>
         </div>
@@ -469,21 +439,79 @@ const ProgressPage = () => {
 
         {/* Сетка целей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {goals.map((goal, index) => (
-            <GoalCard
-              key={goal.id}
-              goal={{
-                ...goal,
-                current_value: goal.measurements && goal.measurements.length > 0 
-                  ? goal.measurements[0].value 
-                  : 0,
-                progress_percentage: getProgressPercentage(goal),
-                trend: getTrend(goal) === 'up' ? 'up' : getTrend(goal) === 'down' ? 'down' : 'none'
-              }}
-              onAddMeasurement={handleAddMeasurement}
-              className="animate-fade-in hover-scale transition-all duration-300"
-            />
-          ))}
+          {goals.map((goal, index) => {
+            const progress = getProgressPercentage(goal);
+            const trend = getTrend(goal);
+            const latestMeasurement = goal.measurements?.[0];
+
+            return (
+              <FitnessCard 
+                key={goal.id} 
+                className="p-6 animate-fade-in hover-scale transition-all duration-300"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{goal.goal_name}</h3>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                          onClick={() => navigate(`/goals/edit/${goal.id}`)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <Badge className={getGoalTypeColor(goal.goal_type)}>
+                        {goal.goal_type}
+                      </Badge>
+                    </div>
+                    {trend && (
+                      <div className="flex items-center gap-1 text-sm">
+                        {trend === 'up' ? (
+                          <TrendingUp className="h-4 w-4 text-success" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4 text-destructive" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Прогресс</span>
+                      <span className="font-medium">{progress.toFixed(1)}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Текущий</p>
+                      <p className="font-medium">
+                        {latestMeasurement ? `${latestMeasurement.value} ${goal.target_unit}` : 'Нет данных'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Цель</p>
+                      <p className="font-medium">{goal.target_value} {goal.target_unit}</p>
+                    </div>
+                  </div>
+
+                  {latestMeasurement && (
+                    <div className="pt-2 border-t border-border/50">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(latestMeasurement.measurement_date), 'dd MMM yyyy', { locale: ru })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </FitnessCard>
+            );
+          })}
         </div>
 
         {/* Галерея прогресса */}

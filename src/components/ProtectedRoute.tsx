@@ -10,8 +10,6 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  
-  console.log('ProtectedRoute - Loading:', loading, 'User:', !!user);
 
   useEffect(() => {
     if (!loading && !user) {
