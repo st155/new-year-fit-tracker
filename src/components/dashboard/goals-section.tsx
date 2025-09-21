@@ -52,9 +52,20 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
   useEffect(() => {
-    if (user && userRole === "participant") {
-      loadUserGoals();
-    }
+    const initializeGoals = async () => {
+      try {
+        if (user && userRole === "participant") {
+          await loadUserGoals();
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing goals:', error);
+        setLoading(false);
+      }
+    };
+    
+    initializeGoals();
   }, [user, userRole]);
 
   const loadUserGoals = async () => {
