@@ -160,16 +160,25 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       // Слушаем сообщения от окна авторизации
       const handleMessage = async (event: MessageEvent) => {
+        console.log('Received message:', event);
+        console.log('Event origin:', event.origin);
+        console.log('Event data:', event.data);
+        
         // Принимаем сообщения от Supabase функции или нашего origin
         if (event.origin !== window.location.origin && 
-            !event.origin.includes('supabase.co')) return;
+            !event.origin.includes('supabase.co')) {
+          console.log('Message rejected due to origin');
+          return;
+        }
 
         if (event.data.type === 'whoop-auth-success') {
+          console.log('Auth success received');
           authWindow?.close();
           window.removeEventListener('message', handleMessage);
           
           // Получаем временные токены из localStorage
           const tempTokens = JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}');
+          console.log('Temp tokens:', tempTokens);
           localStorage.removeItem('whoop_temp_tokens');
           
           toast({

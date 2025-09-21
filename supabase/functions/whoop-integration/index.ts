@@ -168,7 +168,7 @@ async function handleCallback(req: Request) {
             window.opener?.postMessage({
               type: 'whoop-auth-success',
               data: ${JSON.stringify(userInfo)}
-            }, '*');
+            }, window.location.origin);
             window.close();
           </script>
         </body>
