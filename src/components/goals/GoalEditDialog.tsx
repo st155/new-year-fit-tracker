@@ -21,7 +21,7 @@ interface GoalEditDialogProps {
   goal: Goal | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (goalData: any) => Promise<void>;
+  onSave: () => void;
 }
 
 export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDialogProps) {
@@ -47,14 +47,21 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
 
     setLoading(true);
     try {
-      await onSave({
-        goal_name: formData.goal_name,
-        goal_type: formData.goal_type,
-        target_value: formData.target_value,
-        target_unit: formData.target_unit
-      });
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          goal_name: formData.goal_name,
+          goal_type: formData.goal_type,
+          target_value: formData.target_value,
+          target_unit: formData.target_unit
+        })
+        .eq('id', goal.id);
 
+      if (error) throw error;
+
+      toast.success('Цель обновлена');
       onOpenChange(false);
+      onSave();
     } catch (error: any) {
       console.error('Error updating goal:', error);
       toast.error('Ошибка обновления цели');
