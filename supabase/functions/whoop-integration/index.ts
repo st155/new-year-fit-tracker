@@ -141,44 +141,16 @@ async function handleCallback(req: Request) {
   }
 
   try {
-    // Не обмениваем код здесь, чтобы избежать invalid_grant и проблем с кросс-доменным localStorage
+    // Прямой редирект на страницу callback приложения
     const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?code=${code}&state=${state}&success=true`;
     
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Whoop Authorization Success</title>
-        </head>
-        <body>
-          <script>
-            (function(){
-              try {
-                if (window.opener && !window.opener.closed) {
-                  window.opener.postMessage({
-                    type: 'whoop-auth-success',
-                    code: '${code}',
-                    state: '${state}'
-                  }, '*');
-                  window.close();
-                } else {
-                  // Fallback: редиректим в основное приложение
-                  window.location.replace('${redirectUrl}');
-                }
-              } catch (e) {
-                window.location.replace('${redirectUrl}');
-              }
-            })();
-          </script>
-          <noscript>
-            <a href="${redirectUrl}">Continue</a>
-          </noscript>
-        </body>
-      </html>
-    `;
-    return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': redirectUrl,
+        ...corsHeaders
+      }
+    });
 
   } catch (error) {
     console.error('Callback processing error:', error);

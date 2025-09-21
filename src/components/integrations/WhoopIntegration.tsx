@@ -155,68 +155,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       setAuthUrl(data.authUrl);
 
-      // Открываем popup окно для авторизации
-      const popup = window.open(
-        data.authUrl,
-        'whoop-auth',
-        'width=500,height=600,resizable=yes,scrollbars=yes'
-      );
-      
-      // Проверяем, удалось ли открыть окно
-      if (!popup || popup.closed) {
-        setShowManualAuth(true);
-        toast({
-          title: 'Необходимо ручное открытие',
-          description: 'Ваш браузер заблокировал всплывающие окна. Используйте кнопку "Открыть ссылку" ниже.',
-        });
-      } else {
-        // Слушаем сообщение об успешной авторизации из popup
-        const handleMessage = async (event: MessageEvent) => {
-          if (event?.data?.type === 'whoop-auth-success' && event.data.code) {
-            window.removeEventListener('message', handleMessage);
-            try {
-              await syncDataWithCode(event.data.code);
-            } finally {
-              try { popup.close(); } catch {}
-              setIsConnecting(false);
-              // Обновим статус/данные
-              setTimeout(() => {
-                loadWhoopStatus();
-                loadRecentData();
-              }, 500);
-            }
-          } else if (event?.data?.type === 'whoop-auth-error') {
-            window.removeEventListener('message', handleMessage);
-            try { popup.close(); } catch {}
-            setIsConnecting(false);
-            toast({
-              title: 'Ошибка авторизации Whoop',
-              description: String(event.data?.error || 'Неизвестная ошибка'),
-              variant: 'destructive'
-            });
-          }
-        };
-        window.addEventListener('message', handleMessage);
-
-        // Проверяем закрытие popup
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            window.removeEventListener('message', handleMessage);
-            setIsConnecting(false);
-            // Проверяем статус подключения после закрытия popup
-            setTimeout(() => {
-              loadWhoopStatus();
-              loadRecentData();
-            }, 1000);
-          }
-        }, 1000);
-        
-        toast({
-          title: 'Перенаправление на Whoop',
-          description: 'Завершите авторизацию в новой вкладке. После успешной авторизации данные будут автоматически синхронизированы.',
-        });
-      }
+      // Заменяем popup на прямой редирект - более надежно
+      window.location.href = data.authUrl;
 
     } catch (error: any) {
       console.error('Whoop connection error:', error);
