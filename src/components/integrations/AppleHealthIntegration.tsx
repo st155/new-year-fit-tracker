@@ -52,8 +52,8 @@ export function AppleHealthIntegration({ userId }: AppleHealthIntegrationProps) 
         { type: 'sleep', value: 7.5, unit: 'hours', date: new Date().toISOString().split('T')[0] }
       ];
 
-      // Сохраняем данные через Edge Function
-      const { data, error } = await supabase.functions.invoke('apple-health-import', {
+      // Сохраняем данные через Edge Function  
+      const { data, error } = await supabase.functions.invoke('process-apple-health', {
         body: {
           userId,
           healthData: mockHealthData,
