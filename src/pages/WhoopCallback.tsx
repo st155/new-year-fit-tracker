@@ -37,6 +37,8 @@ const WhoopCallback = () => {
       }
 
       try {
+        // Persist code for post-login sync
+        localStorage.setItem('whoop_pending_code', JSON.stringify({ code, state, savedAt: Date.now() }));
         setStatus('authenticating');
         setProgress(25);
 
@@ -58,7 +60,7 @@ const WhoopCallback = () => {
           });
 
           localStorage.removeItem('whoop_temp_tokens');
-
+          localStorage.removeItem('whoop_pending_code');
           if (syncError) {
             throw new Error(syncError.message);
           }
