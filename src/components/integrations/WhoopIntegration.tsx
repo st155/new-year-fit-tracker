@@ -53,8 +53,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     
     try {
       // Инициируем OAuth процесс с Whoop
-      const { data, error } = await supabase.functions.invoke('whoop-integration?action=auth', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: {
+          action: 'auth',
           userId,
           redirectUri: `${window.location.origin}/whoop-callback`
         }
@@ -124,8 +125,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('whoop-integration?action=sync', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: {
+          action: 'sync',
           userId
         }
       });
@@ -154,8 +156,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
   const loadWhoopData = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('whoop-integration?action=get-data', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: {
+          action: 'get-data',
           userId
         }
       });

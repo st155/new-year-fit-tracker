@@ -23,7 +23,15 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    let action = url.searchParams.get('action');
+    if (!action) {
+      try {
+        const body = await req.clone().json();
+        action = body?.action;
+      } catch (_) {
+        // no body or not JSON
+      }
+    }
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     switch (action) {

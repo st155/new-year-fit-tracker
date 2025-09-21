@@ -22,8 +22,9 @@ export default function WhoopCallback() {
         }
 
         // Отправляем код обратно в Edge Function для обмена на токен
-        const { data, error: callbackError } = await supabase.functions.invoke('whoop-integration?action=callback', {
+        const { data, error: callbackError } = await supabase.functions.invoke('whoop-integration', {
           body: {
+            action: 'callback',
             code,
             state
           }
