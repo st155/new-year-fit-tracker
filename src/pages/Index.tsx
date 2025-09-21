@@ -4,7 +4,6 @@ import { StatsGrid } from "@/components/dashboard/stats-grid";
 import { GoalsSection } from "@/components/dashboard/goals-section";
 import { Leaderboard } from "@/components/dashboard/leaderboard";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import ProgressOverview from "@/components/dashboard/progress-overview";
 import IntegrationsCard from "@/components/dashboard/integrations-card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,7 +127,6 @@ const Index = () => {
           </div>
           
           <div className="space-y-6">
-            <ProgressOverview />
             <IntegrationsCard />
             <QuickActions userRole={userRole} />
             <Leaderboard />
