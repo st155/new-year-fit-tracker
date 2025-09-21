@@ -603,11 +603,17 @@ async function syncWhoopData(userId: string, accessToken: string) {
       end: endDate,
     });
 
-    // Синхронизируем body measurement данные (включая VO2Max)
-    const bodyData = await fetchWhoopData(accessToken, 'body_measurement', {
-      start: startDate,
-      end: endDate,
-    });
+    // Пытаемся синхронизировать body measurement данные (опционально)
+    let bodyData = null;
+    try {
+      bodyData = await fetchWhoopData(accessToken, 'body_measurement', {
+        start: startDate,
+        end: endDate,
+      });
+    } catch (error: any) {
+      console.log('Body measurement endpoint not available:', error.message);
+      // Продолжаем без body measurement данных
+    }
 
     // Сохраняем данные в базу
     let savedRecords = 0;
