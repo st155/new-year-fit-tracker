@@ -28,7 +28,6 @@ import { HomeButton } from '@/components/ui/home-button';
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
-import { VO2MaxCard } from '@/components/metrics/VO2MaxCard';
 
 interface MetricValue {
   id: string;
@@ -479,8 +478,6 @@ const Dashboard = () => {
                   )}
                 </CardContent>
               </Card>
-              {/* VO2 Max Card */}
-              <VO2MaxCard selectedDate={selectedDate} showTrend={true} />
             </div>
 
             {/* Быстрые действия */}

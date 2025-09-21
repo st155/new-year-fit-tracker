@@ -1,6 +1,6 @@
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Target, Zap, Award, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Zap, Award } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -126,13 +126,12 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         icon={<TrendingUp className="w-4 h-4" />}
       />
       <StatCard
-        title="VO2 Max"
-        value="45.2"
-        unit="мл/кг/мин"
-        target="50"
-        variant="success"
-        change={3}
-        icon={<Activity className="w-4 h-4" />}
+        title="Место в рейтинге"
+        value="3"
+        unit="/8"
+        variant="default"
+        change={1}
+        icon={<Award className="w-4 h-4" />}
       />
     </div>
   );
