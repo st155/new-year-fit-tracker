@@ -31,6 +31,7 @@ const ChallengeDetail = () => {
   const [participants, setParticipants] = useState<ChallengeParticipant[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const fetchChallengeDetails = async () => {
@@ -117,13 +118,26 @@ const ChallengeDetail = () => {
     fetchChallengeDetails();
   }, [id, user]);
 
+  // Обновляем время каждую минуту для актуального счетчика
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Обновляем каждую минуту
+
+    return () => clearInterval(timer);
+  }, []);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
   const getDaysRemaining = (endDate: string) => {
     const end = new Date(endDate);
-    const today = new Date();
+    // Устанавливаем время конца дня для более точного расчета
+    end.setHours(23, 59, 59, 999);
+    
+    // Используем текущее время для точного расчета
+    const today = currentTime;
     const diffTime = end.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);

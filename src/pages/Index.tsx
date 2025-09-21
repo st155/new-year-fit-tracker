@@ -13,6 +13,7 @@ const Index = () => {
   const [profile, setProfile] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -60,6 +61,15 @@ const Index = () => {
     fetchUserData();
   }, [user]);
 
+  // Обновляем время каждую минуту для актуального счетчика
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Обновляем каждую минуту
+
+    return () => clearInterval(timer);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -75,13 +85,21 @@ const Index = () => {
   if (activeChallenge) {
     const challengeEnd = new Date(activeChallenge.end_date);
     const challengeStart = new Date(activeChallenge.start_date);
-    const today = new Date();
+    
+    // Используем текущее время для точного расчета
+    const today = currentTime;
+    
+    // Устанавливаем время в 23:59:59 для конца дня челленджа
+    challengeEnd.setHours(23, 59, 59, 999);
     
     const totalDays = Math.ceil((challengeEnd.getTime() - challengeStart.getTime()) / (1000 * 60 * 60 * 24));
-    const passedDays = Math.ceil((today.getTime() - challengeStart.getTime()) / (1000 * 60 * 60 * 24));
+    const passedDays = Math.max(0, Math.ceil((today.getTime() - challengeStart.getTime()) / (1000 * 60 * 60 * 24)));
     
     challengeProgress = Math.min(100, Math.max(0, (passedDays / totalDays) * 100));
-    daysLeft = Math.max(0, Math.ceil((challengeEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // Более точный расчет оставшихся дней
+    const timeLeft = challengeEnd.getTime() - today.getTime();
+    daysLeft = Math.max(0, Math.ceil(timeLeft / (1000 * 60 * 60 * 24)));
   }
 
   const userName = profile?.full_name || profile?.username || 'Пользователь';

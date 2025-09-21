@@ -114,6 +114,9 @@ const Challenges = () => {
 
   const getDaysRemaining = (endDate: string) => {
     const end = new Date(endDate);
+    // Устанавливаем время конца дня
+    end.setHours(23, 59, 59, 999);
+    
     const today = new Date();
     const diffTime = end.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

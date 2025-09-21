@@ -62,19 +62,39 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex flex-col items-end gap-2">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">{daysLeft} дней</div>
-                <div className="text-sm text-muted-foreground">до финиша</div>
+            {challengeTitle ? (
+              <div className="flex flex-col items-end gap-2">
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">
+                    {daysLeft > 0 ? `${daysLeft} дней` : 'Завершён!'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {daysLeft > 0 ? 'до финиша' : 'Челлендж завершён'}
+                  </div>
+                </div>
+                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-primary transition-all duration-500"
+                    style={{ width: `${challengeProgress}%` }}
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {Math.round(challengeProgress)}% завершено
+                </div>
               </div>
-              <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-primary transition-all duration-500"
-                  style={{ width: `${challengeProgress}%` }}
-                />
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <div className="text-sm">Нет активных челленджей</div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => navigate('/challenges')}
+                  className="mt-2"
+                >
+                  Присоединиться
+                </Button>
               </div>
-              <div className="text-xs text-muted-foreground">{challengeProgress}% завершено</div>
-            </div>
+            )}
             
             <div className="flex items-center gap-2">
               <Button 
