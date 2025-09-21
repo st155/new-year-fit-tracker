@@ -543,8 +543,8 @@ async function syncWhoopData(userId: string, accessToken: string) {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   
-  const startDate = thirtyDaysAgo.toISOString().split('T')[0];
-  const endDate = now.toISOString().split('T')[0];
+  const startDate = thirtyDaysAgo.toISOString();
+  const endDate = now.toISOString();
 
   console.log(`Syncing Whoop data for user ${userId} from ${startDate} to ${endDate}`);
 
@@ -556,13 +556,13 @@ async function syncWhoopData(userId: string, accessToken: string) {
     });
 
     // Синхронизируем sleep данные
-    const sleepData = await fetchWhoopData(accessToken, 'sleep', {
+    const sleepData = await fetchWhoopData(accessToken, 'activity/sleep', {
       start: startDate,
       end: endDate,
     });
 
     // Синхронизируем workout данные
-    const workoutData = await fetchWhoopData(accessToken, 'workout', {
+    const workoutData = await fetchWhoopData(accessToken, 'activity/workout', {
       start: startDate,
       end: endDate,
     });
@@ -645,7 +645,7 @@ async function saveRecoveryData(userId: string, records: any[]) {
         user_id: userId,
         metric_id: metricId,
         value: record.score.recovery_score,
-        measurement_date: record.cycle_id.split('T')[0],
+        measurement_date: (record.created_at || '').split('T')[0],
         external_id: record.cycle_id,
         source_data: record,
       });
