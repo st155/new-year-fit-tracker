@@ -9,6 +9,8 @@ import { FitnessCard } from "@/components/ui/fitness-card";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { WhoopIntegration } from "@/components/integrations/WhoopIntegration";
+import { AppleHealthIntegration } from "@/components/integrations/AppleHealthIntegration";
+import { GarminIntegration } from "@/components/integrations/GarminIntegration";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -346,14 +348,21 @@ const ProgressPage = () => {
                         <p className="text-sm text-muted-foreground mb-4">
                           Подключите ваши фитнес-устройства для автоматической синхронизации данных
                         </p>
-                        <WhoopIntegration userId={user?.id || ''} />
+                        
+                        <div className="space-y-4">
+                          <WhoopIntegration userId={user?.id || ''} />
+                          
+                          <AppleHealthIntegration userId={user?.id || ''} />
+                          
+                          <GarminIntegration userId={user?.id || ''} />
+                        </div>
                         
                         <div className="mt-4 text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
-                          <h4 className="font-medium mb-2">Скоро будут доступны:</h4>
+                          <h4 className="font-medium mb-2">💡 Рекомендации по интеграции:</h4>
                           <ul className="space-y-1">
-                            <li>• Apple Health - импорт данных о здоровье</li>
-                            <li>• Google Fit - синхронизация активности</li>
-                            <li>• Fitbit - данные тренировок и сна</li>
+                            <li>• Подключите все доступные устройства для полной картины здоровья</li>
+                            <li>• Данные автоматически разделяются между целями и общей статистикой</li>
+                            <li>• Просматривайте полную историю на странице "Данные трекеров"</li>
                           </ul>
                         </div>
                       </div>

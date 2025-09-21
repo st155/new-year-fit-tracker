@@ -1,6 +1,6 @@
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare, TrendingUp, Brain } from "lucide-react";
+import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare, TrendingUp, Brain, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -106,12 +106,21 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           <TrendingUp className="w-4 h-4 mr-2" />
           Мой прогресс
         </Button>
+
+        <Button 
+          variant="outline" 
+          className="h-12 justify-start"
+          onClick={() => navigate('/fitness-data')}
+        >
+          <Activity className="w-4 h-4 mr-2" />
+          Данные трекеров
+        </Button>
       </div>
       
       <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
         <p className="text-sm text-primary font-medium mb-1">💡 Совет дня</p>
         <p className="text-xs text-muted-foreground">
-          Регулярность важнее интенсивности. Загружай данные каждый день!
+          Подключите фитнес-трекеры для автоматического сбора всех показателей здоровья и активности!
         </p>
       </div>
     </FitnessCard>

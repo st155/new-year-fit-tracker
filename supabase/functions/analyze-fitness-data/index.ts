@@ -162,6 +162,7 @@ serve(async (req) => {
 
     // Сохраняем извлеченные данные как измерения
     const savedMeasurements = [];
+    const savedMetrics = [];
     
     for (const dataPoint of analysisData.extractedData) {
       if (dataPoint.confidence < 0.6) {
@@ -169,7 +170,59 @@ serve(async (req) => {
         continue;
       }
 
-      // Ищем подходящую цель по названию метрики
+      // Определяем категорию метрики
+      const metricCategory = categorizeMetric(dataPoint.metric);
+      
+      // Автоматически создаем или получаем метрику в системе
+      const { data: metricData, error: metricError } = await supabase
+        .rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: dataPoint.metric,
+          p_metric_category: metricCategory,
+          p_unit: dataPoint.unit,
+          p_source: 'ai_analysis'
+        });
+
+      if (metricError) {
+        console.error('Error creating/getting metric:', metricError);
+        continue;
+      }
+
+      const metricId = metricData;
+
+      // Сохраняем значение метрики в metric_values
+      const { data: metricValue, error: metricValueError } = await supabase
+        .from('metric_values')
+        .insert({
+          user_id: userId,
+          metric_id: metricId,
+          value: dataPoint.value,
+          measurement_date: measurementDate || new Date().toISOString().split('T')[0],
+          notes: `ИИ-анализ скриншота. Уверенность: ${(dataPoint.confidence * 100).toFixed(1)}%`,
+          photo_url: imageUrl,
+          external_id: `ai_${imageUrl.split('/').pop()}_${dataPoint.metric}_${measurementDate}`,
+          source_data: {
+            confidence: dataPoint.confidence,
+            analysis_type: 'ai_screenshot',
+            original_metric: dataPoint.metric
+          }
+        })
+        .select()
+        .single();
+
+      if (metricValueError) {
+        console.error('Error saving metric value:', metricValueError);
+      } else {
+        console.log('Saved metric value:', metricValue);
+        savedMetrics.push({
+          ...dataPoint,
+          metricId,
+          valueId: metricValue?.id,
+          category: metricCategory
+        });
+      }
+
+      // Ищем подходящую цель по названию метрики для measurements таблицы
       let matchingGoal = null;
       
       if (userGoals) {
@@ -185,34 +238,37 @@ serve(async (req) => {
         });
       }
 
-      try {
-        // Сохраняем измерение
-        const { data: measurement, error: measurementError } = await supabase
-          .from('measurements')
-          .insert({
-            user_id: userId,
-            goal_id: matchingGoal?.id || goalId,
-            value: dataPoint.value,
-            unit: dataPoint.unit,
-            measurement_date: measurementDate || new Date().toISOString().split('T')[0],
-            notes: `Автоматически извлечено из изображения. Уверенность: ${(dataPoint.confidence * 100).toFixed(1)}%`,
-            photo_url: imageUrl
-          })
-          .select()
-          .single();
+      // Если есть подходящая цель, сохраняем также в measurements
+      if (matchingGoal) {
+        try {
+          const { data: measurement, error: measurementError } = await supabase
+            .from('measurements')
+            .insert({
+              user_id: userId,
+              goal_id: matchingGoal.id,
+              value: dataPoint.value,
+              unit: dataPoint.unit,
+              measurement_date: measurementDate || new Date().toISOString().split('T')[0],
+              notes: `Автоматически извлечено из изображения. Уверенность: ${(dataPoint.confidence * 100).toFixed(1)}%`,
+              photo_url: imageUrl,
+              source: 'ai_analysis'
+            })
+            .select()
+            .single();
 
-        if (measurementError) {
-          console.error('Error saving measurement:', measurementError);
-        } else {
-          console.log('Saved measurement:', measurement);
-          savedMeasurements.push({
-            ...dataPoint,
-            measurementId: measurement?.id,
-            goalMatched: !!matchingGoal
-          });
+          if (measurementError) {
+            console.error('Error saving measurement:', measurementError);
+          } else {
+            console.log('Saved measurement:', measurement);
+            savedMeasurements.push({
+              ...dataPoint,
+              measurementId: measurement?.id,
+              goalMatched: true
+            });
+          }
+        } catch (saveError) {
+          console.error('Error saving measurement:', saveError);
         }
-      } catch (saveError) {
-        console.error('Error saving measurement:', saveError);
       }
     }
 
@@ -260,11 +316,38 @@ serve(async (req) => {
       success: true,
       analysis: analysisData,
       savedMeasurements,
-      saved: savedMeasurements.length > 0,
-      message: `Сохранено ${savedMeasurements.length} измерений из ${analysisData.extractedData.length} найденных показателей`
+      savedMetrics,
+      saved: savedMeasurements.length > 0 || savedMetrics.length > 0,
+      message: `Сохранено ${savedMeasurements.length} измерений для целей и ${savedMetrics.length} общих метрик из ${analysisData.extractedData.length} найденных показателей`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+});
+
+// Функция для определения категории метрики
+function categorizeMetric(metricName: string): string {
+  const nameLower = metricName.toLowerCase();
+  
+  if (nameLower.includes('recovery') || nameLower.includes('восстановление') || nameLower.includes('hrv')) {
+    return 'recovery';
+  }
+  if (nameLower.includes('sleep') || nameLower.includes('сон') || nameLower.includes('rem')) {
+    return 'sleep';
+  }
+  if (nameLower.includes('workout') || nameLower.includes('тренировка') || nameLower.includes('strain') || 
+      nameLower.includes('exercise') || nameLower.includes('activity')) {
+    return 'workout';
+  }
+  if (nameLower.includes('heart') || nameLower.includes('пульс') || nameLower.includes('bpm') ||
+      nameLower.includes('кровяное') || nameLower.includes('давление')) {
+    return 'health';
+  }
+  if (nameLower.includes('weight') || nameLower.includes('вес') || nameLower.includes('жир') ||
+      nameLower.includes('мышечная') || nameLower.includes('калории') || nameLower.includes('шаги')) {
+    return 'fitness';
+  }
+  
+  return 'fitness'; // default category
+}
 
   } catch (error) {
     console.error('Error in analyze-fitness-data function:', error);

@@ -13,6 +13,7 @@ import CreateChallenge from "./pages/CreateChallenge";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 import CreateGoal from "./pages/CreateGoal";
+import FitnessData from "./pages/FitnessData";
 import WhoopCallback from "./pages/WhoopCallback";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +61,11 @@ const App = () => (
             <Route path="/goals/create" element={
               <ProtectedRoute>
                 <CreateGoal />
+              </ProtectedRoute>
+            } />
+            <Route path="/fitness-data" element={
+              <ProtectedRoute>
+                <FitnessData />
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
