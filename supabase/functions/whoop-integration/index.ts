@@ -244,28 +244,41 @@ async function handleSync(req: Request) {
   let refreshToken: string | null | undefined;
   let expiresIn: number | undefined;
 
+  console.log('Sync request body:', { hasCode: !!body?.code, hasTempTokens: !!body?.tempTokens, userId: user.id });
+
   if (body?.code) {
-    // Обмениваем код на токены здесь (не в callback), чтобы избежать invalid_grant
-    const tokens = await exchangeCodeForTokens(body.code);
-    accessToken = tokens.access_token;
-    refreshToken = tokens.refresh_token || null;
-    expiresIn = tokens.expires_in || 3600;
+    console.log('Processing authorization code for sync');
+    try {
+      // Обмениваем код на токены здесь (не в callback), чтобы избежать invalid_grant
+      const tokens = await exchangeCodeForTokens(body.code);
+      console.log('Successfully exchanged code for tokens');
+      
+      accessToken = tokens.access_token;
+      refreshToken = tokens.refresh_token || null;
+      expiresIn = tokens.expires_in || 3600;
 
-    const { error: saveError } = await supabase
-      .from('whoop_tokens')
-      .upsert({
-        user_id: user.id,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      const { error: saveError } = await supabase
+        .from('whoop_tokens')
+        .upsert({
+          user_id: user.id,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        });
 
-    if (saveError) {
-      console.error('Error saving tokens (code flow):', saveError);
-      throw new Error('Failed to save tokens');
+      if (saveError) {
+        console.error('Error saving tokens (code flow):', saveError);
+        throw new Error('Failed to save tokens');
+      }
+      
+      console.log('Tokens saved successfully to database');
+    } catch (error: any) {
+      console.error('Failed to process authorization code:', error);
+      throw new Error(`Authorization failed: ${error.message}`);
     }
   } else if (body?.tempTokens?.access_token) {
+    console.log('Processing temporary tokens for sync');
     accessToken = body.tempTokens.access_token;
     refreshToken = body.tempTokens.refresh_token || null;
     expiresIn = body.tempTokens.expires_in || 3600;
