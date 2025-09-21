@@ -253,6 +253,53 @@ export type Database = {
           },
         ]
       }
+      metric_values: {
+        Row: {
+          created_at: string
+          external_id: string | null
+          id: string
+          measurement_date: string
+          metric_id: string
+          notes: string | null
+          photo_url: string | null
+          source_data: Json | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          measurement_date?: string
+          metric_id: string
+          notes?: string | null
+          photo_url?: string | null
+          source_data?: Json | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          measurement_date?: string
+          metric_id?: string
+          notes?: string | null
+          photo_url?: string | null
+          source_data?: Json | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metric_values_metric_id_fkey"
+            columns: ["metric_id"]
+            isOneToOne: false
+            referencedRelation: "user_metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -283,6 +330,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      user_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          metric_category: string
+          metric_name: string
+          source: string
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_category: string
+          metric_name: string
+          source: string
+          unit: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_category?: string
+          metric_name?: string
+          source?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -321,7 +404,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_or_get_metric: {
+        Args: {
+          p_metric_category: string
+          p_metric_name: string
+          p_source: string
+          p_unit: string
+          p_user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
