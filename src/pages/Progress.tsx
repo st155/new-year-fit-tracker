@@ -29,6 +29,7 @@ import { ru } from "date-fns/locale";
 import { HomeButton } from "@/components/ui/home-button";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeightMeasurementDialog } from "@/components/measurements/WeightMeasurementDialog";
+import { VO2MaxCard } from "@/components/metrics/VO2MaxCard";
 
 interface Goal {
   id: string;
@@ -466,6 +467,14 @@ const ProgressPage = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* VO2 Max Card - отдельно от целей */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Кардио показатели</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <VO2MaxCard selectedDate={new Date()} showTrend={true} />
+          </div>
+        </div>
 
         {/* Сетка целей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
