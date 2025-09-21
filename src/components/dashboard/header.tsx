@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, Target, Users, LogOut, Settings, Home, Calendar, TrendingUp } from "lucide-react";
+import { Trophy, Target, Users, LogOut, Settings, Home, Calendar, TrendingUp, BarChart3 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardHeaderProps {
@@ -104,15 +104,24 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Home className="h-4 w-4 mr-1" />
-                Дашборд
-              </Button>
-              <Button 
-                variant={location.pathname === '/challenges' ? "default" : "ghost"}
-                size="sm" 
-                onClick={() => navigate('/challenges')}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Calendar className="h-4 w-4 mr-1" />
+                 Дашборд
+               </Button>
+               <Button 
+                 variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                 size="sm" 
+                 onClick={() => navigate('/dashboard')}
+                 className="text-muted-foreground hover:text-foreground"
+               >
+                 <BarChart3 className="h-4 w-4 mr-1" />
+                 Фитнес
+               </Button>
+               <Button 
+                 variant={location.pathname === '/challenges' ? "default" : "ghost"}
+                 size="sm" 
+                 onClick={() => navigate('/challenges')}
+                 className="text-muted-foreground hover:text-foreground"
+               >
+                 <Calendar className="h-4 w-4 mr-1" />
                 Челленджи
               </Button>
               <Button 
