@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Loader2
 } from 'lucide-react';
+import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -255,8 +256,9 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="whoop">Whoop</TabsTrigger>
             <TabsTrigger value="recovery">Восстановление</TabsTrigger>
             <TabsTrigger value="activity">Активность</TabsTrigger>
             <TabsTrigger value="trends">Тренды</TabsTrigger>
@@ -448,6 +450,10 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="whoop" className="space-y-6">
+            <WhoopMetrics selectedDate={selectedDate} />
           </TabsContent>
 
           <TabsContent value="recovery">
