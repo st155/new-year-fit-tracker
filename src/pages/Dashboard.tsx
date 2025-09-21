@@ -62,11 +62,13 @@ const Dashboard = () => {
     heartRate: null
   });
   const [weeklyData, setWeeklyData] = useState<MetricValue[]>([]);
+  const [appleHealthData, setAppleHealthData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      fetchAppleHealthData();
     }
   }, [user, selectedDate]);
 
@@ -165,6 +167,37 @@ const Dashboard = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAppleHealthData = async () => {
+    if (!user) return;
+
+    try {
+      const today = format(selectedDate, 'yyyy-MM-dd');
+      
+      // Получаем агрегированные данные Apple Health за сегодня
+      const { data: dailySummary } = await supabase
+        .from('daily_health_summary')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (dailySummary) {
+        setAppleHealthData(dailySummary);
+        
+        // Обогащаем основные статистики данными Apple Health
+        setTodayStats(prev => ({
+          ...prev,
+          steps: prev.steps || dailySummary.steps,
+          heartRate: prev.heartRate || dailySummary.heart_rate_avg,
+          calories: prev.calories || dailySummary.active_calories
+        }));
+      }
+
+    } catch (error) {
+      console.error('Error fetching Apple Health data:', error);
     }
   };
 
@@ -393,6 +426,11 @@ const Dashboard = () => {
                     <CardTitle className="text-sm font-medium">Шаги</CardTitle>
                     <Activity className="h-4 w-4 text-blue-500" />
                   </div>
+                  {appleHealthData?.steps && (
+                    <Badge variant="secondary" className="w-fit">
+                      🍎 Apple Health
+                    </Badge>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
@@ -402,6 +440,11 @@ const Dashboard = () => {
                       <span className="text-xl text-muted-foreground">—</span>
                     )}
                   </div>
+                  {appleHealthData?.steps && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Цель: {Math.round((todayStats.steps || 0) / 10000 * 100)}% от 10К
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -411,6 +454,11 @@ const Dashboard = () => {
                     <CardTitle className="text-sm font-medium">Пульс</CardTitle>
                     <Heart className="h-4 w-4 text-red-500" />
                   </div>
+                  {appleHealthData?.heart_rate_avg && (
+                    <Badge variant="secondary" className="w-fit">
+                      🍎 Apple Health
+                    </Badge>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
@@ -423,6 +471,11 @@ const Dashboard = () => {
                       <span className="text-xl text-muted-foreground">—</span>
                     )}
                   </div>
+                  {appleHealthData?.heart_rate_min && appleHealthData?.heart_rate_max && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Диапазон: {Math.round(appleHealthData.heart_rate_min)}—{Math.round(appleHealthData.heart_rate_max)} bpm
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
