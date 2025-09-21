@@ -25,21 +25,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Handle successful OAuth login
+        if (event === 'SIGNED_IN' && session?.user) {
+          toast({
+            title: "Добро пожаловать!",
+            description: `Вы вошли как ${session.user.email}`,
+          });
+        }
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const signUp = async (email: string, password: string, username: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -90,24 +100,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
+    try {
+      console.log('Initiating Google OAuth...');
+      
+      // Use current URL origin for better compatibility
+      const baseUrl = window.location.origin;
+      const redirectTo = `${baseUrl}/`;
+      
+      console.log('Redirect URL:', redirectTo);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
 
-    if (error) {
+      if (error) {
+        console.error('Google auth error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('requested path is invalid')) {
+          toast({
+            title: "Ошибка конфигурации",
+            description: "Проверьте настройки Site URL и Redirect URLs в Supabase Authentication > URL Configuration",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Ошибка входа через Google",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      } else {
+        console.log('Google OAuth initiated successfully');
+      }
+
+      return { data, error };
+    } catch (err: any) {
+      console.error('Google auth catch error:', err);
       toast({
-        title: "Ошибка входа через Google",
-        description: error.message,
+        title: "Ошибка входа через Google", 
+        description: "Убедитесь, что Site URL и Redirect URLs настроены правильно в Supabase",
         variant: "destructive"
       });
+      return { error: err };
     }
-
-    return { error };
   };
 
   const signOut = async () => {
@@ -118,6 +161,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Ошибка выхода",
         description: error.message,
         variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "До свидания!",
+        description: "Вы успешно вышли из системы"
       });
     }
 
