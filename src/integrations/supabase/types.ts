@@ -408,6 +408,24 @@ export type Database = {
         }
         Relationships: []
       }
+      whoop_oauth_states: {
+        Row: {
+          created_at: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whoop_tokens: {
         Row: {
           access_token: string
