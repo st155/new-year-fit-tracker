@@ -241,17 +241,37 @@ async function handleCheckStatus(req: Request) {
     );
   }
 
-  // Проверяем наличие токенов
-  const { data: tokenData, error: tokenError } = await supabase
+  // Проверяем наличие токенов - получаем все записи и используем самую свежую
+  const { data: allTokens, error: tokenError } = await supabase
     .from('whoop_tokens')
     .select('id, expires_at, updated_at')
     .eq('user_id', user.id)
-    .maybeSingle();
+    .order('updated_at', { ascending: false });
 
   if (tokenError) {
     console.error('Error checking tokens:', tokenError);
     throw new Error('Failed to check connection status');
   }
+
+  // Если есть несколько токенов, удаляем старые и оставляем только самый новый
+  if (allTokens && allTokens.length > 1) {
+    console.log(`Found ${allTokens.length} token records, cleaning up duplicates`);
+    const latestToken = allTokens[0];
+    const oldTokenIds = allTokens.slice(1).map(t => t.id);
+    
+    const { error: cleanupError } = await supabase
+      .from('whoop_tokens')
+      .delete()
+      .in('id', oldTokenIds);
+      
+    if (cleanupError) {
+      console.error('Error cleaning up duplicate tokens:', cleanupError);
+    } else {
+      console.log(`Cleaned up ${oldTokenIds.length} duplicate token records`);
+    }
+  }
+
+  const tokenData = allTokens && allTokens.length > 0 ? allTokens[0] : null;
 
   const isConnected = tokenData && new Date(tokenData.expires_at) > new Date();
 
@@ -339,11 +359,14 @@ async function handleSync(req: Request, body: any = {}) {
       console.error('Failed to process authorization code:', error?.message);
       // Если код уже использован/просрочен, попробуем использовать уже сохраненные токены
       if (String(error?.message || '').includes('expired') || String(error?.message || '').includes('already been used')) {
-        const { data: existing, error: tokenErr } = await supabase
+        const { data: existingTokens, error: tokenErr } = await supabase
           .from('whoop_tokens')
           .select('access_token, refresh_token, expires_at')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .order('updated_at', { ascending: false });
+          
+        const existing = existingTokens && existingTokens.length > 0 ? existingTokens[0] : null;
+        
         if (!tokenErr && existing && new Date(existing.expires_at) > new Date()) {
           console.log('Using existing valid tokens after invalid_grant');
           accessToken = existing.access_token;
@@ -375,15 +398,28 @@ async function handleSync(req: Request, body: any = {}) {
       throw new Error('Failed to save tokens');
     }
   } else {
-    // Получаем токены из базы данных
-    const { data: tokenData, error: tokenError } = await supabase
+    // Получаем токены из базы данных - используем самый свежий токен
+    const { data: allTokens, error: tokenError } = await supabase
       .from('whoop_tokens')
       .select('access_token, refresh_token, expires_at')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .order('updated_at', { ascending: false });
 
-    if (tokenError || !tokenData) {
+    if (tokenError) {
+      console.error('Error fetching tokens:', tokenError);
+      throw new Error('Failed to fetch Whoop tokens');
+    }
+
+    // Если есть несколько токенов, используем самый свежий и удаляем остальные
+    if (!allTokens || allTokens.length === 0) {
       throw new Error('No Whoop connection found');
+    }
+
+    const tokenData = allTokens[0];
+    
+    // Очищаем дублированные токены если есть
+    if (allTokens.length > 1) {
+      console.log(`Found ${allTokens.length} token records during sync, will cleanup later`);
     }
 
     // Проверяем срок действия токена
