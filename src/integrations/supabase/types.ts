@@ -133,6 +133,66 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_health_summary: {
+        Row: {
+          active_calories: number | null
+          created_at: string
+          date: string
+          distance_km: number | null
+          exercise_minutes: number | null
+          heart_rate_avg: number | null
+          heart_rate_max: number | null
+          heart_rate_min: number | null
+          id: string
+          resting_calories: number | null
+          sleep_hours: number | null
+          source_data: Json | null
+          steps: number | null
+          updated_at: string
+          user_id: string
+          vo2_max: number | null
+          weight: number | null
+        }
+        Insert: {
+          active_calories?: number | null
+          created_at?: string
+          date: string
+          distance_km?: number | null
+          exercise_minutes?: number | null
+          heart_rate_avg?: number | null
+          heart_rate_max?: number | null
+          heart_rate_min?: number | null
+          id?: string
+          resting_calories?: number | null
+          sleep_hours?: number | null
+          source_data?: Json | null
+          steps?: number | null
+          updated_at?: string
+          user_id: string
+          vo2_max?: number | null
+          weight?: number | null
+        }
+        Update: {
+          active_calories?: number | null
+          created_at?: string
+          date?: string
+          distance_km?: number | null
+          exercise_minutes?: number | null
+          heart_rate_avg?: number | null
+          heart_rate_max?: number | null
+          heart_rate_min?: number | null
+          id?: string
+          resting_calories?: number | null
+          sleep_hours?: number | null
+          source_data?: Json | null
+          steps?: number | null
+          updated_at?: string
+          user_id?: string
+          vo2_max?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
@@ -225,6 +285,54 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      health_records: {
+        Row: {
+          created_at: string
+          device: string | null
+          end_date: string | null
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          record_type: string
+          source_name: string | null
+          source_version: string | null
+          start_date: string
+          unit: string | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          end_date?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          record_type: string
+          source_name?: string | null
+          source_version?: string | null
+          start_date: string
+          unit?: string | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          end_date?: string | null
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          record_type?: string
+          source_name?: string | null
+          source_version?: string | null
+          start_date?: string
+          unit?: string | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
       }
       measurements: {
         Row: {
@@ -461,6 +569,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aggregate_daily_health_data: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
       create_or_get_metric: {
         Args: {
           p_metric_category: string

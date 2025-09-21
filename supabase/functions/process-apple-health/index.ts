@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -167,59 +168,185 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     processingPhase = 'download';
     const downloadStart = Date.now();
     
-    // Для файлов больше 100MB создаем только запись об импорте без полной обработки
+    // Для файлов больше 100MB используем стриминговую обработку
     if (listedSize && listedSize > 100 * 1024 * 1024) {
-      await logError(supabase, userId, 'apple_health_large_file_handling', 'Large file detected - creating import record only', {
+      await logError(supabase, userId, 'apple_health_streaming_processing', 'Starting streaming processing for large file', {
         requestId,
-        fileSizeMB: Math.round(listedSize / 1024 / 1024),
-        strategy: 'import_record_only'
+        fileSizeMB: Math.round(listedSize / 1024 / 1024)
       });
 
-      // Создаем метрику для большого файла без полной обработки
-      const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-        p_user_id: userId,
-        p_metric_name: 'AppleHealthImportLarge',
-        p_metric_category: 'import',
-        p_unit: 'MB',
-        p_source: 'apple_health'
+      // Скачиваем и обрабатываем файл по частям
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('apple-health-uploads')
+        .download(filePath);
+
+      if (downloadError) {
+        throw new Error(`Download failed: ${downloadError.message}`);
+      }
+
+      fileSizeBytes = fileData.size;
+      await logError(supabase, userId, 'apple_health_download_success', 'Large file downloaded for streaming processing', {
+        filePath, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
       });
 
-      if (metricId) {
-        const { error: insertError } = await supabase.from('metric_values').insert({
-          user_id: userId,
-          metric_id: metricId,
-          value: Math.round(listedSize / 1024 / 1024),
-          measurement_date: new Date().toISOString().split('T')[0],
-          source_data: {
-            fileName: fileName,
-            fileSize: listedSize,
-            importDate: new Date().toISOString(),
+      // Извлекаем ZIP-архив
+      const arrayBuffer = await fileData.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      let exportXmlContent = '';
+      
+      // Простое извлечение ZIP без сложных библиотек
+      try {
+        // Конвертируем в текст и ищем XML данные
+        const decoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
+        const textContent = decoder.decode(uint8Array);
+        
+        // Ищем XML начало в данных
+        const xmlStart = textContent.indexOf('<?xml');
+        const xmlEnd = textContent.lastIndexOf('</HealthData>');
+        
+        if (xmlStart !== -1 && xmlEnd !== -1) {
+          exportXmlContent = textContent.slice(xmlStart, xmlEnd + '</HealthData>'.length);
+          
+          await logError(supabase, userId, 'apple_health_xml_extracted', 'XML content extracted from ZIP', {
             requestId,
-            processingStatus: 'large_file_received'
-          },
-          external_id: `apple_health_large_${requestId}`,
-          notes: `Large Apple Health file (${Math.round(listedSize / 1024 / 1024)}MB) received - full processing skipped due to size limits`
+            xmlSizeChars: exportXmlContent.length,
+            xmlSizeMB: Math.round(exportXmlContent.length / 1024 / 1024)
+          });
+        } else {
+          throw new Error('No valid XML content found in the ZIP file');
+        }
+      } catch (extractError) {
+        await logError(supabase, userId, 'apple_health_extract_error', 'Failed to extract XML from ZIP', {
+          requestId,
+          error: extractError.message
         });
+        throw extractError;
+      }
 
-        if (!insertError) {
-          await logError(supabase, userId, 'apple_health_large_file_imported', 'Large file import record created', {
+      // Парсим XML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(exportXmlContent, "text/xml");
+      
+      if (!doc) {
+        throw new Error('Failed to parse XML document');
+      }
+
+      const records = doc.querySelectorAll('Record');
+      await logError(supabase, userId, 'apple_health_records_found', 'Health records found in XML', { 
+        requestId,
+        recordCount: records.length
+      });
+
+      // Фильтруем нужные типы данных
+      const targetTypes = [
+        'HKQuantityTypeIdentifierStepCount',
+        'HKQuantityTypeIdentifierVO2Max', 
+        'HKQuantityTypeIdentifierBodyMass',
+        'HKQuantityTypeIdentifierHeartRate',
+        'HKQuantityTypeIdentifierActiveEnergyBurned',
+        'HKQuantityTypeIdentifierBasalEnergyBurned',
+        'HKQuantityTypeIdentifierAppleExerciseTime',
+        'HKQuantityTypeIdentifierDistanceWalkingRunning',
+        'HKCategoryTypeIdentifierSleepAnalysis'
+      ];
+
+      let processedCount = 0;
+      const batchSize = 100;
+      const processedDates = new Set();
+
+      // Обрабатываем записи батчами
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = Array.from(records).slice(i, i + batchSize);
+        const healthRecords = [];
+        
+        for (const record of batch) {
+          const type = record.getAttribute('type');
+          const value = record.getAttribute('value');
+          const unit = record.getAttribute('unit');
+          const startDate = record.getAttribute('startDate');
+          const endDate = record.getAttribute('endDate');
+          const sourceName = record.getAttribute('sourceName');
+          const sourceVersion = record.getAttribute('sourceVersion');
+          const device = record.getAttribute('device');
+          
+          if (type && targetTypes.includes(type) && value && startDate) {
+            const numericValue = parseFloat(value);
+            if (!isNaN(numericValue)) {
+              healthRecords.push({
+                user_id: userId,
+                record_type: type,
+                value: numericValue,
+                unit: unit || '',
+                start_date: startDate,
+                end_date: endDate,
+                source_name: sourceName,
+                source_version: sourceVersion,
+                device: device,
+                metadata: {
+                  batch_number: Math.floor(i / batchSize) + 1,
+                  processing_id: requestId
+                },
+                external_id: `apple_health_${type}_${startDate}_${numericValue}_${requestId.slice(0, 8)}`
+              });
+              
+              processedDates.add(new Date(startDate).toISOString().split('T')[0]);
+            }
+          }
+        }
+
+        // Вставляем батч записей
+        if (healthRecords.length > 0) {
+          const { error: insertError } = await supabase
+            .from('health_records')
+            .upsert(healthRecords, { 
+              onConflict: 'user_id,external_id',
+              ignoreDuplicates: true 
+            });
+
+          if (insertError) {
+            await logError(supabase, userId, 'apple_health_batch_error', 'Failed to insert health records batch', {
+              requestId,
+              batchNumber: Math.floor(i / batchSize) + 1,
+              recordsInBatch: healthRecords.length,
+              error: insertError.message
+            });
+          } else {
+            processedCount += healthRecords.length;
+          }
+        }
+
+        // Логируем прогресс каждые 10 батчей
+        if ((Math.floor(i / batchSize) + 1) % 10 === 0) {
+          await logError(supabase, userId, 'apple_health_processing_progress', 'Processing progress update', { 
             requestId,
-            metricId,
-            fileSizeMB: Math.round(listedSize / 1024 / 1024)
+            processedBatches: Math.floor(i / batchSize) + 1,
+            totalBatches: Math.ceil(records.length / batchSize),
+            recordsProcessed: processedCount,
+            progressPercent: Math.round((i / records.length) * 100)
           });
         }
       }
 
-      // Удаляем файл после создания записи
-      await supabase.storage.from('apple-health-uploads').remove([filePath]);
-      
-      await logError(supabase, userId, 'apple_health_processing_complete', 'Large Apple Health file processing completed', {
+      // Агрегируем данные по дням
+      for (const dateStr of processedDates) {
+        await supabase.rpc('aggregate_daily_health_data', {
+          p_user_id: userId,
+          p_date: dateStr
+        });
+      }
+
+      await logError(supabase, userId, 'apple_health_processing_complete', 'Apple Health data processing completed', {
         requestId,
-        fileName,
-        fileSizeMB: Math.round(listedSize / 1024 / 1024),
-        strategy: 'large_file_import_only',
-        recordsProcessed: 1
+        totalRecords: records.length,
+        processedRecords: processedCount,
+        uniqueDates: processedDates.size,
+        targetTypes: targetTypes,
+        fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
       });
+
+      // Удаляем обработанный файл
+      await supabase.storage.from('apple-health-uploads').remove([filePath]);
       
       return;
     }

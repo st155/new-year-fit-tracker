@@ -27,6 +27,7 @@ import { TrendsAnalysis } from '@/components/dashboard/trends-analysis';
 import { HomeButton } from '@/components/ui/home-button';
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
 
 interface MetricValue {
   id: string;
@@ -455,6 +456,9 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Apple Health Summary */}
+            <AppleHealthSummary />
           </TabsContent>
 
           <TabsContent value="whoop" className="space-y-6">
