@@ -170,6 +170,27 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                   setUploadProgress(p => Math.max(p, 80));
                   setProcessingPhase('Файл скачан для обработки...');
                   break;
+                case 'apple_health_streaming_start':
+                  setUploadProgress(p => Math.max(p, 72));
+                  setProcessingPhase('Запущена стриминговая обработка большого файла...');
+                  break;
+                case 'apple_health_streaming_active':
+                  setUploadProgress(p => Math.max(p, 80));
+                  setProcessingPhase('Идет потоковая обработка данных Apple Health...');
+                  break;
+                case 'apple_health_streaming_progress': {
+                  try {
+                    const details = JSON.parse(String(latestLog.error_details) || '{}');
+                    const rp = Number(details.recordsProcessed || 0);
+                    const approx = 85 + Math.min(14, Math.floor(rp / 1000));
+                    setUploadProgress(p => Math.max(p, Math.min(99, approx)));
+                    setProcessingPhase(`Обрабатываем записи... (${rp}+ шт.)`);
+                  } catch {
+                    setUploadProgress(p => Math.max(p, 88));
+                    setProcessingPhase('Идет стриминговая обработка...');
+                  }
+                  break;
+                }
                 case 'apple_health_background_phase':
               const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
                 if (phaseData.phase === 'data_extraction') {
@@ -183,12 +204,19 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                       setProcessingPhase('Сохраняем данные в базу...');
                     }
                   break;
+                case 'apple_health_streaming_complete':
+                  setUploadProgress(100);
+                  setProcessingPhase('Обработка большого файла завершена!');
+                  setUploadStatus('complete');
+                  clearInterval(statusInterval);
+                  break;
                 case 'apple_health_processing_complete':
                   setUploadProgress(100);
                   setProcessingPhase('Обработка завершена!');
                   setUploadStatus('complete');
                   clearInterval(statusInterval);
                   break;
+                case 'apple_health_streaming_error':
                 case 'apple_health_background_processing_error':
                   setUploadStatus('error');
                   clearInterval(statusInterval);
