@@ -346,61 +346,177 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
       phase: processingPhase, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
     });
 
-    // 4) Извлечение данных
+    // 4) Извлечение и парсинг XML данных
     processingPhase = 'data_extraction';
-    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+    await logError(supabase, userId, 'apple_health_background_phase', 'Starting XML parsing', { 
       phase: processingPhase, 
       requestId,
-      status: 'starting_extraction'
+      status: 'extracting_xml_from_zip'
     });
-    await new Promise(r => setTimeout(r, 2000));
 
-    // 5) Парсинг XML
+    const arrayBuffer = await fileData.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Извлекаем XML из ZIP архива
+    const textDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
+    const fullText = textDecoder.decode(uint8Array);
+    
+    // Находим XML содержимое
+    const xmlStart = fullText.indexOf('<?xml');
+    const healthDataStart = fullText.indexOf('<HealthData');
+    const healthDataEnd = fullText.lastIndexOf('</HealthData>');
+    
+    if (xmlStart === -1 || healthDataEnd === -1) {
+      throw new Error('No valid Apple Health XML found in file');
+    }
+    
+    const xmlContent = fullText.slice(xmlStart, healthDataEnd + '</HealthData>'.length);
+    
+    await logError(supabase, userId, 'apple_health_xml_extracted', 'XML content extracted', {
+      requestId,
+      xmlSizeChars: xmlContent.length,
+      xmlSizeMB: Math.round(xmlContent.length / 1024 / 1024)
+    });
+
+    // 5) Парсинг XML и извлечение данных
     processingPhase = 'xml_parsing';
-    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+    await logError(supabase, userId, 'apple_health_background_phase', 'Parsing health data', { 
       phase: processingPhase, 
-      requestId,
-      status: 'parsing_health_data'
+      requestId
     });
-    await new Promise(r => setTimeout(r, 3000));
 
-    // 6) Запись в БД - создаем реальные записи
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlContent, 'text/xml');
+    
+    // Извлекаем записи здоровья
+    const records = doc.querySelectorAll('Record');
+    const workouts = doc.querySelectorAll('Workout');
+    
+    await logError(supabase, userId, 'apple_health_records_found', 'Health records found in XML', {
+      requestId,
+      recordsCount: records.length,
+      workoutsCount: workouts.length
+    });
+
+    // 6) Запись в БД - сохраняем реальные данные здоровья
     processingPhase = 'database_insertion';
-    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+    await logError(supabase, userId, 'apple_health_background_phase', 'Saving health records to database', { 
       phase: processingPhase, 
       requestId,
-      status: 'saving_to_database'
+      recordsToSave: records.length
     });
     
-    // Создаем метрику для импорта Apple Health
+    let recordsCreated = 0;
+    let batchSize = 100; // Обрабатываем по 100 записей за раз
+    
+    // Сохраняем записи здоровья батчами
+    for (let i = 0; i < records.length; i += batchSize) {
+      const batch = Array.from(records).slice(i, i + batchSize);
+      const healthRecords = [];
+      
+      for (const record of batch) {
+        const type = record.getAttribute('type');
+        const value = parseFloat(record.getAttribute('value') || '0');
+        const unit = record.getAttribute('unit');
+        const startDate = record.getAttribute('startDate');
+        const endDate = record.getAttribute('endDate');
+        const sourceName = record.getAttribute('sourceName');
+        const sourceVersion = record.getAttribute('sourceVersion');
+        const device = record.getAttribute('device');
+        
+        if (type && startDate && !isNaN(value)) {
+          healthRecords.push({
+            user_id: userId,
+            record_type: type,
+            value: value,
+            unit: unit || '',
+            start_date: startDate,
+            end_date: endDate || startDate,
+            source_name: sourceName || 'Apple Health',
+            source_version: sourceVersion,
+            device: device,
+            metadata: {
+              imported_from: 'apple_health_export',
+              request_id: requestId,
+              batch_number: Math.floor(i / batchSize) + 1
+            }
+          });
+        }
+      }
+      
+      if (healthRecords.length > 0) {
+        const { error: batchError } = await supabase
+          .from('health_records')
+          .insert(healthRecords);
+          
+        if (!batchError) {
+          recordsCreated += healthRecords.length;
+        } else {
+          await logError(supabase, userId, 'apple_health_batch_error', 'Error inserting batch', {
+            requestId,
+            batchNumber: Math.floor(i / batchSize) + 1,
+            batchSize: healthRecords.length,
+            error: batchError.message
+          });
+        }
+      }
+      
+      // Логируем прогресс каждые 500 записей
+      if ((i + batchSize) % 500 === 0) {
+        await logError(supabase, userId, 'apple_health_progress', 'Processing progress', {
+          requestId,
+          processed: Math.min(i + batchSize, records.length),
+          total: records.length,
+          recordsCreated
+        });
+      }
+    }
+    
+    // Создаем агрегированные дневные сводки
+    await logError(supabase, userId, 'apple_health_aggregation', 'Creating daily summaries', {
+      requestId,
+      recordsProcessed: recordsCreated
+    });
+    
+    // Вызываем функцию агрегации для последних 30 дней
+    const endDate = new Date();
+    for (let d = 30; d >= 0; d--) {
+      const date = new Date(endDate);
+      date.setDate(date.getDate() - d);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      await supabase.rpc('aggregate_daily_health_data', {
+        p_user_id: userId,
+        p_date: dateStr
+      });
+    }
+    
+    // Создаем метрику для импорта
     const { data: metricId } = await supabase.rpc('create_or_get_metric', {
       p_user_id: userId,
       p_metric_name: 'AppleHealthImport',
       p_metric_category: 'import',
-      p_unit: 'MB',
+      p_unit: 'records',
       p_source: 'apple_health'
     });
 
-    let recordsCreated = 0;
     if (metricId) {
-      // Создаем запись о импорте
-      const { error: insertError } = await supabase.from('metric_values').insert({
+      await supabase.from('metric_values').insert({
         user_id: userId,
         metric_id: metricId,
-        value: Math.round(fileSizeBytes / 1024 / 1024), // Размер в MB
+        value: recordsCreated,
         measurement_date: new Date().toISOString().split('T')[0],
         source_data: {
           fileName: filePath.split('/').pop(),
           fileSize: fileSizeBytes,
           importDate: new Date().toISOString(),
           requestId,
-          processingPhase: 'completed'
+          recordsImported: recordsCreated,
+          totalRecordsInFile: records.length
         },
         external_id: `apple_health_import_${requestId}`,
-        notes: `Apple Health import completed - ${Math.round(fileSizeBytes / 1024 / 1024)}MB processed`
+        notes: `Apple Health import: ${recordsCreated}/${records.length} records processed`
       });
-
-      if (!insertError) recordsCreated = 1;
     }
 
     const results = {
