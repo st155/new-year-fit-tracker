@@ -718,6 +718,8 @@ async function saveRecoveryData(userId: string, records: any[]) {
         measurement_date: (record.created_at || '').split('T')[0],
         external_id: record.cycle_id,
         source_data: record,
+      }, {
+        onConflict: 'metric_id,measurement_date,external_id'
       });
 
     if (!error) savedCount++;
@@ -748,6 +750,8 @@ async function saveSleepData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: record.id,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -818,6 +822,8 @@ async function saveWorkoutData(userId: string, records: any[]) {
           external_id: record.id,
           source_data: record,
           notes: record.sport_name || record.sport?.name || null,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -838,6 +844,8 @@ async function saveWorkoutData(userId: string, records: any[]) {
           external_id: `${record.id}_hr`,
           source_data: record,
           notes: record.sport_name || record.sport?.name || null,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -858,6 +866,8 @@ async function saveWorkoutData(userId: string, records: any[]) {
           external_id: `${record.id}_max_hr`,
           source_data: record,
           notes: record.sport_name || record.sport?.name || null,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -879,6 +889,8 @@ async function saveWorkoutData(userId: string, records: any[]) {
           external_id: `${record.id}_calories`,
           source_data: record,
           notes: record.sport_name || record.sport?.name || null,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -912,6 +924,8 @@ async function saveBodyData(userId: string, records: any[]) {
           measurement_date: new Date().toISOString().split('T')[0],
           external_id: `whoop_height`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -931,6 +945,8 @@ async function saveBodyData(userId: string, records: any[]) {
           measurement_date: new Date().toISOString().split('T')[0],
           external_id: `whoop_weight`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -950,6 +966,8 @@ async function saveBodyData(userId: string, records: any[]) {
           measurement_date: new Date().toISOString().split('T')[0],
           external_id: `whoop_max_hr`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -1022,6 +1040,8 @@ async function saveCycleData(userId: string, records: any[]) {
           measurement_date: record.start.split('T')[0],
           external_id: `${record.id}_vo2max`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
@@ -1041,6 +1061,8 @@ async function saveCycleData(userId: string, records: any[]) {
           measurement_date: record.start.split('T')[0],
           external_id: `${record.id}_vo2max_metrics`,
           source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
         });
 
       if (!error) savedCount++;
