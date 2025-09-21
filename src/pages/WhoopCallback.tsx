@@ -52,6 +52,7 @@ const WhoopCallback = () => {
           const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
             body: { 
               action: 'sync',
+              code,
               tempTokens: JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}')
             }
           });

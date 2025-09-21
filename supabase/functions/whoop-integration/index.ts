@@ -141,37 +141,24 @@ async function handleCallback(req: Request) {
   }
 
   try {
-    // Получаем токены
-    const tokens = await exchangeCodeForTokens(code);
-    console.log('Received tokens from Whoop');
-
-    // Получаем информацию о пользователе из Whoop
-    const userInfo = await fetchWhoopUserInfo(tokens.access_token);
-    console.log('Received user info:', userInfo);
-
-    // Сохраняем токены во временном хранилище для последующего использования
-    const tempTokensScript = `
-      localStorage.setItem('whoop_temp_tokens', JSON.stringify({
-        access_token: '${tokens.access_token}',
-        refresh_token: '${tokens.refresh_token || ''}',
-        expires_in: ${tokens.expires_in || 3600}
-      }));
-    `;
-
-    // Перенаправляем на нашу callback страницу с параметрами
+    // Не обмениваем код здесь, чтобы избежать invalid_grant и проблем с кросс-доменным localStorage
     const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?code=${code}&state=${state}&success=true`;
     
     const html = `
       <!DOCTYPE html>
       <html>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Whoop Authorization Success</title>
         </head>
         <body>
           <script>
-            ${tempTokensScript}
-            window.location.href = '${redirectUrl}';
+            // Перенаправляем в приложение, где произойдет обмен кода на токены
+            window.location.replace('${redirectUrl}');
           </script>
+          <noscript>
+            <a href="${redirectUrl}">Continue</a>
+          </noscript>
         </body>
       </html>
     `;
@@ -251,26 +238,50 @@ async function handleSync(req: Request) {
     throw new Error('Invalid user token');
   }
 
-  // Сначала проверяем, есть ли временные токены в запросе
+  // Сначала проверяем, есть ли временные токены или код авторизации в запросе
   const body = await req.json().catch(() => ({}));
-  let accessToken = body.tempTokens?.access_token;
-  let refreshToken = body.tempTokens?.refresh_token;
-  let expiresIn = body.tempTokens?.expires_in;
+  let accessToken: string | undefined;
+  let refreshToken: string | null | undefined;
+  let expiresIn: number | undefined;
 
-  if (accessToken) {
-    // Сохраняем токены в базу данных (refresh может отсутствовать у Whoop)
+  if (body?.code) {
+    // Обмениваем код на токены здесь (не в callback), чтобы избежать invalid_grant
+    const tokens = await exchangeCodeForTokens(body.code);
+    accessToken = tokens.access_token;
+    refreshToken = tokens.refresh_token || null;
+    expiresIn = tokens.expires_in || 3600;
+
     const { error: saveError } = await supabase
       .from('whoop_tokens')
       .upsert({
         user_id: user.id,
         access_token: accessToken,
-        refresh_token: refreshToken || null,
+        refresh_token: refreshToken,
         expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
         updated_at: new Date().toISOString()
       });
 
     if (saveError) {
-      console.error('Error saving tokens:', saveError);
+      console.error('Error saving tokens (code flow):', saveError);
+      throw new Error('Failed to save tokens');
+    }
+  } else if (body?.tempTokens?.access_token) {
+    accessToken = body.tempTokens.access_token;
+    refreshToken = body.tempTokens.refresh_token || null;
+    expiresIn = body.tempTokens.expires_in || 3600;
+
+    const { error: saveError } = await supabase
+      .from('whoop_tokens')
+      .upsert({
+        user_id: user.id,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (saveError) {
+      console.error('Error saving tokens (temp flow):', saveError);
       throw new Error('Failed to save tokens');
     }
   } else {
