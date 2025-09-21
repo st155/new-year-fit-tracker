@@ -170,10 +170,39 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
           description: 'Ваш браузер заблокировал всплывающие окна. Используйте кнопку "Открыть ссылку" ниже.',
         });
       } else {
+        // Слушаем сообщение об успешной авторизации из popup
+        const handleMessage = async (event: MessageEvent) => {
+          if (event?.data?.type === 'whoop-auth-success' && event.data.code) {
+            window.removeEventListener('message', handleMessage);
+            try {
+              await syncDataWithCode(event.data.code);
+            } finally {
+              try { popup.close(); } catch {}
+              setIsConnecting(false);
+              // Обновим статус/данные
+              setTimeout(() => {
+                loadWhoopStatus();
+                loadRecentData();
+              }, 500);
+            }
+          } else if (event?.data?.type === 'whoop-auth-error') {
+            window.removeEventListener('message', handleMessage);
+            try { popup.close(); } catch {}
+            setIsConnecting(false);
+            toast({
+              title: 'Ошибка авторизации Whoop',
+              description: String(event.data?.error || 'Неизвестная ошибка'),
+              variant: 'destructive'
+            });
+          }
+        };
+        window.addEventListener('message', handleMessage);
+
         // Проверяем закрытие popup
         const checkClosed = setInterval(() => {
           if (popup.closed) {
             clearInterval(checkClosed);
+            window.removeEventListener('message', handleMessage);
             setIsConnecting(false);
             // Проверяем статус подключения после закрытия popup
             setTimeout(() => {
@@ -304,6 +333,38 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     }
   };
 
+  // Новый вариант: завершаем OAuth в popup, получаем code через postMessage и сразу синхронизируем
+  const syncDataWithCode = async (code: string) => {
+    try {
+      setIsSyncing(true);
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'sync', code }
+      });
+      if (error) throw error;
+
+      toast({
+        title: 'Whoop подключен',
+        description: `Синхронизировано ${data.syncResult?.totalSaved || 0} записей.`,
+      });
+
+      await loadWhoopStatus();
+      await loadRecentData();
+    } catch (error: any) {
+      console.error('Sync with code error:', error);
+      await ErrorLogger.logWhoopError(
+        'Whoop sync with code failed',
+        { error: error.message },
+        userId
+      );
+      toast({
+        title: 'Ошибка подключения',
+        description: error.message || 'Не удалось завершить подключение Whoop.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   const handleDisconnect = async () => {
     try {
       setIsDisconnecting(true);

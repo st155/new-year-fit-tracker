@@ -154,7 +154,23 @@ async function handleCallback(req: Request) {
         </head>
         <body>
           <script>
-            window.location.replace('${redirectUrl}');
+            (function(){
+              try {
+                if (window.opener && !window.opener.closed) {
+                  window.opener.postMessage({
+                    type: 'whoop-auth-success',
+                    code: '${code}',
+                    state: '${state}'
+                  }, '*');
+                  window.close();
+                } else {
+                  // Fallback: редиректим в основное приложение
+                  window.location.replace('${redirectUrl}');
+                }
+              } catch (e) {
+                window.location.replace('${redirectUrl}');
+              }
+            })();
           </script>
           <noscript>
             <a href="${redirectUrl}">Continue</a>
