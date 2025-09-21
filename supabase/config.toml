@@ -1,4 +1,10 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.whoop-integration]
+verify_jwt = true
+
 [functions.process-apple-health]
+verify_jwt = true
+
+[functions.apple-health-import]
 verify_jwt = true
