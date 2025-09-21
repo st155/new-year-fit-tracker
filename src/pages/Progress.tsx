@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera, Edit } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera, Edit, Scale } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +15,8 @@ import { GarminIntegration } from "@/components/integrations/GarminIntegration";
 import { ErrorLogsViewer } from "@/components/ui/error-logs-viewer";
 import { AppTestSuite } from "@/components/ui/app-test-suite";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
+import { WeightTracker } from "@/components/weight/WeightTracker";
+import { GoalEditor } from "@/components/goals/GoalEditor";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +46,7 @@ interface Measurement {
   measurement_date: string;
   notes?: string;
   goal_id: string;
+  photo_url?: string;
 }
 
 const ProgressPage = () => {
@@ -323,6 +326,10 @@ const ProgressPage = () => {
                           onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
                         />
                       </div>
+
+                      <Button onClick={addMeasurement} className="w-full">
+                        Добавить измерение
+                      </Button>
                     </TabsContent>
 
                     <TabsContent value="manual-photo" className="space-y-4">
@@ -348,7 +355,6 @@ const ProgressPage = () => {
                         <AIPhotoUpload
                           onDataExtracted={(result) => {
                             if (result.success && result.saved) {
-                              // Обновляем данные после успешного анализа
                               fetchGoalsAndMeasurements();
                               setIsAddDialogOpen(false);
                               setMeasurementForm({ value: '', notes: '', measurement_date: new Date().toISOString().split('T')[0], photo_url: '' });
@@ -383,26 +389,27 @@ const ProgressPage = () => {
                           <ul className="space-y-1">
                             <li>• Подключите все доступные устройства для полной картины здоровья</li>
                             <li>• Данные автоматически разделяются между целями и общей статистикой</li>
-                            <li>• Просматривайте полную историю на странице "Данные трекеров"</li>
+                            <li>• Интеграции работают в фоновом режиме</li>
                           </ul>
                         </div>
                       </div>
                     </TabsContent>
 
                     <TabsContent value="test" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
-                      <AppTestSuite />
+                      <div className="space-y-4 pr-2">
+                        <AppTestSuite />
+                        <ErrorLogsViewer />
+                      </div>
                     </TabsContent>
-
-                    <Button onClick={addMeasurement} className="w-full bg-gradient-primary hover:opacity-90">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить измерение
-                    </Button>
                   </Tabs>
                 </DialogContent>
               </Dialog>
             </div>
           </div>
         </div>
+
+        {/* Контроль веса */}
+        <WeightTracker className="mb-8" />
 
         {/* Инструкция для новых пользователей */}
         {goals.length === 0 && (
@@ -455,17 +462,16 @@ const ProgressPage = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg">{goal.goal_name}</h3>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
-                          onClick={() => navigate(`/goals/edit/${goal.id}`)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
+                        <GoalEditor 
+                          goal={goal} 
+                          onGoalUpdated={fetchGoalsAndMeasurements}
+                        />
                       </div>
                       <Badge className={getGoalTypeColor(goal.goal_type)}>
-                        {goal.goal_type}
+                        {goal.goal_type === 'strength' ? 'Сила' :
+                         goal.goal_type === 'cardio' ? 'Кардио' :
+                         goal.goal_type === 'endurance' ? 'Выносливость' :
+                         'Состав тела'}
                       </Badge>
                     </div>
                     {trend && (
@@ -501,13 +507,23 @@ const ProgressPage = () => {
                   </div>
 
                   {latestMeasurement && (
-                    <div className="pt-2 border-t border-border/50">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(latestMeasurement.measurement_date), 'dd MMM yyyy', { locale: ru })}
-                      </div>
+                    <div className="text-xs text-muted-foreground">
+                      Последнее: {format(new Date(latestMeasurement.measurement_date), 'd MMM', { locale: ru })}
                     </div>
                   )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedGoal(goal);
+                      setIsAddDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить измерение
+                  </Button>
                 </div>
               </FitnessCard>
             );
@@ -515,79 +531,11 @@ const ProgressPage = () => {
         </div>
 
         {/* Галерея прогресса */}
-        <ProgressGallery />
-
-        {/* Системные функции */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Системные функции</CardTitle>
-            <CardDescription>
-              Тестирование, логи ошибок и диагностика приложения
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="logs" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="logs">Логи ошибок</TabsTrigger>
-                <TabsTrigger value="test">Тестирование</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="logs" className="space-y-4">
-                <ErrorLogsViewer />
-              </TabsContent>
-
-              <TabsContent value="test" className="space-y-4">
-                <AppTestSuite />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Недавние измерения */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Недавние измерения
-            </CardTitle>
-            <CardDescription>
-              Ваши последние результаты
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {measurements.slice(0, 10).map((measurement) => {
-                const goal = goals.find(g => g.id === measurement.goal_id);
-                return (
-                  <div key={measurement.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                    <div>
-                      <h4 className="font-medium">{goal?.goal_name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(measurement.measurement_date), 'dd MMM yyyy', { locale: ru })}
-                      </p>
-                      {measurement.notes && (
-                        <p className="text-xs text-muted-foreground mt-1">{measurement.notes}</p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-lg">
-                        {measurement.value} {measurement.unit}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {measurements.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Пока нет измерений</p>
-                  <p className="text-sm">Добавьте первое измерение, чтобы начать отслеживать прогресс</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {measurements.some(m => m.photo_url) && (
+          <div className="mb-8">
+            <ProgressGallery />
+          </div>
+        )}
       </div>
     </div>
   );

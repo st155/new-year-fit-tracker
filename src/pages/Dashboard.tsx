@@ -28,6 +28,7 @@ import { HomeButton } from '@/components/ui/home-button';
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
+import { QuickWeightTracker } from '@/components/dashboard/quick-weight-tracker';
 
 interface MetricValue {
   id: string;
@@ -398,7 +399,9 @@ const Dashboard = () => {
             </div>
 
             {/* Дополнительные метрики */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <QuickWeightTracker />
+              
               <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
