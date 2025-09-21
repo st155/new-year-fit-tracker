@@ -191,18 +191,31 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
       phase: processingPhase, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
     });
 
-    // 4) Извлечение
+    // 4) Извлечение данных
     processingPhase = 'data_extraction';
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+      phase: processingPhase, 
+      requestId,
+      status: 'starting_extraction'
+    });
     await new Promise(r => setTimeout(r, 2000));
-    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { phase: processingPhase, requestId });
 
     // 5) Парсинг XML
     processingPhase = 'xml_parsing';
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+      phase: processingPhase, 
+      requestId,
+      status: 'parsing_health_data'
+    });
     await new Promise(r => setTimeout(r, 3000));
-    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { phase: processingPhase, requestId });
 
     // 6) Запись в БД - создаем реальные записи
     processingPhase = 'database_insertion';
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { 
+      phase: processingPhase, 
+      requestId,
+      status: 'saving_to_database'
+    });
     
     // Создаем метрику для импорта Apple Health
     const { data: metricId } = await supabase.rpc('create_or_get_metric', {

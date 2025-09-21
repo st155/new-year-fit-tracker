@@ -20,6 +20,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete' | 'error'>('idle');
   const [uploadResult, setUploadResult] = useState<any>(null);
+  const [processingPhase, setProcessingPhase] = useState<string>('');
+  const [requestId, setRequestId] = useState<string>('');
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -76,6 +78,15 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
 
       console.log(`Upload path: ${filePath}`);
 
+      // Реалистичное отслеживание прогресса загрузки
+      const uploadProgressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev < 30) return prev + 2;
+          if (prev < 50) return prev + 1;
+          return prev;
+        });
+      }, 200);
+
       // Загружаем файл в Supabase Storage с увеличенным timeout
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('apple-health-uploads')
@@ -84,14 +95,16 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           upsert: false
         });
 
+      clearInterval(uploadProgressInterval);
+      
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
       console.log('File uploaded successfully:', uploadData);
-
-      setUploadProgress(50);
+      setUploadProgress(60);
+      setProcessingPhase('Файл загружен, начинаем обработку...');
       setUploadStatus('processing');
 
       // Отправляем файл на обработку в Edge Function
@@ -111,8 +124,82 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         throw new Error(`Processing failed: ${processError.message || 'Edge Function returned an error'}`);
       }
 
-      setUploadProgress(100);
-      setUploadStatus('complete');
+      // Отслеживаем прогресс фоновой обработки
+      const currentRequestId = processData?.results?.requestId;
+      setRequestId(currentRequestId);
+      
+      if (currentRequestId) {
+        setUploadProgress(70);
+        setProcessingPhase('Фоновая обработка запущена...');
+        
+        // Проверяем статус обработки каждые 3 секунды
+        const statusInterval = setInterval(async () => {
+          try {
+            const { data: logs } = await supabase
+              .from('error_logs')
+              .select('*')
+              .eq('source', 'apple_health')
+              .contains('error_details', { requestId: currentRequestId })
+              .order('created_at', { ascending: false })
+              .limit(5);
+
+            if (logs && logs.length > 0) {
+              const latestLog = logs[0];
+              const phase = latestLog.error_type;
+              
+              // Обновляем прогресс в зависимости от фазы
+              switch (phase) {
+                case 'apple_health_file_found':
+                  setUploadProgress(75);
+                  setProcessingPhase('Файл найден в хранилище...');
+                  break;
+                case 'apple_health_download_success':
+                  setUploadProgress(80);
+                  setProcessingPhase('Файл скачан для обработки...');
+                  break;
+                case 'apple_health_background_phase':
+              const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
+              if (phaseData.phase === 'data_extraction') {
+                    setUploadProgress(85);
+                    setProcessingPhase('Извлекаем данные из архива...');
+                  } else if (phaseData.phase === 'xml_parsing') {
+                    setUploadProgress(90);
+                    setProcessingPhase('Анализируем данные здоровья...');
+                  } else if (phaseData.phase === 'database_insertion') {
+                    setUploadProgress(95);
+                    setProcessingPhase('Сохраняем данные в базу...');
+                  }
+                  break;
+                case 'apple_health_processing_complete':
+                  setUploadProgress(100);
+                  setProcessingPhase('Обработка завершена!');
+                  setUploadStatus('complete');
+                  clearInterval(statusInterval);
+                  break;
+                case 'apple_health_background_processing_error':
+                  setUploadStatus('error');
+                  clearInterval(statusInterval);
+                  throw new Error('Ошибка фоновой обработки');
+              }
+            }
+          } catch (error) {
+            console.error('Error checking status:', error);
+          }
+        }, 3000);
+
+        // Автоматически останавливаем проверку через 5 минут
+        setTimeout(() => {
+          clearInterval(statusInterval);
+          if (uploadStatus === 'processing') {
+            setUploadProgress(100);
+            setUploadStatus('complete');
+            setProcessingPhase('Обработка может продолжаться в фоновом режиме');
+          }
+        }, 5 * 60 * 1000);
+      } else {
+        setUploadProgress(100);
+        setUploadStatus('complete');
+      }
       setUploadResult(processData);
 
       // Показываем информацию о начале фоновой обработки
@@ -170,6 +257,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     setUploadStatus('idle');
     setUploadProgress(0);
     setUploadResult(null);
+    setProcessingPhase('');
+    setRequestId('');
   };
 
   return (
@@ -240,6 +329,16 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               <p className="text-sm text-muted-foreground">
                 {uploadProgress.toFixed(0)}%
               </p>
+              {processingPhase && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {processingPhase}
+                </p>
+              )}
+              {requestId && (
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  ID запроса: {requestId.slice(0, 8)}...
+                </p>
+              )}
             </div>
             <Alert>
               <AlertTriangle className="h-4 w-4" />
