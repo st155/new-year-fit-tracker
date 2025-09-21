@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { PhotoUpload } from "@/components/ui/photo-upload";
+import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -240,9 +241,10 @@ const ProgressPage = () => {
                   </DialogHeader>
                   
                   <Tabs defaultValue="measurement" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="measurement">Измерение</TabsTrigger>
-                      <TabsTrigger value="photo">Фото прогресса</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="measurement">Ручной ввод</TabsTrigger>
+                      <TabsTrigger value="photo">ИИ-анализ</TabsTrigger>
+                      <TabsTrigger value="manual-photo">Фото прогресса</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="measurement" className="space-y-4">
@@ -298,16 +300,40 @@ const ProgressPage = () => {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="photo" className="space-y-4">
+                    <TabsContent value="manual-photo" className="space-y-4">
                       <div>
                         <Label className="text-base font-medium">Фото прогресса</Label>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Добавьте фото для отслеживания визуального прогресса
+                          Добавьте фото для визуального отслеживания прогресса
                         </p>
                         <PhotoUpload
                           onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
                           existingPhotoUrl={measurementForm.photo_url}
-                          label="Добавить фото измерения"
+                          label="Добавить фото прогресса"
+                        />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="photo" className="space-y-4">
+                      <div>
+                        <Label className="text-base font-medium">Скриншот фитнес-трекера</Label>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Загрузите скриншот с данными трекера - ИИ автоматически извлечет все показатели
+                        </p>
+                        <AIPhotoUpload
+                          onDataExtracted={(result) => {
+                            if (result.success && result.saved) {
+                              // Обновляем данные после успешного анализа
+                              fetchGoalsAndMeasurements();
+                              setIsAddDialogOpen(false);
+                              setMeasurementForm({ value: '', notes: '', measurement_date: new Date().toISOString().split('T')[0], photo_url: '' });
+                              setSelectedGoal(null);
+                            }
+                          }}
+                          onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
+                          existingPhotoUrl={measurementForm.photo_url}
+                          goalId={selectedGoal?.id}
+                          label="Загрузить скриншот трекера"
                         />
                       </div>
                     </TabsContent>

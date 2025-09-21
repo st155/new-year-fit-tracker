@@ -1,7 +1,11 @@
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare, TrendingUp } from "lucide-react";
+import { Upload, Camera, Target, BarChart3, Calendar, MessageSquare, TrendingUp, Brain } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
+import { useAuth } from "@/hooks/useAuth";
 
 interface QuickActionsProps {
   userRole: "participant" | "trainer";
@@ -9,6 +13,8 @@ interface QuickActionsProps {
 
 export function QuickActions({ userRole }: QuickActionsProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
 
   if (userRole === "trainer") {
     return (
@@ -51,26 +57,28 @@ export function QuickActions({ userRole }: QuickActionsProps) {
       </h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Button 
-          variant="fitness" 
-          className="h-12 justify-start"
-          onClick={() => {
-            // Создаем скрытый input для загрузки фото
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = () => {
-              if (input.files?.[0]) {
-                console.log('Photo selected:', input.files[0]);
-                // Здесь можно добавить логику загрузки
-              }
-            };
-            input.click();
-          }}
-        >
-          <Camera className="w-4 h-4 mr-2" />
-          Сделать фото
-        </Button>
+        <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="fitness" className="h-12 justify-start">
+              <Brain className="w-4 h-4 mr-2" />
+              ИИ-анализ трекера
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>ИИ-анализ фитнес-трекера</DialogTitle>
+            </DialogHeader>
+            <AIPhotoUpload
+              onDataExtracted={(result) => {
+                if (result.success && result.saved) {
+                  setIsAIDialogOpen(false);
+                  navigate('/progress');
+                }
+              }}
+              label="Загрузить скриншот трекера"
+            />
+          </DialogContent>
+        </Dialog>
         
         <Button 
           variant="success" 
@@ -87,7 +95,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           onClick={() => navigate('/goals/create')}
         >
           <Target className="w-4 h-4 mr-2" />
-          Обновить цели
+          Новая цель
         </Button>
         
         <Button 
