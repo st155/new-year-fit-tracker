@@ -87,6 +87,15 @@ serve(async (req) => {
 
     console.log(`[${requestId}] Request enqueued successfully in ${totalTime}ms`);
 
+    // Доп. лог для отладки раннего этапа
+    try {
+      await logError(supabase, userId, 'apple_health_initial_response', 'Background processing enqueued', {
+        requestId,
+        filePath,
+        totalTimeMs: totalTime
+      });
+    } catch (_) {}
+
     return new Response(
       JSON.stringify({ success: true, results: initialResults }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -330,10 +339,10 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     }
     
     const downloadMs = Date.now() - downloadStart;
-    const fileSizeBytes = fileData.size;
+    fileSizeBytes = fileData.size;
     
     await logError(supabase, userId, 'apple_health_download_success', 'File downloaded successfully (background)', {
-      filePath, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024), downloadMs
+      filePath, requestId, fileSizeBytes, fileSizeMB: Math.round((fileSizeBytes || 0) / 1024 / 1024), downloadMs
     });
 
     

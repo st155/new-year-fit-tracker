@@ -22,10 +22,14 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [processingPhase, setProcessingPhase] = useState<string>('');
   const [requestId, setRequestId] = useState<string>('');
+  const [lastFileSizeMB, setLastFileSizeMB] = useState<number | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    const sizeMB = Math.round(file.size / 1024 / 1024);
+    setLastFileSizeMB(sizeMB);
 
     // Проверка размера файла (макс 2GB)
     const maxSize = 2 * 1024 * 1024 * 1024; // 2GB в байтах
@@ -36,7 +40,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           fileName: file.name, 
           fileSize: file.size, 
           maxSize,
-          fileSizeMB: Math.round(file.size / 1024 / 1024)
+          fileSizeMB: sizeMB
         },
         user?.id
       );
@@ -150,25 +154,25 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               // Обновляем прогресс в зависимости от фазы
               switch (phase) {
                 case 'apple_health_file_found':
-                  setUploadProgress(75);
+                  setUploadProgress(p => Math.max(p, 75));
                   setProcessingPhase('Файл найден в хранилище...');
                   break;
                 case 'apple_health_download_success':
-                  setUploadProgress(80);
+                  setUploadProgress(p => Math.max(p, 80));
                   setProcessingPhase('Файл скачан для обработки...');
                   break;
                 case 'apple_health_background_phase':
               const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
-              if (phaseData.phase === 'data_extraction') {
-                    setUploadProgress(85);
-                    setProcessingPhase('Извлекаем данные из архива...');
-                  } else if (phaseData.phase === 'xml_parsing') {
-                    setUploadProgress(90);
-                    setProcessingPhase('Анализируем данные здоровья...');
-                  } else if (phaseData.phase === 'database_insertion') {
-                    setUploadProgress(95);
-                    setProcessingPhase('Сохраняем данные в базу...');
-                  }
+                if (phaseData.phase === 'data_extraction') {
+                      setUploadProgress(p => Math.max(p, 85));
+                      setProcessingPhase('Извлекаем данные из архива...');
+                    } else if (phaseData.phase === 'xml_parsing') {
+                      setUploadProgress(p => Math.max(p, 90));
+                      setProcessingPhase('Анализируем данные здоровья...');
+                    } else if (phaseData.phase === 'database_insertion') {
+                      setUploadProgress(p => Math.max(p, 95));
+                      setProcessingPhase('Сохраняем данные в базу...');
+                    }
                   break;
                 case 'apple_health_processing_complete':
                   setUploadProgress(100);
@@ -191,7 +195,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         setTimeout(() => {
           clearInterval(statusInterval);
           if (uploadStatus === 'processing') {
-            setUploadProgress(100);
+            setUploadProgress(p => Math.max(p, 100));
             setUploadStatus('complete');
             setProcessingPhase('Обработка может продолжаться в фоновом режиме');
           }
@@ -206,7 +210,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       const results = processData.results || {};
       toast({
         title: 'Файл загружен успешно!',
-        description: `Размер: ${results.fileSizeMB || 0}MB. Обработка началась в фоновом режиме.`
+        description: `Размер: ${(lastFileSizeMB ?? 0)}MB. Обработка началась в фоновом режиме.`
       });
 
       onUploadComplete?.(processData);
@@ -259,6 +263,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     setUploadResult(null);
     setProcessingPhase('');
     setRequestId('');
+    setLastFileSizeMB(null);
   };
 
   return (
@@ -356,7 +361,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               <AlertDescription>
                 <strong>Файл успешно загружен!</strong>
                 <ul className="mt-2 space-y-1 text-sm">
-                  <li>• Размер файла: {uploadResult.results?.fileSizeMB || 0}MB</li>
+                  <li>• Размер файла: {uploadResult.results?.fileSizeMB ?? lastFileSizeMB ?? 0}MB</li>
                   <li>• Статус: {uploadResult.results?.status === 'processing_started' ? 'Обработка началась' : 'Готово'}</li>
                   <li>• Обработка данных выполняется в фоновом режиме</li>
                 </ul>
