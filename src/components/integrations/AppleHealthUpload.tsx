@@ -129,57 +129,31 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           });
 
           if (batch.length === batchSize || i === maxToProcess - 1) {
-            try {
-              const { error } = await supabase.from('health_records').insert(batch);
-              if (error) {
-                console.error('Batch insert error:', error);
-                await ErrorLogger.logAppleHealthDiagnostics('client_import_batch_error', { error: error.message, batchSize: batch.length }, user?.id || undefined);
-                throw error;
-              }
-              created += batch.length;
-              console.log(`Batch inserted: ${batch.length} records, total: ${created}`);
-              batch = [];
-              setUploadProgress(p => Math.min(95, p + 3));
-            } catch (error: any) {
-              console.error('Critical batch error:', error);
-              await ErrorLogger.logAppleHealthDiagnostics('client_import_critical_error', { 
-                error: error.message, 
-                batchIndex: Math.floor(i / batchSize),
-                recordsProcessed: created
-              }, user?.id || undefined);
+            const { error } = await supabase.from('health_records').insert(batch);
+            if (error) {
+              await ErrorLogger.logAppleHealthDiagnostics('client_import_batch_error', { error: error.message }, user?.id || undefined);
               throw error;
             }
+            created += batch.length;
+            batch = [];
+            setUploadProgress(p => Math.min(95, p + 3));
           }
         }
 
         // Аггрегируем последние 30 дней
-        setProcessingPhase('Создаем сводные данные...');
-        console.log('Starting daily aggregation...');
         const endDate = new Date();
-        let aggregatedDays = 0;
         for (let d = 0; d <= 30; d++) {
           const date = new Date(endDate);
           date.setDate(endDate.getDate() - d);
           const dateStr = date.toISOString().split('T')[0];
-          try {
-            await supabase.rpc('aggregate_daily_health_data', { p_user_id: user?.id, p_date: dateStr });
-            aggregatedDays++;
-          } catch (aggError: any) {
-            console.warn(`Aggregation failed for ${dateStr}:`, aggError.message);
-          }
+          await supabase.rpc('aggregate_daily_health_data', { p_user_id: user?.id, p_date: dateStr });
         }
-        console.log(`Aggregated ${aggregatedDays} days`);
 
-        await ErrorLogger.logAppleHealthDiagnostics('client_import_complete', { created, totalConsidered: maxToProcess, aggregatedDays }, user?.id || undefined);
+        await ErrorLogger.logAppleHealthDiagnostics('client_import_complete', { created, totalConsidered: maxToProcess }, user?.id || undefined);
         setUploadProgress(100);
         setUploadStatus('complete');
-        setProcessingPhase(`Импорт завершен (клиент). Создано записей: ${created}, агрегировано дней: ${aggregatedDays}.`);
-        toast({ title: 'Импорт завершен', description: `Импортировано ${created} записей из ${maxToProcess}. Агрегировано ${aggregatedDays} дней.` });
-        
-        // Вызываем callback если есть
-        if (onUploadComplete) {
-          onUploadComplete({ created, totalConsidered: maxToProcess, aggregatedDays });
-        }
+        setProcessingPhase('Импорт завершен (клиент).');
+        toast({ title: 'Импорт завершен', description: `Импортировано ${created} записей из ${maxToProcess}.` });
         return;
       }
 

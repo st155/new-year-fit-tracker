@@ -20,33 +20,10 @@ serve(async (req) => {
   try {
     console.log('Starting fitness data analysis...');
     
-    // Проверяем есть ли body в запросе
-    const body = await req.text();
-    if (!body) {
-      return new Response(JSON.stringify({ error: 'Request body is empty' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    let requestData;
-    try {
-      requestData = JSON.parse(body);
-    } catch (parseError) {
-      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-    
-    const { imageUrl, userId, goalId, measurementDate } = requestData;
+    const { imageUrl, userId, goalId, measurementDate } = await req.json();
     
     if (!imageUrl || !userId) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing required parameters', 
-        required: ['imageUrl', 'userId'],
-        received: { imageUrl: !!imageUrl, userId: !!userId }
-      }), {
+      return new Response(JSON.stringify({ error: 'Missing imageUrl or userId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -57,8 +34,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Invalid image URL provided',
-          message: 'Please provide a valid image URL starting with http or https',
-          received: imageUrl
+          message: 'Please provide a valid image URL starting with http or https'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -109,17 +85,6 @@ serve(async (req) => {
   "dataQuality": "low"
 }
 `;
-
-    // Проверяем наличие OpenAI API ключа
-    if (!openAIApiKey) {
-      return new Response(JSON.stringify({ 
-        error: 'OpenAI API key not configured',
-        message: 'AI analysis is currently unavailable'
-      }), {
-        status: 503,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
