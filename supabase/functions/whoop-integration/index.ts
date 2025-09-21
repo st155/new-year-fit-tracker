@@ -24,7 +24,9 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action') || (await req.json().catch(() => ({})))?.action;
+    // Read body ONCE to avoid stream consumption issues
+    const parsedBody = await req.clone().json().catch(() => ({}));
+    const action = url.searchParams.get('action') || parsedBody?.action;
 
     console.log(`Whoop integration request: ${action}`);
 
@@ -36,7 +38,7 @@ serve(async (req) => {
       case 'check-status':
         return await handleCheckStatus(req);
       case 'sync':
-        return await handleSync(req);
+        return await handleSync(req, parsedBody);
       case 'disconnect':
         return await handleDisconnect(req);
       default:
@@ -236,7 +238,7 @@ async function handleCheckStatus(req: Request) {
 }
 
 // Синхронизируем данные с Whoop
-async function handleSync(req: Request) {
+async function handleSync(req: Request, body: any = {}) {
   const authHeader = req.headers.get('authorization');
   console.log('Sync request - Auth header present:', !!authHeader);
   
@@ -272,7 +274,7 @@ async function handleSync(req: Request) {
   }
 
   // Сначала проверяем, есть ли временные токены или код авторизации в запросе
-  const body = await req.json().catch(() => ({}));
+  // body был прочитан выше на входе в функцию
   let accessToken: string | undefined;
   let refreshToken: string | null | undefined;
   let expiresIn: number | undefined;
@@ -307,8 +309,23 @@ async function handleSync(req: Request) {
       
       console.log('Tokens saved successfully to database');
     } catch (error: any) {
-      console.error('Failed to process authorization code:', error);
-      throw new Error(`Authorization failed: ${error.message}`);
+      console.error('Failed to process authorization code:', error?.message);
+      // Если код уже использован/просрочен, попробуем использовать уже сохраненные токены
+      if (String(error?.message || '').includes('expired') || String(error?.message || '').includes('already been used')) {
+        const { data: existing, error: tokenErr } = await supabase
+          .from('whoop_tokens')
+          .select('access_token, refresh_token, expires_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!tokenErr && existing && new Date(existing.expires_at) > new Date()) {
+          console.log('Using existing valid tokens after invalid_grant');
+          accessToken = existing.access_token;
+        } else {
+          throw new Error(`Authorization failed and no valid tokens found: ${error.message}`);
+        }
+      } else {
+        throw new Error(`Authorization failed: ${error.message}`);
+      }
     }
   } else if (body?.tempTokens?.access_token) {
     console.log('Processing temporary tokens for sync');

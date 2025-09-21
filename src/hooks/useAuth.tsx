@@ -44,8 +44,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               if (raw) {
                 const { code } = JSON.parse(raw);
                 if (code) {
+                  const { data: { session: current } } = await supabase.auth.getSession();
                   const { error } = await supabase.functions.invoke('whoop-integration', {
-                    body: { action: 'sync', code }
+                    body: { action: 'sync', code },
+                    headers: current?.access_token ? { Authorization: `Bearer ${current.access_token}` } : undefined
                   });
 
                   if (!error) {
