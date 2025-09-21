@@ -21,6 +21,10 @@ import {
   Loader2
 } from 'lucide-react';
 import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
+import { RecoveryDetails } from '@/components/dashboard/recovery-details';
+import { ActivityDetails } from '@/components/dashboard/activity-details';
+import { TrendsAnalysis } from '@/components/dashboard/trends-analysis';
+import { HomeButton } from '@/components/ui/home-button';
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -215,6 +219,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <HomeButton />
       {/* Header */}
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -287,7 +292,7 @@ const Dashboard = () => {
                         <span className="text-2xl text-muted-foreground">—</span>
                       )}
                     </div>
-                    <Progress value={todayStats.recovery || 0} className="h-2" />
+                    <Progress value={todayStats.recovery || 0} autoColor className="h-2" />
                     <p className="text-xs text-muted-foreground">
                       {todayStats.recovery !== null ? 
                         (todayStats.recovery >= 75 ? 'Отличное' : 
@@ -318,7 +323,7 @@ const Dashboard = () => {
                         <span className="text-2xl text-muted-foreground">—</span>
                       )}
                     </div>
-                    <Progress value={todayStats.sleep || 0} className="h-2" />
+                    <Progress value={todayStats.sleep || 0} autoColor className="h-2" />
                     <p className="text-xs text-muted-foreground">
                       {todayStats.sleep !== null ? 
                         (todayStats.sleep >= 85 ? 'Отличный сон' : 
@@ -346,7 +351,7 @@ const Dashboard = () => {
                         <span className="text-2xl text-muted-foreground">—</span>
                       )}
                     </div>
-                    <Progress value={todayStats.strain ? Math.min(100, (todayStats.strain / 20) * 100) : 0} className="h-2" />
+                    <Progress value={todayStats.strain ? Math.min(100, (todayStats.strain / 20) * 100) : 0} autoColor className="h-2" />
                     <p className="text-xs text-muted-foreground">
                       {todayStats.strain !== null ? 
                         (todayStats.strain >= 15 ? 'Высокая' : 
@@ -457,51 +462,15 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="recovery">
-            <Card>
-              <CardHeader>
-                <CardTitle>Детали восстановления</CardTitle>
-                <CardDescription>
-                  Подробная информация о восстановлении и готовности к нагрузкам
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Детальный анализ восстановления будет добавлен в следующих версиях
-                </p>
-              </CardContent>
-            </Card>
+            <RecoveryDetails selectedDate={selectedDate} />
           </TabsContent>
 
           <TabsContent value="activity">
-            <Card>
-              <CardHeader>
-                <CardTitle>Активность и тренировки</CardTitle>
-                <CardDescription>
-                  Анализ физической активности и тренировочных данных
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Детальный анализ активности будет добавлен в следующих версиях
-                </p>
-              </CardContent>
-            </Card>
+            <ActivityDetails selectedDate={selectedDate} />
           </TabsContent>
 
           <TabsContent value="trends">
-            <Card>
-              <CardHeader>
-                <CardTitle>Тренды и аналитика</CardTitle>
-                <CardDescription>
-                  Долгосрочные тренды ваших фитнес-показателей
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Графики трендов и аналитика будут добавлены в следующих версиях
-                </p>
-              </CardContent>
-            </Card>
+            <TrendsAnalysis selectedDate={selectedDate} />
           </TabsContent>
         </Tabs>
       </div>
