@@ -40,41 +40,54 @@ const WhoopCallback = () => {
         setStatus('authenticating');
         setProgress(25);
 
-        // Получаем токены через edge функцию
+        // Получаем сессию, но не требуем её для callback
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Необходима аутентификация');
-        }
 
         setProgress(50);
         setStatus('syncing');
 
-        // Синхронизируем данные
-        const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
-          body: { 
-            action: 'sync',
-            tempTokens: JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}')
+        // Если есть сессия - синхронизируем, если нет - просто показываем успех
+        if (session) {
+          // Синхронизируем данные
+          const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
+            body: { 
+              action: 'sync',
+              tempTokens: JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}')
+            }
+          });
+
+          localStorage.removeItem('whoop_temp_tokens');
+
+          if (syncError) {
+            throw new Error(syncError.message);
           }
-        });
 
-        localStorage.removeItem('whoop_temp_tokens');
+          setProgress(100);
+          setStatus('success');
+          setSyncResult(data.syncResult);
 
-        if (syncError) {
-          throw new Error(syncError.message);
+          toast({
+            title: 'Whoop подключен!',
+            description: 'Ваши данные Whoop успешно синхронизированы.',
+          });
+        } else {
+          // Если нет сессии, просто показываем успех подключения
+          setProgress(100);
+          setStatus('success');
+          
+          toast({
+            title: 'Whoop подключен!',
+            description: 'Авторизация прошла успешно. Войдите в приложение для синхронизации данных.',
+          });
         }
-
-        setProgress(100);
-        setStatus('success');
-        setSyncResult(data.syncResult);
-
-        toast({
-          title: 'Whoop подключен!',
-          description: 'Ваши данные Whoop успешно синхронизированы.',
-        });
 
         // Автоматически перенаправляем через 3 секунды
         setTimeout(() => {
-          navigate('/progress');
+          if (session) {
+            navigate('/progress');
+          } else {
+            navigate('/auth');
+          }
         }, 3000);
 
       } catch (error: any) {
