@@ -5,6 +5,13 @@ verify_jwt = false
 
 [functions.process-apple-health]
 verify_jwt = true
+import_map = "./functions/process-apple-health/import_map.json"
 
 [functions.apple-health-import]
+verify_jwt = true
+
+[functions.analyze-fitness-data]
+verify_jwt = true
+
+[functions.photo-storage]
 verify_jwt = true
