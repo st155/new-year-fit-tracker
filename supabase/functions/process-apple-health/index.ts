@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { readAll } from "https://deno.land/std@0.208.0/io/read_all.ts";
-import { unzip } from "https://deno.land/x/zip@v1.2.5/mod.ts";
+import { decode as base64Decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -168,15 +167,23 @@ async function processLargeFileStreaming(
   }
 
   const zipData = await response.arrayBuffer();
-  const files = await unzip(new Uint8Array(zipData));
-
-  // Ищем export.xml в архиве
+  
+  // Простая проверка на ZIP файл (ZIP файлы начинаются с "PK")
+  const uint8Array = new Uint8Array(zipData);
+  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B;
+  
   let xmlContent: string | null = null;
-  for (const [fileName, fileData] of Object.entries(files)) {
-    if (fileName.includes('export.xml')) {
-      xmlContent = new TextDecoder().decode(fileData);
-      break;
+  
+  if (isZip) {
+    // Для ZIP файлов ищем XML в конце данных (упрощенный подход)
+    const dataString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(zipData);
+    const xmlMatch = dataString.match(/<\?xml[\s\S]*?<\/HealthData>/);
+    if (xmlMatch) {
+      xmlContent = xmlMatch[0];
     }
+  } else {
+    // Если это прямой XML файл
+    xmlContent = new TextDecoder().decode(zipData);
   }
 
   if (!xmlContent) {
@@ -200,14 +207,23 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
   }
 
   const arrayBuffer = await fileData.arrayBuffer();
-  const files = await unzip(new Uint8Array(arrayBuffer));
-
+  
+  // Простая проверка на ZIP файл (ZIP файлы начинаются с "PK")
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B;
+  
   let xmlContent: string | null = null;
-  for (const [fileName, fileData] of Object.entries(files)) {
-    if (fileName.includes('export.xml')) {
-      xmlContent = new TextDecoder().decode(fileData);
-      break;
+  
+  if (isZip) {
+    // Для ZIP файлов ищем XML в конце данных (упрощенный подход)
+    const dataString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(arrayBuffer);
+    const xmlMatch = dataString.match(/<\?xml[\s\S]*?<\/HealthData>/);
+    if (xmlMatch) {
+      xmlContent = xmlMatch[0];
     }
+  } else {
+    // Если это прямой XML файл
+    xmlContent = new TextDecoder().decode(arrayBuffer);
   }
 
   if (!xmlContent) {
