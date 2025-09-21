@@ -95,6 +95,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('processing');
 
       // Отправляем файл на обработку в Edge Function
+      console.log('Calling process-apple-health function...');
+      
       const { data: processData, error: processError } = await supabase.functions.invoke('process-apple-health', {
         body: {
           userId: user?.id,
@@ -102,8 +104,11 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         }
       });
 
+      console.log('Function response:', { data: processData, error: processError });
+
       if (processError) {
-        throw new Error(`Processing failed: ${processError.message}`);
+        console.error('Function invocation error:', processError);
+        throw new Error(`Processing failed: ${processError.message || 'Edge Function returned an error'}`);
       }
 
       setUploadProgress(100);
@@ -126,11 +131,15 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       let errorMessage = error.message || 'Не удалось обработать файл Apple Health';
       
       if (error.message?.includes('exceeded the maximum allowed size')) {
-        errorMessage = 'Файл превышает максимальный размер. Убедитесь, что Global file size limit в Supabase установлен достаточно высоко.';
+        errorMessage = 'Файл превышает максимальный размер Storage (Global file size limit). Обратитесь к администратору для увеличения лимита.';
       } else if (error.message?.includes('Payload too large')) {
         errorMessage = 'Файл слишком большой для загрузки. Попробуйте уменьшить размер архива или обратитесь к администратору.';
       } else if (error.message?.includes('timeout')) {
         errorMessage = 'Превышено время ожидания загрузки. Попробуйте еще раз или проверьте соединение.';
+      } else if (error.message?.includes('Edge Function returned a non-2xx status code') || error.message?.includes('Edge Function returned an error')) {
+        errorMessage = 'Ошибка обработки файла на сервере. Проверьте логи или обратитесь к администратору.';
+      } else if (error.message?.includes('File not found') || error.message?.includes('Object not found')) {
+        errorMessage = 'Файл не найден после загрузки. Попробуйте загрузить файл заново.';
       }
       
       await ErrorLogger.logFileUploadError(

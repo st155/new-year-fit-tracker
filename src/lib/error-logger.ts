@@ -91,10 +91,25 @@ export class ErrorLogger {
   }
 
   static async logFileUploadError(errorMessage: string, fileInfo?: any, userId?: string): Promise<void> {
+    // Расширенная информация о файле и системе
+    const enhancedFileInfo = {
+      ...fileInfo,
+      timestamp: new Date().toISOString(),
+      browserInfo: typeof navigator !== 'undefined' ? {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        cookieEnabled: navigator.cookieEnabled,
+        onLine: navigator.onLine
+      } : null,
+      connectionType: typeof navigator !== 'undefined' && 'connection' in navigator 
+        ? (navigator as any).connection?.effectiveType 
+        : 'unknown'
+    };
+
     await this.logError({
       errorType: 'file_upload_error',
       errorMessage,
-      errorDetails: fileInfo,
+      errorDetails: enhancedFileInfo,
       source: 'file_upload',
       stackTrace: new Error().stack
     }, userId);
@@ -123,6 +138,25 @@ export class ErrorLogger {
     }, userId);
   }
 
+  // Специальный метод для Apple Health диагностики
+  static async logAppleHealthDiagnostics(phase: string, details: any, userId?: string): Promise<void> {
+    await this.logError({
+      errorType: 'apple_health_diagnostics',
+      errorMessage: `Apple Health ${phase}`,
+      errorDetails: {
+        ...details,
+        phase,
+        timestamp: new Date().toISOString(),
+        memoryUsage: typeof performance !== 'undefined' && (performance as any).memory ? {
+          usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+          totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+          jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
+        } : null
+      },
+      source: 'apple_health'
+    }, userId);
+  }
+
   // Глобальный обработчик ошибок JavaScript
   static initGlobalErrorHandler(): void {
     // Обработка необработанных ошибок JavaScript
@@ -133,7 +167,8 @@ export class ErrorLogger {
         errorDetails: {
           filename: event.filename,
           lineno: event.lineno,
-          colno: event.colno
+          colno: event.colno,
+          timestamp: new Date().toISOString()
         },
         source: 'ui',
         stackTrace: event.error?.stack
@@ -146,10 +181,36 @@ export class ErrorLogger {
         errorType: 'unhandled_promise_rejection',
         errorMessage: event.reason?.message || 'Unhandled promise rejection',
         errorDetails: {
-          reason: event.reason
+          reason: event.reason,
+          timestamp: new Date().toISOString()
         },
         source: 'general',
         stackTrace: event.reason?.stack
+      });
+    });
+
+    // Обработка сетевых ошибок
+    window.addEventListener('online', () => {
+      this.logError({
+        errorType: 'network_status_change',
+        errorMessage: 'Network connection restored',
+        errorDetails: { 
+          status: 'online',
+          timestamp: new Date().toISOString()
+        },
+        source: 'general'
+      });
+    });
+
+    window.addEventListener('offline', () => {
+      this.logError({
+        errorType: 'network_status_change',
+        errorMessage: 'Network connection lost',
+        errorDetails: { 
+          status: 'offline',
+          timestamp: new Date().toISOString()
+        },
+        source: 'general'
       });
     });
   }
