@@ -50,7 +50,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        message: error.message 
+        message: error.message,
+        details: error.stack 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -178,15 +179,37 @@ async function handleCallback(req: Request) {
 // Проверяем статус подключения
 async function handleCheckStatus(req: Request) {
   const authHeader = req.headers.get('authorization');
+  console.log('Check status - Auth header present:', !!authHeader);
+  
   if (!authHeader) {
-    throw new Error('No authorization header provided');
+    console.error('Missing authorization header for check-status');
+    return new Response(
+      JSON.stringify({ 
+        error: 'Authorization required',
+        message: 'No authorization header provided' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   const jwt = authHeader.replace('Bearer ', '');
   const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
   
   if (userError || !user) {
-    throw new Error('Invalid user token');
+    console.error('Invalid user token:', userError?.message);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Invalid token',
+        message: userError?.message || 'Invalid user token' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   // Проверяем наличие токенов
@@ -215,15 +238,37 @@ async function handleCheckStatus(req: Request) {
 // Синхронизируем данные с Whoop
 async function handleSync(req: Request) {
   const authHeader = req.headers.get('authorization');
+  console.log('Sync request - Auth header present:', !!authHeader);
+  
   if (!authHeader) {
-    throw new Error('No authorization header provided');
+    console.error('Missing authorization header for sync');
+    return new Response(
+      JSON.stringify({ 
+        error: 'Authorization required',
+        message: 'No authorization header provided' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   const jwt = authHeader.replace('Bearer ', '');
   const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
   
   if (userError || !user) {
-    throw new Error('Invalid user token');
+    console.error('Invalid user token:', userError?.message);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Invalid token',
+        message: userError?.message || 'Invalid user token' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   // Сначала проверяем, есть ли временные токены или код авторизации в запросе
@@ -321,15 +366,37 @@ async function handleSync(req: Request) {
 // Отключаем Whoop
 async function handleDisconnect(req: Request) {
   const authHeader = req.headers.get('authorization');
+  console.log('Disconnect - Auth header present:', !!authHeader);
+  
   if (!authHeader) {
-    throw new Error('No authorization header provided');
+    console.error('Missing authorization header for disconnect');
+    return new Response(
+      JSON.stringify({ 
+        error: 'Authorization required',
+        message: 'No authorization header provided' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   const jwt = authHeader.replace('Bearer ', '');
   const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
   
   if (userError || !user) {
-    throw new Error('Invalid user token');
+    console.error('Invalid user token:', userError?.message);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Invalid token',
+        message: userError?.message || 'Invalid user token' 
+      }),
+      { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   // Удаляем токены
