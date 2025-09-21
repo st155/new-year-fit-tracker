@@ -32,7 +32,7 @@ serve(async (req) => {
 
     switch (action) {
       case 'auth':
-        return await handleAuth();
+        return await handleAuth(req);
       case 'callback':
         return await handleCallback(req);
       case 'check-status':
@@ -61,33 +61,36 @@ serve(async (req) => {
 });
 
 // Инициируем OAuth процесс
-async function handleAuth() {
+async function handleAuth(req: Request) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
   const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback`;
   
   if (!clientId) {
-    throw new Error('WHOOP_CLIENT_ID not configured');
+    return new Response(JSON.stringify({ error: 'WHOOP_CLIENT_ID not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Авторизованный пользователь для привязки state -> user
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Authorization required' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const jwt = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+  if (userError || !user) {
+    return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
   const state = crypto.randomUUID();
+  await supabase
+    .from('whoop_oauth_states')
+    .insert({ state, user_id: user.id });
+
   const scope = 'read:recovery read:sleep read:workout read:profile read:body_measurement';
-  
-  const authUrl = `${WHOOP_AUTH_URL}?` +
-    `response_type=code&` +
-    `client_id=${clientId}&` +
-    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-    `scope=${encodeURIComponent(scope)}&` +
-    `state=${state}`;
+  const authUrl = `${WHOOP_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
 
   console.log('Generated auth URL:', authUrl);
 
-  return new Response(
-    JSON.stringify({ 
-      authUrl,
-      state 
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
+  return new Response(JSON.stringify({ authUrl, state }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 // Обрабатываем callback от Whoop
@@ -144,16 +147,40 @@ async function handleCallback(req: Request) {
   }
 
   try {
-    // Прямой редирект на страницу callback приложения
-    const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?code=${code}&state=${state}&success=true`;
-    
-    return new Response(null, {
-      status: 302,
-      headers: {
-        'Location': redirectUrl,
-        ...corsHeaders
-      }
-    });
+    // Найдём пользователя по state
+    const { data: mapping } = await supabase
+      .from('whoop_oauth_states')
+      .select('user_id')
+      .eq('state', state)
+      .maybeSingle();
+
+    if (!mapping?.user_id) {
+      console.error('No mapping found for state');
+      const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?error=no_state`;
+      return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
+    }
+
+    // Обмениваем код на токены и сохраняем к пользователю
+    const tokens = await exchangeCodeForTokens(code);
+    const expiresIn = tokens.expires_in || 3600;
+    const { error: saveError } = await supabase
+      .from('whoop_tokens')
+      .upsert({
+        user_id: mapping.user_id,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token || null,
+        expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    if (saveError) {
+      console.error('Error saving tokens in callback:', saveError);
+    }
+
+    // Очистим state
+    await supabase.from('whoop_oauth_states').delete().eq('state', state);
+
+    const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?connected=1`;
+    return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
 
   } catch (error) {
     console.error('Callback processing error:', error);

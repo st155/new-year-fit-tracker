@@ -151,8 +151,10 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsConnecting(true);
       
       // Получаем URL для авторизации
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'auth' }
+        body: { action: 'auth' },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
       });
 
       if (error) throw error;

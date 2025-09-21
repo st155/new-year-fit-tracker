@@ -30,15 +30,25 @@ const WhoopCallback = () => {
         return;
       }
 
+      const connected = searchParams.get('connected');
+
       if (!code || !state) {
-        setStatus('error');
-        setErrorMessage('Отсутствует код авторизации или состояние');
-        return;
+        if (connected) {
+          // Токены уже сохранены на сервере в callback, запускаем синк без кода
+          setStatus('authenticating');
+          setProgress(25);
+        } else {
+          setStatus('error');
+          setErrorMessage('Отсутствует код авторизации или состояние');
+          return;
+        }
       }
 
       try {
-        // Persist code for post-login sync
-        localStorage.setItem('whoop_pending_code', JSON.stringify({ code, state, savedAt: Date.now() }));
+        // Persist code for post-login sync (если он есть)
+        if (code) {
+          localStorage.setItem('whoop_pending_code', JSON.stringify({ code, state, savedAt: Date.now() }));
+        }
         setStatus('authenticating');
         setProgress(25);
 
@@ -54,10 +64,10 @@ const WhoopCallback = () => {
           // Синхронизируем данные с JWT токеном
           const { data: { session: currentSession } } = await supabase.auth.getSession();
           const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
-            body: { 
+            body: code ? { 
               action: 'sync',
               code
-            },
+            } : { action: 'sync' },
             headers: {
               Authorization: `Bearer ${currentSession?.access_token}`
             }
