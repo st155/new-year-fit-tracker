@@ -72,6 +72,26 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
 
     setLoading(true);
     try {
+      // Check if goal already exists
+      const { data: existingGoal } = await supabase
+        .from('goals')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('goal_name', customGoal.name)
+        .eq('goal_type', customGoal.type)
+        .eq('is_personal', true)
+        .maybeSingle();
+
+      if (existingGoal) {
+        toast({
+          title: "Внимание",
+          description: "Такая цель уже существует",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('goals')
         .insert({
@@ -83,7 +103,12 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
           is_personal: true
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Такая цель уже существует');
+        }
+        throw error;
+      }
 
       toast({
         title: "Успех",
@@ -97,7 +122,7 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
       console.error('Error creating goal:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось создать цель",
+        description: error.message || "Не удалось создать цель",
         variant: "destructive"
       });
     } finally {
