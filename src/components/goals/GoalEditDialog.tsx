@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Goal {
   id: string;
@@ -24,7 +25,6 @@ interface GoalEditDialogProps {
 }
 
 export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDialogProps) {
-  const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<Goal>>({});
   const [loading, setLoading] = useState(false);
 
@@ -57,11 +57,7 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error updating goal:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить цель",
-        variant: "destructive"
-      });
+      toast.error('Ошибка обновления цели');
     } finally {
       setLoading(false);
     }

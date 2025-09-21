@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
-import { GoalsSection } from "@/components/dashboard/goals-section-simple";
+import { GoalsSection } from "@/components/dashboard/goals-section";
 import { Leaderboard } from "@/components/dashboard/leaderboard";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import IntegrationsCard from "@/components/dashboard/integrations-card";
@@ -10,14 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  console.log('Index component rendering...');
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  console.log('Index: user =', user, 'loading =', loading);
 
   useEffect(() => {
     const fetchUserData = async () => {
