@@ -201,22 +201,53 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     await new Promise(r => setTimeout(r, 3000));
     await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { phase: processingPhase, requestId });
 
-    // 6) Запись в БД
+    // 6) Запись в БД - создаем реальные записи
     processingPhase = 'database_insertion';
-    await new Promise(r => setTimeout(r, 2000));
+    
+    // Создаем метрику для импорта Apple Health
+    const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+      p_user_id: userId,
+      p_metric_name: 'AppleHealthImport',
+      p_metric_category: 'import',
+      p_unit: 'MB',
+      p_source: 'apple_health'
+    });
 
-    const mockRecordsProcessed = Math.floor(Math.random() * 1000) + 100;
+    let recordsCreated = 0;
+    if (metricId) {
+      // Создаем запись о импорте
+      const { error: insertError } = await supabase.from('metric_values').insert({
+        user_id: userId,
+        metric_id: metricId,
+        value: Math.round(fileSizeBytes / 1024 / 1024), // Размер в MB
+        measurement_date: new Date().toISOString().split('T')[0],
+        source_data: {
+          fileName: filePath.split('/').pop(),
+          fileSize: fileSizeBytes,
+          importDate: new Date().toISOString(),
+          requestId,
+          processingPhase: 'completed'
+        },
+        external_id: `apple_health_import_${requestId}`,
+        notes: `Apple Health import completed - ${Math.round(fileSizeBytes / 1024 / 1024)}MB processed`
+      });
+
+      if (!insertError) recordsCreated = 1;
+    }
+
     const results = {
-      recordsProcessed: mockRecordsProcessed,
-      categories: ['Steps', 'Heart Rate', 'Sleep', 'Weight', 'Exercise Minutes'],
+      recordsProcessed: recordsCreated,
+      categories: ['Apple Health Import'],
       dateRange: {
-        from: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+        from: new Date().toISOString(),
         to: new Date().toISOString()
       },
       fileSizeBytes,
       fileSizeMB: fileSizeBytes ? Math.round(fileSizeBytes / 1024 / 1024) : null,
       processingTimeMs: Date.now() - backgroundStartTime,
-      requestId
+      requestId,
+      metricId,
+      realDataCreated: recordsCreated > 0
     };
 
     await logError(supabase, userId, 'apple_health_processing_complete', 'Apple Health background processing completed successfully', {
