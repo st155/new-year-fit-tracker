@@ -30,10 +30,13 @@ interface GoalsSectionProps {
 }
 
 export function GoalsSection({ userRole }: GoalsSectionProps) {
+  console.log('GoalsSection rendering with userRole:', userRole);
   const { user } = useAuth();
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+
+  console.log('GoalsSection: user =', user, 'loading =', loading);
 
   useEffect(() => {
     const loadGoals = async () => {

@@ -22,7 +22,9 @@ import TrainerDashboard from "./pages/TrainerDashboard";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  console.log('App component rendering...');
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -82,6 +84,11 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
+            <Route path="/trainer" element={
+              <ProtectedRoute>
+                <TrainerDashboard />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -89,6 +96,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
