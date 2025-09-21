@@ -60,7 +60,7 @@ serve(async (req) => {
 // Инициируем OAuth процесс
 async function handleAuth() {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
-  const redirectUri = `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/functions/v1/whoop-integration?action=callback`;
+  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback`;
   
   if (!clientId) {
     throw new Error('WHOOP_CLIENT_ID not configured');
