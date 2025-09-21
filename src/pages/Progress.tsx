@@ -207,25 +207,26 @@ const ProgressPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <HomeButton />
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-3 sm:p-6">
         {/* Заголовок */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Мой прогресс
               </h1>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                 Отслеживайте свои достижения и добавляйте новые измерения. 
-                <strong> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
+                <strong className="block sm:inline"> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button
                 onClick={() => navigate('/goals/create')}
                 variant="outline"
-                className="bg-gradient-accent hover:opacity-90"
+                className="bg-gradient-accent hover:opacity-90 w-full sm:w-auto"
+                size="sm"
               >
                 <Target className="h-4 w-4 mr-2" />
                 Новая цель
@@ -233,12 +234,12 @@ const ProgressPage = () => {
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-primary hover:opacity-90">
+                  <Button className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Добавить измерение
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto mx-2">
                   <DialogHeader>
                     <DialogTitle>Добавить новое измерение</DialogTitle>
                     <DialogDescription>
@@ -252,11 +253,11 @@ const ProgressPage = () => {
                   </DialogHeader>
                   
                   <Tabs defaultValue="measurement" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-4">
-                      <TabsTrigger value="measurement">Ручной ввод</TabsTrigger>
-                      <TabsTrigger value="photo">ИИ-анализ</TabsTrigger>
-                      <TabsTrigger value="integrations">Интеграции</TabsTrigger>
-                      <TabsTrigger value="manual-photo">Фото прогресса</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+                      <TabsTrigger value="measurement" className="text-xs sm:text-sm">Ручной ввод</TabsTrigger>
+                      <TabsTrigger value="photo" className="text-xs sm:text-sm">ИИ-анализ</TabsTrigger>
+                      <TabsTrigger value="integrations" className="text-xs sm:text-sm">Интеграции</TabsTrigger>
+                      <TabsTrigger value="manual-photo" className="text-xs sm:text-sm">Фото прогресса</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="measurement" className="space-y-4">
@@ -350,7 +351,7 @@ const ProgressPage = () => {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="integrations" className="space-y-4 max-h-[60vh] overflow-y-auto">
+                    <TabsContent value="integrations" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
                       <div>
                         <Label className="text-base font-medium">Интеграции фитнес-устройств</Label>
                         <p className="text-sm text-muted-foreground mb-4">

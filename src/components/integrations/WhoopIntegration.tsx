@@ -202,14 +202,15 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {!whoopData.isConnected ? (
-          <div className="text-center py-6">
-            <p className="text-muted-foreground mb-4">
+          <div className="text-center py-4 sm:py-6">
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
               Подключите ваш аккаунт Whoop для получения детальных данных о здоровье и фитнесе.
             </p>
             <Button 
               onClick={handleConnect} 
               disabled={isConnecting}
               className="w-full"
+              size="sm"
             >
               {isConnecting ? (
                 <>
@@ -223,13 +224,13 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-green-500/10 text-green-700">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <Badge variant="secondary" className="bg-green-500/10 text-green-700 w-fit">
                   ✓ Подключено
                 </Badge>
                 {whoopData.lastSync && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     Последняя синхронизация: {new Date(whoopData.lastSync).toLocaleString()}
                   </span>
                 )}
@@ -239,6 +240,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 disabled={isSyncing}
                 variant="outline"
                 size="sm"
+                className="w-full sm:w-auto"
               >
                 {isSyncing ? (
                   <>
@@ -254,7 +256,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
             {whoopData.recentData && whoopData.recentData.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Последние данные:</h4>
-                <div className="grid gap-2 max-h-40 overflow-y-auto">
+                <div className="grid gap-2 max-h-32 sm:max-h-40 overflow-y-auto">
                   {whoopData.recentData.slice(0, 10).map((measurement) => (
                     <div 
                       key={measurement.id} 
@@ -264,8 +266,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                         {getMetricIcon(measurement.notes)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span className="font-medium text-sm">
                             {measurement.value} {measurement.unit}
                           </span>
                           <span className="text-xs text-muted-foreground">
@@ -282,7 +284,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
               </div>
             )}
 
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground space-y-1">
               <p>• Recovery Score: Показатель восстановления организма</p>
               <p>• Sleep: Качество и продолжительность сна</p>
               <p>• Strain: Нагрузка от тренировок и активности</p>
