@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ErrorLogger } from '@/lib/error-logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import JSZip from 'jszip';
 
 interface AppleHealthUploadProps {
   onUploadComplete?: (data: any) => void;
@@ -37,12 +36,18 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     if (file.size > maxSize) {
       await ErrorLogger.logFileUploadError(
         'Apple Health file too large',
-        { fileName: file.name, fileSize: file.size, maxSize, fileSizeMB: sizeMB },
+        { 
+          fileName: file.name, 
+          fileSize: file.size, 
+          maxSize,
+          fileSizeMB: sizeMB
+        },
         user?.id
       );
+      
       toast({
         title: 'Файл слишком большой',
-        description: `Размер файла: ${sizeMB}MB. Максимальный размер: 2048MB`,
+        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 2048MB`,
         variant: 'destructive'
       });
       return;
@@ -55,6 +60,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         { fileName: file.name, fileType: file.type },
         user?.id
       );
+      
       toast({
         title: 'Неверный формат файла',
         description: 'Загрузите ZIP-архив экспорта Apple Health',
@@ -68,96 +74,6 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('uploading');
       setUploadProgress(0);
 
-      // Новый подход: большие файлы (>100MB) обрабатываем на клиенте
-      if (sizeMB > 100) {
-        setUploadStatus('processing');
-        setProcessingPhase('Парсим архив локально (большой файл)...');
-        await ErrorLogger.logAppleHealthDiagnostics('client_import_start', { fileName: file.name, sizeMB }, user?.id || undefined);
-
-        // Читаем архив и извлекаем Export.xml
-        const arrayBuffer = await file.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        const xmlEntry = Object.values(zip.files).find((f: any) =>
-          f.name.toLowerCase().endsWith('.xml') && f.name.toLowerCase().includes('export')
-        ) as any;
-        if (!xmlEntry) throw new Error('Export XML not found in ZIP');
-
-        const xmlContent = await xmlEntry.async('string');
-        setUploadProgress(70);
-        setProcessingPhase('Извлекаем записи из XML...');
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xmlContent, 'text/xml');
-        const allRecords = Array.from(doc.querySelectorAll('Record')) as Element[];
-
-        await ErrorLogger.logAppleHealthDiagnostics('client_import_xml_ready', { totalRecords: allRecords.length }, user?.id || undefined);
-
-        const maxToProcess = Math.min(allRecords.length, 5000);
-        const batchSize = 100;
-        let created = 0;
-        const allowedTypes = new Set([
-          'HKQuantityTypeIdentifierStepCount',
-          'HKQuantityTypeIdentifierHeartRate',
-          'HKQuantityTypeIdentifierActiveEnergyBurned',
-          'HKQuantityTypeIdentifierBasalEnergyBurned',
-          'HKQuantityTypeIdentifierDistanceWalkingRunning',
-          'HKQuantityTypeIdentifierVO2Max',
-          'HKQuantityTypeIdentifierBodyMass'
-        ]);
-
-        let batch: any[] = [];
-        for (let i = 0; i < maxToProcess; i++) {
-          const r = allRecords[i];
-          const type = r.getAttribute('type') || '';
-          if (!allowedTypes.has(type)) continue;
-
-          const value = parseFloat(r.getAttribute('value') || 'NaN');
-          const startDate = r.getAttribute('startDate');
-          if (!startDate || Number.isNaN(value)) continue;
-
-          batch.push({
-            user_id: user?.id,
-            record_type: type,
-            value,
-            unit: r.getAttribute('unit') || '',
-            start_date: startDate,
-            end_date: r.getAttribute('endDate') || startDate,
-            source_name: r.getAttribute('sourceName') || 'Apple Health',
-            source_version: r.getAttribute('sourceVersion') || null,
-            device: r.getAttribute('device') || null,
-            metadata: { imported_from: 'apple_health_export_client', index: i }
-          });
-
-          if (batch.length === batchSize || i === maxToProcess - 1) {
-            const { error } = await supabase.from('health_records').insert(batch);
-            if (error) {
-              await ErrorLogger.logAppleHealthDiagnostics('client_import_batch_error', { error: error.message }, user?.id || undefined);
-              throw error;
-            }
-            created += batch.length;
-            batch = [];
-            setUploadProgress(p => Math.min(95, p + 3));
-          }
-        }
-
-        // Аггрегируем последние 30 дней
-        const endDate = new Date();
-        for (let d = 0; d <= 30; d++) {
-          const date = new Date(endDate);
-          date.setDate(endDate.getDate() - d);
-          const dateStr = date.toISOString().split('T')[0];
-          await supabase.rpc('aggregate_daily_health_data', { p_user_id: user?.id, p_date: dateStr });
-        }
-
-        await ErrorLogger.logAppleHealthDiagnostics('client_import_complete', { created, totalConsidered: maxToProcess }, user?.id || undefined);
-        setUploadProgress(100);
-        setUploadStatus('complete');
-        setProcessingPhase('Импорт завершен (клиент).');
-        toast({ title: 'Импорт завершен', description: `Импортировано ${created} записей из ${maxToProcess}.` });
-        return;
-      }
-
-      // Для файлов <=100MB — прежний путь через Storage + Edge Function
       console.log(`Starting Apple Health upload: ${file.name}, size: ${file.size} bytes (${Math.round(file.size / 1024 / 1024)}MB)`);
 
       // Создаем уникальное имя файла
@@ -175,12 +91,16 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         });
       }, 200);
 
-      // Загружаем файл в Supabase Storage
+      // Загружаем файл в Supabase Storage с увеличенным timeout
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('apple-health-uploads')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       clearInterval(uploadProgressInterval);
+      
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
@@ -193,11 +113,16 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
 
       // Отправляем файл на обработку в Edge Function
       console.log('Calling process-apple-health function...');
+      
       const { data: processData, error: processError } = await supabase.functions.invoke('process-apple-health', {
-        body: { userId: user?.id, filePath: uploadData.path }
+        body: {
+          userId: user?.id,
+          filePath: uploadData.path
+        }
       });
 
       console.log('Function response:', { data: processData, error: processError });
+
       if (processError) {
         console.error('Function invocation error:', processError);
         throw new Error(`Processing failed: ${processError.message || 'Edge Function returned an error'}`);
@@ -206,9 +131,12 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       // Отслеживаем прогресс фоновой обработки
       const currentRequestId = processData?.results?.requestId;
       setRequestId(currentRequestId);
+      
       if (currentRequestId) {
         setUploadProgress(70);
         setProcessingPhase('Фоновая обработка запущена...');
+        
+        // Проверяем статус обработки каждые 3 секунды
         const statusInterval = setInterval(async () => {
           try {
             const { data: logs } = await supabase
@@ -222,6 +150,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
             if (logs && logs.length > 0) {
               const latestLog = logs[0];
               const phase = latestLog.error_type;
+              
+              // Обновляем прогресс в зависимости от фазы
               switch (phase) {
                 case 'apple_health_file_found':
                   setUploadProgress(p => Math.max(p, 75));
@@ -232,17 +162,17 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                   setProcessingPhase('Файл скачан для обработки...');
                   break;
                 case 'apple_health_background_phase':
-                  const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
-                  if (phaseData.phase === 'data_extraction') {
-                    setUploadProgress(p => Math.max(p, 85));
-                    setProcessingPhase('Извлекаем данные из архива...');
-                  } else if (phaseData.phase === 'xml_parsing') {
-                    setUploadProgress(p => Math.max(p, 90));
-                    setProcessingPhase('Анализируем данные здоровья...');
-                  } else if (phaseData.phase === 'database_insertion') {
-                    setUploadProgress(p => Math.max(p, 95));
-                    setProcessingPhase('Сохраняем данные в базу...');
-                  }
+              const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
+                if (phaseData.phase === 'data_extraction') {
+                      setUploadProgress(p => Math.max(p, 85));
+                      setProcessingPhase('Извлекаем данные из архива...');
+                    } else if (phaseData.phase === 'xml_parsing') {
+                      setUploadProgress(p => Math.max(p, 90));
+                      setProcessingPhase('Анализируем данные здоровья...');
+                    } else if (phaseData.phase === 'database_insertion') {
+                      setUploadProgress(p => Math.max(p, 95));
+                      setProcessingPhase('Сохраняем данные в базу...');
+                    }
                   break;
                 case 'apple_health_processing_complete':
                   setUploadProgress(100);
@@ -261,7 +191,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           }
         }, 3000);
 
-        // Авто-стоп проверки через 5 минут
+        // Автоматически останавливаем проверку через 5 минут
         setTimeout(() => {
           clearInterval(statusInterval);
           if (uploadStatus === 'processing') {
@@ -274,13 +204,23 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         setUploadProgress(100);
         setUploadStatus('complete');
       }
-
       setUploadResult(processData);
-      toast({ title: 'Файл загружен успешно!', description: `Размер: ${lastFileSizeMB ?? 0}MB. Обработка началась в фоновом режиме.` });
+
+      // Показываем информацию о начале фоновой обработки
+      const results = processData.results || {};
+      toast({
+        title: 'Файл загружен успешно!',
+        description: `Размер: ${(lastFileSizeMB ?? 0)}MB. Обработка началась в фоновом режиме.`
+      });
+
+      onUploadComplete?.(processData);
 
     } catch (error: any) {
       console.error('Apple Health upload error:', error);
+      
+      // Определяем тип ошибки для более информативного сообщения
       let errorMessage = error.message || 'Не удалось обработать файл Apple Health';
+      
       if (error.message?.includes('exceeded the maximum allowed size')) {
         errorMessage = 'Файл превышает максимальный размер Storage (Global file size limit). Обратитесь к администратору для увеличения лимита.';
       } else if (error.message?.includes('Payload too large')) {
@@ -292,15 +232,26 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       } else if (error.message?.includes('File not found') || error.message?.includes('Object not found')) {
         errorMessage = 'Файл не найден после загрузки. Попробуйте загрузить файл заново.';
       }
-
+      
       await ErrorLogger.logFileUploadError(
         'Apple Health upload failed',
-        { fileName: file.name, fileSize: file.size, fileSizeMB: sizeMB, error: error.message, stage: uploadStatus, errorCode: error.statusCode || error.status },
+        { 
+          fileName: file.name, 
+          fileSize: file.size,
+          fileSizeMB: Math.round(file.size / 1024 / 1024),
+          error: error.message,
+          stage: uploadStatus,
+          errorCode: error.statusCode || error.status
+        },
         user?.id
       );
 
       setUploadStatus('error');
-      toast({ title: 'Ошибка загрузки', description: errorMessage, variant: 'destructive' });
+      toast({
+        title: 'Ошибка загрузки',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     } finally {
       setIsUploading(false);
     }
