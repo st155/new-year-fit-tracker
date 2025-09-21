@@ -369,6 +369,17 @@ async function exchangeCodeForTokens(code: string) {
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Token exchange failed:', errorText);
+    
+    // Более детальная обработка ошибок
+    try {
+      const errorData = JSON.parse(errorText);
+      if (errorData.error === 'invalid_grant') {
+        throw new Error('Authorization code has expired or already been used. Please try connecting again.');
+      }
+    } catch (parseError) {
+      // Если не удалось парсить JSON, используем оригинальную ошибку
+    }
+    
     throw new Error('Failed to exchange code for tokens');
   }
 

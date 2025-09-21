@@ -174,7 +174,7 @@ export type Database = {
       }
       goals: {
         Row: {
-          challenge_id: string
+          challenge_id: string | null
           created_at: string
           goal_name: string
           goal_type: string
@@ -186,7 +186,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          challenge_id: string
+          challenge_id?: string | null
           created_at?: string
           goal_name: string
           goal_type: string
@@ -198,7 +198,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          challenge_id?: string
+          challenge_id?: string | null
           created_at?: string
           goal_name?: string
           goal_type?: string

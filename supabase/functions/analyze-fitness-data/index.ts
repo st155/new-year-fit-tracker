@@ -29,6 +29,17 @@ serve(async (req) => {
       });
     }
 
+    // Проверяем валидность URL изображения
+    if (imageUrl === 'test-url' || !imageUrl.startsWith('http')) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid image URL provided',
+          message: 'Please provide a valid image URL starting with http or https'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log('Analyzing image:', imageUrl);
     console.log('For user:', userId);
 

@@ -39,7 +39,15 @@ serve(async (req) => {
 
     if (downloadError) {
       await logError(supabase, userId, 'apple_health_download_error', 'Failed to download file', downloadError);
-      throw new Error(`Failed to download file: ${downloadError.message}`);
+      
+      // Более детальная обработка ошибок скачивания
+      if (downloadError.message?.includes('Object not found')) {
+        throw new Error(`File not found at path: ${filePath}. Please check if the file was uploaded correctly.`);
+      } else if (downloadError.message?.includes('access denied')) {
+        throw new Error(`Access denied to file: ${filePath}. Please check file permissions.`);
+      } else {
+        throw new Error(`Failed to download file: ${downloadError.message || 'Unknown error'}`);
+      }
     }
 
     // Здесь должна быть логика парсинга Apple Health данных
