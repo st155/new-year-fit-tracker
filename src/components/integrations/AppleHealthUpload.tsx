@@ -25,8 +25,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Проверка размера файла (макс 1GB)
-    const maxSize = 1024 * 1024 * 1024; // 1GB в байтах
+    // Проверка размера файла (макс 2GB)
+    const maxSize = 2 * 1024 * 1024 * 1024; // 2GB в байтах
     if (file.size > maxSize) {
       await ErrorLogger.logFileUploadError(
         'Apple Health file too large',
@@ -41,7 +41,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       
       toast({
         title: 'Файл слишком большой',
-        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 1024MB`,
+        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 2048MB`,
         variant: 'destructive'
       });
       return;
@@ -68,18 +68,28 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('uploading');
       setUploadProgress(0);
 
+      console.log(`Starting Apple Health upload: ${file.name}, size: ${file.size} bytes (${Math.round(file.size / 1024 / 1024)}MB)`);
+
       // Создаем уникальное имя файла
       const fileName = `apple-health-${Date.now()}-${file.name}`;
       const filePath = `${user?.id}/${fileName}`;
 
-      // Загружаем файл в Supabase Storage
+      console.log(`Upload path: ${filePath}`);
+
+      // Загружаем файл в Supabase Storage с увеличенным timeout
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('apple-health-uploads')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
+        console.error('Storage upload error:', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
+
+      console.log('File uploaded successfully:', uploadData);
 
       setUploadProgress(50);
       setUploadStatus('processing');
@@ -112,13 +122,26 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     } catch (error: any) {
       console.error('Apple Health upload error:', error);
       
+      // Определяем тип ошибки для более информативного сообщения
+      let errorMessage = error.message || 'Не удалось обработать файл Apple Health';
+      
+      if (error.message?.includes('exceeded the maximum allowed size')) {
+        errorMessage = 'Файл превышает максимальный размер. Убедитесь, что Global file size limit в Supabase установлен достаточно высоко.';
+      } else if (error.message?.includes('Payload too large')) {
+        errorMessage = 'Файл слишком большой для загрузки. Попробуйте уменьшить размер архива или обратитесь к администратору.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Превышено время ожидания загрузки. Попробуйте еще раз или проверьте соединение.';
+      }
+      
       await ErrorLogger.logFileUploadError(
         'Apple Health upload failed',
         { 
           fileName: file.name, 
           fileSize: file.size,
+          fileSizeMB: Math.round(file.size / 1024 / 1024),
           error: error.message,
-          stage: uploadStatus
+          stage: uploadStatus,
+          errorCode: error.statusCode || error.status
         },
         user?.id
       );
@@ -126,7 +149,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('error');
       toast({
         title: 'Ошибка загрузки',
-        description: error.message || 'Не удалось обработать файл Apple Health',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -187,7 +210,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                 <div>
                   <h3 className="font-medium">Загрузить файл Apple Health</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Поддерживается только ZIP-архив экспорта (макс. 1GB)
+                    Поддерживается только ZIP-архив экспорта (макс. 2GB)
                   </p>
                 </div>
                 <Button type="button">
