@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,16 +22,41 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const [whoopData, setWhoopData] = useState<WhoopData>({ isConnected: false });
   const { toast } = useToast();
 
+  // Проверяем статус подключения при загрузке
+  useEffect(() => {
+    checkConnectionStatus();
+  }, [userId]);
+
+  const checkConnectionStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('whoop_tokens')
+        .select('id, expires_at')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        const isTokenValid = new Date(data.expires_at) > new Date();
+        setWhoopData(prev => ({ ...prev, isConnected: isTokenValid }));
+        
+        if (isTokenValid) {
+          loadWhoopData();
+        }
+      }
+    } catch (error) {
+      console.error('Error checking connection status:', error);
+    }
+  };
+
   const handleConnect = async () => {
     setIsConnecting(true);
     
     try {
       // Инициируем OAuth процесс с Whoop
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration?action=auth', {
         body: {
           userId,
-          redirectUri: `${window.location.origin}/whoop-callback`,
-          action: 'auth'
+          redirectUri: `${window.location.origin}/whoop-callback`
         }
       });
 
@@ -99,10 +124,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration?action=sync', {
         body: {
-          userId,
-          action: 'sync'
+          userId
         }
       });
 
@@ -130,10 +154,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
   const loadWhoopData = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration?action=get-data', {
         body: {
-          userId,
-          action: 'get-data'
+          userId
         }
       });
 

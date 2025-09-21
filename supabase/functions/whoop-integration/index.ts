@@ -71,10 +71,18 @@ async function handleAuth(req: Request) {
   // Генерируем state для защиты от CSRF
   const state = crypto.randomUUID();
   
-  // В реальном приложении здесь должны быть ваши Client ID и Secret из Whoop
+  const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+  
+  if (!clientId) {
+    return new Response(JSON.stringify({ error: 'Whoop Client ID not configured' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+  
   const authUrl = new URL(WHOOP_AUTH_URL);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('client_id', 'YOUR_WHOOP_CLIENT_ID'); // Заменить на реальный
+  authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', 'read:cycles read:recovery read:sleep read:workout read:profile');
   authUrl.searchParams.set('state', `${state}-${userId}`);
@@ -109,17 +117,24 @@ async function handleCallback(req: Request, supabase: any) {
   const [stateToken, userId] = state.split('-');
   
   try {
+    const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+    const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
+    
+    if (!clientId || !clientSecret) {
+      throw new Error('Whoop credentials not configured');
+    }
+    
     // Обменяем код на токен доступа
     const tokenResponse = await fetch(WHOOP_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${btoa('YOUR_WHOOP_CLIENT_ID:YOUR_WHOOP_CLIENT_SECRET')}`
+        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'YOUR_REDIRECT_URI' // Заменить на реальный
+        redirect_uri: `${new URL(req.url).origin}/whoop-callback`
       })
     });
 
