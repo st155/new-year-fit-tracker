@@ -21,7 +21,7 @@ const predefinedGoals = [
   { name: "Планка", type: "endurance", unit: "мин", targetValue: "4" },
   { name: "Отжимания", type: "strength", unit: "раз", targetValue: "60" },
   { name: "Подъём ног в висе до перекладины", type: "strength", unit: "раз", targetValue: "17" },
-  { name: "VO₂max", type: "health", unit: "мл/кг/мин", targetValue: "50" },
+  { name: "VO2max", type: "health", unit: "мл/кг/мин", targetValue: "50" },
   { name: "Процент жира", type: "body", unit: "%", targetValue: "11" }
 ];
 
