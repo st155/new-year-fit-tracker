@@ -11,11 +11,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  console.log('ProtectedRoute: user=', user?.email || 'null', 'loading=', loading);
-
   useEffect(() => {
     if (!loading && !user) {
-      console.log('ProtectedRoute: Redirecting to /auth');
       navigate('/auth');
     }
   }, [user, loading, navigate]);
