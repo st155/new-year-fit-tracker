@@ -17,6 +17,8 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  console.log('Index component render:', { user: !!user, loading, email: user?.email });
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
