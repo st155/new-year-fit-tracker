@@ -98,12 +98,14 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
         .select(`
           value,
           measurement_date,
-          user_metrics!inner(metric_name, source)
+          user_metrics!inner(metric_name, source, unit)
         `)
         .eq('user_id', userId)
         .eq('user_metrics.source', 'whoop')
         .order('measurement_date', { ascending: false })
         .limit(20);
+
+      console.log('Loaded Whoop metrics from database:', metrics);
 
       if (error) throw error;
 
@@ -133,6 +135,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
           case 'VO2Max':
             dataByDate[date].vo2Max = metric.value;
             break;
+          case 'Вес':
           case 'Weight':
             dataByDate[date].weight = metric.value;
             break;
@@ -143,6 +146,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5);
 
+      console.log('Processed recent data:', recentDataArray);
       setRecentData(recentDataArray);
     } catch (error: any) {
       console.error('Error loading recent data:', error);

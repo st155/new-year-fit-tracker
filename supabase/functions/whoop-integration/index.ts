@@ -606,13 +606,23 @@ async function syncWhoopData(userId: string, accessToken: string) {
     // Пытаемся синхронизировать body measurement данные (опционально)
     let bodyData = null;
     try {
-      bodyData = await fetchWhoopData(accessToken, 'body_measurement', {
-        start: startDate,
-        end: endDate,
-      });
+      bodyData = await fetchWhoopData(accessToken, 'user/measurement/body', {});
+      console.log('Body measurement data received:', JSON.stringify(bodyData, null, 2));
     } catch (error: any) {
       console.log('Body measurement endpoint not available:', error.message);
       // Продолжаем без body measurement данных
+    }
+
+    // Пытаемся получить данные циклов для VO2Max (могут содержать cardio data)
+    let cycleData = null;
+    try {
+      cycleData = await fetchWhoopData(accessToken, 'cycle', {
+        start: startDate,
+        end: endDate,
+      });
+      console.log('Cycle data received:', JSON.stringify(cycleData?.records?.slice(0,2), null, 2));
+    } catch (error: any) {
+      console.log('Cycle endpoint error:', error.message);
     }
 
     // Сохраняем данные в базу
@@ -630,15 +640,20 @@ async function syncWhoopData(userId: string, accessToken: string) {
       savedRecords += await saveWorkoutData(userId, workoutData.records);
     }
 
-    if (bodyData?.records) {
-      savedRecords += await saveBodyData(userId, bodyData.records);
+    if (bodyData) {
+      savedRecords += await saveBodyData(userId, [bodyData]);
+    }
+
+    if (cycleData?.records) {
+      savedRecords += await saveCycleData(userId, cycleData.records);
     }
 
     await logWhoopEvent(userId, 'whoop_sync_complete', 'Whoop data synchronized', {
       recoveryRecords: recoveryData?.records?.length || 0,
       sleepRecords: sleepData?.records?.length || 0,
       workoutRecords: workoutData?.records?.length || 0,
-      bodyRecords: bodyData?.records?.length || 0,
+      bodyRecords: bodyData ? 1 : 0,
+      cycleRecords: cycleData?.records?.length || 0,
       totalSaved: savedRecords
     });
 
@@ -646,7 +661,8 @@ async function syncWhoopData(userId: string, accessToken: string) {
       recoveryRecords: recoveryData?.records?.length || 0,
       sleepRecords: sleepData?.records?.length || 0,
       workoutRecords: workoutData?.records?.length || 0,
-      bodyRecords: bodyData?.records?.length || 0,
+      bodyRecords: bodyData ? 1 : 0,
+      cycleRecords: cycleData?.records?.length || 0,
       totalSaved: savedRecords
     };
 
@@ -874,30 +890,70 @@ async function saveWorkoutData(userId: string, records: any[]) {
   return savedCount;
 }
 
-// Сохраняем body measurement данные (включая VO2Max)
+// Сохраняем body measurement данные (рост, вес, максимальный пульс)
 async function saveBodyData(userId: string, records: any[]) {
   let savedCount = 0;
 
   for (const record of records) {
-    if (!record.measurement_data || !record.id) continue;
+    if (!record) continue;
 
-    // VO2Max - может быть в разных форматах в зависимости от версии API
-    if (record.measurement_data.vo2_max !== undefined) {
-      const metricId = await getOrCreateMetric(userId, 'VO2Max', 'cardio', 'мл/кг/мин', 'whoop');
+    console.log('Processing body measurement record:', JSON.stringify(record, null, 2));
+
+    // Рост
+    if (record.height_meter !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Рост', 'body', 'м', 'whoop');
       
       const { error } = await supabase
         .from('metric_values')
         .upsert({
           user_id: userId,
           metric_id: metricId,
-          value: record.measurement_data.vo2_max,
-          measurement_date: record.created_at.split('T')[0],
-          external_id: `${record.id}_vo2max`,
+          value: record.height_meter,
+          measurement_date: new Date().toISOString().split('T')[0],
+          external_id: `whoop_height`,
           source_data: record,
         });
 
       if (!error) savedCount++;
-      else console.error('Error saving VO2Max:', error);
+      else console.error('Error saving height:', error);
+    }
+
+    // Вес
+    if (record.weight_kilogram !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Вес', 'body', 'кг', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.weight_kilogram,
+          measurement_date: new Date().toISOString().split('T')[0],
+          external_id: `whoop_weight`,
+          source_data: record,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving weight:', error);
+    }
+
+    // Максимальный пульс
+    if (record.max_heart_rate !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Максимальный пульс', 'cardio', 'bpm', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.max_heart_rate,
+          measurement_date: new Date().toISOString().split('T')[0],
+          external_id: `whoop_max_hr`,
+          source_data: record,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving max heart rate:', error);
     }
 
     // Height (рост)
@@ -941,6 +997,58 @@ async function saveBodyData(userId: string, records: any[]) {
   }
 
   console.log(`Saved ${savedCount} body measurement records`);
+  return savedCount;
+}
+
+// Сохраняем данные циклов (могут содержать VO2Max или другие кардио-метрики)
+async function saveCycleData(userId: string, records: any[]) {
+  let savedCount = 0;
+
+  for (const record of records) {
+    if (!record || !record.id) continue;
+
+    console.log('Processing cycle record:', JSON.stringify(record, null, 2));
+
+    // Проверяем есть ли кардио данные в цикле
+    if (record.score && record.score.vo2_max !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'VO2Max', 'cardio', 'мл/кг/мин', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.score.vo2_max,
+          measurement_date: record.start.split('T')[0],
+          external_id: `${record.id}_vo2max`,
+          source_data: record,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving VO2Max from cycle:', error);
+    }
+
+    // Проверяем другие возможные метрики в циклах
+    if (record.metrics && record.metrics.vo2_max !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'VO2Max', 'cardio', 'мл/кг/мин', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.metrics.vo2_max,
+          measurement_date: record.start.split('T')[0],
+          external_id: `${record.id}_vo2max_metrics`,
+          source_data: record,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving VO2Max from cycle metrics:', error);
+    }
+  }
+
+  console.log(`Saved ${savedCount} cycle records`);
   return savedCount;
 }
 
