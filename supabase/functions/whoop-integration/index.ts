@@ -427,6 +427,13 @@ async function exchangeCodeForTokens(code: string) {
   const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
   const redirectUri = `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/functions/v1/whoop-integration?action=callback`;
 
+  console.log('Exchanging code for tokens', {
+    codeLength: code?.length || 0,
+    hasClientId: !!clientId,
+    hasClientSecret: !!clientSecret,
+    redirectUri
+  });
+
   if (!clientId || !clientSecret) {
     throw new Error('Whoop credentials not configured');
   }
@@ -445,6 +452,8 @@ async function exchangeCodeForTokens(code: string) {
     }),
   });
 
+  console.log('Token exchange response status:', response.status);
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Token exchange failed:', errorText);
@@ -455,14 +464,19 @@ async function exchangeCodeForTokens(code: string) {
       if (errorData.error === 'invalid_grant') {
         throw new Error('Authorization code has expired or already been used. Please try connecting again.');
       }
+      if (errorData.error) {
+        throw new Error(`Whoop error: ${errorData.error}`);
+      }
     } catch (parseError) {
       // Если не удалось парсить JSON, используем оригинальную ошибку
     }
     
-    throw new Error('Failed to exchange code for tokens');
+    throw new Error(`Failed to exchange code for tokens (status ${response.status})`);
   }
 
-  return await response.json();
+  const json = await response.json();
+  console.log('Token exchange succeeded. Has access_token:', !!json.access_token, 'Has refresh_token:', !!json.refresh_token);
+  return json;
 }
 
 // Получаем информацию о пользователе
