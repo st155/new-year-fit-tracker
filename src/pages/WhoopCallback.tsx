@@ -48,8 +48,9 @@ const WhoopCallback = () => {
         setProgress(50);
         setStatus('syncing');
 
-        // Если есть сессия - синхронизируем, если нет - просто показываем успех
-        if (session) {
+        // Если есть сессия - синхронизируем, если нет - сохраняем код для отложенной синхронизации
+        if (session?.user) {
+          console.log('User is authenticated, syncing Whoop data immediately');
           // Синхронизируем данные
           const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
             body: { 
@@ -61,6 +62,7 @@ const WhoopCallback = () => {
 
           localStorage.removeItem('whoop_temp_tokens');
           localStorage.removeItem('whoop_pending_code');
+          
           if (syncError) {
             throw new Error(syncError.message);
           }
@@ -73,7 +75,14 @@ const WhoopCallback = () => {
             title: 'Whoop подключен!',
             description: 'Ваши данные Whoop успешно синхронизированы.',
           });
+
+          // Перенаправляем на страницу прогресса
+          setTimeout(() => {
+            navigate('/progress');
+          }, 2000);
+
         } else {
+          console.log('User not authenticated, will sync after login');
           // Если нет сессии, просто показываем успех подключения
           setProgress(100);
           setStatus('success');
@@ -82,16 +91,12 @@ const WhoopCallback = () => {
             title: 'Whoop подключен!',
             description: 'Авторизация прошла успешно. Войдите в приложение для синхронизации данных.',
           });
-        }
 
-        // Автоматически перенаправляем через 3 секунды
-        setTimeout(() => {
-          if (session) {
-            navigate('/progress');
-          } else {
+          // Перенаправляем на страницу входа
+          setTimeout(() => {
             navigate('/auth');
-          }
-        }, 3000);
+          }, 2000);
+        }
 
       } catch (error: any) {
         setStatus('error');
@@ -194,7 +199,7 @@ const WhoopCallback = () => {
           {status === 'success' && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-3">
-                Перенаправление на страницу прогресса через 3 секунды...
+                Перенаправление через 2 секунды...
               </p>
               <Button onClick={() => navigate('/progress')} className="w-full">
                 Перейти к прогрессу
