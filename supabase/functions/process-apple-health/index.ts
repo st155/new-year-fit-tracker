@@ -177,236 +177,47 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     processingPhase = 'download';
     const downloadStart = Date.now();
     
-    // Для файлов больше 100MB используем стриминговую обработку
-    if (listedSize && listedSize > 100 * 1024 * 1024) {
-      await logError(supabase, userId, 'apple_health_streaming_processing', 'Starting streaming processing for large file', {
+    // Для файлов больше 50MB отклоняем обработку (чтобы избежать превышения памяти)
+    if (listedSize && listedSize > 50 * 1024 * 1024) {
+      await logError(supabase, userId, 'apple_health_file_too_large', 'File size exceeds processing limit', {
         requestId,
-        fileSizeMB: Math.round(listedSize / 1024 / 1024)
+        fileSizeMB: Math.round(listedSize / 1024 / 1024),
+        maxSizeMB: 50,
+        message: 'Apple Health files larger than 50MB cannot be processed due to memory limitations. Please export a smaller date range.'
       });
 
-      // Скачиваем и обрабатываем файл по частям
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('apple-health-uploads')
-        .download(filePath);
-
-      if (downloadError) {
-        throw new Error(`Download failed: ${downloadError.message}`);
-      }
-
-      fileSizeBytes = fileData.size;
-      await logError(supabase, userId, 'apple_health_download_success', 'Large file downloaded for streaming processing', {
-        filePath, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
+      // Создаем сообщение об ошибке для пользователя
+      const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+        p_user_id: userId,
+        p_metric_name: 'AppleHealthImportError',
+        p_metric_category: 'error',
+        p_unit: 'status',
+        p_source: 'apple_health'
       });
 
-      // Извлекаем ZIP-архив
-      const arrayBuffer = await fileData.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      let exportXmlContent = '';
-      
-      // Простое извлечение XML без сложных библиотек
-      try {
-        await logError(supabase, userId, 'apple_health_zip_processing', 'Starting ZIP content analysis', {
-          requestId,
-          fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
+      if (metricId) {
+        await supabase.from('metric_values').insert({
+          user_id: userId,
+          metric_id: metricId,
+          value: 0,
+          measurement_date: new Date().toISOString().split('T')[0],
+          source_data: {
+            fileName: fileName,
+            fileSize: listedSize,
+            error: 'File too large',
+            fileSizeMB: Math.round(listedSize / 1024 / 1024),
+            maxSizeMB: 50,
+            requestId
+          },
+          external_id: `apple_health_error_${requestId}`,
+          notes: `Apple Health file too large: ${Math.round(listedSize / 1024 / 1024)}MB (max: 50MB). Please export a smaller date range from Apple Health.`
         });
-
-        // Более простой подход - ищем XML данные прямо в файле
-        const textDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
-        let xmlContent = '';
-        let exportXmlFound = false;
-
-        // Читаем файл частями для поиска XML
-        const chunkSize = 1024 * 1024; // 1MB chunks
-        for (let offset = 0; offset < arrayBuffer.byteLength; offset += chunkSize) {
-          const chunk = arrayBuffer.slice(offset, Math.min(offset + chunkSize, arrayBuffer.byteLength));
-          const chunkText = textDecoder.decode(new Uint8Array(chunk));
-          
-          if (chunkText.includes('<?xml') && chunkText.includes('<HealthData')) {
-            xmlContent = chunkText;
-            exportXmlFound = true;
-            break;
-          }
-        }
-
-        if (!exportXmlFound) {
-          // Fallback: попробуем найти XML в полном содержимом
-          const fullText = textDecoder.decode(uint8Array);
-          const xmlStart = fullText.indexOf('<?xml');
-          const healthDataStart = fullText.indexOf('<HealthData');
-          const healthDataEnd = fullText.lastIndexOf('</HealthData>');
-          
-          if (xmlStart !== -1 && healthDataEnd !== -1) {
-            xmlContent = fullText.slice(xmlStart, healthDataEnd + '</HealthData>'.length);
-            exportXmlFound = true;
-          }
-        }
-
-        if (!exportXmlFound || !xmlContent) {
-          throw new Error('No valid XML content found in the file');
-        }
-
-        // Парсим XML и сохраняем данные здоровья для больших файлов
-        await logError(supabase, userId, 'apple_health_large_file_parsing', 'Starting XML parsing for large file', {
-          requestId,
-          xmlSizeChars: xmlContent.length,
-          xmlSizeMB: Math.round(xmlContent.length / 1024 / 1024)
-        });
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xmlContent, 'text/xml');
-        
-        // Извлекаем записи здоровья
-        const records = doc.querySelectorAll('Record');
-        
-        await logError(supabase, userId, 'apple_health_large_file_records_found', 'Health records found in large file', {
-          requestId,
-          recordsCount: records.length
-        });
-
-        // Сохраняем данные здоровья батчами (меньшие батчи для больших файлов)
-        let recordsCreated = 0;
-        let batchSize = 50; // Уменьшенный размер батча для больших файлов
-        
-        for (let i = 0; i < records.length && i < 5000; i += batchSize) { // Ограничиваем до 5000 записей для больших файлов
-          const batch = Array.from(records).slice(i, i + batchSize);
-          const healthRecords = [];
-          
-          for (const record of batch) {
-            const type = record.getAttribute('type');
-            const value = parseFloat(record.getAttribute('value') || '0');
-            const unit = record.getAttribute('unit');
-            const startDate = record.getAttribute('startDate');
-            const endDate = record.getAttribute('endDate');
-            const sourceName = record.getAttribute('sourceName');
-            const sourceVersion = record.getAttribute('sourceVersion');
-            const device = record.getAttribute('device');
-            
-            if (type && startDate && !isNaN(value)) {
-              healthRecords.push({
-                user_id: userId,
-                record_type: type,
-                value: value,
-                unit: unit || '',
-                start_date: startDate,
-                end_date: endDate || startDate,
-                source_name: sourceName || 'Apple Health',
-                source_version: sourceVersion,
-                device: device,
-                metadata: {
-                  imported_from: 'apple_health_export_large',
-                  request_id: requestId,
-                  batch_number: Math.floor(i / batchSize) + 1,
-                  file_size_mb: Math.round(fileSizeBytes / 1024 / 1024)
-                }
-              });
-            }
-          }
-          
-          if (healthRecords.length > 0) {
-            const { error: batchError } = await supabase
-              .from('health_records')
-              .insert(healthRecords);
-              
-            if (!batchError) {
-              recordsCreated += healthRecords.length;
-            } else {
-              await logError(supabase, userId, 'apple_health_large_batch_error', 'Error inserting large file batch', {
-                requestId,
-                batchNumber: Math.floor(i / batchSize) + 1,
-                batchSize: healthRecords.length,
-                error: batchError.message
-              });
-            }
-          }
-          
-          // Логируем прогресс каждые 1000 записей
-          if ((i + batchSize) % 1000 === 0) {
-            await logError(supabase, userId, 'apple_health_large_progress', 'Large file processing progress', {
-              requestId,
-              processed: Math.min(i + batchSize, Math.min(records.length, 5000)),
-              total: Math.min(records.length, 5000),
-              recordsCreated
-            });
-          }
-        }
-
-        // Создаем агрегированные дневные сводки для больших файлов
-        await logError(supabase, userId, 'apple_health_large_aggregation', 'Creating daily summaries for large file', {
-          requestId,
-          recordsProcessed: recordsCreated
-        });
-        
-        // Вызываем функцию агрегации для последних 30 дней
-        const endDate = new Date();
-        for (let d = 30; d >= 0; d--) {
-          const date = new Date(endDate);
-          date.setDate(date.getDate() - d);
-          const dateStr = date.toISOString().split('T')[0];
-          
-          await supabase.rpc('aggregate_daily_health_data', {
-            p_user_id: userId,
-            p_date: dateStr
-          });
-        }
-
-        // Создаем метрику для импорта
-        const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-          p_user_id: userId,
-          p_metric_name: 'AppleHealthImport',
-          p_metric_category: 'import',
-          p_unit: 'records',
-          p_source: 'apple_health'
-        });
-
-        if (metricId) {
-          await supabase.from('metric_values').insert({
-            user_id: userId,
-            metric_id: metricId,
-            value: recordsCreated,
-            measurement_date: new Date().toISOString().split('T')[0],
-            source_data: {
-              fileName: fileName,
-              fileSize: fileSizeBytes,
-              importDate: new Date().toISOString(),
-              requestId,
-              recordsImported: recordsCreated,
-              totalRecordsInFile: records.length,
-              processedRecords: Math.min(records.length, 5000),
-              fileType: 'large_file'
-            },
-            external_id: `apple_health_large_import_${requestId}`,
-            notes: `Apple Health large file import: ${recordsCreated}/${Math.min(records.length, 5000)} records processed from ${Math.round(fileSizeBytes / 1024 / 1024)}MB file`
-          });
-
-          await logError(supabase, userId, 'apple_health_large_metric_created', 'Large file import metric created', {
-            requestId,
-            metricId,
-            recordsCreated,
-            fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
-          });
-        }
-      } catch (extractError) {
-        await logError(supabase, userId, 'apple_health_large_extract_error', 'Failed to extract XML from large ZIP', {
-          requestId,
-          error: extractError.message
-        });
-        throw extractError;
       }
 
-        await logError(supabase, userId, 'apple_health_large_processing_complete', 'Apple Health large file processing completed', {
-          requestId,
-          fileName,
-          fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024),
-          strategy: 'large_file_processing',
-          recordsProcessed: recordsCreated || 0,
-          recordsCreated: recordsCreated || 0
-        });
-
-        // Удаляем обработанный файл
-        await supabase.storage.from('apple-health-uploads').remove([filePath]);
-        
-        return;
+      // Удаляем слишком большой файл
+      await supabase.storage.from('apple-health-uploads').remove([filePath]);
+      
+      throw new Error(`File size ${Math.round(listedSize / 1024 / 1024)}MB exceeds maximum limit of 50MB. Please export a smaller date range from Apple Health.`);
     }
 
     // Для файлов меньше 100MB - полная обработка
