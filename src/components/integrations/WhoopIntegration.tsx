@@ -147,66 +147,13 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       if (error) throw error;
 
-      // Открываем окно авторизации
-      const authWindow = window.open(
-        data.authUrl,
-        'whoop-auth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-
-      if (!authWindow) {
-        throw new Error('Не удалось открыть окно авторизации. Проверьте настройки блокировщика всплывающих окон.');
-      }
-
-      // Слушаем сообщения от окна авторизации
-      const handleMessage = async (event: MessageEvent) => {
-        console.log('Received message:', event);
-        console.log('Event origin:', event.origin);
-        console.log('Event data:', event.data);
-        
-        // Принимаем сообщения от Supabase функции или нашего origin
-        if (event.origin !== window.location.origin && 
-            !event.origin.includes('supabase.co')) {
-          console.log('Message rejected due to origin');
-          return;
-        }
-
-        if (event.data.type === 'whoop-auth-success') {
-          console.log('Auth success received');
-          authWindow?.close();
-          window.removeEventListener('message', handleMessage);
-          
-          // Получаем временные токены из localStorage
-          const tempTokens = JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}');
-          console.log('Temp tokens:', tempTokens);
-          localStorage.removeItem('whoop_temp_tokens');
-          
-          toast({
-            title: 'Whoop подключен!',
-            description: 'Ваш аккаунт Whoop успешно подключен.',
-          });
-
-          // Синхронизируем данные с токенами
-          await syncDataWithTokens(tempTokens);
-          await loadWhoopStatus();
-          
-        } else if (event.data.type === 'whoop-auth-error') {
-          authWindow?.close();
-          window.removeEventListener('message', handleMessage);
-          throw new Error(event.data.error || 'Ошибка авторизации');
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-
-      // Проверяем, не закрыто ли окно
-      const checkClosed = setInterval(() => {
-        if (authWindow?.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', handleMessage);
-          setIsConnecting(false);
-        }
-      }, 1000);
+      // Открываем новую вкладку для авторизации (вместо popup)
+      window.open(data.authUrl, '_blank');
+      
+      toast({
+        title: 'Перенаправление на Whoop',
+        description: 'Завершите авторизацию в новой вкладке. После успешной авторизации данные будут автоматически синхронизированы.',
+      });
 
     } catch (error: any) {
       console.error('Whoop connection error:', error);

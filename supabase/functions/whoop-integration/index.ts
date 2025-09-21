@@ -149,7 +149,18 @@ async function handleCallback(req: Request) {
     const userInfo = await fetchWhoopUserInfo(tokens.access_token);
     console.log('Received user info:', userInfo);
 
-    // Возвращаем HTML с сообщением об успехе
+    // Сохраняем токены во временном хранилище для последующего использования
+    const tempTokensScript = `
+      localStorage.setItem('whoop_temp_tokens', JSON.stringify({
+        access_token: '${tokens.access_token}',
+        refresh_token: '${tokens.refresh_token || ''}',
+        expires_in: ${tokens.expires_in || 3600}
+      }));
+    `;
+
+    // Перенаправляем на нашу callback страницу с параметрами
+    const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?code=${code}&state=${state}&success=true`;
+    
     const html = `
       <!DOCTYPE html>
       <html>
@@ -158,18 +169,8 @@ async function handleCallback(req: Request) {
         </head>
         <body>
           <script>
-            // Сохраняем токены в localStorage для временного хранения
-            localStorage.setItem('whoop_temp_tokens', JSON.stringify({
-              access_token: '${tokens.access_token}',
-              refresh_token: '${tokens.refresh_token}',
-              expires_in: ${tokens.expires_in}
-            }));
-            
-            window.opener?.postMessage({
-              type: 'whoop-auth-success',
-              data: ${JSON.stringify(userInfo)}
-            }, window.location.origin);
-            window.close();
+            ${tempTokensScript}
+            window.location.href = '${redirectUrl}';
           </script>
         </body>
       </html>
