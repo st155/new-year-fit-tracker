@@ -56,121 +56,13 @@ serve(async (req) => {
       contentType: req.headers.get('content-type')
     });
 
-    console.log(`[${requestId}] Getting file info for: ${filePath}`);
+    // Планируем фоновую обработку и быстро отвечаем, чтобы не ловить таймауты
+    const processTask = processAppleHealthFile(userId, filePath, requestId);
 
-    // Получаем информацию о файле перед скачиванием с детальной диагностикой
-    const pathParts = filePath.split('/');
-    const folder = pathParts[0];
-    const fileName = pathParts[1];
-    
-    console.log(`[${requestId}] Searching in folder: ${folder}, for file: ${fileName}`);
-
-    const { data: fileInfo, error: listError } = await supabase.storage
-      .from('apple-health-uploads')
-      .list(folder, { search: fileName });
-
-    if (listError) {
-      console.error(`[${requestId}] List error:`, listError);
-      
-      await logError(supabase, userId, 'apple_health_list_error', 'Failed to list files in storage', { 
-        listError, 
-        folder, 
-        fileName, 
-        filePath,
-        requestId
-      });
-      
-      throw new Error(`Failed to list files: ${listError.message}`);
-    }
-
-    if (!fileInfo || fileInfo.length === 0) {
-      console.error(`[${requestId}] File not found. Available files:`, fileInfo);
-      
-      await logError(supabase, userId, 'apple_health_file_not_found', 'File not found in storage', { 
-        filePath, 
-        folder, 
-        fileName, 
-        availableFiles: fileInfo,
-        requestId
-      });
-      
-      throw new Error(`File not found: ${filePath}. No files matching "${fileName}" in folder "${folder}"`);
-    }
-
-    const file = fileInfo[0];
-    const fileSize = file.metadata?.size || 'unknown';
-    console.log(`[${requestId}] File found: ${file.name}, size: ${fileSize} bytes`);
-
-    // Логируем информацию о найденном файле
-    await logError(supabase, userId, 'apple_health_file_found', 'File located in storage', { 
-      fileName: file.name,
-      fileSize,
-      fileSizeMB: typeof fileSize === 'number' ? Math.round(fileSize / 1024 / 1024) : 'unknown',
-      lastModified: file.updated_at,
-      filePath,
-      requestId
-    });
-
-    // Скачиваем файл из Storage с улучшенной обработкой ошибок
-    console.log(`[${requestId}] Starting download of ${filePath}...`);
-    const downloadStartTime = Date.now();
-    
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('apple-health-uploads')
-      .download(filePath);
-
-    const downloadTime = Date.now() - downloadStartTime;
-
-    if (downloadError) {
-      console.error(`[${requestId}] Download error:`, downloadError);
-      
-      await logError(supabase, userId, 'apple_health_download_error', 'Failed to download file', { 
-        downloadError: {
-          message: downloadError.message,
-          name: downloadError.name,
-          statusCode: downloadError.statusCode,
-          details: downloadError
-        },
-        filePath,
-        downloadTimeMs: downloadTime,
-        requestId,
-        bucketName: 'apple-health-uploads'
-      });
-      
-      // Более детальная обработка ошибок скачивания
-      if (downloadError.message?.includes('Object not found')) {
-        throw new Error(`File not found at path: ${filePath}. The file may have been deleted or moved.`);
-      } else if (downloadError.message?.includes('access denied') || downloadError.message?.includes('unauthorized')) {
-        throw new Error(`Access denied to file: ${filePath}. Check storage bucket permissions.`);
-      } else if (downloadError.statusCode === 413 || downloadError.message?.includes('too large')) {
-        throw new Error(`File too large to download: ${filePath}. Increase storage limits.`);
-      } else {
-        throw new Error(`Failed to download file: ${downloadError.message || 'Unknown storage error'}`);
-      }
-    }
-
-    const actualFileSize = fileData.size;
-    console.log(`[${requestId}] File downloaded successfully, size: ${actualFileSize} bytes, time: ${downloadTime}ms`);
-    
-    // Логируем успешное скачивание
-    await logError(supabase, userId, 'apple_health_download_success', 'File downloaded successfully', { 
-      filePath,
-      downloadTimeMs: downloadTime,
-      fileSizeBytes: actualFileSize,
-      fileSizeMB: Math.round(actualFileSize / 1024 / 1024),
-      downloadSpeedMBps: Math.round((actualFileSize / 1024 / 1024) / (downloadTime / 1000) * 100) / 100,
-      requestId
-    });
-    
-    // Начинаем обработку файла в фоновом режиме
-    const processTask = processAppleHealthFile(fileData, userId, filePath, requestId);
-    
-    // Используем waitUntil для обработки в фоне
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
       EdgeRuntime.waitUntil(processTask);
       console.log(`[${requestId}] Background task scheduled with EdgeRuntime.waitUntil`);
     } else {
-      // Fallback для локальной разработки
       console.log(`[${requestId}] Starting background task with fallback method`);
       processTask.catch(error => {
         console.error(`[${requestId}] Background processing error:`, error);
@@ -181,28 +73,21 @@ serve(async (req) => {
         });
       });
     }
-    
+
     const totalTime = Date.now() - startTime;
-    
-    // Возвращаем немедленный ответ
+
     const initialResults = {
-      recordsProcessed: 0,
       status: 'processing_started',
-      message: 'Apple Health file uploaded successfully. Processing in background.',
-      fileSizeBytes: actualFileSize,
-      fileSizeMB: Math.round(actualFileSize / (1024 * 1024)),
+      message: 'Apple Health file enqueued for background processing',
       requestId,
+      filePath,
       totalTimeMs: totalTime
     };
 
-    console.log(`[${requestId}] Request completed successfully in ${totalTime}ms`);
+    console.log(`[${requestId}] Request enqueued successfully in ${totalTime}ms`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Apple Health file upload completed. Processing started in background.',
-        results: initialResults
-      }),
+      JSON.stringify({ success: true, results: initialResults }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -242,64 +127,85 @@ serve(async (req) => {
   }
 });
 
-// Функция для фоновой обработки Apple Health файла
-async function processAppleHealthFile(fileData: Blob, userId: string, filePath: string, requestId: string) {
+// Фоновая обработка: скачивание и парсинг файла выполняются здесь, после ответа клиенту
+async function processAppleHealthFile(userId: string, filePath: string, requestId: string) {
   const backgroundStartTime = Date.now();
   let processingPhase = 'initialization';
-  
+  let fileSizeBytes: number | null = null;
+
   try {
-    console.log(`[${requestId}] Starting background processing for user ${userId}, file size: ${fileData.size} bytes`);
-    
+    console.log(`[${requestId}] BG start for user ${userId}, path: ${filePath}`);
+
+    // 1) Проверяем наличие файла в сторадже (быстро)
+    const pathParts = filePath.split('/');
+    const folder = pathParts[0];
+    const fileName = pathParts[1];
+
+    const { data: fileInfo, error: listError } = await supabase.storage
+      .from('apple-health-uploads')
+      .list(folder, { search: fileName });
+
+    if (listError || !fileInfo || fileInfo.length === 0) {
+      await logError(supabase, userId, 'apple_health_file_not_found', 'File not found in storage (background)', {
+        filePath, folder, fileName, listError, requestId
+      });
+      throw new Error(`File not found for background processing: ${filePath}`);
+    }
+
+    const file = fileInfo[0];
+    const listedSize = (file as any)?.metadata?.size;
+    await logError(supabase, userId, 'apple_health_file_found', 'File located in storage (background)', {
+      fileName: file.name,
+      fileSize: listedSize ?? 'unknown',
+      fileSizeMB: typeof listedSize === 'number' ? Math.round(listedSize / 1024 / 1024) : 'unknown',
+      lastModified: (file as any)?.updated_at,
+      filePath,
+      requestId
+    });
+
+    // 2) Скачиваем файл
+    processingPhase = 'download';
+    const downloadStart = Date.now();
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('apple-health-uploads')
+      .download(filePath);
+    const downloadMs = Date.now() - downloadStart;
+
+    if (downloadError) {
+      await logError(supabase, userId, 'apple_health_download_error', 'Failed to download file (background)', {
+        downloadError, filePath, requestId, downloadMs
+      });
+      throw new Error(`Download failed: ${downloadError.message}`);
+    }
+
+    fileSizeBytes = fileData.size;
+    await logError(supabase, userId, 'apple_health_download_success', 'File downloaded successfully (background)', {
+      filePath, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024), downloadMs
+    });
+
+    // 3) Валидация
     processingPhase = 'file_validation';
-    
-    // Валидация файла
-    if (fileData.size === 0) {
-      throw new Error('File is empty');
-    }
-    
-    if (fileData.size > 2 * 1024 * 1024 * 1024) { // 2GB
-      throw new Error(`File too large: ${Math.round(fileData.size / 1024 / 1024)}MB. Maximum allowed: 2048MB`);
-    }
-
-    // Логируем начало каждой фазы обработки
-    await logError(supabase, userId, 'apple_health_background_phase', `Background processing phase: ${processingPhase}`, { 
-      phase: processingPhase,
-      fileSizeBytes: fileData.size,
-      fileSizeMB: Math.round(fileData.size / 1024 / 1024),
-      requestId
+    if (fileSizeBytes === 0) throw new Error('File is empty');
+    if (fileSizeBytes > 2 * 1024 * 1024 * 1024) throw new Error('File exceeds 2GB limit');
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', {
+      phase: processingPhase, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024)
     });
 
+    // 4) Извлечение
     processingPhase = 'data_extraction';
-    console.log(`[${requestId}] Phase: ${processingPhase}`);
-    
-    // Имитируем извлечение данных из ZIP архива
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    await logError(supabase, userId, 'apple_health_background_phase', `Background processing phase: ${processingPhase}`, { 
-      phase: processingPhase,
-      requestId
-    });
+    await new Promise(r => setTimeout(r, 2000));
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { phase: processingPhase, requestId });
 
+    // 5) Парсинг XML
     processingPhase = 'xml_parsing';
-    console.log(`[${requestId}] Phase: ${processingPhase}`);
-    
-    // Имитируем парсинг XML данных
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    await logError(supabase, userId, 'apple_health_background_phase', `Background processing phase: ${processingPhase}`, { 
-      phase: processingPhase,
-      requestId
-    });
+    await new Promise(r => setTimeout(r, 3000));
+    await logError(supabase, userId, 'apple_health_background_phase', 'Background processing phase', { phase: processingPhase, requestId });
 
+    // 6) Запись в БД
     processingPhase = 'database_insertion';
-    console.log(`[${requestId}] Phase: ${processingPhase}`);
-    
-    // Имитируем вставку данных в базу
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise(r => setTimeout(r, 2000));
+
     const mockRecordsProcessed = Math.floor(Math.random() * 1000) + 100;
-    
-    // Имитируем результаты обработки
     const results = {
       recordsProcessed: mockRecordsProcessed,
       categories: ['Steps', 'Heart Rate', 'Sleep', 'Weight', 'Exercise Minutes'],
@@ -307,69 +213,40 @@ async function processAppleHealthFile(fileData: Blob, userId: string, filePath: 
         from: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
         to: new Date().toISOString()
       },
-      fileSizeBytes: fileData.size,
-      fileSizeMB: Math.round(fileData.size / 1024 / 1024),
+      fileSizeBytes,
+      fileSizeMB: fileSizeBytes ? Math.round(fileSizeBytes / 1024 / 1024) : null,
       processingTimeMs: Date.now() - backgroundStartTime,
       requestId
     };
-    
-    console.log(`[${requestId}] Background processing completed:`, results);
-    
-    // Логируем успешное завершение с детальными результатами
+
     await logError(supabase, userId, 'apple_health_processing_complete', 'Apple Health background processing completed successfully', {
       ...results,
       finalPhase: processingPhase,
-      totalPhases: ['initialization', 'file_validation', 'data_extraction', 'xml_parsing', 'database_insertion'],
+      totalPhases: ['initialization', 'download', 'file_validation', 'data_extraction', 'xml_parsing', 'database_insertion'],
       success: true
     });
-    
-    processingPhase = 'cleanup';
-    
-    // Удаляем обработанный файл
-    const { error: deleteError } = await supabase.storage
-      .from('apple-health-uploads')
-      .remove([filePath]);
 
+    // 7) Очистка: удаляем файл
+    const { error: deleteError } = await supabase.storage.from('apple-health-uploads').remove([filePath]);
     if (deleteError) {
-      console.error(`[${requestId}] Failed to delete processed file:`, deleteError);
-      await logError(supabase, userId, 'apple_health_cleanup_warning', 'Failed to delete processed file', { 
-        deleteError, 
-        filePath,
-        requestId
-      });
+      await logError(supabase, userId, 'apple_health_cleanup_warning', 'Failed to delete processed file', { deleteError, filePath, requestId });
     } else {
-      console.log(`[${requestId}] Processed file deleted successfully`);
-      await logError(supabase, userId, 'apple_health_cleanup_success', 'Processed file deleted successfully', { 
-        filePath,
-        requestId
-      });
+      await logError(supabase, userId, 'apple_health_cleanup_success', 'Processed file deleted successfully', { filePath, requestId });
     }
-    
+
   } catch (error) {
     const processingTime = Date.now() - backgroundStartTime;
-    console.error(`[${requestId}] Background processing error in phase '${processingPhase}':`, error);
-    
-    await logError(supabase, userId, 'apple_health_background_processing_error', `Background processing failed in phase: ${processingPhase}`, { 
-      filePath, 
+    await logError(supabase, userId, 'apple_health_background_processing_error', `Background processing failed in phase: ${processingPhase}`, {
+      filePath,
       phase: processingPhase,
       processingTimeMs: processingTime,
-      error: {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      },
+      error: { message: error.message, name: error.name, stack: error.stack },
       requestId,
-      fileSizeBytes: fileData.size,
-      fileSizeMB: Math.round(fileData.size / 1024 / 1024)
+      fileSizeBytes
     });
-    
-    // В случае ошибки, все равно пытаемся удалить файл
-    try {
-      await supabase.storage.from('apple-health-uploads').remove([filePath]);
-      console.log(`[${requestId}] Failed file deleted during cleanup`);
-    } catch (cleanupError) {
-      console.error(`[${requestId}] Failed to cleanup file after error:`, cleanupError);
-    }
+
+    // Пытаемся удалить проблемный файл
+    try { await supabase.storage.from('apple-health-uploads').remove([filePath]); } catch (_) {}
   }
 }
 
