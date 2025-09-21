@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
+import { unzip } from 'https://deno.land/x/zip@v1.2.5/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -439,26 +440,67 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
     const arrayBuffer = await fileData.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
-    // Извлекаем XML из ZIP архива
-    const textDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
-    const fullText = textDecoder.decode(uint8Array);
+    let xmlContent: string;
     
-    // Находим XML содержимое
-    const xmlStart = fullText.indexOf('<?xml');
-    const healthDataStart = fullText.indexOf('<HealthData');
-    const healthDataEnd = fullText.lastIndexOf('</HealthData>');
-    
-    if (xmlStart === -1 || healthDataEnd === -1) {
-      throw new Error('No valid Apple Health XML found in file');
+    try {
+      // Проверяем, является ли файл ZIP архивом
+      const zipSignature = uint8Array.slice(0, 4);
+      const isZip = zipSignature[0] === 0x50 && zipSignature[1] === 0x4B; // "PK" signature
+      
+      if (isZip) {
+        console.log(`[${requestId}] Processing ZIP archive`);
+        
+        // Извлекаем XML из ZIP архива
+        const extractedFiles = await unzip(uint8Array);
+        
+        // Ищем файл export.xml или любой XML файл
+        let xmlFile = extractedFiles.find(file => 
+          file.name === 'export.xml' || 
+          file.name === 'apple_health_export/export.xml' ||
+          file.name.endsWith('.xml')
+        );
+        
+        if (!xmlFile) {
+          throw new Error('No XML file found in ZIP archive');
+        }
+        
+        xmlContent = new TextDecoder('utf-8').decode(xmlFile.content);
+        
+        await logError(supabase, userId, 'apple_health_zip_extracted', 'XML extracted from ZIP archive', {
+          requestId,
+          zipSizeMB: Math.round(uint8Array.length / 1024 / 1024),
+          xmlSizeMB: Math.round(xmlContent.length / 1024 / 1024),
+          xmlFileName: xmlFile.name
+        });
+        
+      } else {
+        console.log(`[${requestId}] Processing raw XML file`);
+        
+        // Если это уже XML файл, читаем напрямую
+        const textDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
+        const fullText = textDecoder.decode(uint8Array);
+        
+        // Проверяем наличие XML содержимого
+        if (!fullText.includes('<?xml') || !fullText.includes('<HealthData')) {
+          throw new Error('File does not contain valid Apple Health XML data');
+        }
+        
+        xmlContent = fullText;
+        
+        await logError(supabase, userId, 'apple_health_xml_direct', 'Raw XML file processed', {
+          requestId,
+          xmlSizeMB: Math.round(xmlContent.length / 1024 / 1024)
+        });
+      }
+      
+    } catch (extractError) {
+      await logError(supabase, userId, 'apple_health_extraction_error', 'Failed to extract XML content', {
+        requestId,
+        error: extractError.message,
+        fileSize: uint8Array.length
+      });
+      throw new Error(`Failed to extract XML content: ${extractError.message}`);
     }
-    
-    const xmlContent = fullText.slice(xmlStart, healthDataEnd + '</HealthData>'.length);
-    
-    await logError(supabase, userId, 'apple_health_xml_extracted', 'XML content extracted', {
-      requestId,
-      xmlSizeChars: xmlContent.length,
-      xmlSizeMB: Math.round(xmlContent.length / 1024 / 1024)
-    });
 
     // 5) Парсинг XML и извлечение данных
     processingPhase = 'xml_parsing';
