@@ -163,25 +163,104 @@ async function processAppleHealthFile(userId: string, filePath: string, requestI
       requestId
     });
 
-    // 2) Скачиваем файл
+    // 2) Скачиваем файл только если он не слишком большой
     processingPhase = 'download';
     const downloadStart = Date.now();
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('apple-health-uploads')
-      .download(filePath);
-    const downloadMs = Date.now() - downloadStart;
-
-    if (downloadError) {
-      await logError(supabase, userId, 'apple_health_download_error', 'Failed to download file (background)', {
-        downloadError, filePath, requestId, downloadMs
+    
+    // Для файлов больше 100MB создаем только запись об импорте без полной обработки
+    if (listedSize && listedSize > 100 * 1024 * 1024) {
+      await logError(supabase, userId, 'apple_health_large_file_handling', 'Large file detected - creating import record only', {
+        requestId,
+        fileSizeMB: Math.round(listedSize / 1024 / 1024),
+        strategy: 'import_record_only'
       });
-      throw new Error(`Download failed: ${downloadError.message}`);
+
+      // Создаем метрику для большого файла без полной обработки
+      const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+        p_user_id: userId,
+        p_metric_name: 'AppleHealthImportLarge',
+        p_metric_category: 'import',
+        p_unit: 'MB',
+        p_source: 'apple_health'
+      });
+
+      if (metricId) {
+        const { error: insertError } = await supabase.from('metric_values').insert({
+          user_id: userId,
+          metric_id: metricId,
+          value: Math.round(listedSize / 1024 / 1024),
+          measurement_date: new Date().toISOString().split('T')[0],
+          source_data: {
+            fileName: fileName,
+            fileSize: listedSize,
+            importDate: new Date().toISOString(),
+            requestId,
+            processingStatus: 'large_file_received'
+          },
+          external_id: `apple_health_large_${requestId}`,
+          notes: `Large Apple Health file (${Math.round(listedSize / 1024 / 1024)}MB) received - full processing skipped due to size limits`
+        });
+
+        if (!insertError) {
+          await logError(supabase, userId, 'apple_health_large_file_imported', 'Large file import record created', {
+            requestId,
+            metricId,
+            fileSizeMB: Math.round(listedSize / 1024 / 1024)
+          });
+        }
+      }
+
+      // Удаляем файл после создания записи
+      await supabase.storage.from('apple-health-uploads').remove([filePath]);
+      
+      await logError(supabase, userId, 'apple_health_processing_complete', 'Large Apple Health file processing completed', {
+        requestId,
+        fileName,
+        fileSizeMB: Math.round(listedSize / 1024 / 1024),
+        strategy: 'large_file_import_only',
+        recordsProcessed: 1
+      });
+      
+      return;
     }
 
-    fileSizeBytes = fileData.size;
+    // Для файлов меньше 100MB - полная обработка
+    let fileData;
+    try {
+      const { data: downloadedFile, error: downloadError } = await supabase.storage
+        .from('apple-health-uploads')
+        .download(filePath);
+      
+      if (downloadError) {
+        await logError(supabase, userId, 'apple_health_download_error', 'Failed to download file (background)', {
+          downloadError: downloadError.message, 
+          filePath, 
+          requestId, 
+          downloadMs: Date.now() - downloadStart
+        });
+        throw new Error(`Download failed: ${downloadError.message}`);
+      }
+      
+      fileData = downloadedFile;
+      
+    } catch (downloadErr) {
+      await logError(supabase, userId, 'apple_health_download_exception', 'Download exception caught', {
+        error: downloadErr.message,
+        filePath,
+        requestId,
+        downloadMs: Date.now() - downloadStart
+      });
+      throw downloadErr;
+    }
+    
+    const downloadMs = Date.now() - downloadStart;
+    const fileSizeBytes = fileData.size;
+    
     await logError(supabase, userId, 'apple_health_download_success', 'File downloaded successfully (background)', {
       filePath, requestId, fileSizeBytes, fileSizeMB: Math.round(fileSizeBytes / 1024 / 1024), downloadMs
     });
+
+    
 
     // 3) Валидация
     processingPhase = 'file_validation';
