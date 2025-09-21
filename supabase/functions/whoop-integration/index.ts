@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Whoop API endpoints
-const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer';
+// Whoop API v2.0 endpoints
+const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v2';
 const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 
@@ -85,7 +85,7 @@ async function handleAuth(req: Request) {
     .from('whoop_oauth_states')
     .insert({ state, user_id: user.id });
 
-  const scope = 'read:recovery read:sleep read:workout read:profile read:body_measurement';
+  const scope = 'read:recovery read:sleep read:workout read:profile read:body_measurement read:cycles';
   const authUrl = `${WHOOP_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
 
   console.log('Generated auth URL:', authUrl);
@@ -525,7 +525,7 @@ async function exchangeCodeForTokens(code: string) {
 
 // Получаем информацию о пользователе
 async function fetchWhoopUserInfo(accessToken: string) {
-  const response = await fetch(`${WHOOP_API_BASE}/v1/user/profile/basic`, {
+  const response = await fetch(`${WHOOP_API_BASE}/user/profile/basic`, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
     },
@@ -550,19 +550,19 @@ async function syncWhoopData(userId: string, accessToken: string) {
 
   try {
     // Синхронизируем recovery данные
-    const recoveryData = await fetchWhoopData(accessToken, 'v1/cycle', {
+    const recoveryData = await fetchWhoopData(accessToken, 'recovery', {
       start: startDate,
       end: endDate,
     });
 
     // Синхронизируем sleep данные
-    const sleepData = await fetchWhoopData(accessToken, 'v1/activity/sleep', {
+    const sleepData = await fetchWhoopData(accessToken, 'sleep', {
       start: startDate,
       end: endDate,
     });
 
     // Синхронизируем workout данные
-    const workoutData = await fetchWhoopData(accessToken, 'v1/activity/workout', {
+    const workoutData = await fetchWhoopData(accessToken, 'workout', {
       start: startDate,
       end: endDate,
     });
@@ -602,34 +602,40 @@ async function syncWhoopData(userId: string, accessToken: string) {
   }
 }
 
-// Универсальная функция для запросов к Whoop API
+// Универсальная функция для запросов к Whoop API v2
 async function fetchWhoopData(accessToken: string, endpoint: string, params: Record<string, string> = {}) {
   const url = new URL(`${WHOOP_API_BASE}/${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, value);
   });
 
+  console.log(`Fetching Whoop v2 data from: ${url.toString()}`);
+
   const response = await fetch(url.toString(), {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
+      'Accept': 'application/json',
     },
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`Whoop API error for ${endpoint}:`, errorText);
-    throw new Error(`Failed to fetch ${endpoint}`);
+    console.error(`Whoop API v2 error for ${endpoint} (${response.status}):`, errorText);
+    throw new Error(`Failed to fetch ${endpoint}: ${response.status} ${errorText}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  console.log(`Whoop v2 ${endpoint} response:`, { recordsCount: result?.records?.length || 0 });
+  return result;
 }
 
-// Сохраняем recovery данные
+// Сохраняем recovery данные (API v2)
 async function saveRecoveryData(userId: string, records: any[]) {
   let savedCount = 0;
 
   for (const record of records) {
-    if (!record.score || !record.cycle_id) continue;
+    // API v2 structure: record.score.recovery_score, record.cycle_id
+    if (!record.score?.recovery_score || !record.cycle_id) continue;
 
     const metricId = await getOrCreateMetric(userId, 'Recovery Score', 'recovery', '%', 'whoop');
     
@@ -645,20 +651,22 @@ async function saveRecoveryData(userId: string, records: any[]) {
       });
 
     if (!error) savedCount++;
+    else console.error('Error saving recovery data:', error);
   }
 
+  console.log(`Saved ${savedCount} recovery records`);
   return savedCount;
 }
 
-// Сохраняем sleep данные
+// Сохраняем sleep данные (API v2)
 async function saveSleepData(userId: string, records: any[]) {
   let savedCount = 0;
 
   for (const record of records) {
     if (!record.score || !record.id) continue;
 
-    // Sleep efficiency
-    if (record.score.sleep_efficiency_percentage) {
+    // Sleep efficiency - API v2 structure
+    if (record.score.sleep_efficiency_percentage !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Sleep Efficiency', 'sleep', '%', 'whoop');
       
       const { error } = await supabase
@@ -673,10 +681,11 @@ async function saveSleepData(userId: string, records: any[]) {
         });
 
       if (!error) savedCount++;
+      else console.error('Error saving sleep efficiency:', error);
     }
 
-    // Sleep duration
-    if (record.sleep_performance_percentage) {
+    // Sleep performance score - API v2
+    if (record.score.sleep_performance_percentage !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Sleep Performance', 'sleep', '%', 'whoop');
       
       const { error } = await supabase
@@ -684,28 +693,49 @@ async function saveSleepData(userId: string, records: any[]) {
         .upsert({
           user_id: userId,
           metric_id: metricId,
-          value: record.sleep_performance_percentage,
+          value: record.score.sleep_performance_percentage,
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_performance`,
           source_data: record,
         });
 
       if (!error) savedCount++;
+      else console.error('Error saving sleep performance:', error);
+    }
+
+    // Sleep need fulfillment - API v2
+    if (record.score.sleep_need_percentage !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Sleep Need Fulfillment', 'sleep', '%', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.score.sleep_need_percentage,
+          measurement_date: record.created_at.split('T')[0],
+          external_id: `${record.id}_need`,
+          source_data: record,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving sleep need:', error);
     }
   }
 
+  console.log(`Saved ${savedCount} sleep records`);
   return savedCount;
 }
 
-// Сохраняем workout данные
+// Сохраняем workout данные (API v2)
 async function saveWorkoutData(userId: string, records: any[]) {
   let savedCount = 0;
 
   for (const record of records) {
     if (!record.score || !record.id) continue;
 
-    // Strain
-    if (record.score.strain) {
+    // Strain - API v2 structure
+    if (record.score.strain !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Workout Strain', 'workout', 'strain', 'whoop');
       
       const { error } = await supabase
@@ -717,14 +747,15 @@ async function saveWorkoutData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: record.id,
           source_data: record,
-          notes: record.sport_name || null,
+          notes: record.sport_name || record.sport?.name || null,
         });
 
       if (!error) savedCount++;
+      else console.error('Error saving workout strain:', error);
     }
 
-    // Average heart rate
-    if (record.score.average_heart_rate) {
+    // Average heart rate - API v2
+    if (record.score.average_heart_rate !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Average Heart Rate', 'workout', 'bpm', 'whoop');
       
       const { error } = await supabase
@@ -736,13 +767,56 @@ async function saveWorkoutData(userId: string, records: any[]) {
           measurement_date: record.created_at.split('T')[0],
           external_id: `${record.id}_hr`,
           source_data: record,
-          notes: record.sport_name || null,
+          notes: record.sport_name || record.sport?.name || null,
         });
 
       if (!error) savedCount++;
+      else console.error('Error saving workout heart rate:', error);
+    }
+
+    // Max heart rate - API v2
+    if (record.score.max_heart_rate !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Max Heart Rate', 'workout', 'bpm', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.score.max_heart_rate,
+          measurement_date: record.created_at.split('T')[0],
+          external_id: `${record.id}_max_hr`,
+          source_data: record,
+          notes: record.sport_name || record.sport?.name || null,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving max heart rate:', error);
+    }
+
+    // Calories - API v2
+    if (record.score.kilojoule !== undefined) {
+      const calories = Math.round(record.score.kilojoule / 4.184); // Convert kJ to calories
+      const metricId = await getOrCreateMetric(userId, 'Workout Calories', 'workout', 'kcal', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: calories,
+          measurement_date: record.created_at.split('T')[0],
+          external_id: `${record.id}_calories`,
+          source_data: record,
+          notes: record.sport_name || record.sport?.name || null,
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving workout calories:', error);
     }
   }
 
+  console.log(`Saved ${savedCount} workout records`);
   return savedCount;
 }
 
