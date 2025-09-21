@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { readAll } from "https://deno.land/std@0.208.0/io/read_all.ts";
-import { Unzip } from "https://deno.land/x/compress@v0.4.6/mod.ts";
+import { unzip } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -168,15 +168,13 @@ async function processLargeFileStreaming(
   }
 
   const zipData = await response.arrayBuffer();
-  const unzip = new Unzip(new Uint8Array(zipData));
-  const entries = unzip.entries();
+  const files = await unzip(new Uint8Array(zipData));
 
   // Ищем export.xml в архиве
   let xmlContent: string | null = null;
-  for (const entry of entries) {
-    if (entry.name.includes('export.xml')) {
-      const data = unzip.extract(entry);
-      xmlContent = new TextDecoder().decode(data);
+  for (const [fileName, fileData] of Object.entries(files)) {
+    if (fileName.includes('export.xml')) {
+      xmlContent = new TextDecoder().decode(fileData);
       break;
     }
   }
@@ -202,14 +200,12 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
   }
 
   const arrayBuffer = await fileData.arrayBuffer();
-  const unzip = new Unzip(new Uint8Array(arrayBuffer));
-  const entries = unzip.entries();
+  const files = await unzip(new Uint8Array(arrayBuffer));
 
   let xmlContent: string | null = null;
-  for (const entry of entries) {
-    if (entry.name.includes('export.xml')) {
-      const data = unzip.extract(entry);
-      xmlContent = new TextDecoder().decode(data);
+  for (const [fileName, fileData] of Object.entries(files)) {
+    if (fileName.includes('export.xml')) {
+      xmlContent = new TextDecoder().decode(fileData);
       break;
     }
   }
