@@ -160,7 +160,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       // Слушаем сообщения от окна авторизации
       const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+        // Принимаем сообщения от Supabase функции или нашего origin
+        if (event.origin !== window.location.origin && 
+            !event.origin.includes('supabase.co')) return;
 
         if (event.data.type === 'whoop-auth-success') {
           authWindow?.close();
