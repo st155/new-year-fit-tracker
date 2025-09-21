@@ -51,16 +51,18 @@ const WhoopCallback = () => {
         // Если есть сессия - синхронизируем, если нет - сохраняем код для отложенной синхронизации
         if (session?.user) {
           console.log('User is authenticated, syncing Whoop data immediately');
-          // Синхронизируем данные
+          // Синхронизируем данные с JWT токеном
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
           const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
             body: { 
               action: 'sync',
-              code,
-              tempTokens: JSON.parse(localStorage.getItem('whoop_temp_tokens') || '{}')
+              code
+            },
+            headers: {
+              Authorization: `Bearer ${currentSession?.access_token}`
             }
           });
 
-          localStorage.removeItem('whoop_temp_tokens');
           localStorage.removeItem('whoop_pending_code');
           
           if (syncError) {

@@ -61,8 +61,12 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const loadWhoopStatus = async () => {
     try {
       setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'check-status' }
+        body: { action: 'check-status' },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : undefined
       });
 
       if (error) throw error;
@@ -200,9 +204,13 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const syncData = async () => {
     try {
       setIsSyncing(true);
+      const { data: { session } } = await supabase.auth.getSession();
       
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync' }
+        body: { action: 'sync' },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : undefined
       });
 
       if (error) throw error;
@@ -237,12 +245,16 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const syncDataWithTokens = async (tempTokens: any) => {
     try {
       setIsSyncing(true);
+      const { data: { session } } = await supabase.auth.getSession();
       
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: { 
           action: 'sync',
           tempTokens
-        }
+        },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : undefined
       });
 
       if (error) throw error;
@@ -277,8 +289,12 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const syncDataWithCode = async (code: string) => {
     try {
       setIsSyncing(true);
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync', code }
+        body: { action: 'sync', code },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : undefined
       });
       if (error) throw error;
 
@@ -308,9 +324,13 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const handleDisconnect = async () => {
     try {
       setIsDisconnecting(true);
+      const { data: { session } } = await supabase.auth.getSession();
       
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'disconnect' }
+        body: { action: 'disconnect' },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`
+        } : undefined
       });
 
       if (error) throw error;
