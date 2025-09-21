@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ErrorLogger } from '@/lib/error-logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-// import JSZip from 'jszip'; // Убираем статический импорт
+import JSZip from 'jszip';
 
 interface AppleHealthUploadProps {
   onUploadComplete?: (data: any) => void;
@@ -74,8 +74,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
         setProcessingPhase('Парсим архив локально (большой файл)...');
         await ErrorLogger.logAppleHealthDiagnostics('client_import_start', { fileName: file.name, sizeMB }, user?.id || undefined);
 
-        // Читаем архив и извлекаем Export.xml (динамический импорт JSZip)
-        const JSZip = (await import('jszip')).default;
+        // Читаем архив и извлекаем Export.xml
         const arrayBuffer = await file.arrayBuffer();
         const zip = await JSZip.loadAsync(arrayBuffer);
         const xmlEntry = Object.values(zip.files).find((f: any) =>
