@@ -168,22 +168,33 @@ async function processLargeFileStreaming(
 
   const zipData = await response.arrayBuffer();
   
-  // Простая проверка на ZIP файл (ZIP файлы начинаются с "PK")
+  // Проверяем формат файла по магическим байтам
   const uint8Array = new Uint8Array(zipData);
-  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B;
+  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // "PK"
+  const isXml = new TextDecoder().decode(uint8Array.slice(0, 5)) === '<?xml';
   
   let xmlContent: string | null = null;
   
-  if (isZip) {
-    // Для ZIP файлов ищем XML в конце данных (упрощенный подход)
-    const dataString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(zipData);
-    const xmlMatch = dataString.match(/<\?xml[\s\S]*?<\/HealthData>/);
+  if (isXml) {
+    // Прямой XML файл
+    xmlContent = new TextDecoder().decode(zipData);
+    console.log(`[${requestId}] Direct XML file detected`);
+  } else if (isZip) {
+    // Ищем XML содержимое внутри ZIP (упрощенный подход)
+    const zipString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(zipData);
+    
+    // Паттерн для поиска XML заголовка в ZIP данных
+    const xmlPattern = /<\?xml[\s\S]*?<HealthData[\s\S]*?<\/HealthData>/i;
+    const xmlMatch = zipString.match(xmlPattern);
+    
     if (xmlMatch) {
       xmlContent = xmlMatch[0];
+      console.log(`[${requestId}] XML extracted from ZIP using pattern matching`);
+    } else {
+      console.log(`[${requestId}] No XML content found in ZIP file`);
     }
   } else {
-    // Если это прямой XML файл
-    xmlContent = new TextDecoder().decode(zipData);
+    throw new Error('Unknown file format - not ZIP or XML');
   }
 
   if (!xmlContent) {
@@ -208,22 +219,29 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
 
   const arrayBuffer = await fileData.arrayBuffer();
   
-  // Простая проверка на ZIP файл (ZIP файлы начинаются с "PK")
+  // Проверяем формат файла по магическим байтам
   const uint8Array = new Uint8Array(arrayBuffer);
-  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B;
+  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // "PK"
+  const isXml = new TextDecoder().decode(uint8Array.slice(0, 5)) === '<?xml';
   
   let xmlContent: string | null = null;
   
-  if (isZip) {
-    // Для ZIP файлов ищем XML в конце данных (упрощенный подход)
-    const dataString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(arrayBuffer);
-    const xmlMatch = dataString.match(/<\?xml[\s\S]*?<\/HealthData>/);
+  if (isXml) {
+    // Прямой XML файл
+    xmlContent = new TextDecoder().decode(arrayBuffer);
+  } else if (isZip) {
+    // Ищем XML содержимое внутри ZIP (упрощенный подход)
+    const zipString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(arrayBuffer);
+    
+    // Паттерн для поиска XML заголовка в ZIP данных
+    const xmlPattern = /<\?xml[\s\S]*?<HealthData[\s\S]*?<\/HealthData>/i;
+    const xmlMatch = zipString.match(xmlPattern);
+    
     if (xmlMatch) {
       xmlContent = xmlMatch[0];
     }
   } else {
-    // Если это прямой XML файл
-    xmlContent = new TextDecoder().decode(arrayBuffer);
+    throw new Error('Unknown file format - not ZIP or XML');
   }
 
   if (!xmlContent) {

@@ -531,11 +531,9 @@ const ProgressPage = () => {
         </div>
 
         {/* Галерея прогресса */}
-        {measurements.some(m => m.photo_url) && (
-          <div className="mb-8">
-            <ProgressGallery />
-          </div>
-        )}
+        <div className="mb-8">
+          <ProgressGallery />
+        </div>
       </div>
     </div>
   );

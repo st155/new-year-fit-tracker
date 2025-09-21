@@ -104,7 +104,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Home className="h-4 w-4 mr-1" />
-                 Дашборд
+                 Главная
                </Button>
                <Button 
                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
