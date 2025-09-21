@@ -18,6 +18,7 @@ import EditGoal from "./pages/EditGoal";
 import FitnessData from "./pages/FitnessData";
 import WhoopCallback from "./pages/WhoopCallback";
 import NotFound from "./pages/NotFound";
+import TrainerDashboard from "./pages/TrainerDashboard";
 
 const queryClient = new QueryClient();
 

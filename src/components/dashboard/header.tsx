@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Trophy, Target, Users, LogOut, Settings, Home, Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardHeaderProps {
@@ -14,12 +16,50 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ userName, userRole, challengeProgress, daysLeft, challengeTitle }: DashboardHeaderProps) {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isTrainer, setIsTrainer] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkTrainerRole();
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const checkTrainerRole = async () => {
+    if (!user) return;
+
+    try {
+      // Проверяем новую систему ролей
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['trainer', 'admin']);
+
+      if (!error && roles && roles.length > 0) {
+        setIsTrainer(true);
+        return;
+      }
+
+      // Проверяем старую систему (trainer_role в profiles)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('trainer_role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile?.trainer_role) {
+        setIsTrainer(true);
+      }
+    } catch (error) {
+      console.error('Error checking trainer role:', error);
+    }
   };
 
   return (
@@ -104,8 +144,19 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Home className="h-4 w-4 mr-1" />
-                 Главная
+               Главная
                </Button>
+               {isTrainer && (
+                 <Button 
+                   variant={location.pathname === '/trainer' ? "default" : "ghost"}
+                   size="sm"
+                   onClick={() => navigate('/trainer')}
+                   className="text-muted-foreground hover:text-foreground"
+                 >
+                   <Settings className="h-4 w-4 mr-1" />
+                   Тренер
+               </Button>
+               )}
                <Button 
                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
                  size="sm" 
