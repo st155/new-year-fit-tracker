@@ -13,6 +13,7 @@ import CreateChallenge from "./pages/CreateChallenge";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 import CreateGoal from "./pages/CreateGoal";
+import WhoopCallback from "./pages/WhoopCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
                 <CreateGoal />
               </ProtectedRoute>
             } />
+            <Route path="/whoop-callback" element={<WhoopCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

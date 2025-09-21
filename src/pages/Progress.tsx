@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
+import { WhoopIntegration } from "@/components/integrations/WhoopIntegration";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -241,9 +242,10 @@ const ProgressPage = () => {
                   </DialogHeader>
                   
                   <Tabs defaultValue="measurement" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="measurement">Ручной ввод</TabsTrigger>
                       <TabsTrigger value="photo">ИИ-анализ</TabsTrigger>
+                      <TabsTrigger value="integrations">Интеграции</TabsTrigger>
                       <TabsTrigger value="manual-photo">Фото прогресса</TabsTrigger>
                     </TabsList>
 
@@ -335,6 +337,25 @@ const ProgressPage = () => {
                           goalId={selectedGoal?.id}
                           label="Загрузить скриншот трекера"
                         />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="integrations" className="space-y-4">
+                      <div>
+                        <Label className="text-base font-medium">Интеграции фитнес-устройств</Label>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Подключите ваши фитнес-устройства для автоматической синхронизации данных
+                        </p>
+                        <WhoopIntegration userId={user?.id || ''} />
+                        
+                        <div className="mt-4 text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+                          <h4 className="font-medium mb-2">Скоро будут доступны:</h4>
+                          <ul className="space-y-1">
+                            <li>• Apple Health - импорт данных о здоровье</li>
+                            <li>• Google Fit - синхронизация активности</li>
+                            <li>• Fitbit - данные тренировок и сна</li>
+                          </ul>
+                        </div>
                       </div>
                     </TabsContent>
 

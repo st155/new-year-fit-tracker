@@ -189,6 +189,7 @@ export type Database = {
       }
       measurements: {
         Row: {
+          apple_health_id: string | null
           created_at: string
           goal_id: string
           id: string
@@ -196,12 +197,15 @@ export type Database = {
           notes: string | null
           photo_url: string | null
           screenshot_url: string | null
+          source: string | null
           unit: string
           user_id: string
           value: number
           verified_by_trainer: boolean | null
+          whoop_id: string | null
         }
         Insert: {
+          apple_health_id?: string | null
           created_at?: string
           goal_id: string
           id?: string
@@ -209,12 +213,15 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           screenshot_url?: string | null
+          source?: string | null
           unit: string
           user_id: string
           value: number
           verified_by_trainer?: boolean | null
+          whoop_id?: string | null
         }
         Update: {
+          apple_health_id?: string | null
           created_at?: string
           goal_id?: string
           id?: string
@@ -222,10 +229,12 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           screenshot_url?: string | null
+          source?: string | null
           unit?: string
           user_id?: string
           value?: number
           verified_by_trainer?: boolean | null
+          whoop_id?: string | null
         }
         Relationships: [
           {
@@ -274,6 +283,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      whoop_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
