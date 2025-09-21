@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Users, Target, Trophy, ArrowLeft, TrendingDown, Scale } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { HomeButton } from "@/components/ui/home-button";
 
 interface ChallengeParticipant {
   user_id: string;
@@ -149,6 +150,7 @@ const ChallengeDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <HomeButton />
       <div className="max-w-7xl mx-auto p-6">
         {/* Хедер с кнопкой назад */}
         <div className="mb-6">

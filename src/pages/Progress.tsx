@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { HomeButton } from "@/components/ui/home-button";
 
 interface Goal {
   id: string;
@@ -205,6 +206,7 @@ const ProgressPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <HomeButton />
       <div className="max-w-7xl mx-auto p-6">
         {/* Заголовок */}
         <div className="mb-8">

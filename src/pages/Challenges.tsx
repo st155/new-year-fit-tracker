@@ -8,6 +8,7 @@ import { Calendar, Users, Target, Trophy, Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { HomeButton } from "@/components/ui/home-button";
 
 const Challenges = () => {
   const { user } = useAuth();
@@ -129,6 +130,7 @@ const Challenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <HomeButton />
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>

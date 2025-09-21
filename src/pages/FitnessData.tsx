@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { HomeButton } from "@/components/ui/home-button";
 
 interface UserMetric {
   id: string;
@@ -212,6 +213,7 @@ export default function FitnessData() {
 
   return (
     <div className="min-h-screen bg-background">
+      <HomeButton />
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
