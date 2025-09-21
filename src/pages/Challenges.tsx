@@ -4,13 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Target, Trophy } from "lucide-react";
+import { Calendar, Users, Target, Trophy, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const Challenges = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [challenges, setChallenges] = useState<any[]>([]);
   const [userChallenges, setUserChallenges] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,16 +154,25 @@ const Challenges = () => {
                   )}
                 </CardContent>
                 
-                <CardFooter>
+                <CardFooter className="flex gap-2">
+                  <Button 
+                    onClick={() => navigate(`/challenges/${challenge.id}`)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Подробнее
+                  </Button>
+                  
                   {isParticipant ? (
-                    <Button disabled className="w-full">
+                    <Button disabled className="flex-1">
                       Уже участвую
                     </Button>
                   ) : (
                     <Button 
                       onClick={() => joinChallenge(challenge.id)}
                       disabled={joiningChallenge === challenge.id}
-                      className="w-full"
+                      className="flex-1"
                     >
                       {joiningChallenge === challenge.id ? (
                         <>
