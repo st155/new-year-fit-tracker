@@ -28,11 +28,34 @@ const CreateGoalPage = () => {
   });
 
   const goalTypes = [
-    { value: 'strength', label: 'Сила', color: 'bg-primary/10 text-primary border-primary/20', description: 'Силовые упражнения' },
-    { value: 'cardio', label: 'Кардио', color: 'bg-accent/10 text-accent border-accent/20', description: 'Кардиотренировки' },
-    { value: 'endurance', label: 'Выносливость', color: 'bg-success/10 text-success border-success/20', description: 'Упражнения на выносливость' },
-    { value: 'body_composition', label: 'Композиция тела', color: 'bg-secondary/10 text-secondary-foreground border-secondary/20', description: 'Вес, процент жира' },
-    { value: 'flexibility', label: 'Гибкость', color: 'bg-muted/50 text-muted-foreground border-muted', description: 'Растяжка, йога' }
+    { 
+      value: 'strength', 
+      label: 'Силовые упражнения', 
+      color: 'bg-primary/10 text-primary border-primary/20', 
+      description: 'Подтягивания, отжимания, приседания, жим лежа',
+      examples: ['Подтягивания - 50 раз', 'Отжимания - 100 раз', 'Приседания - 200 раз']
+    },
+    { 
+      value: 'cardio', 
+      label: 'Кардио', 
+      color: 'bg-accent/10 text-accent border-accent/20', 
+      description: 'Бег, велосипед, плавание, ходьба',
+      examples: ['Бег - 10 км', 'Велосипед - 50 км', 'Плавание - 2 км']
+    },
+    { 
+      value: 'endurance', 
+      label: 'Выносливость', 
+      color: 'bg-success/10 text-success border-success/20', 
+      description: 'Длительность тренировок, количество кругов',
+      examples: ['Тренировка - 90 мин', 'Круги - 20 кругов', 'Планка - 10 мин']
+    },
+    { 
+      value: 'body_composition', 
+      label: 'Состав тела', 
+      color: 'bg-secondary/10 text-secondary-foreground border-secondary/20', 
+      description: 'Вес, процент жира, объемы тела',
+      examples: ['Вес - 70 кг', 'Процент жира - 15 %', 'Талия - 80 см']
+    }
   ];
 
   const createGoal = async () => {

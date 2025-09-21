@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Target, Trophy, Calendar, Camera, Edit } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -216,7 +216,8 @@ const ProgressPage = () => {
                 Мой прогресс
               </h1>
               <p className="text-muted-foreground mt-2">
-                Отслеживайте свои достижения и добавляйте новые измерения
+                Отслеживайте свои достижения и добавляйте новые измерения. 
+                <strong> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
               </p>
             </div>
 
@@ -237,11 +238,16 @@ const ProgressPage = () => {
                     Добавить измерение
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Добавить новое измерение</DialogTitle>
                     <DialogDescription>
-                      Выберите цель и введите результат измерения
+                      <div className="space-y-2">
+                        <p>Выберите цель и введите результат измерения</p>
+                        <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                          <strong>💡 Подсказка:</strong> Если нужной цели нет в списке, сначала создайте её через кнопку "Новая цель"
+                        </div>
+                      </div>
                     </DialogDescription>
                   </DialogHeader>
                   
@@ -381,6 +387,39 @@ const ProgressPage = () => {
           </div>
         </div>
 
+        {/* Инструкция для новых пользователей */}
+        {goals.length === 0 && (
+          <Card className="mb-8 border-dashed border-2 border-primary/30">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <Target className="h-16 w-16 mx-auto text-primary/50" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Начните отслеживать свой прогресс!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Чтобы добавлять показатели (подтягивания, отжимания, вес и т.д.), сначала создайте цели
+                  </p>
+                  <div className="bg-blue-50 p-4 rounded-lg text-left">
+                    <h4 className="font-medium mb-2">📋 Как это работает:</h4>
+                    <ol className="text-sm space-y-1">
+                      <li><strong>1.</strong> Создайте цель (например: "Подтягивания - 50 раз")</li>
+                      <li><strong>2.</strong> Добавляйте измерения ваших текущих показателей</li>
+                      <li><strong>3.</strong> Отслеживайте прогресс в красивых графиках</li>
+                    </ol>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => navigate('/goals/create')}
+                  className="bg-gradient-primary hover:opacity-90"
+                  size="lg"
+                >
+                  <Target className="h-5 w-5 mr-2" />
+                  Создать первую цель
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Сетка целей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {goals.map((goal, index) => {
@@ -397,7 +436,17 @@ const ProgressPage = () => {
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{goal.goal_name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{goal.goal_name}</h3>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                          onClick={() => navigate(`/goals/edit/${goal.id}`)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
                       <Badge className={getGoalTypeColor(goal.goal_type)}>
                         {goal.goal_type}
                       </Badge>
