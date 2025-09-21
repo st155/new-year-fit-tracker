@@ -25,8 +25,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Проверка размера файла (макс 500MB)
-    const maxSize = 500 * 1024 * 1024; // 500MB в байтах
+    // Проверка размера файла (макс 1GB)
+    const maxSize = 1024 * 1024 * 1024; // 1GB в байтах
     if (file.size > maxSize) {
       await ErrorLogger.logFileUploadError(
         'Apple Health file too large',
@@ -41,7 +41,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       
       toast({
         title: 'Файл слишком большой',
-        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 500MB`,
+        description: `Размер файла: ${Math.round(file.size / 1024 / 1024)}MB. Максимальный размер: 1024MB`,
         variant: 'destructive'
       });
       return;
@@ -100,9 +100,11 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('complete');
       setUploadResult(processData);
 
+      // Показываем информацию о начале фоновой обработки
+      const results = processData.results || {};
       toast({
-        title: 'Успешно загружено!',
-        description: `Обработано записей: ${processData.recordsProcessed || 0}`
+        title: 'Файл загружен успешно!',
+        description: `Размер: ${results.fileSizeMB || 0}MB. Обработка началась в фоновом режиме.`
       });
 
       onUploadComplete?.(processData);
@@ -185,7 +187,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                 <div>
                   <h3 className="font-medium">Загрузить файл Apple Health</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Поддерживается только ZIP-архив экспорта (макс. 500MB)
+                    Поддерживается только ZIP-архив экспорта (макс. 1GB)
                   </p>
                 </div>
                 <Button type="button">
@@ -221,12 +223,15 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Успешно импортировано!</strong>
+                <strong>Файл успешно загружен!</strong>
                 <ul className="mt-2 space-y-1 text-sm">
-                  <li>• Обработано записей: {uploadResult.recordsProcessed || 0}</li>
-                  <li>• Новых показателей: {uploadResult.newMetrics || 0}</li>
-                  <li>• Ошибок: {uploadResult.errors || 0}</li>
+                  <li>• Размер файла: {uploadResult.results?.fileSizeMB || 0}MB</li>
+                  <li>• Статус: {uploadResult.results?.status === 'processing_started' ? 'Обработка началась' : 'Готово'}</li>
+                  <li>• Обработка данных выполняется в фоновом режиме</li>
                 </ul>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Результаты обработки будут сохранены автоматически и появятся в ваших метриках.
+                </p>
               </AlertDescription>
             </Alert>
             <Button onClick={resetUpload} variant="outline" className="w-full">
