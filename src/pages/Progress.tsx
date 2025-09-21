@@ -238,7 +238,7 @@ const ProgressPage = () => {
                     Добавить измерение
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Добавить новое измерение</DialogTitle>
                     <DialogDescription>
@@ -350,14 +350,14 @@ const ProgressPage = () => {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="integrations" className="space-y-4">
+                    <TabsContent value="integrations" className="space-y-4 max-h-[60vh] overflow-y-auto">
                       <div>
                         <Label className="text-base font-medium">Интеграции фитнес-устройств</Label>
                         <p className="text-sm text-muted-foreground mb-4">
                           Подключите ваши фитнес-устройства для автоматической синхронизации данных
                         </p>
                         
-                        <div className="space-y-4">
+                        <div className="space-y-4 pr-2">
                           <WhoopIntegration userId={user?.id || ''} />
                           
                           <AppleHealthIntegration userId={user?.id || ''} />
