@@ -13,58 +13,59 @@ const supabase = createClient(
 );
 
 serve(async (req) => {
-  const startTime = Date.now();
-  let userId: string, filePath: string, requestId: string;
-  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    requestId = crypto.randomUUID();
-    const body = await req.json();
-    userId = body.userId;
-    filePath = body.filePath;
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] Request received: ${req.method} ${req.url}`);
 
-    console.log(`[${requestId}] Starting processing for user ${userId}, file: ${filePath}`);
+  try {
+    const body = await req.json();
+    const { userId, filePath } = body;
+
+    console.log(`[${requestId}] Processing for user ${userId}, file: ${filePath}`);
 
     if (!userId || !filePath) {
+      console.error(`[${requestId}] Missing parameters: userId=${userId}, filePath=${filePath}`);
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters' }),
+        JSON.stringify({ error: 'Missing required parameters: userId and filePath' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Запускаем фоновую обработку
-    const processTask = processAppleHealthFileOptimized(userId, filePath, requestId);
-    
-    // Используем waitUntil если доступно
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(processTask);
-    } else {
-      processTask.catch(error => {
-        console.error(`[${requestId}] Background error:`, error);
-        logError(supabase, userId, 'processing_error', error.message, { requestId, filePath });
-      });
-    }
-
-    return new Response(
+    // Немедленно возвращаем ответ и запускаем обработку в фоне
+    const response = new Response(
       JSON.stringify({ 
         success: true, 
-        results: {
-          status: 'processing_started',
-          message: 'Processing in background',
-          requestId,
-          filePath
-        }
+        message: 'Processing started',
+        requestId,
+        filePath
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
+    // Запускаем фоновую обработку без ожидания
+    processAppleHealthFileOptimized(userId, filePath, requestId)
+      .catch(error => {
+        console.error(`[${requestId}] Background processing failed:`, error);
+        logError(supabase, userId, 'processing_error', error.message, { 
+          requestId, 
+          filePath,
+          stack: error.stack 
+        });
+      });
+
+    return response;
+
   } catch (error) {
-    console.error(`[${requestId || 'unknown'}] Error:`, error);
+    console.error(`[${requestId}] Request processing error:`, error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Request processing failed',
+        details: error.message,
+        requestId 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -72,7 +73,6 @@ serve(async (req) => {
 
 async function processAppleHealthFileOptimized(userId: string, filePath: string, requestId: string) {
   const startTime = Date.now();
-  let tempExtractPath: string | null = null;
   
   try {
     console.log(`[${requestId}] Background processing started`);
@@ -85,7 +85,7 @@ async function processAppleHealthFileOptimized(userId: string, filePath: string,
       });
 
     if (listError || !fileList?.length) {
-      throw new Error(`File not found: ${filePath}`);
+      throw new Error(`File not found: ${filePath}, error: ${listError?.message}`);
     }
 
     const fileInfo = fileList[0];
@@ -100,14 +100,9 @@ async function processAppleHealthFileOptimized(userId: string, filePath: string,
       fileSizeMB
     });
 
-    // 2. Для больших файлов используем streaming
-    if (fileSize > 100 * 1024 * 1024) { // > 100MB
-      console.log(`[${requestId}] Using streaming for large file`);
-      await processLargeFileStreaming(userId, filePath, requestId, fileSize);
-    } else {
-      // Для маленьких файлов - обычная обработка
-      await processSmallFile(userId, filePath, requestId);
-    }
+    // 2. Обрабатываем файл (убрали ограничение на размер файла)
+    console.log(`[${requestId}] Processing file directly`);
+    await processFileDirectly(userId, filePath, requestId);
 
     // 3. Создаем агрегированные данные
     await createDailyAggregates(userId, requestId);
@@ -119,10 +114,12 @@ async function processAppleHealthFileOptimized(userId: string, filePath: string,
       
     if (deleteError) {
       console.error(`[${requestId}] Failed to delete file:`, deleteError);
+    } else {
+      console.log(`[${requestId}] File deleted successfully`);
     }
 
     const processingTime = Date.now() - startTime;
-    await logError(supabase, userId, 'processing_complete', 'Processing completed', {
+    await logError(supabase, userId, 'processing_complete', 'Processing completed successfully', {
       requestId,
       processingTimeMs: processingTime,
       fileSizeMB
@@ -130,85 +127,28 @@ async function processAppleHealthFileOptimized(userId: string, filePath: string,
 
   } catch (error) {
     console.error(`[${requestId}] Processing failed:`, error);
-    await logError(supabase, userId, 'processing_failed', error.message, {
+    await logError(supabase, userId, 'processing_failed', `Processing failed: ${error.message}`, {
       requestId,
       filePath,
-      error: error.stack
+      errorStack: error.stack
     });
     
     // Пытаемся удалить проблемный файл
     try {
       await supabase.storage.from('apple-health-uploads').remove([filePath]);
-    } catch (_) {}
-  }
-}
-
-async function processLargeFileStreaming(
-  userId: string, 
-  filePath: string, 
-  requestId: string,
-  fileSize: number
-) {
-  console.log(`[${requestId}] Starting streaming processing for ${Math.round(fileSize / 1024 / 1024)}MB file`);
-  
-  // Получаем signed URL для прямого доступа
-  const { data: urlData, error: urlError } = await supabase.storage
-    .from('apple-health-uploads')
-    .createSignedUrl(filePath, 3600); // 1 час
-
-  if (urlError || !urlData?.signedUrl) {
-    throw new Error('Failed to create signed URL');
-  }
-
-  // Скачиваем и распаковываем ZIP
-  const response = await fetch(urlData.signedUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to download: ${response.status}`);
-  }
-
-  const zipData = await response.arrayBuffer();
-  
-  // Проверяем формат файла по магическим байтам
-  const uint8Array = new Uint8Array(zipData);
-  const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // "PK"
-  const isXml = new TextDecoder().decode(uint8Array.slice(0, 5)) === '<?xml';
-  
-  let xmlContent: string | null = null;
-  
-  if (isXml) {
-    // Прямой XML файл
-    xmlContent = new TextDecoder().decode(zipData);
-    console.log(`[${requestId}] Direct XML file detected`);
-  } else if (isZip) {
-    // Ищем XML содержимое внутри ZIP (упрощенный подход)
-    const zipString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(zipData);
-    
-    // Паттерн для поиска XML заголовка в ZIP данных
-    const xmlPattern = /<\?xml[\s\S]*?<HealthData[\s\S]*?<\/HealthData>/i;
-    const xmlMatch = zipString.match(xmlPattern);
-    
-    if (xmlMatch) {
-      xmlContent = xmlMatch[0];
-      console.log(`[${requestId}] XML extracted from ZIP using pattern matching`);
-    } else {
-      console.log(`[${requestId}] No XML content found in ZIP file`);
+      console.log(`[${requestId}] Problem file deleted`);
+    } catch (deleteError) {
+      console.error(`[${requestId}] Failed to delete problem file:`, deleteError);
     }
-  } else {
-    throw new Error('Unknown file format - not ZIP or XML');
+    
+    throw error; // Перебрасываем ошибку для логирования
   }
-
-  if (!xmlContent) {
-    throw new Error('No export.xml found in Apple Health archive');
-  }
-
-  console.log(`[${requestId}] XML extracted, size: ${Math.round(xmlContent.length / 1024 / 1024)}MB`);
-
-  // Парсим XML с помощью streaming подхода
-  await parseXMLStreaming(xmlContent, userId, requestId);
 }
 
-async function processSmallFile(userId: string, filePath: string, requestId: string) {
-  // Скачиваем файл целиком для маленьких файлов
+async function processFileDirectly(userId: string, filePath: string, requestId: string) {
+  console.log(`[${requestId}] Starting direct file processing`);
+  
+  // Скачиваем файл
   const { data: fileData, error: downloadError } = await supabase.storage
     .from('apple-health-uploads')
     .download(filePath);
@@ -218,6 +158,7 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
   }
 
   const arrayBuffer = await fileData.arrayBuffer();
+  console.log(`[${requestId}] File downloaded, size: ${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB`);
   
   // Проверяем формат файла по магическим байтам
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -229,8 +170,10 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
   if (isXml) {
     // Прямой XML файл
     xmlContent = new TextDecoder().decode(arrayBuffer);
+    console.log(`[${requestId}] Direct XML file detected`);
   } else if (isZip) {
     // Ищем XML содержимое внутри ZIP (упрощенный подход)
+    console.log(`[${requestId}] ZIP file detected, extracting XML`);
     const zipString = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false }).decode(arrayBuffer);
     
     // Паттерн для поиска XML заголовка в ZIP данных
@@ -239,21 +182,27 @@ async function processSmallFile(userId: string, filePath: string, requestId: str
     
     if (xmlMatch) {
       xmlContent = xmlMatch[0];
+      console.log(`[${requestId}] XML extracted from ZIP successfully`);
+    } else {
+      console.log(`[${requestId}] No XML content found in ZIP file`);
     }
   } else {
     throw new Error('Unknown file format - not ZIP or XML');
   }
 
   if (!xmlContent) {
-    throw new Error('No export.xml found in archive');
+    throw new Error('No XML content found in uploaded file');
   }
 
+  console.log(`[${requestId}] XML content size: ${Math.round(xmlContent.length / 1024 / 1024)}MB`);
+
+  // Парсим XML
   await parseXMLStreaming(xmlContent, userId, requestId);
 }
 
 async function parseXMLStreaming(xmlContent: string, userId: string, requestId: string) {
-  const BATCH_SIZE = 100;
-  const MAX_MEMORY_BUFFER = 5 * 1024 * 1024; // 5MB буфер
+  const BATCH_SIZE = 50; // Уменьшили для надежности
+  const MAX_MEMORY_BUFFER = 2 * 1024 * 1024; // 2MB буфер для экономии памяти
   
   let recordsProcessed = 0;
   let currentBatch: any[] = [];
@@ -262,80 +211,81 @@ async function parseXMLStreaming(xmlContent: string, userId: string, requestId: 
   
   console.log(`[${requestId}] Starting XML parsing, content size: ${Math.round(xmlContent.length / 1024 / 1024)}MB`);
 
-  // Обрабатываем XML по частям
-  while (position < xmlContent.length) {
-    // Читаем следующий чанк
-    const chunkSize = Math.min(MAX_MEMORY_BUFFER, xmlContent.length - position);
-    buffer += xmlContent.slice(position, position + chunkSize);
-    position += chunkSize;
+  try {
+    // Обрабатываем XML по частям
+    while (position < xmlContent.length) {
+      // Читаем следующий чанк
+      const chunkSize = Math.min(MAX_MEMORY_BUFFER, xmlContent.length - position);
+      buffer += xmlContent.slice(position, position + chunkSize);
+      position += chunkSize;
 
-    // Ищем полные записи Record в буфере
-    let recordStart = buffer.indexOf('<Record ');
-    while (recordStart !== -1) {
-      const recordEnd = buffer.indexOf('/>', recordStart);
-      if (recordEnd === -1) break; // Запись не полная, ждем следующий чанк
+      // Ищем полные записи Record в буфере
+      let recordStart = buffer.indexOf('<Record ');
+      while (recordStart !== -1) {
+        const recordEnd = buffer.indexOf('/>', recordStart);
+        if (recordEnd === -1) break; // Запись не полная, ждем следующий чанк
 
-      const recordXml = buffer.slice(recordStart, recordEnd + 2);
-      
-      // Парсим атрибуты записи с помощью регулярных выражений (экономим память)
-      const record = parseRecordAttributes(recordXml);
-      
-      if (record && isValidHealthRecord(record)) {
-        currentBatch.push({
-          user_id: userId,
-          record_type: record.type,
-          value: record.value,
-          unit: record.unit || '',
-          start_date: record.startDate,
-          end_date: record.endDate || record.startDate,
-          source_name: record.sourceName || 'Apple Health',
-          source_version: record.sourceVersion,
-          device: record.device,
-          metadata: {
-            imported_from: 'apple_health',
-            request_id: requestId
-          }
-        });
-      }
-
-      // Сохраняем батч при достижении размера
-      if (currentBatch.length >= BATCH_SIZE) {
-        await saveBatch(currentBatch);
-        recordsProcessed += currentBatch.length;
-        currentBatch = [];
+        const recordXml = buffer.slice(recordStart, recordEnd + 2);
         
-        // Логируем прогресс каждые 1000 записей
-        if (recordsProcessed % 1000 === 0) {
-          console.log(`[${requestId}] Processed ${recordsProcessed} records`);
-          await logError(supabase, userId, 'processing_progress', 'Progress update', {
-            requestId,
-            recordsProcessed
+        // Парсим атрибуты записи
+        const record = parseRecordAttributes(recordXml);
+        
+        if (record && isValidHealthRecord(record)) {
+          currentBatch.push({
+            user_id: userId,
+            record_type: record.type,
+            value: record.value,
+            unit: record.unit || '',
+            start_date: record.startDate,
+            end_date: record.endDate || record.startDate,
+            source_name: record.sourceName || 'Apple Health',
+            source_version: record.sourceVersion,
+            device: record.device,
+            metadata: {
+              imported_from: 'apple_health',
+              request_id: requestId
+            }
           });
         }
+
+        // Сохраняем батч при достижении размера
+        if (currentBatch.length >= BATCH_SIZE) {
+          await saveBatch(currentBatch, requestId);
+          recordsProcessed += currentBatch.length;
+          currentBatch = [];
+          
+          // Логируем прогресс каждые 500 записей
+          if (recordsProcessed % 500 === 0) {
+            console.log(`[${requestId}] Processed ${recordsProcessed} records`);
+          }
+        }
+
+        // Удаляем обработанную запись из буфера
+        buffer = buffer.slice(recordEnd + 2);
+        recordStart = buffer.indexOf('<Record ');
       }
 
-      // Удаляем обработанную запись из буфера
-      buffer = buffer.slice(recordEnd + 2);
-      recordStart = buffer.indexOf('<Record ');
+      // Ограничиваем размер буфера
+      if (buffer.length > MAX_MEMORY_BUFFER) {
+        buffer = buffer.slice(-MAX_MEMORY_BUFFER / 2);
+      }
     }
 
-    // Ограничиваем размер буфера
-    if (buffer.length > MAX_MEMORY_BUFFER) {
-      // Оставляем только последнюю часть буфера
-      buffer = buffer.slice(-MAX_MEMORY_BUFFER / 2);
+    // Сохраняем оставшиеся записи
+    if (currentBatch.length > 0) {
+      await saveBatch(currentBatch, requestId);
+      recordsProcessed += currentBatch.length;
     }
-  }
 
-  // Сохраняем оставшиеся записи
-  if (currentBatch.length > 0) {
-    await saveBatch(currentBatch);
-    recordsProcessed += currentBatch.length;
+    console.log(`[${requestId}] XML parsing complete, processed ${recordsProcessed} records`);
+    
+    // Создаем метрику импорта
+    await createImportMetric(userId, requestId, recordsProcessed);
+    
+  } catch (error) {
+    console.error(`[${requestId}] XML parsing error:`, error);
+    throw new Error(`XML parsing failed: ${error.message}`);
   }
-
-  console.log(`[${requestId}] XML parsing complete, processed ${recordsProcessed} records`);
-  
-  // Создаем метрику импорта
-  await createImportMetric(userId, requestId, recordsProcessed);
 }
 
 function parseRecordAttributes(recordXml: string): any {
@@ -386,23 +336,33 @@ function isValidHealthRecord(record: any): boolean {
          record.value !== 0;
 }
 
-async function saveBatch(batch: any[]) {
+async function saveBatch(batch: any[], requestId: string) {
   if (batch.length === 0) return;
   
-  const { error } = await supabase
-    .from('health_records')
-    .insert(batch);
-    
-  if (error) {
-    console.error('Batch save error:', error);
-    // Попробуем сохранить по одной записи если батч не прошел
-    for (const record of batch) {
-      try {
-        await supabase.from('health_records').insert(record);
-      } catch (e) {
-        console.error('Single record save failed:', e);
+  try {
+    const { error } = await supabase
+      .from('health_records')
+      .insert(batch);
+      
+    if (error) {
+      console.error(`[${requestId}] Batch save error:`, error);
+      // Попробуем сохранить по одной записи если батч не прошел
+      let savedCount = 0;
+      for (const record of batch) {
+        try {
+          await supabase.from('health_records').insert(record);
+          savedCount++;
+        } catch (e) {
+          console.error(`[${requestId}] Single record save failed:`, e);
+        }
       }
+      console.log(`[${requestId}] Saved ${savedCount}/${batch.length} records individually`);
+    } else {
+      console.log(`[${requestId}] Batch of ${batch.length} records saved successfully`);
     }
+  } catch (error) {
+    console.error(`[${requestId}] Critical batch save error:`, error);
+    throw error;
   }
 }
 
