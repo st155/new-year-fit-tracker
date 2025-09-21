@@ -70,31 +70,23 @@ const ProgressPage = () => {
 
   const fetchGoalsAndMeasurements = async () => {
     if (!user) return;
+    
+    console.log('Fetching goals and measurements for user:', user.id);
 
     try {
-      // Загружаем цели пользователя
+      // Загружаем цели пользователя (сначала загружаем простые цели)
       const { data: goalsData, error: goalsError } = await supabase
         .from('goals')
-        .select(`
-          id,
-          goal_name,
-          goal_type,
-          target_value,
-          target_unit,
-          measurements (
-            id,
-            value,
-            unit,
-            measurement_date,
-            notes
-          )
-        `)
+        .select('id, goal_name, goal_type, target_value, target_unit')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (goalsError) throw goalsError;
+      if (goalsError) {
+        console.error('Goals error:', goalsError);
+        throw goalsError;
+      }
 
-      setGoals(goalsData || []);
+      console.log('Goals loaded:', goalsData);
 
       // Загружаем все измерения
       const { data: measurementsData, error: measurementsError } = await supabase
@@ -103,14 +95,30 @@ const ProgressPage = () => {
         .eq('user_id', user.id)
         .order('measurement_date', { ascending: false });
 
-      if (measurementsError) throw measurementsError;
+      if (measurementsError) {
+        console.error('Measurements error:', measurementsError);
+        throw measurementsError;
+      }
 
+      console.log('Measurements loaded:', measurementsData);
+
+      // Объединяем данные вручную
+      const goalsWithMeasurements = (goalsData || []).map(goal => ({
+        ...goal,
+        measurements: (measurementsData || []).filter(m => m.goal_id === goal.id).sort((a, b) => 
+          new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
+        )
+      }));
+
+      console.log('Goals with measurements:', goalsWithMeasurements);
+
+      setGoals(goalsWithMeasurements);
       setMeasurements(measurementsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить данные",
+        title: "Ошибка загрузки данных",
+        description: `Не удалось загрузить данные: ${error.message}`,
         variant: "destructive",
       });
     } finally {
