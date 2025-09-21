@@ -1,0 +1,198 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Users, Target, Trophy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
+const Challenges = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [userChallenges, setUserChallenges] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [joiningChallenge, setJoiningChallenge] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      if (!user) return;
+
+      try {
+        // Загружаем все активные челленджи
+        const { data: challengesData } = await supabase
+          .from('challenges')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        setChallenges(challengesData || []);
+
+        // Загружаем челленджи пользователя
+        const { data: participantData } = await supabase
+          .from('challenge_participants')
+          .select('challenge_id')
+          .eq('user_id', user.id);
+
+        setUserChallenges(participantData?.map(p => p.challenge_id) || []);
+      } catch (error) {
+        console.error('Error fetching challenges:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, [user]);
+
+  const joinChallenge = async (challengeId: string) => {
+    if (!user) return;
+
+    setJoiningChallenge(challengeId);
+
+    try {
+      const { error } = await supabase
+        .from('challenge_participants')
+        .insert({
+          user_id: user.id,
+          challenge_id: challengeId
+        });
+
+      if (error) throw error;
+
+      setUserChallenges(prev => [...prev, challengeId]);
+      
+      toast({
+        title: "Успешно!",
+        description: "Вы присоединились к челленджу"
+      });
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось присоединиться к челленджу",
+        variant: "destructive"
+      });
+    } finally {
+      setJoiningChallenge(null);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
+  const getDaysRemaining = (endDate: string) => {
+    const end = new Date(endDate);
+    const today = new Date();
+    const diffTime = end.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Доступные челленджи
+          </h1>
+          <p className="text-muted-foreground">
+            Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {challenges.map((challenge) => {
+            const isParticipant = userChallenges.includes(challenge.id);
+            const daysRemaining = getDaysRemaining(challenge.end_date);
+            
+            return (
+              <Card key={challenge.id} className="flex flex-col">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-xl text-foreground">
+                      {challenge.title}
+                    </CardTitle>
+                    <Trophy className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardDescription className="text-muted-foreground">
+                    {challenge.description}
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent className="flex-1 space-y-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {formatDate(challenge.start_date)} - {formatDate(challenge.end_date)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Target className="h-4 w-4" />
+                    <span>Осталось дней: {daysRemaining}</span>
+                  </div>
+                  
+                  {isParticipant && (
+                    <Badge variant="secondary" className="w-fit">
+                      <Users className="h-3 w-3 mr-1" />
+                      Участвую
+                    </Badge>
+                  )}
+                </CardContent>
+                
+                <CardFooter>
+                  {isParticipant ? (
+                    <Button disabled className="w-full">
+                      Уже участвую
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => joinChallenge(challenge.id)}
+                      disabled={joiningChallenge === challenge.id}
+                      className="w-full"
+                    >
+                      {joiningChallenge === challenge.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Присоединяюсь...
+                        </>
+                      ) : (
+                        'Присоединиться'
+                      )}
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
+
+        {challenges.length === 0 && (
+          <div className="text-center py-12">
+            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Нет доступных челленджей
+            </h3>
+            <p className="text-muted-foreground">
+              В данный момент нет активных челленджей. Загляните позже!
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Challenges;

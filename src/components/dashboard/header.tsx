@@ -2,17 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Trophy, Target, Users, LogOut, Settings } from "lucide-react";
+import { Trophy, Target, Users, LogOut, Settings, Home, Calendar } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardHeaderProps {
   userName: string;
   userRole: "participant" | "trainer";
   challengeProgress: number;
   daysLeft: number;
+  challengeTitle?: string;
 }
 
-export function DashboardHeader({ userName, userRole, challengeProgress, daysLeft }: DashboardHeaderProps) {
+export function DashboardHeader({ userName, userRole, challengeProgress, daysLeft, challengeTitle }: DashboardHeaderProps) {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -47,10 +51,12 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                     </>
                   )}
                 </Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  <Users className="w-3 h-3 mr-1" />
-                  Челлендж "Пресс к Новому Году"
-                </Badge>
+                {challengeTitle && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    <Users className="w-3 h-3 mr-1" />
+                    {challengeTitle}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -71,6 +77,24 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
             </div>
             
             <div className="flex items-center gap-2">
+              <Button 
+                variant={location.pathname === '/' ? "default" : "ghost"}
+                size="sm" 
+                onClick={() => navigate('/')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Home className="h-4 w-4 mr-1" />
+                Дашборд
+              </Button>
+              <Button 
+                variant={location.pathname === '/challenges' ? "default" : "ghost"}
+                size="sm" 
+                onClick={() => navigate('/challenges')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Calendar className="h-4 w-4 mr-1" />
+                Челленджи
+              </Button>
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 <Settings className="h-4 w-4" />
               </Button>
