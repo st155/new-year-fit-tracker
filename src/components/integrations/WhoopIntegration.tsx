@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ErrorLogger } from '@/lib/error-logger';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Heart, 
   Zap, 
@@ -16,7 +17,9 @@ import {
   CheckCircle, 
   AlertCircle,
   Unlink,
-  Loader2
+  Loader2,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 
 interface WhoopIntegrationProps {
@@ -43,7 +46,10 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [authUrl, setAuthUrl] = useState<string>('');
+  const [showManualAuth, setShowManualAuth] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadWhoopStatus();
@@ -147,13 +153,25 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
       if (error) throw error;
 
-      // Открываем новую вкладку для авторизации (вместо popup)
-      window.open(data.authUrl, '_blank');
+      setAuthUrl(data.authUrl);
+
+      // Пытаемся открыть новую вкладку
+      const newWindow = window.open(data.authUrl, '_blank');
       
-      toast({
-        title: 'Перенаправление на Whoop',
-        description: 'Завершите авторизацию в новой вкладке. После успешной авторизации данные будут автоматически синхронизированы.',
-      });
+      // Проверяем, удалось ли открыть окно (на мобильных может блокироваться)
+      if (!newWindow || newWindow.closed) {
+        // Если не удалось - показываем ручную опцию
+        setShowManualAuth(true);
+        toast({
+          title: 'Необходимо ручное открытие',
+          description: 'Ваш браузер заблокировал всплывающие окна. Используйте кнопку "Открыть ссылку" ниже.',
+        });
+      } else {
+        toast({
+          title: 'Перенаправление на Whoop',
+          description: 'Завершите авторизацию в новой вкладке. После успешной авторизации данные будут автоматически синхронизированы.',
+        });
+      }
 
     } catch (error: any) {
       console.error('Whoop connection error:', error);
@@ -172,6 +190,26 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  const copyAuthUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(authUrl);
+      toast({
+        title: 'Ссылка скопирована',
+        description: 'Ссылка для авторизации скопирована в буфер обмена.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка копирования',
+        description: 'Не удалось скопировать ссылку. Попробуйте выделить и скопировать вручную.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const openAuthUrl = () => {
+    window.open(authUrl, '_blank');
   };
 
   const syncData = async () => {
@@ -413,9 +451,51 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                   </>
                 )}
               </Button>
+
+              {showManualAuth && authUrl && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <AlertCircle className="h-4 w-4" />
+                    Ручное открытие ссылки
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    Скопируйте ссылку ниже и откройте её в браузере для авторизации:
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyAuthUrl}
+                      className="flex-1"
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Скопировать ссылку
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openAuthUrl}
+                      className="flex-1"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Открыть ссылку
+                    </Button>
+                  </div>
+                  
+                  <div className="text-xs bg-background p-2 rounded border font-mono break-all">
+                    {authUrl}
+                  </div>
+                </div>
+              )}
               
               <p className="text-sm text-muted-foreground text-center">
-                Вы будете перенаправлены на сайт Whoop для авторизации
+                {isMobile 
+                  ? "Если кнопка не работает, используйте ручное открытие ссылки выше"
+                  : "Вы будете перенаправлены на сайт Whoop для авторизации"
+                }
               </p>
             </div>
           </div>
