@@ -21,17 +21,38 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Apple Health processing request:', { bodyKeys: Object.keys(body) });
 
-    const { userId, metrics, workouts, summaries } = body;
+    const { userId, filePath, metrics, workouts, summaries } = body;
 
     if (!userId) {
       throw new Error('User ID is required');
     }
 
-    console.log('Processing structured data:', {
+    console.log('Processing request body:', {
+      userId: userId ? 'present' : 'missing',
+      filePath: filePath ? 'present' : 'missing',
+      metricsPresent: !!metrics,
+      workoutsPresent: !!workouts,
+      summariesPresent: !!summaries,
       metricsCount: metrics?.length || 0,
       workoutsCount: workouts?.length || 0,
       summariesCount: summaries?.length || 0
     });
+
+    // If filePath is provided but no parsed data, we need to parse the file
+    if (filePath && (!metrics && !workouts && !summaries)) {
+      console.log('No structured data provided, need to implement file parsing');
+      console.log('FilePath received:', filePath);
+      
+      // For now, return early with information
+      return new Response(
+        JSON.stringify({ 
+          error: 'File parsing not yet implemented in edge function',
+          message: 'Please parse the file client-side and send structured data',
+          received: { filePath, userId }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const saved = {
       metrics: 0,

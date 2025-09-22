@@ -565,4 +565,95 @@ export class AppleHealthParser {
       dateRange: data.metadata.dateRange
     };
   }
+
+  /**
+   * Конвертирует записи здоровья в формат для базы данных
+   */
+  convertToMetrics(data: ParsedHealthData, userId: string): any[] {
+    const metrics: any[] = [];
+    
+    data.records.forEach(record => {
+      const mapping = METRIC_MAPPING[record.type];
+      if (!mapping) return;
+      
+      metrics.push({
+        user_id: userId,
+        metric_name: mapping.name,
+        metric_type: 'health',
+        unit: mapping.unit,
+        value: record.value,
+        measurement_date: record.startDate.toISOString().split('T')[0],
+        source_data: {
+          type: record.type,
+          sourceName: record.sourceName,
+          sourceVersion: record.sourceVersion,
+          device: record.device,
+          creationDate: record.creationDate.toISOString(),
+          startDate: record.startDate.toISOString(),
+          endDate: record.endDate.toISOString()
+        }
+      });
+    });
+    
+    return metrics;
+  }
+
+  /**
+   * Конвертирует тренировки в формат для базы данных
+   */
+  convertToWorkouts(data: ParsedHealthData, userId: string): any[] {
+    const workouts: any[] = [];
+    
+    data.workouts.forEach(workout => {
+      const workoutType = WORKOUT_MAPPING[workout.workoutActivityType] || workout.workoutActivityType;
+      
+      workouts.push({
+        user_id: userId,
+        workout_type: workoutType,
+        start_time: workout.startDate.toISOString(),
+        end_time: workout.endDate.toISOString(),
+        duration_minutes: Math.round(workout.duration),
+        distance_km: workout.totalDistance,
+        calories_burned: workout.totalEnergyBurned,
+        source: 'apple_health',
+        source_data: {
+          workoutActivityType: workout.workoutActivityType,
+          durationUnit: workout.durationUnit,
+          totalDistanceUnit: workout.totalDistanceUnit,
+          totalEnergyBurnedUnit: workout.totalEnergyBurnedUnit,
+          sourceName: workout.sourceName
+        }
+      });
+    });
+    
+    return workouts;
+  }
+
+  /**
+   * Конвертирует сводки активности в формат для базы данных
+   */
+  convertToActivitySummaries(data: ParsedHealthData, userId: string): any[] {
+    const summaries: any[] = [];
+    
+    data.activitySummaries.forEach(summary => {
+      summaries.push({
+        user_id: userId,
+        date: summary.dateComponents,
+        active_calories: summary.activeEnergyBurned,
+        active_calories_goal: summary.activeEnergyBurnedGoal,
+        exercise_minutes: summary.exerciseTime,
+        exercise_minutes_goal: summary.exerciseTimeGoal,
+        stand_hours: summary.standHours,
+        stand_hours_goal: summary.standHoursGoal,
+        move_time: summary.moveTime,
+        move_time_goal: summary.moveTimeGoal,
+        source: 'apple_health',
+        source_data: {
+          activeEnergyBurnedUnit: summary.activeEnergyBurnedUnit
+        }
+      });
+    });
+    
+    return summaries;
+  }
 }

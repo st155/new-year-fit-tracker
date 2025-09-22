@@ -135,15 +135,23 @@ export const AppleHealthIntegration = () => {
         message: 'Сохранение данных в базу...'
       });
 
-      const dbData = parser.prepareForDatabase(data, user.id);
+      const metrics = parser.convertToMetrics(data, user.id);
+      const workouts = parser.convertToWorkouts(data, user.id);
+      const summaries = parser.convertToActivitySummaries(data, user.id);
+      
+      console.log('Converted data for DB:', {
+        metricsCount: metrics.length,
+        workoutsCount: workouts.length,
+        summariesCount: summaries.length
+      });
       
       // Сохраняем через Edge Function для оптимизации
       const { data: result, error } = await supabase.functions.invoke('process-apple-health', {
         body: {
           userId: user.id,
-          metrics: dbData.metrics,
-          workouts: dbData.workouts,
-          summaries: dbData.summaries
+          metrics,
+          workouts,
+          summaries
         }
       });
 
