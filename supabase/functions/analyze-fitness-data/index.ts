@@ -20,7 +20,7 @@ serve(async (req) => {
   try {
     console.log('Starting fitness data analysis...');
     
-    const { imageUrl, userId, goalId, measurementDate } = await req.json();
+    const { imageUrl, userId, goalId, measurementDate, specializedAnalysis } = await req.json();
     
     if (!imageUrl || !userId) {
       return new Response(JSON.stringify({ error: 'Missing imageUrl or userId' }), {
@@ -46,8 +46,52 @@ serve(async (req) => {
     // Создаем Supabase клиент
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Анализируем изображение с помощью ChatGPT Vision
-    const analysisPrompt = `
+    // Создаем специализированный промпт в зависимости от типа анализа
+    let analysisPrompt;
+    
+    if (specializedAnalysis === 'vo2max') {
+      analysisPrompt = `
+Проанализируй этот скриншот из приложения Whoop на предмет данных VO2Max и других кардиометрик.
+Сосредоточься особенно на поиске следующих показателей:
+
+1. VO2Max (мл/кг/мин) - ГЛАВНЫЙ ПРИОРИТЕТ
+2. Кардиофитнес/Cardiovascular Fitness
+3. Средний пульс (bpm)
+4. Максимальный пульс (bpm) 
+5. Пульс покоя (bpm)
+6. HRV (вариабельность сердечного ритма)
+7. Recovery Score (показатель восстановления)
+8. Strain (нагрузка)
+9. Sleep Performance (качество сна)
+10. Любые другие кардиометрики
+
+ОЧЕНЬ ВАЖНО: Ищи VO2Max в разных форматах:
+- "VO2 Max: 45.2 ml/kg/min"
+- "VO₂ Max 45.2"
+- "Cardiovascular Fitness: 45.2"
+- Числовые значения рядом с иконками сердца
+- Графики с трендами VO2Max
+
+Верни ответ ТОЛЬКО в JSON формате:
+{
+  "extractedData": [
+    {
+      "metric": "VO2Max",
+      "value": числовое_значение,
+      "unit": "мл/кг/мин",
+      "confidence": уверенность_от_0_до_1
+    }
+  ],
+  "analysis": "детальный анализ найденных кардиометрик",
+  "dataQuality": "high/medium/low"
+}
+
+Если VO2Max не найден, но есть другие кардиометрики, всё равно верни их.
+Если скриншот не из Whoop или нет кардиометрик, верни пустой extractedData.
+`;
+    } else {
+      // Стандартный промпт для общего анализа фитнес-данных
+      analysisPrompt = `
 Проанализируй это изображение скриншота фитнес-трекера или приложения здоровья. 
 Извлеки следующие данные, если они есть на изображении:
 
@@ -59,10 +103,11 @@ serve(async (req) => {
 6. Калории (сожженные)
 7. Время тренировки (минуты)
 8. Расстояние (км)
-9. Подтягивания (количество)
-10. Отжимания (количество)
-11. Приседания (количество)
-12. Любые другие спортивные показатели
+9. VO2Max (мл/кг/мин)
+10. Подтягивания (количество)
+11. Отжимания (количество)
+12. Приседания (количество)
+13. Любые другие спортивные показатели
 
 Верни ответ ТОЛЬКО в JSON формате без дополнительного текста:
 {
@@ -85,6 +130,7 @@ serve(async (req) => {
   "dataQuality": "low"
 }
 `;
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -334,10 +380,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
 });
 
-// Функция для определения категории метрики
 function categorizeMetric(metricName: string): string {
   const nameLower = metricName.toLowerCase();
   
+  if (nameLower.includes('vo2') || nameLower.includes('кардио') || nameLower.includes('cardiovascular')) {
+    return 'cardio';
+  }
   if (nameLower.includes('recovery') || nameLower.includes('восстановление') || nameLower.includes('hrv')) {
     return 'recovery';
   }

@@ -29,6 +29,7 @@ import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
 import { QuickWeightTracker } from '@/components/dashboard/quick-weight-tracker';
+import { VO2MaxUpload } from '@/components/dashboard/vo2max-upload';
 
 interface MetricValue {
   id: string;
@@ -515,6 +516,9 @@ const Dashboard = () => {
 
             {/* Apple Health Summary */}
             <AppleHealthSummary />
+            
+            {/* VO2Max Upload */}
+            <VO2MaxUpload onDataExtracted={fetchDashboardData} />
           </TabsContent>
 
           <TabsContent value="whoop" className="space-y-6">
