@@ -247,12 +247,15 @@ export const IntegrationsCard = () => {
           {integrations.map((integration) => (
             <div
               key={integration.name}
-              className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
+              className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex-shrink-0">
                 {integration.icon}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+              </div>
+              
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <span className="font-medium">{integration.name}</span>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(integration.status, integration.isConnected)}
@@ -262,41 +265,42 @@ export const IntegrationsCard = () => {
                     </div>
                   </div>
                   
-                  <p className="text-xs text-muted-foreground truncate">
-                    {integration.description}
-                  </p>
-                  
-                  {integration.isConnected && (
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>
-                        📊 {integration.dataCount?.toLocaleString() || 0} записей
-                      </span>
-                      <span>
-                        🕒 {formatLastSync(integration.lastSync)}
-                      </span>
-                    </div>
-                  )}
+                  <Button
+                    variant={integration.isConnected ? "outline" : "default"}
+                    size="sm"
+                    onClick={() => handleConnect(integration.name)}
+                    disabled={integration.name === 'Garmin'}
+                    className="flex-shrink-0"
+                  >
+                    {integration.isConnected ? (
+                      <>
+                        <Activity className="h-4 w-4 mr-1" />
+                        Управление
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Подключить
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </div>
-              
-              <Button
-                variant={integration.isConnected ? "outline" : "default"}
-                size="sm"
-                onClick={() => handleConnect(integration.name)}
-                disabled={integration.name === 'Garmin'}
-              >
-                {integration.isConnected ? (
-                  <>
-                    <Activity className="h-4 w-4 mr-2" />
-                    Управление
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Подключить
-                  </>
+                
+                <p className="text-xs text-muted-foreground line-clamp-2 pr-2">
+                  {integration.description}
+                </p>
+                
+                {integration.isConnected && (
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      📊 {integration.dataCount?.toLocaleString() || 0} записей
+                    </span>
+                    <span className="flex items-center gap-1">
+                      🕒 {formatLastSync(integration.lastSync)}
+                    </span>
+                  </div>
                 )}
-              </Button>
+              </div>
             </div>
           ))}
         </div>
