@@ -17,7 +17,8 @@ import {
   Watch,
   Plus,
   ExternalLink,
-  Loader2
+  Loader2,
+  Scale
 } from 'lucide-react';
 
 interface IntegrationStatus {
@@ -62,6 +63,20 @@ export const IntegrationsCard = () => {
         .eq('user_id', user.id)
         .eq('user_metrics.source', 'whoop');
 
+      // Проверяем Withings интеграцию
+      const { data: withingsTokens } = await supabase
+        .from('withings_tokens')
+        .select('updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      const { data: withingsData } = await supabase
+        .from('metric_values')
+        .select('id, user_metrics!inner(source)')
+        .eq('user_id', user.id)
+        .eq('user_metrics.source', 'withings');
+
       // Проверяем Apple Health интеграцию
       const { data: appleHealthData } = await supabase
         .from('health_records')
@@ -75,13 +90,16 @@ export const IntegrationsCard = () => {
         .select('id', { count: 'exact' })
         .eq('user_id', user.id);
 
-      // Проверяем общие метрики
-      const { data: allMetrics } = await supabase
-        .from('metric_values')
-        .select('id, user_metrics!inner(source)')
-        .eq('user_id', user.id);
-
       const integrationsList: IntegrationStatus[] = [
+        {
+          name: 'Withings',
+          icon: <Scale className="w-6 h-6 text-red-500" />,
+          isConnected: !!withingsTokens?.length,
+          lastSync: withingsTokens?.[0]?.updated_at,
+          dataCount: withingsData?.length || 0,
+          status: withingsTokens?.length ? 'active' : 'pending',
+          description: 'Умные весы и устройства здоровья для отслеживания состава тела'
+        },
         {
           name: 'Whoop',
           icon: <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">W</div>,

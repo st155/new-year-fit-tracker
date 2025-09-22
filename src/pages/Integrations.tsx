@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
+import { WithingsIntegration } from '@/components/integrations/WithingsIntegration';
 import { AppleHealthIntegration } from '@/components/integrations/AppleHealthIntegration';
 import { GarminIntegration } from '@/components/integrations/GarminIntegration';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
@@ -146,8 +147,9 @@ const IntegrationsPage = () => {
 
         {/* Вкладки интеграций */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="withings">Withings</TabsTrigger>
             <TabsTrigger value="whoop">Whoop</TabsTrigger>
             <TabsTrigger value="apple">Apple Health</TabsTrigger>
             <TabsTrigger value="garmin">Garmin</TabsTrigger>
@@ -226,6 +228,10 @@ const IntegrationsPage = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="withings" className="space-y-6">
+            <WithingsIntegration />
           </TabsContent>
 
           <TabsContent value="whoop" className="space-y-6">

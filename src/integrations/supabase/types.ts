@@ -612,6 +612,114 @@ export type Database = {
         }
         Relationships: []
       }
+      withings_oauth_states: {
+        Row: {
+          created_at: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withings_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      workouts: {
+        Row: {
+          calories_burned: number | null
+          created_at: string
+          distance_km: number | null
+          duration_minutes: number | null
+          end_time: string | null
+          external_id: string | null
+          heart_rate_avg: number | null
+          heart_rate_max: number | null
+          id: string
+          notes: string | null
+          source: string | null
+          source_data: Json | null
+          start_time: string
+          updated_at: string
+          user_id: string
+          workout_type: string
+        }
+        Insert: {
+          calories_burned?: number | null
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          external_id?: string | null
+          heart_rate_avg?: number | null
+          heart_rate_max?: number | null
+          id?: string
+          notes?: string | null
+          source?: string | null
+          source_data?: Json | null
+          start_time: string
+          updated_at?: string
+          user_id: string
+          workout_type: string
+        }
+        Update: {
+          calories_burned?: number | null
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          external_id?: string | null
+          heart_rate_avg?: number | null
+          heart_rate_max?: number | null
+          id?: string
+          notes?: string | null
+          source?: string | null
+          source_data?: Json | null
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+          workout_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
