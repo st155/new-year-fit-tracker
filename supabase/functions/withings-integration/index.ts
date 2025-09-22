@@ -78,6 +78,11 @@ async function getAuthUrl(req: Request) {
     .insert({ state, user_id: userId });
     
   console.log('State insert result:', { insertData, insertError });
+  
+  if (insertError) {
+    console.error('Failed to insert state:', insertError);
+    throw new Error(`Failed to store auth state: ${insertError.message}`);
+  }
 
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/withings-integration?action=handle-callback`;
   
@@ -162,9 +167,15 @@ async function handleCallback(req: Request) {
   
   console.log('Saving tokens for user:', userId);
   
+  // Delete any existing tokens for this user to avoid conflicts
+  await supabase
+    .from('withings_tokens')
+    .delete()
+    .eq('user_id', userId);
+  
   const { data: tokenInsertData, error: tokenInsertError } = await supabase
     .from('withings_tokens')
-    .upsert({
+    .insert({
       user_id: userId,
       access_token: tokenData.body.access_token,
       refresh_token: tokenData.body.refresh_token,
