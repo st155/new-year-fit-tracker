@@ -291,7 +291,9 @@ serve(async (req) => {
                  (metricLower.includes('вес') && goalNameLower.includes('вес')) ||
                  (metricLower.includes('жир') && goalNameLower.includes('жир')) ||
                  (metricLower.includes('подтягивания') && goalNameLower.includes('подтягивания')) ||
-                 (metricLower.includes('отжимания') && goalNameLower.includes('отжимания'));
+                 (metricLower.includes('отжимания') && goalNameLower.includes('отжимания')) ||
+                 (metricLower.includes('vo2') && goalNameLower.includes('vo')) ||
+                 (metricLower.includes('vo2max') && goalNameLower.includes('vo₂max'));
         });
       }
 
