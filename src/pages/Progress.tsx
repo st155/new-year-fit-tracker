@@ -17,6 +17,7 @@ import { AppTestSuite } from "@/components/ui/app-test-suite";
 import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { WeightTracker } from "@/components/weight/WeightTracker";
 import { GoalEditor } from "@/components/goals/GoalEditor";
+import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +59,7 @@ const ProgressPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewingGoalDetail, setViewingGoalDetail] = useState<Goal | null>(null);
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -213,6 +215,21 @@ const ProgressPage = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Загружаем ваш прогресс...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Если просматриваем детали цели
+  if (viewingGoalDetail) {
+    return (
+      <div className="min-h-screen bg-background">
+        <HomeButton />
+        <div className="max-w-7xl mx-auto p-3 sm:p-6">
+          <GoalProgressDetail 
+            goal={viewingGoalDetail} 
+            onBack={() => setViewingGoalDetail(null)}
+          />
         </div>
       </div>
     );
@@ -460,8 +477,9 @@ const ProgressPage = () => {
             return (
               <FitnessCard 
                 key={goal.id} 
-                className="p-6 animate-fade-in hover-scale transition-all duration-300"
+                className="p-6 animate-fade-in hover-scale transition-all duration-300 cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => setViewingGoalDetail(goal)}
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
@@ -518,18 +536,31 @@ const ProgressPage = () => {
                     </div>
                   )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setSelectedGoal(goal);
-                      setIsAddDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Добавить измерение
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedGoal(goal);
+                        setIsAddDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Добавить
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingGoalDetail(goal);
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      Детали
+                    </Button>
+                  </div>
                 </div>
               </FitnessCard>
             );
