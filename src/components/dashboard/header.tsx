@@ -65,7 +65,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
   return (
     <div className="bg-gradient-card border-b border-border/50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-2 border-primary/50">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
@@ -101,7 +101,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
             {challengeTitle ? (
               <div className="flex flex-col items-end gap-2">
                 <div className="text-right">
@@ -136,12 +136,12 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
               </div>
             )}
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 max-w-xs sm:max-w-none">
               <Button 
                 variant={location.pathname === '/' ? "default" : "ghost"}
                 size="sm" 
                 onClick={() => navigate('/')}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
               >
                 <Home className="h-4 w-4 mr-1" />
                Главная
@@ -151,7 +151,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                    variant={location.pathname === '/trainer' ? "default" : "ghost"}
                    size="sm"
                    onClick={() => navigate('/trainer')}
-                   className="text-muted-foreground hover:text-foreground"
+                   className="text-muted-foreground hover:text-foreground flex-shrink-0"
                  >
                    <Settings className="h-4 w-4 mr-1" />
                    Тренер
@@ -161,7 +161,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
                  size="sm" 
                  onClick={() => navigate('/dashboard')}
-                 className="text-muted-foreground hover:text-foreground"
+                 className="text-muted-foreground hover:text-foreground flex-shrink-0"
                >
                  <BarChart3 className="h-4 w-4 mr-1" />
                  Фитнес
@@ -170,7 +170,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                  variant={location.pathname === '/challenges' ? "default" : "ghost"}
                  size="sm" 
                  onClick={() => navigate('/challenges')}
-                 className="text-muted-foreground hover:text-foreground"
+                 className="text-muted-foreground hover:text-foreground flex-shrink-0"
                >
                  <Calendar className="h-4 w-4 mr-1" />
                 Челленджи
@@ -179,7 +179,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 variant={location.pathname === '/progress' ? "default" : "ghost"}
                 size="sm" 
                 onClick={() => navigate('/progress')}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
               >
                 <TrendingUp className="h-4 w-4 mr-1" />
                 Прогресс
@@ -188,7 +188,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/profile')}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
               >
                 <Settings className="h-4 w-4" />
               </Button>
@@ -196,7 +196,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 variant="ghost" 
                 size="sm" 
                 onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
