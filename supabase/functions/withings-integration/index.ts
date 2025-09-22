@@ -203,31 +203,32 @@ async function handleCallback(req: Request) {
     `<html>
       <head>
         <title>Withings Authorization</title>
+        <meta charset="utf-8">
       </head>
       <body>
         <script>
-          // Отправляем сообщение родительскому окну
+          // Send message to parent window
           if (window.opener) {
             window.opener.postMessage({type: 'withings-auth-success'}, '*');
           }
           
-          // Пытаемся закрыть окно разными способами
+          // Try to close window automatically
           setTimeout(() => {
             try {
               window.close();
             } catch (e) {
-              // Если не удается закрыть, показываем сообщение
-              document.body.innerHTML = '<p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Авторизация прошла успешно! Можете закрыть это окно.</p>';
+              // If can't close, show message
+              document.body.innerHTML = '<p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! You can close this window.</p>';
             }
           }, 1000);
           
-          // Также пытаемся закрыть сразу
+          // Also try to close immediately
           window.close();
         </script>
-        <p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Авторизация прошла успешно! Окно закроется автоматически...</p>
+        <p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! Window will close automatically...</p>
       </body>
     </html>`,
-    { headers: { ...corsHeaders, 'Content-Type': 'text/html' } }
+    { headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' } }
   );
 }
 
