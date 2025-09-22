@@ -53,7 +53,21 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         setTargetBodyFat(Number(bodyFatGoal.target_value));
       }
 
-      // Получаем данные о проценте жира из body_composition
+      // Сначала получаем данные из Withings (metric_values)
+      const { data: withingsBodyFat } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Процент жира')
+        .eq('user_metrics.source', 'withings')
+        .gte('measurement_date', startDate.toISOString().split('T')[0])
+        .order('measurement_date', { ascending: true });
+
+      // Fallback к данным из body_composition если нет Withings данных
       const { data: bodyData } = await supabase
         .from('body_composition')
         .select('measurement_date, body_fat_percentage')
@@ -61,31 +75,41 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .gte('measurement_date', startDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
-      if (bodyData) {
-        const formattedData = bodyData
+      // Используем данные Withings если есть, иначе body_composition
+      let formattedData: BodyFatData[] = [];
+      
+      if (withingsBodyFat && withingsBodyFat.length > 0) {
+        formattedData = withingsBodyFat
+          .map((item, index, arr) => ({
+            date: item.measurement_date,
+            bodyFat: Number(item.value),
+            change: index > 0 ? Number(item.value) - Number(arr[index - 1].value) : 0
+          }));
+      } else if (bodyData) {
+        formattedData = bodyData
           .filter(item => item.body_fat_percentage)
           .map((item, index, arr) => ({
             date: item.measurement_date,
             bodyFat: Number(item.body_fat_percentage),
             change: index > 0 ? Number(item.body_fat_percentage) - Number(arr[index - 1].body_fat_percentage) : 0
           }));
+      }
 
-        setBodyFatData(formattedData);
+      setBodyFatData(formattedData);
+      
+      if (formattedData.length > 0) {
+        const latest = formattedData[formattedData.length - 1];
+        setCurrentBodyFat(latest.bodyFat);
         
-        if (formattedData.length > 0) {
-          const latest = formattedData[formattedData.length - 1];
-          setCurrentBodyFat(latest.bodyFat);
-          
-          // Вычисляем недельное изменение
-          const weekAgo = formattedData.find(item => {
-            const itemDate = new Date(item.date);
-            const weekAgoDate = subDays(new Date(), 7);
-            return itemDate >= weekAgoDate;
-          });
-          
-          if (weekAgo) {
-            setWeeklyChange(latest.bodyFat - weekAgo.bodyFat);
-          }
+        // Вычисляем недельное изменение
+        const weekAgo = formattedData.find(item => {
+          const itemDate = new Date(item.date);
+          const weekAgoDate = subDays(new Date(), 7);
+          return itemDate >= weekAgoDate;
+        });
+        
+        if (weekAgo) {
+          setWeeklyChange(latest.bodyFat - weekAgo.bodyFat);
         }
       }
     } catch (error) {
