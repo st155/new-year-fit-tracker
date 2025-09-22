@@ -147,7 +147,9 @@ async function handleCallback(req: Request) {
   // Save tokens
   const expiresAt = new Date(Date.now() + tokenData.body.expires_in * 1000);
   
-  await supabase
+  console.log('Saving tokens for user:', userId);
+  
+  const { data: tokenInsertData, error: tokenInsertError } = await supabase
     .from('withings_tokens')
     .upsert({
       user_id: userId,
@@ -156,6 +158,13 @@ async function handleCallback(req: Request) {
       expires_at: expiresAt.toISOString(),
       scope: tokenData.body.scope,
     });
+
+  if (tokenInsertError) {
+    console.error('Error saving tokens:', tokenInsertError);
+    throw new Error(`Failed to save tokens: ${tokenInsertError.message}`);
+  }
+  
+  console.log('Tokens saved successfully:', tokenInsertData);
 
   // Clean up state
   await supabase
@@ -368,7 +377,9 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
       }
 
       // Create or get metric
-      const { data: metricData } = await supabase.rpc('create_or_get_metric', {
+      console.log('Creating metric for user:', userId, 'metric:', metricName);
+      
+      const { data: metricData, error: metricError } = await supabase.rpc('create_or_get_metric', {
         p_user_id: userId,
         p_metric_name: metricName,
         p_metric_category: 'body',
@@ -376,9 +387,16 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
         p_source: 'withings'
       });
 
+      if (metricError) {
+        console.error('Error creating metric:', metricError);
+        continue;
+      }
+
       if (metricData) {
+        console.log('Saving metric value:', { userId, metricData, value, date: date.toISOString().split('T')[0] });
+        
         // Save metric value
-        await supabase
+        const { data: valueData, error: valueError } = await supabase
           .from('metric_values')
           .upsert({
             user_id: userId,
@@ -394,7 +412,12 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
             }
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
         
-        saved++;
+        if (valueError) {
+          console.error('Error saving metric value:', valueError);
+        } else {
+          console.log('Metric value saved successfully:', valueData);
+          saved++;
+        }
       }
     }
   }
