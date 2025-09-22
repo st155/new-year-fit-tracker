@@ -64,7 +64,7 @@ serve(async (req) => {
 // Инициируем OAuth процесс
 async function handleAuth(req: Request) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
-  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback`;
+  const redirectUri = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback`;
   
   if (!clientId) {
     return new Response(JSON.stringify({ error: 'WHOOP_CLIENT_ID not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
