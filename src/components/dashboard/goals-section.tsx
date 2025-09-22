@@ -194,7 +194,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
           <p className="text-sm">Добавьте первую цель, чтобы начать отслеживать прогресс</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {goals.map((goal) => (
             <div key={goal.id} className="p-4 rounded-lg bg-muted/20 border border-border/50 hover:border-primary/30 transition-colors group">
               <div className="flex items-center justify-between mb-3">
@@ -220,17 +220,20 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Текущий:</span>
-                  <span className="font-medium">{goal.current} {goal.unit}</span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Текущий:</span>
+                    <span className="font-medium">{goal.current} {goal.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">Цель:</span>
+                    <span className="font-medium text-primary">{goal.target} {goal.unit}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Цель:</span>
-                  <span className="font-medium text-primary">{goal.target} {goal.unit}</span>
-                </div>
-                <Progress value={goal.progress} className="h-2" />
+                <span className="text-sm font-semibold text-primary">{goal.progress}%</span>
               </div>
+              <Progress value={goal.progress} className="h-2" />
             </div>
           ))}
         </div>

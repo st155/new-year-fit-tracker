@@ -24,7 +24,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           Панель тренера
         </h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <Button variant="fitness" className="h-12 justify-start">
             <BarChart3 className="w-4 h-4 mr-2" />
             Аналитика команды
@@ -56,7 +56,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
         Быстрые действия
       </h3>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="fitness" className="h-12 justify-start">

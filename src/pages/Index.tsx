@@ -133,8 +133,8 @@ const Index = () => {
           <StatsGrid userRole={userRole} />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
+          <div className="xl:col-span-2 space-y-6">
             <GoalsSection userRole={userRole} />
           </div>
           
