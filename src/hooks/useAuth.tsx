@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, username: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -97,15 +97,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
-      toast({
-        title: "Ошибка регистрации",
-        description: error.message,
-        variant: "destructive"
-      });
+      if (error.message.includes('already registered')) {
+        toast({
+          title: "Пользователь уже зарегистрирован",
+          description: "Попробуйте войти в систему вместо регистрации",
+          variant: "destructive"
+        });
+      } else if (error.message.includes('Invalid email')) {
+        toast({
+          title: "Неверный email",
+          description: "Проверьте правильность введенного email адреса",
+          variant: "destructive"
+        });
+      } else if (error.message.includes('Password')) {
+        toast({
+          title: "Слишком простой пароль",
+          description: "Пароль должен содержать минимум 6 символов",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Ошибка регистрации",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     } else {
       toast({
         title: "Проверьте почту",
-        description: "Мы отправили вам ссылку для подтверждения"
+        description: "Мы отправили вам ссылку для подтверждения. Если письмо не пришло, проверьте папку спам."
       });
     }
 
@@ -133,9 +153,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Initiating Google OAuth...');
       
-      // Use current URL origin for better compatibility
+      // Use production URL for better OAuth compatibility
       const baseUrl = window.location.origin;
-      const redirectTo = `${baseUrl}/`;
+      const redirectTo = `${baseUrl}/auth`;
       
       console.log('Redirect URL:', redirectTo);
       
@@ -145,7 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           redirectTo,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         }
       });
@@ -154,10 +174,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Google auth error:', error);
         
         // Handle specific error cases
-        if (error.message.includes('requested path is invalid')) {
+        if (error.message.includes('requested path is invalid') || 
+            error.message.includes('signature is invalid') ||
+            error.message.includes('Invalid token')) {
           toast({
-            title: "Ошибка конфигурации",
-            description: "Проверьте настройки Site URL и Redirect URLs в Supabase Authentication > URL Configuration",
+            title: "Ошибка конфигурации OAuth",
+            description: "Необходимо настроить Site URL и Redirect URLs в панели Supabase. Обратитесь к администратору.",
+            variant: "destructive"
+          });
+        } else if (error.message.includes('Network')) {
+          toast({
+            title: "Ошибка сети",
+            description: "Проверьте подключение к интернету и повторите попытку",
             variant: "destructive"
           });
         } else {
@@ -176,7 +204,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Google auth catch error:', err);
       toast({
         title: "Ошибка входа через Google", 
-        description: "Убедитесь, что Site URL и Redirect URLs настроены правильно в Supabase",
+        description: "Попробуйте позже или используйте вход по email",
         variant: "destructive"
       });
       return { error: err };
