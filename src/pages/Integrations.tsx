@@ -235,9 +235,7 @@ const IntegrationsPage = () => {
           </TabsContent>
 
           <TabsContent value="apple" className="space-y-6">
-            <AppleHealthIntegration 
-              userId={user?.id || ''} 
-            />
+            <AppleHealthIntegration />
           </TabsContent>
 
           <TabsContent value="garmin" className="space-y-6">

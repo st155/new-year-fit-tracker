@@ -1,375 +1,451 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { AppleHealthUpload } from './AppleHealthUpload';
+import { useAuth } from '@/hooks/useAuth';
+import { AppleHealthParser } from '@/lib/apple-health-parser';
+import type { ParsedHealthData } from '@/lib/apple-health-parser';
 import { 
-  Heart, 
-  Activity, 
-  Moon, 
-  Scale, 
-  Footprints, 
-  Zap,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  RefreshCw,
-  Database,
+  Upload, 
+  FileUp, 
+  CheckCircle, 
+  AlertCircle,
+  Activity,
+  Heart,
+  Moon,
+  TrendingUp,
   Calendar,
-  TrendingUp
+  Info,
+  Loader2,
+  Download,
+  Smartphone,
+  X
 } from 'lucide-react';
 
-interface AppleHealthIntegrationProps {
-  userId: string;
-}
-
-interface HealthData {
-  totalRecords: number;
-  lastSync?: string;
-  recordTypes: { [key: string]: number };
-  dateRange?: {
-    earliest: string;
-    latest: string;
+interface ProcessingStatus {
+  stage: 'idle' | 'uploading' | 'parsing' | 'saving' | 'complete' | 'error';
+  progress: number;
+  message: string;
+  details?: {
+    recordsProcessed?: number;
+    totalRecords?: number;
+    workoutsProcessed?: number;
+    metricsFound?: string[];
   };
 }
 
-interface RecentMetrics {
-  steps?: { value: number; date: string };
-  heartRate?: { value: number; date: string };
-  weight?: { value: number; date: string };
-  sleep?: { value: number; date: string };
-  activeCalories?: { value: number; date: string };
-  restingCalories?: { value: number; date: string };
-}
-
-export function AppleHealthIntegration({ userId }: AppleHealthIntegrationProps) {
-  const [healthData, setHealthData] = useState<HealthData | null>(null);
-  const [recentMetrics, setRecentMetrics] = useState<RecentMetrics>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+export const AppleHealthIntegration = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<ProcessingStatus>({
+    stage: 'idle',
+    progress: 0,
+    message: ''
+  });
+  const [parsedData, setParsedData] = useState<ParsedHealthData | null>(null);
+  const [statistics, setStatistics] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    loadHealthData();
-  }, [userId]);
+  // Обработка drag & drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
 
-  const loadHealthData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Загружаем общую статистику по здоровью
-      const { data: healthRecords, error: healthError } = await supabase
-        .from('health_records')
-        .select('record_type, start_date, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
 
-      if (healthError) throw healthError;
-
-      // Анализируем данные
-      if (healthRecords && healthRecords.length > 0) {
-        const recordTypes: { [key: string]: number } = {};
-        let earliest = healthRecords[healthRecords.length - 1].start_date;
-        let latest = healthRecords[0].start_date;
-        let lastSync = healthRecords[0].created_at;
-
-        healthRecords.forEach(record => {
-          recordTypes[record.record_type] = (recordTypes[record.record_type] || 0) + 1;
-          if (record.start_date < earliest) earliest = record.start_date;
-          if (record.start_date > latest) latest = record.start_date;
-          if (record.created_at > lastSync) lastSync = record.created_at;
-        });
-
-        setHealthData({
-          totalRecords: healthRecords.length,
-          lastSync,
-          recordTypes,
-          dateRange: { earliest, latest }
-        });
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.name.endsWith('.zip')) {
+        setSelectedFile(file);
       } else {
-        setHealthData({
-          totalRecords: 0,
-          recordTypes: {}
+        toast({
+          title: 'Неверный формат файла',
+          description: 'Загрузите ZIP-архив экспорта Apple Health',
+          variant: 'destructive'
         });
       }
+    }
+  }, [toast]);
 
-      // Загружаем последние метрики
-      await loadRecentMetrics();
+  // Выбор файла
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.zip')) {
+        toast({
+          title: 'Неверный формат файла',
+          description: 'Загрузите ZIP-архив экспорта Apple Health',
+          variant: 'destructive'
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  // Обработка файла
+  const processFile = async () => {
+    if (!selectedFile || !user) return;
+
+    try {
+      // Этап 1: Парсинг
+      setStatus({
+        stage: 'parsing',
+        progress: 20,
+        message: 'Распаковка и анализ данных...'
+      });
+
+      const parser = new AppleHealthParser();
+      const data = await parser.parseHealthExport(selectedFile);
+      setParsedData(data);
+
+      const stats = parser.getStatistics(data);
+      setStatistics(stats);
+
+      setStatus({
+        stage: 'parsing',
+        progress: 50,
+        message: `Найдено ${stats.totalRecords} записей и ${stats.totalWorkouts} тренировок`,
+        details: {
+          totalRecords: stats.totalRecords,
+          workoutsProcessed: stats.totalWorkouts,
+          metricsFound: stats.metrics.slice(0, 5).map((m: any) => m.name)
+        }
+      });
+
+      // Этап 2: Сохранение в БД
+      setStatus({
+        stage: 'saving',
+        progress: 70,
+        message: 'Сохранение данных в базу...'
+      });
+
+      const dbData = parser.prepareForDatabase(data, user.id);
+      
+      // Сохраняем через Edge Function для оптимизации
+      const { data: result, error } = await supabase.functions.invoke('process-apple-health', {
+        body: {
+          userId: user.id,
+          metrics: dbData.metrics,
+          workouts: dbData.workouts,
+          summaries: dbData.summaries
+        }
+      });
+
+      if (error) throw error;
+
+      setStatus({
+        stage: 'complete',
+        progress: 100,
+        message: 'Данные успешно импортированы!',
+        details: {
+          recordsProcessed: result?.saved?.metrics || 0,
+          workoutsProcessed: result?.saved?.workouts || 0
+        }
+      });
+
+      toast({
+        title: 'Импорт завершен!',
+        description: `Импортировано ${result?.saved?.metrics || 0} метрик и ${result?.saved?.workouts || 0} тренировок`,
+      });
 
     } catch (error: any) {
-      console.error('Error loading health data:', error);
+      console.error('Error processing Apple Health data:', error);
+      
+      setStatus({
+        stage: 'error',
+        progress: 0,
+        message: error.message || 'Ошибка обработки данных'
+      });
+
       toast({
-        title: 'Ошибка загрузки',
-        description: 'Не удалось загрузить данные Apple Health.',
+        title: 'Ошибка импорта',
+        description: error.message || 'Не удалось обработать данные',
         variant: 'destructive'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const loadRecentMetrics = async () => {
-    try {
-      // Получаем последние значения ключевых метрик
-      const metrics = [
-        { type: 'HKQuantityTypeIdentifierStepCount', key: 'steps' },
-        { type: 'HKQuantityTypeIdentifierHeartRate', key: 'heartRate' },
-        { type: 'HKQuantityTypeIdentifierBodyMass', key: 'weight' },
-        { type: 'HKCategoryTypeIdentifierSleepAnalysis', key: 'sleep' },
-        { type: 'HKQuantityTypeIdentifierActiveEnergyBurned', key: 'activeCalories' },
-        { type: 'HKQuantityTypeIdentifierBasalEnergyBurned', key: 'restingCalories' }
-      ];
-
-      const recentData: RecentMetrics = {};
-
-      for (const metric of metrics) {
-        const { data } = await supabase
-          .from('health_records')
-          .select('value, start_date')
-          .eq('user_id', userId)
-          .eq('record_type', metric.type)
-          .order('start_date', { ascending: false })
-          .limit(1);
-
-        if (data && data.length > 0) {
-          (recentData as any)[metric.key] = {
-            value: data[0].value,
-            date: data[0].start_date
-          };
-        }
-      }
-
-      setRecentMetrics(recentData);
-    } catch (error) {
-      console.error('Error loading recent metrics:', error);
-    }
+  const reset = () => {
+    setSelectedFile(null);
+    setStatus({ stage: 'idle', progress: 0, message: '' });
+    setParsedData(null);
+    setStatistics(null);
   };
 
-  const refreshData = async () => {
-    setIsRefreshing(true);
-    await loadHealthData();
-    setIsRefreshing(false);
-    toast({
-      title: 'Данные обновлены',
-      description: 'Статистика Apple Health успешно обновлена.',
-    });
-  };
-
-  const handleUploadComplete = async (data: any) => {
-    await loadHealthData();
-    toast({
-      title: 'Импорт завершен',
-      description: 'Данные Apple Health успешно импортированы и готовы к использованию.',
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getMetricIcon = (type: string) => {
-    switch (type) {
-      case 'steps': return <Footprints className="h-4 w-4" />;
-      case 'heartRate': return <Heart className="h-4 w-4" />;
-      case 'weight': return <Scale className="h-4 w-4" />;
+  const getCategoryIcon = (category: string) => {
+    switch(category) {
+      case 'heart': return <Heart className="h-4 w-4" />;
+      case 'body': return <TrendingUp className="h-4 w-4" />;
+      case 'activity': return <Activity className="h-4 w-4" />;
       case 'sleep': return <Moon className="h-4 w-4" />;
-      case 'activeCalories':
-      case 'restingCalories': 
-        return <Zap className="h-4 w-4" />;
       default: return <Activity className="h-4 w-4" />;
     }
   };
 
-  const getMetricUnit = (type: string) => {
-    switch (type) {
-      case 'steps': return 'шагов';
-      case 'heartRate': return 'уд/мин';
-      case 'weight': return 'кг';
-      case 'sleep': return 'ч';
-      case 'activeCalories':
-      case 'restingCalories': 
-        return 'ккал';
-      default: return '';
-    }
-  };
-
-  const getMetricName = (type: string) => {
-    switch (type) {
-      case 'steps': return 'Шаги';
-      case 'heartRate': return 'Пульс';
-      case 'weight': return 'Вес';
-      case 'sleep': return 'Сон';
-      case 'activeCalories': return 'Активные ккал';
-      case 'restingCalories': return 'Базовые ккал';
-      default: return type;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span>Загрузка данных Apple Health...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg">🍎</span>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center text-white text-xl">
+              🍎
+            </div>
+            <div>
+              <CardTitle>Apple Health</CardTitle>
+              <CardDescription>
+                Импортируйте все ваши данные о здоровье и фитнесе из iPhone
+              </CardDescription>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Инструкции */}
+        {status.stage === 'idle' && !selectedFile && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Как экспортировать данные:</strong>
+              <ol className="list-decimal list-inside mt-2 space-y-1">
+                <li>Откройте приложение "Здоровье" на iPhone</li>
+                <li>Нажмите на свой профиль (правый верхний угол)</li>
+                <li>Прокрутите вниз и выберите "Экспортировать данные о здоровье"</li>
+                <li>Подождите создания архива (может занять несколько минут)</li>
+                <li>Отправьте ZIP-файл себе и загрузите его здесь</li>
+              </ol>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Зона загрузки */}
+        {status.stage === 'idle' && (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`
+              border-2 border-dashed rounded-lg p-8 text-center transition-all
+              ${isDragging 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/25 hover:border-primary/50'
+              }
+              ${selectedFile ? 'bg-green-50 dark:bg-green-950/20' : ''}
+            `}
+          >
+            <input
+              type="file"
+              accept=".zip"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="apple-health-file"
+            />
+            
+            {selectedFile ? (
+              <div className="space-y-4">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                <div>
+                  <p className="font-medium">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={processFile}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Начать импорт
+                  </Button>
+                  <Button variant="outline" onClick={reset}>
+                    <X className="h-4 w-4 mr-2" />
+                    Отмена
+                  </Button>
+                </div>
               </div>
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  Apple Health Integration
-                  {healthData && healthData.totalRecords > 0 && (
-                    <Badge variant="default" className="bg-green-100 text-green-800">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Подключено
-                    </Badge>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  {healthData && healthData.totalRecords > 0 
-                    ? `${healthData.totalRecords.toLocaleString()} записей • Последний импорт: ${healthData.lastSync ? formatDate(healthData.lastSync) : 'Никогда'}`
-                    : 'Импортируйте данные из приложения "Здоровье" на iPhone'
-                  }
-                </CardDescription>
+            ) : (
+              <label htmlFor="apple-health-file" className="cursor-pointer">
+                <div className="space-y-4">
+                  <FileUp className="h-12 w-12 text-muted-foreground mx-auto" />
+                  <div>
+                    <p className="font-medium">
+                      Перетащите ZIP-файл сюда или нажмите для выбора
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Поддерживается экспорт Apple Health (файл export.zip)
+                    </p>
+                  </div>
+                  <Button variant="outline">
+                    Выбрать файл
+                  </Button>
+                </div>
+              </label>
+            )}
+          </div>
+        )}
+
+        {/* Прогресс обработки */}
+        {status.stage !== 'idle' && status.stage !== 'complete' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <div className="flex-1">
+                <p className="font-medium">{status.message}</p>
+                {status.details && (
+                  <p className="text-sm text-muted-foreground">
+                    {status.details.recordsProcessed && 
+                      `Обработано: ${status.details.recordsProcessed} из ${status.details.totalRecords}`}
+                  </p>
+                )}
               </div>
             </div>
             
-            {healthData && healthData.totalRecords > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refreshData}
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? (
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent mr-2" />
-                ) : (
-                  <RefreshCw className="h-4 w-4 mr-2" />
+            <Progress value={status.progress} />
+            
+            {status.details?.metricsFound && (
+              <div className="flex flex-wrap gap-2">
+                {status.details.metricsFound.map(metric => (
+                  <Badge key={metric} variant="secondary">
+                    {metric}
+                  </Badge>
+                ))}
+                {status.details.metricsFound.length < (statistics?.metrics?.length || 0) && (
+                  <Badge variant="outline">
+                    +{(statistics?.metrics?.length || 0) - status.details.metricsFound.length} еще
+                  </Badge>
                 )}
-                Обновить
-              </Button>
+              </div>
             )}
           </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {healthData && healthData.totalRecords > 0 ? (
-            <>
-              {/* Статистика импорта */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Database className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-900">Всего записей</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {healthData.totalRecords.toLocaleString()}
-                  </p>
-                </div>
-                
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Activity className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-900">Типов данных</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-800">
-                    {Object.keys(healthData.recordTypes).length}
-                  </p>
-                </div>
-                
-                {healthData.dateRange && (
-                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-5 w-5 text-purple-600" />
-                      <span className="font-medium text-purple-900">Период данных</span>
-                    </div>
-                    <p className="text-sm text-purple-800">
-                      {formatDate(healthData.dateRange.earliest)} — {formatDate(healthData.dateRange.latest)}
-                    </p>
-                  </div>
-                )}
-              </div>
+        )}
 
-              {/* Последние метрики */}
-              {Object.keys(recentMetrics).length > 0 && (
-                <div>
-                  <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Последние показатели
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {Object.entries(recentMetrics).map(([key, data]) => {
-                      if (!data) return null;
-                      return (
-                        <div key={key} className="p-3 bg-muted/50 rounded-lg border">
-                          <div className="flex items-center gap-2 mb-1">
-                            {getMetricIcon(key)}
-                            <span className="text-xs font-medium">{getMetricName(key)}</span>
-                          </div>
-                          <p className="text-lg font-bold">
-                            {typeof data.value === 'number' ? data.value.toLocaleString() : data.value}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {getMetricUnit(key)} • {formatDate(data.date)}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Топ типов данных */}
-              <div>
-                <h3 className="font-medium mb-3">Топ типов данных</h3>
-                <div className="space-y-2">
-                  {Object.entries(healthData.recordTypes)
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 5)
-                    .map(([type, count]) => (
-                      <div key={type} className="flex items-center justify-between p-2 bg-muted/30 rounded">
-                        <span className="text-sm font-medium truncate flex-1">{type}</span>
-                        <Badge variant="secondary">{count.toLocaleString()}</Badge>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
+        {/* Результаты */}
+        {status.stage === 'complete' && statistics && (
+          <div className="space-y-4">
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
+              <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription>
-                <strong>Данные Apple Health не найдены</strong>
+                <strong>Импорт завершен успешно!</strong>
                 <br />
-                Загрузите экспорт данных из приложения "Здоровье" для автоматического импорта ваших показателей здоровья.
+                Импортировано {statistics.totalRecords.toLocaleString('ru-RU')} записей 
+                за {statistics.totalDays} дней
               </AlertDescription>
             </Alert>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Компонент загрузки */}
-      <AppleHealthUpload onUploadComplete={handleUploadComplete} />
-    </div>
+            <Tabs defaultValue="metrics" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="metrics">Метрики</TabsTrigger>
+                <TabsTrigger value="workouts">Тренировки</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="metrics" className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Импортированные метрики:</h4>
+                  <div className="space-y-1">
+                    {statistics.metrics.slice(0, 10).map((metric: any) => (
+                      <div key={metric.name} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(metric.category)}
+                          <span className="text-sm">{metric.name}</span>
+                        </div>
+                        <Badge variant="outline">
+                          {metric.count.toLocaleString('ru-RU')} записей
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="workouts" className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Типы тренировок:</h4>
+                  <div className="space-y-1">
+                    {statistics.workoutTypes.slice(0, 10).map((workout: any) => (
+                      <div key={workout.type} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                        <span className="text-sm">{workout.type}</span>
+                        <Badge variant="outline">
+                          {workout.count} тренировок
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex gap-2">
+              <Button onClick={reset} className="flex-1">
+                Загрузить еще данные
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = '/progress'}
+              >
+                Посмотреть прогресс
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Ошибка */}
+        {status.stage === 'error' && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Ошибка импорта</strong>
+              <br />
+              {status.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Информация о поддерживаемых метриках */}
+        <div className="pt-4 border-t">
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p className="font-medium">Поддерживаемые данные:</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="flex items-center gap-1">
+                <Heart className="h-3 w-3" />
+                <span>Пульс и HRV</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                <span>Вес и состав тела</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                <span>Шаги и активность</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Moon className="h-3 w-3" />
+                <span>Сон и восстановление</span>
+              </div>
+            </div>
+            <p className="text-xs">
+              • Все данные обрабатываются локально и безопасно сохраняются
+              <br />
+              • Размер архива может быть большим в зависимости от истории (до 2GB)
+              <br />
+              • Обработка может занять несколько минут для больших архивов
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
