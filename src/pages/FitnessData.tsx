@@ -152,6 +152,7 @@ export default function FitnessData() {
   const getSourceIcon = (source: string) => {
     switch (source) {
       case 'whoop': return <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">W</div>;
+      case 'withings': return <div className="w-6 h-6 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">⚖️</div>;
       case 'apple_health': return <div className="w-6 h-6 bg-gray-800 rounded flex items-center justify-center text-white text-xs font-bold">🍎</div>;
       case 'garmin': return <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">G</div>;
       case 'ai_analysis': return <Activity className="w-6 h-6 text-purple-600" />;
