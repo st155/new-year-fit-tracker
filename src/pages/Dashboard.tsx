@@ -30,6 +30,7 @@ import { ru } from 'date-fns/locale';
 import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
 import { QuickWeightTracker } from '@/components/dashboard/quick-weight-tracker';
 import { VO2MaxUpload } from '@/components/dashboard/vo2max-upload';
+import { GoalsSection } from '@/components/dashboard/goals-section';
 
 interface MetricValue {
   id: string;
@@ -516,6 +517,9 @@ const Dashboard = () => {
 
             {/* Apple Health Summary */}
             <AppleHealthSummary />
+            
+            {/* Goals Section */}
+            <GoalsSection userRole="participant" />
             
             {/* VO2Max Upload */}
             <VO2MaxUpload onDataExtracted={fetchDashboardData} />
