@@ -99,7 +99,34 @@ export function StatsGrid({ userRole }: StatsGridProps) {
       // Получаем актуальные данные пользователя
       const today = new Date().toISOString().split('T')[0];
       
-      // Получаем последние данные состава тела
+      // Сначала проверяем данные Withings
+      const { data: withingsWeight } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(10);
+
+      const { data: withingsBodyFat } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Процент жира')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(10);
+
+      // Получаем последние данные состава тела (fallback)
       const { data: bodyComposition } = await supabase
         .from('body_composition')
         .select('weight, body_fat_percentage, measurement_date')
@@ -150,28 +177,50 @@ export function StatsGrid({ userRole }: StatsGridProps) {
       // Рассчитываем изменения для веса и процента жира
       let weightChange = null;
       let bodyFatChange = null;
-      
-      if (bodyComposition && bodyComposition.length > 1) {
-        const current = bodyComposition[0];
-        const previous = bodyComposition[1];
-        
-        if (current.weight && previous.weight) {
-          weightChange = Math.round(((current.weight - previous.weight) / previous.weight) * 100);
+      let currentWeight = null;
+      let currentBodyFat = null;
+
+      // Используем данные Withings если есть, иначе body_composition
+      if (withingsWeight && withingsWeight.length > 0) {
+        currentWeight = withingsWeight[0].value;
+        if (withingsWeight.length > 1) {
+          const current = withingsWeight[0].value;
+          const previous = withingsWeight[1].value;
+          weightChange = Math.round(((current - previous) / previous) * 100);
         }
-        
-        if (current.body_fat_percentage && previous.body_fat_percentage) {
-          bodyFatChange = Math.round(((previous.body_fat_percentage - current.body_fat_percentage) / current.body_fat_percentage) * 100);
+      } else if (bodyComposition && bodyComposition.length > 0) {
+        currentWeight = bodyComposition[0].weight;
+        if (bodyComposition.length > 1 && bodyComposition[0].weight && bodyComposition[1].weight) {
+          const current = bodyComposition[0].weight;
+          const previous = bodyComposition[1].weight;
+          weightChange = Math.round(((current - previous) / previous) * 100);
+        }
+      }
+
+      if (withingsBodyFat && withingsBodyFat.length > 0) {
+        currentBodyFat = withingsBodyFat[0].value;
+        if (withingsBodyFat.length > 1) {
+          const current = withingsBodyFat[0].value;
+          const previous = withingsBodyFat[1].value;
+          bodyFatChange = Math.round(((previous - current) / current) * 100);
+        }
+      } else if (bodyComposition && bodyComposition.length > 0 && bodyComposition[0].body_fat_percentage) {
+        currentBodyFat = bodyComposition[0].body_fat_percentage;
+        if (bodyComposition.length > 1 && bodyComposition[1].body_fat_percentage) {
+          const current = bodyComposition[0].body_fat_percentage;
+          const previous = bodyComposition[1].body_fat_percentage;
+          bodyFatChange = Math.round(((previous - current) / current) * 100);
         }
       }
 
       setStats({
         bodyFat: {
-          current: bodyComposition?.[0]?.body_fat_percentage || null,
+          current: currentBodyFat,
           target: bodyFatGoal?.target_value || 11,
           change: bodyFatChange
         },
         weight: {
-          current: bodyComposition?.[0]?.weight || null,
+          current: currentWeight,
           change: weightChange
         },
         pullUps: {

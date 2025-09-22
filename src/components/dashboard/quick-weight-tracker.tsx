@@ -36,6 +36,36 @@ export function QuickWeightTracker() {
     if (!user) return;
 
     try {
+      // Сначала проверяем данные Withings из metric_values
+      const { data: withingsData, error: withingsError } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(7);
+
+      if (withingsError) {
+        console.error('Error fetching Withings data:', withingsError);
+      }
+
+      // Если есть данные Withings, используем их
+      if (withingsData && withingsData.length > 0) {
+        const weights = withingsData.map(item => ({
+          weight: item.value,
+          date: item.measurement_date
+        }));
+        setWeightData(weights);
+        setLoading(false);
+        return;
+      }
+
+      // Иначе используем данные из daily_health_summary
       const { data, error } = await supabase
         .from('daily_health_summary')
         .select('weight, date')
