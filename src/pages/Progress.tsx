@@ -62,6 +62,7 @@ const ProgressPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [viewingGoalDetail, setViewingGoalDetail] = useState<Goal | null>(null);
   const [quickMeasurementGoal, setQuickMeasurementGoal] = useState<Goal | null>(null);
+  const [weightData, setWeightData] = useState<{ weight: number; date: string; change?: number } | null>(null);
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -73,6 +74,7 @@ const ProgressPage = () => {
 
   useEffect(() => {
     fetchGoalsAndMeasurements();
+    fetchCurrentWeight();
   }, [user]);
 
   const fetchGoalsAndMeasurements = async () => {
@@ -130,6 +132,64 @@ const ProgressPage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCurrentWeight = async () => {
+    if (!user) return;
+
+    try {
+      // Сначала проверяем данные Withings из metric_values
+      const { data: withingsData, error: withingsError } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      if (withingsData && withingsData.length > 0) {
+        const currentWeight = withingsData[0].value;
+        const previousWeight = withingsData[1]?.value;
+        const change = previousWeight ? currentWeight - previousWeight : undefined;
+        
+        setWeightData({
+          weight: currentWeight,
+          date: withingsData[0].measurement_date,
+          change
+        });
+        return;
+      }
+
+      // Иначе используем данные из daily_health_summary
+      const { data, error } = await supabase
+        .from('daily_health_summary')
+        .select('weight, date')
+        .eq('user_id', user.id)
+        .not('weight', 'is', null)
+        .order('date', { ascending: false })
+        .limit(2);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const currentWeight = data[0].weight;
+        const previousWeight = data[1]?.weight;
+        const change = previousWeight ? currentWeight - previousWeight : undefined;
+        
+        setWeightData({
+          weight: currentWeight,
+          date: data[0].date,
+          change
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching current weight:', error);
     }
   };
 
@@ -471,6 +531,148 @@ const ProgressPage = () => {
 
         {/* Сетка целей */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Карточка контроля веса */}
+          {weightData && (
+            <FitnessCard 
+              className="p-6 animate-fade-in hover-scale transition-all duration-300 cursor-pointer border-2 border-primary/20"
+              style={{ animationDelay: `0ms` }}
+              onClick={() => navigate('/progress')} // Можно добавить отдельную страницу для веса
+            >
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Контроль веса</h3>
+                    </div>
+                    <Badge className="bg-primary/10 text-primary border-primary/20">
+                      Состав тела
+                    </Badge>
+                  </div>
+                  {weightData.change && (
+                    <div className="flex items-center gap-1 text-sm">
+                      {weightData.change > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-red-500" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Текущий вес</span>
+                    <span className="font-medium">{weightData.weight} кг</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Текущий</p>
+                    <p className="font-medium">{weightData.weight} кг</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Изменение</p>
+                    <p className={`font-medium ${
+                      weightData.change 
+                        ? weightData.change > 0 ? 'text-red-500' : 'text-green-500'
+                        : 'text-muted-foreground'
+                    }`}>
+                      {weightData.change 
+                        ? `${weightData.change > 0 ? '+' : ''}${weightData.change.toFixed(1)} кг`
+                        : 'Нет данных'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  Последнее: {format(new Date(weightData.date), 'd MMM', { locale: ru })}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Добавить
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Добавить вес</DialogTitle>
+                        <DialogDescription>
+                          Введите текущий вес
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="70.5"
+                          onChange={async (e) => {
+                            if (e.target.value && user) {
+                              try {
+                                const today = new Date().toISOString().split('T')[0];
+                                const weight = parseFloat(e.target.value);
+                                
+                                const { data: existingData } = await supabase
+                                  .from('daily_health_summary')
+                                  .select('id')
+                                  .eq('user_id', user.id)
+                                  .eq('date', today)
+                                  .maybeSingle();
+
+                                if (existingData) {
+                                  await supabase
+                                    .from('daily_health_summary')
+                                    .update({ weight })
+                                    .eq('id', existingData.id);
+                                } else {
+                                  await supabase
+                                    .from('daily_health_summary')
+                                    .insert({
+                                      user_id: user.id,
+                                      date: today,
+                                      weight
+                                    });
+                                }
+                                
+                                fetchCurrentWeight();
+                                toast({
+                                  title: "Успешно!",
+                                  description: "Вес обновлен",
+                                });
+                              } catch (error) {
+                                console.error('Error updating weight:', error);
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Можно добавить детальную страницу веса
+                    }}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Детали
+                  </Button>
+                </div>
+              </div>
+            </FitnessCard>
+          )}
+
           {goals.map((goal, index) => {
             const progress = getProgressPercentage(goal);
             const trend = getTrend(goal);
@@ -480,7 +682,7 @@ const ProgressPage = () => {
               <FitnessCard 
                 key={goal.id} 
                 className="p-6 animate-fade-in hover-scale transition-all duration-300 cursor-pointer"
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${(index + 1) * 100}ms` }}
                 onClick={() => setViewingGoalDetail(goal)}
               >
                 <div className="space-y-4">
