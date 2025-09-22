@@ -176,7 +176,7 @@ async function handleCallback(req: Request) {
         <p>Authorization successful! You can close this window.</p>
       </body>
     </html>`,
-    { headers: { 'Content-Type': 'text/html' } }
+    { headers: { ...corsHeaders, 'Content-Type': 'text/html' } }
   );
 }
 
