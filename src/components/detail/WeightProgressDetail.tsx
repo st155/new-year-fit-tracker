@@ -38,7 +38,21 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
       const endDate = new Date();
       const startDate = subDays(endDate, 30); // Последние 30 дней
 
-      // Получаем данные о весе из body_composition
+      // Сначала получаем данные из Withings (metric_values)
+      const { data: withingsWeight } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .gte('measurement_date', startDate.toISOString().split('T')[0])
+        .order('measurement_date', { ascending: true });
+
+      // Fallback к данным из body_composition если нет Withings данных
       const { data: bodyData } = await supabase
         .from('body_composition')
         .select('measurement_date, weight')
@@ -46,31 +60,41 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
         .gte('measurement_date', startDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
-      if (bodyData) {
-        const formattedData = bodyData
+      // Используем данные Withings если есть, иначе body_composition
+      let formattedData: WeightData[] = [];
+      
+      if (withingsWeight && withingsWeight.length > 0) {
+        formattedData = withingsWeight
+          .map((item, index, arr) => ({
+            date: item.measurement_date,
+            weight: Number(item.value),
+            change: index > 0 ? Number(item.value) - Number(arr[index - 1].value) : 0
+          }));
+      } else if (bodyData) {
+        formattedData = bodyData
           .filter(item => item.weight)
           .map((item, index, arr) => ({
             date: item.measurement_date,
             weight: Number(item.weight),
             change: index > 0 ? Number(item.weight) - Number(arr[index - 1].weight) : 0
           }));
+      }
 
-        setWeightData(formattedData);
+      setWeightData(formattedData);
+      
+      if (formattedData.length > 0) {
+        const latest = formattedData[formattedData.length - 1];
+        setCurrentWeight(latest.weight);
         
-        if (formattedData.length > 0) {
-          const latest = formattedData[formattedData.length - 1];
-          setCurrentWeight(latest.weight);
-          
-          // Вычисляем недельное изменение
-          const weekAgo = formattedData.find(item => {
-            const itemDate = new Date(item.date);
-            const weekAgoDate = subDays(new Date(), 7);
-            return itemDate >= weekAgoDate;
-          });
-          
-          if (weekAgo) {
-            setWeeklyChange(latest.weight - weekAgo.weight);
-          }
+        // Вычисляем недельное изменение
+        const weekAgo = formattedData.find(item => {
+          const itemDate = new Date(item.date);
+          const weekAgoDate = subDays(new Date(), 7);
+          return itemDate >= weekAgoDate;
+        });
+        
+        if (weekAgo) {
+          setWeeklyChange(latest.weight - weekAgo.weight);
         }
       }
     } catch (error) {
