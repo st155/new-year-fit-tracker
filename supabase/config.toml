@@ -3,6 +3,9 @@ project_id = "ueykmmzmguzjppdudvef"
 [functions.whoop-integration]
 verify_jwt = false
 
+[functions.withings-integration]
+verify_jwt = false
+
 [functions.process-apple-health]
 verify_jwt = true
 import_map = "./functions/process-apple-health/import_map.json"
