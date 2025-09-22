@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { FormValidation, validationRules, useFormValidation } from "@/components/ui/form-validation";
 
 interface GoalTemplate {
   name: string;
@@ -44,31 +45,42 @@ interface GoalCreateDialogProps {
 export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
-  const [customGoal, setCustomGoal] = useState({
-    name: "",
-    type: "",
-    value: 0,
-    unit: ""
-  });
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const {
+    values: customGoal,
+    errors,
+    touched,
+    setValue,
+    setFieldTouched,
+    validateAll,
+    reset,
+    isFormValid
+  } = useFormValidation(
+    { name: "", type: "", value: 0, unit: "" },
+    {
+      name: [validationRules.required(), validationRules.minLength(2)],
+      type: [validationRules.required("Выберите тип цели")],
+      value: [validationRules.required("Укажите целевое значение"), validationRules.positiveNumber()],
+      unit: [validationRules.required("Укажите единицу измерения")]
+    }
+  );
+
   const handleTemplateSelect = (templateName: string) => {
     const template = goalTemplates.find(t => t.name === templateName);
     if (template) {
-      setCustomGoal({
-        name: template.name,
-        type: template.type,
-        value: template.value,
-        unit: template.unit
-      });
+      setValue('name', template.name);
+      setValue('type', template.type);
+      setValue('value', template.value);
+      setValue('unit', template.unit);
       setSelectedTemplate(templateName);
     }
   };
 
   const handleCreate = async () => {
-    if (!user || !customGoal.name.trim()) return;
+    if (!user || !validateAll()) return;
 
     setLoading(true);
     try {
@@ -116,7 +128,7 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
       });
       setOpen(false);
       setSelectedTemplate("");
-      setCustomGoal({ name: "", type: "", value: 0, unit: "" });
+      reset();
       onGoalCreated();
     } catch (error: any) {
       console.error('Error creating goal:', error);
@@ -164,8 +176,15 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
             <Input
               id="goal_name"
               value={customGoal.name}
-              onChange={(e) => setCustomGoal({ ...customGoal, name: e.target.value })}
+              onChange={(e) => setValue('name', e.target.value)}
+              onBlur={() => setFieldTouched('name')}
               placeholder="Введите название цели"
+              className={errors.name?.length > 0 ? 'border-destructive' : ''}
+            />
+            <FormValidation
+              value={customGoal.name}
+              rules={[validationRules.required(), validationRules.minLength(2)]}
+              showValidation={touched.name}
             />
           </div>
 
@@ -173,7 +192,10 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
             <Label htmlFor="goal_type">Тип цели</Label>
             <Select
               value={customGoal.type}
-              onValueChange={(value) => setCustomGoal({ ...customGoal, type: value })}
+              onValueChange={(value) => {
+                setValue('type', value);
+                setFieldTouched('type');
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Выберите тип" />
@@ -184,6 +206,11 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
                 ))}
               </SelectContent>
             </Select>
+            <FormValidation
+              value={customGoal.type}
+              rules={[validationRules.required("Выберите тип цели")]}
+              showValidation={touched.type}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -194,7 +221,14 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
                 type="number"
                 step="0.1"
                 value={customGoal.value || ""}
-                onChange={(e) => setCustomGoal({ ...customGoal, value: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+                onBlur={() => setFieldTouched('value')}
+                className={errors.value?.length > 0 ? 'border-destructive' : ''}
+              />
+              <FormValidation
+                value={customGoal.value}
+                rules={[validationRules.required("Укажите целевое значение"), validationRules.positiveNumber()]}
+                showValidation={touched.value}
               />
             </div>
             <div>
@@ -202,15 +236,29 @@ export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
               <Input
                 id="target_unit"
                 value={customGoal.unit}
-                onChange={(e) => setCustomGoal({ ...customGoal, unit: e.target.value })}
+                onChange={(e) => setValue('unit', e.target.value)}
+                onBlur={() => setFieldTouched('unit')}
                 placeholder="кг, раз, мин"
+                className={errors.unit?.length > 0 ? 'border-destructive' : ''}
+              />
+              <FormValidation
+                value={customGoal.unit}
+                rules={[validationRules.required("Укажите единицу измерения")]}
+                showValidation={touched.unit}
               />
             </div>
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button onClick={handleCreate} disabled={loading || !customGoal.name.trim()} className="flex-1">
-              {loading ? 'Создание...' : 'Создать'}
+            <Button onClick={handleCreate} disabled={loading || !isFormValid} className="flex-1">
+              {loading ? (
+                'Создание...'
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Создать
+                </>
+              )}
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
               Отмена

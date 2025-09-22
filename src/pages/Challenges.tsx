@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Target, Trophy, Eye, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Users, Target, Trophy, Eye, Plus, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -17,9 +19,12 @@ const Challenges = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState<any[]>([]);
+  const [filteredChallenges, setFilteredChallenges] = useState<any[]>([]);
   const [userChallenges, setUserChallenges] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningChallenge, setJoiningChallenge] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -34,6 +39,7 @@ const Challenges = () => {
           .order('created_at', { ascending: false });
 
         setChallenges(challengesData || []);
+        setFilteredChallenges(challengesData || []);
 
         // Загружаем челленджи пользователя
         const { data: participantData } = await supabase
@@ -51,6 +57,28 @@ const Challenges = () => {
 
     fetchChallenges();
   }, [user]);
+
+  // Фильтрация и поиск
+  useEffect(() => {
+    let filtered = challenges;
+
+    // Поиск по названию и описанию
+    if (searchTerm) {
+      filtered = filtered.filter(challenge => 
+        challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        challenge.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Фильтр по статусу участия
+    if (statusFilter === "joined") {
+      filtered = filtered.filter(challenge => userChallenges.includes(challenge.id));
+    } else if (statusFilter === "available") {
+      filtered = filtered.filter(challenge => !userChallenges.includes(challenge.id));
+    }
+
+    setFilteredChallenges(filtered);
+  }, [challenges, searchTerm, statusFilter, userChallenges]);
 
   const joinChallenge = async (challengeId: string) => {
     if (!user) return;
@@ -155,7 +183,45 @@ const Challenges = () => {
           </Button>
         </div>
 
-        {challenges.length === 0 ? (
+        {/* Поиск и фильтры */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск челленджей..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все челленджи</SelectItem>
+              <SelectItem value="available">Доступные</SelectItem>
+              <SelectItem value="joined">Мои челленджи</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredChallenges.length === 0 && challenges.length > 0 ? (
+          <EmptyState
+            icon={<Search className="h-16 w-16" />}
+            title="Ничего не найдено"
+            description="Попробуйте изменить критерии поиска или фильтры."
+            action={{
+              label: "Очистить фильтры",
+              onClick: () => {
+                setSearchTerm("");
+                setStatusFilter("all");
+              }
+            }}
+          />
+        ) : challenges.length === 0 ? (
           <EmptyState
             icon={<Trophy className="h-16 w-16" />}
             title="Пока нет челленджей"
@@ -167,7 +233,7 @@ const Challenges = () => {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {challenges.map((challenge, index) => {
+            {filteredChallenges.map((challenge, index) => {
             const isParticipant = userChallenges.includes(challenge.id);
             const daysRemaining = getDaysRemaining(challenge.end_date);
             

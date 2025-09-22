@@ -32,6 +32,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProgressChart } from "@/components/ui/progress-chart";
 
 
 interface Goal {
@@ -65,6 +66,9 @@ const ProgressPage = () => {
   const [viewingGoalDetail, setViewingGoalDetail] = useState<Goal | null>(null);
   const [quickMeasurementGoal, setQuickMeasurementGoal] = useState<Goal | null>(null);
   const [weightData, setWeightData] = useState<{ weight: number; date: string; change?: number } | null>(null);
+  const [dateFilter, setDateFilter] = useState("all");
+  const [goalTypeFilter, setGoalTypeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -254,6 +258,52 @@ const ProgressPage = () => {
     return Math.min(100, Math.max(0, progress));
   };
 
+  const getFilteredGoals = () => {
+    let filtered = goals;
+
+    // Фильтр по типу цели
+    if (goalTypeFilter !== "all") {
+      filtered = filtered.filter(goal => goal.goal_type === goalTypeFilter);
+    }
+
+    // Фильтр по дате последнего измерения
+    if (dateFilter !== "all") {
+      const now = new Date();
+      filtered = filtered.filter(goal => {
+        if (!goal.measurements || goal.measurements.length === 0) return false;
+        const lastMeasurement = new Date(goal.measurements[0].measurement_date);
+        
+        switch (dateFilter) {
+          case "week":
+            return (now.getTime() - lastMeasurement.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+          case "month":
+            return (now.getTime() - lastMeasurement.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+          case "quarter":
+            return (now.getTime() - lastMeasurement.getTime()) <= 90 * 24 * 60 * 60 * 1000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Сортировка
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "progress":
+          return getProgressPercentage(b) - getProgressPercentage(a);
+        case "name":
+          return a.goal_name.localeCompare(b.goal_name);
+        case "recent":
+        default:
+          const aDate = a.measurements?.[0]?.measurement_date || '1970-01-01';
+          const bDate = b.measurements?.[0]?.measurement_date || '1970-01-01';
+          return new Date(bDate).getTime() - new Date(aDate).getTime();
+      }
+    });
+
+    return filtered;
+  };
+
   const getTrend = (goal: Goal) => {
     if (!goal.measurements || goal.measurements.length < 2) return null;
     
@@ -306,9 +356,48 @@ const ProgressPage = () => {
                 </div>
               </Card>
             ))}
+            </div>
+          </div>
+
+          {/* Фильтры и сортировка */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <Select value={goalTypeFilter} onValueChange={setGoalTypeFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Тип цели" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все типы</SelectItem>
+                <SelectItem value="strength">Сила</SelectItem>
+                <SelectItem value="cardio">Кардио</SelectItem>
+                <SelectItem value="endurance">Выносливость</SelectItem>
+                <SelectItem value="body_composition">Состав тела</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Период" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все время</SelectItem>
+                <SelectItem value="week">Последняя неделя</SelectItem>
+                <SelectItem value="month">Последний месяц</SelectItem>
+                <SelectItem value="quarter">Последние 3 месяца</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Сортировка" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">По дате измерения</SelectItem>
+                <SelectItem value="progress">По прогрессу</SelectItem>
+                <SelectItem value="name">По названию</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      </div>
     );
   }
 
