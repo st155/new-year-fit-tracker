@@ -18,6 +18,7 @@ import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { WeightTracker } from "@/components/weight/WeightTracker";
 import { GoalEditor } from "@/components/goals/GoalEditor";
 import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
+import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,7 @@ const ProgressPage = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [viewingGoalDetail, setViewingGoalDetail] = useState<Goal | null>(null);
+  const [quickMeasurementGoal, setQuickMeasurementGoal] = useState<Goal | null>(null);
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -542,8 +544,7 @@ const ProgressPage = () => {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedGoal(goal);
-                        setIsAddDialogOpen(true);
+                        setQuickMeasurementGoal(goal);
                       }}
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -572,6 +573,16 @@ const ProgressPage = () => {
           <ProgressGallery />
         </div>
       </div>
+
+      {/* Быстрое добавление измерения */}
+      {quickMeasurementGoal && (
+        <QuickMeasurementDialog
+          goal={quickMeasurementGoal}
+          isOpen={!!quickMeasurementGoal}
+          onOpenChange={(open) => !open && setQuickMeasurementGoal(null)}
+          onMeasurementAdded={fetchGoalsAndMeasurements}
+        />
+      )}
     </div>
   );
 };
