@@ -31,6 +31,7 @@ import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary'
 import { QuickWeightTracker } from '@/components/dashboard/quick-weight-tracker';
 import { VO2MaxUpload } from '@/components/dashboard/vo2max-upload';
 import { GoalsSection } from '@/components/dashboard/goals-section';
+import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 
 interface MetricValue {
   id: string;
@@ -514,6 +515,9 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Integrations Card */}
+            <IntegrationsCard />
 
             {/* Apple Health Summary */}
             <AppleHealthSummary />
