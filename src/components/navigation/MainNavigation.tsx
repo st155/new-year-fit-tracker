@@ -136,11 +136,11 @@ export function MainNavigation() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
-          <Target className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">FitTracker</span>
+        <Link to="/" className="flex items-center space-x-2 min-w-0">
+          <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+          <span className="font-bold text-lg sm:text-xl truncate">FitTracker</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -149,7 +149,7 @@ export function MainNavigation() {
             <NavigationMenuItem>
               <NavigationMenuTrigger>Навигация</NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                <ul className="grid w-[300px] gap-3 p-4 sm:w-[400px] md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                   {allItems.map((item) => (
                     <li key={item.href}>
                       <NavigationMenuLink asChild>
@@ -180,7 +180,7 @@ export function MainNavigation() {
         </NavigationMenu>
 
         {/* User Menu & Mobile Navigation */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
           {/* User Avatar Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -233,7 +233,7 @@ export function MainNavigation() {
                 <span className="sr-only">Открыть меню</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetContent side="right" className="w-[280px] sm:w-[400px] max-w-[90vw]">
               <SheetHeader>
                 <SheetTitle>Навигация</SheetTitle>
                 <SheetDescription>

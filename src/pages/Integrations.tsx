@@ -175,7 +175,7 @@ const IntegrationsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-4 sm:p-6 max-w-7xl">
         {/* Заголовок */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -200,7 +200,7 @@ const IntegrationsPage = () => {
         </div>
 
         {/* Статистика */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Подключено</CardTitle>
@@ -268,7 +268,7 @@ const IntegrationsPage = () => {
                 }}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {integrationItems.map((item) => (
                   <Card key={item.id} className="relative overflow-hidden">
                     <CardHeader>
@@ -302,7 +302,7 @@ const IntegrationsPage = () => {
           </TabsContent>
 
           <TabsContent value="setup" className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
               {integrationItems.map((item) => (
                 <Card key={item.id}>
                   <CardHeader>

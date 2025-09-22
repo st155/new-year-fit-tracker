@@ -293,9 +293,9 @@ export const AppleHealthIntegration = () => {
                     <p className="font-medium">
                       Перетащите ZIP-файл сюда или нажмите для выбора
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Поддерживается экспорт Apple Health (файл export.zip)
-                    </p>
+                     <p className="text-sm text-muted-foreground mt-1 px-2">
+                       Поддерживается экспорт Apple Health (файл export.zip)
+                     </p>
                   </div>
                   <Button variant="outline">
                     Выбрать файл
@@ -396,13 +396,14 @@ export const AppleHealthIntegration = () => {
               </TabsContent>
             </Tabs>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button onClick={reset} className="flex-1">
                 Загрузить еще данные
               </Button>
               <Button 
                 variant="outline"
                 onClick={() => window.location.href = '/progress'}
+                className="sm:w-auto"
               >
                 Посмотреть прогресс
               </Button>
@@ -426,7 +427,7 @@ export const AppleHealthIntegration = () => {
         <div className="pt-4 border-t">
           <div className="text-sm text-muted-foreground space-y-2">
             <p className="font-medium">Поддерживаемые данные:</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <div className="flex items-center gap-1">
                 <Heart className="h-3 w-3" />
                 <span>Пульс и HRV</span>

@@ -135,6 +135,7 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-sans antialiased;
     background: linear-gradient(135deg, hsl(var(--background)), hsl(222 47% 6%));
     min-height: 100vh;
+    overflow-x: hidden; /* Предотвращаем горизонтальный скролл */
   }
 
   /* Athletic typography */
