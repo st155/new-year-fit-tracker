@@ -75,7 +75,8 @@ async function getAuthUrl(req: Request) {
 
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/withings-integration?action=handle-callback`;
   
-  const authUrl = new URL(`${WITHINGS_API_URL}/v2/oauth2`);
+  // Use the correct Withings Authorization endpoint (account.withings.com)
+  const authUrl = new URL(`https://account.withings.com/oauth2_user/authorize2`);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('client_id', WITHINGS_CLIENT_ID!);
   authUrl.searchParams.set('redirect_uri', redirectUri);
