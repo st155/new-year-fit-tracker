@@ -1,11 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Smartphone, Watch, Apple, Wifi, WifiOff, Loader2, ExternalLink } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Heart, 
+  Activity, 
+  CheckCircle, 
+  AlertCircle,
+  Clock,
+  Database,
+  Smartphone,
+  Watch,
+  Plus,
+  ExternalLink,
+  Loader2
+} from 'lucide-react';
 
 interface IntegrationStatus {
   name: string;
@@ -13,11 +26,13 @@ interface IntegrationStatus {
   isConnected: boolean;
   lastSync?: string;
   dataCount?: number;
+  status?: 'active' | 'syncing' | 'error' | 'pending';
+  description?: string;
 }
 
-const IntegrationsCard = () => {
+export const IntegrationsCard = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const [integrations, setIntegrations] = useState<IntegrationStatus[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,97 +43,83 @@ const IntegrationsCard = () => {
   }, [user]);
 
   const loadIntegrationsStatus = async () => {
+    if (!user) return;
+
     try {
+      setLoading(true);
+
       // Проверяем Whoop интеграцию
       const { data: whoopTokens } = await supabase
         .from('whoop_tokens')
         .select('updated_at')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1);
 
-      // Подсчитываем данные Whoop
-      const { data: whoopMetrics } = await supabase
-        .from('user_metrics')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('source', 'whoop');
+      const { data: whoopData } = await supabase
+        .from('metric_values')
+        .select('id, user_metrics!inner(source)')
+        .eq('user_id', user.id)
+        .eq('user_metrics.source', 'whoop');
 
-      const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
-      
-      let whoopDataCount = 0;
-      if (whoopMetricIds.length > 0) {
-        const { count } = await supabase
-          .from('metric_values')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user?.id)
-          .in('metric_id', whoopMetricIds);
-        whoopDataCount = count || 0;
-      }
+      // Проверяем Apple Health интеграцию
+      const { data: appleHealthData } = await supabase
+        .from('health_records')
+        .select('id, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      // Подсчитываем данные Apple Health
-      const { data: appleMetrics } = await supabase
-        .from('user_metrics')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('source', 'apple_health');
+      const { data: appleHealthCount } = await supabase
+        .from('health_records')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id);
 
-      const appleMetricIds = appleMetrics?.map(m => m.id) || [];
-      
-      let appleDataCount = 0;
-      if (appleMetricIds.length > 0) {
-        const { count } = await supabase
-          .from('metric_values')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user?.id)
-          .in('metric_id', appleMetricIds);
-        appleDataCount = count || 0;
-      }
+      // Проверяем общие метрики
+      const { data: allMetrics } = await supabase
+        .from('metric_values')
+        .select('id, user_metrics!inner(source)')
+        .eq('user_id', user.id);
 
-      const integrationsData: IntegrationStatus[] = [
+      const integrationsList: IntegrationStatus[] = [
         {
           name: 'Whoop',
-          icon: <Watch className="h-5 w-5" />,
-          isConnected: whoopTokens && whoopTokens.length > 0,
+          icon: <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">W</div>,
+          isConnected: !!whoopTokens?.length,
           lastSync: whoopTokens?.[0]?.updated_at,
-          dataCount: whoopDataCount
+          dataCount: whoopData?.length || 0,
+          status: whoopTokens?.length ? 'active' : 'pending',
+          description: 'Автоматическая синхронизация данных о восстановлении, сне и тренировках'
         },
         {
           name: 'Apple Health',
-          icon: <Apple className="h-5 w-5" />,
-          isConnected: appleDataCount > 0,
-          dataCount: appleDataCount
+          icon: <div className="w-6 h-6 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center text-white text-sm">🍎</div>,
+          isConnected: !!appleHealthData?.length,
+          lastSync: appleHealthData?.[0]?.created_at,
+          dataCount: appleHealthCount?.length || 0,
+          status: appleHealthData?.length ? 'active' : 'pending',
+          description: 'Импорт данных из приложения "Здоровье" на iPhone'
         },
         {
           name: 'Garmin',
-          icon: <Smartphone className="h-5 w-5" />,
+          icon: <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">G</div>,
           isConnected: false,
-          dataCount: 0
+          dataCount: 0,
+          status: 'pending',
+          description: 'Скоро: синхронизация с устройствами Garmin'
         }
       ];
 
-      setIntegrations(integrationsData);
+      setIntegrations(integrationsList);
     } catch (error) {
-      console.error('Error loading integrations status:', error);
+      console.error('Error loading integrations:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleConnect = (integrationName: string) => {
-    switch (integrationName) {
-      case 'Whoop':
-        window.location.href = '/progress#whoop';
-        break;
-      case 'Apple Health':
-        window.location.href = '/fitness-data';
-        break;
-      default:
-        toast({
-          title: 'Скоро будет доступно',
-          description: `Интеграция с ${integrationName} находится в разработке`,
-        });
-    }
+    navigate('/integrations');
   };
 
   const formatLastSync = (dateString?: string) => {
@@ -126,114 +127,170 @@ const IntegrationsCard = () => {
     
     const date = new Date(dateString);
     const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
     
     if (diffHours < 1) return 'Только что';
     if (diffHours < 24) return `${diffHours}ч назад`;
-    
-    const diffDays = Math.floor(diffHours / 24);
     if (diffDays < 7) return `${diffDays}д назад`;
     
-    return date.toLocaleDateString('ru-RU');
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'short'
+    });
   };
+
+  const getStatusIcon = (status?: string, isConnected?: boolean) => {
+    if (status === 'syncing') return <Loader2 className="h-3 w-3 animate-spin" />;
+    if (status === 'error') return <AlertCircle className="h-3 w-3 text-red-500" />;
+    if (isConnected) return <CheckCircle className="h-3 w-3 text-green-500" />;
+    return <Clock className="h-3 w-3 text-muted-foreground" />;
+  };
+
+  const getStatusText = (status?: string, isConnected?: boolean) => {
+    if (status === 'syncing') return 'Синхронизация...';
+    if (status === 'error') return 'Ошибка';
+    if (isConnected) return 'Подключено';
+    return 'Не подключено';
+  };
+
+  const connectedCount = integrations.filter(i => i.isConnected).length;
+  const totalDataPoints = integrations.reduce((sum, i) => sum + (i.dataCount || 0), 0);
 
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wifi className="h-5 w-5" />
-            Интеграции
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
+        <CardContent className="flex items-center justify-center py-6">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Загрузка интеграций...</span>
         </CardContent>
       </Card>
     );
   }
 
-  const connectedCount = integrations.filter(i => i.isConnected).length;
-  const totalDataPoints = integrations.reduce((sum, i) => sum + (i.dataCount || 0), 0);
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wifi className="h-5 w-5" />
-          Интеграции
-        </CardTitle>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>{connectedCount} из {integrations.length} подключено</span>
-          <span>•</span>
-          <span>{totalDataPoints} точек данных</span>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Интеграции
+            </CardTitle>
+            <CardDescription>
+              Подключите ваши устройства и приложения для автоматической синхронизации данных
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/integrations')}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Управление
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="space-y-6">
+        {/* Общая статистика */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Подключено</span>
+            </div>
+            <p className="text-2xl font-bold text-primary">
+              {connectedCount}/{integrations.length}
+            </p>
+          </div>
+          
+          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center gap-2 mb-1">
+              <Database className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium">Данных</span>
+            </div>
+            <p className="text-2xl font-bold text-green-700">
+              {totalDataPoints.toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Список интеграций */}
         <div className="space-y-3">
           {integrations.map((integration) => (
-            <div key={integration.name} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  {integration.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+            <div
+              key={integration.name}
+              className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3 flex-1">
+                {integration.icon}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium">{integration.name}</span>
-                    {integration.isConnected ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                        <Wifi className="h-3 w-3 mr-1" />
-                        Подключено
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        <WifiOff className="h-3 w-3 mr-1" />
-                        Не подключено
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(integration.status, integration.isConnected)}
+                      <span className="text-xs text-muted-foreground">
+                        {getStatusText(integration.status, integration.isConnected)}
+                      </span>
+                    </div>
                   </div>
+                  
+                  <p className="text-xs text-muted-foreground truncate">
+                    {integration.description}
+                  </p>
+                  
                   {integration.isConnected && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <span>Последняя синхронизация: {formatLastSync(integration.lastSync)}</span>
-                      {integration.dataCount && integration.dataCount > 0 && (
-                        <span> • {integration.dataCount} записей</span>
-                      )}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span>
+                        📊 {integration.dataCount?.toLocaleString() || 0} записей
+                      </span>
+                      <span>
+                        🕒 {formatLastSync(integration.lastSync)}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
               
               <Button
-                size="sm"
                 variant={integration.isConnected ? "outline" : "default"}
+                size="sm"
                 onClick={() => handleConnect(integration.name)}
-                className="ml-2"
+                disabled={integration.name === 'Garmin'}
               >
                 {integration.isConnected ? (
                   <>
-                    <ExternalLink className="h-3 w-3 mr-1" />
+                    <Activity className="h-4 w-4 mr-2" />
                     Управление
                   </>
                 ) : (
-                  'Подключить'
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Подключить
+                  </>
                 )}
               </Button>
             </div>
           ))}
         </div>
-        
+
         {connectedCount === 0 && (
-          <div className="text-center py-4 text-muted-foreground">
-            <WifiOff className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Подключите устройства для автоматического</p>
-            <p className="text-sm">отслеживания вашего прогресса</p>
+          <div className="text-center py-4">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+              <Smartphone className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Подключите ваши устройства для автоматической синхронизации данных о здоровье и фитнесе
+            </p>
+            <Button onClick={() => navigate('/integrations')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить интеграцию
+            </Button>
           </div>
         )}
       </CardContent>
     </Card>
   );
 };
-
-export default IntegrationsCard;

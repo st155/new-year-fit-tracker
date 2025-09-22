@@ -4,7 +4,7 @@ import { StatsGrid } from "@/components/dashboard/stats-grid";
 import { GoalsSection } from "@/components/dashboard/goals-section";
 import { Leaderboard } from "@/components/dashboard/leaderboard";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import IntegrationsCard from "@/components/dashboard/integrations-card";
+import { IntegrationsCard } from "@/components/dashboard/integrations-card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";

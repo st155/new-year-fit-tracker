@@ -379,7 +379,13 @@ const ProgressPage = () => {
                         <div className="space-y-4 pr-2">
                           <WhoopIntegration userId={user?.id || ''} />
                           
-                          <AppleHealthUpload />
+                          <AppleHealthUpload onUploadComplete={() => {
+                            fetchGoalsAndMeasurements();
+                            toast({
+                              title: 'Данные Apple Health импортированы',
+                              description: 'Показатели здоровья успешно добавлены в вашу статистику.'
+                            });
+                          }} />
                           
                           <GarminIntegration userId={user?.id || ''} />
                         </div>

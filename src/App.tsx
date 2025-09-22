@@ -17,6 +17,7 @@ import CreateGoal from "./pages/CreateGoal";
 import EditGoal from "./pages/EditGoal";
 import FitnessData from "./pages/FitnessData";
 import WhoopCallback from "./pages/WhoopCallback";
+import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
 
@@ -79,6 +80,11 @@ const App = () => (
             <Route path="/fitness-data" element={
               <ProtectedRoute>
                 <FitnessData />
+              </ProtectedRoute>
+            } />
+            <Route path="/integrations" element={
+              <ProtectedRoute>
+                <Integrations />
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
