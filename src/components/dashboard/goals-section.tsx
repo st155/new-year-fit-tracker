@@ -80,9 +80,10 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
           goalsData.map(async (goal) => {
             const { data: measurements } = await supabase
               .from('measurements')
-              .select('value')
+              .select('value, measurement_date, created_at, source')
               .eq('goal_id', goal.id)
               .order('measurement_date', { ascending: false })
+              .order('created_at', { ascending: false })
               .limit(1);
 
             const currentValue = measurements?.[0]?.value || 0;
