@@ -59,7 +59,11 @@ export const WithingsIntegration = () => {
   };
 
   const connectWithings = async () => {
-    if (!user) return;
+    console.log('Withings connect button clicked', { user });
+    if (!user) {
+      console.error('No user found');
+      return;
+    }
     
     setIsConnecting(true);
     
