@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, username: string) => {
-    const redirectUrl = `${window.location.origin}/auth`;
+    const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Use production URL for better OAuth compatibility
       const baseUrl = window.location.origin;
-      const redirectTo = `${baseUrl}/auth`;
+      const redirectTo = `${baseUrl}/`;
       
       console.log('Redirect URL:', redirectTo);
       
