@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FitnessCard } from "@/components/ui/fitness-card";
-import { HomeButton } from "@/components/ui/home-button";
+
 
 const EditGoalPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -154,7 +154,6 @@ const EditGoalPage = () => {
   if (!goal) {
     return (
       <div className="min-h-screen bg-background">
-        <HomeButton />
         <div className="max-w-2xl mx-auto p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -169,7 +168,6 @@ const EditGoalPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       <div className="max-w-2xl mx-auto p-6">
         {/* Заголовок */}
         <div className="mb-8">

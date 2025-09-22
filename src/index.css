@@ -11,6 +11,12 @@ All colors MUST be HSL.
     /* Fitness Challenge Theme - Dark Athletic */
     --background: 222 47% 8%;
     --foreground: 210 40% 98%;
+    
+    /* Enhanced gradients and shadows */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 40%));
+    --shadow-enhanced: 0 10px 40px -10px hsl(var(--primary) / 0.3);
+    --shadow-success: 0 10px 30px -10px hsl(var(--success) / 0.3);
 
     --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;

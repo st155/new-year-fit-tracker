@@ -8,7 +8,9 @@ import { Calendar, Users, Target, Trophy, Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { HomeButton } from "@/components/ui/home-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 const Challenges = () => {
   const { user } = useAuth();
@@ -133,7 +135,6 @@ const Challenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
@@ -154,8 +155,19 @@ const Challenges = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {challenges.map((challenge, index) => {
+        {challenges.length === 0 ? (
+          <EmptyState
+            icon={<Trophy className="h-16 w-16" />}
+            title="Пока нет челленджей"
+            description="Станьте первым, кто создаст челлендж! Приглашайте друзей к соревнованиям и достигайте целей вместе."
+            action={{
+              label: "Создать первый челлендж",
+              onClick: () => navigate('/challenges/create')
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {challenges.map((challenge, index) => {
             const isParticipant = userChallenges.includes(challenge.id);
             const daysRemaining = getDaysRemaining(challenge.end_date);
             
@@ -232,7 +244,8 @@ const Challenges = () => {
               </Card>
             );
           })}
-        </div>
+          </div>
+        )}
 
         {challenges.length === 0 && (
           <div className="text-center py-12">

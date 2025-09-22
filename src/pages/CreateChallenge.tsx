@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FitnessCard } from "@/components/ui/fitness-card";
-import { HomeButton } from "@/components/ui/home-button";
+
 
 interface Goal {
   id: string;
@@ -161,7 +161,6 @@ const CreateChallengePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       <div className="max-w-4xl mx-auto p-6">
         {/* Заголовок */}
         <div className="mb-8">

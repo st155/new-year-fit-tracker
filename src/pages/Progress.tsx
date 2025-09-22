@@ -30,7 +30,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { HomeButton } from "@/components/ui/home-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 interface Goal {
   id: string;
@@ -273,10 +275,38 @@ const ProgressPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Загружаем ваш прогресс...</p>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto p-3 sm:p-6">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-40" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Card key={index} className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-2 w-full" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -286,7 +316,6 @@ const ProgressPage = () => {
   if (viewingGoalDetail) {
     return (
       <div className="min-h-screen bg-background">
-        <HomeButton />
         <div className="max-w-7xl mx-auto p-3 sm:p-6">
           <GoalProgressDetail 
             goal={viewingGoalDetail} 
@@ -299,7 +328,6 @@ const ProgressPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       <div className="max-w-7xl mx-auto p-3 sm:p-6">
         {/* Заголовок */}
         <div className="mb-6 sm:mb-8">
@@ -498,35 +526,16 @@ const ProgressPage = () => {
 
         {/* Инструкция для новых пользователей */}
         {goals.length === 0 && (
-          <Card className="mb-8 border-dashed border-2 border-primary/30">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <Target className="h-16 w-16 mx-auto text-primary/50" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Начните отслеживать свой прогресс!</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Чтобы добавлять показатели (подтягивания, отжимания, вес и т.д.), сначала создайте цели
-                  </p>
-                  <div className="bg-blue-50 p-4 rounded-lg text-left">
-                    <h4 className="font-medium mb-2">📋 Как это работает:</h4>
-                    <ol className="text-sm space-y-1">
-                      <li><strong>1.</strong> Создайте цель (например: "Подтягивания - 50 раз")</li>
-                      <li><strong>2.</strong> Добавляйте измерения ваших текущих показателей</li>
-                      <li><strong>3.</strong> Отслеживайте прогресс в красивых графиках</li>
-                    </ol>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => navigate('/goals/create')}
-                  className="bg-gradient-primary hover:opacity-90"
-                  size="lg"
-                >
-                  <Target className="h-5 w-5 mr-2" />
-                  Создать первую цель
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<Target className="h-16 w-16" />}
+            title="Начните отслеживать свой прогресс!"
+            description="Создайте цели для отслеживания подтягиваний, отжиманий, веса и других показателей. Добавляйте измерения и следите за своими достижениями."
+            action={{
+              label: "Создать первую цель",
+              onClick: () => navigate('/goals/create')
+            }}
+            className="mb-8"
+          />
         )}
 
         {/* Сетка целей */}

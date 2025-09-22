@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { FitnessCard } from "@/components/ui/fitness-card";
-import { HomeButton } from "@/components/ui/home-button";
+
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -113,7 +113,6 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       <div className="max-w-4xl mx-auto p-6">
         {/* Заголовок */}
         <div className="mb-8">

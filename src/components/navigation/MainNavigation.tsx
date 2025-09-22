@@ -45,6 +45,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface NavigationItem {
   title: string;
@@ -211,6 +212,10 @@ export function MainNavigation() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Настройки</span>
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center">
+                <ThemeToggle />
+                <span className="ml-2">Тема</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">

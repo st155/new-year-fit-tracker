@@ -24,7 +24,7 @@ import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
 import { RecoveryDetails } from '@/components/dashboard/recovery-details';
 import { ActivityDetails } from '@/components/dashboard/activity-details';
 import { TrendsAnalysis } from '@/components/dashboard/trends-analysis';
-import { HomeButton } from '@/components/ui/home-button';
+
 import { format, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { AppleHealthSummary } from '@/components/dashboard/apple-health-summary';
@@ -257,7 +257,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <HomeButton />
       {/* Header */}
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-6 py-4">
