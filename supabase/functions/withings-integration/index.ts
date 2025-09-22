@@ -340,13 +340,30 @@ async function syncUserData(userId: string, accessToken: string) {
 }
 
 async function syncMeasurements(userId: string, accessToken: string): Promise<number> {
-  const lastWeek = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
+  // Get data from last 30 days to ensure we catch recent measurements
+  const lastMonth = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
   
-  const response = await fetch(`${WITHINGS_API_URL}/measure?action=getmeas&access_token=${accessToken}&startdate=${lastWeek}`, {
+  console.log('Fetching measurements from Withings API...');
+  
+  const response = await fetch(`${WITHINGS_API_URL}/measure`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: new URLSearchParams({
+      action: 'getmeas',
+      startdate: lastMonth.toString(),
+    }),
   });
 
   const data = await response.json();
+  
+  console.log('Withings measurements API response:', {
+    status: data.status,
+    hasBody: !!data.body,
+    measureGroupsCount: data.body?.measuregrps?.length || 0
+  });
   
   if (data.status !== 0) {
     console.error('Failed to fetch measurements:', data);
@@ -426,14 +443,31 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
 }
 
 async function syncActivities(userId: string, accessToken: string): Promise<number> {
-  const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const today = new Date().toISOString().split('T')[0];
   
-  const response = await fetch(`${WITHINGS_API_URL}/v2/measure?action=getactivity&access_token=${accessToken}&startdateymd=${lastWeek}&enddateymd=${today}`, {
+  console.log('Fetching activities from Withings API...');
+  
+  const response = await fetch(`${WITHINGS_API_URL}/v2/measure`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: new URLSearchParams({
+      action: 'getactivity',
+      startdateymd: lastMonth,
+      enddateymd: today,
+    }),
   });
 
   const data = await response.json();
+  
+  console.log('Withings activities API response:', {
+    status: data.status,
+    hasBody: !!data.body,
+    activitiesCount: data.body?.activities?.length || 0
+  });
   
   if (data.status !== 0) {
     console.error('Failed to fetch activities:', data);
@@ -484,14 +518,31 @@ async function syncActivities(userId: string, accessToken: string): Promise<numb
 }
 
 async function syncSleep(userId: string, accessToken: string): Promise<number> {
-  const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const today = new Date().toISOString().split('T')[0];
   
-  const response = await fetch(`${WITHINGS_API_URL}/v2/sleep?action=getsummary&access_token=${accessToken}&startdateymd=${lastWeek}&enddateymd=${today}`, {
+  console.log('Fetching sleep data from Withings API...');
+  
+  const response = await fetch(`${WITHINGS_API_URL}/v2/sleep`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: new URLSearchParams({
+      action: 'getsummary',
+      startdateymd: lastMonth,
+      enddateymd: today,
+    }),
   });
 
   const data = await response.json();
+  
+  console.log('Withings sleep API response:', {
+    status: data.status,
+    hasBody: !!data.body,
+    sleepCount: data.body?.series?.length || 0
+  });
   
   if (data.status !== 0) {
     console.error('Failed to fetch sleep:', data);
@@ -544,13 +595,29 @@ async function syncSleep(userId: string, accessToken: string): Promise<number> {
 }
 
 async function syncWorkouts(userId: string, accessToken: string): Promise<number> {
-  const lastWeek = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
+  const lastMonth = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
   
-  const response = await fetch(`${WITHINGS_API_URL}/v2/measure?action=getworkouts&access_token=${accessToken}&startdate=${lastWeek}`, {
+  console.log('Fetching workouts from Withings API...');
+  
+  const response = await fetch(`${WITHINGS_API_URL}/v2/measure`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: new URLSearchParams({
+      action: 'getworkouts',
+      startdate: lastMonth.toString(),
+    }),
   });
 
   const data = await response.json();
+  
+  console.log('Withings workouts API response:', {
+    status: data.status,
+    hasBody: !!data.body,
+    workoutsCount: data.body?.series?.length || 0
+  });
   
   if (data.status !== 0) {
     console.error('Failed to fetch workouts:', data);
