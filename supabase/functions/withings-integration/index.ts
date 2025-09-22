@@ -61,6 +61,8 @@ async function getAuthUrl(req: Request) {
   const body = await req.json();
   const { userId } = body;
   
+  console.log('getAuthUrl called with userId:', userId);
+  
   if (!userId) {
     throw new Error('User ID is required');
   }
@@ -68,10 +70,14 @@ async function getAuthUrl(req: Request) {
   // Generate random state for security
   const state = crypto.randomUUID();
   
+  console.log('Generated state:', state, 'for user:', userId);
+  
   // Store state in database
-  await supabase
+  const { data: insertData, error: insertError } = await supabase
     .from('withings_oauth_states')
     .insert({ state, user_id: userId });
+    
+  console.log('State insert result:', { insertData, insertError });
 
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/withings-integration?action=handle-callback`;
   
@@ -95,6 +101,8 @@ async function handleCallback(req: Request) {
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
 
+  console.log('handleCallback called with:', { code: code?.substring(0, 10) + '...', state, error });
+
   if (error) {
     console.error('OAuth error:', error);
     return new Response(
@@ -104,17 +112,22 @@ async function handleCallback(req: Request) {
   }
 
   if (!code || !state) {
+    console.error('Missing parameters:', { hasCode: !!code, hasState: !!state });
     throw new Error('Missing authorization code or state');
   }
 
   // Verify state
+  console.log('Looking up state:', state);
   const { data: stateData, error: stateError } = await supabase
     .from('withings_oauth_states')
     .select('user_id')
     .eq('state', state)
     .single();
 
+  console.log('State lookup result:', { stateData, stateError });
+
   if (stateError || !stateData) {
+    console.error('State verification failed:', { stateError, stateData });
     throw new Error('Invalid state parameter');
   }
 
