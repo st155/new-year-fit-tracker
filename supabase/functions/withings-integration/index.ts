@@ -23,21 +23,17 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     let action = url.searchParams.get('action');
-    
-    // If no action in URL, check request body
-    if (!action) {
-      const body = await req.json();
-      console.log('Withings integration request body:', body);
-      
-      // Determine action based on request
-      if (body.userId) {
-        action = 'get-auth-url';
-      } else if (req.headers.get('Authorization')) {
-        // Check if it's sync or status based on URL path or headers
-        action = url.pathname.includes('sync') ? 'sync-data' : 'check-status';
+
+    // Try to read action from JSON body without consuming the original request
+    if (!action && req.method === 'POST') {
+      try {
+        const body = await req.clone().json();
+        action = body?.action;
+      } catch (_) {
+        // no body or invalid JSON
       }
     }
-    
+
     console.log('Withings integration action:', action);
 
     switch (action) {
@@ -55,7 +51,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Withings integration error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
