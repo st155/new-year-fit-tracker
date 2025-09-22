@@ -63,6 +63,15 @@ const Index = () => {
     };
 
     fetchUserData();
+
+    // Настраиваем автообновление данных каждые 30 секунд
+    const interval = setInterval(() => {
+      if (user) {
+        fetchUserData();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [user]);
 
   // Обновляем время каждую минуту для актуального счетчика

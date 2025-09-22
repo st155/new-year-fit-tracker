@@ -40,6 +40,13 @@ export const IntegrationsCard = () => {
   useEffect(() => {
     if (user) {
       loadIntegrationsStatus();
+      
+      // Автообновление каждые 60 секунд
+      const interval = setInterval(() => {
+        loadIntegrationsStatus();
+      }, 60000);
+
+      return () => clearInterval(interval);
     }
   }, [user]);
 
