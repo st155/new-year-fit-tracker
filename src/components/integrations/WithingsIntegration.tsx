@@ -42,6 +42,7 @@ export const WithingsIntegration = () => {
 
   const checkConnectionStatus = async () => {
     try {
+      console.log('Checking Withings connection status for user:', user?.id);
       const { data, error } = await supabase.functions.invoke('withings-integration', {
         body: { action: 'check-status' },
         headers: {
@@ -49,6 +50,7 @@ export const WithingsIntegration = () => {
         }
       });
 
+      console.log('Withings status check result:', { data, error });
       if (error) throw error;
       setStatus(data);
     } catch (error: any) {
