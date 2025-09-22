@@ -136,70 +136,115 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-2 max-w-xs sm:max-w-none">
-              <Button 
-                variant={location.pathname === '/' ? "default" : "ghost"}
-                size="sm" 
-                onClick={() => navigate('/')}
-                className="text-muted-foreground hover:text-foreground flex-shrink-0"
-              >
-                <Home className="h-4 w-4 mr-1" />
-               Главная
-               </Button>
-               {isTrainer && (
-                 <Button 
-                   variant={location.pathname === '/trainer' ? "default" : "ghost"}
-                   size="sm"
-                   onClick={() => navigate('/trainer')}
-                   className="text-muted-foreground hover:text-foreground flex-shrink-0"
-                 >
-                   <Settings className="h-4 w-4 mr-1" />
-                   Тренер
-               </Button>
-               )}
-               <Button 
-                 variant={location.pathname === '/dashboard' ? "default" : "ghost"}
-                 size="sm" 
-                 onClick={() => navigate('/dashboard')}
-                 className="text-muted-foreground hover:text-foreground flex-shrink-0"
-               >
-                 <BarChart3 className="h-4 w-4 mr-1" />
-                 Фитнес
-               </Button>
-               <Button 
-                 variant={location.pathname === '/challenges' ? "default" : "ghost"}
-                 size="sm" 
-                 onClick={() => navigate('/challenges')}
-                 className="text-muted-foreground hover:text-foreground flex-shrink-0"
-               >
-                 <Calendar className="h-4 w-4 mr-1" />
-                Челленджи
-              </Button>
-              <Button 
-                variant={location.pathname === '/progress' ? "default" : "ghost"}
-                size="sm" 
-                onClick={() => navigate('/progress')}
-                className="text-muted-foreground hover:text-foreground flex-shrink-0"
-              >
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Прогресс
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/profile')}
-                className="text-muted-foreground hover:text-foreground flex-shrink-0"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="text-muted-foreground hover:text-foreground flex-shrink-0"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+            <div className="w-full sm:w-auto">
+              {/* Первый ряд - основные страницы */}
+              <div className="flex justify-center gap-1 mb-2 sm:mb-0 sm:justify-start">
+                <Button 
+                  variant={location.pathname === '/' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => navigate('/')}
+                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                >
+                  <Home className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Главная</span>
+                </Button>
+                <Button 
+                  variant={location.pathname === '/dashboard' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => navigate('/dashboard')}
+                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                >
+                  <BarChart3 className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Фитнес</span>
+                </Button>
+                <Button 
+                  variant={location.pathname === '/challenges' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => navigate('/challenges')}
+                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                >
+                  <Calendar className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Челленджи</span>
+                </Button>
+              </div>
+              
+              {/* Второй ряд - дополнительные функции */}
+              <div className="flex justify-center gap-1 sm:hidden">
+                <Button 
+                  variant={location.pathname === '/progress' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => navigate('/progress')}
+                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                </Button>
+                {isTrainer && (
+                  <Button 
+                    variant={location.pathname === '/trainer' ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => navigate('/trainer')}
+                    className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/profile')}
+                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Десктоп версия - все в одну строку */}
+              <div className="hidden sm:flex items-center gap-2 mt-2 sm:mt-0">
+                <Button 
+                  variant={location.pathname === '/progress' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => navigate('/progress')}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Прогресс
+                </Button>
+                {isTrainer && (
+                  <Button 
+                    variant={location.pathname === '/trainer' ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => navigate('/trainer')}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Тренер
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/profile')}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
