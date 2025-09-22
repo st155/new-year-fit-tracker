@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -34,60 +35,89 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
               <ProtectedRoute>
-                <Index />
+                <AppLayout>
+                  <Index />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges" element={
               <ProtectedRoute>
-                <Challenges />
+                <AppLayout>
+                  <Challenges />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/:id" element={
               <ProtectedRoute>
-                <ChallengeDetail />
+                <AppLayout>
+                  <ChallengeDetail />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/create" element={
               <ProtectedRoute>
-                <CreateChallenge />
+                <AppLayout>
+                  <CreateChallenge />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/progress" element={
               <ProtectedRoute>
-                <Progress />
+                <AppLayout>
+                  <Progress />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
-                <Profile />
+                <AppLayout>
+                  <Profile />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/create" element={
               <ProtectedRoute>
-                <CreateGoal />
+                <AppLayout>
+                  <CreateGoal />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/edit/:id" element={
               <ProtectedRoute>
-                <EditGoal />
+                <AppLayout>
+                  <EditGoal />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/fitness-data" element={
               <ProtectedRoute>
-                <FitnessData />
+                <AppLayout>
+                  <FitnessData />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/integrations" element={
               <ProtectedRoute>
-                <Integrations />
+                <AppLayout>
+                  <Integrations />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
+            <Route path="/trainer-dashboard" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <TrainerDashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

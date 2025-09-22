@@ -119,7 +119,7 @@ const Index = () => {
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
   return (
-    <div className="min-h-screen bg-background animate-fade-in">
+    <div className="animate-fade-in">
       <DashboardHeader 
         userName={userName}
         userRole={userRole}
