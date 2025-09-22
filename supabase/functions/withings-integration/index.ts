@@ -22,9 +22,23 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    let action = url.searchParams.get('action');
     
-    console.log('Withings integration request:', action);
+    // If no action in URL, check request body
+    if (!action) {
+      const body = await req.json();
+      console.log('Withings integration request body:', body);
+      
+      // Determine action based on request
+      if (body.userId) {
+        action = 'get-auth-url';
+      } else if (req.headers.get('Authorization')) {
+        // Check if it's sync or status based on URL path or headers
+        action = url.pathname.includes('sync') ? 'sync-data' : 'check-status';
+      }
+    }
+    
+    console.log('Withings integration action:', action);
 
     switch (action) {
       case 'get-auth-url':
@@ -48,7 +62,8 @@ serve(async (req) => {
 });
 
 async function getAuthUrl(req: Request) {
-  const { userId } = await req.json();
+  const body = await req.json();
+  const { userId } = body;
   
   if (!userId) {
     throw new Error('User ID is required');

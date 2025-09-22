@@ -42,8 +42,8 @@ export const WithingsIntegration = () => {
 
   const checkConnectionStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('withings-integration', {
-        body: { action: 'check-status' },
+      const { data, error } = await supabase.functions.invoke('withings-integration?action=check-status', {
+        body: {},
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
@@ -69,11 +69,8 @@ export const WithingsIntegration = () => {
     
     try {
       // Get authorization URL
-      const { data, error } = await supabase.functions.invoke('withings-integration', {
-        body: { 
-          action: 'get-auth-url',
-          userId: user.id 
-        }
+      const { data, error } = await supabase.functions.invoke('withings-integration?action=get-auth-url', {
+        body: { userId: user.id }
       });
 
       if (error) throw error;
@@ -129,8 +126,8 @@ export const WithingsIntegration = () => {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('withings-integration', {
-        body: { action: 'sync-data' },
+      const { data, error } = await supabase.functions.invoke('withings-integration?action=sync-data', {
+        body: {},
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
