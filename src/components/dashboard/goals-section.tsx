@@ -32,6 +32,8 @@ interface DisplayGoal {
   category: "strength" | "endurance" | "body" | "cardio";
   icon: React.ReactNode;
   rawGoal: Goal;
+  displayCurrent?: string;
+  displayTarget?: string;
 }
 
 const goalIcons = {
@@ -92,9 +94,13 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
             let progress = 0;
             if (goal.target_value) {
               if (isTimeBasedGoal(goal.goal_name, goal.target_unit)) {
+                // Конвертируем времена из формата MM.SS в десятичные минуты
+                const currentDecimal = convertTimeToDecimal(currentValue);
+                const targetDecimal = convertTimeToDecimal(goal.target_value);
+                
                 // Для времени: прогресс = (цель / текущее) * 100, но не более 100%
-                if (currentValue > 0) {
-                  progress = Math.min(100, Math.round((goal.target_value / currentValue) * 100));
+                if (currentDecimal > 0) {
+                  progress = Math.min(100, Math.round((targetDecimal / currentDecimal) * 100));
                 }
               } else {
                 // Для обычных метрик: больше = лучше
@@ -113,7 +119,9 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
               progress,
               category,
               icon: goalIcons[category] || goalIcons.strength,
-              rawGoal: goal
+              rawGoal: goal,
+              displayCurrent: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(currentValue) : currentValue.toString(),
+              displayTarget: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(goal.target_value || 0) : (goal.target_value || 0).toString()
             };
           })
         );
@@ -130,6 +138,20 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Конвертирует время из формата MM.SS в десятичные минуты
+  const convertTimeToDecimal = (timeValue: number): number => {
+    const minutes = Math.floor(timeValue);
+    const seconds = Math.round((timeValue - minutes) * 100);
+    return minutes + (seconds / 60);
+  };
+
+  // Форматирует время для отображения
+  const formatTimeDisplay = (timeValue: number): string => {
+    const minutes = Math.floor(timeValue);
+    const seconds = Math.round((timeValue - minutes) * 100);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const isTimeBasedGoal = (goalName: string, unit: string): boolean => {
@@ -250,11 +272,11 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">Текущий:</span>
-                    <span className="font-medium">{goal.current} {goal.unit}</span>
+                    <span className="font-medium">{goal.displayCurrent || goal.current} {goal.unit}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">Цель:</span>
-                    <span className="font-medium text-primary">{goal.target} {goal.unit}</span>
+                    <span className="font-medium text-primary">{goal.displayTarget || goal.target} {goal.unit}</span>
                   </div>
                 </div>
                 <span className="text-sm font-semibold text-primary">{goal.progress}%</span>
