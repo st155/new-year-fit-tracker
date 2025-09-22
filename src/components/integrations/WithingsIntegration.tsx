@@ -129,10 +129,16 @@ export const WithingsIntegration = () => {
     setIsSyncing(true);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Не удалось получить токен авторизации');
+      }
+
       const { data, error } = await supabase.functions.invoke('withings-integration', {
         body: { action: 'sync-data' },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
