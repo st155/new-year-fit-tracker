@@ -121,7 +121,7 @@ async function handleCallback(req: Request) {
     throw new Error('Missing authorization code or state');
   }
 
-  // Verify state
+  // Verify state and get user_id from state lookup
   console.log('Looking up state:', state);
   const { data: stateData, error: stateError } = await supabase
     .from('withings_oauth_states')
@@ -137,6 +137,7 @@ async function handleCallback(req: Request) {
   }
 
   const userId = stateData.user_id;
+  console.log('Using userId from state lookup:', userId);
 
   // Exchange code for tokens
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/withings-integration?action=handle-callback`;
@@ -347,7 +348,14 @@ async function refreshToken(tokenData: any): Promise<string> {
 }
 
 async function syncUserData(userId: string, accessToken: string) {
-  console.log('Starting data sync for user:', userId);
+  console.log('Starting data sync for userId:', userId);
+  
+  // Дополнительная проверка - убеждаемся что userId валидный UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(userId)) {
+    console.error('Invalid userId format:', userId);
+    throw new Error('Invalid user ID format');
+  }
   
   const results = {
     measurements: 0,
@@ -437,7 +445,7 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
       }
 
       // Create or get metric
-      console.log('Creating metric for user:', userId, 'metric:', metricName);
+      console.log('Creating metric for userId:', userId, 'metric:', metricName);
       
       const { data: metricData, error: metricError } = await supabase.rpc('create_or_get_metric', {
         p_user_id: userId,
@@ -453,7 +461,7 @@ async function syncMeasurements(userId: string, accessToken: string): Promise<nu
       }
 
       if (metricData) {
-        console.log('Saving metric value:', { userId, metricData, value, date: date.toISOString().split('T')[0] });
+        console.log('Saving metric value for userId:', userId, 'metricId:', metricData, 'value:', value, 'date:', date.toISOString().split('T')[0]);
         
         // Save metric value
         const { data: valueData, error: valueError } = await supabase
