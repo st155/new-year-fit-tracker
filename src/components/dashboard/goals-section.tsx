@@ -87,7 +87,20 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
               .limit(1);
 
             const currentValue = measurements?.[0]?.value || 0;
-            const progress = goal.target_value ? Math.min(100, Math.round((currentValue / goal.target_value) * 100)) : 0;
+            
+            // Для некоторых метрик меньше = лучше (время)
+            let progress = 0;
+            if (goal.target_value) {
+              if (isTimeBasedGoal(goal.goal_name, goal.target_unit)) {
+                // Для времени: прогресс = (цель / текущее) * 100, но не более 100%
+                if (currentValue > 0) {
+                  progress = Math.min(100, Math.round((goal.target_value / currentValue) * 100));
+                }
+              } else {
+                // Для обычных метрик: больше = лучше
+                progress = Math.min(100, Math.round((currentValue / goal.target_value) * 100));
+              }
+            }
             
             const category = mapGoalTypeToCategory(goal.goal_type);
             
@@ -117,6 +130,18 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isTimeBasedGoal = (goalName: string, unit: string): boolean => {
+    const nameLower = goalName.toLowerCase();
+    const unitLower = unit.toLowerCase();
+    
+    return (nameLower.includes('бег') || 
+            nameLower.includes('гребля') || 
+            nameLower.includes('время') ||
+            unitLower.includes('мин') || 
+            unitLower.includes('сек')) &&
+           !nameLower.includes('планка'); // Планка - исключение, там больше = лучше
   };
 
   const mapGoalTypeToCategory = (goalType: string): "strength" | "endurance" | "body" | "cardio" => {
