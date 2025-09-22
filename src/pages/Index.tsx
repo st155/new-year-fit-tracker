@@ -5,9 +5,12 @@ import { GoalsSection } from "@/components/dashboard/goals-section";
 import { Leaderboard } from "@/components/dashboard/leaderboard";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { IntegrationsCard } from "@/components/dashboard/integrations-card";
+import { AppTestSuite } from "@/components/ui/app-test-suite";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Index = () => {
   const { user } = useAuth();
@@ -130,6 +133,23 @@ const Index = () => {
             <IntegrationsCard />
             <QuickActions userRole={userRole} />
             <Leaderboard />
+            
+            {/* Добавляем кнопку для запуска тестов */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  🧪 Запустить тесты проекта
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>Тестирование проекта</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden">
+                  <AppTestSuite />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
