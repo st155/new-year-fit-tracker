@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Camera, Save, User, ArrowLeft, Shield, Bell } from "lucide-react";
+import { Camera, Save, User, ArrowLeft, Shield, Bell, Mail, Share, Settings } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { FitnessCard } from "@/components/ui/fitness-card";
-
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -64,26 +65,27 @@ const ProfilePage = () => {
     }
   };
 
-  const updateProfile = async () => {
+  const saveProfile = async () => {
     if (!user) return;
 
-    setLoading(true);
-
     try {
+      setLoading(true);
+      
       const { error } = await supabase
         .from('profiles')
         .update({
           username: profile.username,
           full_name: profile.full_name,
-          avatar_url: profile.avatar_url
+          avatar_url: profile.avatar_url,
+          trainer_role: profile.trainer_role
         })
         .eq('user_id', user.id);
 
       if (error) throw error;
 
       toast({
-        title: "Успешно!",
-        description: "Профиль обновлен",
+        title: "Профиль обновлен",
+        description: "Ваши данные успешно сохранены",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -97,88 +99,84 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
       await signOut();
       navigate('/auth');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Logout error:', error);
     }
   };
 
-  const generateAvatar = () => {
-    const seed = profile.username || profile.full_name || 'default';
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+  const getUserInitials = () => {
+    const email = user?.email || "";
+    const parts = email.split("@")[0].split(".");
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return email.substring(0, 2).toUpperCase();
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="container mx-auto p-6 max-w-6xl">
         {/* Заголовок */}
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к дашборду
-          </Button>
-          
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Мой профиль
+            Профиль
           </h1>
           <p className="text-muted-foreground mt-2">
-            Управляйте своими данными и настройками
+            Управляйте своими данными и настройками аккаунта
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Основная информация */}
-          <div className="lg:col-span-2 space-y-6">
-            <FitnessCard className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Профиль
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Настройки
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Безопасность
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Аватар */}
+              <Card>
+                <CardHeader className="text-center">
+                  <CardTitle className="text-lg">Фото профиля</CardTitle>
+                  <CardDescription>
+                    Загрузите свое фото или выберите аватар
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex justify-center">
+                  <AvatarUpload
+                    currentAvatarUrl={profile.avatar_url}
+                    onAvatarUpdate={(url) => setProfile(prev => ({ ...prev, avatar_url: url }))}
+                    userInitials={getUserInitials()}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Основная информация */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-primary" />
                     Основная информация
-                  </h2>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24 border-4 border-primary/20">
-                      <AvatarImage src={profile.avatar_url || generateAvatar()} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                        {profile.full_name ? profile.full_name.split(' ').map(n => n[0]).join('') : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="icon"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-primary hover:bg-primary/90"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold">{profile.full_name || 'Имя не указано'}</h3>
-                      {profile.trainer_role && (
-                        <Badge variant="default" className="bg-gradient-primary">
-                          <Shield className="h-3 w-3 mr-1" />
-                          Тренер
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">@{profile.username}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{user?.email}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
+                  </CardTitle>
+                  <CardDescription>
+                    Обновите свои личные данные
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="username">Имя пользователя</Label>
@@ -189,7 +187,6 @@ const ProfilePage = () => {
                         placeholder="Введите имя пользователя"
                       />
                     </div>
-                    
                     <div>
                       <Label htmlFor="full_name">Полное имя</Label>
                       <Input
@@ -200,7 +197,7 @@ const ProfilePage = () => {
                       />
                     </div>
                   </div>
-
+                  
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -210,140 +207,152 @@ const ProfilePage = () => {
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Email не может быть изменен
+                      Email нельзя изменить после регистрации
                     </p>
                   </div>
-                </div>
 
-                <div className="flex justify-end">
-                  <Button onClick={updateProfile} disabled={loading} className="bg-gradient-primary hover:opacity-90">
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Сохранение...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Сохранить изменения
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </FitnessCard>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="trainer-mode"
+                      checked={profile.trainer_role}
+                      onCheckedChange={(checked) => setProfile(prev => ({ ...prev, trainer_role: checked }))}
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="trainer-mode" className="text-sm font-medium">
+                        Режим тренера
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Включите для доступа к функциям управления клиентами
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Настройки */}
-            <FitnessCard className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <div className="flex justify-end pt-4">
+                    <Button onClick={saveProfile} disabled={loading} className="bg-gradient-primary hover:opacity-90">
+                      {loading ? "Сохранение..." : "Сохранить изменения"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5 text-primary" />
-                    Настройки уведомлений
-                  </h2>
-                </div>
-
-                <div className="space-y-4">
+                    Уведомления
+                  </CardTitle>
+                  <CardDescription>
+                    Настройте как вы хотите получать уведомления
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <div className="text-base">Push-уведомления</div>
-                      <div className="text-sm text-muted-foreground">
-                        Получать уведомления о новых челленджах и достижениях
-                      </div>
+                      <Label>Push уведомления</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Получать уведомления в браузере
+                      </p>
                     </div>
                     <Switch
                       checked={preferences.notifications}
                       onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, notifications: checked }))}
                     />
                   </div>
-
+                  
+                  <Separator />
+                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <div className="text-base">Email рассылка</div>
-                      <div className="text-sm text-muted-foreground">
-                        Получать еженедельные отчеты о прогрессе на email
-                      </div>
+                      <Label>Email уведомления</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Получать новости и обновления на email
+                      </p>
                     </div>
                     <Switch
                       checked={preferences.email_updates}
                       onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, email_updates: checked }))}
                     />
                   </div>
+                </CardContent>
+              </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share className="h-5 w-5 text-primary" />
+                    Приватность
+                  </CardTitle>
+                  <CardDescription>
+                    Управляйте видимостью ваших данных
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <div className="text-base">Публичный прогресс</div>
-                      <div className="text-sm text-muted-foreground">
-                        Делиться прогрессом с другими участниками
-                      </div>
+                      <Label>Публичный прогресс</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Разрешить другим видеть ваш прогресс
+                      </p>
                     </div>
                     <Switch
                       checked={preferences.progress_sharing}
                       onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, progress_sharing: checked }))}
                     />
                   </div>
-                </div>
-              </div>
-            </FitnessCard>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-          {/* Боковая панель */}
-          <div className="space-y-6">
-            {/* Статистика */}
-            <FitnessCard className="p-6">
-              <div className="space-y-4">
-                <h3 className="font-semibold">Моя статистика</h3>
-                
+          <TabsContent value="security" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Безопасность аккаунта
+                </CardTitle>
+                <CardDescription>
+                  Управляйте безопасностью вашего аккаунта
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Челленджей завершено</span>
-                    <span className="font-semibold">3</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Активных целей</span>
-                    <span className="font-semibold">10</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Дней подряд</span>
-                    <span className="font-semibold">15</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Общий прогресс</span>
-                    <span className="font-semibold text-success">78%</span>
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Email: {user?.email}</p>
+                      <p className="text-sm text-muted-foreground">Подтвержден</p>
+                    </div>
+                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                      Активен
+                    </Badge>
                   </div>
                 </div>
-              </div>
-            </FitnessCard>
 
-            {/* Действия */}
-            <FitnessCard className="p-6">
-              <div className="space-y-4">
-                <h3 className="font-semibold">Действия</h3>
-                
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start">
-                    Экспорт данных
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full justify-start">
-                    Сменить пароль
-                  </Button>
-                  
-                  <Button 
-                    variant="destructive" 
-                    className="w-full justify-start"
-                    onClick={handleSignOut}
-                  >
-                    Выйти из аккаунта
-                  </Button>
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-destructive">
+                    <h4 className="font-medium text-destructive mb-2">Опасная зона</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Выход из аккаунта удалит сессию на этом устройстве.
+                    </p>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleLogout}
+                      className="w-full"
+                    >
+                      Выйти из аккаунта
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </FitnessCard>
-          </div>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

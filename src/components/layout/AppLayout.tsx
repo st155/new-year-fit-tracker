@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { MainNavigation } from "@/components/navigation/MainNavigation";
-import { Breadcrumbs } from "@/components/navigation/Breadcrumbs";
+import { EnhancedBreadcrumbs } from "@/components/navigation/EnhancedBreadcrumbs";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <MainNavigation />
-      <Breadcrumbs />
+      <EnhancedBreadcrumbs />
       <main className="flex-1">
         {children}
       </main>

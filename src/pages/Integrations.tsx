@@ -9,18 +9,17 @@ import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
 import { WithingsIntegration } from '@/components/integrations/WithingsIntegration';
 import { AppleHealthIntegration } from '@/components/integrations/AppleHealthIntegration';
 import { GarminIntegration } from '@/components/integrations/GarminIntegration';
-import { IntegrationsCard } from '@/components/dashboard/integrations-card';
+import { StatusIndicator } from '@/components/ui/status-indicator';
+import { EmptyState } from '@/components/ui/empty-state';
 import { 
   Heart, 
   Smartphone, 
   Watch, 
   Database,
   Settings,
-  Shield,
-  Clock,
   Activity,
-  TrendingUp,
-  CheckCircle
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,17 +30,60 @@ interface HealthStats {
   sources: { [key: string]: number };
 }
 
+interface IntegrationStatus {
+  whoop: 'connected' | 'disconnected' | 'pending' | 'error';
+  withings: 'connected' | 'disconnected' | 'pending' | 'error';
+  appleHealth: 'connected' | 'disconnected' | 'pending' | 'error';
+  garmin: 'connected' | 'disconnected' | 'pending' | 'error';
+}
+
 const IntegrationsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [healthStats, setHealthStats] = useState<HealthStats>({ totalRecords: 0, lastWeek: 0, sources: {} });
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus>({
+    whoop: 'disconnected',
+    withings: 'disconnected', 
+    appleHealth: 'disconnected',
+    garmin: 'disconnected'
+  });
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       loadHealthStats();
+      checkIntegrationStatus();
     }
   }, [user]);
+
+  const checkIntegrationStatus = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Проверяем статус подключений по наличию данных
+      const { data: metricValues } = await supabase
+        .from('metric_values')
+        .select('user_metrics!inner(source)')
+        .eq('user_id', user.id)
+        .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+      const sources = new Set(metricValues?.map(mv => mv.user_metrics.source) || []);
+      
+      setIntegrationStatus({
+        whoop: sources.has('whoop') ? 'connected' : 'disconnected',
+        withings: sources.has('withings') ? 'connected' : 'disconnected',
+        appleHealth: sources.has('apple_health') ? 'connected' : 'disconnected',
+        garmin: sources.has('garmin') ? 'connected' : 'disconnected'
+      });
+    } catch (error) {
+      console.error('Error checking integration status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadHealthStats = async () => {
     if (!user) return;
@@ -85,169 +127,206 @@ const IntegrationsPage = () => {
     }
   };
 
-  const handleIntegrationUpdate = () => {
-    loadHealthStats();
+  const refreshIntegrations = async () => {
+    await checkIntegrationStatus();
+    await loadHealthStats();
     toast({
-      title: 'Интеграция обновлена',
-      description: 'Данные успешно синхронизированы.',
+      title: "Обновлено",
+      description: "Статус интеграций обновлен",
     });
   };
 
+  const integrationItems = [
+    {
+      id: 'whoop',
+      name: 'Whoop',
+      description: 'Ремешок для отслеживания активности и восстановления',
+      icon: Activity,
+      status: integrationStatus.whoop,
+      component: <WhoopIntegration userId={user?.id || ''} />
+    },
+    {
+      id: 'withings',
+      name: 'Withings',
+      description: 'Умные весы и трекеры здоровья',
+      icon: Heart,
+      status: integrationStatus.withings,
+      component: <WithingsIntegration />
+    },
+    {
+      id: 'appleHealth',
+      name: 'Apple Health',
+      description: 'Импорт данных из приложения Здоровье',
+      icon: Smartphone,
+      status: integrationStatus.appleHealth,
+      component: <AppleHealthIntegration />
+    },
+    {
+      id: 'garmin',
+      name: 'Garmin',
+      description: 'Спортивные часы и фитнес-трекеры',
+      icon: Watch,
+      status: integrationStatus.garmin,
+      component: <GarminIntegration userId={user?.id || ''} />
+    }
+  ];
+
+  const connectedCount = Object.values(integrationStatus).filter(status => status === 'connected').length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6 max-w-7xl">
         {/* Заголовок */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            Интеграции
-          </h1>
-          <p className="text-muted-foreground">
-            Подключите ваши устройства и приложения для автоматической синхронизации данных о здоровье и фитнесе
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Интеграции
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Подключите свои фитнес-устройства и приложения для автоматического сбора данных
+              </p>
+            </div>
+            <Button 
+              onClick={refreshIntegrations} 
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Обновить
+            </Button>
+          </div>
         </div>
 
-        {/* Общая статистика */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Статистика */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Всего записей</p>
-                  <p className="text-3xl font-bold">{healthStats.totalRecords.toLocaleString()}</p>
-                </div>
-                <Database className="h-8 w-8 text-muted-foreground" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Подключено</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {connectedCount}/4
               </div>
+              <p className="text-xs text-muted-foreground">устройств</p>
             </CardContent>
           </Card>
-
+          
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">За последнюю неделю</p>
-                  <p className="text-3xl font-bold text-green-600">{healthStats.lastWeek.toLocaleString()}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Всего записей</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{healthStats.totalRecords.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">данных</p>
             </CardContent>
           </Card>
-
+          
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Источников данных</p>
-                  <p className="text-3xl font-bold text-blue-600">{Object.keys(healthStats.sources).length}</p>
-                </div>
-                <Activity className="h-8 w-8 text-blue-600" />
-              </div>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-success">{healthStats.lastWeek}</div>
+              <p className="text-xs text-muted-foreground">новых записей</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Источники</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Object.keys(healthStats.sources).length}</div>
+              <p className="text-xs text-muted-foreground">активных</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Вкладки интеграций */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Обзор</TabsTrigger>
-            <TabsTrigger value="withings">Withings</TabsTrigger>
-            <TabsTrigger value="whoop">Whoop</TabsTrigger>
-            <TabsTrigger value="apple">Apple Health</TabsTrigger>
-            <TabsTrigger value="garmin">Garmin</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Обзор
+            </TabsTrigger>
+            <TabsTrigger value="setup" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Настройка
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <IntegrationsCard />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Безопасность данных
-                </CardTitle>
-                <CardDescription>
-                  Ваши данные защищены и обрабатываются согласно политике конфиденциальности
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-green-900">Шифрование данных</h4>
-                      <p className="text-sm text-green-800">Все данные шифруются при передаче и хранении</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-blue-900">Контроль доступа</h4>
-                      <p className="text-sm text-blue-800">Только вы имеете доступ к своим данным</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <Clock className="h-5 w-5 text-purple-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-purple-900">Автоматическое удаление</h4>
-                      <p className="text-sm text-purple-800">Неактивные токены автоматически удаляются</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <Settings className="h-5 w-5 text-orange-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-orange-900">GDPR совместимость</h4>
-                      <p className="text-sm text-orange-800">Соответствие европейским стандартам защиты данных</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Статистика по источникам */}
-            {Object.keys(healthStats.sources).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Источники данных</CardTitle>
-                  <CardDescription>
-                    Распределение ваших данных по источникам
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(healthStats.sources)
-                      .sort(([,a], [,b]) => b - a)
-                      .map(([source, count]) => (
-                        <div key={source} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                          <span className="font-medium">{source}</span>
-                          <Badge variant="secondary">{count.toLocaleString()} записей</Badge>
+            {connectedCount === 0 ? (
+              <EmptyState
+                icon={<Zap className="h-16 w-16" />}
+                title="Нет подключенных устройств"
+                description="Подключите свои фитнес-трекеры и приложения для автоматического сбора данных о тренировках, сне и здоровье."
+                action={{
+                  label: "Настроить интеграции",
+                  onClick: () => setActiveTab('setup')
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {integrationItems.map((item) => (
+                  <Card key={item.id} className="relative overflow-hidden">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <item.icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">{item.name}</CardTitle>
+                            <CardDescription className="text-sm">
+                              {item.description}
+                            </CardDescription>
+                          </div>
                         </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <StatusIndicator status={item.status} />
+                      </div>
+                    </CardHeader>
+                    
+                    {item.status === 'connected' && (
+                      <CardContent>
+                        <div className="text-sm text-muted-foreground">
+                          <p>Записей от {item.name}: {healthStats.sources[item.id] || 0}</p>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="withings" className="space-y-6">
-            <WithingsIntegration />
-          </TabsContent>
-
-          <TabsContent value="whoop" className="space-y-6">
-            <WhoopIntegration 
-              userId={user?.id || ''} 
-            />
-          </TabsContent>
-
-          <TabsContent value="apple" className="space-y-6">
-            <AppleHealthIntegration />
-          </TabsContent>
-
-          <TabsContent value="garmin" className="space-y-6">
-            <GarminIntegration 
-              userId={user?.id || ''} 
-            />
+          <TabsContent value="setup" className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              {integrationItems.map((item) => (
+                <Card key={item.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <item.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{item.name}</CardTitle>
+                          <CardDescription>
+                            {item.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <StatusIndicator status={item.status} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {item.component}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
