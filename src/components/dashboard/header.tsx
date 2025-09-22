@@ -143,7 +143,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant={location.pathname === '/' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => navigate('/')}
-                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                  className={location.pathname === '/' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <Home className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Главная</span>
@@ -152,7 +152,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant={location.pathname === '/dashboard' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => navigate('/dashboard')}
-                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                  className={location.pathname === '/dashboard' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <BarChart3 className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Фитнес</span>
@@ -161,7 +161,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant={location.pathname === '/challenges' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => navigate('/challenges')}
-                  className="text-muted-foreground hover:text-foreground flex-1 sm:flex-initial min-w-0"
+                  className={location.pathname === '/challenges' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <Calendar className="h-4 w-4 sm:mr-1" />
                   <span className="hidden sm:inline">Челленджи</span>
@@ -174,7 +174,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant={location.pathname === '/progress' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => navigate('/progress')}
-                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                  className={location.pathname === '/progress' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <TrendingUp className="h-4 w-4" />
                 </Button>
@@ -183,7 +183,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                     variant={location.pathname === '/trainer' ? "default" : "ghost"}
                     size="sm"
                     onClick={() => navigate('/trainer')}
-                    className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                    className={location.pathname === '/trainer' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -192,7 +192,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/profile')}
-                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                  className="text-foreground hover:text-white hover:bg-primary/20"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -200,7 +200,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant="ghost" 
                   size="sm" 
                   onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-foreground flex-1 min-w-0"
+                  className="text-foreground hover:text-white hover:bg-primary/20"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -212,7 +212,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant={location.pathname === '/progress' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => navigate('/progress')}
-                  className="text-muted-foreground hover:text-foreground"
+                  className={location.pathname === '/progress' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <TrendingUp className="h-4 w-4 mr-1" />
                   Прогресс
@@ -222,7 +222,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                     variant={location.pathname === '/trainer' ? "default" : "ghost"}
                     size="sm"
                     onClick={() => navigate('/trainer')}
-                    className="text-muted-foreground hover:text-foreground"
+                    className={location.pathname === '/trainer' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                   >
                     <Settings className="h-4 w-4 mr-1" />
                     Тренер
@@ -232,7 +232,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/profile')}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-foreground hover:text-white hover:bg-primary/20"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -240,7 +240,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   variant="ghost" 
                   size="sm" 
                   onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-foreground hover:text-white hover:bg-primary/20"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
