@@ -19,6 +19,7 @@ import CreateGoal from "./pages/CreateGoal";
 import EditGoal from "./pages/EditGoal";
 import FitnessData from "./pages/FitnessData";
 import WhoopCallback from "./pages/WhoopCallback";
+import WithingsCallback from "./pages/WithingsCallback";
 import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
@@ -115,6 +116,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
+            <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
             <Route path="/feed" element={
               <ProtectedRoute>
                 <AppLayout>
