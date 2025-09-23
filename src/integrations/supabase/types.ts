@@ -480,6 +480,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_broadcasts: {
+        Row: {
+          challenge_id: string | null
+          created_at: string
+          id: string
+          message: string
+          recipient_type: string
+          sent_at: string | null
+          sent_count: number | null
+          specific_clients: string[] | null
+          status: string
+          subject: string
+          trainer_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          recipient_type: string
+          sent_at?: string | null
+          sent_count?: number | null
+          specific_clients?: string[] | null
+          status?: string
+          subject: string
+          trainer_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_type?: string
+          sent_at?: string | null
+          sent_count?: number | null
+          specific_clients?: string[] | null
+          status?: string
+          subject?: string
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       trainer_clients: {
         Row: {
           active: boolean | null
@@ -501,6 +543,57 @@ export type Database = {
           client_id?: string
           id?: string
           trainer_id?: string
+        }
+        Relationships: []
+      }
+      trainer_posts: {
+        Row: {
+          challenge_id: string | null
+          content: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          post_type: string
+          priority: string
+          published: boolean
+          scheduled_for: string | null
+          target_audience: string
+          title: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          content: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          post_type: string
+          priority?: string
+          published?: boolean
+          scheduled_for?: string | null
+          target_audience?: string
+          title: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string | null
+          content?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          post_type?: string
+          priority?: string
+          published?: boolean
+          scheduled_for?: string | null
+          target_audience?: string
+          title?: string
+          trainer_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -536,6 +629,39 @@ export type Database = {
           source?: string
           unit?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          source_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          source_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          source_id?: string | null
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
