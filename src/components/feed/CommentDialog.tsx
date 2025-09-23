@@ -25,7 +25,7 @@ interface Comment {
     username: string;
     full_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface CommentDialogProps {
@@ -51,18 +51,30 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
           id,
           comment_text,
           created_at,
-          user_id,
-          profiles!activity_comments_user_id_fkey (
-            username,
-            full_name,
-            avatar_url
-          )
+          user_id
         `)
         .eq('activity_id', activityId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setComments(data || []);
+
+      // Get user profiles separately
+      const commentsWithProfiles = await Promise.all(
+        (data || []).map(async (comment) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('user_id', comment.user_id)
+            .single();
+
+          return {
+            ...comment,
+            profiles: profile
+          };
+        })
+      );
+
+      setComments(commentsWithProfiles);
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({
@@ -168,7 +180,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={comment.profiles.avatar_url || undefined} />
+                        <AvatarImage src={comment.profiles?.avatar_url || undefined} />
                         <AvatarFallback>
                           <User className="h-4 w-4" />
                         </AvatarFallback>
@@ -176,7 +188,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold text-sm">
-                            {comment.profiles.full_name || comment.profiles.username}
+                            {comment.profiles?.full_name || comment.profiles?.username || 'Пользователь'}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(comment.created_at), {

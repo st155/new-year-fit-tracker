@@ -20,7 +20,7 @@ interface ActivityCardProps {
       username: string;
       full_name: string | null;
       avatar_url: string | null;
-    };
+    } | null;
     like_count?: number;
     comment_count?: number;
     user_liked?: boolean;
@@ -61,7 +61,7 @@ const getActionTypeLabel = (actionType: string) => {
 export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) {
   const [showComments, setShowComments] = useState(false);
   
-  const displayName = activity.profiles.full_name || activity.profiles.username;
+  const displayName = activity.profiles?.full_name || activity.profiles?.username || 'Пользователь';
   const timeAgo = formatDistanceToNow(new Date(activity.created_at), {
     addSuffix: true,
     locale: ru,
@@ -74,14 +74,14 @@ export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={activity.profiles.avatar_url || undefined} />
+                <AvatarImage src={activity.profiles?.avatar_url || undefined} />
                 <AvatarFallback>
                   <User className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold">{displayName}</p>
-                <p className="text-sm text-muted-foreground">@{activity.profiles.username}</p>
+                <p className="text-sm text-muted-foreground">@{activity.profiles?.username || 'user'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

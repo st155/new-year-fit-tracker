@@ -23,6 +23,7 @@ import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Feed from "./pages/Feed";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,13 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
+            <Route path="/feed" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Feed />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/trainer-dashboard" element={
               <ProtectedRoute>
                 <AppLayout>

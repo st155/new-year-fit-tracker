@@ -94,6 +94,12 @@ const navigationItems: NavigationItem[] = [
     icon: Zap,
     description: "Подключенные устройства",
   },
+  {
+    title: "Лента",
+    href: "/feed",
+    icon: Activity,
+    description: "Социальная лента активности",
+  },
 ];
 
 const trainerItems: NavigationItem[] = [

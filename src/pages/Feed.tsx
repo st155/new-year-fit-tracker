@@ -16,7 +16,7 @@ interface ActivityItem {
     username: string;
     full_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
   like_count?: number;
   comment_count?: number;
   user_liked?: boolean;
@@ -37,21 +37,22 @@ export default function Feed() {
           user_id,
           action_type,
           action_text,
-          created_at,
-          profiles!activity_feed_user_id_fkey (
-            username,
-            full_name,
-            avatar_url
-          )
+          created_at
         `)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      // Get likes count and user's like status for each activity
-      const activitiesWithStats = await Promise.all(
+      // Get user profiles separately
+      const activitiesWithProfiles = await Promise.all(
         (activitiesData || []).map(async (activity) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('user_id', activity.user_id)
+            .single();
+
           // Get likes count
           const { count: likeCount } = await supabase
             .from('activity_likes')
@@ -65,15 +66,17 @@ export default function Feed() {
             .eq('activity_id', activity.id);
 
           // Check if current user liked this activity
+          const user = await supabase.auth.getUser();
           const { data: userLike } = await supabase
             .from('activity_likes')
             .select('id')
             .eq('activity_id', activity.id)
-            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('user_id', user.data.user?.id)
             .maybeSingle();
 
           return {
             ...activity,
+            profiles: profile,
             like_count: likeCount || 0,
             comment_count: commentCount || 0,
             user_liked: !!userLike
@@ -81,7 +84,7 @@ export default function Feed() {
         })
       );
 
-      setActivities(activitiesWithStats);
+      setActivities(activitiesWithProfiles);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
