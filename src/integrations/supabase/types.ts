@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_comments: {
+        Row: {
+          activity_id: string
+          comment_text: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          comment_text: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          comment_text?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_comments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activity_feed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_feed: {
+        Row: {
+          action_text: string
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          source_id: string
+          source_table: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_text: string
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source_id: string
+          source_table: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_text?: string
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source_id?: string
+          source_table?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      activity_likes: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_likes_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activity_feed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_composition: {
         Row: {
           body_fat_percentage: number | null
