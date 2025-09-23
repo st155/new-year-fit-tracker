@@ -63,20 +63,30 @@ const IntegrationsPage = () => {
     try {
       setLoading(true);
       
-      // Проверяем статус подключений по наличию данных
-      const { data: metricValues } = await supabase
-        .from('metric_values')
-        .select('user_metrics!inner(source)')
+      // Проверяем статус подключений по наличию токенов
+      const { data: whoopTokens } = await supabase
+        .from('whoop_tokens')
+        .select('id')
         .eq('user_id', user.id)
-        .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+        .not('access_token', 'is', null);
 
-      const sources = new Set(metricValues?.map(mv => mv.user_metrics.source) || []);
+      const { data: withingsTokens } = await supabase
+        .from('withings_tokens')
+        .select('id')
+        .eq('user_id', user.id)
+        .not('access_token', 'is', null);
+
+      const { data: appleHealthData } = await supabase
+        .from('health_records')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
       
       setIntegrationStatus({
-        whoop: sources.has('whoop') ? 'connected' : 'disconnected',
-        withings: sources.has('withings') ? 'connected' : 'disconnected',
-        appleHealth: sources.has('apple_health') ? 'connected' : 'disconnected',
-        garmin: sources.has('garmin') ? 'connected' : 'disconnected'
+        whoop: whoopTokens && whoopTokens.length > 0 ? 'connected' : 'disconnected',
+        withings: withingsTokens && withingsTokens.length > 0 ? 'connected' : 'disconnected',
+        appleHealth: appleHealthData && appleHealthData.length > 0 ? 'connected' : 'disconnected',
+        garmin: 'disconnected'
       });
     } catch (error) {
       console.error('Error checking integration status:', error);
@@ -89,37 +99,54 @@ const IntegrationsPage = () => {
     if (!user) return;
 
     try {
-      // Получаем общую статистику
-      const { data: totalData } = await supabase
+      // Получаем общую статистику по всем данным
+      const { data: healthData, count: healthCount } = await supabase
         .from('health_records')
-        .select('id', { count: 'exact' })
+        .select('id, source_name, created_at', { count: 'exact' })
+        .eq('user_id', user.id);
+
+      const { data: metricData, count: metricCount } = await supabase
+        .from('metric_values')
+        .select('id, created_at, user_metrics!inner(source)', { count: 'exact' })
         .eq('user_id', user.id);
 
       // Получаем статистику за последнюю неделю
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       
-      const { data: weekData } = await supabase
+      const { data: recentHealthData } = await supabase
         .from('health_records')
-        .select('id', { count: 'exact' })
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('created_at', oneWeekAgo.toISOString());
+
+      const { data: recentMetricData } = await supabase
+        .from('metric_values')
+        .select('id')
         .eq('user_id', user.id)
         .gte('created_at', oneWeekAgo.toISOString());
 
       // Получаем статистику по источникам
-      const { data: sourcesData } = await supabase
-        .from('health_records')
-        .select('source_name')
-        .eq('user_id', user.id);
-
       const sources: { [key: string]: number } = {};
-      sourcesData?.forEach(record => {
+      
+      // Добавляем health_records
+      healthData?.forEach(record => {
         const source = record.source_name || 'Unknown';
         sources[source] = (sources[source] || 0) + 1;
       });
 
+      // Добавляем metric_values
+      metricData?.forEach(record => {
+        const source = record.user_metrics.source || 'Unknown';
+        sources[source] = (sources[source] || 0) + 1;
+      });
+
+      const totalRecords = (healthCount || 0) + (metricCount || 0);
+      const lastWeekRecords = (recentHealthData?.length || 0) + (recentMetricData?.length || 0);
+
       setHealthStats({
-        totalRecords: totalData?.length || 0,
-        lastWeek: weekData?.length || 0,
+        totalRecords,
+        lastWeek: lastWeekRecords,
         sources
       });
     } catch (error) {
@@ -291,7 +318,7 @@ const IntegrationsPage = () => {
                     {item.status === 'connected' && (
                       <CardContent>
                         <div className="text-sm text-muted-foreground">
-                          <p>Записей от {item.name}: {healthStats.sources[item.id] || 0}</p>
+                          <p>Записей от {item.name}: {healthStats.sources[item.id === 'appleHealth' ? 'apple_health' : item.id] || healthStats.sources[item.name] || 0}</p>
                         </div>
                       </CardContent>
                     )}

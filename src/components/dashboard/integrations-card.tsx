@@ -59,8 +59,9 @@ export const IntegrationsCard = () => {
       // Проверяем Whoop интеграцию
       const { data: whoopTokens } = await supabase
         .from('whoop_tokens')
-        .select('updated_at')
+        .select('updated_at, access_token')
         .eq('user_id', user.id)
+        .not('access_token', 'is', null)
         .order('updated_at', { ascending: false })
         .limit(1);
 
@@ -73,8 +74,9 @@ export const IntegrationsCard = () => {
       // Проверяем Withings интеграцию
       const { data: withingsTokens } = await supabase
         .from('withings_tokens')
-        .select('updated_at')
+        .select('updated_at, access_token')
         .eq('user_id', user.id)
+        .not('access_token', 'is', null)
         .order('updated_at', { ascending: false })
         .limit(1);
 
