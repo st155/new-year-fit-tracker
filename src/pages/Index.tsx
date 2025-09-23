@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
@@ -161,6 +162,18 @@ const Index = () => {
             </Dialog>
           </div>
         </div>
+        
+        {/* Footer с ссылкой на Privacy Policy */}
+        <footer className="border-t pt-8 mt-12">
+          <div className="text-center text-sm text-muted-foreground">
+            <Link 
+              to="/privacy-policy" 
+              className="hover:text-primary transition-colors underline"
+            >
+              Политика конфиденциальности
+            </Link>
+          </div>
+        </footer>
       </div>
     </div>
   );

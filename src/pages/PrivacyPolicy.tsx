@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Home } from "lucide-react";
 
 export default function PrivacyPolicy() {
   const [language, setLanguage] = useState<'ru' | 'en'>('ru');
@@ -193,6 +195,20 @@ export default function PrivacyPolicy() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="space-y-8">
+        {/* Навигация */}
+        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            <Home className="h-4 w-4" />
+            Главная
+          </Link>
+          <span>/</span>
+          <span className="text-foreground">
+            {language === 'ru' ? 'Политика конфиденциальности' : 'Privacy Policy'}
+          </span>
+        </nav>
         <div className="text-center space-y-4">
           <div className="flex justify-center gap-2 mb-6">
             <Button
