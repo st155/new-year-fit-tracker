@@ -72,7 +72,7 @@ serve(async (req) => {
 // Инициируем OAuth процесс
 async function handleAuth(req: Request) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
-  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`;
+  const redirectUri = `https://elite10.club/whoop-callback`;
   
   if (!clientId) {
     return new Response(JSON.stringify({ error: 'WHOOP_CLIENT_ID not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -514,7 +514,7 @@ async function handleDisconnect(req: Request) {
 async function exchangeCodeForTokens(code: string) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
   const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
-  const redirectUri = `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/functions/v1/whoop-integration?action=callback`;
+  const redirectUri = `https://elite10.club/whoop-callback`;
 
   console.log('Exchanging code for tokens', {
     codeLength: code?.length || 0,

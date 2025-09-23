@@ -64,12 +64,13 @@ const WhoopCallback = () => {
           // Синхронизируем данные с JWT токеном
           const { data: { session: currentSession } } = await supabase.auth.getSession();
           const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
-            body: code ? { 
-              action: 'sync',
-              code
-            } : { action: 'sync' },
+            body: { 
+              action: 'callback',
+              code,
+              state
+            },
             headers: {
-              Authorization: `Bearer ${currentSession?.access_token}`
+              Authorization: `Bearer ${session.access_token}`
             }
           });
 
