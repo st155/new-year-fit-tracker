@@ -77,7 +77,7 @@ export default function TrainerDashboard() {
           client_id,
           assigned_at,
           active,
-          profiles!trainer_clients_client_id_fkey (
+          profiles (
             user_id,
             username,
             full_name,
