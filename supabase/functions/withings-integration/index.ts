@@ -84,7 +84,7 @@ async function getAuthUrl(req: Request) {
     throw new Error(`Failed to store auth state: ${insertError.message}`);
   }
 
-  const redirectUri = `https://elite10.club/functions/v1/withings-integration?action=handle-callback`;
+  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration?action=handle-callback`;
   
   // Use the correct Withings Authorization endpoint (account.withings.com)
   const authUrl = new URL(`https://account.withings.com/oauth2_user/authorize2`);
@@ -140,7 +140,7 @@ async function handleCallback(req: Request) {
   console.log('Using userId from state lookup:', userId);
 
   // Exchange code for tokens
-  const redirectUri = `https://elite10.club/functions/v1/withings-integration?action=handle-callback`;
+  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration?action=handle-callback`;
   
   const tokenResponse = await fetch(`${WITHINGS_API_URL}/v2/oauth2`, {
     method: 'POST',
