@@ -40,7 +40,7 @@ import {
   Cell
 } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
 
 interface MetricValue {
@@ -173,7 +173,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
         <div className="flex items-baseline gap-2">
           {value !== null ? (
             <>
-              <span className="text-3xl font-bold">{typeof value === 'number' ? value.toFixed(value % 1 === 0 ? 0 : 1) : value}</span>
+              <span className="text-3xl font-bold">{typeof value === 'number' ? value.toFixed(1) : value}</span>
               {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
             </>
           ) : (
@@ -213,7 +213,7 @@ const ActivityCalendar = ({ weeklyData }: { weeklyData: WeeklyActivity[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm">Активность за неделю</CardTitle>
+        <CardTitle className="text-sm">Weekly Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-7 gap-2">
@@ -224,7 +224,7 @@ const ActivityCalendar = ({ weeklyData }: { weeklyData: WeeklyActivity[] }) => {
               </div>
               <div 
                 className={`w-8 h-8 rounded-sm ${getIntensityColor(day.steps, maxSteps)} flex items-center justify-center cursor-pointer hover:scale-110 transition-transform`}
-                title={`${format(new Date(day.date), 'd MMM', { locale: ru })}: ${day.steps} шагов`}
+                title={`${format(new Date(day.date), 'd MMM', { locale: enUS })}: ${day.steps} steps`}
               >
                 {day.active && (
                   <div className="w-2 h-2 bg-white rounded-full opacity-80" />
@@ -500,15 +500,15 @@ export const EnhancedFitnessDashboard = () => {
             // Группируем по неделям для месячного вида
             const weekStart = startOfWeek(new Date(item.measurement_date), { weekStartsOn: 1 });
             dateKey = format(weekStart, 'yyyy-MM-dd');
-            dateLabel = format(weekStart, 'd MMM', { locale: ru });
+            dateLabel = format(weekStart, 'd MMM', { locale: enUS });
           } else if (viewPeriod === 'week') {
             // Группируем по дням для недельного вида
             dateKey = item.measurement_date;
-            dateLabel = format(new Date(item.measurement_date), 'EEE d', { locale: ru });
+            dateLabel = format(new Date(item.measurement_date), 'EEE d', { locale: enUS });
           } else {
             // Для дневного вида показываем часы (если есть данные)
             dateKey = item.measurement_date;
-            dateLabel = format(new Date(item.measurement_date), 'd MMM', { locale: ru });
+            dateLabel = format(new Date(item.measurement_date), 'd MMM', { locale: enUS });
           }
           
           if (!chartDataMap[dateKey]) {
@@ -608,7 +608,7 @@ export const EnhancedFitnessDashboard = () => {
         
         return {
           date: dateStr,
-          day: format(day, 'EEE', { locale: ru }),
+          day: format(day, 'EEE', { locale: enUS }),
           steps: daySteps,
           calories: dayCalories,
           strain: dayStrain,
@@ -691,15 +691,15 @@ export const EnhancedFitnessDashboard = () => {
   const getPeriodLabel = () => {
     switch (viewPeriod) {
       case 'day':
-        return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+        return format(selectedDate, 'd MMMM yyyy', { locale: enUS });
       case 'week':
         const weekStart = subDays(selectedDate, 6);
-        return `${format(weekStart, 'd MMM', { locale: ru })} - ${format(selectedDate, 'd MMM yyyy', { locale: ru })}`;
+        return `${format(weekStart, 'd MMM', { locale: enUS })} - ${format(selectedDate, 'd MMM yyyy', { locale: enUS })}`;
       case 'month':
         const monthStart = subDays(selectedDate, 29);
-        return `${format(monthStart, 'd MMM', { locale: ru })} - ${format(selectedDate, 'd MMM yyyy', { locale: ru })}`;
+        return `${format(monthStart, 'd MMM', { locale: enUS })} - ${format(selectedDate, 'd MMM yyyy', { locale: enUS })}`;
       default:
-        return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+        return format(selectedDate, 'd MMMM yyyy', { locale: enUS });
     }
   };
 
@@ -711,10 +711,10 @@ export const EnhancedFitnessDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Фитнес Аналитика
+                Fitness Analytics
               </h1>
               <p className="text-muted-foreground mt-1">
-                {getPeriodLabel()} • Комплексный анализ здоровья
+                {getPeriodLabel()} • Comprehensive Health Analysis
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -726,7 +726,7 @@ export const EnhancedFitnessDashboard = () => {
                   onClick={() => setViewPeriod('day')}
                   className="px-3 py-1 h-8"
                 >
-                  День
+                  Day
                 </Button>
                 <Button
                   variant={viewPeriod === 'week' ? 'default' : 'ghost'}
@@ -734,7 +734,7 @@ export const EnhancedFitnessDashboard = () => {
                   onClick={() => setViewPeriod('week')}
                   className="px-3 py-1 h-8"
                 >
-                  Неделя
+                  Week
                 </Button>
                 <Button
                   variant={viewPeriod === 'month' ? 'default' : 'ghost'}
@@ -742,7 +742,7 @@ export const EnhancedFitnessDashboard = () => {
                   onClick={() => setViewPeriod('month')}
                   className="px-3 py-1 h-8"
                 >
-                  Месяц
+                  Month
                 </Button>
               </div>
               
@@ -756,7 +756,7 @@ export const EnhancedFitnessDashboard = () => {
                     setSelectedDate(new Date(selectedDate.getTime() - days * 24 * 60 * 60 * 1000));
                   }}
                 >
-                  ← {viewPeriod === 'day' ? 'Предыдущий день' : viewPeriod === 'week' ? 'Предыдущая неделя' : 'Предыдущий месяц'}
+                  ← {viewPeriod === 'day' ? 'Previous Day' : viewPeriod === 'week' ? 'Previous Week' : 'Previous Month'}
                 </Button>
                 <Button
                   variant="outline"
@@ -768,7 +768,7 @@ export const EnhancedFitnessDashboard = () => {
                       : selectedDate.getTime() > new Date().getTime()
                   }
                 >
-                  {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'Текущая неделя' : 'Текущий месяц'}
+                  {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
                 </Button>
                 <Button
                   variant="outline"
@@ -783,7 +783,7 @@ export const EnhancedFitnessDashboard = () => {
                       : selectedDate.getTime() > new Date().getTime()
                   }
                 >
-                  {viewPeriod === 'day' ? 'Следующий день' : viewPeriod === 'week' ? 'Следующая неделя' : 'Следующий месяц'} →
+                  {viewPeriod === 'day' ? 'Next Day' : viewPeriod === 'week' ? 'Next Week' : 'Next Month'} →
                 </Button>
               </div>
             </div>
@@ -794,11 +794,11 @@ export const EnhancedFitnessDashboard = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-8">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="whoop">Whoop</TabsTrigger>
-            <TabsTrigger value="trends">Тренды</TabsTrigger>
-            <TabsTrigger value="composition">Состав тела</TabsTrigger>
-            <TabsTrigger value="activity">Активность</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="composition">Body Composition</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
@@ -808,16 +808,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.recovery || 0}
                   max={100}
-                  label={viewPeriod === 'day' ? 'Восстановление' : 'Среднее'}
+                  label={viewPeriod === 'day' ? 'Recovery' : 'Average'}
                   color={recoveryColor}
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Heart className="h-4 w-4 text-red-500" />
-                    <span className="font-medium">Восстановление</span>
+                    <span className="font-medium">Recovery</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
+                     {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
                   </div>
                   {trends['Recovery Score'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -831,16 +831,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.sleep || 0}
                   max={100}
-                  label={viewPeriod === 'day' ? 'Сон' : 'Среднее'}
+                  label={viewPeriod === 'day' ? 'Sleep' : 'Average'}
                   color={sleepColor}
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Moon className="h-4 w-4 text-purple-500" />
-                    <span className="font-medium">Качество сна</span>
+                    <span className="font-medium">Sleep Quality</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
+                     {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
                   </div>
                   {trends['Sleep Efficiency'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -854,16 +854,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.strain || 0}
                   max={20}
-                  label={viewPeriod === 'day' ? 'Нагрузка' : 'Среднее'}
+                  label={viewPeriod === 'day' ? 'Strain' : 'Average'}
                   color="hsl(48, 96%, 53%)"
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Zap className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">Нагрузка</span>
+                    <span className="font-medium">Strain</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
+                    {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
                   </div>
                   {trends['Workout Strain'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -881,17 +881,17 @@ export const EnhancedFitnessDashboard = () => {
                       : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
                   }
                   max={100}
-                  label={viewPeriod === 'day' ? 'Шаги' : 'Всего'}
+                  label={viewPeriod === 'day' ? 'Steps' : 'Total'}
                   color="hsl(221, 83%, 53%)"
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Activity className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Активность</span>
+                    <span className="font-medium">Activity</span>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
                     {dashboardStats.steps?.toLocaleString() || 0} 
-                    {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' за неделю' : ' за месяц'}
+                    {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' this week' : ' this month'}
                   </div>
                 </div>
               </Card>
@@ -900,9 +900,9 @@ export const EnhancedFitnessDashboard = () => {
             {/* Дополнительные метрики */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
-                title="Калории"
+                title="Calories"
                 value={dashboardStats.calories}
-                unit="ккал"
+                unit="kcal"
                 trend={trends['Calories'] || trends['Total Kilocalories']}
                 target={2500}
                 icon={<Flame className="h-4 w-4" />}
@@ -910,24 +910,24 @@ export const EnhancedFitnessDashboard = () => {
               />
 
               <MetricCard
-                title="Пульс"
+                title="Heart Rate"
                 value={dashboardStats.heartRate}
-                unit="уд/мин"
+                unit="bpm"
                 trend={trends['Average Heart Rate']}
                 icon={<Heart className="h-4 w-4" />}
                 color="hsl(0, 84%, 60%)"
               />
 
               <MetricCard
-                title="Вес"
+                title="Weight"
                 value={dashboardStats.weight}
-                unit="кг"
+                unit="kg"
                 icon={<Target className="h-4 w-4" />}
                 color="hsl(142, 76%, 36%)"
               />
 
               <MetricCard
-                title="Процент жира"
+                title="Body Fat"
                 value={dashboardStats.bodyFat}
                 unit="%"
                 target={12}
@@ -940,11 +940,11 @@ export const EnhancedFitnessDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Динамика за {viewPeriod === 'day' ? 'день' : viewPeriod === 'week' ? 'неделю' : 'месяц'}
+                  Dynamics for {viewPeriod === 'day' ? 'day' : viewPeriod === 'week' ? 'week' : 'month'}
                 </CardTitle>
                 <CardDescription>
-                  Основные показатели здоровья и активности
-                  {viewPeriod !== 'day' && ' (агрегированные данные)'}
+                   Key health and activity metrics
+                   {viewPeriod !== 'day' && ' (aggregated data)'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -974,7 +974,7 @@ export const EnhancedFitnessDashboard = () => {
                         stroke="hsl(142, 76%, 36%)" 
                         strokeWidth={3}
                         dot={{ fill: 'hsl(142, 76%, 36%)', strokeWidth: 2, r: 4 }}
-                        name="Восстановление (%)"
+                        name="Recovery (%)"
                       />
                       <Line 
                         type="monotone" 
@@ -982,7 +982,7 @@ export const EnhancedFitnessDashboard = () => {
                         stroke="hsl(270, 95%, 60%)" 
                         strokeWidth={3}
                         dot={{ fill: 'hsl(270, 95%, 60%)', strokeWidth: 2, r: 4 }}
-                        name="Сон (%)"
+                        name="Sleep (%)"
                       />
                       <Line 
                         type="monotone" 
@@ -990,7 +990,7 @@ export const EnhancedFitnessDashboard = () => {
                         stroke="hsl(48, 96%, 53%)" 
                         strokeWidth={3}
                         dot={{ fill: 'hsl(48, 96%, 53%)', strokeWidth: 2, r: 4 }}
-                        name="Нагрузка"
+                        name="Strain"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -1009,9 +1009,9 @@ export const EnhancedFitnessDashboard = () => {
           <TabsContent value="trends" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Анализ трендов</CardTitle>
+                <CardTitle>Trend Analysis</CardTitle>
                 <CardDescription>
-                  Изменения ваших показателей за последний месяц
+                  Changes in your metrics over the last month
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1029,7 +1029,7 @@ export const EnhancedFitnessDashboard = () => {
                         stroke="hsl(221, 83%, 53%)" 
                         fill="hsl(221, 83%, 53%)"
                         fillOpacity={0.6}
-                        name="Шаги"
+                        name="Steps"
                       />
                       <Area 
                         type="monotone" 
@@ -1038,7 +1038,7 @@ export const EnhancedFitnessDashboard = () => {
                         stroke="hsl(25, 95%, 53%)" 
                         fill="hsl(25, 95%, 53%)"
                         fillOpacity={0.6}
-                        name="Калории"
+                        name="Calories"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1051,16 +1051,16 @@ export const EnhancedFitnessDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Состав тела</CardTitle>
+                  <CardTitle>Body Composition</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span>Вес</span>
-                      <span className="font-bold">{dashboardStats.weight ? `${dashboardStats.weight.toFixed(1)} кг` : '—'}</span>
+                       <span>Weight</span>
+                       <span className="font-bold">{dashboardStats.weight ? `${dashboardStats.weight.toFixed(1)} kg` : '—'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Процент жира</span>
+                      <span>Body Fat</span>
                       <span className="font-bold">{dashboardStats.bodyFat ? `${dashboardStats.bodyFat.toFixed(1)}%` : '—'}</span>
                     </div>
                     {dashboardStats.bodyFat && (
@@ -1072,13 +1072,13 @@ export const EnhancedFitnessDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Цели по составу тела</CardTitle>
+                  <CardTitle>Body Composition Goals</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="text-sm">
                       <div className="flex justify-between mb-1">
-                        <span>Целевой жир</span>
+                        <span>Target Fat</span>
                         <span>12%</span>
                       </div>
                       <Progress value={dashboardStats.bodyFat ? (12 / dashboardStats.bodyFat) * 100 : 0} className="h-2" />
@@ -1093,7 +1093,7 @@ export const EnhancedFitnessDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Активность сегодня</CardTitle>
+                  <CardTitle>Today's Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
