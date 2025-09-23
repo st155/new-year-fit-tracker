@@ -18,6 +18,7 @@ interface TrainerBroadcast {
   message: string;
   recipient_type: 'all_clients' | 'challenge_participants' | 'specific_clients';
   challenge_id?: string;
+  specific_clients?: string[];
   sent_at?: string;
   sent_count: number;
   created_at: string;
@@ -48,7 +49,7 @@ export function TrainerBroadcasts() {
   const [newBroadcast, setNewBroadcast] = useState({
     subject: "",
     message: "",
-    recipient_type: "all_clients" as const,
+    recipient_type: "all_clients" as 'all_clients' | 'challenge_participants' | 'specific_clients',
     challenge_id: "",
     specific_clients: [] as string[]
   });

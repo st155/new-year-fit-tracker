@@ -44,10 +44,10 @@ export function TrainerPosts() {
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
-    post_type: "daily_tip" as const,
-    target_audience: "all" as const,
+    post_type: "daily_tip" as 'weekly_task' | 'daily_tip' | 'announcement' | 'motivation',
+    target_audience: "all" as 'all' | 'specific_challenge' | 'specific_clients',
     challenge_id: "",
-    priority: "normal" as const,
+    priority: "normal" as 'low' | 'normal' | 'high' | 'urgent',
     published: false,
     scheduled_for: "",
     expires_at: ""
