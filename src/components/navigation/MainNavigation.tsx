@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationItem {
   title: string;
@@ -109,6 +110,38 @@ export function MainNavigation() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isTrainer, setIsTrainer] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkTrainerRole();
+    }
+  }, [user]);
+
+  const checkTrainerRole = async () => {
+    if (!user) return;
+
+    const { data: roles, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['trainer', 'admin']);
+
+    if (!error && roles && roles.length > 0) {
+      setIsTrainer(true);
+    } else {
+      // Проверяем старый способ
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('trainer_role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile?.trainer_role) {
+        setIsTrainer(true);
+      }
+    }
+  };
 
   const isActiveRoute = (href: string) => {
     if (href === "/" && location.pathname === "/") return true;
@@ -133,7 +166,7 @@ export function MainNavigation() {
     return email.substring(0, 2).toUpperCase();
   };
 
-  const allItems = [...navigationItems, ...trainerItems];
+  const allItems = [...navigationItems, ...(isTrainer ? trainerItems : [])];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

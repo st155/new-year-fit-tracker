@@ -287,7 +287,7 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
                     <p className="text-muted-foreground">@{selectedClient.username}</p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={() => onSelectClient(null as any)}>
+                <Button variant="outline" onClick={() => onSelectClient(null!)}>
                   Выбрать другого
                 </Button>
               </div>
