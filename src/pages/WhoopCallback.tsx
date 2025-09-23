@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,12 @@ const WhoopCallback = () => {
   const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [syncResult, setSyncResult] = useState<any>(null);
+  const calledOnce = useRef(false);
 
   useEffect(() => {
+    if (calledOnce.current) return;
+    calledOnce.current = true;
+
     const handleWhoopCallback = async () => {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
@@ -118,6 +122,7 @@ const WhoopCallback = () => {
     };
 
     handleWhoopCallback();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, toast, searchParams]);
 
   const getStatusIcon = () => {
