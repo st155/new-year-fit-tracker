@@ -161,6 +161,8 @@ const ProgressPage = () => {
         .order('measurement_date', { ascending: false })
         .limit(2);
 
+      console.log('Withings weight data:', withingsData);
+
       if (withingsData && withingsData.length > 0) {
         const currentWeight = withingsData[0].value;
         const previousWeight = withingsData[1]?.value;
@@ -169,6 +171,28 @@ const ProgressPage = () => {
         setWeightData({
           weight: currentWeight,
           date: withingsData[0].measurement_date,
+          change
+        });
+        return;
+      }
+
+      // Проверяем body_composition для веса
+      const { data: bodyCompositionData } = await supabase
+        .from('body_composition')
+        .select('weight, measurement_date')
+        .eq('user_id', user.id)
+        .not('weight', 'is', null)
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      if (bodyCompositionData && bodyCompositionData.length > 0) {
+        const currentWeight = bodyCompositionData[0].weight;
+        const previousWeight = bodyCompositionData[1]?.weight;
+        const change = previousWeight ? currentWeight - previousWeight : undefined;
+        
+        setWeightData({
+          weight: currentWeight,
+          date: bodyCompositionData[0].measurement_date,
           change
         });
         return;
