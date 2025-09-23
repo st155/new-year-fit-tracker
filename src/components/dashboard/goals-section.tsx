@@ -102,6 +102,18 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 if (currentDecimal > 0) {
                   progress = Math.min(100, Math.round((targetDecimal / currentDecimal) * 100));
                 }
+              } else if (isLowerIsBetterGoal(goal.goal_name, goal.goal_type)) {
+                // Для метрик где меньше = лучше (процент жира, вес)
+                if (currentValue > 0 && currentValue <= goal.target_value) {
+                  // Если достигли цели или лучше
+                  progress = 100;
+                } else if (currentValue > goal.target_value) {
+                  // Если хуже цели, показываем процент отклонения
+                  const deviation = ((currentValue - goal.target_value) / goal.target_value) * 100;
+                  progress = Math.max(0, 100 - deviation);
+                } else {
+                  progress = 0;
+                }
               } else {
                 // Для обычных метрик: больше = лучше
                 progress = Math.min(100, Math.round((currentValue / goal.target_value) * 100));
@@ -152,6 +164,16 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
     const minutes = Math.floor(timeValue);
     const seconds = Math.round((timeValue - minutes) * 100);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const isLowerIsBetterGoal = (goalName: string, goalType: string): boolean => {
+    const nameLower = goalName.toLowerCase();
+    
+    return goalType === 'body_composition' || 
+           nameLower.includes('жир') || 
+           nameLower.includes('вес') ||
+           (nameLower.includes('бег') && nameLower.includes('км')) ||
+           (nameLower.includes('гребля') && nameLower.includes('км'));
   };
 
   const isTimeBasedGoal = (goalName: string, unit: string): boolean => {

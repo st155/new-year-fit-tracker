@@ -315,15 +315,25 @@ const ProgressPage = () => {
     if (!goal.measurements || goal.measurements.length === 0) return 0;
     
     const latestMeasurement = goal.measurements[0];
-    const progress = (latestMeasurement.value / goal.target_value) * 100;
     
-    // Для целей где меньше = лучше (например, вес, процент жира)
-    const reverseGoals = ['weight_loss', 'body_composition'];
-    if (reverseGoals.includes(goal.goal_type)) {
-      return Math.min(100, Math.max(0, 100 - progress + 100));
+    // Для целей где меньше = лучше (например, процент жира, вес)
+    if (goal.goal_type === 'body_composition' || 
+        goal.goal_name.toLowerCase().includes('жир') || 
+        goal.goal_name.toLowerCase().includes('вес')) {
+      
+      if (latestMeasurement.value <= goal.target_value) {
+        // Если достигли цели или лучше
+        return 100;
+      } else {
+        // Если хуже цели, показываем насколько далеко от цели
+        const deviation = ((latestMeasurement.value - goal.target_value) / goal.target_value) * 100;
+        return Math.max(0, Math.round(100 - deviation));
+      }
     }
     
-    return Math.min(100, Math.max(0, progress));
+    // Для обычных целей (больше = лучше)
+    const progress = (latestMeasurement.value / goal.target_value) * 100;
+    return Math.min(100, Math.max(0, Math.round(progress)));
   };
 
   const getFilteredGoals = () => {
