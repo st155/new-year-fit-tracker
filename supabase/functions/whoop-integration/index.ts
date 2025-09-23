@@ -166,15 +166,24 @@ async function handleCallback(req: Request) {
   }
 
   try {
+    console.log('Starting token exchange process with code:', code?.substring(0, 10) + '...');
+    
     // Найдём пользователя по state
-    const { data: mapping } = await supabase
+    const { data: mapping, error: mappingError } = await supabase
       .from('whoop_oauth_states')
       .select('user_id')
       .eq('state', state)
       .maybeSingle();
 
+    console.log('State mapping lookup result:', { mapping, mappingError });
+
+    if (mappingError) {
+      console.error('Database error during state lookup:', mappingError);
+      throw new Error(`State lookup failed: ${mappingError.message}`);
+    }
+
     if (!mapping?.user_id) {
-      console.error('No mapping found for state');
+      console.error('No mapping found for state:', state);
       if (isJson) {
         return new Response(JSON.stringify({ error: 'no_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -182,8 +191,12 @@ async function handleCallback(req: Request) {
       return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
     }
 
+    console.log('Found user mapping, proceeding with token exchange for user:', mapping.user_id);
+    
     // Обмениваем код на токены и сохраняем к пользователю
     const tokens = await exchangeCodeForTokens(code);
+    console.log('Token exchange successful, saving to database...');
+    
     const expiresIn = tokens.expires_in || 3600;
     const { error: saveError } = await supabase
       .from('whoop_tokens')
@@ -194,13 +207,22 @@ async function handleCallback(req: Request) {
         expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
         updated_at: new Date().toISOString()
       });
+      
     if (saveError) {
       console.error('Error saving tokens in callback:', saveError);
+      throw new Error(`Failed to save tokens: ${saveError.message}`);
     }
+    
+    console.log('Tokens saved successfully, cleaning up state...');
 
     // Очистим state
-    await supabase.from('whoop_oauth_states').delete().eq('state', state);
+    const { error: cleanupError } = await supabase.from('whoop_oauth_states').delete().eq('state', state);
+    if (cleanupError) {
+      console.error('Error cleaning up state:', cleanupError);
+    }
 
+    console.log('Callback process completed successfully');
+    
     if (isJson) {
       return new Response(JSON.stringify({ connected: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -575,18 +597,20 @@ async function exchangeCodeForTokens(code: string) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Token exchange failed:', errorText);
+    console.error('Token exchange failed - Status:', response.status, 'Response:', errorText);
     
     // Более детальная обработка ошибок
     try {
       const errorData = JSON.parse(errorText);
+      console.error('Parsed error data:', errorData);
       if (errorData.error === 'invalid_grant') {
         throw new Error('Authorization code has expired or already been used. Please try connecting again.');
       }
       if (errorData.error) {
-        throw new Error(`Whoop error: ${errorData.error}`);
+        throw new Error(`Whoop error: ${errorData.error} - ${errorData.error_description || ''}`);
       }
     } catch (parseError) {
+      console.error('Could not parse error response as JSON:', parseError);
       // Если не удалось парсить JSON, используем оригинальную ошибку
     }
     
