@@ -241,6 +241,7 @@ export const EnhancedFitnessDashboard = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewPeriod, setViewPeriod] = useState<'day' | 'week' | 'month'>('day');
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     recovery: null,
     sleep: null,
@@ -254,12 +255,13 @@ export const EnhancedFitnessDashboard = () => {
   const [weeklyData, setWeeklyData] = useState<WeeklyActivity[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [trends, setTrends] = useState<{ [key: string]: number }>({});
+  const [aggregatedStats, setAggregatedStats] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, selectedDate]);
+  }, [user, selectedDate, viewPeriod]);
 
   const fetchDashboardData = async () => {
     if (!user) return;
@@ -268,11 +270,33 @@ export const EnhancedFitnessDashboard = () => {
       setLoading(true);
       
       const today = format(selectedDate, 'yyyy-MM-dd');
+      let startDate: string;
+      let endDate: string;
+      
+      // Определяем период в зависимости от выбранного режима
+      switch (viewPeriod) {
+        case 'day':
+          startDate = today;
+          endDate = today;
+          break;
+        case 'week':
+          startDate = format(subDays(selectedDate, 6), 'yyyy-MM-dd');
+          endDate = today;
+          break;
+        case 'month':
+          startDate = format(subDays(selectedDate, 29), 'yyyy-MM-dd');
+          endDate = today;
+          break;
+        default:
+          startDate = today;
+          endDate = today;
+      }
+      
       const weekAgo = format(subDays(selectedDate, 6), 'yyyy-MM-dd');
       const monthAgo = format(subDays(selectedDate, 30), 'yyyy-MM-dd');
 
-      // Получаем данные за сегодня
-      const { data: todayData } = await supabase
+      // Получаем данные за выбранный период
+      const { data: periodData } = await supabase
         .from('metric_values')
         .select(`
           id,
@@ -286,11 +310,16 @@ export const EnhancedFitnessDashboard = () => {
           )
         `)
         .eq('user_id', user.id)
-        .eq('measurement_date', today)
-        .order('created_at', { ascending: false });
+        .gte('measurement_date', startDate)
+        .lte('measurement_date', endDate)
+        .order('measurement_date', { ascending: false });
 
-      // Получаем данные за неделю для графиков
-      const { data: weekData } = await supabase
+      // Получаем данные для графиков (всегда берем больший период для контекста)
+      const chartStartDate = viewPeriod === 'month' ? format(subDays(selectedDate, 60), 'yyyy-MM-dd') 
+                            : viewPeriod === 'week' ? format(subDays(selectedDate, 30), 'yyyy-MM-dd')
+                            : weekAgo;
+                            
+      const { data: chartRawData } = await supabase
         .from('metric_values')
         .select(`
           id,
@@ -304,8 +333,8 @@ export const EnhancedFitnessDashboard = () => {
           )
         `)
         .eq('user_id', user.id)
-        .gte('measurement_date', weekAgo)
-        .lte('measurement_date', today)
+        .gte('measurement_date', chartStartDate)
+        .lte('measurement_date', endDate)
         .order('measurement_date', { ascending: true });
 
       // Получаем данные за месяц для трендов
@@ -329,107 +358,216 @@ export const EnhancedFitnessDashboard = () => {
         .order('measurement_date', { ascending: false })
         .limit(1);
 
-      // Получаем данные из daily_health_summary
-      const { data: dailySummary } = await supabase
+      // Получаем данные из daily_health_summary за период
+      const { data: dailySummaries } = await supabase
         .from('daily_health_summary')
         .select('*')
         .eq('user_id', user.id)
-        .eq('date', today)
-        .maybeSingle();
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: false });
 
-      // Обрабатываем сегодняшние данные
-      const stats: DashboardStats = {
-        recovery: null,
-        sleep: null,
-        strain: null,
-        calories: null,
-        steps: null,
-        heartRate: null,
-        weight: bodyComposition?.[0]?.weight || null,
-        bodyFat: bodyComposition?.[0]?.body_fat_percentage || null
+      // Агрегируем данные в зависимости от периода
+      const aggregateData = (data: any[], summaries: any[]) => {
+        const aggregated: any = {
+          recovery: { values: [], avg: 0, total: 0, count: 0 },
+          sleep: { values: [], avg: 0, total: 0, count: 0 },
+          strain: { values: [], avg: 0, total: 0, count: 0 },
+          calories: { values: [], avg: 0, total: 0, count: 0 },
+          steps: { values: [], avg: 0, total: 0, count: 0 },
+          heartRate: { values: [], avg: 0, total: 0, count: 0 },
+          weight: { values: [], avg: 0, latest: null },
+          bodyFat: { values: [], avg: 0, latest: null }
+        };
+
+        // Обрабатываем metric_values
+        data?.forEach((item: any) => {
+          const metric = item.user_metrics;
+          const value = item.value;
+          
+          switch (metric.metric_name) {
+            case 'Recovery Score':
+              aggregated.recovery.values.push(value);
+              aggregated.recovery.total += value;
+              aggregated.recovery.count++;
+              break;
+            case 'Sleep Efficiency':
+            case 'Sleep Performance':
+              aggregated.sleep.values.push(value);
+              aggregated.sleep.total += value;
+              aggregated.sleep.count++;
+              break;
+            case 'Workout Strain':
+              aggregated.strain.values.push(value);
+              aggregated.strain.total += value;
+              aggregated.strain.count++;
+              break;
+            case 'Workout Calories':
+            case 'Calories':
+            case 'Total Kilocalories':
+              aggregated.calories.values.push(value);
+              aggregated.calories.total += value;
+              aggregated.calories.count++;
+              break;
+            case 'Steps':
+            case 'Количество шагов':
+              aggregated.steps.values.push(value);
+              aggregated.steps.total += value;
+              aggregated.steps.count++;
+              break;
+            case 'Average Heart Rate':
+            case 'Avg Heart Rate':
+            case 'Пульс/ЧСС':
+              aggregated.heartRate.values.push(value);
+              aggregated.heartRate.total += value;
+              aggregated.heartRate.count++;
+              break;
+            case 'Вес':
+              aggregated.weight.values.push(value);
+              aggregated.weight.latest = value;
+              break;
+            case 'Процент жира':
+              aggregated.bodyFat.values.push(value);
+              aggregated.bodyFat.latest = value;
+              break;
+          }
+        });
+
+        // Обрабатываем daily summaries
+        summaries?.forEach((summary: any) => {
+          if (summary.steps) {
+            aggregated.steps.values.push(summary.steps);
+            aggregated.steps.total += summary.steps;
+            aggregated.steps.count++;
+          }
+          if (summary.heart_rate_avg) {
+            aggregated.heartRate.values.push(summary.heart_rate_avg);
+            aggregated.heartRate.total += summary.heart_rate_avg;
+            aggregated.heartRate.count++;
+          }
+          if (summary.active_calories) {
+            aggregated.calories.values.push(summary.active_calories);
+            aggregated.calories.total += summary.active_calories;
+            aggregated.calories.count++;
+          }
+        });
+
+        // Рассчитываем средние значения
+        Object.keys(aggregated).forEach(key => {
+          const metric = aggregated[key];
+          if (metric.count > 0) {
+            metric.avg = metric.total / metric.count;
+          }
+          if (metric.values.length > 0 && key === 'weight') {
+            metric.latest = metric.values[0]; // Последнее значение
+          }
+          if (metric.values.length > 0 && key === 'bodyFat') {
+            metric.latest = metric.values[0]; // Последнее значение
+          }
+        });
+
+        return aggregated;
       };
 
-      // Обогащаем данными из daily summary
-      if (dailySummary) {
-        stats.steps = stats.steps || dailySummary.steps;
-        stats.heartRate = stats.heartRate || dailySummary.heart_rate_avg;
-        stats.calories = stats.calories || dailySummary.active_calories;
-      }
+      const aggregated = aggregateData(periodData, dailySummaries);
+      setAggregatedStats(aggregated);
 
-      todayData?.forEach((item: any) => {
-        const metric = item.user_metrics;
-        
-        switch (metric.metric_name) {
-          case 'Recovery Score':
-            stats.recovery = item.value;
-            break;
-          case 'Sleep Efficiency':
-          case 'Sleep Performance':
-            stats.sleep = item.value;
-            break;
-          case 'Workout Strain':
-            stats.strain = item.value;
-            break;
-          case 'Workout Calories':
-          case 'Calories':
-          case 'Total Kilocalories':
-            stats.calories = (stats.calories || 0) + item.value;
-            break;
-          case 'Steps':
-          case 'Количество шагов':
-            stats.steps = item.value;
-            break;
-          case 'Average Heart Rate':
-          case 'Avg Heart Rate':
-          case 'Пульс/ЧСС':
-            stats.heartRate = item.value;
-            break;
-          case 'Вес':
-            stats.weight = item.value;
-            break;
-          case 'Процент жира':
-            stats.bodyFat = item.value;
-            break;
-        }
-      });
+      // Формируем статистику для отображения
+      const stats: DashboardStats = {
+        recovery: viewPeriod === 'day' ? (aggregated.recovery.values[0] || null) : (aggregated.recovery.avg || null),
+        sleep: viewPeriod === 'day' ? (aggregated.sleep.values[0] || null) : (aggregated.sleep.avg || null),
+        strain: viewPeriod === 'day' ? (aggregated.strain.values[0] || null) : (aggregated.strain.avg || null),
+        calories: viewPeriod === 'day' ? (aggregated.calories.values[0] || null) : (aggregated.calories.total || null),
+        steps: viewPeriod === 'day' ? (aggregated.steps.values[0] || null) : (aggregated.steps.total || null),
+        heartRate: viewPeriod === 'day' ? (aggregated.heartRate.values[0] || null) : (aggregated.heartRate.avg || null),
+        weight: aggregated.weight.latest || bodyComposition?.[0]?.weight || null,
+        bodyFat: aggregated.bodyFat.latest || bodyComposition?.[0]?.body_fat_percentage || null
+      };
 
       setDashboardStats(stats);
 
-      // Подготавливаем данные для графиков
-      const chartDataMap: { [key: string]: any } = {};
-      
-      weekData?.forEach((item: any) => {
-        const date = item.measurement_date;
-        if (!chartDataMap[date]) {
-          chartDataMap[date] = { date, dateFormatted: format(new Date(date), 'd MMM', { locale: ru }) };
-        }
+      // Подготавливаем данные для графиков с учетом периода
+      const prepareChartData = (rawData: any[]) => {
+        const chartDataMap: { [key: string]: any } = {};
         
-        const metric = item.user_metrics;
-        switch (metric.metric_name) {
-          case 'Recovery Score':
-            chartDataMap[date].recovery = item.value;
-            break;
-          case 'Sleep Efficiency':
-          case 'Sleep Performance':
-            chartDataMap[date].sleep = item.value;
-            break;
-          case 'Workout Strain':
-            chartDataMap[date].strain = item.value;
-            break;
-          case 'Steps':
-          case 'Количество шагов':
-            chartDataMap[date].steps = item.value;
-            break;
-          case 'Calories':
-          case 'Total Kilocalories':
-            chartDataMap[date].calories = (chartDataMap[date].calories || 0) + item.value;
-            break;
-        }
-      });
+        rawData?.forEach((item: any) => {
+          let dateKey: string;
+          let dateLabel: string;
+          
+          // Группируем данные в зависимости от периода
+          if (viewPeriod === 'month') {
+            // Группируем по неделям для месячного вида
+            const weekStart = startOfWeek(new Date(item.measurement_date), { weekStartsOn: 1 });
+            dateKey = format(weekStart, 'yyyy-MM-dd');
+            dateLabel = format(weekStart, 'd MMM', { locale: ru });
+          } else if (viewPeriod === 'week') {
+            // Группируем по дням для недельного вида
+            dateKey = item.measurement_date;
+            dateLabel = format(new Date(item.measurement_date), 'EEE d', { locale: ru });
+          } else {
+            // Для дневного вида показываем часы (если есть данные)
+            dateKey = item.measurement_date;
+            dateLabel = format(new Date(item.measurement_date), 'd MMM', { locale: ru });
+          }
+          
+          if (!chartDataMap[dateKey]) {
+            chartDataMap[dateKey] = { 
+              date: dateKey, 
+              dateFormatted: dateLabel,
+              recovery: 0, recoveryCount: 0,
+              sleep: 0, sleepCount: 0,
+              strain: 0, strainCount: 0,
+              steps: 0, stepsCount: 0,
+              calories: 0, caloriesCount: 0
+            };
+          }
+          
+          const metric = item.user_metrics;
+          const dataPoint = chartDataMap[dateKey];
+          
+          switch (metric.metric_name) {
+            case 'Recovery Score':
+              dataPoint.recovery += item.value;
+              dataPoint.recoveryCount++;
+              break;
+            case 'Sleep Efficiency':
+            case 'Sleep Performance':
+              dataPoint.sleep += item.value;
+              dataPoint.sleepCount++;
+              break;
+            case 'Workout Strain':
+              dataPoint.strain += item.value;
+              dataPoint.strainCount++;
+              break;
+            case 'Steps':
+            case 'Количество шагов':
+              dataPoint.steps += item.value;
+              dataPoint.stepsCount++;
+              break;
+            case 'Calories':
+            case 'Total Kilocalories':
+              dataPoint.calories += item.value;
+              dataPoint.caloriesCount++;
+              break;
+          }
+        });
 
-      const chartArray = Object.values(chartDataMap).sort((a: any, b: any) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
+        // Вычисляем средние значения
+        const chartArray = Object.values(chartDataMap).map((item: any) => ({
+          ...item,
+          recovery: item.recoveryCount > 0 ? item.recovery / item.recoveryCount : null,
+          sleep: item.sleepCount > 0 ? item.sleep / item.sleepCount : null,
+          strain: item.strainCount > 0 ? item.strain / item.strainCount : null,
+          steps: item.stepsCount > 0 ? (viewPeriod === 'day' ? item.steps / item.stepsCount : item.steps) : null,
+          calories: item.caloriesCount > 0 ? (viewPeriod === 'day' ? item.calories / item.caloriesCount : item.calories) : null
+        })).sort((a: any, b: any) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+
+        return chartArray;
+      };
+
+      const chartArray = prepareChartData(chartRawData);
       setChartData(chartArray);
 
       // Подготавливаем данные для календаря активности
@@ -439,16 +577,42 @@ export const EnhancedFitnessDashboard = () => {
 
       const weeklyActivity: WeeklyActivity[] = weekDays.map((day) => {
         const dateStr = format(day, 'yyyy-MM-dd');
-        const dayData = chartDataMap[dateStr];
+        // Находим данные для этого дня из chartRawData
+        const dayMetrics = chartRawData?.filter(item => item.measurement_date === dateStr) || [];
+        
+        let daySteps = 0;
+        let dayCalories = 0;
+        let dayStrain = 0;
+        let dayRecovery = 0;
+        
+        dayMetrics.forEach((item: any) => {
+          const metric = item.user_metrics;
+          switch (metric.metric_name) {
+            case 'Steps':
+            case 'Количество шагов':
+              daySteps = Math.max(daySteps, item.value);
+              break;
+            case 'Calories':
+            case 'Total Kilocalories':
+              dayCalories += item.value;
+              break;
+            case 'Workout Strain':
+              dayStrain = Math.max(dayStrain, item.value);
+              break;
+            case 'Recovery Score':
+              dayRecovery = Math.max(dayRecovery, item.value);
+              break;
+          }
+        });
         
         return {
           date: dateStr,
           day: format(day, 'EEE', { locale: ru }),
-          steps: dayData?.steps || 0,
-          calories: dayData?.calories || 0,
-          strain: dayData?.strain || 0,
-          recovery: dayData?.recovery || 0,
-          active: (dayData?.steps || 0) > 1000
+          steps: daySteps,
+          calories: dayCalories,
+          strain: dayStrain,
+          recovery: dayRecovery,
+          active: daySteps > 1000
         };
       });
 
@@ -523,6 +687,21 @@ export const EnhancedFitnessDashboard = () => {
       : 'hsl(0, 84%, 60%)'
     : 'hsl(var(--muted))';
 
+  const getPeriodLabel = () => {
+    switch (viewPeriod) {
+      case 'day':
+        return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+      case 'week':
+        const weekStart = subDays(selectedDate, 6);
+        return `${format(weekStart, 'd MMM', { locale: ru })} - ${format(selectedDate, 'd MMM yyyy', { locale: ru })}`;
+      case 'month':
+        const monthStart = subDays(selectedDate, 29);
+        return `${format(monthStart, 'd MMM', { locale: ru })} - ${format(selectedDate, 'd MMM yyyy', { locale: ru })}`;
+      default:
+        return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -534,25 +713,78 @@ export const EnhancedFitnessDashboard = () => {
                 Фитнес Аналитика
               </h1>
               <p className="text-muted-foreground mt-1">
-                {format(selectedDate, 'd MMMM yyyy', { locale: ru })} • Комплексный анализ здоровья
+                {getPeriodLabel()} • Комплексный анализ здоровья
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}
-              >
-                ← Вчера
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedDate(new Date())}
-                disabled={format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')}
-              >
-                Сегодня
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* Селектор периода */}
+              <div className="flex items-center gap-2 bg-muted/30 rounded-lg p-1">
+                <Button
+                  variant={viewPeriod === 'day' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewPeriod('day')}
+                  className="px-3 py-1 h-8"
+                >
+                  День
+                </Button>
+                <Button
+                  variant={viewPeriod === 'week' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewPeriod('week')}
+                  className="px-3 py-1 h-8"
+                >
+                  Неделя
+                </Button>
+                <Button
+                  variant={viewPeriod === 'month' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewPeriod('month')}
+                  className="px-3 py-1 h-8"
+                >
+                  Месяц
+                </Button>
+              </div>
+              
+              {/* Навигация по времени */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const days = viewPeriod === 'day' ? 1 : viewPeriod === 'week' ? 7 : 30;
+                    setSelectedDate(new Date(selectedDate.getTime() - days * 24 * 60 * 60 * 1000));
+                  }}
+                >
+                  ← {viewPeriod === 'day' ? 'Предыдущий день' : viewPeriod === 'week' ? 'Предыдущая неделя' : 'Предыдущий месяц'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date())}
+                  disabled={
+                    viewPeriod === 'day' 
+                      ? format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                      : selectedDate.getTime() > new Date().getTime()
+                  }
+                >
+                  {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'Текущая неделя' : 'Текущий месяц'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const days = viewPeriod === 'day' ? 1 : viewPeriod === 'week' ? 7 : 30;
+                    setSelectedDate(new Date(selectedDate.getTime() + days * 24 * 60 * 60 * 1000));
+                  }}
+                  disabled={
+                    viewPeriod === 'day' 
+                      ? format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                      : selectedDate.getTime() > new Date().getTime()
+                  }
+                >
+                  {viewPeriod === 'day' ? 'Следующий день' : viewPeriod === 'week' ? 'Следующая неделя' : 'Следующий месяц'} →
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -574,13 +806,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.recovery || 0}
                   max={100}
-                  label="Восстановление"
+                  label={viewPeriod === 'day' ? 'Восстановление' : 'Среднее'}
                   color={recoveryColor}
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Heart className="h-4 w-4 text-red-500" />
                     <span className="font-medium">Восстановление</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
                   </div>
                   {trends['Recovery Score'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -594,13 +829,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.sleep || 0}
                   max={100}
-                  label="Сон"
+                  label={viewPeriod === 'day' ? 'Сон' : 'Среднее'}
                   color={sleepColor}
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Moon className="h-4 w-4 text-purple-500" />
                     <span className="font-medium">Качество сна</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
                   </div>
                   {trends['Sleep Efficiency'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -614,13 +852,16 @@ export const EnhancedFitnessDashboard = () => {
                 <CircularProgress
                   value={dashboardStats.strain || 0}
                   max={20}
-                  label="Нагрузка"
+                  label={viewPeriod === 'day' ? 'Нагрузка' : 'Среднее'}
                   color="hsl(48, 96%, 53%)"
                 />
                 <div className="mt-4">
                   <div className="flex items-center justify-center gap-2">
                     <Zap className="h-4 w-4 text-yellow-500" />
                     <span className="font-medium">Нагрузка</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {viewPeriod === 'day' ? 'Сегодня' : viewPeriod === 'week' ? 'За неделю' : 'За месяц'}
                   </div>
                   {trends['Workout Strain'] && (
                     <Badge variant="secondary" className="mt-2">
@@ -632,9 +873,13 @@ export const EnhancedFitnessDashboard = () => {
 
               <Card className="p-6 text-center">
                 <CircularProgress
-                  value={dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0}
+                  value={
+                    viewPeriod === 'day' 
+                      ? (dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0)
+                      : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
+                  }
                   max={100}
-                  label="Шаги"
+                  label={viewPeriod === 'day' ? 'Шаги' : 'Всего'}
                   color="hsl(221, 83%, 53%)"
                 />
                 <div className="mt-4">
@@ -643,7 +888,8 @@ export const EnhancedFitnessDashboard = () => {
                     <span className="font-medium">Активность</span>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    {dashboardStats.steps?.toLocaleString() || 0} / 10K
+                    {dashboardStats.steps?.toLocaleString() || 0} 
+                    {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' за неделю' : ' за месяц'}
                   </div>
                 </div>
               </Card>
@@ -691,9 +937,12 @@ export const EnhancedFitnessDashboard = () => {
             {/* График недельной динамики */}
             <Card>
               <CardHeader>
-                <CardTitle>Динамика за неделю</CardTitle>
+                <CardTitle>
+                  Динамика за {viewPeriod === 'day' ? 'день' : viewPeriod === 'week' ? 'неделю' : 'месяц'}
+                </CardTitle>
                 <CardDescription>
                   Основные показатели здоровья и активности
+                  {viewPeriod !== 'day' && ' (агрегированные данные)'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
