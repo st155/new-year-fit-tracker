@@ -105,14 +105,20 @@ async function handleAuth(req: Request) {
 // Обрабатываем callback от Whoop
 async function handleCallback(req: Request) {
   const url = new URL(req.url);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const error = url.searchParams.get('error');
+  const isJson = (req.headers.get('content-type') || '').includes('application/json');
+  const body = await req.clone().json().catch(() => ({} as any));
 
-  console.log('Callback received:', { code: !!code, state: !!state, error });
+  const code = url.searchParams.get('code') || body?.code || undefined;
+  const state = url.searchParams.get('state') || body?.state || undefined;
+  const error = url.searchParams.get('error') || body?.error || undefined;
+
+  console.log('Callback received:', { code: !!code, state: !!state, error, isJson });
 
   if (error) {
     console.error('Whoop OAuth error:', error);
+    if (isJson) {
+      return new Response(JSON.stringify({ error }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const html = `
       <!DOCTYPE html>
       <html>
@@ -135,6 +141,9 @@ async function handleCallback(req: Request) {
 
   if (!code || !state) {
     console.error('Missing code or state:', { code: !!code, state: !!state });
+    if (isJson) {
+      return new Response(JSON.stringify({ error: 'missing_code_or_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const html = `
       <!DOCTYPE html>
       <html>
@@ -165,7 +174,10 @@ async function handleCallback(req: Request) {
 
     if (!mapping?.user_id) {
       console.error('No mapping found for state');
-      const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?error=no_state`;
+      if (isJson) {
+        return new Response(JSON.stringify({ error: 'no_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const redirectUrl = `https://elite10.club/whoop-callback?error=no_state`;
       return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
     }
 
@@ -188,7 +200,10 @@ async function handleCallback(req: Request) {
     // Очистим state
     await supabase.from('whoop_oauth_states').delete().eq('state', state);
 
-    const redirectUrl = `https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop-callback?connected=1`;
+    if (isJson) {
+      return new Response(JSON.stringify({ connected: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const redirectUrl = `https://elite10.club/whoop-callback?connected=1`;
     return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
 
   } catch (error) {
