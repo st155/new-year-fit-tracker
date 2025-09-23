@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, TrendingUp, Calendar, Plus, Settings } from "lucide-react";
+import { Users, Target, TrendingUp, Calendar, Plus, Settings, MessageSquare, Mail, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { ClientAnalytics } from "@/components/trainer/ClientAnalytics";
 import { ClientsList } from "@/components/trainer/ClientsList";
+import { TrainerPosts } from "@/components/trainer/TrainerPosts";
+import { TrainerBroadcasts } from "@/components/trainer/TrainerBroadcasts";
+import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 
 interface Client {
   id: string;
@@ -233,6 +236,8 @@ export default function TrainerDashboard() {
         <TabsList>
           <TabsTrigger value="clients">Подопечные</TabsTrigger>
           <TabsTrigger value="goals">Управление целями</TabsTrigger>
+          <TabsTrigger value="posts">Посты и задания</TabsTrigger>
+          <TabsTrigger value="broadcasts">Email-рассылки</TabsTrigger>
           <TabsTrigger value="analytics">Аналитика</TabsTrigger>
         </TabsList>
 
@@ -254,12 +259,16 @@ export default function TrainerDashboard() {
           />
         </TabsContent>
 
+        <TabsContent value="posts">
+          <TrainerPosts />
+        </TabsContent>
+
+        <TabsContent value="broadcasts">
+          <TrainerBroadcasts />
+        </TabsContent>
+
         <TabsContent value="analytics">
-          <ClientAnalytics 
-            clients={clients}
-            selectedClient={selectedClient}
-            onSelectClient={setSelectedClient}
-          />
+          <TrainerAnalytics />
         </TabsContent>
       </Tabs>
     </div>

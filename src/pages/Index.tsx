@@ -192,6 +192,8 @@ const Index = () => {
             <QuickActions userRole={userRole} />
             <Leaderboard />
             
+            <TrainerPostsFeed />
+            
             {/* Добавляем кнопку для запуска тестов */}
             <Dialog>
               <DialogTrigger asChild>

@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface NavigationItem {
   title: string;
@@ -181,6 +182,9 @@ export function MainNavigation() {
 
         {/* User Menu & Mobile Navigation */}
         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+          {/* Notification Bell */}
+          <NotificationBell />
+          
           {/* User Avatar Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
