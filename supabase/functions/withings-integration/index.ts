@@ -207,37 +207,52 @@ async function handleCallback(req: Request) {
   // Start initial data sync
   await syncUserData(userId, tokenData.body.access_token);
 
-  return new Response(
-    `<html>
-      <head>
-        <title>Withings Authorization</title>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <script>
-          // Send message to parent window
-          if (window.opener) {
-            window.opener.postMessage({type: 'withings-auth-success'}, '*');
-          }
-          
-          // Try to close window automatically
-          setTimeout(() => {
-            try {
-              window.close();
-            } catch (e) {
-              // If can't close, show message
-              document.body.innerHTML = '<p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! You can close this window.</p>';
+  // Check if it's an API call (has authorization header) or browser redirect
+  const authHeader = req.headers.get('authorization');
+  
+  if (authHeader) {
+    // API call - return JSON
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Withings connected successfully'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } else {
+    // Browser redirect - return HTML
+    return new Response(
+      `<html>
+        <head>
+          <title>Withings Authorization</title>
+          <meta charset="utf-8">
+        </head>
+        <body>
+          <script>
+            // Send message to parent window
+            if (window.opener) {
+              window.opener.postMessage({type: 'withings-auth-success'}, '*');
             }
-          }, 1000);
-          
-          // Also try to close immediately
-          window.close();
-        </script>
-        <p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! Window will close automatically...</p>
-      </body>
-    </html>`,
-    { headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' } }
-  );
+            
+            // Try to close window automatically
+            setTimeout(() => {
+              try {
+                window.close();
+              } catch (e) {
+                // If can't close, show message
+                document.body.innerHTML = '<p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! You can close this window.</p>';
+              }
+            }, 1000);
+            
+            // Also try to close immediately
+            window.close();
+          </script>
+          <p style="text-align: center; font-family: Arial; margin-top: 50px;">✅ Authorization successful! Window will close automatically...</p>
+        </body>
+      </html>`,
+      { headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
 }
 
 async function syncData(req: Request) {
