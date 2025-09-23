@@ -104,15 +104,19 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 }
               } else if (isLowerIsBetterGoal(goal.goal_name, goal.goal_type)) {
                 // Для метрик где меньше = лучше (процент жира, вес)
-                if (currentValue > 0 && currentValue <= goal.target_value) {
+                if (currentValue <= 0) {
+                  progress = 0;
+                } else if (currentValue <= goal.target_value) {
                   // Если достигли цели или лучше
                   progress = 100;
-                } else if (currentValue > goal.target_value) {
-                  // Если хуже цели, показываем процент отклонения
-                  const deviation = ((currentValue - goal.target_value) / goal.target_value) * 100;
-                  progress = Math.max(0, 100 - deviation);
                 } else {
-                  progress = 0;
+                  // Если текущее значение больше цели, рассчитываем прогресс как обратный процент
+                  // Например: цель 11%, текущий 21.7%
+                  // Прогресс = (1 - (текущий - цель) / текущий) * 100
+                  // Но ограничиваем максимальное отклонение до разумных пределов
+                  const maxReasonableValue = goal.target_value * 3; // максимум в 3 раза больше цели
+                  const cappedCurrent = Math.min(currentValue, maxReasonableValue);
+                  progress = Math.max(0, Math.round(((maxReasonableValue - cappedCurrent) / (maxReasonableValue - goal.target_value)) * 100));
                 }
               } else {
                 // Для обычных метрик: больше = лучше
