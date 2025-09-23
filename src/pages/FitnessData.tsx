@@ -1,6 +1,29 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, TrendingUp, TrendingDown, Activity, Heart, Moon, Dumbbell, Calendar, BarChart3 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  TrendingUp, 
+  TrendingDown, 
+  Activity, 
+  Heart, 
+  Moon, 
+  Dumbbell, 
+  Calendar, 
+  BarChart3,
+  Target,
+  Zap,
+  Award,
+  Filter,
+  Download,
+  Share,
+  Eye,
+  Flame,
+  Clock,
+  Upload,
+  Minus,
+  ArrowUp,
+  ArrowDown
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +32,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  RadialBarChart,
+  RadialBar,
+  Legend
+} from 'recharts';
+import { format, subDays } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 
 interface UserMetric {
@@ -191,11 +234,55 @@ export default function FitnessData() {
   };
 
   const prepareChartData = (values: MetricValue[]) => {
-    return values.slice(-14).map(value => ({
+    return values.slice(-30).map(value => ({
       date: new Date(value.measurement_date).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }),
       value: Number(value.value),
-      fullDate: value.measurement_date
+      fullDate: value.measurement_date,
+      formattedDate: format(new Date(value.measurement_date), 'd MMM', { locale: ru })
     }));
+  };
+
+  const getMetricInsight = (metric: MetricWithValues) => {
+    if (!metric.latestValue || !metric.changePercent) return null;
+    
+    const absChange = Math.abs(metric.changePercent);
+    if (absChange < 1) return null;
+
+    const isImprovement = (metricName: string, trend: 'up' | 'down' | 'stable') => {
+      const improvementOnUp = ['steps', 'recovery', 'sleep', 'vo2max', 'активность'];
+      const improvementOnDown = ['вес', 'жир', 'пульс покоя', 'стресс'];
+      
+      const name = metricName.toLowerCase();
+      if (improvementOnUp.some(keyword => name.includes(keyword))) {
+        return trend === 'up';
+      }
+      if (improvementOnDown.some(keyword => name.includes(keyword))) {
+        return trend === 'down';
+      }
+      return trend === 'up'; // По умолчанию
+    };
+
+    const improvement = isImprovement(metric.metric_name, metric.trend || 'stable');
+    
+    return {
+      message: improvement 
+        ? `Отличная динамика! Рост на ${absChange.toFixed(1)}%` 
+        : `Изменение на ${metric.trend === 'up' ? '+' : '-'}${absChange.toFixed(1)}%`,
+      type: improvement ? 'positive' : 'neutral'
+    };
+  };
+
+  const getMetricColor = (category: string) => {
+    const colors = {
+      'recovery': 'hsl(142, 76%, 36%)',
+      'sleep': 'hsl(270, 95%, 60%)',
+      'workout': 'hsl(25, 95%, 53%)',
+      'fitness': 'hsl(221, 83%, 53%)',
+      'health': 'hsl(0, 84%, 60%)',
+      'body_composition': 'hsl(142, 76%, 36%)',
+      'activity': 'hsl(221, 83%, 53%)'
+    };
+    return colors[category as keyof typeof colors] || 'hsl(var(--primary))';
   };
 
   const categories = Array.from(new Set(metrics.map(m => m.metric_category)));
@@ -274,149 +361,379 @@ export default function FitnessData() {
         </div>
 
         {filteredMetrics.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Нет данных фитнеса</h3>
-              <p className="text-muted-foreground mb-4">
-                Подключите фитнес-трекеры или загрузите скриншоты для автоматического сбора данных
+          <Card className="border-dashed">
+            <CardContent className="text-center py-16">
+              <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <Activity className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Нет данных фитнеса</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Подключите фитнес-трекеры или загрузите скриншоты для автоматического сбора и анализа ваших данных
               </p>
-              <Button onClick={() => navigate('/progress')}>
-                Перейти к настройке интеграций
-              </Button>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={() => navigate('/integrations')} className="gap-2">
+                  <Target className="w-4 h-4" />
+                  Подключить трекер
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/progress')} className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Загрузить данные
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="overview">Обзор</TabsTrigger>
-              <TabsTrigger value="detailed">Детальный анализ</TabsTrigger>
+          <Tabs defaultValue="overview" className="space-y-8">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview" className="gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Обзор
+              </TabsTrigger>
+              <TabsTrigger value="detailed" className="gap-2">
+                <Eye className="w-4 h-4" />
+                Детальный анализ
+              </TabsTrigger>
+              <TabsTrigger value="insights" className="gap-2">
+                <Award className="w-4 h-4" />
+                Инсайты
+              </TabsTrigger>
+              <TabsTrigger value="comparison" className="gap-2">
+                <Target className="w-4 h-4" />
+                Сравнение
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredMetrics.map((metric) => (
-                  <Card 
-                    key={metric.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => setSelectedMetric(metric)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getCategoryIcon(metric.metric_category)}
-                          <span className="font-medium text-sm">{metric.metric_name}</span>
-                        </div>
-                        {getSourceIcon(metric.source)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
+            <TabsContent value="overview" className="space-y-8">
+              {/* Статистика по категориям */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {Array.from(new Set(filteredMetrics.map(m => m.metric_category))).map(category => {
+                  const categoryMetrics = filteredMetrics.filter(m => m.metric_category === category);
+                  const avgTrend = categoryMetrics.reduce((sum, m) => sum + (m.changePercent || 0), 0) / categoryMetrics.length;
+                  
+                  return (
+                    <Card key={category} className="relative overflow-hidden">
+                      <div 
+                        className="absolute inset-0 opacity-5"
+                        style={{ backgroundColor: getMetricColor(category) }}
+                      />
+                      <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold">
-                            {metric.latestValue ? formatValue(metric.latestValue.value, metric.unit) : '—'}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {getTrendIcon(metric.trend)}
-                            {metric.changePercent !== undefined && Math.abs(metric.changePercent) > 1 && (
-                              <span className={`text-sm ${metric.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                                {metric.changePercent > 0 ? '+' : ''}{metric.changePercent.toFixed(1)}%
-                              </span>
-                            )}
+                          <div className="flex items-center gap-2">
+                            {getCategoryIcon(category)}
+                            <CardTitle className="text-sm capitalize">{category}</CardTitle>
                           </div>
+                          <Badge variant={avgTrend > 0 ? "default" : avgTrend < 0 ? "destructive" : "secondary"}>
+                            {avgTrend > 0 ? '+' : ''}{avgTrend.toFixed(1)}%
+                          </Badge>
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>{metric.values.length} записей</span>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {metric.latestValue && 
-                              new Date(metric.latestValue.measurement_date).toLocaleDateString('ru-RU')
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="text-2xl font-bold">{categoryMetrics.length}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {categoryMetrics.length === 1 ? 'метрика' : 'метрики'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Последнее обновление: {categoryMetrics[0]?.latestValue && 
+                              format(new Date(categoryMetrics[0].latestValue.measurement_date), 'd MMM', { locale: ru })
                             }
                           </div>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {metric.metric_category}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Сетка метрик с улучшенным дизайном */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredMetrics.map((metric) => {
+                  const insight = getMetricInsight(metric);
+                  const color = getMetricColor(metric.metric_category);
+                  
+                  return (
+                    <Card 
+                      key={metric.id}
+                      className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden"
+                      onClick={() => setSelectedMetric(metric)}
+                    >
+                      <div 
+                        className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300"
+                        style={{ backgroundColor: color }}
+                      />
+                      
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div style={{ color }}>{getCategoryIcon(metric.metric_category)}</div>
+                            <div>
+                              <span className="font-semibold text-sm">{metric.metric_name}</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                {getSourceIcon(metric.source)}
+                                <Badge variant="outline" className="text-xs px-2 py-0">
+                                  {metric.metric_category}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {getTrendIcon(metric.trend)}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-4">
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-3xl font-bold">
+                              {metric.latestValue ? formatValue(metric.latestValue.value, metric.unit) : '—'}
+                            </span>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Последнее значение
+                            </div>
+                          </div>
+                          
+                          {metric.changePercent !== undefined && Math.abs(metric.changePercent) > 1 && (
+                            <div className="text-right">
+                              <Badge 
+                                variant={metric.trend === 'up' ? "default" : metric.trend === 'down' ? "destructive" : "secondary"}
+                                className="text-xs"
+                              >
+                                {metric.changePercent > 0 ? '+' : ''}{metric.changePercent.toFixed(1)}%
+                              </Badge>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                изменение
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {insight && (
+                          <div className={`text-xs p-2 rounded-md ${
+                            insight.type === 'positive' 
+                              ? 'bg-green-50 text-green-700 border border-green-200' 
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          }`}>
+                            {insight.message}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <BarChart3 className="w-3 h-3" />
+                            <span>{metric.values.length} записей</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {metric.latestValue && 
+                              format(new Date(metric.latestValue.measurement_date), 'd MMM', { locale: ru })
+                            }
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </TabsContent>
 
             <TabsContent value="detailed" className="space-y-6">
               {selectedMetric ? (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          {getCategoryIcon(selectedMetric.metric_category)}
-                          {selectedMetric.metric_name}
-                        </CardTitle>
-                        <CardDescription>
-                          Данные из {selectedMetric.source} • {selectedMetric.values.length} записей
-                        </CardDescription>
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div 
+                            className="p-3 rounded-lg"
+                            style={{ backgroundColor: `${getMetricColor(selectedMetric.metric_category)}20` }}
+                          >
+                            <div style={{ color: getMetricColor(selectedMetric.metric_category) }}>
+                              {getCategoryIcon(selectedMetric.metric_category)}
+                            </div>
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl">{selectedMetric.metric_name}</CardTitle>
+                            <CardDescription className="flex items-center gap-4 mt-1">
+                              <span>Источник: {selectedMetric.source}</span>
+                              <span>•</span>
+                              <span>{selectedMetric.values.length} записей</span>
+                              <span>•</span>
+                              <span className="capitalize">{selectedMetric.metric_category}</span>
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Download className="w-4 h-4" />
+                            Экспорт
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedMetric(null)}>
+                            Закрыть
+                          </Button>
+                        </div>
                       </div>
-                      <Button variant="outline" onClick={() => setSelectedMetric(null)}>
-                        Закрыть
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {/* График */}
-                      <div className="h-64">
+                    </CardHeader>
+                  </Card>
+
+                  {/* Статистика метрики */}
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold">
+                          {selectedMetric.latestValue ? formatValue(selectedMetric.latestValue.value, selectedMetric.unit) : '—'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Текущее значение</div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold">
+                          {formatValue(
+                            selectedMetric.values.reduce((sum, v) => sum + v.value, 0) / selectedMetric.values.length,
+                            selectedMetric.unit
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Среднее значение</div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold">
+                          {formatValue(Math.max(...selectedMetric.values.map(v => v.value)), selectedMetric.unit)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Максимум</div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold">
+                          {formatValue(Math.min(...selectedMetric.values.map(v => v.value)), selectedMetric.unit)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Минимум</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Улучшенный график */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Динамика изменений</CardTitle>
+                      <CardDescription>
+                        График показывает изменения {selectedMetric.metric_name.toLowerCase()} за последние {selectedMetric.values.length} записей
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={prepareChartData(selectedMetric.values)}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis />
+                          <AreaChart data={prepareChartData(selectedMetric.values)}>
+                            <defs>
+                              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={getMetricColor(selectedMetric.metric_category)} stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor={getMetricColor(selectedMetric.metric_category)} stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="formattedDate" 
+                              tick={{ fontSize: 12 }}
+                              stroke="hsl(var(--muted-foreground))"
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 12 }}
+                              stroke="hsl(var(--muted-foreground))"
+                            />
                             <Tooltip 
                               formatter={(value: any) => [formatValue(value, selectedMetric.unit), selectedMetric.metric_name]}
                               labelFormatter={(label) => `Дата: ${label}`}
+                              contentStyle={{
+                                backgroundColor: 'hsl(var(--popover))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '6px'
+                              }}
                             />
-                            <Line 
+                            <Area
                               type="monotone" 
                               dataKey="value" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={2}
-                              dot={{ fill: 'hsl(var(--primary))' }}
+                              stroke={getMetricColor(selectedMetric.metric_category)}
+                              strokeWidth={3}
+                              fill="url(#colorGradient)"
+                              dot={{ 
+                                fill: getMetricColor(selectedMetric.metric_category), 
+                                strokeWidth: 2, 
+                                r: 4 
+                              }}
+                              activeDot={{ 
+                                r: 6, 
+                                fill: getMetricColor(selectedMetric.metric_category) 
+                              }}
                             />
-                          </LineChart>
+                          </AreaChart>
                         </ResponsiveContainer>
                       </div>
+                    </CardContent>
+                  </Card>
 
-                      {/* Последние значения */}
-                      <div>
-                        <h3 className="font-medium mb-3">Последние измерения</h3>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {selectedMetric.values.slice(0, 10).map((value) => (
-                            <div key={value.id} className="flex items-center justify-between p-2 rounded border">
-                              <div className="flex items-center gap-3">
-                                <span className="font-medium">
-                                  {formatValue(value.value, selectedMetric.unit)}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(value.measurement_date).toLocaleDateString('ru-RU', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
+                  {/* История изменений */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>История измерений</CardTitle>
+                      <CardDescription>
+                        Все записи {selectedMetric.metric_name.toLowerCase()} в хронологическом порядке
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {selectedMetric.values.map((value, index) => {
+                          const prevValue = selectedMetric.values[index + 1];
+                          const change = prevValue ? ((value.value - prevValue.value) / prevValue.value) * 100 : null;
+                          
+                          return (
+                            <div key={value.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                              <div className="flex items-center gap-4">
+                                <div className="text-center min-w-[80px]">
+                                  <div className="font-semibold">
+                                    {formatValue(value.value, selectedMetric.unit)}
+                                  </div>
+                                  {change !== null && Math.abs(change) > 1 && (
+                                    <Badge 
+                                      variant={change > 0 ? "default" : "destructive"}
+                                      className="text-xs mt-1"
+                                    >
+                                      {change > 0 ? '+' : ''}{change.toFixed(1)}%
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="font-medium">
+                                    {format(new Date(value.measurement_date), 'd MMMM yyyy', { locale: ru })}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {format(new Date(value.measurement_date), 'EEEE', { locale: ru })}
+                                  </div>
+                                </div>
                               </div>
-                              {value.notes && (
-                                <span className="text-xs text-muted-foreground max-w-xs truncate">
-                                  {value.notes}
-                                </span>
-                              )}
+                              
+                              <div className="text-right">
+                                {value.notes && (
+                                  <div className="text-sm text-muted-foreground max-w-xs truncate">
+                                    📝 {value.notes}
+                                  </div>
+                                )}
+                                <div className="text-xs text-muted-foreground">
+                                  {format(new Date(value.created_at), 'HH:mm')}
+                                </div>
+                              </div>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               ) : (
                 <Card>
                   <CardContent className="text-center py-12">
