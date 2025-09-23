@@ -72,6 +72,7 @@ serve(async (req) => {
 // Инициируем OAuth процесс
 async function handleAuth(req: Request) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+  // Accept both primary and www subdomain for safety
   const redirectUri = `https://elite10.club/whoop-callback`;
   
   if (!clientId) {
@@ -94,7 +95,7 @@ async function handleAuth(req: Request) {
     .from('whoop_oauth_states')
     .insert({ state, user_id: user.id });
 
-  const scope = 'read:recovery read:sleep read:workout read:profile read:body_measurement read:cycles';
+  const scope = 'offline_access read:recovery read:sleep read:workout read:profile read:body_measurement read:cycles';
   const authUrl = `${WHOOP_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
 
   console.log('Generated auth URL:', authUrl);
@@ -455,10 +456,17 @@ async function handleSync(req: Request, body: any = {}) {
 
     // Проверяем срок действия токена
     if (new Date(tokenData.expires_at) <= new Date()) {
-      throw new Error('Whoop token expired');
+      console.log('Access token expired, attempting refresh...');
+      try {
+        accessToken = await refreshWhoopToken(user.id);
+        console.log('Token refreshed successfully');
+      } catch (e) {
+        console.error('Whoop token refresh failed:', e);
+        throw new Error('Whoop token expired, please reconnect');
+      }
+    } else {
+      accessToken = tokenData.access_token;
     }
-
-    accessToken = tokenData.access_token;
   }
 
   // Синхронизируем данные
@@ -588,6 +596,54 @@ async function exchangeCodeForTokens(code: string) {
   const json = await response.json();
   console.log('Token exchange succeeded. Has access_token:', !!json.access_token, 'Has refresh_token:', !!json.refresh_token);
   return json;
+}
+
+// Refresh Whoop token using refresh_token
+async function refreshWhoopToken(userId: string): Promise<string> {
+  const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+  const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
+  if (!clientId || !clientSecret) throw new Error('Whoop credentials not configured');
+
+  // Get latest refresh token from DB
+  const { data: tokens, error } = await supabase
+    .from('whoop_tokens')
+    .select('refresh_token')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const refreshToken = tokens?.refresh_token;
+  if (!refreshToken) throw new Error('No refresh token available');
+
+  const resp = await fetch(WHOOP_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`Failed to refresh Whoop token: ${txt}`);
+  }
+
+  const json = await resp.json();
+  await supabase
+    .from('whoop_tokens')
+    .upsert({
+      user_id: userId,
+      access_token: json.access_token,
+      refresh_token: json.refresh_token || refreshToken,
+      expires_at: new Date(Date.now() + (json.expires_in || 3600) * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+  return json.access_token as string;
 }
 
 // Получаем информацию о пользователе

@@ -258,14 +258,25 @@ async function syncData(req: Request) {
     throw new Error('No Withings connection found');
   }
 
-  // Check if token needs refresh
+  // Check if token needs refresh (refresh 2 minutes early)
   const expiresAt = new Date(tokenData.expires_at);
   const now = new Date();
+  const refreshThreshold = new Date(now.getTime() + 2 * 60 * 1000);
   
   let accessToken = tokenData.access_token;
   
-  if (now >= expiresAt) {
-    accessToken = await refreshToken(tokenData);
+  if (refreshThreshold >= expiresAt) {
+    try {
+      accessToken = await refreshToken(tokenData);
+    } catch (e: any) {
+      console.error('Token refresh failed, clearing tokens:', e?.message || e);
+      // If refresh token invalid – force reconnection
+      await supabase.from('withings_tokens').delete().eq('user_id', user.id);
+      return new Response(
+        JSON.stringify({ error: 'withings_reauth_required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   }
 
   const result = await syncUserData(user.id, accessToken);
@@ -332,15 +343,16 @@ async function refreshToken(tokenData: any): Promise<string> {
     throw new Error(`Token refresh failed: ${data.error}`);
   }
 
-  // Update tokens in database
+  // Update tokens in database (Withings rotates refresh_token!)
   const expiresAt = new Date(Date.now() + data.body.expires_in * 1000);
   
   await supabase
     .from('withings_tokens')
     .update({
       access_token: data.body.access_token,
-      refresh_token: data.body.refresh_token,
+      refresh_token: data.body.refresh_token, // always store the new one
       expires_at: expiresAt.toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq('user_id', tokenData.user_id);
 
