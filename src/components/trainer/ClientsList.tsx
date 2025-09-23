@@ -174,22 +174,34 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{client.goals_count || 0} целей</span>
+                    <span className="text-sm">{client.goals_count || 0} активных целей</span>
                   </div>
                   {client.last_measurement && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">
-                        Измерение: {new Date(client.last_measurement).toLocaleDateString()}
+                        Последнее измерение: {new Date(client.last_measurement).toLocaleDateString()}
                       </span>
                     </div>
                   )}
-                  <Badge variant="secondary" className="w-fit">
-                    Активен с {new Date(client.assigned_at).toLocaleDateString()}
-                  </Badge>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-xs">
+                      Активен с {new Date(client.assigned_at).toLocaleDateString()}
+                    </Badge>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectClient(client);
+                      }}
+                    >
+                      Управление
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

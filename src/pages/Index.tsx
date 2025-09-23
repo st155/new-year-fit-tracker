@@ -8,9 +8,11 @@ import { IntegrationsCard } from "@/components/dashboard/integrations-card";
 import { AppTestSuite } from "@/components/ui/app-test-suite";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -19,6 +21,7 @@ const Index = () => {
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isTrainer, setIsTrainer] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,6 +36,19 @@ const Index = () => {
           .single();
 
         setProfile(profileData);
+
+        // Проверяем, является ли пользователь тренером
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .in('role', ['trainer', 'admin']);
+
+        if (roles && roles.length > 0) {
+          setIsTrainer(true);
+        } else if (profileData?.trainer_role) {
+          setIsTrainer(true);
+        }
 
         // Загружаем активный челлендж пользователя
         const { data: participantData } = await supabase
@@ -140,6 +156,38 @@ const Index = () => {
           </div>
           
           <div className="space-y-6">
+            {/* Панель тренера для тренеров */}
+            {isTrainer && (
+              <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Панель тренера
+                  </CardTitle>
+                  <CardDescription>
+                    Управляйте своими подопечными и их прогрессом
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                        Тренер
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Доступ к расширенным функциям
+                      </span>
+                    </div>
+                    <Link to="/trainer-dashboard">
+                      <Button>
+                        Открыть панель
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             <IntegrationsCard />
             <QuickActions userRole={userRole} />
             <Leaderboard />
