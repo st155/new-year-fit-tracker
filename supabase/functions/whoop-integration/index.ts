@@ -206,8 +206,15 @@ async function handleCallback(req: Request) {
     const redirectUrl = `https://elite10.club/whoop-callback?connected=1`;
     return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
 
-  } catch (error) {
-    console.error('Callback processing error:', error);
+  } catch (error: any) {
+    console.error('Callback processing error:', error?.message || error);
+    const isJson = (req.headers.get('content-type') || '').includes('application/json');
+    if (isJson) {
+      return new Response(JSON.stringify({ error: error?.message || 'callback_failed' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const html = `
       <!DOCTYPE html>
       <html>
@@ -218,7 +225,7 @@ async function handleCallback(req: Request) {
           <script>
             window.opener?.postMessage({
               type: 'whoop-auth-error',
-              error: '${error.message}'
+              error: '${error?.message || 'Unknown error'}'
             }, '*');
             window.close();
           </script>
