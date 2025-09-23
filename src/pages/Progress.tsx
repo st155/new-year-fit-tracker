@@ -66,6 +66,7 @@ const ProgressPage = () => {
   const [viewingGoalDetail, setViewingGoalDetail] = useState<Goal | null>(null);
   const [quickMeasurementGoal, setQuickMeasurementGoal] = useState<Goal | null>(null);
   const [weightData, setWeightData] = useState<{ weight: number; date: string; change?: number } | null>(null);
+  const [bodyFatData, setBodyFatData] = useState<{ current: number | null; target: number; change: number | null }>({ current: null, target: 11, change: null });
   const [dateFilter, setDateFilter] = useState("all");
   const [goalTypeFilter, setGoalTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
@@ -81,6 +82,7 @@ const ProgressPage = () => {
   useEffect(() => {
     fetchGoalsAndMeasurements();
     fetchCurrentWeight();
+    fetchBodyFatData();
   }, [user]);
 
   const fetchGoalsAndMeasurements = async () => {
@@ -196,6 +198,72 @@ const ProgressPage = () => {
       }
     } catch (error) {
       console.error('Error fetching current weight:', error);
+    }
+  };
+
+  const fetchBodyFatData = async () => {
+    if (!user) return;
+
+    try {
+      // Сначала проверяем данные Withings из metric_values
+      const { data: withingsBodyFat } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Процент жира')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(10);
+
+      // Получаем последние данные состава тела (fallback)
+      const { data: bodyComposition } = await supabase
+        .from('body_composition')
+        .select('body_fat_percentage, measurement_date')
+        .eq('user_id', user.id)
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      // Получаем цель по жиру
+      const { data: bodyFatGoal } = await supabase
+        .from('goals')
+        .select('target_value')
+        .eq('user_id', user.id)
+        .ilike('goal_name', '%жир%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let bodyFatChange = null;
+      let currentBodyFat = null;
+
+      // Используем данные Withings если есть, иначе body_composition
+      if (withingsBodyFat && withingsBodyFat.length > 0) {
+        currentBodyFat = withingsBodyFat[0].value;
+        if (withingsBodyFat.length > 1) {
+          const current = withingsBodyFat[0].value;
+          const previous = withingsBodyFat[1].value;
+          bodyFatChange = Math.round(((previous - current) / current) * 100);
+        }
+      } else if (bodyComposition && bodyComposition.length > 0 && bodyComposition[0].body_fat_percentage) {
+        currentBodyFat = bodyComposition[0].body_fat_percentage;
+        if (bodyComposition.length > 1 && bodyComposition[1].body_fat_percentage) {
+          const current = bodyComposition[0].body_fat_percentage;
+          const previous = bodyComposition[1].body_fat_percentage;
+          bodyFatChange = Math.round(((previous - current) / current) * 100);
+        }
+      }
+
+      setBodyFatData({
+        current: currentBodyFat,
+        target: bodyFatGoal?.target_value || 11,
+        change: bodyFatChange
+      });
+    } catch (error) {
+      console.error('Error fetching body fat data:', error);
     }
   };
 
@@ -610,8 +678,62 @@ const ProgressPage = () => {
           </div>
         </div>
 
-        {/* Контроль веса */}
-        <WeightTracker className="mb-8" />
+        {/* Контроль веса и состава тела */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <WeightTracker />
+          
+          {/* Карточка процента жира */}
+          <FitnessCard 
+            variant="gradient" 
+            className="p-6"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-current opacity-80" />
+                  <p className="text-sm font-medium opacity-90">Процент жира</p>
+                  {bodyFatData.current && (
+                    <Badge variant="secondary" className="text-xs">Withings</Badge>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">
+                      {bodyFatData.current ? bodyFatData.current.toFixed(1) : "—"}
+                    </span>
+                    {bodyFatData.current && <span className="text-sm opacity-80">%</span>}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-xs opacity-70">
+                    <Target className="w-3 h-3" />
+                    <span>Цель: {bodyFatData.target}%</span>
+                  </div>
+                  
+                  {!bodyFatData.current && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Подключите Withings для отслеживания состава тела
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {bodyFatData.change !== null && (
+                <Badge 
+                  variant={bodyFatData.change > 0 ? "destructive" : "default"}
+                  className="ml-2 font-semibold"
+                >
+                  {bodyFatData.change > 0 ? (
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 mr-1" />
+                  )}
+                  {bodyFatData.change > 0 ? '+' : ''}{bodyFatData.change}%
+                </Badge>
+              )}
+            </div>
+          </FitnessCard>
+        </div>
 
         {/* Инструкция для новых пользователей */}
         {goals.length === 0 && (
