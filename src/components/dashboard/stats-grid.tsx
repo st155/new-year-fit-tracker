@@ -75,6 +75,8 @@ interface StatsGridProps {
 
 export function StatsGrid({ userRole }: StatsGridProps) {
   const { user } = useAuth();
+  
+  // Состояние для участников
   const [stats, setStats] = useState<any>({
     bodyFat: null,
     weight: null,
@@ -83,15 +85,17 @@ export function StatsGrid({ userRole }: StatsGridProps) {
   });
   const [loading, setLoading] = useState(true);
   const [activeDetail, setActiveDetail] = useState<'weight' | 'bodyFat' | 'pullUps' | null>(null);
+  
+  // Состояние для тренеров
+  const [trainerStats, setTrainerStats] = useState({
+    activeParticipants: 0,
+    averageProgress: 0,
+    goalsCompleted: 0,
+    totalGoals: 0,
+    todayUpdates: 0
+  });
 
-  useEffect(() => {
-    if (user && userRole === "participant") {
-      fetchUserStats();
-    } else {
-      setLoading(false);
-    }
-  }, [user, userRole]);
-
+  // Функция для загрузки статистики участника
   const fetchUserStats = async () => {
     if (!user) return;
 
@@ -237,85 +241,89 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     }
   };
 
+  // Функция для загрузки статистики тренера
+  const fetchTrainerStats = async () => {
+    if (!user) return;
+
+    try {
+      // Получаем всех клиентов тренера
+      const { data: clients } = await supabase
+        .from('trainer_clients')
+        .select('client_id')
+        .eq('trainer_id', user.id)
+        .eq('active', true);
+
+      const clientIds = clients?.map(c => c.client_id) || [];
+      
+      // Получаем цели всех клиентов
+      const { data: goals } = await supabase
+        .from('goals')
+        .select('id, user_id')
+        .in('user_id', clientIds);
+
+      // Получаем измерения за сегодня
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMeasurements } = await supabase
+        .from('measurements')
+        .select('id')
+        .in('user_id', clientIds)
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`);
+
+      // Рассчитываем статистику
+      const totalGoals = goals?.length || 0;
+      const goalsWithMeasurements = goals ? await Promise.all(
+        goals.map(async (goal) => {
+          const { data: measurements } = await supabase
+            .from('measurements')
+            .select('id')
+            .eq('goal_id', goal.id)
+            .limit(1);
+          return measurements && measurements.length > 0;
+        })
+      ) : [];
+      
+      const completedGoals = goalsWithMeasurements.filter(Boolean).length;
+      const averageProgress = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+
+      setTrainerStats({
+        activeParticipants: clientIds.length,
+        averageProgress,
+        goalsCompleted: completedGoals,
+        totalGoals,
+        todayUpdates: todayMeasurements?.length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching trainer stats:', error);
+      // Fallback к статичным данным
+      setTrainerStats({
+        activeParticipants: 8,
+        averageProgress: 67,
+        goalsCompleted: 23,
+        totalGoals: 40,
+        todayUpdates: 12
+      });
+    }
+  };
+
+  // Хук для загрузки статистики участника
+  useEffect(() => {
+    if (user && userRole === "participant") {
+      fetchUserStats();
+    } else if (userRole === "participant") {
+      setLoading(false);
+    }
+  }, [user, userRole]);
+
+  // Хук для загрузки статистики тренера
+  useEffect(() => {
+    if (user && userRole === "trainer") {
+      fetchTrainerStats();
+    }
+  }, [user, userRole]);
+
+  // Рендер для тренера
   if (userRole === "trainer") {
-    const [trainerStats, setTrainerStats] = useState({
-      activeParticipants: 0,
-      averageProgress: 0,
-      goalsCompleted: 0,
-      totalGoals: 0,
-      todayUpdates: 0
-    });
-
-    useEffect(() => {
-      if (user) {
-        fetchTrainerStats();
-      }
-    }, [user]);
-
-    const fetchTrainerStats = async () => {
-      if (!user) return;
-
-      try {
-        // Получаем всех клиентов тренера
-        const { data: clients } = await supabase
-          .from('trainer_clients')
-          .select('client_id')
-          .eq('trainer_id', user.id)
-          .eq('active', true);
-
-        const clientIds = clients?.map(c => c.client_id) || [];
-        
-        // Получаем цели всех клиентов
-        const { data: goals } = await supabase
-          .from('goals')
-          .select('id, user_id')
-          .in('user_id', clientIds);
-
-        // Получаем измерения за сегодня
-        const today = new Date().toISOString().split('T')[0];
-        const { data: todayMeasurements } = await supabase
-          .from('measurements')
-          .select('id')
-          .in('user_id', clientIds)
-          .gte('created_at', `${today}T00:00:00`)
-          .lt('created_at', `${today}T23:59:59`);
-
-        // Рассчитываем статистику
-        const totalGoals = goals?.length || 0;
-        const goalsWithMeasurements = goals ? await Promise.all(
-          goals.map(async (goal) => {
-            const { data: measurements } = await supabase
-              .from('measurements')
-              .select('id')
-              .eq('goal_id', goal.id)
-              .limit(1);
-            return measurements && measurements.length > 0;
-          })
-        ) : [];
-        
-        const completedGoals = goalsWithMeasurements.filter(Boolean).length;
-        const averageProgress = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
-
-        setTrainerStats({
-          activeParticipants: clientIds.length,
-          averageProgress,
-          goalsCompleted: completedGoals,
-          totalGoals,
-          todayUpdates: todayMeasurements?.length || 0
-        });
-      } catch (error) {
-        console.error('Error fetching trainer stats:', error);
-        // Fallback к статичным данным
-        setTrainerStats({
-          activeParticipants: 8,
-          averageProgress: 67,
-          goalsCompleted: 23,
-          totalGoals: 40,
-          todayUpdates: 12
-        });
-      }
-    };
-
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -350,6 +358,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     );
   }
 
+  // Состояние загрузки
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -360,7 +369,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     );
   }
 
-  // Если открыт детальный вид
+  // Детальные виды
   if (activeDetail === 'weight') {
     return <WeightProgressDetail onBack={() => setActiveDetail(null)} />;
   }
@@ -373,6 +382,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     return <PullUpsProgressDetail onBack={() => setActiveDetail(null)} />;
   }
 
+  // Рендер для участника
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
