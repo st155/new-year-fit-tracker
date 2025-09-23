@@ -52,16 +52,25 @@ import { useToast } from '@/hooks/use-toast';
         setProgress(50);
         setStatus('syncing');
 
-        const { data, error } = await supabase.functions.invoke('withings-integration', {
-          body: {
-            action: 'handle-callback',
-            code,
-            state,
+        // Отправляем запрос напрямую на Edge Function как GET с параметрами в URL
+        const response = await fetch(`https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration?action=handle-callback&code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
+          method: 'GET',
+          headers: session?.access_token ? { 
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          } : {
+            'Content-Type': 'application/json'
           },
-          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
         });
 
-        if (error) throw new Error(error.message);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) throw new Error(data.error);
 
         setProgress(100);
         setStatus('success');
