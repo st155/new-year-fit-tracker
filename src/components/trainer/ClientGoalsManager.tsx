@@ -36,7 +36,7 @@ interface Goal {
 interface ClientGoalsManagerProps {
   clients: Client[];
   selectedClient: Client | null;
-  onSelectClient: (client: Client) => void;
+  onSelectClient: (client: Client | null) => void;
 }
 
 export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: ClientGoalsManagerProps) {
@@ -287,7 +287,7 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
                     <p className="text-muted-foreground">@{selectedClient.username}</p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={() => onSelectClient(null!)}>
+                <Button variant="outline" onClick={() => onSelectClient(null)}>
                   Выбрать другого
                 </Button>
               </div>

@@ -77,7 +77,7 @@ export default function TrainerDashboard() {
           client_id,
           assigned_at,
           active,
-          profiles (
+          profiles!trainer_clients_client_id_fkey (
             user_id,
             username,
             full_name,
@@ -255,7 +255,7 @@ export default function TrainerDashboard() {
           <ClientGoalsManager 
             clients={clients}
             selectedClient={selectedClient}
-            onSelectClient={setSelectedClient}
+            onSelectClient={(client) => setSelectedClient(client)}
           />
         </TabsContent>
 

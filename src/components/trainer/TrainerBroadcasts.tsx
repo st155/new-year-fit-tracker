@@ -108,7 +108,7 @@ export function TrainerBroadcasts() {
         .select(`
           id,
           client_id,
-          profiles (
+          profiles!trainer_clients_client_id_fkey (
             user_id,
             username,
             full_name

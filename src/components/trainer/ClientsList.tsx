@@ -305,7 +305,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                         onSelectClient(client);
                       }}
                     >
-                      Управление
+                      Подробнее
                     </Button>
                   </div>
                 </div>

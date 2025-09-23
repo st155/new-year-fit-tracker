@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: clients, error } = await supabaseClient
         .from('trainer_clients')
         .select(`
-          profiles (
+          profiles!trainer_clients_client_id_fkey (
             user_id,
             username,
             full_name
@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('challenge_participants')
         .select(`
           user_id,
-          profiles (
+          profiles!challenge_participants_user_id_fkey (
             username,
             full_name
           )
