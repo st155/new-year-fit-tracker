@@ -65,6 +65,25 @@ export function QuickWeightTracker() {
         return;
       }
 
+      // Fallback к body_composition
+      const { data: bodyCompositionData } = await supabase
+        .from('body_composition')
+        .select('weight, measurement_date')
+        .eq('user_id', user.id)
+        .not('weight', 'is', null)
+        .order('measurement_date', { ascending: false })
+        .limit(7);
+
+      if (bodyCompositionData && bodyCompositionData.length > 0) {
+        const weights = bodyCompositionData.map(item => ({
+          weight: item.weight,
+          date: item.measurement_date
+        }));
+        setWeightData(weights);
+        setLoading(false);
+        return;
+      }
+
       // Иначе используем данные из daily_health_summary
       const { data, error } = await supabase
         .from('daily_health_summary')

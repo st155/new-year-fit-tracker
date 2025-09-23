@@ -49,6 +49,52 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
     if (!user) return;
 
     try {
+      // Сначала проверяем данные Withings из metric_values
+      const { data: withingsData } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: false })
+        .limit(30);
+
+      if (withingsData && withingsData.length > 0) {
+        const entries = withingsData.map(item => ({
+          id: crypto.randomUUID(),
+          weight: item.value,
+          measurement_date: item.measurement_date,
+          created_at: new Date().toISOString()
+        }));
+        setWeightEntries(entries);
+        return;
+      }
+
+      // Fallback к body_composition
+      const { data: bodyCompositionData } = await supabase
+        .from('body_composition')
+        .select('id, weight, measurement_date, created_at')
+        .eq('user_id', user.id)
+        .not('weight', 'is', null)
+        .order('measurement_date', { ascending: false })
+        .limit(30);
+
+      if (bodyCompositionData && bodyCompositionData.length > 0) {
+        const entries = bodyCompositionData.map(item => ({
+          id: item.id,
+          weight: item.weight,
+          measurement_date: item.measurement_date,
+          created_at: item.created_at
+        }));
+        setWeightEntries(entries);
+        return;
+      }
+
+      // Fallback к daily_health_summary
       const { data, error } = await supabase
         .from('daily_health_summary')
         .select('id, weight, date, created_at')

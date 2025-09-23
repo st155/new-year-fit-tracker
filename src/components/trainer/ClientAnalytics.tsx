@@ -52,6 +52,20 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
 
       setMeasurements(measurementsData || []);
 
+      // Загружаем данные веса (приоритет Withings)
+      const { data: withingsWeightData } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', selectedClient.user_id)
+        .eq('user_metrics.metric_name', 'Вес')
+        .eq('user_metrics.source', 'withings')
+        .order('measurement_date', { ascending: true })
+        .limit(30);
+
       // Загружаем дневную статистику здоровья
       const { data: dailyStatsData } = await supabase
         .from('daily_health_summary')
@@ -60,7 +74,23 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
         .order('date', { ascending: true })
         .limit(30); // Последние 30 дней
 
-      setDailyStats(dailyStatsData || []);
+      // Если есть данные Withings, используем их вместо daily_health_summary для веса
+      let enhancedDailyStats = dailyStatsData || [];
+      if (withingsWeightData && withingsWeightData.length > 0) {
+        // Создаем карту дат для быстрого поиска
+        const weightMap = new Map();
+        withingsWeightData.forEach(item => {
+          weightMap.set(item.measurement_date, item.value);
+        });
+
+        // Обновляем данные веса в daily stats
+        enhancedDailyStats = enhancedDailyStats.map(item => ({
+          ...item,
+          weight: weightMap.get(item.date) || item.weight
+        }));
+      }
+
+      setDailyStats(enhancedDailyStats);
 
       // Загружаем данные здоровья за последний месяц
       const monthAgo = new Date();
