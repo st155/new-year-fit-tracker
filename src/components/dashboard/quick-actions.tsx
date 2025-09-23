@@ -25,24 +25,40 @@ export function QuickActions({ userRole }: QuickActionsProps) {
         </h3>
         
         <div className="grid grid-cols-1 gap-3">
-          <Button variant="fitness" className="h-12 justify-start">
+          <Button 
+            variant="fitness" 
+            className="h-12 justify-start"
+            onClick={() => navigate('/trainer-dashboard')}
+          >
             <BarChart3 className="w-4 h-4 mr-2" />
-            Аналитика команды
+            Панель управления
           </Button>
           
-          <Button variant="accent" className="h-12 justify-start">
+          <Button 
+            variant="accent" 
+            className="h-12 justify-start"
+            onClick={() => navigate('/trainer-dashboard')}
+          >
             <MessageSquare className="w-4 h-4 mr-2" />
-            Отправить сообщение
+            Сообщения клиентам
           </Button>
           
-          <Button variant="secondary" className="h-12 justify-start">
+          <Button 
+            variant="secondary" 
+            className="h-12 justify-start"
+            onClick={() => navigate('/trainer-dashboard')}
+          >
             <Calendar className="w-4 h-4 mr-2" />
             Планы тренировок
           </Button>
           
-          <Button variant="secondary" className="h-12 justify-start">
+          <Button 
+            variant="secondary" 
+            className="h-12 justify-start"
+            onClick={() => navigate('/trainer-dashboard')}
+          >
             <Target className="w-4 h-4 mr-2" />
-            Установить цели
+            Управление целями
           </Button>
         </div>
       </FitnessCard>

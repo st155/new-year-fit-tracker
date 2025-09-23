@@ -180,10 +180,10 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 </Button>
                 {isTrainer && (
                   <Button 
-                    variant={location.pathname === '/trainer' ? "default" : "ghost"}
+                    variant={location.pathname === '/trainer-dashboard' ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => navigate('/trainer')}
-                    className={location.pathname === '/trainer' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
+                    onClick={() => navigate('/trainer-dashboard')}
+                    className={location.pathname === '/trainer-dashboard' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -219,10 +219,10 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                 </Button>
                 {isTrainer && (
                   <Button 
-                    variant={location.pathname === '/trainer' ? "default" : "ghost"}
+                    variant={location.pathname === '/trainer-dashboard' ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => navigate('/trainer')}
-                    className={location.pathname === '/trainer' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
+                    onClick={() => navigate('/trainer-dashboard')}
+                    className={location.pathname === '/trainer-dashboard' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                   >
                     <Settings className="h-4 w-4 mr-1" />
                     Тренер
