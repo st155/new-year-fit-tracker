@@ -95,7 +95,7 @@ async function handleAuth(req: Request) {
     .from('whoop_oauth_states')
     .insert({ state, user_id: user.id });
 
-  const scope = 'offline_access read:recovery read:sleep read:workout read:profile read:body_measurement read:cycles';
+  const scope = 'offline read:recovery read:sleep read:workout read:profile read:body_measurement read:cycles';
   const authUrl = `${WHOOP_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}`;
 
   console.log('Generated auth URL:', authUrl);
