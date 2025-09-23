@@ -41,6 +41,7 @@ import {
 } from 'recharts';
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
 
 interface MetricValue {
   id: string;
@@ -792,8 +793,9 @@ export const EnhancedFitnessDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="whoop">Whoop</TabsTrigger>
             <TabsTrigger value="trends">Тренды</TabsTrigger>
             <TabsTrigger value="composition">Состав тела</TabsTrigger>
             <TabsTrigger value="activity">Активность</TabsTrigger>
@@ -998,6 +1000,10 @@ export const EnhancedFitnessDashboard = () => {
 
             {/* Календарь активности */}
             <ActivityCalendar weeklyData={weeklyData} />
+          </TabsContent>
+
+          <TabsContent value="whoop" className="space-y-6">
+            <WhoopMetrics selectedDate={selectedDate} />
           </TabsContent>
 
           <TabsContent value="trends" className="space-y-6">
