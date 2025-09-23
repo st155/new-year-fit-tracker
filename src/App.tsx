@@ -22,6 +22,7 @@ import WhoopCallback from "./pages/WhoopCallback";
 import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const App = () => (
                 </AppLayout>
               </ProtectedRoute>
             } />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
