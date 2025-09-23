@@ -24,6 +24,13 @@ serve(async (req) => {
     const url = new URL(req.url);
     let action = url.searchParams.get('action');
 
+    // If Withings redirected back with code/error, handle callback regardless of action
+    const code = url.searchParams.get('code');
+    const oauthError = url.searchParams.get('error');
+    if (code || oauthError) {
+      return await handleCallback(req);
+    }
+
     // Try to read action from JSON body without consuming the original request
     if (!action && req.method === 'POST') {
       try {
@@ -84,7 +91,7 @@ async function getAuthUrl(req: Request) {
     throw new Error(`Failed to store auth state: ${insertError.message}`);
   }
 
-  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration?action=handle-callback`;
+  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration`;
   
   // Use the correct Withings Authorization endpoint (account.withings.com)
   const authUrl = new URL(`https://account.withings.com/oauth2_user/authorize2`);
@@ -140,7 +147,7 @@ async function handleCallback(req: Request) {
   console.log('Using userId from state lookup:', userId);
 
   // Exchange code for tokens
-  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration?action=handle-callback`;
+  const redirectUri = `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/withings-integration`;
   
   const tokenResponse = await fetch(`${WITHINGS_API_URL}/v2/oauth2`, {
     method: 'POST',
