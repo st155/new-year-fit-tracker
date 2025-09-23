@@ -120,7 +120,7 @@ const CircularProgress = ({ value, max = 100, size = 120, strokeWidth = 12, labe
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold">{normalizedValue}</span>
+        <span className="text-2xl font-bold">{normalizedValue.toFixed(1)}</span>
         <span className="text-xs text-muted-foreground">{label}</span>
       </div>
     </div>
@@ -184,7 +184,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
         {target && value && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span>Прогресс</span>
+              <span>Progress</span>
               <span>{Math.round((value / target) * 100)}%</span>
             </div>
             <Progress value={(value / target) * 100} className="h-2" />
