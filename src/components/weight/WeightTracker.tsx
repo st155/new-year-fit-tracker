@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 interface WeightEntry {
   id: string;
@@ -409,30 +410,64 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
         </CardContent>
       </Card>
 
-      {/* История измерений */}
+      {/* График истории измерений */}
       {weightEntries.length > 1 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">История измерений</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {weightEntries.slice(1, 6).map((entry, index) => (
-                <div key={entry.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div>
-                    <span className="font-medium">{entry.weight} кг</span>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(entry.measurement_date), 'd MMMM', { locale: ru })}
-                    </p>
-                  </div>
-                  {index === 0 && weightEntries.length > 2 && (
-                    <div className="text-sm text-muted-foreground">
-                      {weightEntries[0].weight > entry.weight ? '-' : '+'}
-                      {Math.abs(weightEntries[0].weight - entry.weight).toFixed(1)} кг
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={weightEntries.slice(0, 10).reverse().map(entry => ({
+                    date: format(new Date(entry.measurement_date), 'd MMM', { locale: ru }),
+                    weight: entry.weight,
+                    fullDate: entry.measurement_date
+                  }))}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis 
+                    domain={['dataMin - 1', 'dataMax + 1']}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border rounded-lg p-3 shadow-lg">
+                            <p className="font-medium">{data.weight} кг</p>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(data.fullDate), 'd MMMM yyyy', { locale: ru })}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="weight" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, fill: 'hsl(var(--primary))' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
