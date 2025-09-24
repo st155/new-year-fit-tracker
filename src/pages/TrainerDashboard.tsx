@@ -13,6 +13,7 @@ import { ClientsList } from "@/components/trainer/ClientsList";
 import { TrainerPosts } from "@/components/trainer/TrainerPosts";
 import { TrainerBroadcasts } from "@/components/trainer/TrainerBroadcasts";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
+import { ClientDetailView } from "@/components/trainer/ClientDetailView";
 
 interface Client {
   id: string;
@@ -175,6 +176,18 @@ export default function TrainerDashboard() {
             <CardDescription>У вас нет прав тренера для доступа к этой странице</CardDescription>
           </CardHeader>
         </Card>
+      </div>
+    );
+  }
+
+  // Если выбран клиент, показываем детальную информацию
+  if (selectedClient) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <ClientDetailView 
+          client={selectedClient} 
+          onBack={() => setSelectedClient(null)} 
+        />
       </div>
     );
   }

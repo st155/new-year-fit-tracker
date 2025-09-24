@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { TrainerPostsFeed } from "@/components/notifications/TrainerPostsFeed";
+import { TrainerOverview } from "@/components/trainer/TrainerOverview";
+import { ClientDetailView } from "@/components/trainer/ClientDetailView";
 
 const Index = () => {
   const { user } = useAuth();
@@ -23,6 +25,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isTrainer, setIsTrainer] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -151,14 +154,19 @@ const Index = () => {
           <StatsGrid userRole={userRole} />
         </div>
         
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <div className="xl:col-span-2 space-y-6">
-            <GoalsSection userRole={userRole} />
-          </div>
-          
-          <div className="space-y-6">
-            {/* Панель тренера для тренеров */}
-            {isTrainer && (
+        {/* Показываем либо тренерскую панель, либо обычный контент */}
+        {isTrainer ? (
+          <div className="space-y-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
+            {selectedClient ? (
+              <ClientDetailView 
+                client={selectedClient} 
+                onBack={() => setSelectedClient(null)} 
+              />
+            ) : (
+              <TrainerOverview onClientSelect={setSelectedClient} />
+            )}
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -166,7 +174,7 @@ const Index = () => {
                     Панель тренера
                   </CardTitle>
                   <CardDescription>
-                    Управляйте своими подопечными и их прогрессом
+                    Доступ к расширенным функциям
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -176,7 +184,7 @@ const Index = () => {
                         Тренер
                       </Badge>
                       <span className="text-sm text-muted-foreground">
-                        Доступ к расширенным функциям
+                        Управление подопечными
                       </span>
                     </div>
                     <Link to="/trainer-dashboard">
@@ -187,31 +195,46 @@ const Index = () => {
                   </div>
                 </CardContent>
               </Card>
-            )}
-            
-            <IntegrationsCard />
-            <QuickActions userRole={userRole} />
-            <Leaderboard />
+              
+              <IntegrationsCard />
+            </div>
             
             <TrainerPostsFeed />
-            
-            {/* Добавляем кнопку для запуска тестов */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  🧪 Запустить тесты проекта
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-                <DialogHeader>
-                  <DialogTitle>Тестирование проекта</DialogTitle>
-                </DialogHeader>
-                <div className="flex-1 overflow-hidden">
-                  <AppTestSuite />
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
+            <div className="xl:col-span-2 space-y-6">
+              <GoalsSection userRole={userRole} />
+            </div>
+            
+            <div className="space-y-6">
+              <IntegrationsCard />
+              <QuickActions userRole={userRole} />
+              <Leaderboard />
+            </div>
+          </div>
+        )}
+        
+        {/* Общий контент для всех пользователей */}
+        <div className="space-y-6 mt-8">
+          {!isTrainer && <TrainerPostsFeed />}
+          
+          {/* Добавляем кнопку для запуска тестов */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full">
+                🧪 Запустить тесты проекта
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Тестирование проекта</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-hidden">
+                <AppTestSuite />
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         
         {/* Footer с ссылкой на Privacy Policy */}
