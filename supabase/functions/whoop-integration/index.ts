@@ -90,10 +90,8 @@ async function handleAuth(req: Request) {
     return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  // Генерируем state длиной 8 символов (требование Whoop)
-  const state = Array.from(crypto.getRandomValues(new Uint8Array(8)))
-    .map((b) => (b % 36).toString(36))
-    .join('');
+  // Генерируем UUID для state
+  const state = crypto.randomUUID();
   await supabase
     .from('whoop_oauth_states')
     .insert({ state, user_id: user.id });
