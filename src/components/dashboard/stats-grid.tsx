@@ -17,11 +17,57 @@ interface StatCardProps {
   variant?: "default" | "success" | "gradient";
   icon?: React.ReactNode;
   onClick?: () => void;
+  compact?: boolean;
 }
 
-function StatCard({ title, value, unit, change, target, variant = "default", icon, onClick }: StatCardProps) {
+function StatCard({ title, value, unit, change, target, variant = "default", icon, onClick, compact }: StatCardProps) {
   const isPositiveChange = change && change > 0;
   const hasTarget = target !== undefined;
+  
+  if (compact) {
+    return (
+      <FitnessCard 
+        variant={variant} 
+        className={`p-4 hover:scale-[1.02] transition-transform ${onClick ? 'cursor-pointer' : ''}`}
+        onClick={onClick}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {icon && <div className="text-current opacity-80">{icon}</div>}
+            <div>
+              <p className="text-sm font-medium opacity-90">{title}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-bold">{value}</span>
+                {unit && <span className="text-xs opacity-80">{unit}</span>}
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-right">
+            {hasTarget && (
+              <div className="flex items-center gap-1 text-xs opacity-70 mb-1">
+                <Target className="w-3 h-3" />
+                <span>Цель: {target}{unit}</span>
+              </div>
+            )}
+            {change !== undefined && (
+              <Badge 
+                variant={isPositiveChange ? "default" : "destructive"}
+                className="text-xs"
+              >
+                {isPositiveChange ? (
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                ) : (
+                  <TrendingDown className="w-3 h-3 mr-1" />
+                )}
+                {change > 0 ? '+' : ''}{change}%
+              </Badge>
+            )}
+          </div>
+        </div>
+      </FitnessCard>
+    );
+  }
   
   return (
     <FitnessCard 
@@ -390,10 +436,11 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         value={stats.bodyFat?.current ? stats.bodyFat.current.toFixed(1) : "—"}
         unit="%"
         target={stats.bodyFat?.target}
-        variant="gradient"
+        variant="default"
         change={stats.bodyFat?.change}
         icon={<Target className="w-4 h-4" />}
         onClick={() => setActiveDetail('bodyFat')}
+        compact
       />
       <StatCard
         title="Вес тела"
