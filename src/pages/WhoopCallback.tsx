@@ -66,23 +66,23 @@ const WhoopCallback = () => {
         if (session?.user) {
           console.log('User is authenticated, syncing Whoop data immediately');
           // Синхронизируем данные с JWT токеном
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          const { data, error: syncError } = await supabase.functions.invoke('whoop-integration', {
-            body: { 
-              action: 'callback',
-              code,
-              state
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
-            }
-          });
+          // Выполняем колбэк через прямой вызов Edge Function (надежнее на мобильных)
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+          const resp = await fetch(`https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback&code=${encodeURIComponent(code || '')}&state=${encodeURIComponent(state || '')}`,
+          { method: 'GET', headers });
+
+          if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(`HTTP ${resp.status}: ${txt}`);
+          }
+
+          const data = await resp.json();
 
           localStorage.removeItem('whoop_pending_code');
           
-          if (syncError) {
-            throw new Error(syncError.message);
-          }
+
 
           setProgress(100);
           setStatus('success');
