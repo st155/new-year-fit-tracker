@@ -56,13 +56,13 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Whoop integration error:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        message: error.message,
-        details: error.stack 
+        message: error?.message || 'Unknown error',
+        details: error?.stack || 'No stack trace available'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -497,9 +497,16 @@ async function handleSync(req: Request, body: any = {}) {
       try {
         accessToken = await refreshWhoopToken(user.id);
         console.log('Token refreshed successfully');
-      } catch (e) {
+      } catch (e: any) {
         console.error('Whoop token refresh failed:', e);
-        throw new Error('Whoop token expired, please reconnect');
+        return new Response(
+          JSON.stringify({ 
+            error: 'token_refresh_failed',
+            message: 'Whoop token expired and refresh failed. Please reconnect your Whoop account.',
+            details: e.message
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     } else {
       accessToken = tokenData.access_token;
@@ -507,7 +514,7 @@ async function handleSync(req: Request, body: any = {}) {
   }
 
   // Синхронизируем данные
-  const syncResult = await syncWhoopData(user.id, accessToken);
+  const syncResult = await syncWhoopData(user.id, accessToken!);
 
   return new Response(
     JSON.stringify({ 
@@ -796,8 +803,8 @@ async function syncWhoopData(userId: string, accessToken: string) {
       totalSaved: savedRecords
     };
 
-  } catch (error) {
-    await logWhoopEvent(userId, 'whoop_sync_error', 'Whoop sync failed', { error: error.message });
+  } catch (error: any) {
+    await logWhoopEvent(userId, 'whoop_sync_error', 'Whoop sync failed', { error: error?.message || 'Unknown error' });
     throw error;
   }
 }

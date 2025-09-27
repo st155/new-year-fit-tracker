@@ -246,11 +246,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
         userId
       );
 
-      toast({
-        title: 'Ошибка синхронизации',
-        description: error.message || 'Не удалось синхронизировать данные.',
-        variant: 'destructive'
-      });
+      // Если ошибка связана с авторизацией, предлагаем переподключиться
+      if (error.message?.includes('401') || error.message?.includes('Authorization') || error.message?.includes('expired') || error.message?.includes('non-2xx')) {
+        setStatus({ isConnected: false });
+        toast({
+          title: 'Требуется переподключение',
+          description: 'Токен доступа истек. Пожалуйста, переподключите Whoop.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Ошибка синхронизации',
+          description: error.message || 'Не удалось синхронизировать данные.',
+          variant: 'destructive'
+        });
+      }
     } finally {
       setIsSyncing(false);
     }
