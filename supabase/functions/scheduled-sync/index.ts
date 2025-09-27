@@ -104,12 +104,12 @@ Deno.serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Scheduled sync error:', error)
     return new Response(
       JSON.stringify({ 
         error: 'Scheduled sync failed', 
-        details: error.message,
+        details: error?.message || 'Unknown error',
         timestamp: new Date().toISOString()
       }),
       { 

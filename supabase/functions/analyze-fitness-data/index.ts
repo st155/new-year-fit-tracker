@@ -332,7 +332,7 @@ serve(async (req) => {
     }
 
     // Обновляем композицию тела если есть соответствующие данные
-    const bodyCompositionData = analysisData.extractedData.filter(d => 
+    const bodyCompositionData = analysisData.extractedData.filter((d: any) => 
       ['вес', 'процент жира', 'мышечная масса'].some(metric => 
         d.metric.toLowerCase().includes(metric)
       )
@@ -345,7 +345,7 @@ serve(async (req) => {
         photo_after_url: imageUrl
       };
 
-      bodyCompositionData.forEach(data => {
+      bodyCompositionData.forEach((data: any) => {
         const metric = data.metric.toLowerCase();
         if (metric.includes('вес')) {
           bodyData.weight = data.value;
@@ -410,22 +410,22 @@ function categorizeMetric(metricName: string): string {
   return 'fitness'; // default category
 }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in analyze-fitness-data function:', error);
     
     // Более понятные сообщения об ошибках для пользователя
     let errorMessage = 'Internal server error';
-    if (error.message?.includes('quota')) {
+    if (error?.message?.includes('quota')) {
       errorMessage = 'OpenAI API quota exceeded. Please contact support.';
-    } else if (error.message?.includes('api_key')) {
+    } else if (error?.message?.includes('api_key')) {
       errorMessage = 'API configuration error. Please contact support.';
-    } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+    } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
       errorMessage = 'Network error. Please try again later.';
     }
     
     return new Response(JSON.stringify({ 
       error: errorMessage,
-      details: error.message,
+      details: error?.message || 'Unknown error',
       success: false
     }), {
       status: 500,
