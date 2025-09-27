@@ -64,8 +64,8 @@ const WhoopCallback = () => {
 
         // Если есть сессия - синхронизируем, если нет - сохраняем код для отложенной синхронизации
         if (session?.user) {
-          console.log('User is authenticated, syncing Whoop data immediately');
-          // Синхронизируем данные с JWT токеном
+          console.log('User is authenticated, processing Whoop callback');
+          // Обрабатываем callback и синхронизируем данные
           // Выполняем колбэк через прямой вызов Edge Function (надежнее на мобильных)
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;

@@ -214,7 +214,18 @@ async function handleCallback(req: Request) {
       throw new Error(`Failed to save tokens: ${saveError.message}`);
     }
     
-    console.log('Tokens saved successfully, cleaning up state...');
+    console.log('Tokens saved successfully to database');
+
+    // Сразу синхронизируем данные с новыми токенами
+    let syncResult = null;
+    try {
+      console.log('Starting immediate data sync after token exchange...');
+      syncResult = await syncWhoopData(mapping.user_id, tokens.access_token);
+      console.log('Sync completed successfully:', syncResult);
+    } catch (syncError: any) {
+      console.error('Sync error during callback (non-critical):', syncError?.message);
+      // Не прерываем процесс при ошибке синхронизации
+    }
 
     // Очистим state
     const { error: cleanupError } = await supabase.from('whoop_oauth_states').delete().eq('state', state);
@@ -225,9 +236,12 @@ async function handleCallback(req: Request) {
     console.log('Callback process completed successfully');
     
     if (isJson) {
-      return new Response(JSON.stringify({ connected: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ 
+        connected: true,
+        syncResult: syncResult || { message: 'Sync will be attempted later' }
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const redirectUrl = `https://elite10.club/whoop-callback?connected=1`;
+    const redirectUrl = `https://elite10.club/whoop-callback?connected=1${syncResult ? '&synced=1' : ''}`;
     return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
 
   } catch (error: any) {
