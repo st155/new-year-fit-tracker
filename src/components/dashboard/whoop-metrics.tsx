@@ -49,12 +49,42 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
     }
   }, [user, selectedDate, selectedPeriod]);
 
+  // Real-time updates для метрик
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('metric-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'metric_values',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Real-time metric update:', payload);
+          // Обновляем данные при изменениях
+          fetchWhoopMetrics();
+          fetchAggregatedMetrics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchWhoopMetrics = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      
+      console.log('WhoopMetrics: Fetching data for date:', dateStr, 'user:', user.id);
       
       const { data } = await supabase
         .from('metric_values')
@@ -94,6 +124,8 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       }, {} as Record<string, any>) || {};
 
       const formattedMetrics = Object.values(latestMetrics) as WhoopMetric[];
+      
+      console.log('WhoopMetrics: Found metrics:', formattedMetrics.length, 'for date:', dateStr);
 
       setMetrics(formattedMetrics);
     } catch (error) {
