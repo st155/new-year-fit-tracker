@@ -69,17 +69,47 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
     
     setLoading(true);
     try {
-      const { data: goalsData, error: goalsError } = await supabase
+      // Ищем активный челлендж пользователя
+      const { data: participantData } = await supabase
+        .from('challenge_participants')
+        .select(`
+          challenge_id,
+          challenges!inner ( is_active )
+        `)
+        .eq('user_id', user.id)
+        .eq('challenges.is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      // Загружаем личные цели пользователя
+      const { data: personalGoals, error: personalErr } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_personal', true);
 
-      if (goalsError) throw goalsError;
+      if (personalErr) throw personalErr;
 
-      if (goalsData) {
+      let mergedGoals: Goal[] = personalGoals || [];
+
+      // Если пользователь в активном челлендже, добавляем цели челленджа
+      if (participantData?.challenge_id) {
+        const { data: challengeGoals, error: chErr } = await supabase
+          .from('goals')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('challenge_id', participantData.challenge_id)
+          .eq('is_personal', false);
+        if (chErr) throw chErr;
+        if (challengeGoals) {
+          // Помещаем цели челленджа впереди списка
+          mergedGoals = [...challengeGoals, ...mergedGoals];
+        }
+      }
+
+      if (mergedGoals.length) {
         const goalsWithProgress = await Promise.all(
-          goalsData.map(async (goal) => {
+          mergedGoals.map(async (goal) => {
             const { data: measurements } = await supabase
               .from('measurements')
               .select('value, measurement_date, created_at, source')
@@ -90,36 +120,25 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
 
             const currentValue = measurements?.[0]?.value || 0;
             
-            // Для некоторых метрик меньше = лучше (время)
             let progress = 0;
             if (goal.target_value) {
               if (isTimeBasedGoal(goal.goal_name, goal.target_unit)) {
-                // Конвертируем времена из формата MM.SS в десятичные минуты
                 const currentDecimal = convertTimeToDecimal(currentValue);
                 const targetDecimal = convertTimeToDecimal(goal.target_value);
-                
-                // Для времени: прогресс = (цель / текущее) * 100, но не более 100%
                 if (currentDecimal > 0) {
                   progress = Math.min(100, Math.round((targetDecimal / currentDecimal) * 100));
                 }
               } else if (isLowerIsBetterGoal(goal.goal_name, goal.goal_type)) {
-                // Для метрик где меньше = лучше (процент жира, вес)
                 if (currentValue <= 0) {
                   progress = 0;
                 } else if (currentValue <= goal.target_value) {
-                  // Если достигли цели или лучше
                   progress = 100;
                 } else {
-                  // Если текущее значение больше цели, рассчитываем прогресс как обратный процент
-                  // Например: цель 11%, текущий 21.7%
-                  // Прогресс = (1 - (текущий - цель) / текущий) * 100
-                  // Но ограничиваем максимальное отклонение до разумных пределов
-                  const maxReasonableValue = goal.target_value * 3; // максимум в 3 раза больше цели
+                  const maxReasonableValue = goal.target_value * 3;
                   const cappedCurrent = Math.min(currentValue, maxReasonableValue);
                   progress = Math.max(0, Math.round(((maxReasonableValue - cappedCurrent) / (maxReasonableValue - goal.target_value)) * 100));
                 }
               } else {
-                // Для обычных метрик: больше = лучше
                 progress = Math.min(100, Math.round((currentValue / goal.target_value) * 100));
               }
             }
@@ -138,11 +157,12 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
               rawGoal: goal,
               displayCurrent: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(currentValue) : currentValue.toString(),
               displayTarget: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(goal.target_value || 0) : (goal.target_value || 0).toString()
-            };
+            } as DisplayGoal;
           })
         );
-        
         setGoals(goalsWithProgress);
+      } else {
+        setGoals([]);
       }
     } catch (error: any) {
       console.error('Error fetching goals:', error);
