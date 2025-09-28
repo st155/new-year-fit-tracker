@@ -28,10 +28,11 @@ serve(async (req) => {
     let code: string | null = null;
     let state: string | null = null;
     let action: string | null = null;
+    let parsedBody: any = {};
     
-    // Для POST запросов читаем body, для GET - параметры URL
+    // Для POST запросов читаем body ОДИН раз
     if (req.method === 'POST') {
-      const parsedBody = await req.json().catch(() => ({}));
+      parsedBody = await req.json().catch(() => ({}));
       action = parsedBody.action;
       code = parsedBody.code;
       state = parsedBody.state;
@@ -47,18 +48,17 @@ serve(async (req) => {
 
     // Если есть code параметр, то это callback от Whoop
     if (code || error) {
-      return await handleCallback(req);
+      return await handleCallback(req, code, state, error);
     }
 
     switch (action) {
       case 'auth':
         return await handleAuth(req);
       case 'callback':
-        return await handleCallback(req);
+        return await handleCallback(req, code, state, error);
       case 'check-status':
         return await handleCheckStatus(req);
       case 'sync':
-        const parsedBody = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
         return await handleSync(req, parsedBody);
       case 'disconnect':
         return await handleDisconnect(req);
@@ -117,14 +117,18 @@ async function handleAuth(req: Request) {
 }
 
 // Обрабатываем callback от Whoop
-async function handleCallback(req: Request) {
+async function handleCallback(req: Request, code?: string | null, state?: string | null, error?: string | null) {
   const url = new URL(req.url);
   const isJson = (req.headers.get('content-type') || '').includes('application/json');
-  const body = await req.clone().json().catch(() => ({} as any));
+  let body: any = {};
 
-  const code = url.searchParams.get('code') || body?.code || undefined;
-  const state = url.searchParams.get('state') || body?.state || undefined;
-  const error = url.searchParams.get('error') || body?.error || undefined;
+  // Если параметры не переданы извне, пытаемся получить их из URL/тела
+  if (code === undefined && state === undefined && error === undefined) {
+    body = await req.clone().json().catch(() => ({} as any));
+    code = url.searchParams.get('code') || body?.code || undefined;
+    state = url.searchParams.get('state') || body?.state || undefined;
+    error = url.searchParams.get('error') || body?.error || undefined;
+  }
 
   console.log('Callback received:', { code: !!code, state: !!state, error, isJson });
 
