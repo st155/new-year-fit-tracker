@@ -25,16 +25,27 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    // Read body ONCE to avoid stream consumption issues
-    const parsedBody = await req.clone().json().catch(() => ({}));
-    const action = url.searchParams.get('action') || parsedBody?.action;
+    let code: string | null = null;
+    let state: string | null = null;
+    let action: string | null = null;
+    
+    // Для POST запросов читаем body, для GET - параметры URL
+    if (req.method === 'POST') {
+      const parsedBody = await req.json().catch(() => ({}));
+      action = parsedBody.action;
+      code = parsedBody.code;
+      state = parsedBody.state;
+    } else {
+      action = url.searchParams.get('action');
+      code = url.searchParams.get('code');
+      state = url.searchParams.get('state');
+    }
+    
+    const error = url.searchParams.get('error');
 
     console.log(`Whoop integration request: ${action}`);
 
     // Если есть code параметр, то это callback от Whoop
-    const code = url.searchParams.get('code');
-    const error = url.searchParams.get('error');
-    
     if (code || error) {
       return await handleCallback(req);
     }
@@ -47,6 +58,7 @@ serve(async (req) => {
       case 'check-status':
         return await handleCheckStatus(req);
       case 'sync':
+        const parsedBody = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
         return await handleSync(req, parsedBody);
       case 'disconnect':
         return await handleDisconnect(req);
