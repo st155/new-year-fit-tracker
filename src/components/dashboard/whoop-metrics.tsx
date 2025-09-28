@@ -62,6 +62,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           value,
           measurement_date,
           notes,
+          created_at,
           user_metrics!inner (
             metric_name,
             metric_category,
@@ -73,16 +74,26 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
         .eq('measurement_date', dateStr)
         .eq('user_metrics.source', 'whoop')
         .order('user_metrics.metric_category')
-        .order('user_metrics.metric_name');
+        .order('user_metrics.metric_name')
+        .order('created_at', { ascending: false });
 
-      const formattedMetrics = data?.map(item => ({
-        metric_name: item.user_metrics.metric_name,
-        metric_category: item.user_metrics.metric_category,
-        unit: item.user_metrics.unit,
-        value: item.value,
-        measurement_date: item.measurement_date,
-        notes: item.notes,
-      })) || [];
+      // Группируем по метрике и берем последнюю (самую свежую) запись
+      const latestMetrics = data?.reduce((acc, item) => {
+        const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
+        if (!acc[key]) {
+          acc[key] = {
+            metric_name: item.user_metrics.metric_name,
+            metric_category: item.user_metrics.metric_category,
+            unit: item.user_metrics.unit,
+            value: item.value,
+            measurement_date: item.measurement_date,
+            notes: item.notes,
+          };
+        }
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      const formattedMetrics = Object.values(latestMetrics) as WhoopMetric[];
 
       setMetrics(formattedMetrics);
     } catch (error) {
