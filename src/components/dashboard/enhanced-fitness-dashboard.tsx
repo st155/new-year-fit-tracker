@@ -793,12 +793,12 @@ export const EnhancedFitnessDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="whoop">Whoop</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="composition">Body Composition</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="whoop" className="text-xs sm:text-sm">Whoop</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+            <TabsTrigger value="composition" className="text-xs sm:text-sm">Body</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
