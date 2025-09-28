@@ -65,20 +65,19 @@ const WhoopCallback = () => {
         // Если есть сессия - синхронизируем, если нет - сохраняем код для отложенной синхронизации
         if (session?.user) {
           console.log('User is authenticated, processing Whoop callback');
-          // Обрабатываем callback и синхронизируем данные
-          // Выполняем колбэк через прямой вызов Edge Function (надежнее на мобильных)
-          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-          if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+          
+          // Используем Supabase functions.invoke для вызова Edge Function
+          const { data, error } = await supabase.functions.invoke('whoop-integration', {
+            body: { 
+              action: 'callback',
+              code: code || '',
+              state: state || ''
+            }
+          });
 
-          const resp = await fetch(`https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback&code=${encodeURIComponent(code || '')}&state=${encodeURIComponent(state || '')}`,
-          { method: 'GET', headers });
-
-          if (!resp.ok) {
-            const txt = await resp.text();
-            throw new Error(`HTTP ${resp.status}: ${txt}`);
+          if (error) {
+            throw new Error(error.message || 'Ошибка вызова функции');
           }
-
-          const data = await resp.json();
 
           localStorage.removeItem('whoop_pending_code');
           
