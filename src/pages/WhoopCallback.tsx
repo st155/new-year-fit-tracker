@@ -114,9 +114,11 @@ const WhoopCallback = () => {
           }, 2000);
         }
 
-      } catch (error: any) {
+      } catch (err: any) {
+        console.error('Whoop callback error:', err);
+        const details = err?.context?.body || err?.message || 'Произошла неизвестная ошибка';
         setStatus('error');
-        setErrorMessage(error.message || 'Произошла неизвестная ошибка');
+        setErrorMessage(details);
       }
     };
 
