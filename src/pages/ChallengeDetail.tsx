@@ -64,7 +64,8 @@ const ChallengeDetail = () => {
         const { data: goalsData } = await supabase
           .from('goals')
           .select('*')
-          .eq('challenge_id', id);
+          .eq('challenge_id', id)
+          .eq('is_personal', false);
 
         setGoals(goalsData || []);
 

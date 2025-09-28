@@ -100,6 +100,7 @@ export function Leaderboard() {
               .from('goals')
               .select('id')
               .eq('user_id', participant.user_id)
+              .eq('challenge_id', participantData.challenge_id)
               .eq('is_personal', false);
 
             const { data: measurements } = await supabase
