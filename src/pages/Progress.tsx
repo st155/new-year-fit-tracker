@@ -34,7 +34,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressChart } from "@/components/ui/progress-chart";
 
-
 interface Goal {
   id: string;
   goal_name: string;
@@ -88,38 +87,23 @@ const ProgressPage = () => {
   const fetchGoalsAndMeasurements = async () => {
     if (!user) return;
     
-    console.log('Fetching goals and measurements for user:', user.id);
-
     try {
-      // Загружаем цели пользователя (сначала загружаем простые цели)
       const { data: goalsData, error: goalsError } = await supabase
         .from('goals')
         .select('id, goal_name, goal_type, target_value, target_unit')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (goalsError) {
-        console.error('Goals error:', goalsError);
-        throw goalsError;
-      }
+      if (goalsError) throw goalsError;
 
-      console.log('Goals loaded:', goalsData);
-
-      // Загружаем все измерения
       const { data: measurementsData, error: measurementsError } = await supabase
         .from('measurements')
         .select('*')
         .eq('user_id', user.id)
         .order('measurement_date', { ascending: false });
 
-      if (measurementsError) {
-        console.error('Measurements error:', measurementsError);
-        throw measurementsError;
-      }
+      if (measurementsError) throw measurementsError;
 
-      console.log('Measurements loaded:', measurementsData);
-
-      // Объединяем данные вручную
       const goalsWithMeasurements = (goalsData || []).map(goal => ({
         ...goal,
         measurements: (measurementsData || []).filter(m => m.goal_id === goal.id).sort((a, b) => 
@@ -127,15 +111,13 @@ const ProgressPage = () => {
         )
       }));
 
-      console.log('Goals with measurements:', goalsWithMeasurements);
-
       setGoals(goalsWithMeasurements);
       setMeasurements(measurementsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
         title: "Ошибка загрузки данных",
-        description: `Не удалось загрузить данные: ${error.message}`,
+        description: "Не удалось загрузить данные",
         variant: "destructive",
       });
     } finally {
@@ -147,8 +129,7 @@ const ProgressPage = () => {
     if (!user) return;
 
     try {
-      // Сначала проверяем данные Withings из metric_values
-      const { data: withingsData, error: withingsError } = await supabase
+      const { data: withingsData } = await supabase
         .from('metric_values')
         .select(`
           value,
@@ -160,8 +141,6 @@ const ProgressPage = () => {
         .eq('user_metrics.source', 'withings')
         .order('measurement_date', { ascending: false })
         .limit(2);
-
-      console.log('Withings weight data:', withingsData);
 
       if (withingsData && withingsData.length > 0) {
         const currentWeight = withingsData[0].value;
@@ -176,7 +155,6 @@ const ProgressPage = () => {
         return;
       }
 
-      // Проверяем body_composition для веса
       const { data: bodyCompositionData } = await supabase
         .from('body_composition')
         .select('weight, measurement_date')
@@ -198,7 +176,6 @@ const ProgressPage = () => {
         return;
       }
 
-      // Иначе используем данные из daily_health_summary
       const { data, error } = await supabase
         .from('daily_health_summary')
         .select('weight, date')
@@ -229,7 +206,6 @@ const ProgressPage = () => {
     if (!user) return;
 
     try {
-      // Сначала проверяем данные Withings из metric_values
       const { data: withingsBodyFat } = await supabase
         .from('metric_values')
         .select(`
@@ -243,7 +219,6 @@ const ProgressPage = () => {
         .order('measurement_date', { ascending: false })
         .limit(10);
 
-      // Получаем последние данные состава тела (fallback)
       const { data: bodyComposition } = await supabase
         .from('body_composition')
         .select('body_fat_percentage, measurement_date')
@@ -251,7 +226,6 @@ const ProgressPage = () => {
         .order('measurement_date', { ascending: false })
         .limit(2);
 
-      // Получаем цель по жиру
       const { data: bodyFatGoal } = await supabase
         .from('goals')
         .select('target_value')
@@ -264,7 +238,6 @@ const ProgressPage = () => {
       let bodyFatChange = null;
       let currentBodyFat = null;
 
-      // Используем данные Withings если есть, иначе body_composition
       if (withingsBodyFat && withingsBodyFat.length > 0) {
         currentBodyFat = withingsBodyFat[0].value;
         if (withingsBodyFat.length > 1) {
@@ -340,22 +313,18 @@ const ProgressPage = () => {
     
     const latestMeasurement = goal.measurements[0];
     
-    // Для целей где меньше = лучше (например, процент жира, вес)
     if (goal.goal_type === 'body_composition' || 
         goal.goal_name.toLowerCase().includes('жир') || 
         goal.goal_name.toLowerCase().includes('вес')) {
       
       if (latestMeasurement.value <= goal.target_value) {
-        // Если достигли цели или лучше
         return 100;
       } else {
-        // Если хуже цели, показываем насколько далеко от цели
         const deviation = ((latestMeasurement.value - goal.target_value) / goal.target_value) * 100;
         return Math.max(0, Math.round(100 - deviation));
       }
     }
     
-    // Для обычных целей (больше = лучше)
     const progress = (latestMeasurement.value / goal.target_value) * 100;
     return Math.min(100, Math.max(0, Math.round(progress)));
   };
@@ -363,12 +332,10 @@ const ProgressPage = () => {
   const getFilteredGoals = () => {
     let filtered = goals;
 
-    // Фильтр по типу цели
     if (goalTypeFilter !== "all") {
       filtered = filtered.filter(goal => goal.goal_type === goalTypeFilter);
     }
 
-    // Фильтр по дате последнего измерения
     if (dateFilter !== "all") {
       const now = new Date();
       filtered = filtered.filter(goal => {
@@ -388,7 +355,6 @@ const ProgressPage = () => {
       });
     }
 
-    // Сортировка
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "progress":
@@ -428,37 +394,277 @@ const ProgressPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto p-3 sm:p-6">
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-4 w-96" />
+        <div className="space-y-8 pb-8">
+          <div className="px-4">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-48" />
+                  <Skeleton className="h-4 w-96" />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Skeleton className="h-10 w-32" />
+                  <Skeleton className="h-10 w-40" />
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Skeleton className="h-10 w-32" />
-                <Skeleton className="h-10 w-40" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                    <Skeleton className="h-2 w-full" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewingGoalDetail) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="space-y-8 pb-8">
+          <div className="px-4">
+            <GoalProgressDetail 
+              goal={viewingGoalDetail} 
+              onBack={() => setViewingGoalDetail(null)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="space-y-8 pb-8">
+        {/* Заголовок */}
+        <div className="px-4 py-3">
+          <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Мой прогресс
+                </h1>
+                <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+                  Отслеживайте свои достижения и добавляйте новые измерения. 
+                  <strong className="block sm:inline"> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={() => navigate('/goals/create')}
+                  variant="outline"
+                  className="bg-gradient-accent hover:opacity-90 w-full sm:w-auto"
+                  size="sm"
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Новая цель
+                </Button>
+
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Добавить измерение
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto mx-2">
+                    <DialogHeader>
+                      <DialogTitle>Добавить новое измерение</DialogTitle>
+                      <DialogDescription>
+                        <div className="space-y-2">
+                          <p>Выберите цель и введите результат измерения</p>
+                          <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                            <strong>💡 Подсказка:</strong> Если нужной цели нет в списке, сначала создайте её через кнопку "Новая цель"
+                          </div>
+                        </div>
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Tabs defaultValue="measurement" className="space-y-4">
+                      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
+                        <TabsTrigger value="measurement" className="text-xs sm:text-sm">Ручной ввод</TabsTrigger>
+                        <TabsTrigger value="photo" className="text-xs sm:text-sm">ИИ-анализ</TabsTrigger>
+                        <TabsTrigger value="integrations" className="text-xs sm:text-sm">Интеграции</TabsTrigger>
+                        <TabsTrigger value="manual-photo" className="text-xs sm:text-sm">Фото прогресса</TabsTrigger>
+                        <TabsTrigger value="test" className="text-xs sm:text-sm">Тестирование</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="measurement" className="space-y-4">
+                        <div>
+                          <Label htmlFor="goal-select">Цель</Label>
+                          <Select onValueChange={(value) => {
+                            const goal = goals.find(g => g.id === value);
+                            setSelectedGoal(goal || null);
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите цель" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {goals.map((goal) => (
+                                <SelectItem key={goal.id} value={goal.id}>
+                                  {goal.goal_name} ({goal.target_unit})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="value">Результат</Label>
+                          <Input
+                            id="value"
+                            type="number"
+                            step="0.1"
+                            placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
+                            value={measurementForm.value}
+                            onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="date">Дата измерения</Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            value={measurementForm.measurement_date}
+                            onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="notes">Заметки (необязательно)</Label>
+                          <Textarea
+                            id="notes"
+                            placeholder="Дополнительная информация..."
+                            value={measurementForm.notes}
+                            onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
+                          />
+                        </div>
+
+                        <Button onClick={addMeasurement} className="w-full">
+                          Добавить измерение
+                        </Button>
+                      </TabsContent>
+
+                      <TabsContent value="photo" className="space-y-4">
+                        <AIPhotoUpload />
+                      </TabsContent>
+
+                      <TabsContent value="integrations" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+                        <div className="space-y-4 pr-2">
+                          <WhoopIntegration userId={user?.id || ''} />
+                          <AppleHealthIntegration />
+                          <AppleHealthUpload />
+                          <GarminIntegration userId={user?.id || ''} />
+                          
+                          <div className="bg-blue-50 p-4 rounded-lg text-sm">
+                            <h4 className="font-semibold mb-2">Как работают интеграции:</h4>
+                            <ul className="space-y-1 text-muted-foreground">
+                              <li>• Данные загружаются автоматически в фоновом режиме</li>
+                              <li>• Измерения добавляются к соответствующим целям</li>
+                              <li>• Можно комбинировать ручной ввод и интеграции</li>
+                              <li>• История сохраняется и синхронизируется</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="manual-photo" className="space-y-4">
+                        <PhotoUpload 
+                          onPhotoUploaded={(url) => {
+                            setMeasurementForm(prev => ({ ...prev, photo_url: url }));
+                            toast({
+                              title: "Фото загружено!",
+                              description: "Фото добавлено к измерению",
+                            });
+                          }}
+                        />
+                        <div className="bg-green-50 p-4 rounded-lg text-sm">
+                          <h4 className="font-semibold mb-2">Фото прогресса:</h4>
+                          <ul className="space-y-1 text-muted-foreground">
+                            <li>• Делайте фото в одинаковых условиях</li>
+                            <li>• Одинаковое освещение и ракурс</li>
+                            <li>• Фиксируйте изменения каждую неделю</li>
+                            <li>• Данные автоматически разделяются между целями и общей статистикой</li>
+                            <li>• Интеграции работают в фоновом режиме</li>
+                          </ul>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="test" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+                        <div className="space-y-4 pr-2">
+                          <AppTestSuite />
+                          <ErrorLogsViewer />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Card key={index} className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-6 w-32" />
-                    <Skeleton className="h-4 w-16" />
+        </div>
+
+        <div className="px-4 space-y-6">
+          {/* Контроль веса и состава тела */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <WeightTracker />
+            
+            {/* Карточка процента жира */}
+            <FitnessCard 
+              variant="gradient" 
+              className="p-6"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-4 w-4 text-current opacity-80" />
+                    <p className="text-sm font-medium opacity-90">Процент жира</p>
+                    {bodyFatData.current && (
+                      <Badge variant="secondary" className="text-xs">Withings</Badge>
+                    )}
                   </div>
-                  <Skeleton className="h-2 w-full" />
-                  <div className="flex justify-between">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-24" />
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-current">
+                        {bodyFatData.current ? bodyFatData.current.toFixed(1) : '--'}
+                      </span>
+                      <span className="text-sm opacity-80">%</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs opacity-70">
+                        цель: {bodyFatData.target}%
+                      </span>
+                      {bodyFatData.change !== null && (
+                        <Badge 
+                          variant={bodyFatData.change < 0 ? "secondary" : "destructive"} 
+                          className="text-xs"
+                        >
+                          {bodyFatData.change > 0 ? '+' : ''}{bodyFatData.change}%
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </Card>
-            ))}
-            </div>
+              </div>
+            </FitnessCard>
           </div>
 
           {/* Фильтры и сортировка */}
@@ -499,546 +705,123 @@ const ProgressPage = () => {
               </SelectContent>
             </Select>
           </div>
-        </div>
-    );
-  }
 
-  // Если просматриваем детали цели
-  if (viewingGoalDetail) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto p-3 sm:p-6">
-          <GoalProgressDetail 
-            goal={viewingGoalDetail} 
-            onBack={() => setViewingGoalDetail(null)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-3 sm:p-6">
-        {/* Заголовок */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Мой прогресс
-              </h1>
-              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                Отслеживайте свои достижения и добавляйте новые измерения. 
-                <strong className="block sm:inline"> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Button
-                onClick={() => navigate('/goals/create')}
-                variant="outline"
-                className="bg-gradient-accent hover:opacity-90 w-full sm:w-auto"
-                size="sm"
-              >
-                <Target className="h-4 w-4 mr-2" />
-                Новая цель
-              </Button>
-
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Добавить измерение
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto mx-2">
-                  <DialogHeader>
-                    <DialogTitle>Добавить новое измерение</DialogTitle>
-                    <DialogDescription>
-                      <div className="space-y-2">
-                        <p>Выберите цель и введите результат измерения</p>
-                        <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                          <strong>💡 Подсказка:</strong> Если нужной цели нет в списке, сначала создайте её через кнопку "Новая цель"
-                        </div>
-                      </div>
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Tabs defaultValue="measurement" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
-                      <TabsTrigger value="measurement" className="text-xs sm:text-sm">Ручной ввод</TabsTrigger>
-                      <TabsTrigger value="photo" className="text-xs sm:text-sm">ИИ-анализ</TabsTrigger>
-                      <TabsTrigger value="integrations" className="text-xs sm:text-sm">Интеграции</TabsTrigger>
-                      <TabsTrigger value="manual-photo" className="text-xs sm:text-sm">Фото прогресса</TabsTrigger>
-                      <TabsTrigger value="test" className="text-xs sm:text-sm">Тестирование</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="measurement" className="space-y-4">
-                      <div>
-                        <Label htmlFor="goal-select">Цель</Label>
-                        <Select onValueChange={(value) => {
-                          const goal = goals.find(g => g.id === value);
-                          setSelectedGoal(goal || null);
-                        }}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите цель" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {goals.map((goal) => (
-                              <SelectItem key={goal.id} value={goal.id}>
-                                {goal.goal_name} ({goal.target_unit})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="value">Результат</Label>
-                        <Input
-                          id="value"
-                          type="number"
-                          step="0.1"
-                          placeholder={selectedGoal ? `Введите значение в ${selectedGoal.target_unit}` : "Значение"}
-                          value={measurementForm.value}
-                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, value: e.target.value }))}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="date">Дата измерения</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={measurementForm.measurement_date}
-                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, measurement_date: e.target.value }))}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="notes">Заметки (опционально)</Label>
-                        <Textarea
-                          id="notes"
-                          placeholder="Добавьте заметки о тренировке или условиях измерения..."
-                          value={measurementForm.notes}
-                          onChange={(e) => setMeasurementForm(prev => ({ ...prev, notes: e.target.value }))}
-                        />
-                      </div>
-
-                      <Button onClick={addMeasurement} className="w-full">
-                        Добавить измерение
-                      </Button>
-                    </TabsContent>
-
-                    <TabsContent value="manual-photo" className="space-y-4">
-                      <div>
-                        <Label className="text-base font-medium">Фото прогресса</Label>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Добавьте фото для визуального отслеживания прогресса
-                        </p>
-                        <PhotoUpload
-                          onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
-                          existingPhotoUrl={measurementForm.photo_url}
-                          label="Добавить фото прогресса"
-                        />
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="photo" className="space-y-4">
-                      <div>
-                        <Label className="text-base font-medium">Скриншот фитнес-трекера</Label>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Загрузите скриншот с данными трекера - ИИ автоматически извлечет все показатели
-                        </p>
-                        <AIPhotoUpload
-                          onDataExtracted={(result) => {
-                            if (result.success && result.saved) {
-                              fetchGoalsAndMeasurements();
-                              setIsAddDialogOpen(false);
-                              setMeasurementForm({ value: '', notes: '', measurement_date: new Date().toISOString().split('T')[0], photo_url: '' });
-                              setSelectedGoal(null);
-                            }
-                          }}
-                          onPhotoUploaded={(url) => setMeasurementForm(prev => ({ ...prev, photo_url: url }))}
-                          existingPhotoUrl={measurementForm.photo_url}
-                          goalId={selectedGoal?.id}
-                          label="Загрузить скриншот трекера"
-                        />
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="integrations" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
-                      <div>
-                        <Label className="text-base font-medium">Интеграции фитнес-устройств</Label>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Подключите ваши фитнес-устройства для автоматической синхронизации данных
-                        </p>
-                        
-                        <div className="space-y-4 pr-2">
-                          <WhoopIntegration userId={user?.id || ''} />
-                          
-                          <AppleHealthUpload onUploadComplete={() => {
-                            fetchGoalsAndMeasurements();
-                            toast({
-                              title: 'Данные Apple Health импортированы',
-                              description: 'Показатели здоровья успешно добавлены в вашу статистику.'
-                            });
-                          }} />
-                          
-                          <GarminIntegration userId={user?.id || ''} />
+          {/* Отображение целей */}
+          {getFilteredGoals().length === 0 ? (
+            <EmptyState
+              icon={<Trophy className="h-16 w-16" />}
+              title="Цели не найдены"
+              description="Создайте свою первую цель, чтобы начать отслеживать прогресс."
+              action={{
+                label: "Создать цель",
+                onClick: () => navigate('/goals/create')
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {getFilteredGoals().map((goal, index) => {
+                const progress = getProgressPercentage(goal);
+                const trend = getTrend(goal);
+                const latestMeasurement = goal.measurements?.[0];
+                
+                return (
+                  <FitnessCard 
+                    key={goal.id} 
+                    variant="default"
+                    className="animate-fade-in cursor-pointer hover-scale"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    onClick={() => setViewingGoalDetail(goal)}
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Target className="h-4 w-4 text-primary" />
+                            <h3 className="font-semibold text-foreground truncate">
+                              {goal.goal_name}
+                            </h3>
+                          </div>
+                          <Badge className={getGoalTypeColor(goal.goal_type)}>
+                            {goal.goal_type}
+                          </Badge>
                         </div>
                         
-                        <div className="mt-4 text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
-                          <h4 className="font-medium mb-2">💡 Рекомендации по интеграции:</h4>
-                          <ul className="space-y-1">
-                            <li>• Подключите все доступные устройства для полной картины здоровья</li>
-                            <li>• Данные автоматически разделяются между целями и общей статистикой</li>
-                            <li>• Интеграции работают в фоновом режиме</li>
-                          </ul>
+                        <div className="text-right">
+                          <div className="flex items-center gap-1">
+                            <span className="text-2xl font-bold text-foreground">
+                              {latestMeasurement ? latestMeasurement.value : '--'}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {goal.target_unit}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            цель: {goal.target_value} {goal.target_unit}
+                          </div>
                         </div>
                       </div>
-                    </TabsContent>
 
-                    <TabsContent value="test" className="space-y-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
-                      <div className="space-y-4 pr-2">
-                        <AppTestSuite />
-                        <ErrorLogsViewer />
+                      <Progress value={progress} className="h-2" />
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {progress}% достигнуто
+                        </span>
+                        
+                        <div className="flex items-center gap-2">
+                          {trend && (
+                            <div className={`flex items-center gap-1 ${
+                              (goal.goal_type === 'body_composition' || 
+                               goal.goal_name.toLowerCase().includes('жир') ||
+                               goal.goal_name.toLowerCase().includes('вес'))
+                                ? (trend === 'down' ? 'text-success' : 'text-destructive')
+                                : (trend === 'up' ? 'text-success' : 'text-destructive')
+                            }`}>
+                              {((goal.goal_type === 'body_composition' || 
+                                 goal.goal_name.toLowerCase().includes('жир') ||
+                                 goal.goal_name.toLowerCase().includes('вес'))
+                                ? (trend === 'down' ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />)
+                                : (trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)
+                              )}
+                            </div>
+                          )}
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuickMeasurementGoal(goal);
+                            }}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                    </TabsContent>
-                  </Tabs>
-                </DialogContent>
-              </Dialog>
+                    </div>
+                  </FitnessCard>
+                );
+              })}
             </div>
+          )}
+
+          {/* Галерея прогресса */}
+          <div className="mb-8">
+            <ProgressGallery />
           </div>
         </div>
 
-        {/* Контроль веса и состава тела */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <WeightTracker />
-          
-          {/* Карточка процента жира */}
-          <FitnessCard 
-            variant="gradient" 
-            className="p-6"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-current opacity-80" />
-                  <p className="text-sm font-medium opacity-90">Процент жира</p>
-                  {bodyFatData.current && (
-                    <Badge variant="secondary" className="text-xs">Withings</Badge>
-                  )}
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">
-                      {bodyFatData.current ? bodyFatData.current.toFixed(1) : "—"}
-                    </span>
-                    {bodyFatData.current && <span className="text-sm opacity-80">%</span>}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-xs opacity-70">
-                    <Target className="w-3 h-3" />
-                    <span>Цель: {bodyFatData.target}%</span>
-                  </div>
-                  
-                  {!bodyFatData.current && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Подключите Withings для отслеживания состава тела
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {bodyFatData.change !== null && (
-                <Badge 
-                  variant={bodyFatData.change > 0 ? "destructive" : "default"}
-                  className="ml-2 font-semibold"
-                >
-                  {bodyFatData.change > 0 ? (
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3 mr-1" />
-                  )}
-                  {bodyFatData.change > 0 ? '+' : ''}{bodyFatData.change}%
-                </Badge>
-              )}
-            </div>
-          </FitnessCard>
-        </div>
-
-        {/* Инструкция для новых пользователей */}
-        {goals.length === 0 && (
-          <EmptyState
-            icon={<Target className="h-16 w-16" />}
-            title="Начните отслеживать свой прогресс!"
-            description="Создайте цели для отслеживания подтягиваний, отжиманий, веса и других показателей. Добавляйте измерения и следите за своими достижениями."
-            action={{
-              label: "Создать первую цель",
-              onClick: () => navigate('/goals/create')
-            }}
-            className="mb-8"
+        {/* Быстрое добавление измерения */}
+        {quickMeasurementGoal && (
+          <QuickMeasurementDialog
+            goal={quickMeasurementGoal}
+            isOpen={!!quickMeasurementGoal}
+            onOpenChange={(open) => !open && setQuickMeasurementGoal(null)}
+            onMeasurementAdded={fetchGoalsAndMeasurements}
           />
         )}
-
-        {/* Сетка целей */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Карточка контроля веса */}
-          {weightData && (
-            <FitnessCard 
-              className="p-6 animate-fade-in hover-scale transition-all duration-300 cursor-pointer border-2 border-primary/20"
-              style={{ animationDelay: `0ms` }}
-              onClick={() => navigate('/progress')} // Можно добавить отдельную страницу для веса
-            >
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Scale className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold text-lg">Контроль веса</h3>
-                    </div>
-                    <Badge className="bg-primary/10 text-primary border-primary/20">
-                      Состав тела
-                    </Badge>
-                  </div>
-                  {weightData.change && (
-                    <div className="flex items-center gap-1 text-sm">
-                      {weightData.change > 0 ? (
-                        <TrendingUp className="h-4 w-4 text-red-500" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 text-green-500" />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Текущий вес</span>
-                    <span className="font-medium">{weightData.weight} кг</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Текущий</p>
-                    <p className="font-medium">{weightData.weight} кг</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Изменение</p>
-                    <p className={`font-medium ${
-                      weightData.change 
-                        ? weightData.change > 0 ? 'text-red-500' : 'text-green-500'
-                        : 'text-muted-foreground'
-                    }`}>
-                      {weightData.change 
-                        ? `${weightData.change > 0 ? '+' : ''}${weightData.change.toFixed(1)} кг`
-                        : 'Нет данных'
-                      }
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Последнее: {format(new Date(weightData.date), 'd MMM', { locale: ru })}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Добавить
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Добавить вес</DialogTitle>
-                        <DialogDescription>
-                          Введите текущий вес
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="70.5"
-                          onChange={async (e) => {
-                            if (e.target.value && user) {
-                              try {
-                                const today = new Date().toISOString().split('T')[0];
-                                const weight = parseFloat(e.target.value);
-                                
-                                const { data: existingData } = await supabase
-                                  .from('daily_health_summary')
-                                  .select('id')
-                                  .eq('user_id', user.id)
-                                  .eq('date', today)
-                                  .maybeSingle();
-
-                                if (existingData) {
-                                  await supabase
-                                    .from('daily_health_summary')
-                                    .update({ weight })
-                                    .eq('id', existingData.id);
-                                } else {
-                                  await supabase
-                                    .from('daily_health_summary')
-                                    .insert({
-                                      user_id: user.id,
-                                      date: today,
-                                      weight
-                                    });
-                                }
-                                
-                                fetchCurrentWeight();
-                                toast({
-                                  title: "Успешно!",
-                                  description: "Вес обновлен",
-                                });
-                              } catch (error) {
-                                console.error('Error updating weight:', error);
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Можно добавить детальную страницу веса
-                    }}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    Детали
-                  </Button>
-                </div>
-              </div>
-            </FitnessCard>
-          )}
-
-          {goals.map((goal, index) => {
-            const progress = getProgressPercentage(goal);
-            const trend = getTrend(goal);
-            const latestMeasurement = goal.measurements?.[0];
-
-            return (
-              <FitnessCard 
-                key={goal.id} 
-                className="p-6 animate-fade-in hover-scale transition-all duration-300 cursor-pointer"
-                style={{ animationDelay: `${(index + 1) * 100}ms` }}
-                onClick={() => setViewingGoalDetail(goal)}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{goal.goal_name}</h3>
-                        <GoalEditor 
-                          goal={goal} 
-                          onGoalUpdated={fetchGoalsAndMeasurements}
-                        />
-                      </div>
-                      <Badge className={getGoalTypeColor(goal.goal_type)}>
-                        {goal.goal_type === 'strength' ? 'Сила' :
-                         goal.goal_type === 'cardio' ? 'Кардио' :
-                         goal.goal_type === 'endurance' ? 'Выносливость' :
-                         'Состав тела'}
-                      </Badge>
-                    </div>
-                    {trend && (
-                      <div className="flex items-center gap-1 text-sm">
-                        {trend === 'up' ? (
-                          <TrendingUp className="h-4 w-4 text-success" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4 text-destructive" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Прогресс</span>
-                      <span className="font-medium">{progress.toFixed(1)}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Текущий</p>
-                      <p className="font-medium">
-                        {latestMeasurement ? `${latestMeasurement.value} ${goal.target_unit}` : 'Нет данных'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Цель</p>
-                      <p className="font-medium">{goal.target_value} {goal.target_unit}</p>
-                    </div>
-                  </div>
-
-                  {latestMeasurement && (
-                    <div className="text-xs text-muted-foreground">
-                      Последнее: {format(new Date(latestMeasurement.measurement_date), 'd MMM', { locale: ru })}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setQuickMeasurementGoal(goal);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Добавить
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setViewingGoalDetail(goal);
-                      }}
-                    >
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      Детали
-                    </Button>
-                  </div>
-                </div>
-              </FitnessCard>
-            );
-          })}
-        </div>
-
-        {/* Галерея прогресса */}
-        <div className="mb-8">
-          <ProgressGallery />
-        </div>
       </div>
-
-      {/* Быстрое добавление измерения */}
-      {quickMeasurementGoal && (
-        <QuickMeasurementDialog
-          goal={quickMeasurementGoal}
-          isOpen={!!quickMeasurementGoal}
-          onOpenChange={(open) => !open && setQuickMeasurementGoal(null)}
-          onMeasurementAdded={fetchGoalsAndMeasurements}
-        />
-      )}
     </div>
   );
 };

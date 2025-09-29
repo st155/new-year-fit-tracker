@@ -4,7 +4,6 @@ import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
 import { AdditionalMetrics } from "./additional-metrics";
 import { TodayActivity } from "./today-activity";
-import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -102,13 +101,8 @@ export function NewDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopNavigation 
-        userName={userName}
-        userRole={userRole}
-      />
-      
       <div className="space-y-8 pb-8">
-        <NewDashboardHeader 
+        <NewDashboardHeader
           userName={userName}
           userRole={userRole}
           challengeTitle={activeChallenge?.title}

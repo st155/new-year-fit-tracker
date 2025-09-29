@@ -119,16 +119,19 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 max-w-6xl">
-        {/* Заголовок */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Профиль
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Управляйте своими данными и настройками аккаунта
-          </p>
+      <div className="space-y-8 pb-8">
+        <div className="px-4 py-3">
+          <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Профиль
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Управляйте своими данными и настройками аккаунта
+            </p>
+          </div>
         </div>
+
+        <div className="px-4">
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -353,6 +356,7 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );

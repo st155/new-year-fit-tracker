@@ -163,25 +163,31 @@ const Challenges = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Доступные челленджи
-            </h1>
-            <p className="text-muted-foreground">
-              Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
-            </p>
+      <div className="space-y-8 pb-8">
+        <div className="px-4 py-3">
+          <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  Доступные челленджи
+                </h1>
+                <p className="text-muted-foreground">
+                  Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
+                </p>
+              </div>
+              
+              <Button
+                onClick={() => navigate('/challenges/create')}
+                className="bg-gradient-primary hover:opacity-90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Создать челлендж
+              </Button>
+            </div>
           </div>
-          
-          <Button
-            onClick={() => navigate('/challenges/create')}
-            className="bg-gradient-primary hover:opacity-90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Создать челлендж
-          </Button>
         </div>
+
+        <div className="px-4 space-y-6">
 
         {/* Поиск и фильтры */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -324,6 +330,7 @@ const Challenges = () => {
             </p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
