@@ -65,7 +65,7 @@ export function TodayActivity() {
     .reduce((sum, w, _, arr) => sum + (w.heart_rate_avg || 0) / arr.length, 0);
 
   return (
-    <div className="px-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary" />
