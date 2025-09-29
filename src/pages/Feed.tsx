@@ -12,6 +12,7 @@ interface ActivityItem {
   action_type: string;
   action_text: string;
   created_at: string;
+  metadata?: any;
   profiles: {
     username: string;
     full_name: string | null;
@@ -31,7 +32,6 @@ export default function Feed() {
     try {
       setLoading(true);
 
-      // 1) Fetch recent activities
       const { data: activitiesData, error } = await supabase
         .from('activity_feed')
         .select(`
@@ -39,7 +39,8 @@ export default function Feed() {
           user_id,
           action_type,
           action_text,
-          created_at
+          created_at,
+          metadata
         `)
         .order('created_at', { ascending: false })
         .limit(50);

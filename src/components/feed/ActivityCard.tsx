@@ -1,4 +1,4 @@
-import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, User, Footprints, Zap, PersonStanding } from "lucide-react";
+import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, Footprints, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityCardProps {
@@ -8,6 +8,7 @@ interface ActivityCardProps {
     action_type: string;
     action_text: string;
     created_at: string;
+    metadata?: any;
     profiles: {
       username: string;
       full_name: string | null;
@@ -20,146 +21,106 @@ interface ActivityCardProps {
   onActivityUpdate: () => void;
 }
 
-const getActivityIcon = (actionText: string) => {
-  const text = actionText.toLowerCase();
-  
-  // Running activities (orange running person)
-  if (text.includes('running') || text.includes('run') || text.includes('бег')) {
-    return <Footprints className="h-8 w-8" />;
-  }
-  
-  // Swimming activities (teal waves)
-  if (text.includes('swimming') || text.includes('swim') || text.includes('плавание')) {
-    return <Waves className="h-8 w-8" />;
-  }
-  
-  // Cycling activities (blue bicycle)
-  if (text.includes('cycling') || text.includes('bike') || text.includes('велосипед')) {
-    return <Bike className="h-8 w-8" />;
-  }
-  
-  // Weight lifting activities (red/orange person with weights)
-  if (text.includes('weight') || text.includes('lifting') || text.includes('силовая') || text.includes('гантели')) {
-    return <PersonStanding className="h-8 w-8" />;
-  }
-  
-  // Strength training (barbell icon)
-  if (text.includes('strength') || text.includes('barbell') || text.includes('штанга')) {
-    return <Dumbbell className="h-8 w-8" />;
-  }
-  
-  // Hiking/Walking activities (green hiking boot/mountain)
-  if (text.includes('hiking') || text.includes('walk') || text.includes('поход') || text.includes('ходьба')) {
-    return <Mountain className="h-8 w-8" />;
-  }
-  
-  // Yoga/Meditation activities (blue person sitting)
-  if (text.includes('yoga') || text.includes('meditation') || text.includes('йога') || text.includes('медитация')) {
-    return <User className="h-8 w-8" />;
-  }
-  
-  // Boxing/Martial arts (purple)
-  if (text.includes('boxing') || text.includes('martial') || text.includes('бокс') || text.includes('единоборства')) {
-    return <Zap className="h-8 w-8" />;
-  }
-  
-  // Sleep activities (purple moon)
-  if (text.includes('slept') || text.includes('sleep') || text.includes('сон') || text.includes('спал')) {
-    return <Moon className="h-8 w-8" />;
-  }
-  
-  // General workouts/training (activity line trending up)
-  if (text.includes('workout') || text.includes('training') || text.includes('тренировку') || text.includes('strain') || text.includes('завершил')) {
+const getActivityIcon = (activity: ActivityCardProps["activity"]) => {
+  const meta = activity.metadata || {};
+  const text = (activity.action_text || '').toLowerCase();
+  const type = (meta.workout_type || '').toLowerCase();
+
+  const has = (s: string) => text.includes(s) || type.includes(s);
+
+  if (activity.action_type === 'workouts') {
+    if (has('run') || has('бег')) return <Footprints className="h-8 w-8" />;
+    if (has('swim') || has('плав')) return <Waves className="h-8 w-8" />;
+    if (has('bike') || has('велос') || has('cycle')) return <Bike className="h-8 w-8" />;
+    if (has('hike') || has('walk') || has('ходьб') || has('поход')) return <Mountain className="h-8 w-8" />;
+    if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг')) return <Dumbbell className="h-8 w-8" />;
     return <TrendingUp className="h-8 w-8" />;
   }
-  
-  // Recovery activities  
-  if (text.includes('recovered') || text.includes('recovery') || text.includes('восстановление')) {
-    return <Heart className="h-8 w-8" />;
+
+  if (activity.action_type === 'metric_values') {
+    if (has('recovery') || /восстанов/i.test(text)) return <Heart className="h-8 w-8" />;
+    return <TrendingUp className="h-8 w-8" />;
   }
-  
-  // Default fallback icon (standard activity icon)
+
+  if (/(sleep|сон)/i.test(text)) return <Moon className="h-8 w-8" />;
+  if (/(boxing|бокс|martial|единобор)/i.test(text)) return <Zap className="h-8 w-8" />;
+
   return <Activity className="h-8 w-8" />;
 };
 
-const parseActivityMetrics = (actionText: string) => {
-  const parts: string[] = [];
-  const text = actionText.toLowerCase();
-  const isRu = /[а-яё]/i.test(actionText);
-
-  // Remove [Whoop], [Garmin], etc tags
-  let cleanText = actionText.replace(/\[.*?\]/g, '').trim();
-
-  // Duration variants (EN)
-  const durHMM = cleanText.match(/(\d+)h\s*(\d+)m/i); // 1h 23m
-  const durMS = cleanText.match(/(\d+)m\s*(\d+)s/i);  // 15m 36s
-  const durM = cleanText.match(/(?:^|\s)(\d+)m(?:\s|$)/i); // 75m
-
-  // Duration variants (RU)
-  const durHMMru = cleanText.match(/(\d+)\s*ч\s*(\d+)\s*м/i);
-  const durMru = cleanText.match(/(?:^|\s)(\d+)\s*м(?:\s|$)/i);
-
-  if (durHMM) parts.push(`${durHMM[1]}h ${durHMM[2]}m`);
-  else if (durMS) parts.push(`${durMS[1]}m ${durMS[2]}s`);
-  else if (durM) parts.push(`${durM[1]}m`);
-  else if (durHMMru) parts.push(`${durHMMru[1]}ч ${durHMMru[2]}м`);
-  else if (durMru) parts.push(`${durMru[1]}м`);
-
-  // Calories (EN + RU)
-  const caloriesMatch = cleanText.match(/(\d+)\s*(?:kcal|ккал)/i);
-  const caloriesBurnedMatch = cleanText.match(/(?:сжёг|burned|burnt)\s*(\d+)\s*(?:kcal|ккал)/i);
-  const caloriesVal = caloriesMatch?.[1] ?? caloriesBurnedMatch?.[1];
-  if (caloriesVal) parts.push(`${caloriesVal}${isRu ? 'ккал' : 'kcal'}`);
-
-  // Strain (support colon and RU label)
-  const strainEn = cleanText.match(/strain[:\s]*([\d.,]+)/i);
-  const strainBeforeEn = cleanText.match(/([\d.,]+)\s*strain/i);
-  const strainRu = cleanText.match(/нагрузка[:\s]*([\d.,]+)/i);
-  const strainVal = (strainEn?.[1] ?? strainBeforeEn?.[1] ?? strainRu?.[1])?.replace(',', '.');
-  if (strainVal) parts.push(`Strain ${strainVal}`);
-
-  // Recovery (support both orders + RU)
-  const recoveryAfter = cleanText.match(/recovery[:\s]*(\d+)%/i);
-  const recoveryBefore = cleanText.match(/(\d+)%\s*recovery/i);
-  const recovered = cleanText.match(/recovered\s*(\d+)%/i);
-  const recoveryRu = cleanText.match(/восстановлени[ея][:\s]*(\d+)%/i);
-  const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1] ?? recoveryRu?.[1];
-  if (recoveryVal) parts.push(`${recoveryVal}% recovery`);
-
-  // Sleep duration (EN + RU)
-  const sleptHM = cleanText.match(/slept\s*(\d+)h\s*(\d+)m/i);
-  const sleptH = cleanText.match(/slept\s*([\d.]+)h/i);
-  const sleptHMru = cleanText.match(/спал(?:а)?\s*(\d+)\s*ч\s*(\d+)\s*м/i);
-  const sleptHru = cleanText.match(/спал(?:а)?\s*([\d.,]+)\s*ч/i);
-  if (sleptHM) parts.push(`${sleptHM[1]}h ${sleptHM[2]}m`);
-  else if (sleptH) parts.push(`${sleptH[1]}h`);
-  else if (sleptHMru) parts.push(`${sleptHMru[1]}ч ${sleptHMru[2]}м`);
-  else if (sleptHru) parts.push(`${sleptHru[1]}ч`);
-
-  // Quality (English and Russian labels)
-  const qualityEn = cleanText.match(/quality[:\s]*?(\d+)%/i);
-  const qualityRu = cleanText.match(/качество[:\s]*?(\d+)%/i);
-  if (qualityEn?.[1]) parts.push(`${qualityEn[1]}% quality`);
-  else if (qualityRu?.[1]) parts.push(`качество ${qualityRu[1]}%`);
-
-  // Return metrics if any found
-  if (parts.length > 0) return parts.join(', ');
-
-  // Fallback: show generic activity labels without the full action text
-  if (/(sleep|slept|сон|спал)/i.test(text)) return isRu ? 'сон' : 'sleep';
-  if (/(workout|training|тренировк|strain|завершил)/i.test(text)) return isRu ? 'тренировка' : 'workout';
-  if (/(running|run|бег)/i.test(text)) return isRu ? 'бег' : 'run';
-  if (/(cycling|bike|велосипед)/i.test(text)) return isRu ? 'велосипед' : 'cycling';
-
-  return isRu ? 'активность' : 'activity';
+const formatDistance = (km?: number | null, swim = false) => {
+  if (!km && km !== 0) return undefined;
+  const val = Number(km);
+  if (swim || val < 1) return `${Math.round(val * 1000)} м`;
+  return `${val.toFixed(1).replace(/\.0$/, '')} км`;
 };
 
+const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
+  const isRu = /[а-яё]/i.test(activity.action_text || '');
+  const clean = (activity.action_text || '').replace(/\[.*?\]/g, '').trim();
+
+  // If backend already produced a descriptive sentence, use it
+  const generic = /^(activity|активность)$/i.test(clean);
+  const veryGeneric = /(завершил тренировку)$/i.test(clean);
+  if (!generic && !veryGeneric && clean.length > 3) return clean;
+
+  const m = activity.metadata || {};
+
+  if (activity.action_type === 'workouts') {
+    const wt = (m.workout_type || '').toLowerCase();
+    const isRun = /run|бег/.test(wt);
+    const isSwim = /swim|плав/.test(wt);
+    const isBike = /bike|cycle|велос/.test(wt);
+    const isWalk = /walk|ходьб|hike|поход/.test(wt);
+    const isStrength = /strength|силов|weight|barbell|штанг/.test(wt);
+
+    const label = isRun
+      ? 'Бег'
+      : isBike
+      ? 'Велосипед'
+      : isSwim
+      ? 'Плавание'
+      : isWalk
+      ? 'Ходьба'
+      : isStrength
+      ? 'Силовая'
+      : 'Тренировка';
+
+    const parts: string[] = [];
+    const dist = formatDistance(m.distance_km, isSwim);
+    if (dist) parts.push(dist);
+    if (m.duration_minutes) parts.push(`${m.duration_minutes} мин`);
+    if (m.calories_burned) parts.push(`${Math.round(Number(m.calories_burned))} ккал`);
+
+    return parts.length ? `${label} — ${parts.join(', ')}` : label;
+  }
+
+  if (activity.action_type === 'body_composition') {
+    const parts: string[] = [];
+    if (m.weight) parts.push(`${Number(m.weight)} кг`);
+    if (m.body_fat_percentage) parts.push(`${Number(m.body_fat_percentage)}% жир`);
+    return parts.length ? `Состав тела — ${parts.join(', ')}` : (isRu ? 'Состав тела' : 'Body composition');
+  }
+
+  if (activity.action_type === 'measurements') {
+    if (m.value && m.unit) return `${isRu ? 'Измерение' : 'Measurement'} — ${m.value} ${m.unit}`;
+    return isRu ? 'Измерение' : 'Measurement';
+  }
+
+  if (activity.action_type === 'metric_values') {
+    if (m.value) return `${isRu ? 'Метрика' : 'Metric'} — ${m.value}${m.unit ? ` ${m.unit}` : ''}`;
+  }
+
+  return clean || (isRu ? 'Активность' : 'Activity');
+};
+
+
 export function ActivityCard({ activity }: ActivityCardProps) {
-  const metrics = parseActivityMetrics(activity.action_text);
-  const icon = getActivityIcon(activity.action_text);
+  const text = buildDisplayText(activity);
+  const icon = getActivityIcon(activity);
   
   return (
-    <div className="relative rounded-3xl p-[2px] bg-gradient-to-r from-primary via-primary to-success overflow-hidden group hover:scale-[1.02] transition-all duration-300">
+    <div className="relative rounded-3xl p-[2px] bg-gradient-to-r from-primary via-primary to-success overflow-hidden group hover:scale-[1.02] transition-all duration-300 animate-fade-in">
       <div className="relative rounded-3xl bg-card/90 backdrop-blur-sm p-6 h-full">
         <div className="flex items-center gap-4">
           <div className="text-primary shrink-0">
@@ -168,7 +129,7 @@ export function ActivityCard({ activity }: ActivityCardProps) {
           
           <div className="flex-1 min-w-0">
             <p className="text-lg font-semibold text-foreground leading-tight">
-              {metrics}
+              {text}
             </p>
           </div>
         </div>
