@@ -1,4 +1,4 @@
-import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, User, Footprints, Zap, ShirtIcon as Shirt } from "lucide-react";
+import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, User, Footprints, Zap, PersonStanding } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityCardProps {
@@ -23,24 +23,59 @@ interface ActivityCardProps {
 const getActivityIcon = (actionText: string) => {
   const text = actionText.toLowerCase();
   
-  // Sleep activities (purple moon icon)
+  // Running activities (orange running person)
+  if (text.includes('running') || text.includes('run') || text.includes('бег')) {
+    return <Footprints className="h-8 w-8" />;
+  }
+  
+  // Swimming activities (teal waves)
+  if (text.includes('swimming') || text.includes('swim') || text.includes('плавание')) {
+    return <Waves className="h-8 w-8" />;
+  }
+  
+  // Cycling activities (blue bicycle)
+  if (text.includes('cycling') || text.includes('bike') || text.includes('велосипед')) {
+    return <Bike className="h-8 w-8" />;
+  }
+  
+  // Weight lifting activities (red/orange person with weights)
+  if (text.includes('weight') || text.includes('lifting') || text.includes('силовая') || text.includes('гантели')) {
+    return <PersonStanding className="h-8 w-8" />;
+  }
+  
+  // Strength training (barbell icon)
+  if (text.includes('strength') || text.includes('barbell') || text.includes('штанга')) {
+    return <Dumbbell className="h-8 w-8" />;
+  }
+  
+  // Hiking/Walking activities (green hiking boot/mountain)
+  if (text.includes('hiking') || text.includes('walk') || text.includes('поход') || text.includes('ходьба')) {
+    return <Mountain className="h-8 w-8" />;
+  }
+  
+  // Yoga/Meditation activities (blue person sitting)
+  if (text.includes('yoga') || text.includes('meditation') || text.includes('йога') || text.includes('медитация')) {
+    return <User className="h-8 w-8" />;
+  }
+  
+  // Boxing/Martial arts (purple)
+  if (text.includes('boxing') || text.includes('martial') || text.includes('бокс') || text.includes('единоборства')) {
+    return <Zap className="h-8 w-8" />;
+  }
+  
+  // Sleep activities (purple moon)
   if (text.includes('slept') || text.includes('sleep') || text.includes('сон') || text.includes('спал')) {
     return <Moon className="h-8 w-8" />;
   }
   
-  // Strength/Weight training (orange dumbbell icon)
-  if (text.includes('weight') || text.includes('strength') || text.includes('силовая') || text.includes('гантели')) {
-    return <Dumbbell className="h-8 w-8" />;
-  }
-  
-  // General workouts/training (orange activity line icon)
+  // General workouts/training (activity line trending up)
   if (text.includes('workout') || text.includes('training') || text.includes('тренировку') || text.includes('strain') || text.includes('завершил')) {
     return <TrendingUp className="h-8 w-8" />;
   }
   
   // Recovery activities  
   if (text.includes('recovered') || text.includes('recovery') || text.includes('восстановление')) {
-    return <TrendingUp className="h-8 w-8" />;
+    return <Heart className="h-8 w-8" />;
   }
   
   // Default fallback icon (standard activity icon)
