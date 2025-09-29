@@ -111,18 +111,26 @@ export function NewDashboard() {
           daysLeft={daysLeft}
         />
         
-        {/* Desktop: Two-column layout, Mobile: Single column */}
+        {/* Main metrics grid */}
+        <div className="px-6">
+          <MetricsGrid />
+        </div>
+        
+        {/* Quick Actions right after metrics */}
+        <div className="px-6">
+          <QuickActions userRole={userRole} />
+        </div>
+        
+        {/* Desktop: Two-column layout for remaining content */}
         <div className="px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Main metrics and quick actions */}
-            <div className="lg:col-span-2 space-y-6">
-              <MetricsGrid />
+            {/* Left Column - Today's activity */}
+            <div className="lg:col-span-2">
               <TodayActivity />
             </div>
             
-            {/* Right Column - Quick actions and additional metrics */}
+            {/* Right Column - Additional metrics and leaderboard */}
             <div className="space-y-6">
-              <QuickActions userRole={userRole} />
               <AdditionalMetrics />
             </div>
           </div>
