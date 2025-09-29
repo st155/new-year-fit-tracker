@@ -121,19 +121,14 @@ export function NewDashboard() {
           <QuickActions userRole={userRole} />
         </div>
         
-        {/* Desktop: Two-column layout for remaining content */}
+        {/* Today's activity */}
         <div className="px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Today's activity */}
-            <div className="lg:col-span-2">
-              <TodayActivity />
-            </div>
-            
-            {/* Right Column - Additional metrics and leaderboard */}
-            <div className="space-y-6">
-              <AdditionalMetrics />
-            </div>
-          </div>
+          <TodayActivity />
+        </div>
+        
+        {/* Additional metrics */}
+        <div className="px-6">
+          <AdditionalMetrics />
         </div>
         
         <GoalsProgress />
