@@ -58,91 +58,102 @@ const formatDistance = (km?: number | null, swim = false) => {
 const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   const m = activity.metadata || {};
   const profiles = activity.profiles;
-  const userName = profiles?.full_name || profiles?.username || "Пользователь";
+  
+  // Получаем короткие инициалы пользователя
+  const getShortName = () => {
+    if (profiles?.full_name) {
+      const parts = profiles.full_name.split(' ');
+      if (parts.length >= 2) {
+        return parts[0].charAt(0) + parts[1].charAt(0);
+      }
+      return parts[0].substring(0, 2);
+    }
+    if (profiles?.username) {
+      return profiles.username.substring(0, 2).toUpperCase();
+    }
+    return 'ST';
+  };
+
+  const shortName = getShortName();
+  
+  // Получаем время из created_at
+  const getTime = () => {
+    try {
+      const date = new Date(activity.created_at);
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    } catch {
+      return '00:00';
+    }
+  };
+
+  const time = getTime();
+  const parts = [shortName, time];
 
   if (activity.action_type === 'workouts') {
-    const wt = (m.workout_type || '').toLowerCase();
-    const isRun = /run|бег/.test(wt);
-    const isSwim = /swim|плав/.test(wt);
-    const isBike = /bike|cycle|велос/.test(wt);
-    const isWalk = /walk|ходьб|hike|поход/.test(wt);
-    const isStrength = /strength|силов|weight|barbell|штанг/.test(wt);
-
-    let activityText = "";
-    if (isRun) {
-      activityText = "пробежал";
-      if (m.distance_km) activityText += ` ${Number(m.distance_km).toFixed(1)} км`;
-    } else if (isBike) {
-      activityText = "проехал на велосипеде";
-      if (m.distance_km) activityText += ` ${Number(m.distance_km).toFixed(1)} км`;
-    } else if (isSwim) {
-      activityText = "проплыл";
-      if (m.distance_km) activityText += ` ${Math.round(Number(m.distance_km) * 1000)} м`;
-    } else if (isWalk) {
-      activityText = "прошел";
-      if (m.distance_km) activityText += ` ${Number(m.distance_km).toFixed(1)} км`;
-    } else if (isStrength) {
-      activityText = "завершил силовую тренировку";
-    } else {
-      activityText = `завершил тренировку ${m.workout_type || 'неизвестного типа'}`;
+    // Добавляем продолжительность
+    if (m.duration_minutes) {
+      parts.push(`(${m.duration_minutes}m)`);
     }
-
-    const details = [];
-    if (m.duration_minutes) details.push(`${m.duration_minutes} мин`);
-    if (m.calories_burned) details.push(`${Math.round(Number(m.calories_burned))} ккал`);
     
-    const result = `${userName} ${activityText}`;
-    return details.length > 0 ? `${result} (${details.join(', ')})` : result;
+    // Добавляем калории
+    if (m.calories_burned) {
+      parts.push(`${Math.round(Number(m.calories_burned))} kcal`);
+    }
+    
+    // Добавляем strain если есть
+    if (m.strain || m.workout_strain) {
+      const strain = m.strain || m.workout_strain;
+      parts.push(`Strain ${Number(strain).toFixed(1)}`);
+    }
+    
+    return parts.join(', ');
   }
 
   if (activity.action_type === 'body_composition') {
-    const details = [];
-    if (m.weight) details.push(`вес ${Number(m.weight).toFixed(1)} кг`);
-    if (m.body_fat_percentage) details.push(`${Number(m.body_fat_percentage).toFixed(1)}% жира`);
-    
-    if (details.length > 0) {
-      return `${userName} обновил состав тела (${details.join(', ')})`;
+    if (m.weight) {
+      parts.push(`${Number(m.weight).toFixed(1)}kg`);
     }
-    return `${userName} обновил состав тела`;
-  }
-
-  if (activity.action_type === 'measurements') {
-    if (m.value && m.unit) {
-      return `${userName} записал измерение: ${m.value} ${m.unit}`;
+    if (m.body_fat_percentage) {
+      parts.push(`${Number(m.body_fat_percentage).toFixed(1)}% BF`);
     }
-    return `${userName} добавил измерение`;
+    return parts.join(', ');
   }
 
   if (activity.action_type === 'metric_values') {
     const metricName = m.user_metrics?.metric_name;
     if (metricName === 'Recovery Score') {
-      return `${userName} восстановился на ${Math.round(Number(m.value))}%`;
-    }
-    if (metricName === 'Workout Strain') {
-      return `${userName} завершил тренировку (нагрузка ${Number(m.value).toFixed(1)})`;
-    }
-    if (metricName === 'Sleep Duration') {
+      parts.push(`${Math.round(Number(m.value))}% recovery`);
+    } else if (metricName === 'Workout Strain') {
+      parts.push(`Strain ${Number(m.value).toFixed(1)}`);
+    } else if (metricName === 'Sleep Duration') {
       const hours = Number(m.value);
-      return `${userName} спал ${hours.toFixed(1)} ч`;
+      parts.push(`${hours.toFixed(1)}h sleep`);
+    } else if (metricName === 'VO2Max') {
+      parts.push(`VO₂Max ${Number(m.value).toFixed(1)}`);
+    } else if (m.value) {
+      parts.push(`${Number(m.value).toFixed(1)}${m.unit || ''}`);
     }
-    if (metricName === 'VO2Max') {
-      return `${userName} обновил VO₂Max: ${Number(m.value).toFixed(1)} мл/кг/мин`;
+    return parts.join(', ');
+  }
+
+  if (activity.action_type === 'measurements') {
+    if (m.value && m.unit) {
+      parts.push(`${m.value} ${m.unit}`);
     }
-    if (m.value) {
-      return `${userName} обновил показатель: ${Number(m.value).toFixed(1)}${m.unit ? ` ${m.unit}` : ''}`;
-    }
+    return parts.join(', ');
   }
 
   if (activity.action_type === 'goals') {
-    const goalName = m.goal_name || 'новую цель';
-    if (m.target_value && m.target_unit) {
-      return `${userName} создал цель "${goalName}" (${m.target_value} ${m.target_unit})`;
-    }
-    return `${userName} создал цель "${goalName}"`;
+    const goalName = m.goal_name || 'goal';
+    parts.push(`new goal: ${goalName}`);
+    return parts.join(', ');
   }
 
-  // Fallback - никогда не показываем техническую информацию
-  return `${userName} проявил активность`;
+  return parts.join(', ');
 };
 
 
