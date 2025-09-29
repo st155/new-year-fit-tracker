@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { NewDashboardHeader } from "./new-dashboard-header";
 import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
+import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -98,18 +99,25 @@ export function NewDashboard() {
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
   return (
-    <div className="min-h-screen bg-background space-y-8">
-      <NewDashboardHeader 
+    <div className="min-h-screen bg-background">
+      <TopNavigation 
         userName={userName}
         userRole={userRole}
-        challengeTitle={activeChallenge?.title}
-        challengeProgress={challengeProgress}
-        daysLeft={daysLeft}
       />
       
-      <MetricsGrid />
-      
-      <GoalsProgress />
+      <div className="space-y-8">
+        <NewDashboardHeader 
+          userName={userName}
+          userRole={userRole}
+          challengeTitle={activeChallenge?.title}
+          challengeProgress={challengeProgress}
+          daysLeft={daysLeft}
+        />
+        
+        <MetricsGrid />
+        
+        <GoalsProgress />
+      </div>
     </div>
   );
 }
