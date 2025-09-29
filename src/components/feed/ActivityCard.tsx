@@ -1,4 +1,4 @@
-import { Activity, Heart, Moon, Dumbbell, TrendingUp } from "lucide-react";
+import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, User, Footprints, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityCardProps {
@@ -21,53 +21,107 @@ interface ActivityCardProps {
 }
 
 const getActivityIcon = (actionText: string) => {
-  if (actionText.includes('workout') || actionText.includes('Activity') || actionText.includes('strain')) {
-    return <Activity className="h-8 w-8" />;
+  const text = actionText.toLowerCase();
+  
+  // Running activities
+  if (text.includes('running') || text.includes('run') || text.includes('бег')) {
+    return <Footprints className="h-8 w-8" />;
   }
-  if (actionText.includes('recovered') || actionText.includes('Recovery')) {
+  
+  // Cycling activities
+  if (text.includes('cycling') || text.includes('bike') || text.includes('велосипед')) {
+    return <Bike className="h-8 w-8" />;
+  }
+  
+  // Swimming activities
+  if (text.includes('swimming') || text.includes('swim') || text.includes('плавание')) {
+    return <Waves className="h-8 w-8" />;
+  }
+  
+  // Hiking/Walking activities
+  if (text.includes('hiking') || text.includes('walk') || text.includes('поход') || text.includes('ходьба')) {
+    return <Mountain className="h-8 w-8" />;
+  }
+  
+  // Yoga/Meditation activities
+  if (text.includes('yoga') || text.includes('meditation') || text.includes('йога') || text.includes('медитация')) {
+    return <User className="h-8 w-8" />;
+  }
+  
+  // High intensity/HIIT activities
+  if (text.includes('hiit') || text.includes('interval') || text.includes('cardio') || text.includes('кардио')) {
+    return <Zap className="h-8 w-8" />;
+  }
+  
+  // Recovery activities
+  if (text.includes('recovered') || text.includes('recovery') || text.includes('восстановление')) {
     return <TrendingUp className="h-8 w-8" />;
   }
-  if (actionText.includes('slept') || actionText.includes('sleep')) {
+  
+  // Sleep activities
+  if (text.includes('slept') || text.includes('sleep') || text.includes('сон') || text.includes('спал')) {
     return <Moon className="h-8 w-8" />;
   }
-  return <Dumbbell className="h-8 w-8" />;
+  
+  // Workout/Training activities (catch-all for gym activities)
+  if (text.includes('workout') || text.includes('training') || text.includes('тренировка') || text.includes('strain')) {
+    return <Dumbbell className="h-8 w-8" />;
+  }
+  
+  // Default fallback icon
+  return <Activity className="h-8 w-8" />;
 };
 
 const parseActivityMetrics = (actionText: string) => {
-  const metrics: string[] = [];
+  const parts: string[] = [];
+  
+  // Start with "ST" prefix
+  parts.push("ST");
   
   // Duration (e.g., "15m 36s")
   const durationMatch = actionText.match(/(\d+)m\s*(\d+)s/);
   if (durationMatch) {
-    metrics.push(`${durationMatch[1]}m ${durationMatch[2]}s`);
+    parts.push(`${durationMatch[1]}m ${durationMatch[2]}s`);
   }
   
   // Calories (e.g., "173kcal")
   const caloriesMatch = actionText.match(/(\d+)kcal/);
   if (caloriesMatch) {
-    metrics.push(`${caloriesMatch[1]}kcal`);
+    parts.push(`${caloriesMatch[1]}kcal`);
   }
   
-  // Strain (e.g., "7.2 strain")
-  const strainMatch = actionText.match(/([\d.]+)\s*strain/);
+  // Strain (e.g., "Strain 7.2")
+  const strainMatch = actionText.match(/([\d.]+)\s*strain/i);
   if (strainMatch) {
-    metrics.push(`${strainMatch[1]} strain`);
+    parts.push(`Strain ${strainMatch[1]}`);
   }
   
-  // Recovery (e.g., "recovered 85%")
-  const recoveryMatch = actionText.match(/recovered\s*(\d+)%/);
+  // Recovery (e.g., "85% recovery")
+  const recoveryMatch = actionText.match(/recovered\s*(\d+)%/i);
   if (recoveryMatch) {
-    metrics.push(`${recoveryMatch[1]}% recovery`);
+    parts.push(`${recoveryMatch[1]}% recovery`);
   }
   
-  // Sleep (e.g., "slept 7.5h")
-  const sleepMatch = actionText.match(/slept\s*([\d.]+)h/);
+  // Sleep (e.g., "7.5h sleep")
+  const sleepMatch = actionText.match(/slept\s*([\d.]+)h/i);
   if (sleepMatch) {
-    metrics.push(`${sleepMatch[1]}h sleep`);
+    parts.push(`${sleepMatch[1]}h sleep`);
   }
   
-  // If no metrics found, return the action text as is
-  return metrics.length > 0 ? metrics.join(', ') : actionText;
+  // If we only have "ST", add a generic activity description
+  if (parts.length === 1) {
+    if (actionText.toLowerCase().includes('тренировку')) {
+      parts.push('завершил тренировку');
+    } else if (actionText.toLowerCase().includes('спал')) {
+      parts.push('спал');
+    } else if (actionText.toLowerCase().includes('recovered')) {
+      parts.push('восстановился');
+    } else {
+      parts.push('активность');
+    }
+  }
+  
+  return parts.join(' ');
 };
 
 export function ActivityCard({ activity }: ActivityCardProps) {
