@@ -56,6 +56,8 @@ export default {
           weight: "hsl(var(--metric-weight))",
           vo2max: "hsl(var(--metric-vo2max))",
           row: "hsl(var(--metric-row))",
+          recovery: "hsl(var(--metric-recovery))",
+          steps: "hsl(var(--metric-steps))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

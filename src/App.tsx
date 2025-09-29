@@ -26,7 +26,9 @@ import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Landing from "./pages/Landing";
+import ModernProgress from "./pages/ModernProgress";
 import Feed from "./pages/Feed";
+import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 
 const queryClient = new QueryClient();
 
@@ -44,95 +46,95 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Index />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/app" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Dashboard />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Challenges />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/:id" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <ChallengeDetail />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/create" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <CreateChallenge />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/progress" element={
               <ProtectedRoute>
-                <AppLayout>
-                  <Progress />
-                </AppLayout>
+                <ModernAppLayout>
+                  <ModernProgress />
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Profile />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/create" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <CreateGoal />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/edit/:id" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <EditGoal />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/fitness-data" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <FitnessData />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/integrations" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Integrations />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/whoop-callback" element={<WhoopCallback />} />
             <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
             <Route path="/feed" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <Feed />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/trainer-dashboard" element={
               <ProtectedRoute>
-                <AppLayout>
+                <ModernAppLayout>
                   <TrainerDashboard />
-                </AppLayout>
+                </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
