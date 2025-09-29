@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, BarChart3, Trophy, Camera, User, Bell, Globe, Settings } from "lucide-react";
+import { Bell, Globe, Settings } from "lucide-react";
+import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -48,11 +49,11 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
   }, [user]);
 
   const navItems = [
-    { icon: Home, path: "/dashboard", label: "Home" },
-    { icon: BarChart3, path: "/progress", label: "Stats" },
-    { icon: Trophy, path: "/challenges", label: "Challenges" },
-    { icon: Camera, path: "/feed", label: "Camera" },
-    { icon: User, path: "/profile", label: "Profile" },
+    { type: 'home' as const, path: "/dashboard", label: "Home" },
+    { type: 'stats' as const, path: "/progress", label: "Stats" },
+    { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
+    { type: 'activity' as const, path: "/feed", label: "Activity" },
+    { type: 'integrations' as const, path: "/integrations", label: "Integrations" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -154,25 +155,20 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
       </div>
 
       {/* Second row - Navigation Icons */}
-      <div className="flex items-center justify-center px-4 py-3">
-        <nav className="flex items-center gap-1">
+      <div className="flex items-center justify-center px-4 py-4">
+        <nav className="flex items-center gap-6">
           {navItems.map((item) => (
             <Button
               key={item.path}
               variant="ghost"
               size="sm"
               onClick={() => navigate(item.path)}
-              className={cn(
-                "h-10 w-10 p-0 relative",
-                isActive(item.path)
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
+              className="h-12 w-12 p-0 relative hover:bg-transparent"
             >
-              <item.icon className="h-5 w-5" />
-              {isActive(item.path) && (
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
-              )}
+              <CustomNavigationIcon 
+                type={item.type} 
+                isActive={isActive(item.path)}
+              />
             </Button>
           ))}
         </nav>

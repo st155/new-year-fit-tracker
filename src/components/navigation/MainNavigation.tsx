@@ -32,18 +32,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Home,
-  BarChart3,
-  Trophy,
   Target,
   User,
   Settings,
   LogOut,
   Menu,
-  Activity,
-  Users,
-  Zap,
 } from "lucide-react";
+import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageToggle } from "@/components/ui/language-toggle";
@@ -59,56 +54,64 @@ interface NavigationItem {
   trainerOnly?: boolean;
 }
 
-const navigationItems: NavigationItem[] = [
+interface NavigationItemExtended {
+  title: string;
+  href: string;
+  iconType: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer';
+  description?: string;
+  trainerOnly?: boolean;
+}
+
+const navigationItems: NavigationItemExtended[] = [
   {
     title: "navigation.home",
     href: "/",
-    icon: Home,
+    iconType: "home",
     description: "descriptions.home",
   },
   {
     title: "navigation.dashboard",
     href: "/dashboard",
-    icon: BarChart3,
+    iconType: "stats",
     description: "descriptions.dashboard",
   },
   {
     title: "navigation.challenges",
     href: "/challenges",
-    icon: Trophy,
+    iconType: "challenges",
     description: "descriptions.challenges",
   },
   {
     title: "navigation.progress",
     href: "/progress",
-    icon: Target,
+    iconType: "stats",
     description: "descriptions.progress",
   },
   {
     title: "navigation.fitnessData",
     href: "/fitness-data",
-    icon: Activity,
+    iconType: "activity",
     description: "descriptions.fitnessData",
   },
   {
     title: "navigation.integrations",
     href: "/integrations",
-    icon: Zap,
+    iconType: "integrations",
     description: "descriptions.integrations",
   },
   {
     title: "navigation.feed",
     href: "/feed",
-    icon: Activity,
+    iconType: "activity",
     description: "descriptions.feed",
   },
 ];
 
-const trainerItems: NavigationItem[] = [
+const trainerItems: NavigationItemExtended[] = [
   {
     title: "navigation.clients",
     href: "/trainer-dashboard", 
-    icon: Users,
+    iconType: "trainer",
     description: "descriptions.clients",
     trainerOnly: true,
   },
@@ -204,7 +207,11 @@ export function MainNavigation() {
                           )}
                         >
                           <div className="flex items-center space-x-2">
-                            <item.icon className="h-4 w-4" />
+                            <CustomNavigationIcon 
+                              type={item.iconType} 
+                              isActive={isActiveRoute(item.href)}
+                              className="scale-75"
+                            />
                             <div className="text-sm font-medium leading-none">
                               {t(item.title)}
                             </div>
@@ -300,7 +307,11 @@ export function MainNavigation() {
                       isActiveRoute(item.href) && "bg-accent text-accent-foreground"
                     )}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <CustomNavigationIcon 
+                      type={item.iconType} 
+                      isActive={isActiveRoute(item.href)}
+                      className="scale-90"
+                    />
                     <div>
                       <div>{t(item.title)}</div>
                       {item.description && (

@@ -3,19 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Home,
-  BarChart3,
-  Trophy,
-  Target,
-  Users,
-  Settings,
-  Activity,
-  User,
   LogOut,
   Dumbbell,
-  Layers,
-  Calendar
 } from "lucide-react";
+import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 
 import {
   Sidebar,
@@ -79,22 +70,22 @@ export function AppSidebar() {
   }, [user]);
 
   const mainItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Progress", url: "/progress", icon: BarChart3 },
-    { title: "Challenges", url: "/challenges", icon: Trophy },
-    { title: "Goals", url: "/goals/create", icon: Target },
-    { title: "Feed", url: "/feed", icon: Activity },
+    { title: "Dashboard", url: "/dashboard", iconType: "home" as const },
+    { title: "Progress", url: "/progress", iconType: "stats" as const },
+    { title: "Challenges", url: "/challenges", iconType: "challenges" as const },
+    { title: "Goals", url: "/goals/create", iconType: "activity" as const },
+    { title: "Feed", url: "/feed", iconType: "activity" as const },
   ];
 
   const trainerItems = [
-    { title: "Trainer Dashboard", url: "/trainer-dashboard", icon: Users },
-    { title: "Analytics", url: "/trainer-analytics", icon: Layers },
+    { title: "Trainer Dashboard", url: "/trainer-dashboard", iconType: "trainer" as const },
+    { title: "Analytics", url: "/trainer-analytics", iconType: "stats" as const },
   ];
 
   const settingsItems = [
-    { title: "Profile", url: "/profile", icon: User },
-    { title: "Integrations", url: "/integrations", icon: Settings },
-    { title: "Fitness Data", url: "/fitness-data", icon: Calendar },
+    { title: "Profile", url: "/profile", iconType: "settings" as const },
+    { title: "Integrations", url: "/integrations", iconType: "integrations" as const },
+    { title: "Fitness Data", url: "/fitness-data", iconType: "connections" as const },
   ];
 
   const isActive = (path: string) => currentPath === path;
@@ -146,7 +137,11 @@ export function AppSidebar() {
                         : "hover:bg-muted/50"
                     }`}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <CustomNavigationIcon 
+                      type={item.iconType} 
+                      isActive={isActive(item.url)}
+                      className="scale-75"
+                    />
                     {!isCollapsed && <span>{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -173,7 +168,11 @@ export function AppSidebar() {
                           : "hover:bg-muted/50"
                       }`}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <CustomNavigationIcon 
+                        type={item.iconType} 
+                        isActive={isActive(item.url)}
+                        className="scale-75"
+                      />
                       {!isCollapsed && <span>{item.title}</span>}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -200,7 +199,11 @@ export function AppSidebar() {
                         : "hover:bg-muted/50"
                     }`}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <CustomNavigationIcon 
+                      type={item.iconType} 
+                      isActive={isActive(item.url)}
+                      className="scale-75"
+                    />
                     {!isCollapsed && <span>{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
