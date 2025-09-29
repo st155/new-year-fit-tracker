@@ -3,6 +3,7 @@ import { NewDashboardHeader } from "./new-dashboard-header";
 import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
 import { AdditionalMetrics } from "./additional-metrics";
+import { TodayActivity } from "./today-activity";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,6 +117,8 @@ export function NewDashboard() {
         />
         
         <MetricsGrid />
+        
+        <TodayActivity />
         
         <AdditionalMetrics />
         
