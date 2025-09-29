@@ -84,49 +84,73 @@ const getActivityIcon = (actionText: string) => {
 
 const parseActivityMetrics = (actionText: string) => {
   const parts: string[] = [];
-  
-  // Duration (e.g., "15m 36s")
-  const durationMatch = actionText.match(/(\d+)m\s*(\d+)s/);
-  if (durationMatch) {
-    parts.push(`${durationMatch[1]}m ${durationMatch[2]}s`);
+
+  // Always start with "ST" prefix
+  parts.push("ST");
+
+  const text = actionText.toLowerCase();
+
+  // Duration variants
+  // 1) 1h 23m
+  const durHMM = actionText.match(/(\d+)h\s*(\d+)m/i);
+  if (durHMM) {
+    parts.push(`${durHMM[1]}h ${durHMM[2]}m`);
   }
-  
-  // Calories (e.g., "173kcal")
-  const caloriesMatch = actionText.match(/(\d+)kcal/);
+  // 2) 15m 36s
+  const durMS = actionText.match(/(\d+)m\s*(\d+)s/i);
+  if (!durHMM && durMS) {
+    parts.push(`${durMS[1]}m ${durMS[2]}s`);
+  }
+  // 3) 75m
+  const durM = actionText.match(/(?:^|\s)(\d+)m(?:\s|$)/i);
+  if (!durHMM && !durMS && durM) {
+    parts.push(`${durM[1]}m`);
+  }
+
+  // Calories (accept optional space)
+  const caloriesMatch = actionText.match(/(\d+)\s*kcal/i);
   if (caloriesMatch) {
     parts.push(`${caloriesMatch[1]}kcal`);
   }
-  
-  // Strain (e.g., "7.2 strain")
-  const strainMatch = actionText.match(/([\d.]+)\s*strain/i);
-  if (strainMatch) {
-    parts.push(`${strainMatch[1]} strain`);
+
+  // Strain (support both "7.8 strain" and "strain 7.8")
+  const strainAfter = actionText.match(/strain\s*([\d.]+)/i);
+  const strainBefore = actionText.match(/([\d.]+)\s*strain/i);
+  const strainVal = strainAfter?.[1] ?? strainBefore?.[1];
+  if (strainVal) {
+    parts.push(`Strain ${strainVal}`);
   }
-  
-  // Recovery (e.g., "85% recovery")
-  const recoveryMatch = actionText.match(/recovered\s*(\d+)%/i);
-  if (recoveryMatch) {
-    parts.push(`${recoveryMatch[1]}% recovery`);
+
+  // Recovery (support both orders)
+  const recoveryAfter = actionText.match(/recovery\s*(\d+)%/i);
+  const recoveryBefore = actionText.match(/(\d+)%\s*recovery/i);
+  const recovered = actionText.match(/recovered\s*(\d+)%/i);
+  const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1];
+  if (recoveryVal) {
+    parts.push(`Recovery ${recoveryVal}%`);
   }
-  
-  // Sleep (e.g., "7.5h sleep")
-  const sleepMatch = actionText.match(/slept\s*([\d.]+)h/i);
-  if (sleepMatch) {
-    parts.push(`${sleepMatch[1]}h sleep`);
+
+  // Sleep duration (e.g., "slept 7.5h" or "slept 7h 30m")
+  const sleptHM = actionText.match(/slept\s*(\d+)h\s*(\d+)m/i);
+  const sleptH = actionText.match(/slept\s*([\d.]+)h/i);
+  if (sleptHM) {
+    parts.push(`${sleptHM[1]}h ${sleptHM[2]}m`);
+  } else if (sleptH) {
+    parts.push(`${sleptH[1]}h`);
   }
-  
-  // Quality (quality percentage)
-  const qualityMatch = actionText.match(/качество:\s*(\d+)%/i);
-  if (qualityMatch) {
-    parts.push(`${qualityMatch[1]}% quality`);
+
+  // Quality (English and Russian labels)
+  const qualityEn = actionText.match(/quality[:\s]*?(\d+)%/i);
+  const qualityRu = actionText.match(/качество[:\s]*?(\d+)%/i);
+  const qualityVal = qualityEn?.[1] ?? qualityRu?.[1];
+  if (qualityVal) {
+    parts.push(`${qualityVal}% quality`);
   }
-  
-  // If we have extracted metrics, join them with commas
-  if (parts.length > 0) {
+
+  // If we have more than just "ST", join with commas; else fallback
+  if (parts.length > 1) {
     return parts.join(', ');
   }
-  
-  // Fallback for activities without specific metrics
   return 'активность';
 };
 
