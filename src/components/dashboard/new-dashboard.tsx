@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { NewDashboardHeader } from "./new-dashboard-header";
 import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
+import { AdditionalMetrics } from "./additional-metrics";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,7 +106,7 @@ export function NewDashboard() {
         userRole={userRole}
       />
       
-      <div className="space-y-8">
+      <div className="space-y-8 pb-8">
         <NewDashboardHeader 
           userName={userName}
           userRole={userRole}
@@ -115,6 +116,8 @@ export function NewDashboard() {
         />
         
         <MetricsGrid />
+        
+        <AdditionalMetrics />
         
         <GoalsProgress />
       </div>
