@@ -183,7 +183,7 @@ export function MainNavigation() {
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 min-w-0">
           <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
-          <span className="font-bold text-lg sm:text-xl truncate">FitTracker</span>
+          <span className="font-bold text-lg sm:text-xl truncate">Elite10</span>
         </Link>
 
         {/* Desktop Navigation */}

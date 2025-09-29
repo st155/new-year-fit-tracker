@@ -60,39 +60,17 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-      <div className="flex items-center justify-between px-4 py-3">
+      {/* First row - Logo and User info */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
         {/* Logo and Brand */}
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            FitTracker
+            Elite10
           </span>
         </div>
-
-        {/* Navigation Icons */}
-        <nav className="flex items-center gap-1">
-          {navItems.map((item) => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(item.path)}
-              className={cn(
-                "h-10 w-10 p-0 relative",
-                isActive(item.path)
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {isActive(item.path) && (
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
-              )}
-            </Button>
-          ))}
-        </nav>
 
         {/* Right side actions */}
         <div className="flex items-center gap-2">
@@ -145,6 +123,31 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
             </Avatar>
           </Button>
         </div>
+      </div>
+
+      {/* Second row - Navigation Icons */}
+      <div className="flex items-center justify-center px-4 py-3">
+        <nav className="flex items-center gap-1">
+          {navItems.map((item) => (
+            <Button
+              key={item.path}
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(item.path)}
+              className={cn(
+                "h-10 w-10 p-0 relative",
+                isActive(item.path)
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {isActive(item.path) && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
+              )}
+            </Button>
+          ))}
+        </nav>
       </div>
     </header>
   );

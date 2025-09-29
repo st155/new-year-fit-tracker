@@ -31,7 +31,7 @@ const Landing = () => {
               <Dumbbell className="h-6 w-6 text-primary" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              FitTracker
+              Elite10
             </span>
           </div>
           
@@ -295,10 +295,10 @@ const Landing = () => {
               <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
                 <Dumbbell className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-semibold text-foreground">FitTracker</span>
+              <span className="font-semibold text-foreground">Elite10</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 FitTracker. Transform your fitness journey.
+              © 2024 Elite10. Transform your fitness journey.
             </p>
           </div>
         </div>
