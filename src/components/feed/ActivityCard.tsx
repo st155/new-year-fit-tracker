@@ -87,14 +87,17 @@ const parseActivityMetrics = (actionText: string) => {
   const text = actionText.toLowerCase();
   const isRu = /[а-яё]/i.test(actionText);
 
+  // Remove [Whoop], [Garmin], etc tags
+  let cleanText = actionText.replace(/\[.*?\]/g, '').trim();
+
   // Duration variants (EN)
-  const durHMM = actionText.match(/(\d+)h\s*(\d+)m/i); // 1h 23m
-  const durMS = actionText.match(/(\d+)m\s*(\d+)s/i);  // 15m 36s
-  const durM = actionText.match(/(?:^|\s)(\d+)m(?:\s|$)/i); // 75m
+  const durHMM = cleanText.match(/(\d+)h\s*(\d+)m/i); // 1h 23m
+  const durMS = cleanText.match(/(\d+)m\s*(\d+)s/i);  // 15m 36s
+  const durM = cleanText.match(/(?:^|\s)(\d+)m(?:\s|$)/i); // 75m
 
   // Duration variants (RU)
-  const durHMMru = actionText.match(/(\d+)\s*ч\s*(\d+)\s*м/i);
-  const durMru = actionText.match(/(?:^|\s)(\d+)\s*м(?:\s|$)/i);
+  const durHMMru = cleanText.match(/(\d+)\s*ч\s*(\d+)\s*м/i);
+  const durMru = cleanText.match(/(?:^|\s)(\d+)\s*м(?:\s|$)/i);
 
   if (durHMM) parts.push(`${durHMM[1]}h ${durHMM[2]}m`);
   else if (durMS) parts.push(`${durMS[1]}m ${durMS[2]}s`);
@@ -103,46 +106,50 @@ const parseActivityMetrics = (actionText: string) => {
   else if (durMru) parts.push(`${durMru[1]}м`);
 
   // Calories (EN + RU)
-  const caloriesMatch = actionText.match(/(\d+)\s*(?:kcal|ккал)/i);
-  if (caloriesMatch) parts.push(`${caloriesMatch[1]}${isRu ? ' ккал' : 'kcal'}`.trim());
+  const caloriesMatch = cleanText.match(/(\d+)\s*(?:kcal|ккал)/i);
+  const caloriesBurnedMatch = cleanText.match(/(?:сжёг|burned|burnt)\s*(\d+)\s*(?:kcal|ккал)/i);
+  const caloriesVal = caloriesMatch?.[1] ?? caloriesBurnedMatch?.[1];
+  if (caloriesVal) parts.push(`${caloriesVal}${isRu ? 'ккал' : 'kcal'}`);
 
   // Strain (support colon and RU label)
-  const strainEn = actionText.match(/strain[:\s]*([\d.,]+)/i);
-  const strainBeforeEn = actionText.match(/([\d.,]+)\s*strain/i);
-  const strainRu = actionText.match(/нагрузка[:\s]*([\d.,]+)/i);
+  const strainEn = cleanText.match(/strain[:\s]*([\d.,]+)/i);
+  const strainBeforeEn = cleanText.match(/([\d.,]+)\s*strain/i);
+  const strainRu = cleanText.match(/нагрузка[:\s]*([\d.,]+)/i);
   const strainVal = (strainEn?.[1] ?? strainBeforeEn?.[1] ?? strainRu?.[1])?.replace(',', '.');
-  if (strainVal) parts.push(isRu ? `Нагрузка ${strainVal}` : `Strain ${strainVal}`);
+  if (strainVal) parts.push(`Strain ${strainVal}`);
 
   // Recovery (support both orders + RU)
-  const recoveryAfter = actionText.match(/recovery[:\s]*(\d+)%/i);
-  const recoveryBefore = actionText.match(/(\d+)%\s*recovery/i);
-  const recovered = actionText.match(/recovered\s*(\d+)%/i);
-  const recoveryRu = actionText.match(/восстановлени[ея][:\s]*(\d+)%/i);
+  const recoveryAfter = cleanText.match(/recovery[:\s]*(\d+)%/i);
+  const recoveryBefore = cleanText.match(/(\d+)%\s*recovery/i);
+  const recovered = cleanText.match(/recovered\s*(\d+)%/i);
+  const recoveryRu = cleanText.match(/восстановлени[ея][:\s]*(\d+)%/i);
   const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1] ?? recoveryRu?.[1];
-  if (recoveryVal) parts.push(isRu ? `Восстановление ${recoveryVal}%` : `Recovery ${recoveryVal}%`);
+  if (recoveryVal) parts.push(`${recoveryVal}% recovery`);
 
   // Sleep duration (EN + RU)
-  const sleptHM = actionText.match(/slept\s*(\d+)h\s*(\d+)m/i);
-  const sleptH = actionText.match(/slept\s*([\d.]+)h/i);
-  const sleptHMru = actionText.match(/спал(?:а)?\s*(\d+)\s*ч\s*(\d+)\s*м/i);
-  const sleptHru = actionText.match(/спал(?:а)?\s*([\d.,]+)\s*ч/i);
+  const sleptHM = cleanText.match(/slept\s*(\d+)h\s*(\d+)m/i);
+  const sleptH = cleanText.match(/slept\s*([\d.]+)h/i);
+  const sleptHMru = cleanText.match(/спал(?:а)?\s*(\d+)\s*ч\s*(\d+)\s*м/i);
+  const sleptHru = cleanText.match(/спал(?:а)?\s*([\d.,]+)\s*ч/i);
   if (sleptHM) parts.push(`${sleptHM[1]}h ${sleptHM[2]}m`);
   else if (sleptH) parts.push(`${sleptH[1]}h`);
   else if (sleptHMru) parts.push(`${sleptHMru[1]}ч ${sleptHMru[2]}м`);
   else if (sleptHru) parts.push(`${sleptHru[1]}ч`);
 
   // Quality (English and Russian labels)
-  const qualityEn = actionText.match(/quality[:\s]*?(\d+)%/i);
-  const qualityRu = actionText.match(/качество[:\s]*?(\d+)%/i);
+  const qualityEn = cleanText.match(/quality[:\s]*?(\d+)%/i);
+  const qualityRu = cleanText.match(/качество[:\s]*?(\d+)%/i);
   if (qualityEn?.[1]) parts.push(`${qualityEn[1]}% quality`);
   else if (qualityRu?.[1]) parts.push(`качество ${qualityRu[1]}%`);
 
-  // Prefer metrics-only output; never show raw source text like "ST ... [Whoop]"
+  // Return metrics if any found
   if (parts.length > 0) return parts.join(', ');
 
-  // Fallback by category
+  // Fallback: show generic activity labels without the full action text
   if (/(sleep|slept|сон|спал)/i.test(text)) return isRu ? 'сон' : 'sleep';
-  if (/(workout|training|тренировк|strain)/i.test(text)) return isRu ? 'тренировка' : 'workout';
+  if (/(workout|training|тренировк|strain|завершил)/i.test(text)) return isRu ? 'тренировка' : 'workout';
+  if (/(running|run|бег)/i.test(text)) return isRu ? 'бег' : 'run';
+  if (/(cycling|bike|велосипед)/i.test(text)) return isRu ? 'велосипед' : 'cycling';
 
   return isRu ? 'активность' : 'activity';
 };
