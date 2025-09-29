@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Target, Zap, Award } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Zap, Award, Heart, Activity } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { WeightProgressDetail } from '@/components/detail/WeightProgressDetail';
@@ -127,6 +127,8 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     bodyFat: null,
     weight: null,
     pullUps: null,
+    recovery: null,
+    steps: null,
     ranking: 3
   });
   const [loading, setLoading] = useState(true);
@@ -224,11 +226,38 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         .limit(1)
         .maybeSingle();
 
-      // Рассчитываем изменения для веса и процента жира
+      // Получаем Recovery Score за последние дни
+      const { data: recoveryData } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, metric_category, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'Recovery Score')
+        .eq('user_metrics.source', 'whoop')
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      // Получаем Steps за последние дни
+      const { data: stepsData } = await supabase
+        .from('daily_health_summary')
+        .select('steps, date')
+        .eq('user_id', user.id)
+        .not('steps', 'is', null)
+        .order('date', { ascending: false })
+        .limit(2);
+
+      // Рассчитываем изменения для веса, процента жира, Recovery и Steps
       let weightChange = null;
       let bodyFatChange = null;
       let currentWeight = null;
       let currentBodyFat = null;
+      let currentRecovery = null;
+      let recoveryChange = null;
+      let currentSteps = null;
+      let stepsChange = null;
 
       // Используем данные Withings если есть, иначе body_composition
       if (withingsWeight && withingsWeight.length > 0) {
@@ -263,6 +292,26 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         }
       }
 
+      // Обрабатываем данные Recovery
+      if (recoveryData && recoveryData.length > 0) {
+        currentRecovery = recoveryData[0].value;
+        if (recoveryData.length > 1) {
+          const current = recoveryData[0].value;
+          const previous = recoveryData[1].value;
+          recoveryChange = Math.round(current - previous);
+        }
+      }
+
+      // Обрабатываем данные Steps
+      if (stepsData && stepsData.length > 0) {
+        currentSteps = stepsData[0].steps;
+        if (stepsData.length > 1) {
+          const current = stepsData[0].steps;
+          const previous = stepsData[1].steps;
+          stepsChange = Math.round(((current - previous) / previous) * 100);
+        }
+      }
+
       setStats({
         bodyFat: {
           current: currentBodyFat,
@@ -277,6 +326,15 @@ export function StatsGrid({ userRole }: StatsGridProps) {
           current: pullUpValue,
           target: pullUpGoal?.target_value || 17,
           change: pullUpChange
+        },
+        recovery: {
+          current: currentRecovery,
+          change: recoveryChange
+        },
+        steps: {
+          current: currentSteps,
+          target: 10000,
+          change: stepsChange
         },
         ranking: 3
       });
@@ -430,7 +488,27 @@ export function StatsGrid({ userRole }: StatsGridProps) {
 
   // Рендер для участника
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <StatCard
+        title="Recovery Score"
+        value={stats.recovery?.current ? Math.round(stats.recovery.current) : "—"}
+        unit="%"
+        variant={stats.recovery?.current && stats.recovery.current >= 70 ? "success" : 
+                stats.recovery?.current && stats.recovery.current >= 50 ? "default" : "default"}
+        change={stats.recovery?.change}
+        icon={<Heart className="w-4 h-4" />}
+        compact
+      />
+      <StatCard
+        title="Шаги"
+        value={stats.steps?.current ? stats.steps.current.toLocaleString() : "—"}
+        unit=""
+        target={stats.steps?.target?.toLocaleString()}
+        variant={stats.steps?.current && stats.steps.current >= 10000 ? "success" : "default"}
+        change={stats.steps?.change}
+        icon={<Activity className="w-4 h-4" />}
+        compact
+      />
       <StatCard
         title="Процент жира"
         value={stats.bodyFat?.current ? stats.bodyFat.current.toFixed(1) : "—"}
