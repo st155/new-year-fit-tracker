@@ -85,9 +85,6 @@ const getActivityIcon = (actionText: string) => {
 const parseActivityMetrics = (actionText: string) => {
   const parts: string[] = [];
   
-  // Start with "ST" prefix
-  parts.push("ST");
-  
   // Duration (e.g., "15m 36s")
   const durationMatch = actionText.match(/(\d+)m\s*(\d+)s/);
   if (durationMatch) {
@@ -100,10 +97,10 @@ const parseActivityMetrics = (actionText: string) => {
     parts.push(`${caloriesMatch[1]}kcal`);
   }
   
-  // Strain (e.g., "Strain 7.2")
+  // Strain (e.g., "7.2 strain")
   const strainMatch = actionText.match(/([\d.]+)\s*strain/i);
   if (strainMatch) {
-    parts.push(`Strain ${strainMatch[1]}`);
+    parts.push(`${strainMatch[1]} strain`);
   }
   
   // Recovery (e.g., "85% recovery")
@@ -118,20 +115,19 @@ const parseActivityMetrics = (actionText: string) => {
     parts.push(`${sleepMatch[1]}h sleep`);
   }
   
-  // If we only have "ST", add a generic activity description
-  if (parts.length === 1) {
-    if (actionText.toLowerCase().includes('тренировку')) {
-      parts.push('завершил тренировку');
-    } else if (actionText.toLowerCase().includes('спал')) {
-      parts.push('спал');
-    } else if (actionText.toLowerCase().includes('recovered')) {
-      parts.push('восстановился');
-    } else {
-      parts.push('активность');
-    }
+  // Quality (quality percentage)
+  const qualityMatch = actionText.match(/качество:\s*(\d+)%/i);
+  if (qualityMatch) {
+    parts.push(`${qualityMatch[1]}% quality`);
   }
   
-  return parts.join(' ');
+  // If we have extracted metrics, join them with commas
+  if (parts.length > 0) {
+    return parts.join(', ');
+  }
+  
+  // Fallback for activities without specific metrics
+  return 'активность';
 };
 
 export function ActivityCard({ activity }: ActivityCardProps) {
