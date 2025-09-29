@@ -142,8 +142,8 @@ export function AdditionalMetrics() {
 
   return (
     <div className="space-y-6">
-      {/* Two-column layout for compact tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Three-column layout for compact tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Team Rank - Compact tile */}
         <div className="bg-card border-2 border-primary rounded-xl p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">TEAM RANK</div>
@@ -156,14 +156,17 @@ export function AdditionalMetrics() {
           <WeeklyGoals />
         </div>
 
-        {/* Leaderboard - Compact version */}
-        <div className="md:col-span-2">
+        {/* First Health Metric */}
+        <MetricCard {...healthMetrics[0]} />
+
+        {/* Leaderboard - Full width */}
+        <div className="md:col-span-2 lg:col-span-3">
           <Leaderboard />
         </div>
 
-        {/* Health Metrics - Two columns */}
-        {healthMetrics.map((metric, index) => (
-          <MetricCard key={index} {...metric} />
+        {/* Remaining Health Metrics - Three columns */}
+        {healthMetrics.slice(1).map((metric, index) => (
+          <MetricCard key={index + 1} {...metric} />
         ))}
       </div>
     </div>
