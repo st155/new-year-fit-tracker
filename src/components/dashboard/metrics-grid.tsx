@@ -101,8 +101,6 @@ export function MetricsGrid() {
         // Fetch real data from database
         const today = new Date().toISOString().split('T')[0];
         
-        console.log('Fetching metrics for user:', user.id);
-        
         // Get Recovery Score from Whoop
         const { data: recoveryData, error: recoveryError } = await supabase
           .from('metric_values')
@@ -118,8 +116,6 @@ export function MetricsGrid() {
           .order('created_at', { ascending: false })
           .limit(2);
         
-        console.log('Recovery data:', recoveryData, 'Error:', recoveryError);
-
         // Get Steps from daily summary
         const { data: stepsData, error: stepsError } = await supabase
           .from('daily_health_summary')
@@ -129,8 +125,6 @@ export function MetricsGrid() {
           .order('date', { ascending: false })
           .limit(2);
         
-        console.log('Steps data:', stepsData, 'Error:', stepsError);
-
         // Get Weight from Withings or body composition
         const { data: weightData, error: weightError } = await supabase
           .from('metric_values')
@@ -146,8 +140,6 @@ export function MetricsGrid() {
           .order('created_at', { ascending: false })
           .limit(2);
         
-        console.log('Weight data:', weightData, 'Error:', weightError);
-
         // Get Body Fat from Withings
         const { data: bodyFatData, error: bodyFatError } = await supabase
           .from('metric_values')
@@ -163,8 +155,6 @@ export function MetricsGrid() {
           .order('created_at', { ascending: false })
           .limit(2);
         
-        console.log('Body Fat data:', bodyFatData, 'Error:', bodyFatError);
-
         // Get VO2Max
         const { data: vo2maxData, error: vo2maxError } = await supabase
           .from('metric_values')
@@ -178,8 +168,6 @@ export function MetricsGrid() {
           .order('measurement_date', { ascending: false })
           .order('created_at', { ascending: false })
           .limit(1);
-        
-        console.log('VO2Max data:', vo2maxData, 'Error:', vo2maxError);
 
         // Calculate metrics with changes
         const newMetrics: Record<string, any> = {
