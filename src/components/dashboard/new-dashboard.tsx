@@ -4,6 +4,7 @@ import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
 import { AdditionalMetrics } from "./additional-metrics";
 import { TodayActivity } from "./today-activity";
+import { QuickActions } from "./quick-actions";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -113,6 +114,10 @@ export function NewDashboard() {
         <MetricsGrid />
         
         <TodayActivity />
+        
+        <div className="px-6">
+          <QuickActions userRole={userRole} />
+        </div>
         
         <AdditionalMetrics />
         
