@@ -125,7 +125,21 @@ export function MetricsGrid() {
           .order('date', { ascending: false })
           .limit(2);
         
-        // Get Weight from Withings or body composition
+        // Fallback: Steps from metric_values if no daily summary
+        const { data: stepsMV, error: stepsMVError } = await supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(metric_name)
+          `)
+          .eq('user_id', user.id)
+          .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(2);
+        
+        // Get Weight from Withings
         const { data: weightData, error: weightError } = await supabase
           .from('metric_values')
           .select(`
@@ -138,6 +152,15 @@ export function MetricsGrid() {
           .eq('user_metrics.source', 'withings')
           .order('measurement_date', { ascending: false })
           .order('created_at', { ascending: false })
+          .limit(2);
+        
+        // Fallback: latest Weight from body_composition
+        const { data: weightBC, error: weightBCError } = await supabase
+          .from('body_composition')
+          .select('weight, measurement_date')
+          .eq('user_id', user.id)
+          .not('weight', 'is', null)
+          .order('measurement_date', { ascending: false })
           .limit(2);
         
         // Get Body Fat from Withings
@@ -153,6 +176,15 @@ export function MetricsGrid() {
           .eq('user_metrics.source', 'withings')
           .order('measurement_date', { ascending: false })
           .order('created_at', { ascending: false })
+          .limit(2);
+        
+        // Fallback: latest Body Fat from body_composition
+        const { data: bodyFatBC, error: bodyFatBCError } = await supabase
+          .from('body_composition')
+          .select('body_fat_percentage, measurement_date')
+          .eq('user_id', user.id)
+          .not('body_fat_percentage', 'is', null)
+          .order('measurement_date', { ascending: false })
           .limit(2);
         
         // Get VO2Max
@@ -197,11 +229,22 @@ export function MetricsGrid() {
         // Steps
         if (stepsData && stepsData.length > 0) {
           newMetrics.steps.value = stepsData[0].steps.toLocaleString();
-          if (stepsData.length > 1) {
+          if (stepsData.length > 1 && stepsData[1].steps) {
             const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
             newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
           newMetrics.steps.subtitle = "daily average";
+        } else if (stepsMV && stepsMV.length > 0) {
+          const curr = Number(stepsMV[0].value) || 0;
+          newMetrics.steps.value = curr.toLocaleString();
+          if (stepsMV.length > 1 && stepsMV[1].value) {
+            const prev = Number(stepsMV[1].value) || 0;
+            if (prev > 0) {
+              const change = Math.round(((curr - prev) / prev) * 100);
+              newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
+            }
+          }
+          newMetrics.steps.subtitle = "latest steps";
         }
 
         // Weight
@@ -212,6 +255,17 @@ export function MetricsGrid() {
             newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
           newMetrics.weight.subtitle = "по ланзей";
+        } else if (weightBC && weightBC.length > 0) {
+          const curr = Number(weightBC[0].weight);
+          newMetrics.weight.value = curr.toFixed(1);
+          if (weightBC.length > 1 && weightBC[1].weight) {
+            const prev = Number(weightBC[1].weight);
+            if (prev > 0) {
+              const change = Math.round(((curr - prev) / prev) * 100);
+              newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
+            }
+          }
+          newMetrics.weight.subtitle = "по ланзей";
         }
 
         // Body Fat
@@ -220,6 +274,17 @@ export function MetricsGrid() {
           if (bodyFatData.length > 1) {
             const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
             newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
+          }
+          newMetrics.body_fat.subtitle = "полненькей";
+        } else if (bodyFatBC && bodyFatBC.length > 0) {
+          const curr = Number(bodyFatBC[0].body_fat_percentage);
+          newMetrics.body_fat.value = curr.toFixed(1);
+          if (bodyFatBC.length > 1 && bodyFatBC[1].body_fat_percentage) {
+            const prev = Number(bodyFatBC[1].body_fat_percentage);
+            if (curr !== 0) {
+              const change = Math.round(((prev - curr) / curr) * 100);
+              newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
+            }
           }
           newMetrics.body_fat.subtitle = "полненькей";
         }
