@@ -50,6 +50,12 @@ All colors MUST be HSL.
     --success: 142 71% 45%;
     --success-foreground: 210 40% 98%;
 
+    /* Metric color scheme */
+    --metric-body-fat: 142 71% 45%;      /* Green */
+    --metric-weight: 16 90% 58%;         /* Orange/Red */
+    --metric-vo2max: 217 91% 60%;        /* Blue */
+    --metric-row: 280 80% 65%;           /* Purple */
+
     /* Gradients for dynamic effects */
     --gradient-primary: linear-gradient(135deg, hsl(16 90% 58%), hsl(25 95% 53%));
     --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 52%));

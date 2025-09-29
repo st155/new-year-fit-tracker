@@ -51,6 +51,12 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        metric: {
+          "body-fat": "hsl(var(--metric-body-fat))",
+          weight: "hsl(var(--metric-weight))",
+          vo2max: "hsl(var(--metric-vo2max))",
+          row: "hsl(var(--metric-row))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
