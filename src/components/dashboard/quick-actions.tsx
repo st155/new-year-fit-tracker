@@ -95,13 +95,15 @@ export function QuickActions({ userRole }: QuickActionsProps) {
       
       <div className="space-y-4">
         {/* Top row - 3 square cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
             <DialogTrigger asChild>
-              <Card className="aspect-square border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer group hover:scale-105 transition-transform">
-                <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
-                  <Brain className="h-8 w-8" />
-                  <span className="text-sm font-semibold leading-tight">ИИ-анализ трекера</span>
+              <Card className="h-16 border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer group hover:scale-105 transition-transform">
+                <CardContent className="p-2 h-full flex items-center justify-center text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <Brain className="h-4 w-4" />
+                    <span className="text-xs font-medium">ИИ-анализ</span>
+                  </div>
                 </CardContent>
               </Card>
             </DialogTrigger>
@@ -122,49 +124,53 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           </Dialog>
           
           <Card 
-            className="aspect-square border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            className="h-16 border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/progress')}
           >
-            <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
-              <Upload className="h-8 w-8" />
-              <span className="text-sm font-semibold leading-tight">Загузит данень</span>
+            <CardContent className="p-2 h-full flex items-center justify-center text-center">
+              <div className="flex flex-col items-center gap-1">
+                <Upload className="h-4 w-4" />
+                <span className="text-xs font-medium">Загрузить</span>
+              </div>
             </CardContent>
           </Card>
           
           <Card 
-            className="aspect-square border-0 bg-gradient-to-br from-blue-400 via-purple-500 to-violet-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            className="h-16 border-0 bg-gradient-to-br from-blue-400 via-purple-500 to-violet-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/goals/create')}
           >
-            <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
-              <Target className="h-8 w-8" />
-              <span className="text-sm font-semibold leading-tight">Новая цель</span>
+            <CardContent className="p-2 h-full flex items-center justify-center text-center">
+              <div className="flex flex-col items-center gap-1">
+                <Target className="h-4 w-4" />
+                <span className="text-xs font-medium">Новая цель</span>
+              </div>
             </CardContent>
           </Card>
         </div>
         
         {/* Bottom row - 2 rectangular cards */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Card 
-            className="border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            className="h-14 border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/progress')}
           >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/20">
-                <TrendingUp className="h-6 w-6" />
+            <CardContent className="p-2 flex items-center gap-2 h-full">
+              <div className="p-1 rounded-full bg-white/20">
+                <TrendingUp className="h-4 w-4" />
               </div>
-              <span className="font-semibold">Мой прогресс</span>
+              <span className="text-sm font-medium">Мой прогресс</span>
             </CardContent>
           </Card>
 
           <Card 
-            className="border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            className="h-14 border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/fitness-data')}
           >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-full bg-white/20">
-                <Activity className="h-6 w-6" />
+            <CardContent className="p-2 flex items-center gap-2 h-full">
+              <div className="p-1 rounded-full bg-white/20">
+                <Activity className="h-4 w-4" />
               </div>
-              <span className="font-semibold">Дание трекеров</span>
+              <span className="text-sm font-medium">Данные трекеров</span>
             </CardContent>
           </Card>
         </div>
