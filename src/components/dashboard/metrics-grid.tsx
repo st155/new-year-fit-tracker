@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ interface MetricCardProps {
   color: "body-fat" | "weight" | "vo2max" | "row" | "recovery" | "steps";
 }
 
-function MetricCard({ title, value, unit, change, subtitle, color }: MetricCardProps) {
+function MetricCard({ title, value, unit, change, subtitle, color, onClick }: MetricCardProps & { onClick?: () => void }) {
   const colorClasses = {
     "body-fat": "border-metric-body-fat bg-metric-body-fat/5",
     "weight": "border-metric-weight bg-metric-weight/5", 
@@ -27,10 +28,13 @@ function MetricCard({ title, value, unit, change, subtitle, color }: MetricCardP
   };
 
   return (
-    <Card className={cn(
-      "border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg",
-      colorClasses[color]
-    )}>
+    <Card 
+      className={cn(
+        "border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer",
+        colorClasses[color]
+      )}
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="text-sm font-medium text-muted-foreground mb-2">
           {title}
@@ -66,6 +70,7 @@ function MetricCard({ title, value, unit, change, subtitle, color }: MetricCardP
 }
 
 export function MetricsGrid() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "vo2max", "row_2km"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
@@ -347,6 +352,7 @@ export function MetricsGrid() {
               change={data.change}
               subtitle={data.subtitle}
               color={config.color}
+              onClick={() => navigate(`/metric/${metricKey}`)}
             />
           );
         })}
