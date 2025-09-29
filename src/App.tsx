@@ -25,6 +25,7 @@ import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Landing from "./pages/Landing";
 import Feed from "./pages/Feed";
 
 const queryClient = new QueryClient();
@@ -39,14 +40,16 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={
               <ProtectedRoute>
                 <AppLayout>
                   <Index />
                 </AppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/dashboard" element={
+            <Route path="/app" element={
               <ProtectedRoute>
                 <AppLayout>
                   <Dashboard />
