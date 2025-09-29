@@ -1,0 +1,117 @@
+-- Update the activity feed entry function to use English format
+CREATE OR REPLACE FUNCTION public.create_activity_feed_entry()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  user_profile RECORD;
+  action_text TEXT;
+  metric_info RECORD;
+  strain_value NUMERIC;
+BEGIN
+  -- Get user profile
+  SELECT username, full_name INTO user_profile
+  FROM public.profiles
+  WHERE user_id = NEW.user_id;
+  
+  -- Generate action text based on table
+  IF TG_TABLE_NAME = 'workouts' THEN
+    action_text := COALESCE(user_profile.username, 'user');
+    action_text := action_text || ' made an Activity';
+    
+    -- Add calories
+    IF NEW.calories_burned IS NOT NULL THEN
+      action_text := action_text || ', ' || ROUND(NEW.calories_burned::numeric, 0) || 'kcal';
+    END IF;
+    
+    -- Try to get strain from metric_values for this workout
+    SELECT mv.value INTO strain_value
+    FROM public.metric_values mv
+    JOIN public.user_metrics um ON um.id = mv.metric_id
+    WHERE mv.user_id = NEW.user_id
+      AND um.metric_name = 'Workout Strain'
+      AND mv.measurement_date = DATE(NEW.start_time)
+      AND mv.external_id = NEW.external_id
+    LIMIT 1;
+    
+    IF strain_value IS NOT NULL THEN
+      action_text := action_text || ', ' || ROUND(strain_value::numeric, 1) || ' strain';
+    END IF;
+    
+  ELSIF TG_TABLE_NAME = 'measurements' THEN
+    SELECT goal_name INTO action_text FROM public.goals WHERE id = NEW.goal_id;
+    action_text := COALESCE(user_profile.username, 'user') || 
+                   ' recorded: ' || COALESCE(action_text, 'goal') || 
+                   ' = ' || NEW.value || ' ' || NEW.unit;
+                   
+  ELSIF TG_TABLE_NAME = 'body_composition' THEN
+    action_text := COALESCE(user_profile.username, 'user') || 
+                   ' updated body composition';
+    IF NEW.weight IS NOT NULL THEN
+      action_text := action_text || ' (weight: ' || NEW.weight || ' kg)';
+    END IF;
+    
+  ELSIF TG_TABLE_NAME = 'goals' THEN
+    action_text := COALESCE(user_profile.username, 'user') || 
+                   ' created a new goal: ' || NEW.goal_name;
+    IF NEW.target_value IS NOT NULL THEN
+      action_text := action_text || ' (' || NEW.target_value || 
+                     COALESCE(' ' || NEW.target_unit, '') || ')';
+    END IF;
+
+  ELSIF TG_TABLE_NAME = 'metric_values' THEN
+    -- Get metric information
+    SELECT metric_name, metric_category, unit, source 
+    INTO metric_info
+    FROM public.user_metrics 
+    WHERE id = NEW.metric_id;
+    
+    -- Only create activity feed entries for workout and recovery related metrics
+    IF metric_info.metric_category IN ('workout', 'recovery', 'sleep', 'cardio') THEN
+      action_text := COALESCE(user_profile.username, 'user');
+      
+      -- Format based on metric category
+      IF metric_info.metric_category = 'workout' THEN
+        action_text := action_text || ' completed a workout';
+        IF metric_info.metric_name = 'Workout Strain' THEN
+          action_text := action_text || ', Strain: ' || ROUND(NEW.value::numeric, 1);
+        ELSIF metric_info.metric_name = 'Workout Calories' THEN
+          action_text := action_text || ', ' || ROUND(NEW.value::numeric, 0) || 'kcal';
+        END IF;
+      ELSIF metric_info.metric_category = 'recovery' THEN
+        action_text := action_text || ' recovered ' || ROUND(NEW.value::numeric, 0) || '%';
+      ELSIF metric_info.metric_category = 'sleep' THEN
+        action_text := action_text || ' slept ' || ROUND(NEW.value::numeric / 60, 1) || 'h';
+      ELSIF metric_info.metric_category = 'cardio' THEN
+        IF metric_info.metric_name = 'VO2Max' THEN
+          action_text := action_text || ' updated VO2Max: ' || ROUND(NEW.value::numeric, 1) || ' ' || metric_info.unit;
+        END IF;
+      END IF;
+    ELSE
+      -- Don't create activity feed entries for non-activity metrics
+      RETURN NEW;
+    END IF;
+  END IF;
+  
+  -- Insert into activity feed
+  INSERT INTO public.activity_feed (
+    user_id,
+    action_type,
+    action_text,
+    source_table,
+    source_id,
+    metadata
+  ) VALUES (
+    NEW.user_id,
+    TG_TABLE_NAME,
+    action_text,
+    TG_TABLE_NAME,
+    NEW.id,
+    to_jsonb(NEW)
+  );
+  
+  RETURN NEW;
+END;
+$function$;
