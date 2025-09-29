@@ -29,23 +29,23 @@ const getActivityIcon = (activity: ActivityCardProps["activity"]) => {
   const has = (s: string) => text.includes(s) || type.includes(s);
 
   if (activity.action_type === 'workouts') {
-    if (has('run') || has('бег')) return <Footprints className="h-8 w-8" />;
-    if (has('swim') || has('плав')) return <Waves className="h-8 w-8" />;
-    if (has('bike') || has('велос') || has('cycle')) return <Bike className="h-8 w-8" />;
-    if (has('hike') || has('walk') || has('ходьб') || has('поход')) return <Mountain className="h-8 w-8" />;
-    if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг')) return <Dumbbell className="h-8 w-8" />;
-    return <TrendingUp className="h-8 w-8" />;
+    if (has('run') || has('бег')) return <Footprints className="h-8 w-8" strokeWidth={1.5} />;
+    if (has('swim') || has('плав')) return <Waves className="h-8 w-8" strokeWidth={1.5} />;
+    if (has('bike') || has('велос') || has('cycle')) return <Bike className="h-8 w-8" strokeWidth={1.5} />;
+    if (has('hike') || has('walk') || has('ходьб') || has('поход')) return <Mountain className="h-8 w-8" strokeWidth={1.5} />;
+    if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг')) return <Dumbbell className="h-8 w-8" strokeWidth={1.5} />;
+    return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
   }
 
   if (activity.action_type === 'metric_values') {
-    if (has('recovery') || /восстанов/i.test(text)) return <Heart className="h-8 w-8" />;
-    return <TrendingUp className="h-8 w-8" />;
+    if (has('recovery') || /восстанов/i.test(text)) return <Heart className="h-8 w-8" strokeWidth={1.5} />;
+    return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
   }
 
-  if (/(sleep|сон)/i.test(text)) return <Moon className="h-8 w-8" />;
-  if (/(boxing|бокс|martial|единобор)/i.test(text)) return <Zap className="h-8 w-8" />;
+  if (/(sleep|сон)/i.test(text)) return <Moon className="h-8 w-8" strokeWidth={1.5} />;
+  if (/(boxing|бокс|martial|единобор)/i.test(text)) return <Zap className="h-8 w-8" strokeWidth={1.5} />;
 
-  return <Activity className="h-8 w-8" />;
+  return <Activity className="h-8 w-8" strokeWidth={1.5} />;
 };
 
 const formatDistance = (km?: number | null, swim = false) => {
