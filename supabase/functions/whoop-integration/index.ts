@@ -232,6 +232,32 @@ async function handleCallback(req: Request, code?: string | null, state?: string
     
     console.log('Tokens saved successfully to database');
 
+    // Получаем информацию о пользователе Whoop и сохраняем связь
+    try {
+      const whoopUserInfo = await fetchWhoopUserInfo(tokens.access_token);
+      console.log('Whoop user info:', whoopUserInfo);
+      
+      if (whoopUserInfo.user_id) {
+        // Сохраняем связь whoop_user_id с нашим пользователем
+        const { error: mappingError } = await supabase
+          .from('whoop_user_mapping')
+          .upsert({
+            user_id: mapping.user_id,
+            whoop_user_id: whoopUserInfo.user_id.toString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        if (mappingError) {
+          console.error('Error saving Whoop user mapping:', mappingError);
+        } else {
+          console.log(`Whoop user mapping saved: ${whoopUserInfo.user_id} -> ${mapping.user_id}`);
+        }
+      }
+    } catch (userInfoError: any) {
+      console.error('Error fetching Whoop user info (non-critical):', userInfoError?.message);
+      // Не прерываем процесс при ошибке получения информации о пользователе
+    }
+
     // Сразу синхронизируем данные с новыми токенами
     let syncResult = null;
     try {

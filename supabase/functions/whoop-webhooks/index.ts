@@ -48,29 +48,38 @@ async function validateWhoopSignature(
 }
 
 // Функция для получения токена пользователя из базы данных
-async function getUserToken(userId: string): Promise<{ access_token: string, user_id: string } | null> {
+async function getUserToken(whoopUserId: string): Promise<{ access_token: string, user_id: string } | null> {
   try {
-    // Сначала ищем по integer user_id (если это число)
-    let query = supabase
-      .from('whoop_tokens')
-      .select('access_token, user_id')
-      .not('access_token', 'is', null);
-
-    // Пытаемся найти пользователя по whoop user_id
-    // Для этого нужно будет сопоставить whoop user_id с нашими user_id через таблицу связей
-    const { data: tokens, error } = await query;
+    console.log(`Looking for user with Whoop ID: ${whoopUserId}`);
     
-    if (error) {
-      console.error('Error fetching user tokens:', error);
+    // Получаем mapping Whoop user_id -> наш user_id
+    const { data: mapping, error: mappingError } = await supabase
+      .from('whoop_user_mapping')
+      .select('user_id')
+      .eq('whoop_user_id', whoopUserId)
+      .single();
+
+    if (mappingError || !mapping) {
+      console.error('No user mapping found for Whoop user:', whoopUserId, mappingError);
       return null;
     }
 
-    // Для начала возьмем первый доступный токен (позже нужно будет создать таблицу связей)
-    if (tokens && tokens.length > 0) {
-      return tokens[0];
+    console.log(`Found mapping: Whoop user ${whoopUserId} -> our user ${mapping.user_id}`);
+
+    // Получаем токен для нашего пользователя
+    const { data: token, error: tokenError } = await supabase
+      .from('whoop_tokens')
+      .select('access_token, user_id')
+      .eq('user_id', mapping.user_id)
+      .not('access_token', 'is', null)
+      .single();
+    
+    if (tokenError || !token) {
+      console.error('No token found for user:', mapping.user_id, tokenError);
+      return null;
     }
 
-    return null;
+    return token;
   } catch (error) {
     console.error('Error in getUserToken:', error);
     return null;

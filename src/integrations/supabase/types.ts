@@ -869,6 +869,30 @@ export type Database = {
         }
         Relationships: []
       }
+      whoop_user_mapping: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          whoop_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          whoop_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          whoop_user_id?: string
+        }
+        Relationships: []
+      }
       withings_oauth_states: {
         Row: {
           created_at: string
