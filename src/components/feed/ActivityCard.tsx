@@ -23,53 +23,28 @@ interface ActivityCardProps {
 const getActivityIcon = (actionText: string) => {
   const text = actionText.toLowerCase();
   
-  // Running activities (orange person running icon)
-  if (text.includes('running') || text.includes('run') || text.includes('бег')) {
-    return <Footprints className="h-8 w-8 text-orange-500" />;
-  }
-  
-  // Swimming activities (teal waves icon)
-  if (text.includes('swimming') || text.includes('swim') || text.includes('плавание')) {
-    return <Waves className="h-8 w-8 text-teal-500" />;
-  }
-  
-  // Cycling activities (blue bicycle icon)
-  if (text.includes('cycling') || text.includes('bike') || text.includes('велосипед')) {
-    return <Bike className="h-8 w-8 text-blue-500" />;
-  }
-  
-  // Weightlifting/Gym activities (red/orange dumbbell icon)
-  if (text.includes('weight') || text.includes('gym') || text.includes('lifting') || text.includes('силовая') || text.includes('тренировка')) {
-    return <Dumbbell className="h-8 w-8 text-red-500" />;
-  }
-  
-  // Hiking/Walking activities (green mountain/boot icon)
-  if (text.includes('hiking') || text.includes('walk') || text.includes('поход') || text.includes('ходьба')) {
-    return <Mountain className="h-8 w-8 text-green-500" />;
-  }
-  
-  // Yoga/Meditation activities (blue person sitting icon)
-  if (text.includes('yoga') || text.includes('meditation') || text.includes('йога') || text.includes('медитация')) {
-    return <User className="h-8 w-8 text-blue-500" />;
-  }
-  
-  // Recovery activities (green trending up)
-  if (text.includes('recovered') || text.includes('recovery') || text.includes('восстановление')) {
-    return <TrendingUp className="h-8 w-8 text-green-500" />;
-  }
-  
-  // Sleep activities (purple moon)
+  // Sleep activities (purple moon icon)
   if (text.includes('slept') || text.includes('sleep') || text.includes('сон') || text.includes('спал')) {
-    return <Moon className="h-8 w-8 text-purple-500" />;
+    return <Moon className="h-8 w-8" />;
   }
   
-  // Strain/workout activities (orange dumbbell for general workouts)
-  if (text.includes('strain') || text.includes('workout') || text.includes('training')) {
-    return <Dumbbell className="h-8 w-8 text-orange-500" />;
+  // Strength/Weight training (orange dumbbell icon)
+  if (text.includes('weight') || text.includes('strength') || text.includes('силовая') || text.includes('гантели')) {
+    return <Dumbbell className="h-8 w-8" />;
   }
   
-  // Default fallback icon (neutral activity icon)
-  return <Activity className="h-8 w-8 text-primary" />;
+  // General workouts/training (orange activity line icon)
+  if (text.includes('workout') || text.includes('training') || text.includes('тренировку') || text.includes('strain') || text.includes('завершил')) {
+    return <TrendingUp className="h-8 w-8" />;
+  }
+  
+  // Recovery activities  
+  if (text.includes('recovered') || text.includes('recovery') || text.includes('восстановление')) {
+    return <TrendingUp className="h-8 w-8" />;
+  }
+  
+  // Default fallback icon (standard activity icon)
+  return <Activity className="h-8 w-8" />;
 };
 
 const parseActivityMetrics = (actionText: string) => {
@@ -132,7 +107,7 @@ export function ActivityCard({ activity }: ActivityCardProps) {
     <div className="relative rounded-3xl p-[2px] bg-gradient-to-r from-primary via-primary to-success overflow-hidden group hover:scale-[1.02] transition-all duration-300">
       <div className="relative rounded-3xl bg-card/90 backdrop-blur-sm p-6 h-full">
         <div className="flex items-center gap-4">
-          <div className="shrink-0">
+          <div className="text-primary shrink-0">
             {icon}
           </div>
           
