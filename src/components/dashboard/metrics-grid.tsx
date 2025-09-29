@@ -325,13 +325,13 @@ export function MetricsGrid() {
   }
 
   return (
-    <div className="px-6 relative">
+    <div className="relative">
       <MetricsSettings 
         selectedMetrics={selectedMetrics}
         onMetricsChange={handleMetricsChange}
       />
       
-      <div className="grid grid-cols-2 gap-4 relative">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {selectedMetrics.map((metricKey, index) => {
           const config = metricConfig[metricKey];
           const data = metrics[metricKey];
@@ -351,8 +351,8 @@ export function MetricsGrid() {
           );
         })}
 
-        {/* Team Rank Circle */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+        {/* Team Rank Circle - only show on mobile/tablet */}
+        <div className="lg:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
           <div className="bg-card border-2 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-glow">
             <div className="text-xs text-muted-foreground">TEAM</div>
             <div className="text-xs text-muted-foreground">RANK:</div>

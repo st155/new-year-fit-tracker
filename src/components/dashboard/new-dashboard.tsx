@@ -102,7 +102,7 @@ export function NewDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="space-y-8 pb-8">
+      <div className="space-y-6 pb-8">
         <NewDashboardHeader
           userName={userName}
           userRole={userRole}
@@ -111,15 +111,22 @@ export function NewDashboard() {
           daysLeft={daysLeft}
         />
         
-        <MetricsGrid />
-        
-        <TodayActivity />
-        
+        {/* Desktop: Two-column layout, Mobile: Single column */}
         <div className="px-6">
-          <QuickActions userRole={userRole} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Main metrics and quick actions */}
+            <div className="lg:col-span-2 space-y-6">
+              <MetricsGrid />
+              <TodayActivity />
+            </div>
+            
+            {/* Right Column - Quick actions and additional metrics */}
+            <div className="space-y-6">
+              <QuickActions userRole={userRole} />
+              <AdditionalMetrics />
+            </div>
+          </div>
         </div>
-        
-        <AdditionalMetrics />
         
         <GoalsProgress />
       </div>

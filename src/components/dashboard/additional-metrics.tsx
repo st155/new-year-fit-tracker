@@ -2,6 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Activity, Heart, Flame, Footprints, Moon, TrendingUp, Droplets, Dumbbell } from "lucide-react";
+import { Leaderboard } from "./leaderboard";
+import { WeeklyGoals } from "./weekly-goals";
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -139,26 +141,29 @@ export function AdditionalMetrics() {
   ];
 
   return (
-    <div className="px-6 space-y-6">
-      {/* Weekly Activity Section */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-          Weekly Activity
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {weeklyMetrics.map((metric, index) => (
-            <MetricCard key={index} {...metric} />
-          ))}
+    <div className="space-y-6">
+      {/* Team Rank - Desktop only */}
+      <div className="hidden lg:block">
+        <div className="bg-card border-2 border-primary rounded-xl p-4 text-center">
+          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">TEAM RANK</div>
+          <div className="text-3xl font-bold text-primary mb-1">#3</div>
+          <div className="text-xs text-muted-foreground">2KM ROW</div>
         </div>
       </div>
 
-      {/* Health & Recovery Section */}
+      {/* Weekly Goals */}
+      <WeeklyGoals />
+
+      {/* Leaderboard */}
+      <Leaderboard />
+
+      {/* Quick Health Metrics */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-          Health & Recovery
+          Today's Health
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {healthMetrics.map((metric, index) => (
+        <div className="grid grid-cols-1 gap-3">
+          {healthMetrics.slice(0, 2).map((metric, index) => (
             <MetricCard key={index} {...metric} />
           ))}
         </div>
