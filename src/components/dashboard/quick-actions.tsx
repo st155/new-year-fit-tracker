@@ -93,78 +93,81 @@ export function QuickActions({ userRole }: QuickActionsProps) {
         Быстрые действия
       </h3>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="h-auto p-3 flex flex-col items-center gap-2 border-2 border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 hover:border-orange-500/40 transition-all group"
-            >
-              <div className="p-2 rounded-xl bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
-                <Brain className="h-5 w-5 text-orange-500" />
+      <div className="space-y-4">
+        {/* Top row - 3 square cards */}
+        <div className="grid grid-cols-3 gap-3">
+          <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+            <DialogTrigger asChild>
+              <Card className="aspect-square border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer group hover:scale-105 transition-transform">
+                <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
+                  <Brain className="h-8 w-8" />
+                  <span className="text-sm font-semibold leading-tight">ИИ-анализ трекера</span>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>ИИ-анализ фитнес-трекера</DialogTitle>
+              </DialogHeader>
+              <AIPhotoUpload
+                onDataExtracted={(result) => {
+                  if (result.success && result.saved) {
+                    setIsAIDialogOpen(false);
+                    navigate('/progress');
+                  }
+                }}
+                label="Загрузить скриншот трекера"
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Card 
+            className="aspect-square border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            onClick={() => navigate('/progress')}
+          >
+            <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
+              <Upload className="h-8 w-8" />
+              <span className="text-sm font-semibold leading-tight">Загузит данень</span>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="aspect-square border-0 bg-gradient-to-br from-blue-400 via-purple-500 to-violet-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            onClick={() => navigate('/goals/create')}
+          >
+            <CardContent className="p-4 h-full flex flex-col items-center justify-center text-center space-y-2">
+              <Target className="h-8 w-8" />
+              <span className="text-sm font-semibold leading-tight">Новая цель</span>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Bottom row - 2 rectangular cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card 
+            className="border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            onClick={() => navigate('/progress')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/20">
+                <TrendingUp className="h-6 w-6" />
               </div>
-              <span className="text-xs font-medium text-center leading-tight">ИИ-анализ</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>ИИ-анализ фитнес-трекера</DialogTitle>
-            </DialogHeader>
-            <AIPhotoUpload
-              onDataExtracted={(result) => {
-                if (result.success && result.saved) {
-                  setIsAIDialogOpen(false);
-                  navigate('/progress');
-                }
-              }}
-              label="Загрузить скриншот трекера"
-            />
-          </DialogContent>
-        </Dialog>
-        
-        <Button 
-          variant="outline"
-          className="h-auto p-3 flex flex-col items-center gap-2 border-2 border-green-500/20 bg-gradient-to-br from-green-500/10 to-green-500/5 hover:border-green-500/40 transition-all group"
-          onClick={() => navigate('/progress')}
-        >
-          <div className="p-2 rounded-xl bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-            <Upload className="h-5 w-5 text-green-500" />
-          </div>
-          <span className="text-xs font-medium text-center leading-tight">Загрузить</span>
-        </Button>
-        
-        <Button 
-          variant="outline"
-          className="h-auto p-3 flex flex-col items-center gap-2 border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 hover:border-blue-500/40 transition-all group"
-          onClick={() => navigate('/goals/create')}
-        >
-          <div className="p-2 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-            <Target className="h-5 w-5 text-blue-500" />
-          </div>
-          <span className="text-xs font-medium text-center leading-tight">Новая цель</span>
-        </Button>
-        
-        <Button 
-          variant="outline"
-          className="h-auto p-3 flex flex-col items-center gap-2 border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:border-purple-500/40 transition-all group"
-          onClick={() => navigate('/progress')}
-        >
-          <div className="p-2 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-            <TrendingUp className="h-5 w-5 text-purple-500" />
-          </div>
-          <span className="text-xs font-medium text-center leading-tight">Прогресс</span>
-        </Button>
+              <span className="font-semibold">Мой прогресс</span>
+            </CardContent>
+          </Card>
 
-        <Button 
-          variant="outline"
-          className="h-auto p-3 flex flex-col items-center gap-2 border-2 border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 hover:border-cyan-500/40 transition-all group"
-          onClick={() => navigate('/fitness-data')}
-        >
-          <div className="p-2 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
-            <Activity className="h-5 w-5 text-cyan-500" />
-          </div>
-          <span className="text-xs font-medium text-center leading-tight">Трекеры</span>
-        </Button>
+          <Card 
+            className="border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            onClick={() => navigate('/fitness-data')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-full bg-white/20">
+                <Activity className="h-6 w-6" />
+              </div>
+              <span className="font-semibold">Дание трекеров</span>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background animate-fade-in">
