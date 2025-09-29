@@ -134,7 +134,7 @@ export function Leaderboard() {
           isUser: entry.isUser
         }));
 
-      setLeaderboardData(sortedLeaderboard.slice(0, 5)); // Показываем топ-5
+      setLeaderboardData(sortedLeaderboard); // Показываем всех участников
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       setLeaderboardData([]);
@@ -155,7 +155,7 @@ export function Leaderboard() {
         <Card className="border-2 border-accent/20">
           <CardContent className="p-4">
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(Math.min(leaderboardData.length, 10))].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
@@ -184,7 +184,7 @@ export function Leaderboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto">{/* Добавляем скролл для большого количества участников */}
               {leaderboardData.map((user) => (
                 <div 
                   key={user.rank}
