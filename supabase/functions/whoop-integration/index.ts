@@ -916,6 +916,28 @@ async function saveSleepData(userId: string, records: any[]) {
   for (const record of records) {
     if (!record.score || !record.id) continue;
 
+    // Sleep duration from stage_summary.total_in_bed_time_milli
+    if (record.score.stage_summary?.total_in_bed_time_milli) {
+      const totalSleepHours = record.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60); // convert ms to hours
+      const metricId = await getOrCreateMetric(userId, 'Sleep Duration', 'sleep', 'hours', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: totalSleepHours,
+          measurement_date: record.created_at.split('T')[0],
+          external_id: `${record.id}_duration`,
+          source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving sleep duration:', error);
+    }
+
     // Sleep efficiency - API v2 structure
     if (record.score.sleep_efficiency_percentage !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Sleep Efficiency', 'sleep', '%', 'whoop');
