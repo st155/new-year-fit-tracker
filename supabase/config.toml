@@ -3,9 +3,11 @@ project_id = "ueykmmzmguzjppdudvef"
 [functions.whoop-integration]
 verify_jwt = false
 
-[functions.withings-integration]
+[functions.whoop-webhooks]
 verify_jwt = false
 
+[functions.withings-integration]
+verify_jwt = false
 
 [functions.apple-health-import]
 verify_jwt = true
@@ -15,3 +17,9 @@ verify_jwt = true
 
 [functions.photo-storage]
 verify_jwt = true
+
+[functions.send-trainer-broadcast]
+verify_jwt = true
+
+[functions.scheduled-sync]
+verify_jwt = false
