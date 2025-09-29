@@ -121,24 +121,11 @@ export function NewDashboard() {
           <QuickActions userRole={userRole} />
         </div>
         
-        {/* Compact grid layout for remaining components */}
+        {/* Compact, centered stack for remaining content */}
         <div className="px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* Today's activity */}
-            <div className="lg:col-span-2 xl:col-span-2">
-              <TodayActivity />
-            </div>
-            
-            {/* Additional metrics sidebar */}
-            <div className="lg:col-span-1 xl:col-span-1">
-              <AdditionalMetrics />
-            </div>
-          </div>
-        </div>
-        
-        {/* Goals Progress - compact layout */}
-        <div className="px-6">
-          <div className="max-w-4xl">
+          <div className="mx-auto max-w-5xl space-y-6">
+            <TodayActivity />
+            <AdditionalMetrics />
             <GoalsProgress />
           </div>
         </div>
