@@ -17,9 +17,11 @@ import { Link } from "react-router-dom";
 import { TrainerPostsFeed } from "@/components/notifications/TrainerPostsFeed";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ const Index = () => {
     daysLeft = Math.max(0, Math.ceil(timeLeft / (1000 * 60 * 60 * 24)));
   }
 
-  const userName = profile?.full_name || profile?.username || 'Пользователь';
+  const userName = profile?.full_name || profile?.username || t('common.user');
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
   return (
@@ -171,25 +173,25 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
-                    Панель тренера
+                    {t('dashboard.trainerPanel')}
                   </CardTitle>
                   <CardDescription>
-                    Доступ к расширенным функциям
+                    {t('dashboard.trainerPanelDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="bg-primary/10 text-primary">
-                        Тренер
+                        {t('common.trainer')}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
-                        Управление подопечными
+                        {t('dashboard.clientManagement')}
                       </span>
                     </div>
                     <Link to="/trainer-dashboard">
                       <Button>
-                        Открыть панель
+                        {t('dashboard.openPanel')}
                       </Button>
                     </Link>
                   </div>
@@ -223,12 +225,12 @@ const Index = () => {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full">
-                🧪 Запустить тесты проекта
+                {t('dashboard.runTests')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
               <DialogHeader>
-                <DialogTitle>Тестирование проекта</DialogTitle>
+                <DialogTitle>{t('dashboard.testingProject')}</DialogTitle>
               </DialogHeader>
               <div className="flex-1 overflow-hidden">
                 <AppTestSuite />
@@ -244,7 +246,7 @@ const Index = () => {
               to="/privacy-policy" 
               className="hover:text-primary transition-colors underline"
             >
-              Политика конфиденциальности
+              {t('dashboard.privacyPolicy')}
             </Link>
           </div>
         </footer>

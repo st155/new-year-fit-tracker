@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -25,6 +27,7 @@ const Auth = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (user) {
@@ -62,6 +65,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="space-y-8 text-center lg:text-left">
@@ -75,25 +81,35 @@ const Auth = () => {
               </h1>
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Челлендж "Пресс к Новому Году"
+              {t('auth.heroTitle')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
-              Присоединяйтесь к команде и достигайте целей вместе с 15 октября до 31 декабря
+              {t('auth.heroSubtitle')}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t('auth.challengeDetails')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-card/50 border border-border/50">
-              <Users className="h-6 w-6 text-primary mb-2 mx-auto" />
-              <p className="text-sm text-muted-foreground">Командная работа</p>
-            </div>
-            <div className="p-4 rounded-xl bg-card/50 border border-border/50">
-              <Target className="h-6 w-6 text-primary mb-2 mx-auto" />
-              <p className="text-sm text-muted-foreground">Личные цели</p>
-            </div>
-            <div className="p-4 rounded-xl bg-card/50 border border-border/50">
-              <Trophy className="h-6 w-6 text-primary mb-2 mx-auto" />
-              <p className="text-sm text-muted-foreground">Достижения</p>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">{t('auth.features.title')}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <Target className="h-6 w-6 text-primary mb-2 mx-auto" />
+                <p className="text-sm text-muted-foreground">{t('auth.features.goals')}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <Trophy className="h-6 w-6 text-primary mb-2 mx-auto" />
+                <p className="text-sm text-muted-foreground">{t('auth.features.tracking')}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <Users className="h-6 w-6 text-primary mb-2 mx-auto" />
+                <p className="text-sm text-muted-foreground">{t('auth.features.leaderboard')}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                <Dumbbell className="h-6 w-6 text-primary mb-2 mx-auto" />
+                <p className="text-sm text-muted-foreground">{t('auth.features.trainer')}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -101,9 +117,9 @@ const Auth = () => {
         {/* Auth Form */}
         <Card className="w-full max-w-md mx-auto">
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl text-center">Добро пожаловать</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('auth.welcomeBack')}</CardTitle>
             <CardDescription className="text-center">
-              Войдите или создайте аккаунт для участия в челлендже
+              {t('auth.signInSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,7 +137,7 @@ const Auth = () => {
                   <GoogleIcon />
                 )}
                 <span className="ml-2">
-                  {isGoogleLoading ? 'Вход...' : 'Войти через Google'}
+                  {isGoogleLoading ? t('auth.signingIn') : t('auth.signInWithGoogle')}
                 </span>
               </Button>
 
@@ -131,7 +147,7 @@ const Auth = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    или
+                    or
                   </span>
                 </div>
               </div>
@@ -139,29 +155,29 @@ const Auth = () => {
 
             <Tabs defaultValue="signin" className="space-y-4 mt-4">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Вход</TabsTrigger>
-                <TabsTrigger value="signup">Регистрация</TabsTrigger>
+                <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t('auth.email')}</Label>
                     <Input
                       id="signin-email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('auth.enterEmail')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Пароль</Label>
+                    <Label htmlFor="signin-password">{t('auth.password')}</Label>
                     <Input
                       id="signin-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder={t('auth.enterPassword')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -172,7 +188,7 @@ const Auth = () => {
                     className="w-full" 
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Вход...' : 'Войти'}
+                    {isLoading ? t('auth.signingIn') : t('auth.signIn')}
                   </Button>
                 </form>
               </TabsContent>
@@ -180,33 +196,33 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-username">Имя пользователя</Label>
+                    <Label htmlFor="signup-username">{t('auth.username')}</Label>
                     <Input
                       id="signup-username"
                       type="text"
-                      placeholder="ВашНик"
+                      placeholder={t('auth.enterUsername')}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('auth.enterEmail')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Пароль</Label>
+                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder={t('auth.enterPassword')}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -218,7 +234,7 @@ const Auth = () => {
                     className="w-full" 
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+                    {isLoading ? t('auth.signingUp') : t('auth.signUp')}
                   </Button>
                 </form>
               </TabsContent>

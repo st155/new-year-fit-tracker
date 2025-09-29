@@ -46,8 +46,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface NavigationItem {
   title: string;
@@ -59,55 +61,55 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    title: "Главная",
+    title: "navigation.home",
     href: "/",
     icon: Home,
-    description: "Обзор и статистика",
+    description: "descriptions.home",
   },
   {
-    title: "Дашборд",
+    title: "navigation.dashboard",
     href: "/dashboard",
     icon: BarChart3,
-    description: "Детальная аналитика",
+    description: "descriptions.dashboard",
   },
   {
-    title: "Челленджи",
+    title: "navigation.challenges",
     href: "/challenges",
     icon: Trophy,
-    description: "Соревнования и вызовы",
+    description: "descriptions.challenges",
   },
   {
-    title: "Прогресс",
+    title: "navigation.progress",
     href: "/progress",
     icon: Target,
-    description: "Отслеживание целей",
+    description: "descriptions.progress",
   },
   {
-    title: "Фитнес данные",
+    title: "navigation.fitnessData",
     href: "/fitness-data",
     icon: Activity,
-    description: "Данные о тренировках",
+    description: "descriptions.fitnessData",
   },
   {
-    title: "Интеграции",
+    title: "navigation.integrations",
     href: "/integrations",
     icon: Zap,
-    description: "Подключенные устройства",
+    description: "descriptions.integrations",
   },
   {
-    title: "Лента",
+    title: "navigation.feed",
     href: "/feed",
     icon: Activity,
-    description: "Социальная лента активности",
+    description: "descriptions.feed",
   },
 ];
 
 const trainerItems: NavigationItem[] = [
   {
-    title: "Клиенты",
+    title: "navigation.clients",
     href: "/trainer-dashboard", 
     icon: Users,
-    description: "Управление клиентами",
+    description: "descriptions.clients",
     trainerOnly: true,
   },
 ];
@@ -117,6 +119,7 @@ export function MainNavigation() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (user) {
@@ -187,7 +190,7 @@ export function MainNavigation() {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Навигация</NavigationMenuTrigger>
+              <NavigationMenuTrigger>{t('navigation.navigation')}</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[300px] gap-3 p-4 sm:w-[400px] md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                   {allItems.map((item) => (
@@ -203,11 +206,11 @@ export function MainNavigation() {
                           <div className="flex items-center space-x-2">
                             <item.icon className="h-4 w-4" />
                             <div className="text-sm font-medium leading-none">
-                              {item.title}
+                              {t(item.title)}
                             </div>
                           </div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {item.description}
+                            {t(item.description)}
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -224,6 +227,9 @@ export function MainNavigation() {
           {/* Notification Bell */}
           <NotificationBell />
           
+          {/* Language Toggle */}
+          <LanguageToggle />
+          
           {/* User Avatar Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -237,7 +243,7 @@ export function MainNavigation() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Аккаунт</p>
+                  <p className="text-sm font-medium leading-none">{t('navigation.account')}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
@@ -247,23 +253,23 @@ export function MainNavigation() {
               <DropdownMenuItem asChild>
                 <Link to="/profile" className="cursor-pointer">
                   <User className="mr-2 h-4 w-4" />
-                  <span>Профиль</span>
+                  <span>{t('navigation.profile')}</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/integrations" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Настройки</span>
+                  <span>{t('navigation.settings')}</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex items-center">
                 <ThemeToggle />
-                <span className="ml-2">Тема</span>
+                <span className="ml-2">{t('navigation.theme')}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Выйти</span>
+                <span>{t('navigation.logout')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -273,14 +279,14 @@ export function MainNavigation() {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Открыть меню</span>
+                <span className="sr-only">{t('navigation.openMenu')}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[400px] max-w-[90vw]">
               <SheetHeader>
-                <SheetTitle>Навигация</SheetTitle>
+                <SheetTitle>{t('navigation.navigation')}</SheetTitle>
                 <SheetDescription>
-                  Выберите страницу для перехода
+                  {t('navigation.selectPage')}
                 </SheetDescription>
               </SheetHeader>
               <div className="grid gap-4 py-4">
@@ -296,10 +302,10 @@ export function MainNavigation() {
                   >
                     <item.icon className="h-5 w-5" />
                     <div>
-                      <div>{item.title}</div>
+                      <div>{t(item.title)}</div>
                       {item.description && (
                         <div className="text-xs text-muted-foreground">
-                          {item.description}
+                          {t(item.description)}
                         </div>
                       )}
                     </div>
