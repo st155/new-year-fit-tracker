@@ -84,74 +84,60 @@ const getActivityIcon = (actionText: string) => {
 
 const parseActivityMetrics = (actionText: string) => {
   const parts: string[] = [];
-
-  // Always start with "ST" prefix
-  parts.push("ST");
-
   const text = actionText.toLowerCase();
+  const isRu = /[а-яё]/i.test(actionText);
 
-  // Duration variants
-  // 1) 1h 23m
-  const durHMM = actionText.match(/(\d+)h\s*(\d+)m/i);
-  if (durHMM) {
-    parts.push(`${durHMM[1]}h ${durHMM[2]}m`);
-  }
-  // 2) 15m 36s
-  const durMS = actionText.match(/(\d+)m\s*(\d+)s/i);
-  if (!durHMM && durMS) {
-    parts.push(`${durMS[1]}m ${durMS[2]}s`);
-  }
-  // 3) 75m
-  const durM = actionText.match(/(?:^|\s)(\d+)m(?:\s|$)/i);
-  if (!durHMM && !durMS && durM) {
-    parts.push(`${durM[1]}m`);
-  }
+  // Duration variants (EN)
+  const durHMM = actionText.match(/(\d+)h\s*(\d+)m/i); // 1h 23m
+  const durMS = actionText.match(/(\d+)m\s*(\d+)s/i);  // 15m 36s
+  const durM = actionText.match(/(?:^|\s)(\d+)m(?:\s|$)/i); // 75m
+
+  // Duration variants (RU)
+  const durHMMru = actionText.match(/(\d+)\s*ч\s*(\d+)\s*м/i);
+  const durMru = actionText.match(/(?:^|\s)(\d+)\s*м(?:\s|$)/i);
+
+  if (durHMM) parts.push(`${durHMM[1]}h ${durHMM[2]}m`);
+  else if (durMS) parts.push(`${durMS[1]}m ${durMS[2]}s`);
+  else if (durM) parts.push(`${durM[1]}m`);
+  else if (durHMMru) parts.push(`${durHMMru[1]}ч ${durHMMru[2]}м`);
+  else if (durMru) parts.push(`${durMru[1]}м`);
 
   // Calories (accept optional space)
   const caloriesMatch = actionText.match(/(\d+)\s*kcal/i);
-  if (caloriesMatch) {
-    parts.push(`${caloriesMatch[1]}kcal`);
-  }
+  if (caloriesMatch) parts.push(`${caloriesMatch[1]}kcal`);
 
   // Strain (support both "7.8 strain" and "strain 7.8")
   const strainAfter = actionText.match(/strain\s*([\d.]+)/i);
   const strainBefore = actionText.match(/([\d.]+)\s*strain/i);
   const strainVal = strainAfter?.[1] ?? strainBefore?.[1];
-  if (strainVal) {
-    parts.push(`Strain ${strainVal}`);
-  }
+  if (strainVal) parts.push(isRu ? `Нагрузка ${strainVal}` : `Strain ${strainVal}`);
 
   // Recovery (support both orders)
   const recoveryAfter = actionText.match(/recovery\s*(\d+)%/i);
   const recoveryBefore = actionText.match(/(\d+)%\s*recovery/i);
   const recovered = actionText.match(/recovered\s*(\d+)%/i);
   const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1];
-  if (recoveryVal) {
-    parts.push(`Recovery ${recoveryVal}%`);
-  }
+  if (recoveryVal) parts.push(isRu ? `Восстановление ${recoveryVal}%` : `Recovery ${recoveryVal}%`);
 
-  // Sleep duration (e.g., "slept 7.5h" or "slept 7h 30m")
+  // Sleep duration
   const sleptHM = actionText.match(/slept\s*(\d+)h\s*(\d+)m/i);
   const sleptH = actionText.match(/slept\s*([\d.]+)h/i);
-  if (sleptHM) {
-    parts.push(`${sleptHM[1]}h ${sleptHM[2]}m`);
-  } else if (sleptH) {
-    parts.push(`${sleptH[1]}h`);
-  }
+  const sleptHMru = actionText.match(/спал(?:а)?\s*(\d+)\s*ч\s*(\d+)\s*м/i);
+  const sleptHru = actionText.match(/спал(?:а)?\s*([\d.,]+)\s*ч/i);
+  if (sleptHM) parts.push(`${sleptHM[1]}h ${sleptHM[2]}m`);
+  else if (sleptH) parts.push(`${sleptH[1]}h`);
+  else if (sleptHMru) parts.push(`${sleptHMru[1]}ч ${sleptHMru[2]}м`);
+  else if (sleptHru) parts.push(`${sleptHru[1]}ч`);
 
   // Quality (English and Russian labels)
   const qualityEn = actionText.match(/quality[:\s]*?(\d+)%/i);
   const qualityRu = actionText.match(/качество[:\s]*?(\d+)%/i);
-  const qualityVal = qualityEn?.[1] ?? qualityRu?.[1];
-  if (qualityVal) {
-    parts.push(`${qualityVal}% quality`);
-  }
+  if (qualityEn?.[1]) parts.push(`${qualityEn[1]}% quality`);
+  else if (qualityRu?.[1]) parts.push(`качество ${qualityRu[1]}%`);
 
-  // If we have more than just "ST", join with commas; else fallback
-  if (parts.length > 1) {
-    return parts.join(', ');
-  }
-  return 'активность';
+  // Return metrics if any, otherwise original text (instead of generic "активность")
+  if (parts.length > 0) return parts.join(', ');
+  return actionText || 'активность';
 };
 
 export function ActivityCard({ activity }: ActivityCardProps) {
