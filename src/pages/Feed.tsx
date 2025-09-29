@@ -30,6 +30,10 @@ export default function Feed() {
   const fetchActivities = async () => {
     try {
       setLoading(true);
+      
+      // Check authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Feed: Current user:', user?.id);
 
       // 1) Fetch recent activities
       const { data: activitiesData, error } = await supabase
@@ -46,6 +50,8 @@ export default function Feed() {
 
       if (error) throw error;
       const activities = activitiesData || [];
+      
+      console.log('Feed: Fetched activities:', activities.length, activities);
 
       if (activities.length === 0) {
         setActivities([]);
