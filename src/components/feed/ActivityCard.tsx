@@ -102,24 +102,26 @@ const parseActivityMetrics = (actionText: string) => {
   else if (durHMMru) parts.push(`${durHMMru[1]}ч ${durHMMru[2]}м`);
   else if (durMru) parts.push(`${durMru[1]}м`);
 
-  // Calories (accept optional space)
-  const caloriesMatch = actionText.match(/(\d+)\s*kcal/i);
-  if (caloriesMatch) parts.push(`${caloriesMatch[1]}kcal`);
+  // Calories (EN + RU)
+  const caloriesMatch = actionText.match(/(\d+)\s*(?:kcal|ккал)/i);
+  if (caloriesMatch) parts.push(`${caloriesMatch[1]}${isRu ? ' ккал' : 'kcal'}`.trim());
 
-  // Strain (support both "7.8 strain" and "strain 7.8")
-  const strainAfter = actionText.match(/strain\s*([\d.]+)/i);
-  const strainBefore = actionText.match(/([\d.]+)\s*strain/i);
-  const strainVal = strainAfter?.[1] ?? strainBefore?.[1];
+  // Strain (support colon and RU label)
+  const strainEn = actionText.match(/strain[:\s]*([\d.,]+)/i);
+  const strainBeforeEn = actionText.match(/([\d.,]+)\s*strain/i);
+  const strainRu = actionText.match(/нагрузка[:\s]*([\d.,]+)/i);
+  const strainVal = (strainEn?.[1] ?? strainBeforeEn?.[1] ?? strainRu?.[1])?.replace(',', '.');
   if (strainVal) parts.push(isRu ? `Нагрузка ${strainVal}` : `Strain ${strainVal}`);
 
-  // Recovery (support both orders)
-  const recoveryAfter = actionText.match(/recovery\s*(\d+)%/i);
+  // Recovery (support both orders + RU)
+  const recoveryAfter = actionText.match(/recovery[:\s]*(\d+)%/i);
   const recoveryBefore = actionText.match(/(\d+)%\s*recovery/i);
   const recovered = actionText.match(/recovered\s*(\d+)%/i);
-  const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1];
+  const recoveryRu = actionText.match(/восстановлени[ея][:\s]*(\d+)%/i);
+  const recoveryVal = recoveryAfter?.[1] ?? recoveryBefore?.[1] ?? recovered?.[1] ?? recoveryRu?.[1];
   if (recoveryVal) parts.push(isRu ? `Восстановление ${recoveryVal}%` : `Recovery ${recoveryVal}%`);
 
-  // Sleep duration
+  // Sleep duration (EN + RU)
   const sleptHM = actionText.match(/slept\s*(\d+)h\s*(\d+)m/i);
   const sleptH = actionText.match(/slept\s*([\d.]+)h/i);
   const sleptHMru = actionText.match(/спал(?:а)?\s*(\d+)\s*ч\s*(\d+)\s*м/i);
@@ -135,9 +137,14 @@ const parseActivityMetrics = (actionText: string) => {
   if (qualityEn?.[1]) parts.push(`${qualityEn[1]}% quality`);
   else if (qualityRu?.[1]) parts.push(`качество ${qualityRu[1]}%`);
 
-  // Return metrics if any, otherwise original text (instead of generic "активность")
+  // Prefer metrics-only output; never show raw source text like "ST ... [Whoop]"
   if (parts.length > 0) return parts.join(', ');
-  return actionText || 'активность';
+
+  // Fallback by category
+  if (/(sleep|slept|сон|спал)/i.test(text)) return isRu ? 'сон' : 'sleep';
+  if (/(workout|training|тренировк|strain)/i.test(text)) return isRu ? 'тренировка' : 'workout';
+
+  return isRu ? 'активность' : 'activity';
 };
 
 export function ActivityCard({ activity }: ActivityCardProps) {
