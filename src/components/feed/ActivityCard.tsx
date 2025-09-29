@@ -4,9 +4,9 @@ import { ru } from "date-fns/locale";
 import { MessageCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FitnessCard } from "@/components/ui/fitness-card";
 import { CommentDialog } from "./CommentDialog";
 import { LikeButton } from "./LikeButton";
+import { cn } from "@/lib/utils";
 
 interface ActivityCardProps {
   activity: {
@@ -27,15 +27,16 @@ interface ActivityCardProps {
   onActivityUpdate: () => void;
 }
 
-const getActionTypeVariant = (actionType: string): "default" | "gradient" | "success" => {
+const getBorderColor = (actionType: string): string => {
   switch (actionType) {
     case 'workouts':
-      return 'gradient';
+      return 'border-orange-500';
     case 'measurements':
+      return 'border-green-500';
     case 'metric_values':
-      return 'success';
+      return 'border-blue-500';
     default:
-      return 'default';
+      return 'border-purple-500';
   }
 };
 
@@ -50,27 +51,26 @@ export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) 
 
   return (
     <>
-      <FitnessCard variant={getActionTypeVariant(activity.action_type)} className="p-4">
+      <div className={cn(
+        "relative rounded-2xl border-2 bg-card/50 backdrop-blur-sm p-4 transition-all duration-300 hover:scale-[1.01]",
+        getBorderColor(activity.action_type)
+      )}>
         <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10 ring-2 ring-background/10">
+          <Avatar className="h-10 w-10 ring-2 ring-border shrink-0">
             <AvatarImage src={activity.profiles?.avatar_url || undefined} />
-            <AvatarFallback className="bg-background/20">
+            <AvatarFallback className="bg-muted text-muted-foreground">
               <User className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <div>
-                <p className="font-semibold text-sm leading-tight">{displayName}</p>
-                <p className="text-xs opacity-70">@{activity.profiles?.username || 'user'}</p>
-              </div>
-              <span className="text-xs opacity-70 whitespace-nowrap">{timeAgo}</span>
-            </div>
+            <p className="text-xs text-muted-foreground mb-1">
+              @{activity.profiles?.username || 'user'}
+            </p>
             
             <p className="text-sm mb-3 leading-relaxed">{activity.action_text}</p>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between">
               <LikeButton
                 activityId={activity.id}
                 initialLiked={activity.user_liked || false}
@@ -78,19 +78,11 @@ export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) 
                 onUpdate={onActivityUpdate}
               />
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowComments(true)}
-                className="h-7 px-2 hover:bg-background/20"
-              >
-                <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs">{activity.comment_count || 0}</span>
-              </Button>
+              <span className="text-xs text-muted-foreground">{timeAgo}</span>
             </div>
           </div>
         </div>
-      </FitnessCard>
+      </div>
 
       <CommentDialog
         activityId={activity.id}

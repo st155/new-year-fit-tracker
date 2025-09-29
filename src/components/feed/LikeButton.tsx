@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
   activityId: string;
@@ -72,19 +72,18 @@ export function LikeButton({ activityId, initialLiked, initialCount, onUpdate }:
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
       onClick={handleLike}
       disabled={loading}
-      className={`h-7 px-2 hover:bg-background/20 ${
-        liked ? 'text-red-500 hover:text-red-600' : ''
-      }`}
+      className={cn(
+        "flex items-center gap-1.5 transition-colors",
+        liked ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
+      )}
     >
       <Heart 
-        className={`h-3.5 w-3.5 mr-1.5 ${liked ? 'fill-current' : ''}`} 
+        className={cn("h-4 w-4", liked && "fill-current")}
       />
-      <span className="text-xs">{count}</span>
-    </Button>
+      <span className="text-xs font-medium">{count}</span>
+    </button>
   );
 }
