@@ -30,6 +30,8 @@ export default function Feed() {
   const fetchActivities = async () => {
     try {
       setLoading(true);
+
+      // 1) Fetch recent activities
       const { data: activitiesData, error } = await supabase
         .from('activity_feed')
         .select(`
@@ -43,54 +45,67 @@ export default function Feed() {
         .limit(50);
 
       if (error) throw error;
+      const activities = activitiesData || [];
 
-      // Get user profiles separately
-      const activitiesWithProfiles = await Promise.all(
-        (activitiesData || []).map(async (activity) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username, full_name, avatar_url')
-            .eq('user_id', activity.user_id)
-            .single();
+      if (activities.length === 0) {
+        setActivities([]);
+        return;
+      }
 
-          // Get likes count
-          const { count: likeCount } = await supabase
-            .from('activity_likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('activity_id', activity.id);
+      // 2) Batch fetch profiles
+      const userIds = Array.from(new Set(activities.map(a => a.user_id)));
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, username, full_name, avatar_url')
+        .in('user_id', userIds);
+      const profileMap = new Map((profilesData || []).map(p => [p.user_id, p]));
 
-          // Get comments count
-          const { count: commentCount } = await supabase
-            .from('activity_comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('activity_id', activity.id);
+      // 3) Batch fetch likes and comments
+      const activityIds = activities.map(a => a.id);
+      const [likesRes, commentsRes, authUser] = await Promise.all([
+        supabase
+          .from('activity_likes')
+          .select('id, activity_id, user_id')
+          .in('activity_id', activityIds),
+        supabase
+          .from('activity_comments')
+          .select('id, activity_id')
+          .in('activity_id', activityIds),
+        supabase.auth.getUser(),
+      ]);
 
-          // Check if current user liked this activity
-          const user = await supabase.auth.getUser();
-          const { data: userLike } = await supabase
-            .from('activity_likes')
-            .select('id')
-            .eq('activity_id', activity.id)
-            .eq('user_id', user.data.user?.id)
-            .maybeSingle();
+      const likes = likesRes.data || [];
+      const comments = commentsRes.data || [];
+      const currentUserId = authUser.data.user?.id;
 
-          return {
-            ...activity,
-            profiles: profile,
-            like_count: likeCount || 0,
-            comment_count: commentCount || 0,
-            user_liked: !!userLike
-          };
-        })
-      );
+      const likeCountMap = new Map<string, number>();
+      const userLikedSet = new Set<string>();
+      likes.forEach(like => {
+        likeCountMap.set(like.activity_id, (likeCountMap.get(like.activity_id) || 0) + 1);
+        if (currentUserId && like.user_id === currentUserId) userLikedSet.add(like.activity_id);
+      });
 
-      setActivities(activitiesWithProfiles);
+      const commentCountMap = new Map<string, number>();
+      comments.forEach(c => {
+        commentCountMap.set(c.activity_id, (commentCountMap.get(c.activity_id) || 0) + 1);
+      });
+
+      // 4) Compose final payload
+      const activitiesWithMeta = activities.map(a => ({
+        ...a,
+        profiles: profileMap.get(a.user_id) || null,
+        like_count: likeCountMap.get(a.id) || 0,
+        comment_count: commentCountMap.get(a.id) || 0,
+        user_liked: userLikedSet.has(a.id),
+      }));
+
+      setActivities(activitiesWithMeta);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить ленту активности",
-        variant: "destructive",
+        title: 'Ошибка',
+        description: 'Не удалось загрузить ленту активности',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -99,6 +114,10 @@ export default function Feed() {
 
   useEffect(() => {
     fetchActivities();
+    // Re-fetch on visibility change to keep fresh on mobile resume
+    const onVis = () => document.visibilityState === 'visible' && fetchActivities();
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
   if (loading) {
