@@ -101,23 +101,16 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
             <Globe className="h-4 w-4" />
           </Button>
 
-          {/* User initials */}
-          <div className="flex items-center gap-1 bg-muted/30 rounded-full px-2 py-1">
-            <span className="text-sm font-medium text-foreground">
-              {userRole === 'trainer' ? 'ST' : 'ПР'}
-            </span>
-          </div>
-
-          {/* User Avatar */}
+          {/* User Avatar with initials */}
           <Button
             variant="ghost"
             size="sm"
             className="h-10 w-10 p-0"
             onClick={() => navigate('/profile')}
           >
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-9 w-9 border-2 border-accent/30">
               <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
                 {getInitials(userName || 'User')}
               </AvatarFallback>
             </Avatar>
