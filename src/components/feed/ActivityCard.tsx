@@ -64,11 +64,13 @@ export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) 
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground mb-1">
+            <p className="text-xs text-muted-foreground mb-2">
               @{activity.profiles?.username || 'user'}
             </p>
             
-            <p className="text-sm mb-3 leading-relaxed">{activity.action_text}</p>
+            <p className="text-sm font-semibold text-white mb-3 leading-relaxed whitespace-pre-line">
+              {activity.action_text}
+            </p>
             
             <div className="flex items-center justify-between">
               <LikeButton
