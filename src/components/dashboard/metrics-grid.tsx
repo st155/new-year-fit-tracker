@@ -98,15 +98,139 @@ export function MetricsGrid() {
           setSelectedMetrics(JSON.parse(savedMetrics));
         }
 
-        // Mock data - в реальном приложении здесь будут API вызовы
-        setMetrics({
-          body_fat: { value: "18.5", change: "-3%", subtitle: "полненькей" },
-          weight: { value: "72.0", change: "-2%", subtitle: "по ланзей" },
-          vo2max: { value: "52.1", records: 71, subtitle: "71 записей" },
-          row_2km: { value: "7:25", change: "-2%", attempts: 34, subtitle: "34 попыток" },
-          recovery: { value: "85", change: "+5%", subtitle: "excellent" },
-          steps: { value: "12,847", change: "+12%", subtitle: "daily average" }
-        });
+        // Fetch real data from database
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get Recovery Score from Whoop
+        const { data: recoveryData } = await supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(metric_name, source)
+          `)
+          .eq('user_id', user.id)
+          .eq('user_metrics.metric_name', 'Recovery Score')
+          .eq('user_metrics.source', 'whoop')
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        // Get Steps from daily summary
+        const { data: stepsData } = await supabase
+          .from('daily_health_summary')
+          .select('steps, date')
+          .eq('user_id', user.id)
+          .not('steps', 'is', null)
+          .order('date', { ascending: false })
+          .limit(2);
+
+        // Get Weight from Withings or body composition
+        const { data: weightData } = await supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(metric_name, source)
+          `)
+          .eq('user_id', user.id)
+          .eq('user_metrics.metric_name', 'Weight')
+          .eq('user_metrics.source', 'withings')
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        // Get Body Fat from Withings
+        const { data: bodyFatData } = await supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(metric_name, source)
+          `)
+          .eq('user_id', user.id)
+          .eq('user_metrics.metric_name', 'Body Fat Percentage')
+          .eq('user_metrics.source', 'withings')
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(2);
+
+        // Get VO2Max
+        const { data: vo2maxData } = await supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(metric_name)
+          `)
+          .eq('user_id', user.id)
+          .eq('user_metrics.metric_name', 'VO2Max')
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        // Calculate metrics with changes
+        const newMetrics: Record<string, any> = {
+          body_fat: { value: "—", change: null, subtitle: "" },
+          weight: { value: "—", change: null, subtitle: "" },
+          vo2max: { value: "—", records: 0, subtitle: "0 записей" },
+          row_2km: { value: "—", change: null, attempts: 0, subtitle: "0 попыток" },
+          recovery: { value: "—", change: null, subtitle: "" },
+          steps: { value: "—", change: null, subtitle: "" }
+        };
+
+        // Recovery
+        if (recoveryData && recoveryData.length > 0) {
+          const current = Math.round(recoveryData[0].value);
+          newMetrics.recovery.value = current.toString();
+          
+          if (recoveryData.length > 1) {
+            const change = Math.round(recoveryData[0].value - recoveryData[1].value);
+            newMetrics.recovery.change = change >= 0 ? `+${change}%` : `${change}%`;
+          }
+          
+          if (current >= 67) newMetrics.recovery.subtitle = "excellent";
+          else if (current >= 34) newMetrics.recovery.subtitle = "good";
+          else newMetrics.recovery.subtitle = "low";
+        }
+
+        // Steps
+        if (stepsData && stepsData.length > 0) {
+          newMetrics.steps.value = stepsData[0].steps.toLocaleString();
+          if (stepsData.length > 1) {
+            const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
+            newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
+          }
+          newMetrics.steps.subtitle = "daily average";
+        }
+
+        // Weight
+        if (weightData && weightData.length > 0) {
+          newMetrics.weight.value = weightData[0].value.toFixed(1);
+          if (weightData.length > 1) {
+            const change = Math.round(((weightData[0].value - weightData[1].value) / weightData[1].value) * 100);
+            newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
+          }
+          newMetrics.weight.subtitle = "по ланзей";
+        }
+
+        // Body Fat
+        if (bodyFatData && bodyFatData.length > 0) {
+          newMetrics.body_fat.value = bodyFatData[0].value.toFixed(1);
+          if (bodyFatData.length > 1) {
+            const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
+            newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
+          }
+          newMetrics.body_fat.subtitle = "полненькей";
+        }
+
+        // VO2Max
+        if (vo2maxData && vo2maxData.length > 0) {
+          newMetrics.vo2max.value = vo2maxData[0].value.toFixed(1);
+          newMetrics.vo2max.subtitle = "71 записей";
+        }
+
+        setMetrics(newMetrics);
       } catch (error) {
         console.error('Error fetching metrics:', error);
       } finally {
