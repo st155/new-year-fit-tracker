@@ -76,6 +76,7 @@ export function MetricsGrid() {
     const fetchMetrics = async () => {
       if (!user) return;
 
+      try {
         // Use mock data for now to avoid type errors
         setMetrics({
           bodyFat: { value: "18.5", change: "-3%" },
@@ -83,7 +84,6 @@ export function MetricsGrid() {
           vo2max: { value: "52.1", records: 71 },
           row: { value: "7:25", change: "-2%", attempts: 34 }
         });
-
       } catch (error) {
         console.error('Error fetching metrics:', error);
       } finally {
