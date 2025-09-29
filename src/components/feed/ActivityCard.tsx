@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Heart, MessageCircle, User } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MessageCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { FitnessCard } from "@/components/ui/fitness-card";
 import { CommentDialog } from "./CommentDialog";
 import { LikeButton } from "./LikeButton";
 
@@ -28,33 +27,15 @@ interface ActivityCardProps {
   onActivityUpdate: () => void;
 }
 
-const getActionTypeColor = (actionType: string) => {
+const getActionTypeVariant = (actionType: string): "default" | "gradient" | "success" => {
   switch (actionType) {
     case 'workouts':
-      return 'bg-gradient-primary text-primary-foreground';
+      return 'gradient';
     case 'measurements':
-      return 'bg-gradient-success text-success-foreground';
-    case 'body_composition':
-      return 'bg-gradient-accent text-accent-foreground';
-    case 'goals':
-      return 'bg-gradient-secondary text-secondary-foreground';
+    case 'metric_values':
+      return 'success';
     default:
-      return 'bg-muted text-muted-foreground';
-  }
-};
-
-const getActionTypeLabel = (actionType: string) => {
-  switch (actionType) {
-    case 'workouts':
-      return 'Тренировка';
-    case 'measurements':
-      return 'Измерение';
-    case 'body_composition':
-      return 'Состав тела';
-    case 'goals':
-      return 'Цель';
-    default:
-      return actionType;
+      return 'default';
   }
 };
 
@@ -69,53 +50,47 @@ export function ActivityCard({ activity, onActivityUpdate }: ActivityCardProps) 
 
   return (
     <>
-      <Card className="transition-all duration-300 hover:shadow-lg">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={activity.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">{displayName}</p>
-                <p className="text-sm text-muted-foreground">@{activity.profiles?.username || 'user'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge className={getActionTypeColor(activity.action_type)}>
-                {getActionTypeLabel(activity.action_type)}
-              </Badge>
-              <span className="text-sm text-muted-foreground">{timeAgo}</span>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0">
-          <p className="text-lg mb-4">{activity.action_text}</p>
+      <FitnessCard variant={getActionTypeVariant(activity.action_type)} className="p-4">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-10 w-10 ring-2 ring-background/10">
+            <AvatarImage src={activity.profiles?.avatar_url || undefined} />
+            <AvatarFallback className="bg-background/20">
+              <User className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
           
-          <div className="flex items-center gap-4">
-            <LikeButton
-              activityId={activity.id}
-              initialLiked={activity.user_liked || false}
-              initialCount={activity.like_count || 0}
-              onUpdate={onActivityUpdate}
-            />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <div>
+                <p className="font-semibold text-sm leading-tight">{displayName}</p>
+                <p className="text-xs opacity-70">@{activity.profiles?.username || 'user'}</p>
+              </div>
+              <span className="text-xs opacity-70 whitespace-nowrap">{timeAgo}</span>
+            </div>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowComments(true)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              {activity.comment_count || 0}
-            </Button>
+            <p className="text-sm mb-3 leading-relaxed">{activity.action_text}</p>
+            
+            <div className="flex items-center gap-3">
+              <LikeButton
+                activityId={activity.id}
+                initialLiked={activity.user_liked || false}
+                initialCount={activity.like_count || 0}
+                onUpdate={onActivityUpdate}
+              />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowComments(true)}
+                className="h-7 px-2 hover:bg-background/20"
+              >
+                <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                <span className="text-xs">{activity.comment_count || 0}</span>
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FitnessCard>
 
       <CommentDialog
         activityId={activity.id}

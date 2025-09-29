@@ -154,16 +154,20 @@ export default function Feed() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Activity className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Лента активности</h1>
+          <div className="p-2 rounded-lg bg-gradient-primary">
+            <Activity className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold">Лента активности</h1>
         </div>
         <Button 
           variant="outline" 
+          size="sm"
           onClick={fetchActivities}
           disabled={loading}
+          className="h-9"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Обновить
@@ -181,7 +185,7 @@ export default function Feed() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {activities.map((activity) => (
             <ActivityCard 
               key={activity.id} 

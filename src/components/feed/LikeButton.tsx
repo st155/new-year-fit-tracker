@@ -77,14 +77,14 @@ export function LikeButton({ activityId, initialLiked, initialCount, onUpdate }:
       size="sm"
       onClick={handleLike}
       disabled={loading}
-      className={`text-muted-foreground hover:text-foreground ${
+      className={`h-7 px-2 hover:bg-background/20 ${
         liked ? 'text-red-500 hover:text-red-600' : ''
       }`}
     >
       <Heart 
-        className={`h-4 w-4 mr-2 ${liked ? 'fill-current' : ''}`} 
+        className={`h-3.5 w-3.5 mr-1.5 ${liked ? 'fill-current' : ''}`} 
       />
-      {count}
+      <span className="text-xs">{count}</span>
     </Button>
   );
 }
