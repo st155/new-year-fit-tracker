@@ -231,6 +231,8 @@ export default function MetricDetail() {
           });
       }
       else if (metricType === 'steps') {
+        console.log('Fetching steps data for timeRange:', timeRange, 'from:', startDate.toISOString());
+        
         const [dhsData, mvData] = await Promise.all([
           supabase
             .from('daily_health_summary')
@@ -248,6 +250,9 @@ export default function MetricDetail() {
             .order('measurement_date', { ascending: true })
         ]);
 
+        console.log('Steps DHS data:', dhsData.data?.length, 'entries');
+        console.log('Steps MV data:', mvData.data?.length, 'entries');
+
         const dhsEntries = (dhsData.data || []).map(item => ({
           value: Number(item.steps),
           date: item.date,
@@ -260,9 +265,26 @@ export default function MetricDetail() {
           source: 'metric'
         }));
 
-        metricData = [...dhsEntries, ...mvEntries].sort((a, b) => 
+        // Объединяем и убираем дубликаты по дате (приоритет - health_summary)
+        const allStepsEntries = [...dhsEntries, ...mvEntries].sort((a, b) => 
           new Date(a.date).getTime() - new Date(b.date).getTime()
         );
+        
+        // Дедупликация по дате
+        const dateMap = new Map<string, MetricData>();
+        allStepsEntries.forEach(entry => {
+          const existing = dateMap.get(entry.date);
+          if (!existing || existing.source === 'metric') {
+            dateMap.set(entry.date, entry);
+          }
+        });
+        
+        metricData = Array.from(dateMap.values()).sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        
+        console.log('Steps final data after deduplication:', metricData.length, 'entries');
+        console.log('Steps sample:', metricData.slice(0, 3));
       }
       else {
         // Для других метрик (vo2max, recovery, row_2km)
