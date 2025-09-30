@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ActivityCard } from "@/components/feed/ActivityCard";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Activity } from "lucide-react";
@@ -18,9 +18,6 @@ interface ActivityItem {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
-  like_count?: number;
-  comment_count?: number;
-  user_liked?: boolean;
 }
 
 export default function Feed() {
@@ -32,6 +29,7 @@ export default function Feed() {
     try {
       setLoading(true);
 
+      // Оптимизированный запрос - сразу джойним профили
       const { data: activitiesData, error } = await supabase
         .from('activity_feed')
         .select(`
@@ -40,68 +38,26 @@ export default function Feed() {
           action_type,
           action_text,
           created_at,
-          metadata
+          metadata,
+          profiles:user_id (
+            username,
+            full_name,
+            avatar_url
+          )
         `)
-.in('action_type', ['workouts','metric_values','measurements','body_composition'])
+        .in('action_type', ['workouts', 'metric_values', 'measurements', 'body_composition'])
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(20); // Уменьшаем лимит для быстрой загрузки
 
       if (error) throw error;
-      const activities = activitiesData || [];
 
-      if (activities.length === 0) {
-        setActivities([]);
-        return;
-      }
-
-      // 2) Batch fetch profiles
-      const userIds = Array.from(new Set(activities.map(a => a.user_id)));
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, username, full_name, avatar_url')
-        .in('user_id', userIds);
-      const profileMap = new Map((profilesData || []).map(p => [p.user_id, p]));
-
-      // 3) Batch fetch likes and comments
-      const activityIds = activities.map(a => a.id);
-      const [likesRes, commentsRes, authUser] = await Promise.all([
-        supabase
-          .from('activity_likes')
-          .select('id, activity_id, user_id')
-          .in('activity_id', activityIds),
-        supabase
-          .from('activity_comments')
-          .select('id, activity_id')
-          .in('activity_id', activityIds),
-        supabase.auth.getUser(),
-      ]);
-
-      const likes = likesRes.data || [];
-      const comments = commentsRes.data || [];
-      const currentUserId = authUser.data.user?.id;
-
-      const likeCountMap = new Map<string, number>();
-      const userLikedSet = new Set<string>();
-      likes.forEach(like => {
-        likeCountMap.set(like.activity_id, (likeCountMap.get(like.activity_id) || 0) + 1);
-        if (currentUserId && like.user_id === currentUserId) userLikedSet.add(like.activity_id);
-      });
-
-      const commentCountMap = new Map<string, number>();
-      comments.forEach(c => {
-        commentCountMap.set(c.activity_id, (commentCountMap.get(c.activity_id) || 0) + 1);
-      });
-
-      // 4) Compose final payload
-      const activitiesWithMeta = activities.map(a => ({
-        ...a,
-        profiles: profileMap.get(a.user_id) || null,
-        like_count: likeCountMap.get(a.id) || 0,
-        comment_count: commentCountMap.get(a.id) || 0,
-        user_liked: userLikedSet.has(a.id),
+      // Преобразуем данные в нужный формат
+      const formattedActivities = (activitiesData || []).map(activity => ({
+        ...activity,
+        profiles: Array.isArray(activity.profiles) ? activity.profiles[0] : activity.profiles
       }));
 
-      setActivities(activitiesWithMeta);
+      setActivities(formattedActivities);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
@@ -116,39 +72,69 @@ export default function Feed() {
 
   useEffect(() => {
     fetchActivities();
-    // Re-fetch on visibility change to keep fresh on mobile resume
-    const onVis = () => document.visibilityState === 'visible' && fetchActivities();
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
+
+    // Real-time subscription для новых активностей
+    const channel = supabase
+      .channel('activity_feed_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'activity_feed',
+          filter: `action_type=in.(workouts,metric_values,measurements,body_composition)`
+        },
+        () => {
+          // При добавлении новой активности обновляем ленту
+          fetchActivities();
+        }
+      )
+      .subscribe();
+
+    // Обновление при возвращении на страницу
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchActivities();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
-  if (loading) {
+  if (loading && activities.length === 0) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-3 mb-8">
-          <Activity className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Лента активности</h1>
+      <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-background">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Activity className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">Лента</h1>
+              <h1 className="text-2xl font-bold leading-tight">активности</h1>
+            </div>
+          </div>
         </div>
         <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-muted"></div>
-                  <div className="space-y-2">
-                    <div className="h-4 w-32 bg-muted rounded"></div>
-                    <div className="h-3 w-20 bg-muted rounded"></div>
+          {[...Array(3)].map((_, i) => (
+            <div 
+              key={i} 
+              className="relative rounded-3xl p-[2px] bg-gradient-to-r from-primary via-primary to-success overflow-hidden animate-pulse"
+            >
+              <div className="relative rounded-3xl bg-card/90 backdrop-blur-sm p-6 h-20">
+                <div className="flex items-center gap-4">
+                  <div className="h-8 w-8 bg-muted rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-4 w-full bg-muted rounded mb-4"></div>
-                <div className="flex gap-4">
-                  <div className="h-8 w-16 bg-muted rounded"></div>
-                  <div className="h-8 w-20 bg-muted rounded"></div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -180,7 +166,7 @@ export default function Feed() {
       </div>
 
       {activities.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 rounded-3xl border-border/50 bg-card/50">
           <CardContent>
             <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Пока нет активности</h3>
