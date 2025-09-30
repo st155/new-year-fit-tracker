@@ -141,56 +141,56 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[600px] flex flex-col gap-4">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
+      <DialogContent className="max-w-md max-h-[500px] flex flex-col gap-3 p-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <MessageCircle className="h-4 w-4" />
             Комментарии ({comments.length})
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <ScrollArea className="flex-1 pr-3 -mr-3">
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-start gap-2 p-3 rounded-lg bg-muted/50">
-                  <div className="h-8 w-8 rounded-full bg-muted"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-20 bg-muted rounded"></div>
-                    <div className="h-3 w-full bg-muted rounded"></div>
+                <div key={i} className="animate-pulse flex items-start gap-2 p-2 rounded-lg bg-muted/50">
+                  <div className="h-6 w-6 rounded-full bg-muted"></div>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-2.5 w-16 bg-muted rounded"></div>
+                    <div className="h-2.5 w-full bg-muted rounded"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-              <p className="text-sm text-muted-foreground">Пока нет комментариев</p>
-              <p className="text-xs text-muted-foreground mt-1">Будьте первым!</p>
+            <div className="text-center py-6">
+              <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+              <p className="text-xs text-muted-foreground">Пока нет комментариев</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Будьте первым!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <Avatar className="h-7 w-7">
+                <div key={comment.id} className="flex items-start gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={comment.profiles?.avatar_url || undefined} />
                     <AvatarFallback>
                       <User className="h-3 w-3" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-xs truncate">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-medium text-[11px] truncate">
                         {comment.profiles?.full_name || comment.profiles?.username || 'Пользователь'}
                       </span>
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      <span className="text-[9px] text-muted-foreground whitespace-nowrap">
                         {formatDistanceToNow(new Date(comment.created_at), {
                           addSuffix: true,
                           locale: ru,
                         })}
                       </span>
                     </div>
-                    <p className="text-sm break-words">{comment.comment_text}</p>
+                    <p className="text-xs break-words">{comment.comment_text}</p>
                   </div>
                 </div>
               ))}
@@ -198,13 +198,13 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
           )}
         </ScrollArea>
 
-        <div className="border-t pt-3">
+        <div className="border-t pt-2">
           <div className="flex gap-2">
             <Textarea
               placeholder="Напишите комментарий..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[60px] resize-none text-sm"
+              className="min-h-[50px] resize-none text-xs"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -216,12 +216,12 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || submitting}
               size="sm"
-              className="self-end h-9"
+              className="self-end h-8 w-8 p-0"
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-3 w-3" />
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5">
+          <p className="text-[9px] text-muted-foreground mt-1">
             Enter для отправки • Shift+Enter для новой строки
           </p>
         </div>
