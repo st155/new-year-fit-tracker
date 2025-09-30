@@ -107,7 +107,7 @@ export default function Feed() {
           sourceIds.length
             ? supabase
                 .from('metric_values')
-                .select('id, value, unit, measurement_date')
+                .select('id, value, measurement_date')
                 .in('id', sourceIds)
             : Promise.resolve({ data: [], error: null }),
         ]);
@@ -135,7 +135,7 @@ export default function Feed() {
               workout_type: wo?.workout_type ?? meta.workout_type,
               duration_minutes: wo?.duration_minutes ?? meta.duration_minutes,
               metric_name: mu?.metric_name ?? meta.metric_name,
-              unit: mv?.unit ?? mu?.unit ?? meta.unit,
+              unit: mu?.unit ?? meta.unit,
               value: mv?.value ?? meta.value,
               measurement_date: mv?.measurement_date ?? meta.measurement_date,
             },
