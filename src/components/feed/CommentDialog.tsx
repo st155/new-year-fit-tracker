@@ -141,7 +141,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-lg max-h-[600px] flex flex-col gap-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
@@ -149,73 +149,64 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 -mr-4">
           {loading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full bg-muted"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-24 bg-muted rounded"></div>
-                        <div className="h-4 w-full bg-muted rounded"></div>
-                        <div className="h-3 w-16 bg-muted rounded"></div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="space-y-3">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="animate-pulse flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                  <div className="h-8 w-8 rounded-full bg-muted"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-20 bg-muted rounded"></div>
+                    <div className="h-3 w-full bg-muted rounded"></div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-8">
-              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Пока нет комментариев</p>
-              <p className="text-sm text-muted-foreground">Будьте первым, кто оставит комментарий!</p>
+              <MessageCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+              <p className="text-sm text-muted-foreground">Пока нет комментариев</p>
+              <p className="text-xs text-muted-foreground mt-1">Будьте первым!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {comments.map((comment) => (
-                <Card key={comment.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={comment.profiles?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-sm">
-                            {comment.profiles?.full_name || comment.profiles?.username || 'Пользователь'}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(comment.created_at), {
-                              addSuffix: true,
-                              locale: ru,
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-sm">{comment.comment_text}</p>
-                      </div>
+                <div key={comment.id} className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      <User className="h-3 w-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-xs truncate">
+                        {comment.profiles?.full_name || comment.profiles?.username || 'Пользователь'}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(comment.created_at), {
+                          addSuffix: true,
+                          locale: ru,
+                        })}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm break-words">{comment.comment_text}</p>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </ScrollArea>
 
-        <div className="border-t pt-4 mt-4">
-          <div className="flex gap-3">
+        <div className="border-t pt-3">
+          <div className="flex gap-2">
             <Textarea
               placeholder="Напишите комментарий..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[80px] resize-none"
+              className="min-h-[60px] resize-none text-sm"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handleSubmitComment();
                 }
@@ -225,13 +216,13 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || submitting}
               size="sm"
-              className="self-end"
+              className="self-end h-9"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Нажмите Ctrl+Enter для быстрой отправки
+          <p className="text-[10px] text-muted-foreground mt-1.5">
+            Enter для отправки • Shift+Enter для новой строки
           </p>
         </div>
       </DialogContent>
