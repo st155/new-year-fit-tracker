@@ -34,7 +34,8 @@ function ProgressCard({
   target, 
   unit, 
   trend, 
-  color = "primary" 
+  color = "primary",
+  onClick,
 }: {
   title: string;
   current: number;
@@ -42,12 +43,21 @@ function ProgressCard({
   unit: string;
   trend: number;
   color?: string;
+  onClick?: () => void;
 }) {
   const progress = (current / target) * 100;
   const isPositive = trend > 0;
 
   return (
-    <Card className="bg-gradient-card border-border/50 hover:shadow-lg transition-all duration-300">
+    <Card
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      className={cn(
+        "bg-gradient-card border-border/50 transition-all duration-300",
+        onClick && "cursor-pointer hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      )}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">{title}</CardTitle>
@@ -89,6 +99,7 @@ function ProgressCard({
 export default function ModernProgress() {
   const [timeRange, setTimeRange] = useState<"1M" | "3M" | "6M" | "1Y">("3M");
   const [activeTab, setActiveTab] = useState<"body" | "performance" | "health">("body");
+  const navigate = useNavigate();
 
   const progressData = [
     {
@@ -175,9 +186,17 @@ export default function ModernProgress() {
 
       {/* Progress Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {progressData.map((item, index) => (
-          <ProgressCard key={index} {...item} />
-        ))}
+        {progressData.map((item, index) => {
+          const routeMap: Record<string, string | null> = { weight: 'weight', 'body-fat': 'body_fat', vo2max: 'vo2max', row: null };
+          const metricKey = routeMap[item.color as keyof typeof routeMap];
+          return (
+            <ProgressCard
+              key={index}
+              {...item}
+              onClick={metricKey ? () => navigate(`/metric/${metricKey}`) : undefined}
+            />
+          );
+        })}
       </div>
 
       {/* Charts Section */}
