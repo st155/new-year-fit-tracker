@@ -26,24 +26,59 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, unit, change, subtitle, color, onClick }: MetricCardProps & { onClick?: () => void }) {
-  const colorClasses = {
-    "body-fat": "border-metric-body-fat bg-metric-body-fat/5",
-    "weight": "border-metric-weight bg-metric-weight/5", 
-    "vo2max": "border-metric-vo2max bg-metric-vo2max/5",
-    "row": "border-metric-row bg-metric-row/5",
-    "recovery": "border-success bg-success/5",
-    "steps": "border-accent bg-accent/5"
+  const colorStyles = {
+    "body-fat": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-metric-body-fat/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]",
+      ring: "ring-2 ring-metric-body-fat/30"
+    },
+    "weight": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-metric-weight/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]",
+      ring: "ring-2 ring-metric-weight/30"
+    },
+    "vo2max": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-metric-vo2max/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]",
+      ring: "ring-2 ring-metric-vo2max/30"
+    },
+    "row": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-metric-row/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]",
+      ring: "ring-2 ring-metric-row/30"
+    },
+    "recovery": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-success/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]",
+      ring: "ring-2 ring-success/30"
+    },
+    "steps": {
+      border: "border-2",
+      gradient: "bg-gradient-to-br from-accent/20 via-card to-card",
+      glow: "shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]",
+      ring: "ring-2 ring-accent/30"
+    }
   };
+
+  const style = colorStyles[color];
 
   return (
     <Card 
       className={cn(
-        "border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer",
-        colorClasses[color]
+        "relative overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer backdrop-blur-sm",
+        style.border,
+        style.gradient,
+        style.glow,
+        style.ring
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 relative z-10">
         <div className="text-sm font-medium text-muted-foreground mb-2">
           {title}
         </div>
