@@ -4,6 +4,11 @@ import { Settings, TrendingUp, TrendingDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { WeightProgressDetail } from "@/components/detail/WeightProgressDetail";
+import { PullUpsProgressDetail } from "@/components/detail/PullUpsProgressDetail";
+import { BodyFatProgressDetail } from "@/components/detail/BodyFatProgressDetail";
+import { VO2MaxProgressDetail } from "@/components/detail/VO2MaxProgressDetail";
+import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
 
 interface MetricCard {
   id: string;
@@ -16,6 +21,8 @@ interface MetricCard {
   borderColor: string;
   progressColor: string;
   chart?: boolean;
+  goalId?: string;
+  goalType?: string;
 }
 
 export default function ModernProgress() {
@@ -23,6 +30,7 @@ export default function ModernProgress() {
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
   const [metrics, setMetrics] = useState<MetricCard[]>([]);
+  const [selectedMetric, setSelectedMetric] = useState<MetricCard | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -167,7 +175,9 @@ export default function ModernProgress() {
           trend,
           borderColor: color,
           progressColor: color,
-          chart: id === 'vo2max'
+          chart: id === 'vo2max',
+          goalId: goal.id,
+          goalType: goal.goal_type
         });
       }
 
@@ -310,6 +320,41 @@ export default function ModernProgress() {
     return Math.min(100, (metric.value / metric.target) * 100);
   };
 
+  // Render detail view if metric selected
+  if (selectedMetric) {
+    const handleBack = () => setSelectedMetric(null);
+
+    // Specialized detail components
+    if (selectedMetric.id === 'weight') {
+      return <WeightProgressDetail onBack={handleBack} />;
+    }
+    if (selectedMetric.id === 'pullups') {
+      return <PullUpsProgressDetail onBack={handleBack} />;
+    }
+    if (selectedMetric.id === 'body-fat') {
+      return <BodyFatProgressDetail onBack={handleBack} />;
+    }
+    if (selectedMetric.id === 'vo2max') {
+      return <VO2MaxProgressDetail onBack={handleBack} />;
+    }
+
+    // Generic goal detail for others
+    if (selectedMetric.goalId && !String(selectedMetric.goalId).startsWith('synthetic-')) {
+      return (
+        <GoalProgressDetail
+          goal={{
+            id: selectedMetric.goalId,
+            goal_name: selectedMetric.title,
+            goal_type: selectedMetric.goalType || 'general',
+            target_value: selectedMetric.target,
+            target_unit: selectedMetric.targetUnit
+          }}
+          onBack={handleBack}
+        />
+      );
+    }
+  }
+
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">
       {/* Header */}
@@ -365,7 +410,8 @@ export default function ModernProgress() {
           return (
             <div
               key={`${metric.id}-${metric.title}`}
-              className="p-4 relative overflow-hidden transition-all duration-300 rounded-2xl border-2"
+              onClick={() => setSelectedMetric(metric)}
+              className="p-4 relative overflow-hidden transition-all duration-300 rounded-2xl border-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 background: "rgba(255, 255, 255, 0.05)",
                 backdropFilter: "blur(10px)",
