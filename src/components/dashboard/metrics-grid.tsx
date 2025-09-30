@@ -103,143 +103,141 @@ export function MetricsGrid() {
           setSelectedMetrics(JSON.parse(savedMetrics));
         }
 
-        // Fetch real data from database
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Get Recovery Score from Whoop
-        const { data: recoveryData, error: recoveryError } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name, source)
-          `)
-          .eq('user_id', user.id)
-          .eq('user_metrics.metric_name', 'Recovery Score')
-          .eq('user_metrics.source', 'whoop')
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(2);
-        
-        // Get Steps from daily summary
-        const { data: stepsData, error: stepsError } = await supabase
-          .from('daily_health_summary')
-          .select('steps, date')
-          .eq('user_id', user.id)
-          .not('steps', 'is', null)
-          .order('date', { ascending: false })
-          .limit(2);
-        
-        // Fallback: Steps from metric_values if no daily summary
-        const { data: stepsMV, error: stepsMVError } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name)
-          `)
-          .eq('user_id', user.id)
-          .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(2);
-        
-        // Get Weight from Withings
-        const { data: weightData, error: weightError } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name, source)
-          `)
-          .eq('user_id', user.id)
-          .eq('user_metrics.metric_name', 'Weight')
-          .eq('user_metrics.source', 'withings')
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(2);
-        
-        // Fallback: latest Weight from body_composition
-        const { data: weightBC, error: weightBCError } = await supabase
-          .from('body_composition')
-          .select('weight, measurement_date')
-          .eq('user_id', user.id)
-          .not('weight', 'is', null)
-          .order('measurement_date', { ascending: false })
-          .limit(2);
-        
-        // Get Body Fat from Withings
-        const { data: bodyFatData, error: bodyFatError } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name, source)
-          `)
-          .eq('user_id', user.id)
-          .eq('user_metrics.metric_name', 'Body Fat Percentage')
-          .eq('user_metrics.source', 'withings')
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(2);
-        
-        // Fallback: latest Body Fat from body_composition
-        const { data: bodyFatBC, error: bodyFatBCError } = await supabase
-          .from('body_composition')
-          .select('body_fat_percentage, measurement_date')
-          .eq('user_id', user.id)
-          .not('body_fat_percentage', 'is', null)
-          .order('measurement_date', { ascending: false })
-          .limit(2);
-        
-        // Get VO2Max
-        const { data: vo2maxData, error: vo2maxError } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name)
-          `)
-          .eq('user_id', user.id)
-          .eq('user_metrics.metric_name', 'VO2Max')
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(1);
+        // Мгновенная отрисовка из кэша
+        const cached = localStorage.getItem(`metrics_grid_${user.id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.metrics) {
+            setMetrics(parsed.metrics);
+            setLoading(false);
+          }
+        }
 
-        // Calculate metrics with changes
+        // Fetch real data from database (параллельно)
+        const today = new Date().toISOString().split('T')[0];
+
+        const [
+          recoveryRes,
+          stepsRes,
+          stepsMVRes,
+          weightRes,
+          weightBCRes,
+          bodyFatRes,
+          bodyFatBCRes,
+          vo2maxRes,
+        ] = await Promise.all([
+          // Recovery
+          supabase
+            .from('metric_values')
+            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'Recovery Score')
+            .eq('user_metrics.source', 'whoop')
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(2),
+          // Steps from daily summary
+          supabase
+            .from('daily_health_summary')
+            .select('steps, date')
+            .eq('user_id', user.id)
+            .not('steps', 'is', null)
+            .order('date', { ascending: false })
+            .limit(2),
+          // Fallback steps from metric_values
+          supabase
+            .from('metric_values')
+            .select(`value, measurement_date, user_metrics!inner(metric_name)`) 
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(2),
+          // Weight from Withings
+          supabase
+            .from('metric_values')
+            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Weight', 'Вес'])
+            .eq('user_metrics.source', 'withings')
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(2),
+          // Weight fallback body composition
+          supabase
+            .from('body_composition')
+            .select('weight, measurement_date')
+            .eq('user_id', user.id)
+            .not('weight', 'is', null)
+            .order('measurement_date', { ascending: false })
+            .limit(2),
+          // Body Fat from Withings
+          supabase
+            .from('metric_values')
+            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Body Fat Percentage', 'Процент жира'])
+            .eq('user_metrics.source', 'withings')
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(2),
+          // Body Fat fallback body composition
+          supabase
+            .from('body_composition')
+            .select('body_fat_percentage, measurement_date')
+            .eq('user_id', user.id)
+            .not('body_fat_percentage', 'is', null)
+            .order('measurement_date', { ascending: false })
+            .limit(2),
+          // VO2Max
+          supabase
+            .from('metric_values')
+            .select(`value, measurement_date, user_metrics!inner(metric_name)`) 
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'VO2Max')
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1),
+        ]);
+
+        const recoveryData = recoveryRes.data || [];
+        const stepsData = stepsRes.data || [];
+        const stepsMV = stepsMVRes.data || [];
+        const weightData = weightRes.data || [];
+        const weightBC = weightBCRes.data || [];
+        const bodyFatData = bodyFatRes.data || [];
+        const bodyFatBC = bodyFatBCRes.data || [];
+        const vo2maxData = vo2maxRes.data || [];
+
         const newMetrics: Record<string, any> = {
-          body_fat: { value: "—", change: null, subtitle: "" },
-          weight: { value: "—", change: null, subtitle: "" },
-          vo2max: { value: "—", records: 0, subtitle: "0 записей" },
-          row_2km: { value: "—", change: null, attempts: 0, subtitle: "0 попыток" },
-          recovery: { value: "—", change: null, subtitle: "" },
-          steps: { value: "—", change: null, subtitle: "" }
+          body_fat: { value: '—', change: null, subtitle: '' },
+          weight: { value: '—', change: null, subtitle: '' },
+          vo2max: { value: '—', records: 0, subtitle: '0 записей' },
+          row_2km: { value: '—', change: null, attempts: 0, subtitle: '0 попыток' },
+          recovery: { value: '—', change: null, subtitle: '' },
+          steps: { value: '—', change: null, subtitle: '' }
         };
 
         // Recovery
-        if (recoveryData && recoveryData.length > 0) {
+        if (recoveryData.length > 0) {
           const current = Math.round(recoveryData[0].value);
           newMetrics.recovery.value = current.toString();
-          
           if (recoveryData.length > 1) {
             const change = Math.round(recoveryData[0].value - recoveryData[1].value);
             newMetrics.recovery.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          
-          if (current >= 67) newMetrics.recovery.subtitle = "excellent";
-          else if (current >= 34) newMetrics.recovery.subtitle = "good";
-          else newMetrics.recovery.subtitle = "low";
+          newMetrics.recovery.subtitle = current >= 67 ? 'excellent' : current >= 34 ? 'good' : 'low';
         }
 
         // Steps
-        if (stepsData && stepsData.length > 0) {
+        if (stepsData.length > 0) {
           newMetrics.steps.value = stepsData[0].steps.toLocaleString();
           if (stepsData.length > 1 && stepsData[1].steps) {
             const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
             newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.steps.subtitle = "daily average";
-        } else if (stepsMV && stepsMV.length > 0) {
+          newMetrics.steps.subtitle = 'daily average';
+        } else if (stepsMV.length > 0) {
           const curr = Number(stepsMV[0].value) || 0;
           newMetrics.steps.value = curr.toLocaleString();
           if (stepsMV.length > 1 && stepsMV[1].value) {
@@ -249,18 +247,18 @@ export function MetricsGrid() {
               newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.steps.subtitle = "latest steps";
+          newMetrics.steps.subtitle = 'latest steps';
         }
 
         // Weight
-        if (weightData && weightData.length > 0) {
+        if (weightData.length > 0) {
           newMetrics.weight.value = weightData[0].value.toFixed(1);
           if (weightData.length > 1) {
             const change = Math.round(((weightData[0].value - weightData[1].value) / weightData[1].value) * 100);
             newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.weight.subtitle = "по ланзей";
-        } else if (weightBC && weightBC.length > 0) {
+          newMetrics.weight.subtitle = 'по ланзей';
+        } else if (weightBC.length > 0) {
           const curr = Number(weightBC[0].weight);
           newMetrics.weight.value = curr.toFixed(1);
           if (weightBC.length > 1 && weightBC[1].weight) {
@@ -270,18 +268,18 @@ export function MetricsGrid() {
               newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.weight.subtitle = "по ланзей";
+          newMetrics.weight.subtitle = 'по ланзей';
         }
 
         // Body Fat
-        if (bodyFatData && bodyFatData.length > 0) {
+        if (bodyFatData.length > 0) {
           newMetrics.body_fat.value = bodyFatData[0].value.toFixed(1);
           if (bodyFatData.length > 1) {
             const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
             newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.body_fat.subtitle = "полненькей";
-        } else if (bodyFatBC && bodyFatBC.length > 0) {
+          newMetrics.body_fat.subtitle = 'полненькей';
+        } else if (bodyFatBC.length > 0) {
           const curr = Number(bodyFatBC[0].body_fat_percentage);
           newMetrics.body_fat.value = curr.toFixed(1);
           if (bodyFatBC.length > 1 && bodyFatBC[1].body_fat_percentage) {
@@ -291,16 +289,19 @@ export function MetricsGrid() {
               newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.body_fat.subtitle = "полненькей";
+          newMetrics.body_fat.subtitle = 'полненькей';
         }
 
         // VO2Max
-        if (vo2maxData && vo2maxData.length > 0) {
+        if (vo2maxData.length > 0) {
           newMetrics.vo2max.value = vo2maxData[0].value.toFixed(1);
-          newMetrics.vo2max.subtitle = "71 записей";
+          newMetrics.vo2max.subtitle = '71 записей';
         }
 
         setMetrics(newMetrics);
+        try {
+          localStorage.setItem(`metrics_grid_${user.id}` , JSON.stringify({ metrics: newMetrics, ts: Date.now() }));
+        } catch {}
       } catch (error) {
         console.error('Error fetching metrics:', error);
       } finally {

@@ -268,9 +268,21 @@ export const EnhancedFitnessDashboard = () => {
   const [viewingDetailType, setViewingDetailType] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
+    if (!user) return;
+
+    // Мгновенная отрисовка из кэша
+    try {
+      const cached = localStorage.getItem(`dashboard_snapshot_${user.id}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.dashboardStats) {
+          setDashboardStats(parsed.dashboardStats);
+          setLoading(false);
+        }
+      }
+    } catch {}
+
+    fetchDashboardData();
   }, [user, selectedDate, viewPeriod]);
 
   const fetchDashboardData = async () => {
@@ -305,77 +317,79 @@ export const EnhancedFitnessDashboard = () => {
       const weekAgo = format(subDays(selectedDate, 6), 'yyyy-MM-dd');
       const monthAgo = format(subDays(selectedDate, 30), 'yyyy-MM-dd');
 
-      // Получаем данные за выбранный период
-      const { data: periodData } = await supabase
-        .from('metric_values')
-        .select(`
-          id,
-          value,
-          measurement_date,
-          user_metrics!inner (
-            metric_name,
-            metric_category,
-            unit,
-            source
-          )
-        `)
-        .eq('user_id', user.id)
-        .gte('measurement_date', startDate)
-        .lte('measurement_date', endDate)
-        .order('measurement_date', { ascending: false });
+      // Получаем данные параллельно для максимальной скорости
+      const chartStartDate = viewPeriod === 'month' 
+        ? format(subDays(selectedDate, 60), 'yyyy-MM-dd') 
+        : viewPeriod === 'week' 
+          ? format(subDays(selectedDate, 30), 'yyyy-MM-dd')
+          : weekAgo;
 
-      // Получаем данные для графиков (всегда берем больший период для контекста)
-      const chartStartDate = viewPeriod === 'month' ? format(subDays(selectedDate, 60), 'yyyy-MM-dd') 
-                            : viewPeriod === 'week' ? format(subDays(selectedDate, 30), 'yyyy-MM-dd')
-                            : weekAgo;
-                            
-      const { data: chartRawData } = await supabase
-        .from('metric_values')
-        .select(`
-          id,
-          value,
-          measurement_date,
-          user_metrics!inner (
-            metric_name,
-            metric_category,
-            unit,
-            source
-          )
-        `)
-        .eq('user_id', user.id)
-        .gte('measurement_date', chartStartDate)
-        .lte('measurement_date', endDate)
-        .order('measurement_date', { ascending: true });
-
-      // Получаем данные за месяц для трендов
-      const { data: monthData } = await supabase
-        .from('metric_values')
-        .select(`
-          value,
-          measurement_date,
-          user_metrics!inner (metric_name)
-        `)
-        .eq('user_id', user.id)
-        .gte('measurement_date', monthAgo)
-        .lte('measurement_date', today)
-        .order('measurement_date', { ascending: true });
-
-      // Получаем данные веса и жира из body_composition
-      const { data: bodyComposition } = await supabase
-        .from('body_composition')
-        .select('weight, body_fat_percentage, measurement_date')
-        .eq('user_id', user.id)
-        .order('measurement_date', { ascending: false })
-        .limit(1);
-
-      // Получаем данные из daily_health_summary за период
-      const { data: dailySummaries } = await supabase
-        .from('daily_health_summary')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: false });
+      const [
+        { data: periodData },
+        { data: chartRawData },
+        { data: monthData },
+        { data: bodyComposition },
+        { data: dailySummaries },
+      ] = await Promise.all([
+        supabase
+          .from('metric_values')
+          .select(`
+            id,
+            value,
+            measurement_date,
+            user_metrics!inner (
+              metric_name,
+              metric_category,
+              unit,
+              source
+            )
+          `)
+          .eq('user_id', user.id)
+          .gte('measurement_date', startDate)
+          .lte('measurement_date', endDate)
+          .order('measurement_date', { ascending: false }),
+        supabase
+          .from('metric_values')
+          .select(`
+            id,
+            value,
+            measurement_date,
+            user_metrics!inner (
+              metric_name,
+              metric_category,
+              unit,
+              source
+            )
+          `)
+          .eq('user_id', user.id)
+          .gte('measurement_date', chartStartDate)
+          .lte('measurement_date', endDate)
+          .order('measurement_date', { ascending: true }),
+        supabase
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner (metric_name)
+          `)
+          .eq('user_id', user.id)
+          .gte('measurement_date', monthAgo)
+          .lte('measurement_date', today)
+          .order('measurement_date', { ascending: true }),
+        supabase
+          .from('body_composition')
+          .select('weight, body_fat_percentage, measurement_date')
+          .eq('user_id', user.id)
+          .order('measurement_date', { ascending: false })
+          .limit(1),
+        supabase
+          .from('daily_health_summary')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .order('date', { ascending: false }),
+      ]);
 
       // Агрегируем данные в зависимости от периода
       const aggregateData = (data: any[], summaries: any[]) => {
@@ -495,6 +509,14 @@ export const EnhancedFitnessDashboard = () => {
       };
 
       setDashboardStats(stats);
+      // Сохраняем быстрый снепшот для моментальной отрисовки при следующем визите
+      try {
+        localStorage.setItem(
+          `dashboard_snapshot_${user.id}`,
+          JSON.stringify({ dashboardStats: stats, ts: Date.now() })
+        );
+      } catch {}
+
 
       // Подготавливаем данные для графиков с учетом периода
       const prepareChartData = (rawData: any[]) => {
