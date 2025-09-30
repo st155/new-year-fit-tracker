@@ -301,32 +301,30 @@ export default function FitnessData() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/progress')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Назад к прогрессу
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Данные фитнес-трекеров</h1>
-              <p className="text-muted-foreground">
-                Полная история всех ваших показателей здоровья и фитнеса
-              </p>
-            </div>
+      <div className="container mx-auto px-3 py-3 max-w-7xl">
+        {/* Compact Header */}
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/progress')}
+            className="flex items-center gap-1 mb-2 h-8 px-2"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            <span className="text-xs">Назад к прогрессу</span>
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold">Данные фитнес-трекеров</h1>
+            <p className="text-xs text-muted-foreground">
+              Полная история всех ваших показателей здоровья и фитнеса
+            </p>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4 mb-6">
+        {/* Compact Filters */}
+        <div className="flex gap-2 mb-3">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="h-8 text-xs w-40">
               <SelectValue placeholder="Категория" />
             </SelectTrigger>
             <SelectContent>
@@ -335,7 +333,7 @@ export default function FitnessData() {
                 <SelectItem key={category} value={category}>
                   <div className="flex items-center gap-2">
                     {getCategoryIcon(category)}
-                    {category}
+                    <span className="text-xs">{category}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -343,7 +341,7 @@ export default function FitnessData() {
           </Select>
 
           <Select value={selectedSource} onValueChange={setSelectedSource}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="h-8 text-xs w-40">
               <SelectValue placeholder="Источник" />
             </SelectTrigger>
             <SelectContent>
@@ -352,7 +350,7 @@ export default function FitnessData() {
                 <SelectItem key={source} value={source}>
                   <div className="flex items-center gap-2">
                     {getSourceIcon(source)}
-                    {source}
+                    <span className="text-xs">{source}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -362,50 +360,50 @@ export default function FitnessData() {
 
         {filteredMetrics.length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="text-center py-16">
-              <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <Activity className="w-8 h-8 text-primary" />
+            <CardContent className="text-center py-8">
+              <div className="rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <Activity className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Нет данных фитнеса</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              <h3 className="text-base font-semibold mb-2">Нет данных фитнеса</h3>
+              <p className="text-xs text-muted-foreground mb-4 max-w-md mx-auto">
                 Подключите фитнес-трекеры или загрузите скриншоты для автоматического сбора и анализа ваших данных
               </p>
-              <div className="flex gap-3 justify-center">
-                <Button onClick={() => navigate('/integrations')} className="gap-2">
-                  <Target className="w-4 h-4" />
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => navigate('/integrations')} className="gap-1.5 h-8 text-xs">
+                  <Target className="w-3 h-3" />
                   Подключить трекер
                 </Button>
-                <Button variant="outline" onClick={() => navigate('/progress')} className="gap-2">
-                  <Upload className="w-4 h-4" />
+                <Button variant="outline" onClick={() => navigate('/progress')} className="gap-1.5 h-8 text-xs">
+                  <Upload className="w-3 h-3" />
                   Загрузить данные
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="overview" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
+          <Tabs defaultValue="overview" className="space-y-3">
+            <TabsList className="grid w-full grid-cols-4 h-8">
+              <TabsTrigger value="overview" className="gap-1 text-xs h-7">
+                <BarChart3 className="w-3 h-3" />
                 Обзор
               </TabsTrigger>
-              <TabsTrigger value="detailed" className="gap-2">
-                <Eye className="w-4 h-4" />
+              <TabsTrigger value="detailed" className="gap-1 text-xs h-7">
+                <Eye className="w-3 h-3" />
                 Детальный анализ
               </TabsTrigger>
-              <TabsTrigger value="insights" className="gap-2">
-                <Award className="w-4 h-4" />
+              <TabsTrigger value="insights" className="gap-1 text-xs h-7">
+                <Award className="w-3 h-3" />
                 Инсайты
               </TabsTrigger>
-              <TabsTrigger value="comparison" className="gap-2">
-                <Target className="w-4 h-4" />
+              <TabsTrigger value="comparison" className="gap-1 text-xs h-7">
+                <Target className="w-3 h-3" />
                 Сравнение
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-8">
-              {/* Статистика по категориям */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <TabsContent value="overview" className="space-y-3">
+              {/* Компактная статистика по категориям */}
+              <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                 {Array.from(new Set(filteredMetrics.map(m => m.metric_category))).map(category => {
                   const categoryMetrics = filteredMetrics.filter(m => m.metric_category === category);
                   const avgTrend = categoryMetrics.reduce((sum, m) => sum + (m.changePercent || 0), 0) / categoryMetrics.length;
@@ -416,25 +414,25 @@ export default function FitnessData() {
                         className="absolute inset-0 opacity-5"
                         style={{ backgroundColor: getMetricColor(category) }}
                       />
-                      <CardHeader className="pb-3">
+                      <CardHeader className="p-3 pb-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {getCategoryIcon(category)}
-                            <CardTitle className="text-sm capitalize">{category}</CardTitle>
+                            <CardTitle className="text-xs capitalize">{category}</CardTitle>
                           </div>
-                          <Badge variant={avgTrend > 0 ? "default" : avgTrend < 0 ? "destructive" : "secondary"}>
+                          <Badge variant={avgTrend > 0 ? "default" : avgTrend < 0 ? "destructive" : "secondary"} className="h-5 text-[10px]">
                             {avgTrend > 0 ? '+' : ''}{avgTrend.toFixed(1)}%
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold">{categoryMetrics.length}</div>
-                          <div className="text-sm text-muted-foreground">
+                      <CardContent className="p-3 pt-0">
+                        <div className="space-y-1">
+                          <div className="text-xl font-bold">{categoryMetrics.length}</div>
+                          <div className="text-[10px] text-muted-foreground">
                             {categoryMetrics.length === 1 ? 'метрика' : 'метрики'}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Последнее обновление: {categoryMetrics[0]?.latestValue && 
+                          <div className="text-[10px] text-muted-foreground">
+                            Обновлено: {categoryMetrics[0]?.latestValue && 
                               format(new Date(categoryMetrics[0].latestValue.measurement_date), 'd MMM', { locale: ru })
                             }
                           </div>
@@ -445,8 +443,8 @@ export default function FitnessData() {
                 })}
               </div>
 
-              {/* Сетка метрик с улучшенным дизайном */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Компактная сетка метрик */}
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {filteredMetrics.map((metric) => {
                   const insight = getMetricInsight(metric);
                   const color = getMetricColor(metric.metric_category);
@@ -454,23 +452,23 @@ export default function FitnessData() {
                   return (
                     <Card 
                       key={metric.id}
-                      className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.01] group relative overflow-hidden"
                       onClick={() => setSelectedMetric(metric)}
                     >
                       <div 
-                        className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300"
+                        className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200"
                         style={{ backgroundColor: color }}
                       />
                       
-                      <CardHeader className="pb-3">
+                      <CardHeader className="p-3 pb-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <div style={{ color }}>{getCategoryIcon(metric.metric_category)}</div>
                             <div>
-                              <span className="font-semibold text-sm">{metric.metric_name}</span>
-                              <div className="flex items-center gap-2 mt-1">
+                              <span className="font-semibold text-xs">{metric.metric_name}</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
                                 {getSourceIcon(metric.source)}
-                                <Badge variant="outline" className="text-xs px-2 py-0">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
                                   {metric.metric_category}
                                 </Badge>
                               </div>
@@ -482,13 +480,13 @@ export default function FitnessData() {
                         </div>
                       </CardHeader>
                       
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-2 p-3 pt-0">
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <span className="text-3xl font-bold">
+                            <span className="text-2xl font-bold">
                               {metric.latestValue ? formatValue(metric.latestValue.value, metric.unit) : '—'}
                             </span>
-                            <div className="text-xs text-muted-foreground mt-1">
+                            <div className="text-[10px] text-muted-foreground mt-0.5">
                               Последнее значение
                             </div>
                           </div>
@@ -497,11 +495,11 @@ export default function FitnessData() {
                             <div className="text-right">
                               <Badge 
                                 variant={metric.trend === 'up' ? "default" : metric.trend === 'down' ? "destructive" : "secondary"}
-                                className="text-xs"
+                                className="text-[10px] h-4"
                               >
                                 {metric.changePercent > 0 ? '+' : ''}{metric.changePercent.toFixed(1)}%
                               </Badge>
-                              <div className="text-xs text-muted-foreground mt-1">
+                              <div className="text-[10px] text-muted-foreground mt-0.5">
                                 изменение
                               </div>
                             </div>
@@ -509,16 +507,16 @@ export default function FitnessData() {
                         </div>
 
                         {insight && (
-                          <div className={`text-xs p-2 rounded-md ${
+                          <div className={`text-[10px] p-1.5 rounded-md ${
                             insight.type === 'positive' 
-                              ? 'bg-green-50 text-green-700 border border-green-200' 
-                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                              ? 'bg-success/10 text-success-foreground border border-success/20' 
+                              : 'bg-accent/10 text-accent-foreground border border-accent/20'
                           }`}>
                             {insight.message}
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <BarChart3 className="w-3 h-3" />
                             <span>{metric.values.length} записей</span>
