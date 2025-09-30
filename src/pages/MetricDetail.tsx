@@ -289,7 +289,13 @@ export default function MetricDetail() {
 
       // Вычисляем статистику за весь выбранный период
       if (metricData.length >= 2) {
-        const current = metricData[metricData.length - 1].value;
+        // Для steps показываем среднее за период, для остальных - последнее значение
+        let current = metricData[metricData.length - 1].value;
+        if (metricType === 'steps') {
+          const sum = metricData.reduce((acc, item) => acc + item.value, 0);
+          current = sum / metricData.length;
+        }
+        
         const previous = metricData[0].value; // Первое значение в периоде
         const change = current - previous;
         const changePercent = previous !== 0 ? (change / previous) * 100 : 0;
