@@ -342,6 +342,18 @@ export default function FitnessData() {
       });
     }
 
+    if (metricValues['Resting Heart Rate']) {
+      const rhr = metricValues['Resting Heart Rate'];
+      cards.push({
+        name: 'Пульс покоя',
+        value: Math.round(rhr.current).toString(),
+        subtitle: 'уд/мин',
+        icon: Heart,
+        color: '#EC4899',
+        borderColor: '#EC4899'
+      });
+    }
+
     if (metricValues['Weight']) {
       const w = metricValues['Weight'];
       cards.push({
@@ -365,6 +377,62 @@ export default function FitnessData() {
         borderColor: '#06B6D4'
       });
     }
+
+    if (metricValues['HRV'] || metricValues['Heart Rate Variability']) {
+      const hrv = metricValues['HRV'] || metricValues['Heart Rate Variability'];
+      cards.push({
+        name: 'HRV',
+        value: Math.round(hrv.current).toString(),
+        subtitle: 'мс',
+        icon: Heart,
+        color: '#8B5CF6',
+        borderColor: '#8B5CF6'
+      });
+    }
+
+    if (metricValues['Workout Count']) {
+      const wc = metricValues['Workout Count'];
+      cards.push({
+        name: 'Тренировки',
+        value: Math.round(wc.current).toString(),
+        subtitle: 'за период',
+        icon: Dumbbell,
+        color: '#F59E0B',
+        borderColor: '#F59E0B'
+      });
+    }
+
+    if (metricValues['Exercise Minutes']) {
+      const em = metricValues['Exercise Minutes'];
+      cards.push({
+        name: 'Активность',
+        value: Math.round(em.current).toString(),
+        subtitle: 'мин',
+        icon: Zap,
+        color: '#FBBF24',
+        borderColor: '#FBBF24'
+      });
+    }
+
+    // Add all remaining metrics that aren't already added
+    Object.keys(metricValues).forEach(metricName => {
+      const alreadyAdded = cards.some(c => 
+        c.name.toLowerCase().includes(metricName.toLowerCase()) ||
+        metricName.toLowerCase().includes(c.name.toLowerCase())
+      );
+      
+      if (!alreadyAdded) {
+        const metric = metricValues[metricName];
+        cards.push({
+          name: metricName,
+          value: (Math.round(metric.current * 10) / 10).toString(),
+          subtitle: metric.unit || '',
+          icon: Activity,
+          color: '#64748B',
+          borderColor: '#64748B'
+        });
+      }
+    });
 
     result.cards = cards;
     return result;
