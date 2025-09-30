@@ -51,13 +51,73 @@ export default function Feed() {
 
       if (error) throw error;
 
-      // Преобразуем данные в нужный формат
-      const formattedActivities = (activitiesData || []).map(activity => ({
+      const formattedActivities: ActivityItem[] = ((activitiesData || []).map((activity: any) => ({
         ...activity,
-        profiles: Array.isArray(activity.profiles) ? activity.profiles[0] : activity.profiles
-      }));
+        profiles: Array.isArray(activity.profiles) ? activity.profiles[0] : activity.profiles,
+      })) as any);
 
-      setActivities(formattedActivities);
+      // Доп. обогащение данных: для metric_values подтягиваем название метрики и длительность тренировки
+      const metricActivities = formattedActivities.filter(
+        (a) => a.action_type === 'metric_values' && (a as any).metadata
+      );
+      const externalIds = Array.from(
+        new Set(
+          metricActivities
+            .map((a) => ((a as any).metadata as any)?.external_id)
+            .filter((v) => typeof v === 'string' && v.length > 0)
+        )
+      );
+      const metricIds = Array.from(
+        new Set(
+          metricActivities
+            .map((a) => ((a as any).metadata as any)?.metric_id)
+            .filter((v) => typeof v === 'string' && v.length > 0)
+        )
+      );
+
+      let enhancedActivities: ActivityItem[] = formattedActivities;
+      if (externalIds.length > 0 || metricIds.length > 0) {
+        const [workoutsRes, metricsRes] = await Promise.all([
+          externalIds.length
+            ? supabase
+                .from('workouts')
+                .select('external_id, workout_type, duration_minutes')
+                .in('external_id', externalIds)
+            : Promise.resolve({ data: [], error: null }),
+          metricIds.length
+            ? supabase
+                .from('user_metrics')
+                .select('id, metric_name, unit')
+                .in('id', metricIds)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+
+        const workoutMap = new Map<string, any>(
+          (((workoutsRes as any).data) || []).map((w: any) => [w.external_id, w])
+        );
+        const metricsMap = new Map<string, any>(
+          (((metricsRes as any).data) || []).map((m: any) => [m.id, m])
+        );
+
+        enhancedActivities = formattedActivities.map((a: any) => {
+          if (a.action_type !== 'metric_values' || !a.metadata) return a as ActivityItem;
+          const meta: any = a.metadata || {};
+          const wo: any = meta.external_id ? (workoutMap.get(meta.external_id as string) as any) : null;
+          const mu: any = meta.metric_id ? (metricsMap.get(meta.metric_id as string) as any) : null;
+          return {
+            ...a,
+            metadata: {
+              ...(meta as object),
+              workout_type: wo?.workout_type ?? meta.workout_type,
+              duration_minutes: wo?.duration_minutes ?? meta.duration_minutes,
+              metric_name: mu?.metric_name ?? meta.metric_name,
+              unit: mu?.unit ?? meta.unit,
+            },
+          } as ActivityItem;
+        });
+      }
+
+      setActivities(enhancedActivities);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
