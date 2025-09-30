@@ -30,7 +30,7 @@ const ProgressPage = () => {
     if (user) {
       fetchChallengeGoals();
     }
-  }, [user]);
+  }, [user, selectedPeriod]);
 
   const fetchChallengeGoals = async () => {
     if (!user) return;
@@ -58,7 +58,7 @@ const ProgressPage = () => {
       // Deduplicate by goal_name
       const uniqueGoals = Array.from(new Map((goals || []).map(g => [g.goal_name, g])).values());
       setChallengeGoals(uniqueGoals);
-      buildMetrics(uniqueGoals);
+      await buildMetrics(uniqueGoals);
     } catch (error) {
       console.error('Error fetching challenge goals:', error);
       setChallengeGoals([]);
@@ -66,7 +66,7 @@ const ProgressPage = () => {
     }
   };
 
-  const buildMetrics = (goals: any[]) => {
+  const buildMetrics = async (goals: any[]) => {
     if (goals.length === 0) {
       setMetrics([]);
       return;
@@ -84,8 +84,14 @@ const ProgressPage = () => {
       'vo2max': { id: 'vo2max', color: '#3B82F6' },
       'vo₂max': { id: 'vo2max', color: '#3B82F6' },
       'бег 1 км': { id: 'run', color: '#06B6D4' },
-      'процент жира': { id: 'body-fat', color: '#FF6B2C' }
+      'процент жира': { id: 'body-fat', color: '#FF6B2C' },
+      'вес': { id: 'weight', color: '#10B981' }
     };
+
+    // Calculate period start date
+    const periodDays = selectedPeriod === '1M' ? 30 : selectedPeriod === '3M' ? 90 : selectedPeriod === '6M' ? 180 : 365;
+    const periodStart = new Date();
+    periodStart.setDate(periodStart.getDate() - periodDays);
 
     for (const goal of goals) {
       const normalized = goal.goal_name.toLowerCase();
@@ -93,14 +99,37 @@ const ProgressPage = () => {
       
       if (!mapping) continue;
 
+      // Fetch measurements for this goal
+      const { data: measurements } = await supabase
+        .from('measurements')
+        .select('*')
+        .eq('goal_id', goal.id)
+        .gte('measurement_date', periodStart.toISOString().split('T')[0])
+        .order('measurement_date', { ascending: false });
+
+      let currentValue = 0;
+      let trend = 0;
+
+      if (measurements && measurements.length > 0) {
+        currentValue = measurements[0].value;
+
+        // Calculate trend
+        if (measurements.length > 1) {
+          const oldValue = measurements[measurements.length - 1].value;
+          if (oldValue !== 0) {
+            trend = ((currentValue - oldValue) / oldValue) * 100;
+          }
+        }
+      }
+
       metricsArray.push({
         id: mapping.id,
         title: goal.goal_name,
-        value: 0,
+        value: currentValue,
         unit: goal.target_unit || '',
         target: goal.target_value || 0,
         targetUnit: goal.target_unit || '',
-        trend: 0,
+        trend: trend,
         borderColor: `border-[${mapping.color}]`,
         progressColor: `bg-[${mapping.color}]`,
         chart: mapping.id === 'vo2max'
