@@ -94,6 +94,13 @@ export default function ModernProgress() {
 
       uniqueGoals = [...uniqueGoals, ...placeholders];
 
+      // Fetch user personal goals and index by name for mapping
+      const { data: userGoals } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id);
+      const userGoalsByName = new Map((userGoals || []).map((g: any) => [((g.goal_name || '') as string).toLowerCase(), g]));
+
       // Build metric cards
       const goalMapping: { [key: string]: { id: string; color: string } } = {
         'подтягивания': { id: 'pullups', color: '#A855F7' },
@@ -144,38 +151,41 @@ export default function ModernProgress() {
 
         let currentValue = 0;
         let trend = 0;
-        let realGoalId = goal.id;
 
-        // For synthetic goals, try to find a real goal with the same name
-        if (String(goal.id).startsWith('synthetic-')) {
-          const { data: realGoals } = await supabase
-            .from('goals')
-            .select('id')
-            .eq('user_id', user.id)
-            .ilike('goal_name', goal.goal_name)
-            .limit(1);
-          
-          if (realGoals && realGoals.length > 0) {
-            realGoalId = realGoals[0].id;
-          }
-        }
+        // Prefer user's personal goal with the same name (for measurements and targets)
+        const userGoal = userGoalsByName.get(normalized);
+        const realGoalId = userGoal?.id ?? goal.id;
 
-        // Fetch measurements for this goal
+        // Fetch measurements for this goal: within period, then fallback to latest ever
+        let measurements: any[] = [];
         if (!String(realGoalId).startsWith('synthetic-')) {
-          const { data: measurements } = await supabase
+          const { data: inPeriod } = await supabase
             .from('measurements')
             .select('*')
+            .eq('user_id', user.id)
             .eq('goal_id', realGoalId)
             .gte('measurement_date', periodStart.toISOString().split('T')[0])
             .order('measurement_date', { ascending: false });
+          measurements = inPeriod || [];
 
-          if (measurements && measurements.length > 0) {
-            currentValue = Number(measurements[0].value);
-            if (measurements.length > 1) {
-              const oldValue = Number(measurements[measurements.length - 1].value);
-              if (oldValue !== 0) {
-                trend = ((currentValue - oldValue) / oldValue) * 100;
-              }
+          if (measurements.length === 0) {
+            const { data: latestAny } = await supabase
+              .from('measurements')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('goal_id', realGoalId)
+              .order('measurement_date', { ascending: false })
+              .limit(1);
+            measurements = latestAny || [];
+          }
+        }
+
+        if (measurements && measurements.length > 0) {
+          currentValue = Number(measurements[0].value);
+          if (measurements.length > 1) {
+            const oldValue = Number(measurements[measurements.length - 1].value);
+            if (oldValue !== 0) {
+              trend = ((currentValue - oldValue) / oldValue) * 100;
             }
           }
         }
@@ -184,15 +194,15 @@ export default function ModernProgress() {
           id,
           title: goal.goal_name,
           value: currentValue,
-          unit: goal.target_unit || '',
-          target: Number(goal.target_value) || 0,
-          targetUnit: goal.target_unit || '',
+          unit: (userGoal?.target_unit ?? goal.target_unit) || '',
+          target: Number(userGoal?.target_value ?? goal.target_value) || 0,
+          targetUnit: (userGoal?.target_unit ?? goal.target_unit) || '',
           trend,
           borderColor: color,
           progressColor: color,
           chart: id === 'vo2max',
           goalId: realGoalId,
-          goalType: goal.goal_type
+          goalType: userGoal?.goal_type ?? goal.goal_type
         });
       }
 
