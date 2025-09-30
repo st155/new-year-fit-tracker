@@ -117,6 +117,8 @@ export default function MetricDetail() {
       let metricData: MetricData[] = [];
 
       if (metricType === 'body_fat') {
+        console.log('Fetching body_fat data for timeRange:', timeRange, 'from:', startDate.toISOString());
+        
         // Получаем данные из body_composition и metric_values
         const [bcData, mvData] = await Promise.all([
           supabase
@@ -130,10 +132,24 @@ export default function MetricDetail() {
             .from('metric_values')
             .select(`value, measurement_date, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Body Fat Percentage', 'Процент жира'])
             .gte('measurement_date', startDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
+
+        console.log('Body composition data:', bcData);
+        console.log('Metric values data:', mvData);
+
+        // Фильтруем metric_values по именам метрик
+        const filteredMvData = (mvData.data || []).filter(item => {
+          const metricName = (item.user_metrics as any)?.metric_name || '';
+          return metricName === 'Body Fat Percentage' || 
+                 metricName === 'Процент жира' ||
+                 metricName === 'Body Fat %' ||
+                 metricName.toLowerCase().includes('body fat') ||
+                 metricName.toLowerCase().includes('жир');
+        });
+
+        console.log('Filtered metric values:', filteredMvData);
 
         const bcEntries = (bcData.data || []).map(item => ({
           value: Number(item.body_fat_percentage),
@@ -141,11 +157,13 @@ export default function MetricDetail() {
           source: 'manual'
         }));
 
-        const mvEntries = (mvData.data || []).map(item => ({
+        const mvEntries = filteredMvData.map(item => ({
           value: Number(item.value),
           date: item.measurement_date,
           source: (item.user_metrics as any)?.source || 'unknown'
         }));
+
+        console.log('BC entries:', bcEntries.length, 'MV entries:', mvEntries.length);
 
         // Сортируем по дате и приоритету источника
         const allEntries = [...bcEntries, ...mvEntries];
@@ -162,6 +180,8 @@ export default function MetricDetail() {
             if (sameDate.length === 1) return true;
             return sameDate.indexOf(entry) === 0;
           });
+        
+        console.log('Final metric data:', metricData.length, 'entries');
       }
       else if (metricType === 'weight') {
         const [bcData, mvData] = await Promise.all([
