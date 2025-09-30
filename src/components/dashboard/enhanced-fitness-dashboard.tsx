@@ -48,6 +48,7 @@ import { WeightProgressDetail } from '@/components/detail/WeightProgressDetail';
 import { BodyFatProgressDetail } from '@/components/detail/BodyFatProgressDetail';
 import { VO2MaxProgressDetail } from '@/components/detail/VO2MaxProgressDetail';
 import { PullUpsProgressDetail } from '@/components/detail/PullUpsProgressDetail';
+import { MetricsSettings, type MetricVisibility } from './metrics-settings';
 
 interface MetricValue {
   id: string;
@@ -133,8 +134,8 @@ const CircularProgress = ({ value, max = 100, size = 120, strokeWidth = 12, labe
   );
 };
 
-// Компонент метрики с трендом
-const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", onClick, children }: {
+// Компонент метрики с трендом и градиентной рамкой
+const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", gradientBorder, onClick, children }: {
   title: string;
   value: number | null;
   unit?: string;
@@ -142,6 +143,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   target?: number;
   icon: React.ReactNode;
   color?: string;
+  gradientBorder?: string;
   onClick?: () => void;
   children?: React.ReactNode;
 }) => {
@@ -158,49 +160,53 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   };
 
   return (
-    <Card className={`relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${onClick ? 'cursor-pointer hover-scale' : ''}`} onClick={onClick}>
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 group-hover:to-background/10 transition-all duration-300" />
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div style={{ color }}>{icon}</div>
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    <div className={`relative p-[2px] rounded-lg ${onClick ? 'cursor-pointer' : ''}`} 
+         style={{ background: gradientBorder || 'transparent' }}
+         onClick={onClick}>
+      <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 bg-card border-0 h-full hover-scale">
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 group-hover:to-background/10 transition-all duration-300" />
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div style={{ color }}>{icon}</div>
+              <CardTitle className="text-sm font-medium uppercase tracking-wide">{title}</CardTitle>
+            </div>
+            {trend !== undefined && (
+              <div className="flex items-center gap-1">
+                {getTrendIcon()}
+                <span className={`text-xs font-medium ${getTrendColor()}`}>
+                  {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
+                </span>
+              </div>
+            )}
           </div>
-          {trend !== undefined && (
-            <div className="flex items-center gap-1">
-              {getTrendIcon()}
-              <span className={`text-xs font-medium ${getTrendColor()}`}>
-                {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
-              </span>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-baseline gap-2">
+            {value !== null ? (
+              <>
+                <span className="text-4xl font-bold">{typeof value === 'number' ? value.toFixed(1) : value}</span>
+                {unit && <span className="text-sm text-muted-foreground font-medium">{unit}</span>}
+              </>
+            ) : (
+              <span className="text-3xl text-muted-foreground">—</span>
+            )}
+          </div>
+          
+          {target && value && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>Progress</span>
+                <span>{Math.round((value / target) * 100)}%</span>
+              </div>
+              <Progress value={(value / target) * 100} className="h-2" />
             </div>
           )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          {value !== null ? (
-            <>
-              <span className="text-3xl font-bold">{typeof value === 'number' ? value.toFixed(1) : value}</span>
-              {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
-            </>
-          ) : (
-            <span className="text-2xl text-muted-foreground">—</span>
-          )}
-        </div>
-        
-        {target && value && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span>Progress</span>
-              <span>{Math.round((value / target) * 100)}%</span>
-            </div>
-            <Progress value={(value / target) * 100} className="h-2" />
-          </div>
-        )}
-        
-        {children}
-      </CardContent>
-    </Card>
+          
+          {children}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
@@ -266,6 +272,16 @@ export const EnhancedFitnessDashboard = () => {
   const [trends, setTrends] = useState<{ [key: string]: number }>({});
   const [aggregatedStats, setAggregatedStats] = useState<any>(null);
   const [viewingDetailType, setViewingDetailType] = useState<string | null>(null);
+  const [metricsVisibility, setMetricsVisibility] = useState<MetricVisibility>({
+    recovery: true,
+    sleep: true,
+    strain: true,
+    steps: true,
+    calories: true,
+    heartRate: true,
+    weight: true,
+    bodyFat: true,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -768,6 +784,11 @@ export const EnhancedFitnessDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <MetricsSettings 
+                onSettingsChange={setMetricsVisibility}
+                initialSettings={metricsVisibility}
+              />
+              
               {/* Селектор периода */}
               <div className="flex items-center gap-2 bg-muted/30 rounded-lg p-1">
                 <Button
@@ -893,140 +914,160 @@ export const EnhancedFitnessDashboard = () => {
 
             {/* Главные показатели с круговыми прогресс-барами */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('recovery')}>
-                <CircularProgress
-                  value={dashboardStats.recovery || 0}
-                  max={100}
-                  label={viewPeriod === 'day' ? 'Recovery' : 'Average'}
-                  color={recoveryColor}
-                />
-                <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Heart className="h-4 w-4 text-red-500" />
-                    <span className="font-medium">Recovery</span>
+              {metricsVisibility.recovery && (
+                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('recovery')}>
+                  <CircularProgress
+                    value={dashboardStats.recovery || 0}
+                    max={100}
+                    label={viewPeriod === 'day' ? 'Recovery' : 'Average'}
+                    color={recoveryColor}
+                  />
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Heart className="h-4 w-4 text-red-500" />
+                      <span className="font-medium">Recovery</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                       {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                    </div>
+                    {trends['Recovery Score'] && (
+                      <Badge variant="secondary" className="mt-2">
+                        {trends['Recovery Score'] > 0 ? '+' : ''}{trends['Recovery Score'].toFixed(1)}%
+                      </Badge>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                     {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                  </div>
-                  {trends['Recovery Score'] && (
-                    <Badge variant="secondary" className="mt-2">
-                      {trends['Recovery Score'] > 0 ? '+' : ''}{trends['Recovery Score'].toFixed(1)}%
-                    </Badge>
-                  )}
-                </div>
-              </Card>
+                </Card>
+              )}
 
-              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('sleep')}>
-                <CircularProgress
-                  value={dashboardStats.sleep || 0}
-                  max={100}
-                  label={viewPeriod === 'day' ? 'Sleep' : 'Average'}
-                  color={sleepColor}
-                />
-                <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Moon className="h-4 w-4 text-purple-500" />
-                    <span className="font-medium">Sleep Quality</span>
+              {metricsVisibility.sleep && (
+                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('sleep')}>
+                  <CircularProgress
+                    value={dashboardStats.sleep || 0}
+                    max={100}
+                    label={viewPeriod === 'day' ? 'Sleep' : 'Average'}
+                    color={sleepColor}
+                  />
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Moon className="h-4 w-4 text-purple-500" />
+                      <span className="font-medium">Sleep Quality</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                       {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                    </div>
+                    {trends['Sleep Efficiency'] && (
+                      <Badge variant="secondary" className="mt-2">
+                        {trends['Sleep Efficiency'] > 0 ? '+' : ''}{trends['Sleep Efficiency'].toFixed(1)}%
+                      </Badge>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                     {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                  </div>
-                  {trends['Sleep Efficiency'] && (
-                    <Badge variant="secondary" className="mt-2">
-                      {trends['Sleep Efficiency'] > 0 ? '+' : ''}{trends['Sleep Efficiency'].toFixed(1)}%
-                    </Badge>
-                  )}
-                </div>
-              </Card>
+                </Card>
+              )}
 
-              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('strain')}>
-                <CircularProgress
-                  value={dashboardStats.strain || 0}
-                  max={20}
-                  label={viewPeriod === 'day' ? 'Strain' : 'Average'}
-                  color="hsl(48, 96%, 53%)"
-                />
-                <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Zap className="h-4 w-4 text-yellow-500" />
-                    <span className="font-medium">Strain</span>
+              {metricsVisibility.strain && (
+                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('strain')}>
+                  <CircularProgress
+                    value={dashboardStats.strain || 0}
+                    max={20}
+                    label={viewPeriod === 'day' ? 'Strain' : 'Average'}
+                    color="hsl(48, 96%, 53%)"
+                  />
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Zap className="h-4 w-4 text-yellow-500" />
+                      <span className="font-medium">Strain</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                    </div>
+                    {trends['Workout Strain'] && (
+                      <Badge variant="secondary" className="mt-2">
+                        {trends['Workout Strain'] > 0 ? '+' : ''}{trends['Workout Strain'].toFixed(1)}%
+                      </Badge>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                  </div>
-                  {trends['Workout Strain'] && (
-                    <Badge variant="secondary" className="mt-2">
-                      {trends['Workout Strain'] > 0 ? '+' : ''}{trends['Workout Strain'].toFixed(1)}%
-                    </Badge>
-                  )}
-                </div>
-              </Card>
+                </Card>
+              )}
 
-              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('steps')}>
-                <CircularProgress
-                  value={
-                    viewPeriod === 'day' 
-                      ? (dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0)
-                      : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
-                  }
-                  max={100}
-                  label={viewPeriod === 'day' ? 'Steps' : 'Total'}
-                  color="hsl(221, 83%, 53%)"
-                />
-                <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Activity className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Activity</span>
+              {metricsVisibility.steps && (
+                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('steps')}>
+                  <CircularProgress
+                    value={
+                      viewPeriod === 'day' 
+                        ? (dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0)
+                        : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
+                    }
+                    max={100}
+                    label={viewPeriod === 'day' ? 'Steps' : 'Total'}
+                    color="hsl(221, 83%, 53%)"
+                  />
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Activity className="h-4 w-4 text-blue-500" />
+                      <span className="font-medium">Activity</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {dashboardStats.steps?.toLocaleString() || 0} 
+                      {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' this week' : ' this month'}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {dashboardStats.steps?.toLocaleString() || 0} 
-                    {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' this week' : ' this month'}
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
             </div>
 
-            {/* Дополнительные метрики */}
+            {/* Дополнительные метрики с градиентными рамками */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                title="Calories"
-                value={dashboardStats.calories}
-                unit="kcal"
-                trend={trends['Calories'] || trends['Total Kilocalories']}
-                target={2500}
-                icon={<Flame className="h-4 w-4" />}
-                color="hsl(25, 95%, 53%)"
-                onClick={() => navigate('/metric/steps')} // Пока без детального экрана калорий
-              />
+              {metricsVisibility.calories && (
+                <MetricCard
+                  title="Calories"
+                  value={dashboardStats.calories}
+                  unit="kcal"
+                  trend={trends['Calories'] || trends['Total Kilocalories']}
+                  target={2500}
+                  icon={<Flame className="h-4 w-4" />}
+                  color="hsl(25, 95%, 53%)"
+                  gradientBorder="linear-gradient(135deg, hsl(25, 95%, 53%), hsl(38, 92%, 50%))"
+                  onClick={() => navigate('/metric/steps')}
+                />
+              )}
 
-              <MetricCard
-                title="Heart Rate"
-                value={dashboardStats.heartRate}
-                unit="bpm"
-                trend={trends['Average Heart Rate']}
-                icon={<Heart className="h-4 w-4" />}
-                color="hsl(0, 84%, 60%)"
-                onClick={() => navigate('/metric/recovery')} // Навигация к детализации пульса
-              />
+              {metricsVisibility.heartRate && (
+                <MetricCard
+                  title="Heart Rate"
+                  value={dashboardStats.heartRate}
+                  unit="bpm"
+                  trend={trends['Average Heart Rate']}
+                  icon={<Heart className="h-4 w-4" />}
+                  color="hsl(0, 84%, 60%)"
+                  gradientBorder="linear-gradient(135deg, hsl(0, 84%, 60%), hsl(340, 82%, 52%))"
+                  onClick={() => navigate('/metric/recovery')}
+                />
+              )}
 
-              <MetricCard
-                title="Weight"
-                value={dashboardStats.weight}
-                unit="kg"
-                icon={<Target className="h-4 w-4" />}
-                color="hsl(142, 76%, 36%)"
-                onClick={() => navigate('/metric/weight')}
-              />
+              {metricsVisibility.weight && (
+                <MetricCard
+                  title="Weight"
+                  value={dashboardStats.weight}
+                  unit="kg"
+                  icon={<Target className="h-4 w-4" />}
+                  color="hsl(142, 76%, 36%)"
+                  gradientBorder="linear-gradient(135deg, hsl(142, 76%, 36%), hsl(158, 64%, 52%))"
+                  onClick={() => navigate('/metric/weight')}
+                />
+              )}
 
-              <MetricCard
-                title="Body Fat"
-                value={dashboardStats.bodyFat}
-                unit="%"
-                target={12}
-                icon={<BarChart3 className="h-4 w-4" />}
-                color="hsl(270, 95%, 60%)"
-                onClick={() => navigate('/metric/body_fat')}
-              />
+              {metricsVisibility.bodyFat && (
+                <MetricCard
+                  title="Body Fat"
+                  value={dashboardStats.bodyFat}
+                  unit="%"
+                  target={12}
+                  icon={<BarChart3 className="h-4 w-4" />}
+                  color="hsl(270, 95%, 60%)"
+                  gradientBorder="linear-gradient(135deg, hsl(270, 95%, 60%), hsl(280, 87%, 65%))"
+                  onClick={() => navigate('/metric/body_fat')}
+                />
+              )}
             </div>
 
             {/* График недельной динамики */}

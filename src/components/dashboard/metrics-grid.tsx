@@ -6,7 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { MetricsSettings, MetricConfig } from "./metrics-settings";
+
+interface MetricConfig {
+  key: string;
+  title: string;
+  unit: string;
+  color: "body-fat" | "weight" | "vo2max" | "row" | "recovery" | "steps";
+  description: string;
+  category: string;
+}
 
 interface MetricCardProps {
   title: string;
@@ -319,10 +327,6 @@ export function MetricsGrid() {
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-4 px-6 relative">
-        <MetricsSettings 
-          selectedMetrics={selectedMetrics}
-          onMetricsChange={handleMetricsChange}
-        />
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-32 rounded-lg" />
         ))}
@@ -332,11 +336,6 @@ export function MetricsGrid() {
 
   return (
     <div className="relative">
-      <MetricsSettings 
-        selectedMetrics={selectedMetrics}
-        onMetricsChange={handleMetricsChange}
-      />
-      
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {selectedMetrics.map((metricKey, index) => {
           const config = metricConfig[metricKey];
