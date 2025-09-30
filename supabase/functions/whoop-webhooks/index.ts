@@ -74,18 +74,36 @@ async function refreshWhoopToken(refreshToken: string) {
 
 // Функция для получения валидного токена (с автообновлением)
 async function getValidAccessToken(userId: string) {
-  const { data: tokens, error } = await supabase
+  // Получаем все токены для пользователя и удаляем дубликаты
+  const { data: allTokens, error } = await supabase
     .from('whoop_tokens')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(1);
+    .order('updated_at', { ascending: false });
     
-  if (error || !tokens || tokens.length === 0) {
+  if (error || !allTokens || allTokens.length === 0) {
+    console.error('No token found for user:', userId, error);
     throw new Error('No Whoop tokens found');
   }
   
-  const token = tokens[0];
+  // Если есть дубликаты, удаляем старые
+  if (allTokens.length > 1) {
+    console.log(`Found ${allTokens.length} token records for user ${userId}, cleaning up duplicates`);
+    const oldTokenIds = allTokens.slice(1).map(t => t.id);
+    
+    const { error: cleanupError } = await supabase
+      .from('whoop_tokens')
+      .delete()
+      .in('id', oldTokenIds);
+      
+    if (cleanupError) {
+      console.error('Error cleaning up duplicate tokens:', cleanupError);
+    } else {
+      console.log(`Cleaned up ${oldTokenIds.length} duplicate token records`);
+    }
+  }
+  
+  const token = allTokens[0];
   const now = new Date();
   const expiresAt = new Date(token.expires_at);
   
