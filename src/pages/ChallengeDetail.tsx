@@ -67,7 +67,11 @@ const ChallengeDetail = () => {
           .eq('challenge_id', id)
           .eq('is_personal', false);
 
-        setGoals(goalsData || []);
+        // Дедупликация целей по имени
+        const uniqueGoals = goalsData 
+          ? Array.from(new Map(goalsData.map(g => [g.goal_name, g])).values())
+          : [];
+        setGoals(uniqueGoals);
 
         // Для каждого участника вычисляем прогресс
         if (participantsData && goalsData) {
