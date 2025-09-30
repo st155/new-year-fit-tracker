@@ -51,7 +51,7 @@ export default function Feed() {
         `)
         .in('action_type', ['workouts', 'metric_values', 'measurements', 'body_composition'])
         .order('created_at', { ascending: false })
-        .limit(20); // Уменьшаем лимит для быстрой загрузки
+        .limit(100); // Увеличиваем лимит, чтобы не терялись тренировки за счет сна
 
       if (error) throw error;
 
@@ -143,12 +143,30 @@ export default function Feed() {
         });
       }
 
-      // Убираем дубликаты по source_id (одна и та же запись может быть вставлена дважды)
-      const uniqueActivities = Array.from(
+      // Дедупликация по id
+      const deduped = Array.from(
         new Map(enhancedActivities.map(a => [a.id, a])).values()
       );
 
-      setActivities(uniqueActivities);
+      // Приоритизируем тренировки и strain, затем прочее, затем сон
+      const isSleep = (a: ActivityItem) => {
+        const text = (a.action_text || '').toLowerCase();
+        const mname = (((a as any).metadata?.metric_name) || '').toLowerCase();
+        return /sleep|slept|сон/.test(text) || /sleep|сон/.test(mname);
+      };
+      const isStrainOrWorkout = (a: ActivityItem) => {
+        const text = (a.action_text || '').toLowerCase();
+        const mname = (((a as any).metadata?.metric_name) || '').toLowerCase();
+        return a.action_type === 'workouts' || /strain/.test(text) || /strain/.test(mname);
+      };
+
+      const prioritized = [
+        ...deduped.filter(isStrainOrWorkout),
+        ...deduped.filter((a) => !isStrainOrWorkout(a) && !isSleep(a)),
+        ...deduped.filter(isSleep),
+      ].slice(0, 30);
+
+      setActivities(prioritized as ActivityItem[]);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
