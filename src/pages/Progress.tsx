@@ -705,6 +705,147 @@ const ProgressPage = () => {
           </Card>
         </div>
 
+        {/* Main Metric Cards */}
+        <div className="px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Weight Loss Card */}
+            <Card 
+              className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
+              onClick={() => setViewingDetailType('weight')}
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-foreground">Weight Loss</h3>
+                    <Badge variant="destructive" className="text-xs">
+                      ↓ 4.2%
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-foreground">
+                      {weightData?.weight ? `${weightData.weight.toFixed(0)}` : '72'} <span className="text-lg text-muted-foreground">kg</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progress to goal</span>
+                        <span className="font-medium">103%</span>
+                      </div>
+                      <Progress value={103} className="h-2" />
+                      <div className="text-sm text-muted-foreground">
+                        Target: 70 kg
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Body Fat Card */}
+            <Card 
+              className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
+              onClick={() => setViewingDetailType('body_fat')}
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-foreground">Body Fat</h3>
+                    <Badge variant="destructive" className="text-xs">
+                      ↓ 8.1%
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-foreground">
+                      {bodyFatData?.current ? `${bodyFatData.current.toFixed(1)}` : '18.5'} <span className="text-lg text-muted-foreground">%</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progress to goal</span>
+                        <span className="font-medium">123%</span>
+                      </div>
+                      <Progress value={123} className="h-2" />
+                      <div className="text-sm text-muted-foreground">
+                        Target: 15 %
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* VO2 Max Card */}
+            <Card 
+              className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
+              onClick={() => setViewingDetailType('vo2_max')}
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-foreground">VO₂ Max</h3>
+                    <Badge variant="destructive" className="text-xs">
+                      ↓ 12.5%
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-foreground">
+                      52 <span className="text-lg text-muted-foreground">ml/kg/min</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progress to goal</span>
+                        <span className="font-medium">95%</span>
+                      </div>
+                      <Progress value={95} className="h-2" />
+                      <div className="text-sm text-muted-foreground">
+                        Target: 55 ml/kg/min
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 2KM Row Card */}
+            <Card 
+              className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
+              onClick={() => setViewingDetailType('pull_ups')}
+            >
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-foreground">2KM Row</h3>
+                    <Badge variant="destructive" className="text-xs">
+                      ↓ 3.8%
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-foreground">
+                      445 <span className="text-lg text-muted-foreground">sec</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progress to goal</span>
+                        <span className="font-medium">106%</span>
+                      </div>
+                      <Progress value={106} className="h-2" />
+                      <div className="text-sm text-muted-foreground">
+                        Target: 420 sec
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         <div className="px-4 space-y-6">
           {/* Контроль веса и состава тела */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
