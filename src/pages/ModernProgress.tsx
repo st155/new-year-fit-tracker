@@ -1,345 +1,331 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  ResponsiveContainer,
-  Tooltip,
-  Legend
-} from 'recharts';
-import { TrendingUp, TrendingDown, Activity, Target, Calendar } from "lucide-react";
+import { Settings, TrendingUp, TrendingDown } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-const mockData = [
-  { date: "Jan", weight: 75, bodyFat: 20, vo2max: 45 },
-  { date: "Feb", weight: 74, bodyFat: 19.5, vo2max: 46 },
-  { date: "Mar", weight: 73, bodyFat: 19, vo2max: 47 },
-  { date: "Apr", weight: 72.5, bodyFat: 18.8, vo2max: 48 },
-  { date: "May", weight: 72, bodyFat: 18.5, vo2max: 50 },
-  { date: "Jun", weight: 71.5, bodyFat: 18.2, vo2max: 52 },
-];
-
-function ProgressCard({ 
-  title, 
-  current, 
-  target, 
-  unit, 
-  trend, 
-  color = "primary",
-  onClick,
-}: {
+interface MetricCard {
+  id: string;
   title: string;
-  current: number;
-  target: number;
+  value: number;
   unit: string;
+  target: number;
+  targetUnit: string;
   trend: number;
-  color?: string;
-  onClick?: () => void;
-}) {
-  const progress = (current / target) * 100;
-  const isPositive = trend > 0;
-
-  return (
-    <Card
-      onClick={onClick}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      className={cn(
-        "bg-gradient-card border-border/50 transition-all duration-300",
-        onClick && "cursor-pointer hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-      )}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-          <Badge 
-            variant={isPositive ? "default" : "destructive"} 
-            className="text-xs"
-          >
-            {isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-            {Math.abs(trend)}%
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-foreground">{current}</span>
-            <span className="text-lg text-muted-foreground mb-1">{unit}</span>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to goal</span>
-              <span className="font-medium">{progress.toFixed(0)}%</span>
-            </div>
-            <Progress 
-              value={progress} 
-              className="h-2"
-            />
-            <div className="text-sm text-muted-foreground">
-              Target: {target} {unit}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  borderColor: string;
+  progressColor: string;
+  chart?: boolean;
 }
 
 export default function ModernProgress() {
-  const [timeRange, setTimeRange] = useState<"1M" | "3M" | "6M" | "1Y">("3M");
-  const [activeTab, setActiveTab] = useState<"body" | "performance" | "health">("body");
+  const { user } = useAuth();
   const navigate = useNavigate();
-
-  const progressData = [
+  const [selectedPeriod, setSelectedPeriod] = useState("3M");
+  const [metrics, setMetrics] = useState<MetricCard[]>([
     {
+      id: "weight",
       title: "Weight Loss",
-      current: 72,
-      target: 70,
+      value: 72,
       unit: "kg",
+      target: 70,
+      targetUnit: "kg",
       trend: -4.2,
-      color: "weight"
+      borderColor: "#10B981",
+      progressColor: "#10B981",
     },
     {
+      id: "body-fat",
       title: "Body Fat",
-      current: 18.5,
-      target: 15,
+      value: 18.5,
       unit: "%",
+      target: 15,
+      targetUnit: "%",
       trend: -8.1,
-      color: "body-fat"
+      borderColor: "#FF6B2C",
+      progressColor: "#FF6B2C",
     },
     {
-      title: "VO₂ Max",
-      current: 52,
+      id: "vo2max",
+      title: "VO₂ MAX",
+      value: 52.1,
+      unit: "ML/KG/MIN",
       target: 55,
-      unit: "ml/kg/min",
-      trend: 12.5,
-      color: "vo2max"
+      targetUnit: "ML/KG/MIN",
+      trend: 3,
+      borderColor: "#3B82F6",
+      progressColor: "#3B82F6",
+      chart: true,
     },
     {
-      title: "2KM Row",
-      current: 445,
-      target: 420,
-      unit: "sec",
-      trend: -3.8,
-      color: "row"
-    }
-  ];
+      id: "pullups",
+      title: "Pull-ups",
+      value: 18,
+      unit: "reps",
+      target: 25,
+      targetUnit: "reps",
+      trend: 3,
+      borderColor: "#A855F7",
+      progressColor: "#A855F7",
+    },
+    {
+      id: "pushups",
+      title: "Push-ups",
+      value: 75,
+      unit: "kg",
+      target: 80,
+      targetUnit: "kg",
+      trend: 5,
+      borderColor: "#EF4444",
+      progressColor: "#EF4444",
+    },
+    {
+      id: "run",
+      title: "1km Run",
+      value: 3.5,
+      unit: "min",
+      target: 3.45,
+      targetUnit: "min",
+      trend: -2,
+      borderColor: "#06B6D4",
+      progressColor: "#06B6D4",
+    },
+  ]);
 
-  const tabsConfig = {
-    body: { 
-      title: "Body Composition", 
-      icon: Activity,
-      metrics: ["Weight", "Body Fat %", "Muscle Mass"]
-    },
-    performance: { 
-      title: "Performance", 
-      icon: Target,
-      metrics: ["VO₂ Max", "2KM Row", "Pull-ups"]
-    },
-    health: { 
-      title: "Health", 
-      icon: Calendar,
-      metrics: ["Recovery", "Sleep", "Steps"]
+  useEffect(() => {
+    if (user) {
+      fetchRealMetrics();
+    }
+  }, [user]);
+
+  const fetchRealMetrics = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch weight data
+      const { data: weightData } = await supabase
+        .from('body_composition')
+        .select('weight, measurement_date')
+        .eq('user_id', user.id)
+        .not('weight', 'is', null)
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      // Fetch body fat data
+      const { data: bodyFatData } = await supabase
+        .from('body_composition')
+        .select('body_fat_percentage, measurement_date')
+        .eq('user_id', user.id)
+        .not('body_fat_percentage', 'is', null)
+        .order('measurement_date', { ascending: false })
+        .limit(2);
+
+      // Fetch goals for targets
+      const { data: goalsData } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Update metrics with real data
+      setMetrics(prev => prev.map(metric => {
+        if (metric.id === 'weight' && weightData && weightData.length > 0) {
+          const current = weightData[0].weight;
+          const previous = weightData[1]?.weight;
+          const weightGoal = goalsData?.find(g => g.goal_name.toLowerCase().includes('вес'));
+          
+          return {
+            ...metric,
+            value: Number(current),
+            target: weightGoal?.target_value || metric.target,
+            trend: previous ? ((previous - current) / current) * 100 : metric.trend,
+          };
+        }
+        
+        if (metric.id === 'body-fat' && bodyFatData && bodyFatData.length > 0) {
+          const current = bodyFatData[0].body_fat_percentage;
+          const previous = bodyFatData[1]?.body_fat_percentage;
+          const bodyFatGoal = goalsData?.find(g => g.goal_name.toLowerCase().includes('жир'));
+          
+          return {
+            ...metric,
+            value: Number(current),
+            target: bodyFatGoal?.target_value || metric.target,
+            trend: previous ? ((previous - current) / current) * 100 : metric.trend,
+          };
+        }
+        
+        return metric;
+      }));
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
     }
   };
 
-  return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Progress Tracking
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Monitor your fitness journey and celebrate your achievements
-          </p>
-        </div>
+  const formatValue = (value: number, unit: string) => {
+    if (unit === "min") {
+      const minutes = Math.floor(value);
+      const seconds = Math.round((value % 1) * 60);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return value % 1 === 0 ? value.toString() : value.toFixed(1);
+  };
 
-        {/* Time Range Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Period:</span>
-          {(["1M", "3M", "6M", "1Y"] as const).map((range) => (
-            <Button
-              key={range}
-              variant={timeRange === range ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeRange(range)}
-              className="h-8"
+  const getProgressPercentage = (metric: MetricCard) => {
+    if (metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run') {
+      // For metrics where lower is better
+      if (metric.value <= metric.target) return 100;
+      return Math.max(0, Math.min(100, (1 - (metric.value - metric.target) / metric.target) * 100));
+    }
+    // For metrics where higher is better
+    return Math.min(100, (metric.value / metric.target) * 100);
+  };
+
+  return (
+    <div className="min-h-screen pb-24 px-4 pt-4">
+      {/* Header */}
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-foreground mb-1">
+          Progress Tracking
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Monitor your fitness journey and celebrate your achievements
+        </p>
+      </div>
+
+      {/* Period Filter */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm text-muted-foreground">Period:</span>
+          {["1M", "3M", "6M", "1Y"].map((period) => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={cn(
+                "px-6 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
+                selectedPeriod === period
+                  ? "text-white"
+                  : "text-muted-foreground hover:text-foreground border border-border/30"
+              )}
+              style={
+                selectedPeriod === period
+                  ? {
+                      background: "linear-gradient(135deg, #FF6B2C, #FF4B2B)",
+                      boxShadow: "0 0 20px rgba(255, 107, 44, 0.5)",
+                    }
+                  : {
+                      background: "rgba(255, 255, 255, 0.05)",
+                      backdropFilter: "blur(10px)",
+                    }
+              }
             >
-              {range}
-            </Button>
+              {period}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Progress Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {progressData.map((item, index) => {
-          const routeMap: Record<string, string | null> = { weight: 'weight', 'body-fat': 'body_fat', vo2max: 'vo2max', row: null };
-          const metricKey = routeMap[item.color as keyof typeof routeMap];
+      {/* Metrics Grid - 2 columns on all screens */}
+      <div className="grid grid-cols-2 gap-3">
+        {metrics.map((metric) => {
+          const progress = getProgressPercentage(metric);
+          const isPositiveTrend = metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run' 
+            ? metric.trend < 0 
+            : metric.trend > 0;
+
           return (
-            <ProgressCard
-              key={index}
-              {...item}
-              onClick={metricKey ? () => navigate(`/metric/${metricKey}`) : undefined}
-            />
+            <div
+              key={metric.id}
+              className="p-4 relative overflow-hidden transition-all duration-300 rounded-2xl border-2"
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                borderColor: metric.borderColor,
+                boxShadow: `0 0 20px ${metric.borderColor}40`,
+              }}
+            >
+              {/* Title and Trend */}
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-xs font-semibold text-foreground leading-tight">
+                  {metric.title}
+                </h3>
+                <div
+                  className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5 text-white"
+                  style={{
+                    background: isPositiveTrend ? "#10B981" : "#EF4444",
+                    boxShadow: isPositiveTrend
+                      ? "0 0 10px rgba(16, 185, 129, 0.6)"
+                      : "0 0 10px rgba(239, 68, 68, 0.6)",
+                  }}
+                >
+                  {isPositiveTrend ? "↓" : "↑"}
+                  {Math.abs(metric.trend).toFixed(1)}%
+                </div>
+              </div>
+
+              {/* Value */}
+              <div className="mb-3">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-foreground">
+                    {formatValue(metric.value, metric.unit)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {metric.unit !== "min" && metric.unit}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mini Chart (for VO2 MAX) */}
+              {metric.chart && (
+                <div className="mb-3 h-8 flex items-end gap-0.5">
+                  {[45, 48, 46, 50, 52, 51, 52.1].map((value, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 rounded-t"
+                      style={{
+                        height: `${(value / 55) * 100}%`,
+                        background: metric.borderColor,
+                        opacity: 0.6,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Progress Bar */}
+              <div className="space-y-1.5 mb-2">
+                <div 
+                  className="h-1 rounded-full overflow-hidden"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${progress}%`,
+                      background: metric.progressColor,
+                      boxShadow: `0 0 8px ${metric.progressColor}CC`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Target Text */}
+              <p className="text-[11px] text-muted-foreground">
+                Target: {metric.target} {metric.targetUnit}
+              </p>
+
+              {/* Settings Icon (for VO2 MAX) */}
+              {metric.chart && (
+                <button className="absolute bottom-2 right-2 text-muted-foreground/50 hover:text-foreground transition-colors">
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
-
-      {/* Charts Section */}
-      <div className="space-y-6">
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-card/30 p-1 rounded-lg border border-border/50">
-          {(Object.keys(tabsConfig) as Array<keyof typeof tabsConfig>).map((tab) => {
-            const config = tabsConfig[tab];
-            const Icon = config.icon;
-            
-            return (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? "default" : "ghost"}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "flex-1 flex items-center gap-2 justify-center",
-                  activeTab === tab && "bg-primary/10 text-primary shadow-sm"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {config.title}
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Trend Chart */}
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Progress Trends
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mockData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="weight" 
-                    stroke="hsl(var(--metric-weight))" 
-                    strokeWidth={2}
-                    name="Weight (kg)"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="bodyFat" 
-                    stroke="hsl(var(--metric-body-fat))" 
-                    strokeWidth={2}
-                    name="Body Fat (%)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Area Chart */}
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-accent" />
-                Performance Evolution
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={mockData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="vo2max"
-                    stroke="hsl(var(--metric-vo2max))"
-                    fill="hsl(var(--metric-vo2max) / 0.2)"
-                    strokeWidth={2}
-                    name="VO₂ Max"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <Card className="bg-gradient-primary border-primary/30 text-primary-foreground">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            This Month's Highlights
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="space-y-2">
-              <div className="text-2xl font-bold">5.2kg</div>
-              <div className="text-sm opacity-90">Weight Lost</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-2xl font-bold">2.1%</div>
-              <div className="text-sm opacity-90">Body Fat Reduced</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-2xl font-bold">7</div>
-              <div className="text-sm opacity-90">PRs Hit</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-2xl font-bold">24</div>
-              <div className="text-sm opacity-90">Workouts Completed</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
