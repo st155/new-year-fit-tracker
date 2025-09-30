@@ -48,6 +48,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const [userLiked, setUserLiked] = useState(false);
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     fetchLikesAndComments();
@@ -91,6 +92,8 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const handleLike = async () => {
     try {
       setLoading(true);
+      setIsAnimating(true);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -99,6 +102,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           description: "Войдите в систему, чтобы ставить лайки",
           variant: "destructive",
         });
+        setIsAnimating(false);
         return;
       }
 
@@ -130,6 +134,9 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       }
 
       onActivityUpdate();
+      
+      // Reset animation after it completes
+      setTimeout(() => setIsAnimating(false), 300);
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
@@ -137,6 +144,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
         description: "Не удалось изменить статус лайка",
         variant: "destructive",
       });
+      setIsAnimating(false);
     } finally {
       setLoading(false);
     }
@@ -302,12 +310,16 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           <button
             onClick={handleLike}
             disabled={loading}
-            className="flex items-center gap-1 transition-all hover:scale-110"
+            className={cn(
+              "flex items-center gap-1 transition-all hover:scale-110",
+              isAnimating && "animate-scale-in"
+            )}
           >
             <Heart 
               className={cn(
-                "h-4 w-4 transition-colors",
-                userLiked ? "fill-red-500 text-red-500" : "text-gray-400"
+                "h-4 w-4 transition-all duration-300",
+                userLiked ? "fill-red-500 text-red-500 scale-110" : "text-gray-400 scale-100",
+                isAnimating && (userLiked ? "animate-[scale-in_0.3s_ease-out]" : "animate-[scale-out_0.3s_ease-out]")
               )} 
             />
             <span className="text-xs font-medium text-white">{likeCount}</span>
