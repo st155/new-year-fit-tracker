@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { ActivityCard } from "@/components/feed/ActivityCard";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Activity } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ActivityItem {
@@ -217,17 +217,9 @@ export default function Feed() {
 
   if (loading && activities.length === 0) {
     return (
-      <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-background">
+      <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-[#0f1419]">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Activity className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold leading-tight">Лента</h1>
-              <h1 className="text-2xl font-bold leading-tight">активности</h1>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold tracking-wider text-white">ACTIVITY FEED</h1>
         </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
@@ -251,9 +243,9 @@ export default function Feed() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-background">
+    <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-[#0f1419]">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold tracking-wider">ACTIVITY FEED</h1>
+        <h1 className="text-3xl font-bold tracking-wider text-white">ACTIVITY FEED</h1>
         <Button 
           variant="ghost" 
           size="icon"
@@ -268,9 +260,8 @@ export default function Feed() {
       {activities.length === 0 ? (
         <Card className="text-center py-12 rounded-3xl border-border/50 bg-card/50">
           <CardContent>
-            <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Пока нет активности</h3>
-            <p className="text-muted-foreground">
+            <h3 className="text-lg font-semibold mb-2 text-white">Пока нет активности</h3>
+            <p className="text-gray-400">
               Начните тренироваться или добавляйте измерения, чтобы увидеть активность в ленте!
             </p>
           </CardContent>

@@ -1,4 +1,4 @@
-import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, Footprints, MessageCircle } from "lucide-react";
+import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
@@ -24,41 +24,9 @@ interface ActivityCardProps {
   onActivityUpdate: () => void;
 }
 
-// Определяем цвет рамки карточки в зависимости от типа активности
-const getActivityBorderColor = (activity: ActivityCardProps["activity"]) => {
-  const meta: any = activity.metadata || {};
-  const text = (activity.action_text || '').toLowerCase();
-  const metricName = (meta.metric_name || '').toLowerCase();
-
-  const has = (s: string) => text.includes(s) || metricName.includes(s);
-
-  // Зеленый для достижений, рекордов, целей
-  if (has('record') || has('рекорд') || has('достиж') || has('achievement') || has('goal') || has('цел')) {
-    return 'border-green-500';
-  }
-
-  // Оранжевый для бега и кардио
-  if (has('run') || has('бег') || has('bike') || has('велос') || has('cycle')) {
-    return 'border-orange-500';
-  }
-
-  // Фиолетовый для силовых тренировок
-  if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг') || activity.action_type === 'body_composition') {
-    return 'border-purple-500';
-  }
-
-  // Красный для strain и интенсивности
-  if (has('strain')) {
-    return 'border-red-500';
-  }
-
-  // Синий для сна
-  if (has('sleep') || has('сон') || has('slept')) {
-    return 'border-blue-500';
-  }
-
-  // Дефолт - зеленый
-  return 'border-green-500';
+// Все карточки имеют красную границу
+const getActivityBorderColor = () => {
+  return 'border-red-500/80';
 };
 
 const formatDistance = (km?: number | null, swim = false) => {
@@ -193,7 +161,7 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
 
 
 export function ActivityCard({ activity }: ActivityCardProps) {
-  const borderColor = getActivityBorderColor(activity);
+  const borderColor = getActivityBorderColor();
   const profiles = activity.profiles;
   
   // Получаем инициалы пользователя
@@ -229,38 +197,31 @@ export function ActivityCard({ activity }: ActivityCardProps) {
   
   return (
     <div className={cn(
-      "relative rounded-3xl border-[3px] bg-card p-6 transition-all duration-300 animate-fade-in",
+      "relative rounded-[28px] border-[2.5px] bg-[#1a1f2e] p-6 transition-all duration-300 animate-fade-in",
       borderColor
     )}>
       <div className="flex items-start gap-4">
-        <Avatar className={cn("h-14 w-14 border-[3px]", borderColor)}>
+        <Avatar className={cn("h-16 w-16 border-[2.5px] shrink-0", borderColor)}>
           <AvatarImage src={profiles?.avatar_url || undefined} />
-          <AvatarFallback className="text-lg font-semibold">
+          <AvatarFallback className="text-xl font-bold bg-[#252b3d] text-white">
             {getUserInitials()}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-bold mb-1">{displayName}</h3>
-          <p className="text-base text-foreground/90 mb-3">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="text-[22px] font-bold text-white leading-tight">{displayName}</h3>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+              <span className="text-base font-medium text-white">{likeCount}</span>
+            </div>
+          </div>
+          <p className="text-[15px] text-gray-300 leading-relaxed mb-3">
             {activity.action_text}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-gray-500">
             {getRelativeTime()}
           </p>
-        </div>
-
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-            <span className="text-sm font-medium">{likeCount}</span>
-          </div>
-          {commentCount > 0 && (
-            <div className="flex items-center gap-1">
-              <MessageCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">{commentCount}</span>
-            </div>
-          )}
         </div>
       </div>
     </div>
