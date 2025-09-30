@@ -311,16 +311,15 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
             onClick={handleLike}
             disabled={loading}
             className={cn(
-              "flex items-center gap-1 transition-all hover:scale-110",
+              "flex items-center gap-1 transition-all duration-300 hover:scale-110",
               isAnimating && "animate-scale-in"
             )}
           >
             <Heart 
               className={cn(
                 "h-4 w-4 transition-all duration-300",
-                userLiked ? "fill-red-500 text-red-500 scale-110" : "text-gray-400 scale-100",
-                isAnimating && (userLiked ? "animate-[scale-in_0.3s_ease-out]" : "animate-[scale-out_0.3s_ease-out]")
-              )} 
+                userLiked ? "fill-red-500 text-red-500 scale-110" : "text-white/60 hover:text-white scale-100"
+              )}
             />
             <span className="text-xs font-medium text-white">{likeCount}</span>
           </button>

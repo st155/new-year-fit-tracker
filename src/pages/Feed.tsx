@@ -139,7 +139,7 @@ export default function Feed() {
   }, []);
 
   const onActivityUpdate = () => {
-    fetchActivities();
+    // Лайки и комментарии не влияют на activity_feed, не нужно перезагружать
   };
 
   if (loading) {
