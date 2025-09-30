@@ -58,7 +58,34 @@ const ProgressPage = () => {
       console.log('[Progress] challenge goals (challenge-level):', goals);
 
       // Deduplicate by goal_name
-      const uniqueGoals = Array.from(new Map((goals || []).map(g => [g.goal_name, g])).values());
+      let uniqueGoals: any[] = Array.from(new Map((goals || []).map((g: any) => [g.goal_name, g as any])).values());
+
+      // Ensure all core challenge goals are present (fallback placeholders if missing)
+      const coreGoals: Array<{ name: string; value: number; unit: string }> = [
+        { name: 'Подтягивания', value: 17, unit: 'раз' },
+        { name: 'Жим лёжа', value: 90, unit: 'кг' },
+        { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
+        { name: 'Планка', value: 4, unit: 'мин' },
+        { name: 'Отжимания', value: 60, unit: 'раз' },
+        { name: 'VO₂max', value: 50, unit: 'мл/кг/мин' },
+        { name: 'Бег 1 км', value: 4.0, unit: 'мин' },
+        { name: 'Процент жира', value: 11, unit: '%' },
+      ];
+
+      const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
+      const placeholders: any[] = coreGoals
+        .filter(cg => !existing.has(cg.name.toLowerCase()))
+        .map(cg => ({
+          id: `synthetic-${cg.name}`,
+          goal_name: cg.name,
+          goal_type: 'challenge',
+          target_value: cg.value,
+          target_unit: cg.unit,
+          is_personal: false,
+        } as any));
+
+      uniqueGoals = [...uniqueGoals, ...placeholders] as any[];
+
       setChallengeGoals(uniqueGoals);
       await buildMetrics(uniqueGoals);
     } catch (error) {
@@ -185,7 +212,7 @@ const ProgressPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4">
+    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">{/* Changed: added overflow-y-auto */}
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -217,8 +244,13 @@ const ProgressPage = () => {
         </div>
       </div>
 
-      {/* Metrics Grid - 2 columns on all screens */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-muted rounded text-xs">
+        Goals found: {challengeGoals.length}, Metrics built: {metrics.length}
+      </div>
+
+      {/* Metrics Grid - flexible grid that expands vertically */}
+      <div className="grid grid-cols-2 gap-3 auto-rows-max">{/* Changed: added auto-rows-max for flexible height */}
         {metrics.map((metric) => {
           const progress = getProgressPercentage(metric);
           const isPositiveTrend = metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run' 
