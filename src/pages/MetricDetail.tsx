@@ -310,12 +310,20 @@ export default function MetricDetail() {
       }
 
       // Вычисляем статистику за весь выбранный период
-      if (metricData.length >= 2) {
-        // Показываем среднее значение за период для всех метрик
+      if (metricData.length > 0) {
+        // Сумма значений за период
         const sum = metricData.reduce((acc, item) => acc + item.value, 0);
-        const current = sum / metricData.length;
         
-        console.log(`[${metricType}] Period: ${timeRange}, Data points: ${metricData.length}, Average: ${current.toFixed(2)}`);
+        // Среднее за период: для шагов — по количеству дней в диапазоне, для остальных — по количеству записей
+        let current = 0;
+        if (metricType === 'steps') {
+          const daysInRange = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : 90;
+          current = sum / daysInRange;
+        } else {
+          current = sum / metricData.length;
+        }
+        
+        console.log(`[${metricType}] Period: ${timeRange}, Points: ${metricData.length}, Sum: ${sum}, Avg: ${current.toFixed(2)}`);
         
         const previous = metricData[0].value; // Первое значение в периоде
         const change = current - previous;
@@ -336,17 +344,9 @@ export default function MetricDetail() {
           title: config.title,
           description: config.description
         });
-      } else if (metricData.length === 1) {
-        setStats({
-          current: metricData[0].value,
-          previous: 0,
-          change: 0,
-          changePercent: 0,
-          trend: 'stable',
-          unit: config.unit,
-          title: config.title,
-          description: config.description
-        });
+      } else {
+        // Нет данных за выбранный период — очищаем статистику, чтобы не показывать старые значения
+        setStats(null);
       }
 
       setData(metricData);
