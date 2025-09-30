@@ -90,10 +90,9 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   };
 
   const handleLike = async () => {
+    if (loading) return; // Защита от двойных кликов
+    
     try {
-      setLoading(true);
-      setIsAnimating(true);
-      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -102,11 +101,20 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           description: "Войдите в систему, чтобы ставить лайки",
           variant: "destructive",
         });
-        setIsAnimating(false);
         return;
       }
 
-      if (userLiked) {
+      // Оптимистичное обновление UI (мгновенно)
+      const previousLiked = userLiked;
+      const previousCount = likeCount;
+      
+      setUserLiked(!previousLiked);
+      setLikeCount(previousLiked ? likeCount - 1 : likeCount + 1);
+      setIsAnimating(true);
+      setLoading(true);
+
+      // Запрос в фоне
+      if (previousLiked) {
         // Unlike
         const { error } = await supabase
           .from('activity_likes')
@@ -114,10 +122,12 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           .eq('activity_id', activity.id)
           .eq('user_id', user.id);
 
-        if (error) throw error;
-
-        setUserLiked(false);
-        setLikeCount(prev => Math.max(0, prev - 1));
+        if (error) {
+          // Откатываем при ошибке
+          setUserLiked(previousLiked);
+          setLikeCount(previousCount);
+          throw error;
+        }
       } else {
         // Like
         const { error } = await supabase
@@ -127,15 +137,19 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
             user_id: user.id,
           });
 
-        if (error) throw error;
-
-        setUserLiked(true);
-        setLikeCount(prev => prev + 1);
+        if (error) {
+          // Откатываем при ошибке
+          setUserLiked(previousLiked);
+          setLikeCount(previousCount);
+          
+          // Игнорируем ошибку дублирования (уже есть лайк)
+          if (!error.message?.includes('duplicate key')) {
+            throw error;
+          }
+        }
       }
-
-      onActivityUpdate();
       
-      // Reset animation after it completes
+      // Сброс анимации
       setTimeout(() => setIsAnimating(false), 300);
     } catch (error) {
       console.error('Error toggling like:', error);
