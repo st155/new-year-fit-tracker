@@ -98,6 +98,28 @@ export default function FitnessData() {
   useEffect(() => {
     if (user) {
       fetchFitnessData();
+
+      // Real-time обновления для новых значений метрик
+      const channel = supabase
+        .channel('fitness-data-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'metric_values',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            // Обновляем данные при добавлении новых значений
+            fetchFitnessData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -107,9 +129,7 @@ export default function FitnessData() {
 
   const fetchFitnessData = async () => {
     try {
-      setLoading(true);
-      
-      // Получаем все метрики пользователя
+      // Быстрое получение метрик без values
       const { data: userMetrics, error: metricsError } = await supabase
         .from('user_metrics')
         .select('*')
@@ -119,10 +139,11 @@ export default function FitnessData() {
 
       if (metricsError) throw metricsError;
 
-      // Для каждой метрики получаем последние значения
-      const metricsWithValues: MetricWithValues[] = [];
-      
-      for (const metric of userMetrics || []) {
+      // Сразу показываем метрики без значений
+      setLoading(false);
+
+      // Параллельно загружаем значения для всех метрик
+      const metricsPromises = (userMetrics || []).map(async (metric) => {
         const { data: values, error: valuesError } = await supabase
           .from('metric_values')
           .select('*')
@@ -130,41 +151,42 @@ export default function FitnessData() {
           .order('measurement_date', { ascending: false })
           .limit(30);
 
-        if (valuesError) {
-          console.error('Error fetching values for metric:', metric.id, valuesError);
-          continue;
+        if (valuesError || !values || values.length === 0) {
+          return null;
         }
 
-        if (values && values.length > 0) {
-          const sortedValues = values.sort((a, b) => 
-            new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
-          );
+        const sortedValues = values.sort((a, b) => 
+          new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
+        );
+        
+        const latestValue = values[0];
+        const previousValue = values[1];
+        
+        let trend: 'up' | 'down' | 'stable' = 'stable';
+        let changePercent = 0;
+        
+        if (previousValue) {
+          const change = latestValue.value - previousValue.value;
+          changePercent = (change / previousValue.value) * 100;
           
-          const latestValue = values[0];
-          const previousValue = values[1];
-          
-          let trend: 'up' | 'down' | 'stable' = 'stable';
-          let changePercent = 0;
-          
-          if (previousValue) {
-            const change = latestValue.value - previousValue.value;
-            changePercent = (change / previousValue.value) * 100;
-            
-            if (Math.abs(changePercent) > 1) {
-              trend = change > 0 ? 'up' : 'down';
-            }
+          if (Math.abs(changePercent) > 1) {
+            trend = change > 0 ? 'up' : 'down';
           }
-
-          metricsWithValues.push({
-            ...metric,
-            values: sortedValues,
-            latestValue,
-            trend,
-            changePercent
-          });
         }
-      }
 
+        return {
+          ...metric,
+          values: sortedValues,
+          latestValue,
+          trend,
+          changePercent
+        };
+      });
+
+      // Ждем все промисы и обновляем данные
+      const results = await Promise.all(metricsPromises);
+      const metricsWithValues = results.filter(Boolean) as MetricWithValues[];
+      
       setMetrics(metricsWithValues);
     } catch (error) {
       console.error('Error fetching fitness data:', error);
@@ -173,7 +195,6 @@ export default function FitnessData() {
         description: 'Не удалось загрузить данные фитнеса',
         variant: 'destructive'
       });
-    } finally {
       setLoading(false);
     }
   };
