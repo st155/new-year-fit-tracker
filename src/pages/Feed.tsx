@@ -156,18 +156,23 @@ export default function Feed() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto p-4 max-w-2xl min-h-screen bg-background">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <Activity className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Лента<br/>активности</h1>
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold leading-tight">Лента</h1>
+            <h1 className="text-2xl font-bold leading-tight">активности</h1>
+          </div>
         </div>
         <Button 
           variant="outline" 
           size="sm"
           onClick={fetchActivities}
           disabled={loading}
-          className="h-9 rounded-full"
+          className="h-10 px-4 rounded-full bg-card/50 border-border/50 hover:bg-card"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Обновить
