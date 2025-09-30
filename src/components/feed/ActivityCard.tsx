@@ -59,26 +59,22 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   const m = activity.metadata || {};
   const profiles = activity.profiles;
   
-  // Получаем короткие инициалы пользователя
-  const getShortName = () => {
+  // Получаем полное имя пользователя
+  const getUserName = () => {
     if (profiles?.full_name) {
-      const parts = profiles.full_name.split(' ');
-      if (parts.length >= 2) {
-        return parts[0].charAt(0) + parts[1].charAt(0);
-      }
-      return parts[0].substring(0, 2);
+      return profiles.full_name;
     }
     if (profiles?.username) {
-      return profiles.username.substring(0, 2).toUpperCase();
+      return profiles.username;
     }
-    return 'ST';
+    return 'User';
   };
 
-  const shortName = getShortName();
-  const parts = [shortName];
+  const userName = getUserName();
+  const parts = [userName];
 
   if (activity.action_type === 'workouts') {
-    // Добавляем продолжительность в формате MM:SS или HH:MM:SS
+    // Добавляем длительность (Duration)
     if (m.duration_minutes) {
       const totalMinutes = Number(m.duration_minutes);
       const hours = Math.floor(totalMinutes / 60);
@@ -92,10 +88,10 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
       }
     }
     
-    // Добавляем strain если есть
+    // Добавляем Strain
     if (m.strain || m.workout_strain) {
       const strain = m.strain || m.workout_strain;
-      parts.push(`Strain ${Number(strain).toFixed(1)}`);
+      parts.push(`${Number(strain).toFixed(1)}`);
     }
     
     return parts.join(', ');
@@ -116,7 +112,7 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
     if (metricName === 'Recovery Score') {
       parts.push(`${Math.round(Number(m.value))}%`);
     } else if (metricName === 'Workout Strain') {
-      parts.push(`Strain ${Number(m.value).toFixed(1)}`);
+      parts.push(`${Number(m.value).toFixed(1)}`);
     } else if (metricName === 'Sleep Duration') {
       const hours = Number(m.value);
       const h = Math.floor(hours);
