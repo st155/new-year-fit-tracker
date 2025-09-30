@@ -144,13 +144,28 @@ export default function ModernProgress() {
 
         let currentValue = 0;
         let trend = 0;
+        let realGoalId = goal.id;
 
-        // Only fetch measurements for real goals (non-synthetic)
-        if (!String(goal.id).startsWith('synthetic-')) {
+        // For synthetic goals, try to find a real goal with the same name
+        if (String(goal.id).startsWith('synthetic-')) {
+          const { data: realGoals } = await supabase
+            .from('goals')
+            .select('id')
+            .eq('user_id', user.id)
+            .ilike('goal_name', goal.goal_name)
+            .limit(1);
+          
+          if (realGoals && realGoals.length > 0) {
+            realGoalId = realGoals[0].id;
+          }
+        }
+
+        // Fetch measurements for this goal
+        if (!String(realGoalId).startsWith('synthetic-')) {
           const { data: measurements } = await supabase
             .from('measurements')
             .select('*')
-            .eq('goal_id', goal.id)
+            .eq('goal_id', realGoalId)
             .gte('measurement_date', periodStart.toISOString().split('T')[0])
             .order('measurement_date', { ascending: false });
 
@@ -176,7 +191,7 @@ export default function ModernProgress() {
           borderColor: color,
           progressColor: color,
           chart: id === 'vo2max',
-          goalId: goal.id,
+          goalId: realGoalId,
           goalType: goal.goal_type
         });
       }
