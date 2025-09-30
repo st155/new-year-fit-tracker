@@ -138,7 +138,7 @@ export default function Feed() {
           </h1>
           <button
             onClick={() => refetch()}
-            disabled={loading && !fromCache}
+            disabled={loading}
             className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300"
             style={{
               borderColor: "#10B981",
@@ -146,7 +146,7 @@ export default function Feed() {
             }}
           >
             <RefreshCw
-              className={cn("h-5 w-5 text-white", loading && !fromCache && "animate-spin")}
+              className={cn("h-5 w-5 text-white", loading && "animate-spin")}
             />
           </button>
         </div>
@@ -171,7 +171,7 @@ export default function Feed() {
         </h1>
         <button
           onClick={() => refetch()}
-          disabled={loading && !fromCache}
+          disabled={loading}
           className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110"
           style={{
             borderColor: "#10B981",
@@ -179,7 +179,7 @@ export default function Feed() {
           }}
         >
           <RefreshCw
-            className={cn("h-5 w-5 text-white", loading && !fromCache && "animate-spin")}
+            className={cn("h-5 w-5 text-white", loading && "animate-spin")}
           />
         </button>
       </div>

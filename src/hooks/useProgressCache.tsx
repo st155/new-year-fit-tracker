@@ -55,6 +55,7 @@ export function useProgressCache<T>(
 
   // Загрузка свежих данных
   const fetchFresh = useCallback(async () => {
+    setLoading(true);
     try {
       const freshData = await fetchFn();
       setData(freshData);
