@@ -37,10 +37,11 @@ const ProgressPage = () => {
 
     try {
       // Get user's active challenges
-      const { data: participations } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id')
-        .eq('user_id', user.id);
+       const { data: participations } = await supabase
+         .from('challenge_participants')
+         .select('challenge_id')
+         .eq('user_id', user.id);
+       console.log('[Progress] participations:', participations);
 
       if (!participations || participations.length === 0) {
         setChallengeGoals([]);
@@ -53,7 +54,9 @@ const ProgressPage = () => {
         .from('goals')
         .select('*')
         .eq('is_personal', false)
+        .eq('user_id', user.id)
         .in('challenge_id', participations.map(p => p.challenge_id));
+      console.log('[Progress] challenge goals for user:', goals);
 
       // Deduplicate by goal_name
       const uniqueGoals = Array.from(new Map((goals || []).map(g => [g.goal_name, g])).values());
@@ -74,7 +77,7 @@ const ProgressPage = () => {
 
     const metricsArray: MetricCard[] = [];
 
-    // Map goal names to metric configurations
+    // Map goal names to metric configurations (known ones)
     const goalMapping: { [key: string]: { id: string; color: string } } = {
       'подтягивания': { id: 'pullups', color: '#A855F7' },
       'жим лёжа': { id: 'bench', color: '#EF4444' },
@@ -88,18 +91,38 @@ const ProgressPage = () => {
       'вес': { id: 'weight', color: '#10B981' }
     };
 
+    const detectId = (name: string) => {
+      if (name.includes('вес') || name.includes('weight')) return 'weight';
+      if (name.includes('жир')) return 'body-fat';
+      if (name.includes('бег') || name.includes('run')) return 'run';
+      if (name.includes('vo2') || name.includes('vo₂')) return 'vo2max';
+      if (name.includes('подтяг')) return 'pullups';
+      if (name.includes('отжим')) return 'pushups';
+      return 'generic';
+    };
+
+    const detectColor = (name: string) => {
+      if (name.includes('вес') || name.includes('weight')) return '#10B981';
+      if (name.includes('жир')) return '#FF6B2C';
+      if (name.includes('бег') || name.includes('run')) return '#06B6D4';
+      if (name.includes('vo2') || name.includes('vo₂')) return '#3B82F6';
+      if (name.includes('подтяг')) return '#A855F7';
+      if (name.includes('отжим')) return '#FBBF24';
+      return '#64748B'; // slate
+    };
+
     // Calculate period start date
     const periodDays = selectedPeriod === '1M' ? 30 : selectedPeriod === '3M' ? 90 : selectedPeriod === '6M' ? 180 : 365;
     const periodStart = new Date();
     periodStart.setDate(periodStart.getDate() - periodDays);
 
     for (const goal of goals) {
-      const normalized = goal.goal_name.toLowerCase();
+      const normalized = (goal.goal_name || '').toLowerCase();
       const mapping = goalMapping[normalized];
-      
-      if (!mapping) continue;
+      const id = mapping?.id ?? detectId(normalized) ?? `goal-${goal.id}`;
+      const color = mapping?.color ?? detectColor(normalized);
 
-      // Fetch measurements for this goal
+      // Fetch measurements for this goal for the selected period
       const { data: measurements } = await supabase
         .from('measurements')
         .select('*')
@@ -111,11 +134,10 @@ const ProgressPage = () => {
       let trend = 0;
 
       if (measurements && measurements.length > 0) {
-        currentValue = measurements[0].value;
+        currentValue = Number(measurements[0].value);
 
-        // Calculate trend
         if (measurements.length > 1) {
-          const oldValue = measurements[measurements.length - 1].value;
+          const oldValue = Number(measurements[measurements.length - 1].value);
           if (oldValue !== 0) {
             trend = ((currentValue - oldValue) / oldValue) * 100;
           }
@@ -123,16 +145,16 @@ const ProgressPage = () => {
       }
 
       metricsArray.push({
-        id: mapping.id,
+        id,
         title: goal.goal_name,
         value: currentValue,
         unit: goal.target_unit || '',
-        target: goal.target_value || 0,
+        target: Number(goal.target_value) || 0,
         targetUnit: goal.target_unit || '',
-        trend: trend,
-        borderColor: `border-[${mapping.color}]`,
-        progressColor: `bg-[${mapping.color}]`,
-        chart: mapping.id === 'vo2max'
+        trend,
+        borderColor: `border-[${color}]`,
+        progressColor: `bg-[${color}]`,
+        chart: id === 'vo2max'
       });
     }
 
