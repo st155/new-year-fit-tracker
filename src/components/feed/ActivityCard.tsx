@@ -59,19 +59,23 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   const m = activity.metadata || {};
   const profiles = activity.profiles;
   
-  // Получаем полное имя пользователя
-  const getUserName = () => {
+  // Получаем инициалы пользователя (первая буква имени + первая буква фамилии)
+  const getUserInitials = () => {
     if (profiles?.full_name) {
-      return profiles.full_name;
+      const parts = profiles.full_name.split(' ');
+      if (parts.length >= 2) {
+        return parts[0].charAt(0) + parts[1].charAt(0);
+      }
+      return parts[0].substring(0, 2);
     }
     if (profiles?.username) {
-      return profiles.username;
+      return profiles.username.substring(0, 2).toUpperCase();
     }
-    return 'User';
+    return 'ST';
   };
 
-  const userName = getUserName();
-  const parts = [userName];
+  const userInitials = getUserInitials();
+  const parts = [userInitials];
 
   if (activity.action_type === 'workouts') {
     // Добавляем длительность (Duration)
