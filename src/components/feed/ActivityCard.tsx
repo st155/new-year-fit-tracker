@@ -7,6 +7,7 @@ import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { CommentDialog } from "./CommentDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ActivityCardProps {
   activity: {
@@ -42,6 +43,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const profiles = activity.profiles;
   const borderStyle = borderColors[index % borderColors.length];
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
@@ -52,7 +54,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
   useEffect(() => {
     fetchLikesAndComments();
-  }, [activity.id]);
+  }, [activity.id, user?.id]);
 
   const fetchLikesAndComments = async () => {
     try {
@@ -72,8 +74,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
       setCommentCount(comments || 0);
 
-      // Check if user liked
-      const { data: { user } } = await supabase.auth.getUser();
+      // Check if current user liked
       if (user) {
         const { data: liked } = await supabase
           .from('activity_likes')
@@ -82,7 +83,9 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           .eq('user_id', user.id)
           .maybeSingle();
 
-        setUserLiked(!!liked);
+        if (!loading) setUserLiked(!!liked);
+      } else {
+        if (!loading) setUserLiked(false);
       }
     } catch (error) {
       console.error('Error fetching likes and comments:', error);
@@ -93,8 +96,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
     if (loading) return; // Защита от двойных кликов
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast({
           title: "Требуется авторизация",
@@ -138,11 +139,9 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           });
 
         if (error) {
-          // Откатываем при ошибке
+          // Откатываем при ошибке (кроме дубля)
           setUserLiked(previousLiked);
           setLikeCount(previousCount);
-          
-          // Игнорируем ошибку дублирования (уже есть лайк)
           if (!error.message?.includes('duplicate key')) {
             throw error;
           }
@@ -150,7 +149,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       }
       
       // Сброс анимации
-      setTimeout(() => setIsAnimating(false), 300);
+      setTimeout(() => setIsAnimating(false), 250);
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
