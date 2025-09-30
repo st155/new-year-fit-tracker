@@ -75,7 +75,24 @@ export default function Feed() {
         return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
       });
 
-      setActivities(filteredActivities);
+      // Deduplicate Sleep: keep only the most recent night's single entry
+      const sleepItems = filteredActivities.filter(a => (a.action_text?.toLowerCase().includes('slept') && /\d+:\d+/.test(a.action_text)));
+      let dedupedActivities = filteredActivities;
+      if (sleepItems.length > 1) {
+        const getMeasureDate = (a: any) => new Date((a.metadata?.measurement_date) || a.created_at);
+        const latestDate = new Date(Math.max(...sleepItems.map(a => new Date(getMeasureDate(a).toDateString()).getTime())));
+        const latestDateStr = latestDate.toDateString();
+        const latestForDate = sleepItems
+          .filter(a => new Date(getMeasureDate(a)).toDateString() === latestDateStr)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const keepId = latestForDate[0]?.id;
+        dedupedActivities = filteredActivities.filter(a => {
+          const isSleep = a.action_text?.toLowerCase().includes('slept') && /\d+:\d+/.test(a.action_text);
+          return !isSleep || a.id === keepId;
+        });
+      }
+
+      setActivities(dedupedActivities);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
