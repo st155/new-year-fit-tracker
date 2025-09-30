@@ -52,7 +52,19 @@ export default function Feed() {
 
       if (error) throw error;
 
-      setActivities(activitiesData || []);
+      // Filter out sleep activities
+      const filteredActivities = (activitiesData || []).filter(activity => {
+        const actionText = activity.action_text?.toLowerCase() || '';
+        const actionType = activity.action_type?.toLowerCase() || '';
+        
+        // Exclude sleep-related activities
+        return !actionText.includes('сон') && 
+               !actionText.includes('sleep') && 
+               !actionText.includes('slept') &&
+               !actionType.includes('sleep');
+      });
+
+      setActivities(filteredActivities);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
