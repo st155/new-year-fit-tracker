@@ -135,7 +135,7 @@ const CircularProgress = ({ value, max = 100, size = 120, strokeWidth = 12, labe
 };
 
 // Компонент метрики с трендом и градиентной рамкой
-const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", gradientBorder, onClick, children }: {
+const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", gradientBorder, glowColor, onClick, children }: {
   title: string;
   value: number | null;
   unit?: string;
@@ -144,6 +144,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   icon: React.ReactNode;
   color?: string;
   gradientBorder?: string;
+  glowColor?: string;
   onClick?: () => void;
   children?: React.ReactNode;
 }) => {
@@ -160,10 +161,15 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   };
 
   return (
-    <div className={`relative p-[2px] rounded-lg ${onClick ? 'cursor-pointer' : ''}`} 
-         style={{ background: gradientBorder || 'transparent' }}
-         onClick={onClick}>
-      <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 bg-card border-0 h-full hover-scale">
+    <div 
+      className={`relative p-[2px] rounded-lg transition-all duration-300 ${onClick ? 'cursor-pointer hover:scale-105' : ''}`} 
+      style={{ 
+        background: gradientBorder || 'transparent',
+        boxShadow: glowColor ? `0 0 20px ${glowColor}40, 0 0 40px ${glowColor}20` : 'none'
+      }}
+      onClick={onClick}
+    >
+      <Card className="relative overflow-hidden group transition-all duration-300 bg-card border-0 h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 group-hover:to-background/10 transition-all duration-300" />
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -915,103 +921,139 @@ export const EnhancedFitnessDashboard = () => {
             {/* Главные показатели с круговыми прогресс-барами */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {metricsVisibility.recovery && (
-                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('recovery')}>
-                  <CircularProgress
-                    value={dashboardStats.recovery || 0}
-                    max={100}
-                    label={viewPeriod === 'day' ? 'Recovery' : 'Average'}
-                    color={recoveryColor}
-                  />
-                  <div className="mt-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      <span className="font-medium">Recovery</span>
+                <div 
+                  className="relative p-[2px] rounded-lg transition-all duration-300 cursor-pointer hover:scale-105"
+                  style={{ 
+                    background: 'linear-gradient(135deg, hsl(0, 84%, 60%), hsl(340, 82%, 52%))',
+                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.25), 0 0 40px rgba(239, 68, 68, 0.125)'
+                  }}
+                  onClick={() => setViewingDetailType('recovery')}
+                >
+                  <Card className="p-6 text-center bg-card border-0 h-full">
+                    <CircularProgress
+                      value={dashboardStats.recovery || 0}
+                      max={100}
+                      label={viewPeriod === 'day' ? 'Recovery' : 'Average'}
+                      color={recoveryColor}
+                    />
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        <span className="font-medium">Recovery</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                         {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                      </div>
+                      {trends['Recovery Score'] && (
+                        <Badge variant="secondary" className="mt-2">
+                          {trends['Recovery Score'] > 0 ? '+' : ''}{trends['Recovery Score'].toFixed(1)}%
+                        </Badge>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                       {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                    </div>
-                    {trends['Recovery Score'] && (
-                      <Badge variant="secondary" className="mt-2">
-                        {trends['Recovery Score'] > 0 ? '+' : ''}{trends['Recovery Score'].toFixed(1)}%
-                      </Badge>
-                    )}
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
 
               {metricsVisibility.sleep && (
-                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('sleep')}>
-                  <CircularProgress
-                    value={dashboardStats.sleep || 0}
-                    max={100}
-                    label={viewPeriod === 'day' ? 'Sleep' : 'Average'}
-                    color={sleepColor}
-                  />
-                  <div className="mt-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Moon className="h-4 w-4 text-purple-500" />
-                      <span className="font-medium">Sleep Quality</span>
+                <div 
+                  className="relative p-[2px] rounded-lg transition-all duration-300 cursor-pointer hover:scale-105"
+                  style={{ 
+                    background: 'linear-gradient(135deg, hsl(270, 95%, 60%), hsl(280, 87%, 65%))',
+                    boxShadow: '0 0 20px rgba(168, 85, 247, 0.25), 0 0 40px rgba(168, 85, 247, 0.125)'
+                  }}
+                  onClick={() => setViewingDetailType('sleep')}
+                >
+                  <Card className="p-6 text-center bg-card border-0 h-full">
+                    <CircularProgress
+                      value={dashboardStats.sleep || 0}
+                      max={100}
+                      label={viewPeriod === 'day' ? 'Sleep' : 'Average'}
+                      color={sleepColor}
+                    />
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Moon className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium">Sleep Quality</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                         {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                      </div>
+                      {trends['Sleep Efficiency'] && (
+                        <Badge variant="secondary" className="mt-2">
+                          {trends['Sleep Efficiency'] > 0 ? '+' : ''}{trends['Sleep Efficiency'].toFixed(1)}%
+                        </Badge>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                       {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                    </div>
-                    {trends['Sleep Efficiency'] && (
-                      <Badge variant="secondary" className="mt-2">
-                        {trends['Sleep Efficiency'] > 0 ? '+' : ''}{trends['Sleep Efficiency'].toFixed(1)}%
-                      </Badge>
-                    )}
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
 
               {metricsVisibility.strain && (
-                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('strain')}>
-                  <CircularProgress
-                    value={dashboardStats.strain || 0}
-                    max={20}
-                    label={viewPeriod === 'day' ? 'Strain' : 'Average'}
-                    color="hsl(48, 96%, 53%)"
-                  />
-                  <div className="mt-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Zap className="h-4 w-4 text-yellow-500" />
-                      <span className="font-medium">Strain</span>
+                <div 
+                  className="relative p-[2px] rounded-lg transition-all duration-300 cursor-pointer hover:scale-105"
+                  style={{ 
+                    background: 'linear-gradient(135deg, hsl(48, 96%, 53%), hsl(38, 92%, 50%))',
+                    boxShadow: '0 0 20px rgba(251, 191, 36, 0.25), 0 0 40px rgba(251, 191, 36, 0.125)'
+                  }}
+                  onClick={() => setViewingDetailType('strain')}
+                >
+                  <Card className="p-6 text-center bg-card border-0 h-full">
+                    <CircularProgress
+                      value={dashboardStats.strain || 0}
+                      max={20}
+                      label={viewPeriod === 'day' ? 'Strain' : 'Average'}
+                      color="hsl(48, 96%, 53%)"
+                    />
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-500" />
+                        <span className="font-medium">Strain</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
+                      </div>
+                      {trends['Workout Strain'] && (
+                        <Badge variant="secondary" className="mt-2">
+                          {trends['Workout Strain'] > 0 ? '+' : ''}{trends['Workout Strain'].toFixed(1)}%
+                        </Badge>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {viewPeriod === 'day' ? 'Today' : viewPeriod === 'week' ? 'This Week' : 'This Month'}
-                    </div>
-                    {trends['Workout Strain'] && (
-                      <Badge variant="secondary" className="mt-2">
-                        {trends['Workout Strain'] > 0 ? '+' : ''}{trends['Workout Strain'].toFixed(1)}%
-                      </Badge>
-                    )}
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
 
               {metricsVisibility.steps && (
-                <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('steps')}>
-                  <CircularProgress
-                    value={
-                      viewPeriod === 'day' 
-                        ? (dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0)
-                        : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
-                    }
-                    max={100}
-                    label={viewPeriod === 'day' ? 'Steps' : 'Total'}
-                    color="hsl(221, 83%, 53%)"
-                  />
-                  <div className="mt-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Activity className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">Activity</span>
+                <div 
+                  className="relative p-[2px] rounded-lg transition-all duration-300 cursor-pointer hover:scale-105"
+                  style={{ 
+                    background: 'linear-gradient(135deg, hsl(221, 83%, 53%), hsl(201, 96%, 32%))',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.25), 0 0 40px rgba(59, 130, 246, 0.125)'
+                  }}
+                  onClick={() => setViewingDetailType('steps')}
+                >
+                  <Card className="p-6 text-center bg-card border-0 h-full">
+                    <CircularProgress
+                      value={
+                        viewPeriod === 'day' 
+                          ? (dashboardStats.steps ? Math.min(dashboardStats.steps / 10000 * 100, 100) : 0)
+                          : (dashboardStats.steps ? Math.min(dashboardStats.steps / (10000 * (viewPeriod === 'week' ? 7 : 30)) * 100, 100) : 0)
+                      }
+                      max={100}
+                      label={viewPeriod === 'day' ? 'Steps' : 'Total'}
+                      color="hsl(221, 83%, 53%)"
+                    />
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Activity className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">Activity</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {dashboardStats.steps?.toLocaleString() || 0} 
+                        {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' this week' : ' this month'}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {dashboardStats.steps?.toLocaleString() || 0} 
-                      {viewPeriod === 'day' ? ' / 10K' : viewPeriod === 'week' ? ' this week' : ' this month'}
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               )}
             </div>
 
@@ -1027,6 +1069,7 @@ export const EnhancedFitnessDashboard = () => {
                   icon={<Flame className="h-4 w-4" />}
                   color="hsl(25, 95%, 53%)"
                   gradientBorder="linear-gradient(135deg, hsl(25, 95%, 53%), hsl(38, 92%, 50%))"
+                  glowColor="hsl(25, 95%, 53%)"
                   onClick={() => navigate('/metric/steps')}
                 />
               )}
@@ -1040,6 +1083,7 @@ export const EnhancedFitnessDashboard = () => {
                   icon={<Heart className="h-4 w-4" />}
                   color="hsl(0, 84%, 60%)"
                   gradientBorder="linear-gradient(135deg, hsl(0, 84%, 60%), hsl(340, 82%, 52%))"
+                  glowColor="hsl(0, 84%, 60%)"
                   onClick={() => navigate('/metric/recovery')}
                 />
               )}
@@ -1052,6 +1096,7 @@ export const EnhancedFitnessDashboard = () => {
                   icon={<Target className="h-4 w-4" />}
                   color="hsl(142, 76%, 36%)"
                   gradientBorder="linear-gradient(135deg, hsl(142, 76%, 36%), hsl(158, 64%, 52%))"
+                  glowColor="hsl(142, 76%, 36%)"
                   onClick={() => navigate('/metric/weight')}
                 />
               )}
@@ -1065,6 +1110,7 @@ export const EnhancedFitnessDashboard = () => {
                   icon={<BarChart3 className="h-4 w-4" />}
                   color="hsl(270, 95%, 60%)"
                   gradientBorder="linear-gradient(135deg, hsl(270, 95%, 60%), hsl(280, 87%, 65%))"
+                  glowColor="hsl(270, 95%, 60%)"
                   onClick={() => navigate('/metric/body_fat')}
                 />
               )}
