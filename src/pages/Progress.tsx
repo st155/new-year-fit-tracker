@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, TrendingUp, TrendingDown } from "lucide-react";
+import { Settings, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useProgressCache } from "@/hooks/useProgressCache";
 
 interface MetricCard {
   id: string;
@@ -19,178 +20,183 @@ interface MetricCard {
   chart?: boolean;
 }
 
+// Вспомогательные функции вне компонента
+const detectId = (name: string) => {
+  if (name.includes('вес') || name.includes('weight')) return 'weight';
+  if (name.includes('жир') || name.includes('fat')) return 'body-fat';
+  if (name.includes('бег') || name.includes('run')) return 'run';
+  if (name.includes('vo2') || name.includes('vo₂')) return 'vo2max';
+  if (name.includes('подтяг') || name.includes('pull-up')) return 'pullups';
+  if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? 'bench' : 'pushups';
+  if (name.includes('планк') || name.includes('plank')) return 'plank';
+  if (name.includes('выпад') || name.includes('lunge')) return 'lunges';
+  return `goal-${Math.random().toString(36).slice(2, 7)}`;
+};
+
+const detectColor = (name: string) => {
+  if (name.includes('вес') || name.includes('weight')) return '#10B981';
+  if (name.includes('жир') || name.includes('fat')) return '#FF6B2C';
+  if (name.includes('бег') || name.includes('run')) return '#06B6D4';
+  if (name.includes('vo2') || name.includes('vo₂')) return '#3B82F6';
+  if (name.includes('подтяг') || name.includes('pull-up')) return '#A855F7';
+  if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? '#EF4444' : '#FBBF24';
+  if (name.includes('планк') || name.includes('plank')) return '#8B5CF6';
+  if (name.includes('выпад') || name.includes('lunge')) return '#84CC16';
+  return '#64748B';
+};
+
+const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] => {
+  const goalMapping: { [key: string]: { id: string; color: string } } = {
+    'подтягивания': { id: 'pullups', color: '#A855F7' },
+    'жим лёжа': { id: 'bench', color: '#EF4444' },
+    'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
+    'планка': { id: 'plank', color: '#8B5CF6' },
+    'отжимания': { id: 'pushups', color: '#FBBF24' },
+    'vo2max': { id: 'vo2max', color: '#3B82F6' },
+    'vo₂max': { id: 'vo2max', color: '#3B82F6' },
+    'бег 1 км': { id: 'run', color: '#06B6D4' },
+    'процент жира': { id: 'body-fat', color: '#FF6B2C' },
+    'вес': { id: 'weight', color: '#10B981' }
+  };
+
+  // Дедупликация целей по имени
+  let uniqueGoals: any[] = Array.from(new Map(goals.map((g: any) => [g.goal_name, g])).values());
+
+  // Добавить отсутствующие базовые цели
+  const coreGoals = [
+    { name: 'Подтягивания', value: 17, unit: 'раз' },
+    { name: 'Жим лёжа', value: 90, unit: 'кг' },
+    { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
+    { name: 'Планка', value: 4, unit: 'мин' },
+    { name: 'Отжимания', value: 60, unit: 'раз' },
+    { name: 'VO₂max', value: 50, unit: 'мл/кг/мин' },
+    { name: 'Бег 1 км', value: 4.0, unit: 'мин' },
+    { name: 'Процент жира', value: 11, unit: '%' },
+  ];
+
+  const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
+  const placeholders = coreGoals
+    .filter(cg => !existing.has(cg.name.toLowerCase()))
+    .map(cg => ({
+      id: `synthetic-${cg.name}`,
+      goal_name: cg.name,
+      goal_type: 'challenge',
+      target_value: cg.value,
+      target_unit: cg.unit,
+      is_personal: false,
+    }));
+
+  uniqueGoals = [...uniqueGoals, ...placeholders];
+
+  // Группируем измерения по goal_id для быстрого доступа
+  const measurementsByGoal = measurements.reduce((acc, m) => {
+    if (!acc[m.goal_id]) acc[m.goal_id] = [];
+    acc[m.goal_id].push(m);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const metricsArray: MetricCard[] = [];
+
+  for (const goal of uniqueGoals) {
+    const normalized = (goal.goal_name || '').toLowerCase();
+    const mapping = goalMapping[normalized];
+    const id = mapping?.id ?? detectId(normalized) ?? `goal-${goal.id}`;
+    const color = mapping?.color ?? detectColor(normalized);
+
+    const goalMeasurements = measurementsByGoal[goal.id] || [];
+    let currentValue = 0;
+    let trend = 0;
+
+    if (goalMeasurements.length > 0) {
+      currentValue = Number(goalMeasurements[0].value);
+
+      if (goalMeasurements.length > 1) {
+        const oldValue = Number(goalMeasurements[goalMeasurements.length - 1].value);
+        if (oldValue !== 0) {
+          trend = ((currentValue - oldValue) / oldValue) * 100;
+        }
+      }
+    }
+
+    metricsArray.push({
+      id,
+      title: goal.goal_name,
+      value: currentValue,
+      unit: goal.target_unit || '',
+      target: Number(goal.target_value) || 0,
+      targetUnit: goal.target_unit || '',
+      trend,
+      borderColor: `border-[${color}]`,
+      progressColor: `bg-[${color}]`,
+      chart: id === 'vo2max'
+    });
+  }
+
+  return metricsArray;
+};
+
 const ProgressPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
-  const [challengeGoals, setChallengeGoals] = useState<any[]>([]);
-  const [metrics, setMetrics] = useState<MetricCard[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchChallengeGoals();
-    }
-  }, [user, selectedPeriod]);
-
-  const fetchChallengeGoals = async () => {
-    if (!user) return;
+  // Оптимизированная функция загрузки всех данных одним запросом
+  const fetchAllData = useCallback(async () => {
+    if (!user) return { goals: [], metrics: [] };
 
     try {
-      // Get user's active challenges
-       const { data: participations } = await supabase
-         .from('challenge_participants')
-         .select('challenge_id')
-         .eq('user_id', user.id);
-       console.log('[Progress] participations:', participations);
+      const periodDays = selectedPeriod === '1M' ? 30 : selectedPeriod === '3M' ? 90 : selectedPeriod === '6M' ? 180 : 365;
+      const periodStart = new Date();
+      periodStart.setDate(periodStart.getDate() - periodDays);
+
+      // 1. Получить все цели
+      const { data: participations } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id')
+        .eq('user_id', user.id);
 
       if (!participations || participations.length === 0) {
-        setChallengeGoals([]);
-        setMetrics([]);
-        return;
+        return { goals: [], metrics: [] };
       }
 
-      // Get goals for those challenges
       const { data: goals } = await supabase
         .from('goals')
         .select('*')
         .eq('is_personal', false)
         .in('challenge_id', participations.map(p => p.challenge_id));
-      console.log('[Progress] challenge goals (challenge-level):', goals);
 
-      // Deduplicate by goal_name
-      let uniqueGoals: any[] = Array.from(new Map((goals || []).map((g: any) => [g.goal_name, g as any])).values());
+      if (!goals || goals.length === 0) {
+        return { goals: [], metrics: [] };
+      }
 
-      // Ensure all core challenge goals are present (fallback placeholders if missing)
-      const coreGoals: Array<{ name: string; value: number; unit: string }> = [
-        { name: 'Подтягивания', value: 17, unit: 'раз' },
-        { name: 'Жим лёжа', value: 90, unit: 'кг' },
-        { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
-        { name: 'Планка', value: 4, unit: 'мин' },
-        { name: 'Отжимания', value: 60, unit: 'раз' },
-        { name: 'VO₂max', value: 50, unit: 'мл/кг/мин' },
-        { name: 'Бег 1 км', value: 4.0, unit: 'мин' },
-        { name: 'Процент жира', value: 11, unit: '%' },
-      ];
-
-      const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
-      const placeholders: any[] = coreGoals
-        .filter(cg => !existing.has(cg.name.toLowerCase()))
-        .map(cg => ({
-          id: `synthetic-${cg.name}`,
-          goal_name: cg.name,
-          goal_type: 'challenge',
-          target_value: cg.value,
-          target_unit: cg.unit,
-          is_personal: false,
-        } as any));
-
-      uniqueGoals = [...uniqueGoals, ...placeholders] as any[];
-
-      setChallengeGoals(uniqueGoals);
-      await buildMetrics(uniqueGoals);
-    } catch (error) {
-      console.error('Error fetching challenge goals:', error);
-      setChallengeGoals([]);
-      setMetrics([]);
-    }
-  };
-
-  const buildMetrics = async (goals: any[]) => {
-    if (goals.length === 0) {
-      setMetrics([]);
-      return;
-    }
-
-    const metricsArray: MetricCard[] = [];
-
-    // Map goal names to metric configurations (known ones)
-    const goalMapping: { [key: string]: { id: string; color: string } } = {
-      'подтягивания': { id: 'pullups', color: '#A855F7' },
-      'жим лёжа': { id: 'bench', color: '#EF4444' },
-      'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
-      'планка': { id: 'plank', color: '#8B5CF6' },
-      'отжимания': { id: 'pushups', color: '#FBBF24' },
-      'vo2max': { id: 'vo2max', color: '#3B82F6' },
-      'vo₂max': { id: 'vo2max', color: '#3B82F6' },
-      'бег 1 км': { id: 'run', color: '#06B6D4' },
-      'процент жира': { id: 'body-fat', color: '#FF6B2C' },
-      'вес': { id: 'weight', color: '#10B981' }
-    };
-
-    const detectId = (name: string) => {
-      if (name.includes('вес') || name.includes('weight')) return 'weight';
-      if (name.includes('жир') || name.includes('fat')) return 'body-fat';
-      if (name.includes('бег') || name.includes('run')) return 'run';
-      if (name.includes('vo2') || name.includes('vo₂')) return 'vo2max';
-      if (name.includes('подтяг') || name.includes('pull-up')) return 'pullups';
-      if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? 'bench' : 'pushups';
-      if (name.includes('планк') || name.includes('plank')) return 'plank';
-      if (name.includes('выпад') || name.includes('lunge')) return 'lunges';
-      return `goal-${Math.random().toString(36).slice(2, 7)}`; // ensure unique key fallback
-    };
-
-    const detectColor = (name: string) => {
-      if (name.includes('вес') || name.includes('weight')) return '#10B981';
-      if (name.includes('жир') || name.includes('fat')) return '#FF6B2C';
-      if (name.includes('бег') || name.includes('run')) return '#06B6D4';
-      if (name.includes('vo2') || name.includes('vo₂')) return '#3B82F6';
-      if (name.includes('подтяг') || name.includes('pull-up')) return '#A855F7';
-      if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? '#EF4444' : '#FBBF24';
-      if (name.includes('планк') || name.includes('plank')) return '#8B5CF6';
-      if (name.includes('выпад') || name.includes('lunge')) return '#84CC16';
-      return '#64748B';
-    };
-
-    // Calculate period start date
-    const periodDays = selectedPeriod === '1M' ? 30 : selectedPeriod === '3M' ? 90 : selectedPeriod === '6M' ? 180 : 365;
-    const periodStart = new Date();
-    periodStart.setDate(periodStart.getDate() - periodDays);
-
-    for (const goal of goals) {
-      const normalized = (goal.goal_name || '').toLowerCase();
-      const mapping = goalMapping[normalized];
-      const id = mapping?.id ?? detectId(normalized) ?? `goal-${goal.id}`;
-      const color = mapping?.color ?? detectColor(normalized);
-
-      // Fetch measurements for this goal for the selected period
-      const { data: measurements } = await supabase
+      // 2. Получить ВСЕ измерения одним запросом
+      const goalIds = goals.map(g => g.id);
+      const { data: allMeasurements } = await supabase
         .from('measurements')
         .select('*')
-        .eq('goal_id', goal.id)
+        .in('goal_id', goalIds)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
-      let currentValue = 0;
-      let trend = 0;
+      // 3. Построить метрики на клиенте
+      const metrics = buildMetricsFromData(goals, allMeasurements || []);
 
-      if (measurements && measurements.length > 0) {
-        currentValue = Number(measurements[0].value);
-
-        if (measurements.length > 1) {
-          const oldValue = Number(measurements[measurements.length - 1].value);
-          if (oldValue !== 0) {
-            trend = ((currentValue - oldValue) / oldValue) * 100;
-          }
-        }
-      }
-
-      metricsArray.push({
-        id,
-        title: goal.goal_name,
-        value: currentValue,
-        unit: goal.target_unit || '',
-        target: Number(goal.target_value) || 0,
-        targetUnit: goal.target_unit || '',
-        trend,
-        borderColor: `border-[${color}]`,
-        progressColor: `bg-[${color}]`,
-        chart: id === 'vo2max'
-      });
+      return { goals, metrics };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      return { goals: [], metrics: [] };
     }
+  }, [user, selectedPeriod]);
 
-    console.log('[Progress] built metrics:', metricsArray.length, metricsArray.map(m => m.title));
-    setMetrics(metricsArray);
-  };
+  // Используем кэш
+  const { data, loading, fromCache, refetch } = useProgressCache(
+    `progress_${user?.id}_${selectedPeriod}`,
+    fetchAllData,
+    [user?.id, selectedPeriod]
+  );
+
+  const challengeGoals = data?.goals || [];
+  const metrics = data?.metrics || [];
 
   const formatValue = (value: number, unit: string) => {
     if (unit === "min") {
@@ -212,15 +218,26 @@ const ProgressPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">{/* Changed: added overflow-y-auto */}
+    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">
       {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-foreground mb-1">
-          Progress Tracking
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Monitor your fitness journey and celebrate your achievements
-        </p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground mb-1">
+            Progress Tracking
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Monitor your fitness journey {fromCache && '(cached)'}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={loading && !fromCache}
+          className="h-9 w-9 p-0"
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && !fromCache && "animate-spin")} />
+        </Button>
       </div>
 
       {/* Period Filter */}
@@ -244,13 +261,15 @@ const ProgressPage = () => {
         </div>
       </div>
 
-      {/* Debug info */}
-      <div className="mb-4 p-2 bg-muted rounded text-xs">
-        Goals found: {challengeGoals.length}, Metrics built: {metrics.length}
-      </div>
+      {/* No data message */}
+      {metrics.length === 0 && !loading && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground text-center">
+          No challenge goals found. Join a challenge to track your progress!
+        </div>
+      )}
 
-      {/* Metrics Grid - flexible grid that expands vertically */}
-      <div className="grid grid-cols-2 gap-3 auto-rows-max">{/* Changed: added auto-rows-max for flexible height */}
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 gap-3 auto-rows-max">
         {metrics.map((metric) => {
           const progress = getProgressPercentage(metric);
           const isPositiveTrend = metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run' 
