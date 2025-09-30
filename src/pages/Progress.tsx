@@ -454,7 +454,11 @@ const ProgressPage = () => {
   }
 
   if (viewingDetailType) {
-    const onBack = () => setViewingDetailType(null);
+    console.log('Showing detail view for:', viewingDetailType);
+    const onBack = () => {
+      console.log('Back button clicked, returning to main view');
+      setViewingDetailType(null);
+    };
     
     return (
       <div className="min-h-screen bg-background">
@@ -711,7 +715,10 @@ const ProgressPage = () => {
             {/* Weight Loss Card */}
             <Card 
               className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
-              onClick={() => setViewingDetailType('weight')}
+              onClick={() => {
+                console.log('Weight Loss card clicked');
+                setViewingDetailType('weight');
+              }}
             >
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -745,7 +752,10 @@ const ProgressPage = () => {
             {/* Body Fat Card */}
             <Card 
               className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
-              onClick={() => setViewingDetailType('body_fat')}
+              onClick={() => {
+                console.log('Body Fat card clicked');
+                setViewingDetailType('body_fat');
+              }}
             >
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -779,7 +789,10 @@ const ProgressPage = () => {
             {/* VO2 Max Card */}
             <Card 
               className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
-              onClick={() => setViewingDetailType('vo2_max')}
+              onClick={() => {
+                console.log('VO2 Max card clicked');
+                setViewingDetailType('vo2_max');
+              }}
             >
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -813,7 +826,10 @@ const ProgressPage = () => {
             {/* 2KM Row Card */}
             <Card 
               className="cursor-pointer hover-scale transition-all duration-300 bg-card/50 backdrop-blur-sm border-border/50"
-              onClick={() => setViewingDetailType('pull_ups')}
+              onClick={() => {
+                console.log('2KM Row card clicked');
+                setViewingDetailType('pull_ups');
+              }}
             >
               <CardContent className="p-6">
                 <div className="space-y-4">
