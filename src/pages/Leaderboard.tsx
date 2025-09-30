@@ -140,15 +140,18 @@ const LeaderboardPage = () => {
 
   const getRankStyle = (rank: number, isCurrentUser: boolean) => {
     if (rank === 1) {
-      return "bg-gradient-to-br from-yellow-500 via-yellow-600 to-amber-700 border-yellow-400/50 shadow-[0_0_30px_rgba(234,179,8,0.4)]";
+      return "bg-gradient-to-br from-yellow-600 via-orange-600 to-orange-800 border-orange-500/30 shadow-[0_0_40px_rgba(234,179,8,0.5)]";
     }
     if (rank === 2) {
-      return "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 border-gray-400/50 shadow-[0_0_30px_rgba(156,163,175,0.4)]";
+      return "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-800 border-slate-400/30 shadow-[0_0_40px_rgba(148,163,184,0.5)]";
+    }
+    if (rank === 3) {
+      return "bg-gradient-to-br from-amber-700 via-amber-800 to-amber-900 border-amber-600/30 shadow-[0_0_40px_rgba(217,119,6,0.5)]";
     }
     if (isCurrentUser) {
-      return "bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.4)]";
+      return "bg-gradient-to-br from-cyan-500 via-teal-600 to-blue-700 border-cyan-400/30 shadow-[0_0_40px_rgba(6,182,212,0.5)]";
     }
-    return "glass border-white/10";
+    return "bg-card/40 backdrop-blur-sm border-border/30";
   };
 
   const getRankIconColor = (rank: number) => {
@@ -159,37 +162,38 @@ const LeaderboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6 overflow-y-auto">
+    <div className="min-h-screen pb-24 px-4 pt-8 overflow-y-auto bg-gradient-to-b from-background via-background to-background/80">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Leaderboard</h1>
-          <p className="text-muted-foreground text-sm">
-            Compete with others {fromCache && '(cached)'}
-          </p>
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <Trophy className="w-8 h-8 text-yellow-500" />
+          <h1 className="text-4xl font-bold tracking-tight">TEAM LEADERBOARD</h1>
         </div>
+        <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
+          Отслеживайте прогресс команды и соревнуйтесь за место на вершина! {fromCache && '(кэш)'}
+        </p>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => refetch()}
           disabled={loading && !fromCache}
-          className="h-9 w-9 p-0"
+          className="mt-2 h-8 w-8 p-0"
         >
           <RefreshCw className={cn("h-4 w-4", loading && !fromCache && "animate-spin")} />
         </Button>
       </div>
 
       {/* Challenge Filter Buttons */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-3 mb-8 overflow-x-auto pb-2 justify-center">
         {challenges.map((challenge) => (
           <button
             key={challenge.id}
             onClick={() => setSelectedChallenge(challenge.id)}
             className={cn(
-              "px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap flex items-center gap-2",
+              "px-6 py-3 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap flex items-center gap-2 border-2",
               selectedChallenge === challenge.id
-                ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-[0_0_20px_rgba(234,179,8,0.5)]"
-                : "glass border border-white/10 text-muted-foreground hover:border-white/20"
+                ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-yellow-400/50 shadow-[0_0_25px_rgba(234,179,8,0.6)]"
+                : "bg-card/50 backdrop-blur-sm border-border/50 text-muted-foreground hover:border-border hover:bg-card/80"
             )}
           >
             {selectedChallenge === challenge.id && <Trophy className="w-4 h-4" />}
@@ -199,128 +203,120 @@ const LeaderboardPage = () => {
       </div>
 
       {/* Leaderboard */}
-      {loading && !fromCache ? (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="glass rounded-2xl p-4 h-20 animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {(leaderboardData || []).map((userEntry) => {
-            const isTopTwo = userEntry.rank <= 2;
+      <div className="max-w-3xl mx-auto">
+        {loading && !fromCache ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="rounded-3xl p-4 h-24 animate-pulse bg-card/50" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {(leaderboardData || []).map((userEntry) => {
+              const isTopThree = userEntry.rank <= 3;
+              const isCurrentUser = userEntry.isCurrentUser || false;
 
-            return (
-              <div
-                key={`${userEntry.userId}-${userEntry.rank}`}
-                className={cn(
-                  "rounded-2xl border-2 transition-all duration-300 overflow-hidden",
-                  getRankStyle(userEntry.rank, userEntry.isCurrentUser || false),
-                  isTopTwo || userEntry.isCurrentUser ? "p-6" : "p-4"
-                )}
-              >
-                {isTopTwo ? (
-                  // Large cards for Gold & Silver
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col items-center">
-                        {userEntry.rank === 1 ? (
-                          <Award className="w-12 h-12 text-yellow-300" />
-                        ) : (
-                          <Medal className="w-12 h-12 text-gray-300" />
-                        )}
-                        <span className="text-xs font-bold text-white/80 mt-1">
-                          {userEntry.rank === 1 ? '1st' : '2nd'}
+              return (
+                <div
+                  key={`${userEntry.userId}-${userEntry.rank}`}
+                  className={cn(
+                    "rounded-3xl border-2 transition-all duration-300 overflow-hidden",
+                    getRankStyle(userEntry.rank, isCurrentUser),
+                    isTopThree || isCurrentUser ? "p-6" : "p-4"
+                  )}
+                >
+                  {isTopThree ? (
+                    // Large cards for top 3
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-5">
+                        <div className="flex flex-col items-center min-w-[60px]">
+                          <div className="relative">
+                            {userEntry.rank === 1 ? (
+                              <Award className="w-14 h-14 text-yellow-200 drop-shadow-lg" />
+                            ) : userEntry.rank === 2 ? (
+                              <Medal className="w-14 h-14 text-slate-200 drop-shadow-lg" />
+                            ) : (
+                              <Medal className="w-14 h-14 text-amber-300 drop-shadow-lg" />
+                            )}
+                          </div>
+                          <span className="text-3xl font-black text-white/90 mt-1">
+                            {userEntry.rank}
+                          </span>
+                        </div>
+                        <Avatar className="w-16 h-16 border-4 border-white/40 shadow-xl">
+                          <AvatarImage src={userEntry.avatarUrl} />
+                          <AvatarFallback className="text-2xl font-bold bg-white/20">
+                            {userEntry.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
+                          <p className="text-white/80 text-base font-medium">{userEntry.points} очков</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-green-500/90 px-4 py-2 rounded-full">
+                        <TrendingUp className="w-5 h-5 text-white" />
+                        <span className="text-base font-bold text-white">
+                          +{Math.abs(userEntry.trend)}
                         </span>
                       </div>
-                      <Avatar className="w-16 h-16 border-4 border-white/30">
-                        <AvatarImage src={userEntry.avatarUrl} />
-                        <AvatarFallback className="text-lg font-bold">
-                          {userEntry.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
-                        <p className="text-white/70 text-sm">{userEntry.points} очков</p>
+                    </div>
+                  ) : isCurrentUser ? (
+                    // Highlighted card for current user
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
+                          <span className="text-2xl font-black text-white">{userEntry.rank}</span>
+                        </div>
+                        <Avatar className="w-16 h-16 border-4 border-white/40">
+                          <AvatarImage src={userEntry.avatarUrl} />
+                          <AvatarFallback className="text-xl font-bold bg-white/20">
+                            {userEntry.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
+                          <p className="text-white/80 text-sm">{userEntry.points} очков</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {userEntry.trend > 0 ? (
-                        <TrendingUp className="w-5 h-5 text-green-300" />
-                      ) : (
-                        <TrendingDown className="w-5 h-5 text-red-300" />
-                      )}
-                      <span className="text-sm font-semibold text-white/90">
-                        {userEntry.trend > 0 ? '+' : ''}{userEntry.trend}%
-                      </span>
-                    </div>
-                  </div>
-                ) : userEntry.isCurrentUser ? (
-                  // Highlighted card for current user
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <span className="text-xl font-bold text-white">{userEntry.rank}</span>
-                      </div>
-                      <Avatar className="w-14 h-14 border-4 border-white/30">
-                        <AvatarImage src={userEntry.avatarUrl} />
-                        <AvatarFallback className="text-lg font-bold">
-                          {userEntry.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{userEntry.name}</h3>
-                        <p className="text-white/70 text-sm">{userEntry.points} очков</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {userEntry.trend > 0 ? (
-                        <TrendingUp className="w-5 h-5 text-green-300" />
-                      ) : (
-                        <TrendingDown className="w-5 h-5 text-red-300" />
-                      )}
-                      <span className="text-sm font-semibold text-white">
-                        {userEntry.trend > 0 ? '+' : ''}{userEntry.trend}%
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  // Compact cards for others
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full glass-strong flex items-center justify-center">
-                        <span className={cn("text-sm font-bold", getRankIconColor(userEntry.rank))}>
-                          {userEntry.rank}
+                      <div className="flex items-center gap-2 bg-green-500/90 px-3 py-1.5 rounded-full">
+                        <TrendingUp className="w-4 h-4 text-white" />
+                        <span className="text-sm font-bold text-white">
+                          +{Math.abs(userEntry.trend)}
                         </span>
                       </div>
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={userEntry.avatarUrl} />
-                        <AvatarFallback className="text-sm font-semibold">
-                          {userEntry.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground">{userEntry.name}</h3>
-                        <p className="text-xs text-muted-foreground">{userEntry.points} очков</p>
+                    </div>
+                  ) : (
+                    // Compact cards for others
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center border border-border/50">
+                          <span className="text-base font-bold text-foreground">{userEntry.rank}</span>
+                        </div>
+                        <Avatar className="w-12 h-12 border-2 border-border/30">
+                          <AvatarImage src={userEntry.avatarUrl} />
+                          <AvatarFallback className="text-sm font-semibold">
+                            {userEntry.name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
+                          <p className="text-sm text-muted-foreground">{userEntry.points} очков</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-green-500/80 px-3 py-1 rounded-full">
+                        <span className="text-sm font-bold text-white">
+                          +{Math.abs(userEntry.trend)}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {userEntry.trend > 0 ? (
-                        <TrendingUp className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {userEntry.trend > 0 ? '+' : ''}{userEntry.trend}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {(!leaderboardData || leaderboardData.length === 0) && !loading && (
         <div className="text-center py-12">

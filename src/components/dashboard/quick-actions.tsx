@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Target, BarChart3, Calendar, MessageSquare, TrendingUp, Brain, Activity } from "lucide-react";
+import { Upload, Target, BarChart3, Calendar, MessageSquare, TrendingUp, Brain, Activity, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -148,17 +148,29 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           </Card>
         </div>
         
-        {/* Bottom row - 2 rectangular cards */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Bottom row - 3 rectangular cards */}
+        <div className="grid grid-cols-3 gap-2">
           <Card 
             className="h-14 border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/progress')}
           >
-            <CardContent className="p-2 flex items-center gap-2 h-full">
+            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
               <div className="p-1 rounded-full bg-white/20">
                 <TrendingUp className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium">Мой прогресс</span>
+              <span className="text-xs font-medium">Прогресс</span>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="h-14 border-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-orange-600 text-white cursor-pointer group hover:scale-105 transition-transform"
+            onClick={() => navigate('/leaderboard')}
+          >
+            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
+              <div className="p-1 rounded-full bg-white/20">
+                <Trophy className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-medium">Рейтинг</span>
             </CardContent>
           </Card>
 
@@ -166,11 +178,11 @@ export function QuickActions({ userRole }: QuickActionsProps) {
             className="h-14 border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer group hover:scale-105 transition-transform"
             onClick={() => navigate('/fitness-data')}
           >
-            <CardContent className="p-2 flex items-center gap-2 h-full">
+            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
               <div className="p-1 rounded-full bg-white/20">
                 <Activity className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium">Фитнес данные</span>
+              <span className="text-xs font-medium">Данные</span>
             </CardContent>
           </Card>
         </div>

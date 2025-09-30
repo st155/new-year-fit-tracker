@@ -204,11 +204,12 @@ const Landing = () => {
                 description: "Set personalized goals and track your progress with advanced analytics and insights.",
                 color: "text-primary"
               },
-              {
+               {
                 icon: Trophy,
-                title: "Competitive Challenges",
-                description: "Join team challenges, compete with friends, and climb the leaderboard.",
-                color: "text-accent"
+                title: "Team Leaderboard",
+                description: "Отслеживайте прогресс команды и соревнуйтесь за место на вершине.",
+                color: "text-accent",
+                link: "/leaderboard"
               },
               {
                 icon: Activity,
@@ -235,14 +236,18 @@ const Landing = () => {
                 color: "text-success"
               }
             ].map((feature, index) => (
-              <Card key={index} className="bg-gradient-card border-border/50 hover:shadow-lg transition-all duration-300">
+              <Card 
+                key={index} 
+                className="bg-gradient-card border-border/50 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => feature.link && navigate(feature.link)}
+              >
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className={`p-3 rounded-xl bg-current/10 w-fit ${feature.color}`}>
+                    <div className={`p-3 rounded-xl bg-current/10 w-fit ${feature.color} group-hover:scale-110 transition-transform`}>
                       <feature.icon className={`h-6 w-6 ${feature.color}`} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-foreground mb-2">
+                      <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                         {feature.title}
                       </h3>
                       <p className="text-muted-foreground">
