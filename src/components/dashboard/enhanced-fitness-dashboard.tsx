@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -246,6 +247,7 @@ const ActivityCalendar = ({ weeklyData }: { weeklyData: WeeklyActivity[] }) => {
 
 export const EnhancedFitnessDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewPeriod, setViewPeriod] = useState<'day' | 'week' | 'month'>('day');
@@ -972,6 +974,7 @@ export const EnhancedFitnessDashboard = () => {
                 target={2500}
                 icon={<Flame className="h-4 w-4" />}
                 color="hsl(25, 95%, 53%)"
+                onClick={() => navigate('/metric/steps')} // Пока без детального экрана калорий
               />
 
               <MetricCard
@@ -981,6 +984,7 @@ export const EnhancedFitnessDashboard = () => {
                 trend={trends['Average Heart Rate']}
                 icon={<Heart className="h-4 w-4" />}
                 color="hsl(0, 84%, 60%)"
+                onClick={() => navigate('/metric/recovery')} // Навигация к детализации пульса
               />
 
               <MetricCard
@@ -989,7 +993,7 @@ export const EnhancedFitnessDashboard = () => {
                 unit="kg"
                 icon={<Target className="h-4 w-4" />}
                 color="hsl(142, 76%, 36%)"
-                onClick={() => setViewingDetailType('weight')}
+                onClick={() => navigate('/metric/weight')}
               />
 
               <MetricCard
@@ -999,7 +1003,7 @@ export const EnhancedFitnessDashboard = () => {
                 target={12}
                 icon={<BarChart3 className="h-4 w-4" />}
                 color="hsl(270, 95%, 60%)"
-                onClick={() => setViewingDetailType('body_fat')}
+                onClick={() => navigate('/metric/body_fat')}
               />
             </div>
 

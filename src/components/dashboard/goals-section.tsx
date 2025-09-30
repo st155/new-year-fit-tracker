@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -63,6 +64,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchGoals = async () => {
     if (!user) return;
@@ -289,47 +291,85 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {goals.map((goal) => (
-            <div key={goal.id} className="p-4 rounded-lg bg-muted/20 border border-border/50 hover:border-primary/30 transition-colors group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {goal.icon}
-                  <h4 className="font-semibold">{goal.title}</h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs font-semibold ${goalColors[goal.category]} text-white border-none`}
-                  >
-                    {goal.progress}%
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                    onClick={() => handleEditGoal(goal)}
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
+          {goals.map((goal) => {
+            const getClickHandler = () => {
+              const nameMap: Record<string, string> = {
+                'вес': 'weight',
+                'weight': 'weight',
+                'жир': 'body_fat',
+                'body fat': 'body_fat',
+                'процент жира': 'body_fat',
+                'vo2': 'vo2max',
+                'подтягивания': 'vo2max', // Пока без детального экрана
+                'жим': 'vo2max', // Пока без детального экрана
+                'шаги': 'steps',
+                'steps': 'steps',
+                'планка': 'recovery', // Пока без детального экрана
+                'отжимания': 'recovery', // Пока без детального экрана
+                'выпады': 'recovery', // Пока без детального экрана
+                'бег': 'recovery' // Пока без детального экрана
+              };
               
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Текущий:</span>
-                    <span className="font-medium">{goal.displayCurrent || goal.current} {goal.unit}</span>
+              const goalName = goal.title.toLowerCase();
+              for (const [key, route] of Object.entries(nameMap)) {
+                if (goalName.includes(key)) {
+                  return () => navigate(`/metric/${route}`);
+                }
+              }
+              return undefined;
+            };
+
+            return (
+              <div 
+                key={goal.id} 
+                className={`p-4 rounded-lg bg-muted/20 border border-border/50 hover:border-primary/30 transition-all duration-300 group ${
+                  getClickHandler() ? 'cursor-pointer hover:shadow-md' : ''
+                }`}
+                onClick={getClickHandler()}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {goal.icon}
+                    <h4 className="font-semibold">{goal.title}</h4>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Цель:</span>
-                    <span className="font-medium text-primary">{goal.displayTarget || goal.target} {goal.unit}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs font-semibold ${goalColors[goal.category]} text-white border-none`}
+                    >
+                      {goal.progress}%
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditGoal(goal);
+                      }}
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-primary">{goal.progress}%</span>
+                
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">Текущий:</span>
+                      <span className="font-medium">{goal.displayCurrent || goal.current} {goal.unit}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">Цель:</span>
+                      <span className="font-medium text-primary">{goal.displayTarget || goal.target} {goal.unit}</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-primary">{goal.progress}%</span>
+                </div>
+                <Progress value={goal.progress} className="h-2" />
               </div>
-              <Progress value={goal.progress} className="h-2" />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       

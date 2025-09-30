@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ interface ActivityDetailsProps {
 
 export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,7 +129,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
     <div className="space-y-6">
       {/* Основные показатели активности */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => navigate('/metric/recovery')}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">Нагрузка</CardTitle>
@@ -187,7 +189,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => navigate('/metric/steps')}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">Шаги</CardTitle>

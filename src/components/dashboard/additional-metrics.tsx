@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Activity, Heart, Flame, Footprints, Moon, TrendingUp, Droplets, Dumbbell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Leaderboard } from "./leaderboard";
 import { WeeklyGoals } from "./weekly-goals";
 
@@ -13,14 +14,19 @@ interface MetricCardProps {
   change?: string;
   subtitle?: string;
   color: string;
+  onClick?: () => void;
 }
 
-function MetricCard({ icon, title, value, unit, change, subtitle, color }: MetricCardProps) {
+function MetricCard({ icon, title, value, unit, change, subtitle, color, onClick }: MetricCardProps) {
   return (
-    <Card className={cn(
-      "border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
-      `border-${color} bg-${color}/5`
-    )}>
+    <Card 
+      className={cn(
+        "border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
+        `border-${color} bg-${color}/5`,
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className={cn("p-2 rounded-xl", `bg-${color}/10`)}>
@@ -62,6 +68,7 @@ function MetricCard({ icon, title, value, unit, change, subtitle, color }: Metri
 }
 
 export function AdditionalMetrics() {
+  const navigate = useNavigate();
   const weeklyMetrics = [
     {
       icon: <Activity className="h-4 w-4 text-primary" />,
@@ -157,7 +164,7 @@ export function AdditionalMetrics() {
         </div>
 
         {/* First Health Metric */}
-        <MetricCard {...healthMetrics[0]} />
+        <MetricCard {...healthMetrics[0]} onClick={() => navigate('/metric/recovery')} />
 
         {/* Leaderboard - Full width */}
         <div className="md:col-span-2 lg:col-span-3">
@@ -165,9 +172,16 @@ export function AdditionalMetrics() {
         </div>
 
         {/* Remaining Health Metrics - Three columns */}
-        {healthMetrics.slice(1).map((metric, index) => (
-          <MetricCard key={index + 1} {...metric} />
-        ))}
+        {healthMetrics.slice(1).map((metric, index) => {
+          const routeMap = ['steps', 'steps', 'steps']; // strain, hydration, workouts пока без детального экрана
+          return (
+            <MetricCard 
+              key={index + 1} 
+              {...metric} 
+              onClick={routeMap[index] ? () => navigate(`/metric/${routeMap[index]}`) : undefined}
+            />
+          );
+        })}
       </div>
     </div>
   );

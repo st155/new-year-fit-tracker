@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Scale, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface WeightData {
 export function QuickWeightTracker() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [weightData, setWeightData] = useState<WeightData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -197,7 +199,7 @@ export function QuickWeightTracker() {
   }
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300">
+    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate('/metric/weight')}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -206,7 +208,11 @@ export function QuickWeightTracker() {
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>

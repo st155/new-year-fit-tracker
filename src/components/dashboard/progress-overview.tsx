@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ interface ProgressOverviewProps {
 
 const ProgressOverview = ({ className }: ProgressOverviewProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [goals, setGoals] = useState<GoalProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -189,36 +191,65 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {goals.slice(0, 5).map((goal) => (
-            <div key={goal.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-sm">{goal.goal_name}</h4>
-                  {getTrendIcon(goal.trend)}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={goal.is_personal ? "secondary" : "default"} className="text-xs">
-                    {goal.is_personal ? "Личная" : goal.challenge_title}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {goal.current_value.toFixed(1)}/{goal.target_value} {goal.target_unit}
-                  </span>
-                </div>
-              </div>
+          {goals.slice(0, 5).map((goal) => {
+            const getClickHandler = () => {
+              const nameMap: Record<string, string> = {
+                'вес': 'weight',
+                'weight': 'weight',
+                'жир': 'body_fat',
+                'body fat': 'body_fat',
+                'процент жира': 'body_fat',
+                'vo2': 'vo2max',
+                'шаги': 'steps',
+                'steps': 'steps'
+              };
               
-              <div className="space-y-1">
-                <Progress 
-                  value={goal.progress_percentage} 
-                  className="h-2"
-                  color={getProgressColor(goal.progress_percentage)}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{goal.progress_percentage.toFixed(1)}% выполнено</span>
-                  <span className="capitalize">{goal.goal_type}</span>
+              const goalName = goal.goal_name.toLowerCase();
+              for (const [key, route] of Object.entries(nameMap)) {
+                if (goalName.includes(key)) {
+                  return () => navigate(`/metric/${route}`);
+                }
+              }
+              return undefined;
+            };
+
+            return (
+              <div 
+                key={goal.id} 
+                className={`space-y-2 p-3 rounded-lg transition-all duration-300 ${
+                  getClickHandler() ? 'cursor-pointer hover:bg-accent/50 hover:shadow-sm' : ''
+                }`}
+                onClick={getClickHandler()}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-sm">{goal.goal_name}</h4>
+                    {getTrendIcon(goal.trend)}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={goal.is_personal ? "secondary" : "default"} className="text-xs">
+                      {goal.is_personal ? "Личная" : goal.challenge_title}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {goal.current_value.toFixed(1)}/{goal.target_value} {goal.target_unit}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <Progress 
+                    value={goal.progress_percentage} 
+                    className="h-2"
+                    color={getProgressColor(goal.progress_percentage)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{goal.progress_percentage.toFixed(1)}% выполнено</span>
+                    <span className="capitalize">{goal.goal_type}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {goals.length > 5 && (
             <div className="pt-2 border-t">

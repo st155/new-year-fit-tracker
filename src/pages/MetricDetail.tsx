@@ -63,6 +63,13 @@ const metricConfigs = {
     unit: "шагов",
     color: "from-indigo-400 to-blue-500",
     goodTrend: "up"
+  },
+  row_2km: {
+    title: "2KM Row",
+    description: "Время гребли на 2 километра",
+    unit: "сек",
+    color: "from-yellow-400 to-orange-500",
+    goodTrend: "down"
   }
 };
 
@@ -238,10 +245,11 @@ export default function MetricDetail() {
         );
       }
       else {
-        // Для других метрик (vo2max, recovery)
+        // Для других метрик (vo2max, recovery, row_2km)
         const metricNames = {
           vo2max: 'VO2Max',
-          recovery: 'Recovery Score'
+          recovery: 'Recovery Score',
+          row_2km: '2KM Row'
         };
 
         const { data: mvData } = await supabase

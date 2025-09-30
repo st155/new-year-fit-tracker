@@ -343,6 +343,16 @@ export function MetricsGrid() {
           
           if (!config || !data) return null;
           
+          // Маппинг метрик на роуты
+          const routeMap: Record<string, string> = {
+            'body_fat': 'body_fat',
+            'weight': 'weight',
+            'vo2max': 'vo2max',
+            'row_2km': 'row_2km',
+            'recovery': 'recovery',
+            'steps': 'steps'
+          };
+          
           return (
             <MetricCard
               key={metricKey}
@@ -352,7 +362,7 @@ export function MetricsGrid() {
               change={data.change}
               subtitle={data.subtitle}
               color={config.color}
-              onClick={() => navigate(`/metric/${metricKey}`)}
+              onClick={() => navigate(`/metric/${routeMap[metricKey] || metricKey}`)}
             />
           );
         })}
