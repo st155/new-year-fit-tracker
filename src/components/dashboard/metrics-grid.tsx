@@ -26,89 +26,56 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, unit, change, subtitle, color, onClick }: MetricCardProps & { onClick?: () => void }) {
-  const colorStyles = {
-    "body-fat": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-metric-body-fat/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]",
-      ring: "ring-2 ring-metric-body-fat/30"
-    },
-    "weight": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-metric-weight/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]",
-      ring: "ring-2 ring-metric-weight/30"
-    },
-    "vo2max": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-metric-vo2max/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]",
-      ring: "ring-2 ring-metric-vo2max/30"
-    },
-    "row": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-metric-row/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]",
-      ring: "ring-2 ring-metric-row/30"
-    },
-    "recovery": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-success/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]",
-      ring: "ring-2 ring-success/30"
-    },
-    "steps": {
-      border: "border-2",
-      gradient: "bg-gradient-to-br from-accent/20 via-card to-card",
-      glow: "shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]",
-      ring: "ring-2 ring-accent/30"
-    }
+  const wrappers: Record<MetricCardProps['color'], { wrapper: string }> = {
+    'body-fat': { wrapper: 'bg-gradient-to-br from-metric-body-fat/60 via-metric-body-fat/20 to-transparent ring-1 ring-metric-body-fat/40' },
+    'weight': { wrapper: 'bg-gradient-to-br from-metric-weight/60 via-metric-weight/20 to-transparent ring-1 ring-metric-weight/40' },
+    'vo2max': { wrapper: 'bg-gradient-to-br from-metric-vo2max/60 via-metric-vo2max/20 to-transparent ring-1 ring-metric-vo2max/40' },
+    'row': { wrapper: 'bg-gradient-to-br from-metric-row/60 via-metric-row/20 to-transparent ring-1 ring-metric-row/40' },
+    'recovery': { wrapper: 'bg-gradient-to-br from-success/60 via-success/20 to-transparent ring-1 ring-success/40' },
+    'steps': { wrapper: 'bg-gradient-to-br from-accent/60 via-accent/20 to-transparent ring-1 ring-accent/40' },
   };
 
-  const style = colorStyles[color];
-
   return (
-    <Card 
+    <div
       className={cn(
-        "relative overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer backdrop-blur-sm",
-        style.border,
-        style.gradient,
-        style.glow,
-        style.ring
+        'relative rounded-xl p-[2px] transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer',
+        wrappers[color].wrapper
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4 relative z-10">
-        <div className="text-sm font-medium text-muted-foreground mb-2">
-          {title}
-        </div>
-        <div className="flex items-baseline gap-1 mb-2">
-          <span className="text-2xl font-bold text-foreground">
-            {value}
-          </span>
-          {unit && (
-            <span className="text-sm text-muted-foreground">
-              {unit}
+      <Card className="relative overflow-hidden bg-card rounded-[0.9rem] border-0 h-full">
+        <CardContent className="p-4 relative z-10">
+          <div className="text-sm font-medium text-muted-foreground mb-2">
+            {title}
+          </div>
+          <div className="flex items-baseline gap-1 mb-2">
+            <span className="text-2xl font-bold text-foreground">
+              {value}
             </span>
-          )}
-        </div>
-        <div className="flex items-center justify-between">
-          {subtitle && (
-            <span className="text-xs text-muted-foreground">
-              {subtitle}
-            </span>
-          )}
-          {change && (
-            <Badge 
-              variant={change.startsWith('-') ? "destructive" : "default"}
-              className="text-xs"
-            >
-              {change}
-            </Badge>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            {unit && (
+              <span className="text-sm text-muted-foreground">
+                {unit}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            {subtitle && (
+              <span className="text-xs text-muted-foreground">
+                {subtitle}
+              </span>
+            )}
+            {change && (
+              <Badge
+                variant={change.startsWith('-') ? 'destructive' : 'default'}
+                className="text-xs"
+              >
+                {change}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
