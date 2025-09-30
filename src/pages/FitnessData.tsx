@@ -42,10 +42,10 @@ export default function FitnessData() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
+    if (user && challengeGoals.length >= 0) {
       fetchDashboardData();
     }
-  }, [user, selectedFilter, challengeGoals]);
+  }, [user, challengeGoals]);
 
   const fetchChallengeGoals = async () => {
     try {
