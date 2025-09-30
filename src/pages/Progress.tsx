@@ -18,6 +18,10 @@ import { ProgressGallery } from "@/components/ui/progress-gallery";
 import { WeightTracker } from "@/components/weight/WeightTracker";
 import { GoalEditor } from "@/components/goals/GoalEditor";
 import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
+import { WeightProgressDetail } from "@/components/detail/WeightProgressDetail";
+import { BodyFatProgressDetail } from "@/components/detail/BodyFatProgressDetail";
+import { VO2MaxProgressDetail } from "@/components/detail/VO2MaxProgressDetail";
+import { PullUpsProgressDetail } from "@/components/detail/PullUpsProgressDetail";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -69,6 +73,8 @@ const ProgressPage = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [goalTypeFilter, setGoalTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  const [selectedPeriod, setSelectedPeriod] = useState("3M");
+  const [viewingDetailType, setViewingDetailType] = useState<string | null>(null);
 
   // Форма для добавления измерения
   const [measurementForm, setMeasurementForm] = useState({
@@ -447,6 +453,23 @@ const ProgressPage = () => {
     );
   }
 
+  if (viewingDetailType) {
+    const onBack = () => setViewingDetailType(null);
+    
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="space-y-8 pb-8">
+          <div className="px-4">
+            {viewingDetailType === 'weight' && <WeightProgressDetail onBack={onBack} />}
+            {viewingDetailType === 'body_fat' && <BodyFatProgressDetail onBack={onBack} />}
+            {viewingDetailType === 'vo2_max' && <VO2MaxProgressDetail onBack={onBack} />}
+            {viewingDetailType === 'pull_ups' && <PullUpsProgressDetail onBack={onBack} />}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="space-y-8 pb-8">
@@ -456,11 +479,10 @@ const ProgressPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  Мой прогресс
+                  Progress Tracking
                 </h1>
                 <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                  Отслеживайте свои достижения и добавляйте новые измерения. 
-                  <strong className="block sm:inline"> Для добавления показателей (подтягивания, отжимания и т.д.) сначала создайте цель, затем добавляйте измерения.</strong>
+                  Monitor your fitness journey and celebrate your achievements
                 </p>
               </div>
 
@@ -620,15 +642,81 @@ const ProgressPage = () => {
           </div>
         </div>
 
+        {/* Period Filter */}
+        <div className="px-4">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-sm text-muted-foreground flex items-center">Period:</span>
+            {["1M", "3M", "6M", "1Y"].map((period) => (
+              <Button
+                key={period}
+                variant={selectedPeriod === period ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedPeriod(period)}
+                className="h-8 px-3 text-xs"
+              >
+                {period}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* This Month's Highlights */}
+        <div className="px-4">
+          <Card className="bg-gradient-primary border-primary/30 text-primary-foreground mb-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Trophy className="h-5 w-5" />
+                This Month's Highlights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div 
+                  className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setViewingDetailType('weight')}
+                >
+                  <div className="text-xl md:text-2xl font-bold">
+                    {weightData?.change ? `${Math.abs(weightData.change).toFixed(1)}kg` : '5.2kg'}
+                  </div>
+                  <div className="text-xs md:text-sm opacity-90">Weight Lost</div>
+                </div>
+                <div 
+                  className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setViewingDetailType('body_fat')}
+                >
+                  <div className="text-xl md:text-2xl font-bold">
+                    {bodyFatData?.change ? `${Math.abs(bodyFatData.change)}%` : '2.1%'}
+                  </div>
+                  <div className="text-xs md:text-sm opacity-90">Body Fat Reduced</div>
+                </div>
+                <div 
+                  className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setViewingDetailType('pull_ups')}
+                >
+                  <div className="text-xl md:text-2xl font-bold">7</div>
+                  <div className="text-xs md:text-sm opacity-90">PRs Hit</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xl md:text-2xl font-bold">24</div>
+                  <div className="text-xs md:text-sm opacity-90">Workouts Completed</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="px-4 space-y-6">
           {/* Контроль веса и состава тела */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <WeightTracker />
+            <div onClick={() => setViewingDetailType('weight')} className="cursor-pointer">
+              <WeightTracker />
+            </div>
             
             {/* Карточка процента жира */}
             <FitnessCard 
               variant="gradient" 
-              className="p-6"
+              className="p-6 cursor-pointer hover-scale"
+              onClick={() => setViewingDetailType('body_fat')}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
