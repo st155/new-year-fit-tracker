@@ -129,6 +129,7 @@ export default function FitnessData() {
 
   const fetchFitnessData = async () => {
     try {
+      console.log('FitnessData: fetching metrics for user', user?.id);
       // Быстрое получение метрик без values
       const { data: userMetrics, error: metricsError } = await supabase
         .from('user_metrics')
@@ -139,6 +140,8 @@ export default function FitnessData() {
 
       if (metricsError) throw metricsError;
 
+      console.log('FitnessData: metrics found', userMetrics?.length || 0);
+
       // Сразу показываем метрики без значений
       setLoading(false);
 
@@ -148,6 +151,7 @@ export default function FitnessData() {
           .from('metric_values')
           .select('*')
           .eq('metric_id', metric.id)
+          .eq('user_id', user!.id)
           .order('measurement_date', { ascending: false })
           .limit(30);
 
