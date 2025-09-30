@@ -54,9 +54,8 @@ const ProgressPage = () => {
         .from('goals')
         .select('*')
         .eq('is_personal', false)
-        .eq('user_id', user.id)
         .in('challenge_id', participations.map(p => p.challenge_id));
-      console.log('[Progress] challenge goals for user:', goals);
+      console.log('[Progress] challenge goals (challenge-level):', goals);
 
       // Deduplicate by goal_name
       const uniqueGoals = Array.from(new Map((goals || []).map(g => [g.goal_name, g])).values());
