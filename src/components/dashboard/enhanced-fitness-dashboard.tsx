@@ -42,6 +42,10 @@ import {
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { WhoopMetrics } from '@/components/dashboard/whoop-metrics';
+import { WeightProgressDetail } from '@/components/detail/WeightProgressDetail';
+import { BodyFatProgressDetail } from '@/components/detail/BodyFatProgressDetail';
+import { VO2MaxProgressDetail } from '@/components/detail/VO2MaxProgressDetail';
+import { PullUpsProgressDetail } from '@/components/detail/PullUpsProgressDetail';
 
 interface MetricValue {
   id: string;
@@ -128,7 +132,7 @@ const CircularProgress = ({ value, max = 100, size = 120, strokeWidth = 12, labe
 };
 
 // Компонент метрики с трендом
-const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", children }: {
+const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(--primary))", onClick, children }: {
   title: string;
   value: number | null;
   unit?: string;
@@ -136,6 +140,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   target?: number;
   icon: React.ReactNode;
   color?: string;
+  onClick?: () => void;
   children?: React.ReactNode;
 }) => {
   const getTrendIcon = () => {
@@ -151,7 +156,7 @@ const MetricCard = ({ title, value, unit, trend, target, icon, color = "hsl(var(
   };
 
   return (
-    <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+    <Card className={`relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${onClick ? 'cursor-pointer hover-scale' : ''}`} onClick={onClick}>
       <div className="absolute inset-0 bg-gradient-to-br from-transparent to-background/5 group-hover:to-background/10 transition-all duration-300" />
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -257,6 +262,7 @@ export const EnhancedFitnessDashboard = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [trends, setTrends] = useState<{ [key: string]: number }>({});
   const [aggregatedStats, setAggregatedStats] = useState<any>(null);
+  const [viewingDetailType, setViewingDetailType] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -659,6 +665,25 @@ export const EnhancedFitnessDashboard = () => {
     }
   };
 
+  // Handle detail views
+  if (viewingDetailType) {
+    const onBack = () => setViewingDetailType(null);
+    
+    return (
+      <div className="min-h-screen bg-gradient-subtle">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {viewingDetailType === 'weight' && <WeightProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'body_fat' && <BodyFatProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'vo2_max' && <VO2MaxProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'recovery' && <VO2MaxProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'sleep' && <VO2MaxProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'strain' && <PullUpsProgressDetail onBack={onBack} />}
+          {viewingDetailType === 'steps' && <VO2MaxProgressDetail onBack={onBack} />}
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -804,7 +829,7 @@ export const EnhancedFitnessDashboard = () => {
           <TabsContent value="overview" className="space-y-8">
             {/* Главные показатели с круговыми прогресс-барами */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('recovery')}>
                 <CircularProgress
                   value={dashboardStats.recovery || 0}
                   max={100}
@@ -827,7 +852,7 @@ export const EnhancedFitnessDashboard = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('sleep')}>
                 <CircularProgress
                   value={dashboardStats.sleep || 0}
                   max={100}
@@ -850,7 +875,7 @@ export const EnhancedFitnessDashboard = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('strain')}>
                 <CircularProgress
                   value={dashboardStats.strain || 0}
                   max={20}
@@ -873,7 +898,7 @@ export const EnhancedFitnessDashboard = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 text-center">
+              <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('steps')}>
                 <CircularProgress
                   value={
                     viewPeriod === 'day' 
@@ -924,6 +949,7 @@ export const EnhancedFitnessDashboard = () => {
                 unit="kg"
                 icon={<Target className="h-4 w-4" />}
                 color="hsl(142, 76%, 36%)"
+                onClick={() => setViewingDetailType('weight')}
               />
 
               <MetricCard
@@ -933,6 +959,7 @@ export const EnhancedFitnessDashboard = () => {
                 target={12}
                 icon={<BarChart3 className="h-4 w-4" />}
                 color="hsl(270, 95%, 60%)"
+                onClick={() => setViewingDetailType('body_fat')}
               />
             </div>
 
@@ -1048,23 +1075,57 @@ export const EnhancedFitnessDashboard = () => {
           </TabsContent>
 
           <TabsContent value="composition" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('weight')}>
                 <CardHeader>
-                  <CardTitle>Body Composition</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-green-500" />
+                    Weight Tracking
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <span>Weight</span>
-                       <span className="font-bold">{dashboardStats.weight ? `${dashboardStats.weight.toFixed(1)} kg` : '—'}</span>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-foreground">
+                        {dashboardStats.weight ? `${dashboardStats.weight.toFixed(1)}` : '—'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">kg</div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>Body Fat</span>
-                      <span className="font-bold">{dashboardStats.bodyFat ? `${dashboardStats.bodyFat.toFixed(1)}%` : '—'}</span>
+                    {trends['Вес'] && (
+                      <div className="flex items-center justify-center gap-2">
+                        {trends['Вес'] > 0 ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-green-500" />}
+                        <span className={`text-sm font-medium ${trends['Вес'] > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {trends['Вес'] > 0 ? '+' : ''}{trends['Вес'].toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('body_fat')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-purple-500" />
+                    Body Fat %
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-foreground">
+                        {dashboardStats.bodyFat ? `${dashboardStats.bodyFat.toFixed(1)}` : '—'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">%</div>
                     </div>
                     {dashboardStats.bodyFat && (
-                      <Progress value={dashboardStats.bodyFat} className="h-3" />
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span>Progress to 12%</span>
+                          <span>{Math.round((12 / dashboardStats.bodyFat) * 100)}%</span>
+                        </div>
+                        <Progress value={(12 / dashboardStats.bodyFat) * 100} className="h-2" />
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -1072,21 +1133,81 @@ export const EnhancedFitnessDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Body Composition Goals</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-blue-500" />
+                    Composition Goals
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="text-sm">
-                      <div className="flex justify-between mb-1">
-                        <span>Target Fat</span>
-                        <span>12%</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Target Weight</span>
+                        <span className="font-medium">70 kg</span>
                       </div>
-                      <Progress value={dashboardStats.bodyFat ? (12 / dashboardStats.bodyFat) * 100 : 0} className="h-2" />
+                      <div className="flex justify-between text-sm">
+                        <span>Target Body Fat</span>
+                        <span className="font-medium">12%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Target Muscle Mass</span>
+                        <span className="font-medium">65 kg</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Body Composition Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Body Composition Trends</CardTitle>
+                <CardDescription>Track your weight and body fat percentage over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData.filter(d => d.weight || d.bodyFat)}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="dateFormatted" 
+                        tick={{ fontSize: 12 }}
+                        stroke="hsl(var(--muted-foreground))"
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }}
+                        stroke="hsl(var(--muted-foreground))"
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--popover))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="weight" 
+                        stroke="hsl(142, 76%, 36%)" 
+                        strokeWidth={3}
+                        dot={{ fill: 'hsl(142, 76%, 36%)', strokeWidth: 2, r: 4 }}
+                        name="Weight (kg)"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="bodyFat" 
+                        stroke="hsl(270, 95%, 60%)" 
+                        strokeWidth={3}
+                        dot={{ fill: 'hsl(270, 95%, 60%)', strokeWidth: 2, r: 4 }}
+                        name="Body Fat (%)"
+                        yAxisId="right"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
