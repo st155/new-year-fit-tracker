@@ -1,8 +1,12 @@
+import { useState, useEffect } from "react";
 import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { CommentDialog } from "./CommentDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ActivityCardProps {
   activity: {
@@ -34,9 +38,114 @@ const borderColors = [
   { color: "#10B981", shadow: "rgba(16, 185, 129, 0.6)" }, // Green (repeat)
 ];
 
-export function ActivityCard({ activity, index }: ActivityCardProps) {
+export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCardProps) {
   const profiles = activity.profiles;
   const borderStyle = borderColors[index % borderColors.length];
+  const { toast } = useToast();
+  
+  const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
+  const [userLiked, setUserLiked] = useState(false);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchLikesAndComments();
+  }, [activity.id]);
+
+  const fetchLikesAndComments = async () => {
+    try {
+      // Get like count
+      const { count: likes } = await supabase
+        .from('activity_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('activity_id', activity.id);
+
+      setLikeCount(likes || 0);
+
+      // Get comment count
+      const { count: comments } = await supabase
+        .from('activity_comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('activity_id', activity.id);
+
+      setCommentCount(comments || 0);
+
+      // Check if user liked
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: liked } = await supabase
+          .from('activity_likes')
+          .select('id')
+          .eq('activity_id', activity.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        setUserLiked(!!liked);
+      }
+    } catch (error) {
+      console.error('Error fetching likes and comments:', error);
+    }
+  };
+
+  const handleLike = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Требуется авторизация",
+          description: "Войдите в систему, чтобы ставить лайки",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (userLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from('activity_likes')
+          .delete()
+          .eq('activity_id', activity.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setUserLiked(false);
+        setLikeCount(prev => Math.max(0, prev - 1));
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('activity_likes')
+          .insert({
+            activity_id: activity.id,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+
+        setUserLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
+
+      onActivityUpdate();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось изменить статус лайка",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCommentUpdate = () => {
+    fetchLikesAndComments();
+    onActivityUpdate();
+  };
   
   // Get activity icon and color based on action type or text
   const getActivityIconAndColor = () => {
@@ -139,8 +248,6 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   };
 
   const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
-  const likeCount = activity.like_count || 15;
-  const commentCount = activity.comment_count || 3;
   
   // Format time
   const getRelativeTime = () => {
@@ -192,18 +299,37 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
 
         {/* Likes & Comments */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-1">
-            <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+          <button
+            onClick={handleLike}
+            disabled={loading}
+            className="flex items-center gap-1 transition-all hover:scale-110"
+          >
+            <Heart 
+              className={cn(
+                "h-4 w-4 transition-colors",
+                userLiked ? "fill-red-500 text-red-500" : "text-gray-400"
+              )} 
+            />
             <span className="text-xs font-medium text-white">{likeCount}</span>
-          </div>
-          {commentCount > 0 && (
-            <div className="flex items-center gap-1">
+          </button>
+          {commentCount > 0 || true && (
+            <button
+              onClick={() => setCommentDialogOpen(true)}
+              className="flex items-center gap-1 transition-all hover:scale-110"
+            >
               <MessageCircle className="h-4 w-4 text-gray-400" />
               <span className="text-xs font-medium text-white">{commentCount}</span>
-            </div>
+            </button>
           )}
         </div>
       </div>
+
+      <CommentDialog
+        activityId={activity.id}
+        open={commentDialogOpen}
+        onOpenChange={setCommentDialogOpen}
+        onUpdate={handleCommentUpdate}
+      />
     </div>
   );
 }
