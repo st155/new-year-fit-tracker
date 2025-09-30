@@ -125,148 +125,230 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="w-fit">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
-          </Button>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-red-500" />
-            Прогресс VO2Max
-          </CardTitle>
+    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={onBack}
+          className="rounded-full"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Прогресс VO2Max</h1>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Текущие показатели */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {currentVO2Max ? `${currentVO2Max.toFixed(1)}` : '—'}
-              {currentVO2Max && <span className="text-sm ml-1">мл/кг/мин</span>}
-            </div>
-            <div className="text-sm text-muted-foreground">Текущий VO2Max</div>
-            {currentVO2Max && (
-              <div className={`text-xs mt-1 ${getVO2MaxCategory(currentVO2Max).color}`}>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div 
+          className="p-5 rounded-2xl border-2 relative overflow-hidden col-span-2"
+          style={{
+            background: "rgba(239, 68, 68, 0.1)",
+            borderColor: "#EF4444",
+            boxShadow: "0 0 20px rgba(239, 68, 68, 0.3)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Текущий VO2Max</div>
+          <div className="text-4xl font-bold text-[#EF4444]">
+            {currentVO2Max ? `${currentVO2Max.toFixed(1)}` : '—'}
+          </div>
+          {currentVO2Max && (
+            <>
+              <div className="text-sm text-muted-foreground">мл/кг/мин</div>
+              <div className={`text-xs mt-1 font-semibold ${getVO2MaxCategory(currentVO2Max).color}`}>
                 {getVO2MaxCategory(currentVO2Max).label}
               </div>
-            )}
-          </div>
-          
-          <div className="p-4 bg-muted/30 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-2 text-lg font-semibold">
-              {weeklyChange !== null ? (
-                <>
-                  {getTrendIcon(weeklyChange)}
+            </>
+          )}
+        </div>
+
+        <div 
+          className="p-5 rounded-2xl border-2"
+          style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="flex items-center gap-2 text-2xl font-bold">
+            {weeklyChange !== null ? (
+              <>
+                {getTrendIcon(weeklyChange)}
+                <span className={weeklyChange >= 0 ? 'text-green-500' : 'text-red-500'}>
                   {weeklyChange > 0 ? '+' : ''}{weeklyChange.toFixed(1)}
-                </>
-              ) : '—'}
-            </div>
-            <div className="text-sm text-muted-foreground">За неделю</div>
-          </div>
-          
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {vo2maxData.length}
-            </div>
-            <div className="text-sm text-muted-foreground">Измерений</div>
+                </span>
+              </>
+            ) : '—'}
           </div>
         </div>
 
-        {/* График */}
-        {vo2maxData.length > 0 ? (
+        <div 
+          className="p-5 rounded-2xl border-2"
+          style={{
+            background: "rgba(59, 130, 246, 0.1)",
+            borderColor: "#3B82F6",
+            boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Измерений</div>
+          <div className="text-3xl font-bold text-[#3B82F6]">
+            {vo2maxData.length}
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      {vo2maxData.length > 0 ? (
+        <div 
+          className="p-4 rounded-2xl border-2 mb-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={vo2maxData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <LineChart data={vo2maxData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="vo2Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#EF4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="rgba(255, 255, 255, 0.1)" 
+                  vertical={false}
+                />
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={formatTooltipDate}
-                  className="text-xs"
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
                 />
                 <YAxis 
                   domain={['dataMin - 2', 'dataMax + 2']}
-                  tickFormatter={(value) => `${value}`}
-                  className="text-xs"
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
                 />
                 <Tooltip 
+                  contentStyle={{
+                    background: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '8px 12px'
+                  }}
+                  labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+                  itemStyle={{ color: '#EF4444', fontSize: 14, fontWeight: 'bold' }}
                   labelFormatter={(value) => formatTooltipDate(value as string)}
                   formatter={(value: number) => [`${value.toFixed(1)} мл/кг/мин`, 'VO2Max']}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="vo2max" 
-                  stroke="#ef4444" 
+                  stroke="#EF4444" 
                   strokeWidth={3}
-                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#ef4444', strokeWidth: 2 }}
+                  fill="url(#vo2Gradient)"
+                  dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Нет данных VO2Max</p>
-            <p className="text-sm">Загрузите скриншоты из Whoop для отслеживания прогресса</p>
-          </div>
-        )}
-
-        {/* История изменений */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">История измерений</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {vo2maxData.slice(-10).reverse().map((item, index) => (
-              <div key={item.date} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                <div>
-                  <div className="font-medium">{item.vo2max.toFixed(1)} мл/кг/мин</div>
-                  <div className="text-sm text-muted-foreground">
-                    {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
-                  </div>
-                  <div className={`text-xs ${getVO2MaxCategory(item.vo2max).color}`}>
-                    {getVO2MaxCategory(item.vo2max).label}
-                  </div>
-                </div>
-                {item.change !== 0 && (
-                  <div className="flex items-center gap-1 text-sm">
-                    {getTrendIcon(item.change)}
-                    <span className={item.change > 0 ? 'text-green-600' : 'text-red-600'}>
-                      {item.change > 0 ? '+' : ''}{item.change.toFixed(1)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
+      ) : (
+        <div 
+          className="text-center py-12 rounded-2xl border-2 mb-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <Heart className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p className="text-muted-foreground">Нет данных VO2Max</p>
+          <p className="text-sm text-muted-foreground">Загрузите скриншоты из Whoop для отслеживания прогресса</p>
+        </div>
+      )}
 
-        {/* Информация о VO2Max */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-            📊 Что такое VO2Max?
-          </h4>
-          <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-            <p>
-              VO2Max — максимальное потребление кислорода, ключевой показатель сердечно-сосудистой выносливости.
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+      {/* History */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">История измерений</h3>
+        <div className="space-y-2">
+          {vo2maxData.slice(-10).reverse().map((item) => (
+            <div 
+              key={item.date} 
+              className="flex items-center justify-between p-4 rounded-xl border"
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                borderColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
               <div>
-                <strong>Превосходный:</strong> 60+ мл/кг/мин
+                <div className="font-semibold text-foreground text-lg">
+                  {item.vo2max.toFixed(1)} мл/кг/мин
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                </div>
+                <div className={`text-xs font-semibold ${getVO2MaxCategory(item.vo2max).color}`}>
+                  {getVO2MaxCategory(item.vo2max).label}
+                </div>
               </div>
-              <div>
-                <strong>Отличный:</strong> 50-59 мл/кг/мин
-              </div>
-              <div>
-                <strong>Хороший:</strong> 40-49 мл/кг/мин
-              </div>
-              <div>
-                <strong>Удовлетв.:</strong> 30-39 мл/кг/мин
-              </div>
+              {item.change !== 0 && (
+                <div 
+                  className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold"
+                  style={{
+                    background: item.change > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: item.change > 0 ? '#22C55E' : '#EF4444'
+                  }}
+                >
+                  {getTrendIcon(item.change)}
+                  <span>
+                    {item.change > 0 ? '+' : ''}{item.change.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Info */}
+      <div 
+        className="p-5 rounded-2xl border-2"
+        style={{
+          background: "rgba(59, 130, 246, 0.1)",
+          borderColor: "#3B82F6",
+        }}
+      >
+        <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+          📊 Что такое VO2Max?
+        </h4>
+        <div className="text-sm text-muted-foreground space-y-2">
+          <p>
+            VO2Max — максимальное потребление кислорода, ключевой показатель сердечно-сосудистой выносливости.
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <strong className="text-foreground">Превосходный:</strong> 60+ мл/кг/мин
+            </div>
+            <div>
+              <strong className="text-foreground">Отличный:</strong> 50-59 мл/кг/мин
+            </div>
+            <div>
+              <strong className="text-foreground">Хороший:</strong> 40-49 мл/кг/мин
+            </div>
+            <div>
+              <strong className="text-foreground">Удовлетв.:</strong> 30-39 мл/кг/мин
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

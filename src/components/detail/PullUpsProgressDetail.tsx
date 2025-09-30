@@ -139,84 +139,147 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} className="w-fit">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
-          </Button>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            Прогресс подтягиваний
-          </CardTitle>
+    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={onBack}
+          className="rounded-full"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Прогресс подтягиваний</h1>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Текущие показатели */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-primary/10 rounded-lg text-center">
-            <div className={`text-2xl font-bold ${currentPullUps ? getProgressColor(currentPullUps, targetPullUps) : 'text-primary'}`}>
-              {currentPullUps || '—'}
-            </div>
-            <div className="text-sm text-muted-foreground">Текущий максимум</div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        {/* Current Max */}
+        <div 
+          className="p-5 rounded-2xl border-2 relative overflow-hidden"
+          style={{
+            background: "rgba(168, 85, 247, 0.1)",
+            borderColor: "#A855F7",
+            boxShadow: "0 0 20px rgba(168, 85, 247, 0.3)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Текущий максимум</div>
+          <div className="text-4xl font-bold text-[#A855F7]">
+            {currentPullUps || '—'}
           </div>
-          
-          <div className="p-4 bg-muted/30 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-2 text-lg font-semibold">
-              {weeklyChange !== null ? (
-                <>
-                  {getTrendIcon(weeklyChange)}
+        </div>
+
+        {/* Weekly Change */}
+        <div 
+          className="p-5 rounded-2xl border-2"
+          style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="flex items-center gap-2 text-2xl font-bold">
+            {weeklyChange !== null ? (
+              <>
+                {getTrendIcon(weeklyChange)}
+                <span className={weeklyChange >= 0 ? 'text-green-500' : 'text-red-500'}>
                   {weeklyChange > 0 ? '+' : ''}{weeklyChange}
-                </>
-              ) : '—'}
-            </div>
-            <div className="text-sm text-muted-foreground">За неделю</div>
-          </div>
-          
-          <div className="p-4 bg-success/10 rounded-lg text-center">
-            <div className="text-lg font-bold text-success">{targetPullUps}</div>
-            <div className="text-sm text-muted-foreground">Цель</div>
-          </div>
-
-          <div className="p-4 bg-accent/10 rounded-lg text-center">
-            <div className="text-lg font-bold text-accent">
-              {getProgressPercentage().toFixed(0)}%
-            </div>
-            <div className="text-sm text-muted-foreground">Прогресс</div>
+                </span>
+              </>
+            ) : '—'}
           </div>
         </div>
 
-        {/* График */}
-        {pullUpsData.length > 0 ? (
+        {/* Target */}
+        <div 
+          className="p-5 rounded-2xl border-2"
+          style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Цель</div>
+          <div className="text-3xl font-bold text-foreground">{targetPullUps}</div>
+        </div>
+
+        {/* Progress */}
+        <div 
+          className="p-5 rounded-2xl border-2"
+          style={{
+            background: "rgba(255, 107, 44, 0.1)",
+            borderColor: "#FF6B2C",
+            boxShadow: "0 0 20px rgba(255, 107, 44, 0.3)",
+          }}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Прогресс</div>
+          <div className="text-3xl font-bold text-[#FF6B2C]">
+            {getProgressPercentage().toFixed(0)}%
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      {pullUpsData.length > 0 ? (
+        <div 
+          className="p-4 rounded-2xl border-2 mb-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pullUpsData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <BarChart data={pullUpsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="pullupGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06B6D4" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#06B6D4" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="rgba(255, 255, 255, 0.1)" 
+                  vertical={false}
+                />
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={formatTooltipDate}
-                  className="text-xs"
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
                 />
                 <YAxis 
-                  domain={[0, 'dataMax + 2']}
-                  tickFormatter={(value) => value.toString()}
-                  className="text-xs"
+                  domain={[0, Math.max(targetPullUps + 2, Math.max(...pullUpsData.map(d => d.pullUps)) + 2)]}
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
                 />
                 <Tooltip 
+                  contentStyle={{
+                    background: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '8px 12px'
+                  }}
+                  labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+                  itemStyle={{ color: '#06B6D4', fontSize: 14, fontWeight: 'bold' }}
                   labelFormatter={(value) => formatTooltipDate(value as string)}
                   formatter={(value: number) => [value, 'Подтягивания']}
                 />
                 <Bar 
                   dataKey="pullUps" 
-                  fill="hsl(var(--primary))" 
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#pullupGradient)"
+                  radius={[8, 8, 0, 0]}
+                  maxBarSize={40}
                 />
-                {/* Линия цели */}
+                {/* Target line */}
                 <Line 
                   type="monotone" 
                   dataKey={() => targetPullUps}
-                  stroke="hsl(var(--success))" 
+                  stroke="#FF6B2C" 
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={false}
@@ -224,41 +287,60 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        ) : (
-          <div className="text-center py-12 text-muted-foreground">
-            <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Нет данных о подтягиваниях за последние 30 дней</p>
-            <p className="text-sm">Добавьте измерения для отслеживания прогресса</p>
-          </div>
-        )}
-
-        {/* История изменений */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">История тренировок</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {pullUpsData.slice(-10).reverse().map((item, index) => (
-              <div key={item.date} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                <div>
-                  <div className={`font-medium ${getProgressColor(item.pullUps, targetPullUps)}`}>
-                    {item.pullUps} подтягиваний
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
-                  </div>
-                </div>
-                {item.change !== 0 && (
-                  <div className="flex items-center gap-1 text-sm">
-                    {getTrendIcon(item.change)}
-                    <span className={item.change > 0 ? 'text-green-600' : 'text-red-600'}>
-                      {item.change > 0 ? '+' : ''}{item.change}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <div 
+          className="text-center py-12 rounded-2xl border-2 mb-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p className="text-muted-foreground">Нет данных о подтягиваниях</p>
+          <p className="text-sm text-muted-foreground">Добавьте измерения для отслеживания прогресса</p>
+        </div>
+      )}
+
+      {/* History */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">История тренировок</h3>
+        <div className="space-y-2">
+          {pullUpsData.slice(-10).reverse().map((item) => (
+            <div 
+              key={item.date} 
+              className="flex items-center justify-between p-4 rounded-xl border"
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                borderColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <div>
+                <div className="font-semibold text-foreground text-lg">
+                  {item.pullUps} подтягиваний
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                </div>
+              </div>
+              {item.change !== 0 && (
+                <div 
+                  className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold"
+                  style={{
+                    background: item.change > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: item.change > 0 ? '#22C55E' : '#EF4444'
+                  }}
+                >
+                  {getTrendIcon(item.change)}
+                  <span>
+                    {item.change > 0 ? '+' : ''}{item.change}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
