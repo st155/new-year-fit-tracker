@@ -1,5 +1,8 @@
-import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, Footprints, Zap } from "lucide-react";
+import { Activity, Heart, Moon, Dumbbell, TrendingUp, Bike, Waves, Mountain, Footprints, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface ActivityCardProps {
   activity: {
@@ -21,35 +24,41 @@ interface ActivityCardProps {
   onActivityUpdate: () => void;
 }
 
-const getActivityIcon = (activity: ActivityCardProps["activity"]) => {
+// Определяем цвет рамки карточки в зависимости от типа активности
+const getActivityBorderColor = (activity: ActivityCardProps["activity"]) => {
   const meta: any = activity.metadata || {};
   const text = (activity.action_text || '').toLowerCase();
-  const type = (meta.workout_type || '').toLowerCase();
   const metricName = (meta.metric_name || '').toLowerCase();
 
-  const has = (s: string) => text.includes(s) || type.includes(s) || metricName.includes(s);
+  const has = (s: string) => text.includes(s) || metricName.includes(s);
 
-  // Sleep / Recovery first (они часто приходят как metric_values)
-  if (has('sleep') || /slept|сон/i.test(text)) return <Moon className="h-8 w-8" strokeWidth={1.5} />;
-  if (has('recovery') || /recovered|восстанов/i.test(text)) return <Heart className="h-8 w-8" strokeWidth={1.5} />;
-
-  // Workouts
-  if (activity.action_type === 'workouts' || has('workout')) {
-    if (has('run') || has('бег')) return <Footprints className="h-8 w-8" strokeWidth={1.5} />;
-    if (has('swim') || has('плав')) return <Waves className="h-8 w-8" strokeWidth={1.5} />;
-    if (has('bike') || has('велос') || has('cycle')) return <Bike className="h-8 w-8" strokeWidth={1.5} />;
-    if (has('hike') || has('walk') || has('ходьб') || has('поход')) return <Mountain className="h-8 w-8" strokeWidth={1.5} />;
-    if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг')) return <Dumbbell className="h-8 w-8" strokeWidth={1.5} />;
-    return <Dumbbell className="h-8 w-8" strokeWidth={1.5} />; // дефолт для тренировок
+  // Зеленый для достижений, рекордов, целей
+  if (has('record') || has('рекорд') || has('достиж') || has('achievement') || has('goal') || has('цел')) {
+    return 'border-green-500';
   }
 
-  // Метрические значения (strain и др.)
-  if (activity.action_type === 'metric_values') {
-    if (has('strain')) return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
-    return <Activity className="h-8 w-8" strokeWidth={1.5} />;
+  // Оранжевый для бега и кардио
+  if (has('run') || has('бег') || has('bike') || has('велос') || has('cycle')) {
+    return 'border-orange-500';
   }
 
-  return <Activity className="h-8 w-8" strokeWidth={1.5} />;
+  // Фиолетовый для силовых тренировок
+  if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг') || activity.action_type === 'body_composition') {
+    return 'border-purple-500';
+  }
+
+  // Красный для strain и интенсивности
+  if (has('strain')) {
+    return 'border-red-500';
+  }
+
+  // Синий для сна
+  if (has('sleep') || has('сон') || has('slept')) {
+    return 'border-blue-500';
+  }
+
+  // Дефолт - зеленый
+  return 'border-green-500';
 };
 
 const formatDistance = (km?: number | null, swim = false) => {
@@ -184,22 +193,74 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
 
 
 export function ActivityCard({ activity }: ActivityCardProps) {
-  const text = buildDisplayText(activity);
-  const icon = getActivityIcon(activity);
+  const borderColor = getActivityBorderColor(activity);
+  const profiles = activity.profiles;
+  
+  // Получаем инициалы пользователя
+  const getUserInitials = () => {
+    if (profiles?.full_name) {
+      const parts = profiles.full_name.split(' ');
+      if (parts.length >= 2) {
+        return parts[0].charAt(0) + parts[1].charAt(0);
+      }
+      return parts[0].substring(0, 2);
+    }
+    if (profiles?.username) {
+      return profiles.username.substring(0, 2).toUpperCase();
+    }
+    return 'ST';
+  };
+
+  // Форматируем время
+  const getRelativeTime = () => {
+    try {
+      return formatDistanceToNow(new Date(activity.created_at), { 
+        addSuffix: true, 
+        locale: ru 
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
+  const likeCount = activity.like_count || 0;
+  const commentCount = activity.comment_count || 0;
   
   return (
-    <div className="relative rounded-3xl p-[2px] bg-gradient-to-r from-primary via-primary to-success overflow-hidden group hover:scale-[1.02] transition-all duration-300 animate-fade-in">
-      <div className="relative rounded-3xl bg-card/90 backdrop-blur-sm p-6 h-full">
-        <div className="flex items-center gap-4">
-          <div className="text-primary shrink-0">
-            {icon}
+    <div className={cn(
+      "relative rounded-3xl border-[3px] bg-card p-6 transition-all duration-300 animate-fade-in",
+      borderColor
+    )}>
+      <div className="flex items-start gap-4">
+        <Avatar className={cn("h-14 w-14 border-[3px]", borderColor)}>
+          <AvatarImage src={profiles?.avatar_url || undefined} />
+          <AvatarFallback className="text-lg font-semibold">
+            {getUserInitials()}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xl font-bold mb-1">{displayName}</h3>
+          <p className="text-base text-foreground/90 mb-3">
+            {activity.action_text}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {getRelativeTime()}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
+            <span className="text-sm font-medium">{likeCount}</span>
           </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="text-lg font-semibold text-foreground leading-tight">
-              {text}
-            </p>
-          </div>
+          {commentCount > 0 && (
+            <div className="flex items-center gap-1">
+              <MessageCircle className="h-5 w-5" />
+              <span className="text-sm font-medium">{commentCount}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
