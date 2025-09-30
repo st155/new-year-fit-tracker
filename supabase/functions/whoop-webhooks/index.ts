@@ -257,14 +257,21 @@ async function saveRecoveryData(data: any, userId: string, whoopSleepId: string)
       const today = new Date().toISOString().split('T')[0];
       
       if (metric.metric_name === 'Recovery Score' && data.score !== undefined) {
-        await supabase.from('metric_values').upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: data.score,
-          measurement_date: today,
-          external_id: whoopSleepId,
-          source_data: { recovery_data: data, source: 'whoop_webhook' }
-        });
+        const { error } = await supabase.from('metric_values').upsert(
+          {
+            user_id: userId,
+            metric_id: metricId,
+            value: data.score,
+            measurement_date: today,
+            external_id: whoopSleepId,
+            source_data: { recovery_data: data, source: 'whoop_webhook' }
+          },
+          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+        );
+        
+        if (error && error.code !== '23505') {
+          console.error('Error saving recovery score:', error);
+        }
       }
       
       // Можно добавить больше метрик из данных восстановления
@@ -327,25 +334,39 @@ async function saveSleepData(data: any, userId: string, whoopSleepId: string) {
       // Сохраняем значения сна
       if (metric.metric_name === 'Sleep Duration' && data.score?.sleep_duration_score !== undefined) {
         const durationHours = data.score.sleep_duration_score / 100 * 8; // примерный расчет
-        await supabase.from('metric_values').upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: durationHours,
-          measurement_date: sleepDate,
-          external_id: whoopSleepId,
-          source_data: { sleep_data: data, source: 'whoop_webhook' }
-        });
+        const { error } = await supabase.from('metric_values').upsert(
+          {
+            user_id: userId,
+            metric_id: metricId,
+            value: durationHours,
+            measurement_date: sleepDate,
+            external_id: whoopSleepId,
+            source_data: { sleep_data: data, source: 'whoop_webhook' }
+          },
+          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+        );
+        
+        if (error && error.code !== '23505') {
+          console.error('Error saving sleep duration:', error);
+        }
       }
 
       if (metric.metric_name === 'Sleep Efficiency' && data.score?.sleep_efficiency_percentage !== undefined) {
-        await supabase.from('metric_values').upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: data.score.sleep_efficiency_percentage,
-          measurement_date: sleepDate,
-          external_id: whoopSleepId,
-          source_data: { sleep_data: data, source: 'whoop_webhook' }
-        });
+        const { error } = await supabase.from('metric_values').upsert(
+          {
+            user_id: userId,
+            metric_id: metricId,
+            value: data.score.sleep_efficiency_percentage,
+            measurement_date: sleepDate,
+            external_id: whoopSleepId,
+            source_data: { sleep_data: data, source: 'whoop_webhook' }
+          },
+          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+        );
+        
+        if (error && error.code !== '23505') {
+          console.error('Error saving sleep efficiency:', error);
+        }
       }
     }
 
@@ -435,14 +456,21 @@ async function saveWorkoutData(data: any, userId: string, whoopWorkoutId: string
       }
 
       if (value !== null && value !== undefined) {
-        await supabase.from('metric_values').upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: value,
-          measurement_date: workoutDate,
-          external_id: whoopWorkoutId,
-          source_data: { workout_data: data, source: 'whoop_webhook' }
-        });
+        const { error } = await supabase.from('metric_values').upsert(
+          {
+            user_id: userId,
+            metric_id: metricId,
+            value: value,
+            measurement_date: workoutDate,
+            external_id: whoopWorkoutId,
+            source_data: { workout_data: data, source: 'whoop_webhook' }
+          },
+          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+        );
+        
+        if (error && error.code !== '23505') { // Ignore duplicate key errors
+          console.error(`Error saving ${metric.metric_name}:`, error);
+        }
       }
     }
 
@@ -450,19 +478,26 @@ async function saveWorkoutData(data: any, userId: string, whoopWorkoutId: string
     const workoutDate = data.end ? new Date(data.end).toISOString() : new Date().toISOString();
     const startDate = data.start ? new Date(data.start).toISOString() : workoutDate;
     
-    await supabase.from('workouts').upsert({
-      user_id: userId,
-      external_id: whoopWorkoutId,
-      workout_type: data.sport_name || 'Unknown',
-      start_time: startDate,
-      end_time: workoutDate,
-      duration_minutes: data.score?.strain ? Math.round(data.score.strain * 10) : null,
-      calories_burned: data.score?.kilojoule || null,
-      heart_rate_avg: data.score?.average_heart_rate || null,
-      heart_rate_max: data.score?.max_heart_rate || null,
-      source: 'whoop',
-      source_data: data
-    });
+    const { error: workoutError } = await supabase.from('workouts').upsert(
+      {
+        user_id: userId,
+        external_id: whoopWorkoutId,
+        workout_type: data.sport_name || 'Unknown',
+        start_time: startDate,
+        end_time: workoutDate,
+        duration_minutes: data.score?.strain ? Math.round(data.score.strain * 10) : null,
+        calories_burned: data.score?.kilojoule || null,
+        heart_rate_avg: data.score?.average_heart_rate || null,
+        heart_rate_max: data.score?.max_heart_rate || null,
+        source: 'whoop',
+        source_data: data
+      },
+      { onConflict: 'user_id,external_id', ignoreDuplicates: false }
+    );
+    
+    if (workoutError && workoutError.code !== '23505') {
+      console.error('Error saving workout:', workoutError);
+    }
 
     console.log('Workout data saved successfully');
   } catch (error) {

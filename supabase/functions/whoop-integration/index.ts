@@ -319,15 +319,18 @@ async function handleCallback(req: Request, code?: string | null, state?: string
         // Сохраняем связь whoop_user_id с нашим пользователем
         const { error: mappingError } = await supabase
           .from('whoop_user_mapping')
-          .upsert({
-            user_id: mapping.user_id,
-            whoop_user_id: whoopUserInfo.user_id.toString(),
-            updated_at: new Date().toISOString()
-          });
+          .upsert(
+            {
+              user_id: mapping.user_id,
+              whoop_user_id: whoopUserInfo.user_id.toString(),
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'user_id', ignoreDuplicates: false }
+          );
           
-        if (mappingError) {
+        if (mappingError && mappingError.code !== '23505') {
           console.error('Error saving Whoop user mapping:', mappingError);
-        } else {
+        } else if (!mappingError) {
           console.log(`Whoop user mapping saved: ${whoopUserInfo.user_id} -> ${mapping.user_id}`);
         }
       }
