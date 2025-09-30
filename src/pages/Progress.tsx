@@ -182,37 +182,40 @@ const ProgressPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6">
+    <div className="min-h-screen pb-24 px-4 pt-4">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-foreground mb-1">
           Progress Tracking
         </h1>
         <p className="text-muted-foreground text-sm">
-          Your goals at be in an cectorrredting paiking.
+          Monitor your fitness journey and celebrate your achievements
         </p>
       </div>
 
       {/* Period Filter */}
-      <div className="flex justify-center gap-3 mb-8">
-        {["1M", "3M", "6M"].map((period) => (
-          <button
-            key={period}
-            onClick={() => setSelectedPeriod(period)}
-            className={cn(
-              "px-8 py-2 rounded-full text-sm font-medium transition-all duration-300",
-              selectedPeriod === period
-                ? "bg-gradient-secondary text-white shadow-glow-secondary"
-                : "glass text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {period}
-          </button>
-        ))}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm text-muted-foreground">Period:</span>
+          {["1M", "3M", "6M", "1Y"].map((period) => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={cn(
+                "px-6 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
+                selectedPeriod === period
+                  ? "bg-[#3B82F6] text-white"
+                  : "glass text-muted-foreground hover:text-foreground border border-border/50"
+              )}
+            >
+              {period}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      {/* Metrics Grid - 2 columns on all screens */}
+      <div className="grid grid-cols-2 gap-3">
         {metrics.map((metric) => {
           const progress = getProgressPercentage(metric);
           const isPositiveTrend = metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run' 
@@ -223,51 +226,57 @@ const ProgressPage = () => {
             <div
               key={metric.id}
               className={cn(
-                "glass-card p-6 relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
-                "border-2",
+                "glass-card p-3 relative overflow-hidden transition-all duration-300",
+                "border-2 rounded-2xl",
                 metric.borderColor
               )}
-              style={{
-                boxShadow: `0 0 20px ${metric.borderColor.replace('border-', 'hsl(var(--')})}`,
-              }}
             >
               {/* Title and Trend */}
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-base font-semibold text-foreground">
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-xs font-semibold text-foreground leading-tight">
                   {metric.title}
                 </h3>
                 <div
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-bold",
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5",
                     isPositiveTrend
-                      ? "bg-[#10B981] text-white"
-                      : "bg-[#EF4444] text-white"
+                      ? "bg-[#10B981]/20 text-[#10B981]"
+                      : "bg-[#EF4444]/20 text-[#EF4444]"
                   )}
-                  style={{
-                    boxShadow: isPositiveTrend
-                      ? "0 0 10px rgba(16, 185, 129, 0.5)"
-                      : "0 0 10px rgba(239, 68, 68, 0.5)",
-                  }}
                 >
-                  {metric.trend > 0 ? "+" : ""}{metric.trend.toFixed(1)}%
+                  {isPositiveTrend ? <TrendingDown className="h-2.5 w-2.5" /> : <TrendingUp className="h-2.5 w-2.5" />}
+                  {Math.abs(metric.trend).toFixed(1)}%
                 </div>
               </div>
 
               {/* Value */}
-              <div className="mb-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-foreground">
+              <div className="mb-2">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-foreground">
                     {formatValue(metric.value, metric.unit)}
                   </span>
-                  <span className="text-lg text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {metric.unit !== "min" && metric.unit}
                   </span>
                 </div>
               </div>
 
+              {/* Progress Info */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground">Progress to goal</span>
+                  <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
+                </div>
+                
+                {/* Progress Bar - removed, showing text only */}
+                <p className="text-[11px] text-muted-foreground">
+                  Target: {metric.target} {metric.targetUnit}
+                </p>
+              </div>
+
               {/* Mini Chart (for VO2 MAX) */}
               {metric.chart && (
-                <div className="mb-4 h-12 flex items-end gap-1">
+                <div className="mt-2 h-8 flex items-end gap-0.5">
                   {[45, 48, 46, 50, 52, 51, 52.1].map((value, i) => (
                     <div
                       key={i}
@@ -281,26 +290,10 @@ const ProgressPage = () => {
                 </div>
               )}
 
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full transition-all duration-500", metric.progressColor)}
-                    style={{
-                      width: `${progress}%`,
-                      boxShadow: `0 0 8px ${metric.progressColor.replace('bg-', '')}`,
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Target: {metric.target} {metric.targetUnit}
-                </p>
-              </div>
-
               {/* Settings Icon (for VO2 MAX) */}
               {metric.chart && (
-                <button className="absolute bottom-6 right-6 text-muted-foreground hover:text-foreground transition-colors">
-                  <Settings className="h-5 w-5" />
+                <button className="absolute bottom-2 right-2 text-muted-foreground/50 hover:text-foreground transition-colors">
+                  <Settings className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
