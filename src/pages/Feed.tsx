@@ -12,6 +12,8 @@ interface ActivityItem {
   action_type: string;
   action_text: string;
   created_at: string;
+  source_id?: string;
+  source_table?: string;
   metadata?: any;
   profiles: {
     username: string;
@@ -38,6 +40,8 @@ export default function Feed() {
           action_type,
           action_text,
           created_at,
+          source_id,
+          source_table,
           metadata,
           profiles:user_id (
             username,
@@ -76,8 +80,18 @@ export default function Feed() {
       );
 
       let enhancedActivities: ActivityItem[] = formattedActivities;
-      if (externalIds.length > 0 || metricIds.length > 0) {
-        const [workoutsRes, metricsRes] = await Promise.all([
+
+      // Собираем source_ids для metric_values, чтобы можно было подтянуть value и дату измерения
+      const sourceIds = Array.from(
+        new Set(
+          metricActivities
+            .map((a: any) => a.source_id)
+            .filter((v: any) => typeof v === 'string' && v.length > 0)
+        )
+      );
+
+      if (externalIds.length > 0 || metricIds.length > 0 || sourceIds.length > 0) {
+        const [workoutsRes, metricsRes, metricValuesRes] = await Promise.all([
           externalIds.length
             ? supabase
                 .from('workouts')
@@ -90,6 +104,12 @@ export default function Feed() {
                 .select('id, metric_name, unit')
                 .in('id', metricIds)
             : Promise.resolve({ data: [], error: null }),
+          sourceIds.length
+            ? supabase
+                .from('metric_values')
+                .select('id, value, unit, measurement_date')
+                .in('id', sourceIds)
+            : Promise.resolve({ data: [], error: null }),
         ]);
 
         const workoutMap = new Map<string, any>(
@@ -98,12 +118,16 @@ export default function Feed() {
         const metricsMap = new Map<string, any>(
           (((metricsRes as any).data) || []).map((m: any) => [m.id, m])
         );
+        const metricValuesMap = new Map<string, any>(
+          (((metricValuesRes as any).data) || []).map((mv: any) => [mv.id, mv])
+        );
 
         enhancedActivities = formattedActivities.map((a: any) => {
           if (a.action_type !== 'metric_values' || !a.metadata) return a as ActivityItem;
           const meta: any = a.metadata || {};
           const wo: any = meta.external_id ? (workoutMap.get(meta.external_id as string) as any) : null;
           const mu: any = meta.metric_id ? (metricsMap.get(meta.metric_id as string) as any) : null;
+          const mv: any = a.source_id ? (metricValuesMap.get(a.source_id as string) as any) : null;
           return {
             ...a,
             metadata: {
@@ -111,11 +135,41 @@ export default function Feed() {
               workout_type: wo?.workout_type ?? meta.workout_type,
               duration_minutes: wo?.duration_minutes ?? meta.duration_minutes,
               metric_name: mu?.metric_name ?? meta.metric_name,
-              unit: mu?.unit ?? meta.unit,
+              unit: mv?.unit ?? mu?.unit ?? meta.unit,
+              value: mv?.value ?? meta.value,
+              measurement_date: mv?.measurement_date ?? meta.measurement_date,
             },
           } as ActivityItem;
         });
       }
+
+      // Убираем дубликаты сна — оставляем один (самый длинный) на день
+      const isSleep = (a: ActivityItem) => {
+        const meta: any = (a as any).metadata || {};
+        const name = String(meta?.user_metrics?.metric_name || meta?.metric_name || a.action_text || '').toLowerCase();
+        return /sleep|сон|slept/.test(name);
+      };
+
+      const sleepMap = new Map<string, ActivityItem>();
+      const others: ActivityItem[] = [];
+      for (const a of enhancedActivities) {
+        if (a.action_type === 'metric_values' && isSleep(a)) {
+          const dateKey = String(((a as any).metadata?.measurement_date) || a.created_at?.substring(0, 10));
+          const prev = sleepMap.get(dateKey);
+          if (!prev) sleepMap.set(dateKey, a);
+          else {
+            const prevVal = Number((prev as any).metadata?.value ?? 0);
+            const curVal = Number((a as any).metadata?.value ?? 0);
+            if (curVal > prevVal) sleepMap.set(dateKey, a);
+          }
+        } else {
+          others.push(a);
+        }
+      }
+
+      enhancedActivities = [...others, ...Array.from(sleepMap.values())].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       setActivities(enhancedActivities);
     } catch (error) {
