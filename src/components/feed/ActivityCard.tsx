@@ -75,33 +75,21 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   };
 
   const shortName = getShortName();
-  
-  // Получаем время из created_at
-  const getTime = () => {
-    try {
-      const date = new Date(activity.created_at);
-      return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      });
-    } catch {
-      return '00:00';
-    }
-  };
-
-  const time = getTime();
-  const parts = [shortName, time];
+  const parts = [shortName];
 
   if (activity.action_type === 'workouts') {
-    // Добавляем продолжительность
+    // Добавляем продолжительность в формате MM:SS или HH:MM:SS
     if (m.duration_minutes) {
-      parts.push(`(${m.duration_minutes}m)`);
-    }
-    
-    // Добавляем калории
-    if (m.calories_burned) {
-      parts.push(`${Math.round(Number(m.calories_burned))} kcal`);
+      const totalMinutes = Number(m.duration_minutes);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.floor(totalMinutes % 60);
+      const seconds = Math.round((totalMinutes % 1) * 60);
+      
+      if (hours > 0) {
+        parts.push(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        parts.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
     }
     
     // Добавляем strain если есть
@@ -126,14 +114,16 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   if (activity.action_type === 'metric_values') {
     const metricName = m.user_metrics?.metric_name;
     if (metricName === 'Recovery Score') {
-      parts.push(`${Math.round(Number(m.value))}% recovery`);
+      parts.push(`${Math.round(Number(m.value))}%`);
     } else if (metricName === 'Workout Strain') {
       parts.push(`Strain ${Number(m.value).toFixed(1)}`);
     } else if (metricName === 'Sleep Duration') {
       const hours = Number(m.value);
-      parts.push(`${hours.toFixed(1)}h sleep`);
+      const h = Math.floor(hours);
+      const min = Math.round((hours % 1) * 60);
+      parts.push(`${h}:${min.toString().padStart(2, '0')}`);
     } else if (metricName === 'VO2Max') {
-      parts.push(`VO₂Max ${Number(m.value).toFixed(1)}`);
+      parts.push(`${Number(m.value).toFixed(1)}`);
     } else if (m.value) {
       parts.push(`${Number(m.value).toFixed(1)}${m.unit || ''}`);
     }
@@ -149,7 +139,7 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
 
   if (activity.action_type === 'goals') {
     const goalName = m.goal_name || 'goal';
-    parts.push(`new goal: ${goalName}`);
+    parts.push(`${goalName}`);
     return parts.join(', ');
   }
 
