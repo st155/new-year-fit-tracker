@@ -42,7 +42,7 @@ export default function FitnessData() {
   }, [user]);
 
   useEffect(() => {
-    if (user && challengeGoals.length > 0) {
+    if (user) {
       fetchDashboardData();
     }
   }, [user, selectedFilter, challengeGoals]);
@@ -169,8 +169,8 @@ export default function FitnessData() {
     // Build cards - only for challenge goals
     const cards: MetricCard[] = [];
 
-    // Strain (only if in challenge)
-    if ((metricValues['Workout Strain'] || metricValues['Day Strain']) && isInChallengeGoals('strain')) {
+    // Strain (always show if available)
+    if ((metricValues['Workout Strain'] || metricValues['Day Strain'])) {
       const strain = metricValues['Workout Strain'] || metricValues['Day Strain'];
       const value = Math.round(strain.current * 10) / 10;
       cards.push({
@@ -183,8 +183,8 @@ export default function FitnessData() {
       });
     }
 
-    // Sleep (only if in challenge)
-    if (metricValues['Sleep Duration'] && isInChallengeGoals('sleep')) {
+    // Sleep (always show if available)
+    if (metricValues['Sleep Duration']) {
       const sleepDur = metricValues['Sleep Duration'];
       const hours = Math.floor(sleepDur.current);
       const minutes = Math.round((sleepDur.current - hours) * 60);
@@ -302,6 +302,67 @@ export default function FitnessData() {
         icon: Dumbbell,
         color: '#84CC16',
         borderColor: '#84CC16'
+      });
+    }
+
+    // General tracker metrics (always show if available)
+    if (metricValues['Steps']) {
+      const steps = metricValues['Steps'];
+      cards.push({
+        name: 'Шаги',
+        value: Math.round(steps.current).toString(),
+        subtitle: 'за день',
+        icon: Footprints,
+        color: '#22C55E',
+        borderColor: '#22C55E'
+      });
+    }
+
+    if (metricValues['Workout Calories'] || metricValues['Active Calories']) {
+      const cals = metricValues['Workout Calories'] || metricValues['Active Calories'];
+      cards.push({
+        name: 'Калории',
+        value: Math.round(cals.current).toString(),
+        subtitle: 'ккал',
+        icon: Flame,
+        color: '#EF4444',
+        borderColor: '#EF4444'
+      });
+    }
+
+    if (metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate']) {
+      const hr = metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate'];
+      cards.push({
+        name: 'Пульс ср.',
+        value: Math.round(hr.current).toString(),
+        subtitle: 'уд/мин',
+        icon: Heart,
+        color: '#F43F5E',
+        borderColor: '#F43F5E'
+      });
+    }
+
+    if (metricValues['Weight']) {
+      const w = metricValues['Weight'];
+      cards.push({
+        name: 'Вес',
+        value: (Math.round(w.current * 10) / 10).toString(),
+        subtitle: 'кг',
+        icon: Scale,
+        color: '#10B981',
+        borderColor: '#10B981'
+      });
+    }
+
+    if (metricValues['Distance']) {
+      const d = metricValues['Distance'];
+      cards.push({
+        name: 'Дистанция',
+        value: (Math.round(d.current * 10) / 10).toString(),
+        subtitle: 'км',
+        icon: Activity,
+        color: '#06B6D4',
+        borderColor: '#06B6D4'
       });
     }
 
