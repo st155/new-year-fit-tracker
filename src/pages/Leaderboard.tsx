@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { Trophy, TrendingUp, TrendingDown, Award, Medal } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Trophy, TrendingUp, TrendingDown, Award, Medal, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useProgressCache } from "@/hooks/useProgressCache";
+import { Button } from "@/components/ui/button";
 
 interface LeaderboardUser {
   rank: number;
@@ -25,20 +27,12 @@ const LeaderboardPage = () => {
   const { user } = useAuth();
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchChallenges();
     }
   }, [user]);
-
-  useEffect(() => {
-    if (selectedChallenge) {
-      fetchLeaderboard();
-    }
-  }, [selectedChallenge, user]);
 
   const fetchChallenges = async () => {
     if (!user) return;
@@ -62,10 +56,9 @@ const LeaderboardPage = () => {
     }
   };
 
-  const fetchLeaderboard = async () => {
-    if (!user || !selectedChallenge) return;
+  const fetchLeaderboardData = useCallback(async () => {
+    if (!user || !selectedChallenge) return [];
 
-    setLoading(true);
     try {
       const { data: participants } = await supabase
         .from('challenge_participants')
@@ -76,9 +69,7 @@ const LeaderboardPage = () => {
         .eq('challenge_id', selectedChallenge);
 
       if (!participants) {
-        setLeaderboardData([]);
-        setLoading(false);
-        return;
+        return [];
       }
 
       const leaderboard = await Promise.all(
@@ -134,14 +125,18 @@ const LeaderboardPage = () => {
           ...entry,
         }));
 
-      setLeaderboardData(sortedLeaderboard);
+      return sortedLeaderboard;
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
-      setLeaderboardData([]);
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, [user, selectedChallenge]);
+
+  const { data: leaderboardData, loading, fromCache, refetch } = useProgressCache(
+    `leaderboard_${selectedChallenge}`,
+    fetchLeaderboardData,
+    [selectedChallenge]
+  );
 
   const getRankStyle = (rank: number, isCurrentUser: boolean) => {
     if (rank === 1) {
@@ -166,13 +161,22 @@ const LeaderboardPage = () => {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 overflow-y-auto">
       {/* Header */}
-      <div className="mb-6 text-center">
-        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-          TEAM LEADERBOARD
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Отслеживайте прогресс команды и сразитесь за место на вершине!
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-1">Leaderboard</h1>
+          <p className="text-muted-foreground text-sm">
+            Compete with others {fromCache && '(cached)'}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={loading && !fromCache}
+          className="h-9 w-9 p-0"
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && !fromCache && "animate-spin")} />
+        </Button>
       </div>
 
       {/* Challenge Filter Buttons */}
@@ -195,7 +199,7 @@ const LeaderboardPage = () => {
       </div>
 
       {/* Leaderboard */}
-      {loading ? (
+      {loading && !fromCache ? (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="glass rounded-2xl p-4 h-20 animate-pulse" />
@@ -203,9 +207,8 @@ const LeaderboardPage = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {leaderboardData.map((userEntry) => {
+          {(leaderboardData || []).map((userEntry) => {
             const isTopTwo = userEntry.rank <= 2;
-            const isCompact = !isTopTwo && !userEntry.isCurrentUser;
 
             return (
               <div
@@ -319,7 +322,7 @@ const LeaderboardPage = () => {
         </div>
       )}
 
-      {leaderboardData.length === 0 && !loading && (
+      {(!leaderboardData || leaderboardData.length === 0) && !loading && (
         <div className="text-center py-12">
           <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">

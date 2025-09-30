@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivityCard } from "@/components/feed/ActivityCard";
 import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useProgressCache } from "@/hooks/useProgressCache";
+import { cn } from "@/lib/utils";
 
 interface ActivityItem {
   id: string;
@@ -21,15 +23,10 @@ interface ActivityItem {
 }
 
 export default function Feed() {
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     try {
-      setLoading(true);
-
       const { data: activitiesData, error } = await supabase
         .from('activity_feed')
         .select(`
@@ -56,26 +53,18 @@ export default function Feed() {
       const filteredActivities = (activitiesData || []).filter(activity => {
         const actionText = activity.action_text?.toLowerCase() || '';
         
-        // Include these types:
-        // 1. Recovery (восстановился/recovered)
-        // 2. Workouts (тренировку/workout/completed)
-        // 3. VO2Max
-        // 4. Sleep (slept/спал) - but with HH:MM format only
-        // 5. Strain
-        // 6. Daily Steps (шаги/steps)
-        
         const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
         const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
-                          && !actionText.includes('качество'); // exclude Whoop quality sleep entries
+                          && !actionText.includes('качество');
         const isVO2Max = actionText.includes('vo2max');
-        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/); // Only HH:MM format
+        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/);
         const isStrain = actionText.includes('strain');
         const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
         
         return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
       });
 
-      // Deduplicate Sleep: keep only the most recent night's single entry
+      // Deduplicate Sleep
       const sleepItems = filteredActivities.filter(a => (a.action_text?.toLowerCase().includes('slept') && /\d+:\d+/.test(a.action_text)));
       let dedupedActivities = filteredActivities;
       if (sleepItems.length > 1) {
@@ -92,7 +81,7 @@ export default function Feed() {
         });
       }
 
-      setActivities(dedupedActivities);
+      return dedupedActivities;
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
@@ -100,49 +89,21 @@ export default function Feed() {
         description: "Не удалось загрузить ленту активности",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+      return [];
     }
-  };
+  }, [toast]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchActivities();
-    setRefreshing(false);
-    toast({
-      title: "Обновлено!",
-      description: "Лента активности обновлена",
-    });
-  };
-
-  useEffect(() => {
-    fetchActivities();
-
-    const channel = supabase
-      .channel('activity-feed-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'activity_feed'
-        },
-        () => {
-          fetchActivities();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  const { data: activities, loading, fromCache, refetch } = useProgressCache(
+    'activity_feed',
+    fetchActivities,
+    []
+  );
 
   const onActivityUpdate = () => {
     // Лайки и комментарии не влияют на activity_feed, не нужно перезагружать
   };
 
-  if (loading) {
+  if (loading && !fromCache) {
     return (
       <div className="min-h-screen pb-24 px-4 pt-6">
         <div className="flex items-center justify-between mb-6">
@@ -150,7 +111,7 @@ export default function Feed() {
             ACTIVITY FEED
           </h1>
           <button className="w-12 h-12 rounded-full border-2 border-muted flex items-center justify-center">
-            <RefreshCw className="h-5 w-5 text-muted-foreground" />
+            <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin" />
           </button>
         </div>
         <div className="space-y-4">
@@ -168,7 +129,7 @@ export default function Feed() {
     );
   }
 
-  if (activities.length === 0) {
+  if (!activities || activities.length === 0) {
     return (
       <div className="min-h-screen pb-24 px-4 pt-6">
         <div className="flex items-center justify-between mb-6">
@@ -176,8 +137,8 @@ export default function Feed() {
             ACTIVITY FEED
           </h1>
           <button
-            onClick={handleRefresh}
-            disabled={refreshing}
+            onClick={() => refetch()}
+            disabled={loading && !fromCache}
             className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300"
             style={{
               borderColor: "#10B981",
@@ -185,7 +146,7 @@ export default function Feed() {
             }}
           >
             <RefreshCw
-              className={`h-5 w-5 text-white ${refreshing ? "animate-spin" : ""}`}
+              className={cn("h-5 w-5 text-white", loading && !fromCache && "animate-spin")}
             />
           </button>
         </div>
@@ -209,8 +170,8 @@ export default function Feed() {
           ACTIVITY FEED
         </h1>
         <button
-          onClick={handleRefresh}
-          disabled={refreshing}
+          onClick={() => refetch()}
+          disabled={loading && !fromCache}
           className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110"
           style={{
             borderColor: "#10B981",
@@ -218,7 +179,7 @@ export default function Feed() {
           }}
         >
           <RefreshCw
-            className={`h-5 w-5 text-white ${refreshing ? "animate-spin" : ""}`}
+            className={cn("h-5 w-5 text-white", loading && !fromCache && "animate-spin")}
           />
         </button>
       </div>
