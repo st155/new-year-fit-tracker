@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Activity, Moon, Dumbbell, Utensils, Footprints, TrendingUp, Trophy, Zap } from "lucide-react";
+import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
@@ -38,36 +38,71 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   const profiles = activity.profiles;
   const borderStyle = borderColors[index % borderColors.length];
   
-  // Get activity icon based on action type or text
-  const getActivityIcon = () => {
+  // Get activity icon and color based on action type or text
+  const getActivityIconAndColor = () => {
     const actionText = activity.action_text?.toLowerCase() || '';
     const actionType = activity.action_type?.toLowerCase() || '';
     
-    if (actionText.includes('сон') || actionText.includes('sleep') || actionType.includes('sleep')) {
-      return Moon;
+    // Recovery/Восстановление - Electric Blue
+    if (actionText.includes('recover') || actionText.includes('восстан') || actionType.includes('recovery')) {
+      return { icon: Zap, color: '#3B82F6' }; // Bright Blue
     }
-    if (actionText.includes('бег') || actionText.includes('пробежал') || actionType.includes('run')) {
-      return Activity;
+    
+    // Running/Бег/1km - Neon Green
+    if (actionText.includes('бег') || actionText.includes('пробежал') || actionText.includes('1 км') || actionText.includes('1km') || actionType.includes('run')) {
+      return { icon: Activity, color: '#10B981' }; // Neon Green
     }
-    if (actionText.includes('тренир') || actionText.includes('workout') || actionType.includes('workout')) {
-      return Dumbbell;
+    
+    // Pull-ups/Подтягивания - Purple
+    if (actionText.includes('подтягив') || actionText.includes('pull') || actionText.includes('pullup')) {
+      return { icon: Target, color: '#A855F7' }; // Purple
     }
+    
+    // Bench Press/Жим лёжа - Orange
+    if (actionText.includes('жим') || actionText.includes('bench') || actionText.includes('press')) {
+      return { icon: Dumbbell, color: '#F97316' }; // Orange
+    }
+    
+    // Push-ups/Отжимания - Pink
+    if (actionText.includes('отжима') || actionText.includes('pushup') || actionText.includes('push-up')) {
+      return { icon: Flame, color: '#EC4899' }; // Pink
+    }
+    
+    // Weight Loss/Вес - Red
+    if (actionText.includes('вес') || actionText.includes('weight') || actionText.includes('кг') || actionType.includes('weight')) {
+      return { icon: TrendingUp, color: '#EF4444' }; // Red
+    }
+    
+    // VO2 Max - Cyan
+    if (actionText.includes('vo2') || actionText.includes('кардио') || actionText.includes('выносл')) {
+      return { icon: Wind, color: '#06B6D4' }; // Cyan
+    }
+    
+    // Steps/Шаги - Yellow
     if (actionText.includes('шаг') || actionText.includes('steps') || actionType.includes('steps')) {
-      return Footprints;
+      return { icon: Footprints, color: '#FBBF24' }; // Yellow
     }
-    if (actionText.includes('вес') || actionText.includes('weight') || actionType.includes('weight')) {
-      return TrendingUp;
-    }
+    
+    // Goals/Цели - Gold
     if (actionText.includes('цел') || actionText.includes('goal') || actionType.includes('goal')) {
-      return Trophy;
+      return { icon: Trophy, color: '#F59E0B' }; // Gold
     }
-    if (actionText.includes('калор') || actionText.includes('nutrition') || actionType.includes('nutrition')) {
-      return Utensils;
+    
+    // Workout/Тренировка - Lime
+    if (actionText.includes('тренир') || actionText.includes('workout') || actionType.includes('workout')) {
+      return { icon: Dumbbell, color: '#84CC16' }; // Lime
     }
-    return Zap; // Default icon
+    
+    // Time-based activities - Teal
+    if (actionText.includes('мин') || actionText.includes('time') || actionText.includes('timer')) {
+      return { icon: Timer, color: '#14B8A6' }; // Teal
+    }
+    
+    // Default - Electric Purple
+    return { icon: Zap, color: '#8B5CF6' };
   };
   
-  const ActivityIcon = getActivityIcon();
+  const { icon: ActivityIcon, color: iconColor } = getActivityIconAndColor();
 
   // Format time
   const getRelativeTime = () => {
@@ -99,12 +134,13 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
       <div className="flex items-center gap-3">
         {/* Avatar with Icon */}
         <div
-          className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center bg-[#252b3d]"
+          className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center"
           style={{
             borderColor: borderStyle.color,
+            background: `linear-gradient(135deg, ${iconColor}22, ${iconColor}44)`,
           }}
         >
-          <ActivityIcon className="h-5 w-5 text-white" />
+          <ActivityIcon className="h-5 w-5" style={{ color: iconColor }} />
         </div>
         
         {/* Content */}
