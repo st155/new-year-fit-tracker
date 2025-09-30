@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Award } from "lucide-react";
+import { Award, ChevronRight } from "lucide-react";
 
 interface LeaderboardUser {
   rank: number;
@@ -16,6 +17,7 @@ interface LeaderboardUser {
 
 export function Leaderboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -167,14 +169,23 @@ export function Leaderboard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Award className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-          Team Leaderboard
-        </h3>
+      <div 
+        className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
+        onClick={() => navigate('/leaderboard')}
+      >
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+            Team Leaderboard
+          </h3>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
       </div>
       
-      <Card className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-background">
+      <Card 
+        className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-background cursor-pointer hover:border-accent/40 transition-all"
+        onClick={() => navigate('/leaderboard')}
+      >
         <CardContent className="p-4">
           {leaderboardData.length === 0 ? (
             <div className="text-center py-6">
@@ -184,43 +195,82 @@ export function Leaderboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">{/* Добавляем скролл для большого количества участников */}
-              {leaderboardData.map((user) => (
+            <div className="space-y-3">
+              {/* Показываем только топ-1 участника с выделением */}
+              {leaderboardData.slice(0, 1).map((user) => (
                 <div 
                   key={user.rank}
-                  className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                    user.isUser 
-                      ? 'bg-primary/10 border border-primary/20' 
-                      : 'hover:bg-muted/50'
-                  }`}
+                  className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-yellow-500/20 border-2 border-yellow-500/30"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      user.rank === 1 ? 'bg-yellow-500 text-white' :
-                      user.rank === 2 ? 'bg-gray-400 text-white' :
-                      user.rank === 3 ? 'bg-orange-500 text-white' :
-                      'bg-muted text-muted-foreground'
-                    }`}>
-                      {user.rank}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg">
+                      <Award className="h-5 w-5" />
                     </div>
-                    <span className={`text-sm font-medium ${user.isUser ? 'text-primary' : 'text-foreground'}`}>
-                      {user.name}
-                    </span>
+                    <div>
+                      <span className="text-base font-bold text-foreground block">
+                        {user.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Лидирует
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">
-                      {user.points}
-                    </span>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-foreground">
+                        {user.points}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        очков
+                      </div>
+                    </div>
                     <Badge 
-                      variant={user.change.startsWith('-') ? "destructive" : "default"}
-                      className="text-xs"
+                      variant="default"
+                      className="text-xs bg-green-500 hover:bg-green-600"
                     >
                       {user.change}
                     </Badge>
                   </div>
                 </div>
               ))}
+              
+              {/* Показываем текущего пользователя, если он не на первом месте */}
+              {leaderboardData.find(u => u.isUser && u.rank > 1) && (
+                <div 
+                  className="flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary/20 text-primary">
+                      {leaderboardData.find(u => u.isUser)?.rank}
+                    </div>
+                    <span className="text-sm font-medium text-primary">
+                      Вы
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      {leaderboardData.find(u => u.isUser)?.points}
+                    </span>
+                    <Badge 
+                      variant="default"
+                      className="text-xs"
+                    >
+                      {leaderboardData.find(u => u.isUser)?.change}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              
+              {/* Индикатор, что есть еще участники */}
+              {leaderboardData.length > 2 && (
+                <div className="text-center pt-2">
+                  <span className="text-xs text-muted-foreground">
+                    +{leaderboardData.length - (leaderboardData.find(u => u.isUser && u.rank > 1) ? 2 : 1)} участников
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
