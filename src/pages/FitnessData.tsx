@@ -29,6 +29,7 @@ export default function FitnessData() {
   
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<TimeFilter>('today');
+  const [challengeGoals, setChallengeGoals] = useState<string[]>([]);
   const [data, setData] = useState<DashboardData>({
     readiness: { score: 0, status: '' },
     cards: []
@@ -36,9 +37,43 @@ export default function FitnessData() {
 
   useEffect(() => {
     if (user) {
+      fetchChallengeGoals();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && challengeGoals.length > 0) {
       fetchDashboardData();
     }
-  }, [user, selectedFilter]);
+  }, [user, selectedFilter, challengeGoals]);
+
+  const fetchChallengeGoals = async () => {
+    try {
+      // Get user's active challenges
+      const { data: participations } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id')
+        .eq('user_id', user?.id);
+
+      if (!participations || participations.length === 0) {
+        setChallengeGoals([]);
+        return;
+      }
+
+      // Get goals for those challenges
+      const { data: goals } = await supabase
+        .from('goals')
+        .select('goal_name')
+        .eq('is_personal', false)
+        .in('challenge_id', participations.map(p => p.challenge_id));
+
+      const goalNames = goals?.map(g => g.goal_name.toLowerCase()) || [];
+      setChallengeGoals(goalNames);
+    } catch (error) {
+      console.error('Error fetching challenge goals:', error);
+      setChallengeGoals([]);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -78,6 +113,24 @@ export default function FitnessData() {
     }
   };
 
+  const isInChallengeGoals = (metricName: string): boolean => {
+    if (challengeGoals.length === 0) return true; // Show all if no challenge
+    
+    const normalized = metricName.toLowerCase();
+    return challengeGoals.some(goal => 
+      normalized.includes(goal) || 
+      goal.includes(normalized) ||
+      (goal.includes('подтягивания') && normalized.includes('pull')) ||
+      (goal.includes('жим') && normalized.includes('bench')) ||
+      (goal.includes('выпады') && normalized.includes('lunge')) ||
+      (goal.includes('планка') && normalized.includes('plank')) ||
+      (goal.includes('отжимания') && normalized.includes('push')) ||
+      (goal.includes('vo2') && normalized.includes('vo2')) ||
+      (goal.includes('бег') && normalized.includes('run')) ||
+      (goal.includes('жир') && normalized.includes('fat'))
+    );
+  };
+
   const processMetrics = (metrics: any[]): DashboardData => {
     const result: DashboardData = {
       readiness: { score: 85, status: 'Оптимально' },
@@ -113,11 +166,11 @@ export default function FitnessData() {
       result.readiness.status = recovery.current > 70 ? 'Оптимально' : recovery.current > 40 ? 'Нормально' : 'Низкий';
     }
 
-    // Build cards
+    // Build cards - only for challenge goals
     const cards: MetricCard[] = [];
 
-    // Strain
-    if (metricValues['Workout Strain'] || metricValues['Day Strain']) {
+    // Strain (only if in challenge)
+    if ((metricValues['Workout Strain'] || metricValues['Day Strain']) && isInChallengeGoals('strain')) {
       const strain = metricValues['Workout Strain'] || metricValues['Day Strain'];
       const value = Math.round(strain.current * 10) / 10;
       cards.push({
@@ -130,8 +183,8 @@ export default function FitnessData() {
       });
     }
 
-    // Sleep
-    if (metricValues['Sleep Duration']) {
+    // Sleep (only if in challenge)
+    if (metricValues['Sleep Duration'] && isInChallengeGoals('sleep')) {
       const sleepDur = metricValues['Sleep Duration'];
       const hours = Math.floor(sleepDur.current);
       const minutes = Math.round((sleepDur.current - hours) * 60);
@@ -146,34 +199,8 @@ export default function FitnessData() {
       });
     }
 
-    // Heart Rate
-    if (metricValues['Resting Heart Rate'] || metricValues['Heart Rate Avg']) {
-      const hr = metricValues['Resting Heart Rate'] || metricValues['Heart Rate Avg'];
-      cards.push({
-        name: 'Пульс покоя',
-        value: `${Math.round(hr.current)}`,
-        subtitle: 'уд/мин',
-        icon: Heart,
-        color: '#EF4444',
-        borderColor: '#EF4444'
-      });
-    }
-
-    // Steps
-    if (metricValues['Steps'] || metricValues['Daily Steps']) {
-      const steps = metricValues['Steps'] || metricValues['Daily Steps'];
-      cards.push({
-        name: 'Шаги',
-        value: Math.round(steps.current).toLocaleString(),
-        subtitle: 'сегодня',
-        icon: Footprints,
-        color: '#FBBF24',
-        borderColor: '#FBBF24'
-      });
-    }
-
-    // VO2 Max
-    if (metricValues['VO2Max']) {
+    // VO2 Max (challenge goal)
+    if (metricValues['VO2Max'] && isInChallengeGoals('vo2max')) {
       const vo2 = metricValues['VO2Max'];
       cards.push({
         name: 'VO2 Max',
@@ -185,40 +212,14 @@ export default function FitnessData() {
       });
     }
 
-    // Calories
-    if (metricValues['Active Calories'] || metricValues['Workout Calories']) {
-      const cals = metricValues['Active Calories'] || metricValues['Workout Calories'];
-      cards.push({
-        name: 'Калории',
-        value: Math.round(cals.current) + '',
-        subtitle: 'активных ккал',
-        icon: Flame,
-        color: '#FB923C',
-        borderColor: '#FB923C'
-      });
-    }
-
-    // HRV
-    if (metricValues['HRV'] || metricValues['Heart Rate Variability']) {
-      const hrv = metricValues['HRV'] || metricValues['Heart Rate Variability'];
-      cards.push({
-        name: 'HRV',
-        value: Math.round(hrv.current) + '',
-        subtitle: 'мс',
-        icon: Activity,
-        color: '#A855F7',
-        borderColor: '#A855F7'
-      });
-    }
-
-    // Body Fat
-    if (metricValues['Body Fat %']) {
+    // Body Fat (challenge goal)
+    if (metricValues['Body Fat %'] && isInChallengeGoals('жир')) {
       const fat = metricValues['Body Fat %'];
       const diff = fat.previous ? fat.current - fat.previous : 0;
       const trend = diff > 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`;
       cards.push({
-        name: 'Состав Тела',
-        value: `Жир: ${Math.round(fat.current * 10) / 10}%`,
+        name: 'Процент жира',
+        value: `${Math.round(fat.current * 10) / 10}%`,
         subtitle: trend,
         icon: Scale,
         color: '#10B981',
@@ -226,28 +227,78 @@ export default function FitnessData() {
       });
     }
 
-    // Weight
-    if (metricValues['Weight'] || metricValues['Body Mass']) {
-      const weight = metricValues['Weight'] || metricValues['Body Mass'];
-      const diff = weight.previous ? weight.current - weight.previous : 0;
-      const trend = diff > 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`;
+    // Pull-ups (challenge goal)
+    if (metricValues['Pull-ups'] && isInChallengeGoals('подтягивания')) {
+      const pullups = metricValues['Pull-ups'];
       cards.push({
-        name: 'Вес',
-        value: `${Math.round(weight.current * 10) / 10} кг`,
-        subtitle: trend + ' кг',
-        icon: TrendingUp,
+        name: 'Подтягивания',
+        value: Math.round(pullups.current) + '',
+        subtitle: 'раз',
+        icon: Dumbbell,
+        color: '#A855F7',
+        borderColor: '#A855F7'
+      });
+    }
+
+    // Bench Press (challenge goal)
+    if (metricValues['Bench Press'] && isInChallengeGoals('жим')) {
+      const bench = metricValues['Bench Press'];
+      cards.push({
+        name: 'Жим лёжа',
+        value: Math.round(bench.current) + '',
+        subtitle: 'кг',
+        icon: Dumbbell,
+        color: '#EF4444',
+        borderColor: '#EF4444'
+      });
+    }
+
+    // Push-ups (challenge goal)
+    if (metricValues['Push-ups'] && isInChallengeGoals('отжимания')) {
+      const pushups = metricValues['Push-ups'];
+      cards.push({
+        name: 'Отжимания',
+        value: Math.round(pushups.current) + '',
+        subtitle: 'раз',
+        icon: Dumbbell,
+        color: '#FBBF24',
+        borderColor: '#FBBF24'
+      });
+    }
+
+    // Plank (challenge goal)
+    if (metricValues['Plank'] && isInChallengeGoals('планка')) {
+      const plank = metricValues['Plank'];
+      cards.push({
+        name: 'Планка',
+        value: Math.round(plank.current) + '',
+        subtitle: 'мин',
+        icon: Activity,
         color: '#8B5CF6',
         borderColor: '#8B5CF6'
       });
     }
 
-    // Workout count
-    if (metricValues['Workout Count']) {
-      const count = metricValues['Workout Count'];
+    // 1km Run (challenge goal)
+    if (metricValues['1km Run'] && isInChallengeGoals('бег')) {
+      const run = metricValues['1km Run'];
       cards.push({
-        name: 'Тренировки',
-        value: Math.round(count.current) + '',
-        subtitle: 'за период',
+        name: 'Бег 1 км',
+        value: Math.round(run.current * 10) / 10 + '',
+        subtitle: 'мин',
+        icon: Footprints,
+        color: '#06B6D4',
+        borderColor: '#06B6D4'
+      });
+    }
+
+    // Lunges (challenge goal)
+    if (metricValues['Lunges'] && isInChallengeGoals('выпады')) {
+      const lunges = metricValues['Lunges'];
+      cards.push({
+        name: 'Выпады со штангой',
+        value: Math.round(lunges.current) + '',
+        subtitle: 'кг×8',
         icon: Dumbbell,
         color: '#84CC16',
         borderColor: '#84CC16'

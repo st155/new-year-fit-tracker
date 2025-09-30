@@ -23,143 +23,91 @@ const ProgressPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
-  const [metrics, setMetrics] = useState<MetricCard[]>([
-    {
-      id: "weight",
-      title: "Weight Loss",
-      value: 72,
-      unit: "kg",
-      target: 70,
-      targetUnit: "kg",
-      trend: -4.2,
-      borderColor: "border-[#10B981]",
-      progressColor: "bg-[#10B981]",
-    },
-    {
-      id: "body-fat",
-      title: "Body Fat",
-      value: 18.5,
-      unit: "%",
-      target: 15,
-      targetUnit: "%",
-      trend: -8.1,
-      borderColor: "border-[#FF6B2C]",
-      progressColor: "bg-[#FF6B2C]",
-    },
-    {
-      id: "vo2max",
-      title: "VO₂ MAX",
-      value: 52.1,
-      unit: "ML/KG/MIN",
-      target: 55,
-      targetUnit: "ML/KG/MIN",
-      trend: 3,
-      borderColor: "border-[#3B82F6]",
-      progressColor: "bg-[#3B82F6]",
-      chart: true,
-    },
-    {
-      id: "pullups",
-      title: "Pull-ups",
-      value: 18,
-      unit: "reps",
-      target: 25,
-      targetUnit: "reps",
-      trend: 3,
-      borderColor: "border-[#A855F7]",
-      progressColor: "bg-[#A855F7]",
-    },
-    {
-      id: "pushups",
-      title: "Push-ups",
-      value: 75,
-      unit: "kg",
-      target: 80,
-      targetUnit: "kg",
-      trend: 5,
-      borderColor: "border-[#EF4444]",
-      progressColor: "bg-[#EF4444]",
-    },
-    {
-      id: "run",
-      title: "1km Run",
-      value: 3.5,
-      unit: "min",
-      target: 3.45,
-      targetUnit: "min",
-      trend: -2,
-      borderColor: "border-[#06B6D4]",
-      progressColor: "bg-[#06B6D4]",
-    },
-  ]);
+  const [challengeGoals, setChallengeGoals] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<MetricCard[]>([]);
 
   useEffect(() => {
     if (user) {
-      fetchRealMetrics();
+      fetchChallengeGoals();
     }
   }, [user]);
 
-  const fetchRealMetrics = async () => {
+  const fetchChallengeGoals = async () => {
     if (!user) return;
 
     try {
-      // Fetch weight data
-      const { data: weightData } = await supabase
-        .from('body_composition')
-        .select('weight, measurement_date')
-        .eq('user_id', user.id)
-        .not('weight', 'is', null)
-        .order('measurement_date', { ascending: false })
-        .limit(2);
-
-      // Fetch body fat data
-      const { data: bodyFatData } = await supabase
-        .from('body_composition')
-        .select('body_fat_percentage, measurement_date')
-        .eq('user_id', user.id)
-        .not('body_fat_percentage', 'is', null)
-        .order('measurement_date', { ascending: false })
-        .limit(2);
-
-      // Fetch goals for targets
-      const { data: goalsData } = await supabase
-        .from('goals')
-        .select('*')
+      // Get user's active challenges
+      const { data: participations } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id')
         .eq('user_id', user.id);
 
-      // Update metrics with real data
-      setMetrics(prev => prev.map(metric => {
-        if (metric.id === 'weight' && weightData && weightData.length > 0) {
-          const current = weightData[0].weight;
-          const previous = weightData[1]?.weight;
-          const weightGoal = goalsData?.find(g => g.goal_name.toLowerCase().includes('вес'));
-          
-          return {
-            ...metric,
-            value: Number(current),
-            target: weightGoal?.target_value || metric.target,
-            trend: previous ? ((previous - current) / current) * 100 : metric.trend,
-          };
-        }
-        
-        if (metric.id === 'body-fat' && bodyFatData && bodyFatData.length > 0) {
-          const current = bodyFatData[0].body_fat_percentage;
-          const previous = bodyFatData[1]?.body_fat_percentage;
-          const bodyFatGoal = goalsData?.find(g => g.goal_name.toLowerCase().includes('жир'));
-          
-          return {
-            ...metric,
-            value: Number(current),
-            target: bodyFatGoal?.target_value || metric.target,
-            trend: previous ? ((previous - current) / current) * 100 : metric.trend,
-          };
-        }
-        
-        return metric;
-      }));
+      if (!participations || participations.length === 0) {
+        setChallengeGoals([]);
+        setMetrics([]);
+        return;
+      }
+
+      // Get goals for those challenges
+      const { data: goals } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('is_personal', false)
+        .in('challenge_id', participations.map(p => p.challenge_id));
+
+      // Deduplicate by goal_name
+      const uniqueGoals = Array.from(new Map((goals || []).map(g => [g.goal_name, g])).values());
+      setChallengeGoals(uniqueGoals);
+      buildMetrics(uniqueGoals);
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      console.error('Error fetching challenge goals:', error);
+      setChallengeGoals([]);
+      setMetrics([]);
     }
+  };
+
+  const buildMetrics = (goals: any[]) => {
+    if (goals.length === 0) {
+      setMetrics([]);
+      return;
+    }
+
+    const metricsArray: MetricCard[] = [];
+
+    // Map goal names to metric configurations
+    const goalMapping: { [key: string]: { id: string; color: string } } = {
+      'подтягивания': { id: 'pullups', color: '#A855F7' },
+      'жим лёжа': { id: 'bench', color: '#EF4444' },
+      'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
+      'планка': { id: 'plank', color: '#8B5CF6' },
+      'отжимания': { id: 'pushups', color: '#FBBF24' },
+      'vo2max': { id: 'vo2max', color: '#3B82F6' },
+      'vo₂max': { id: 'vo2max', color: '#3B82F6' },
+      'бег 1 км': { id: 'run', color: '#06B6D4' },
+      'процент жира': { id: 'body-fat', color: '#FF6B2C' }
+    };
+
+    for (const goal of goals) {
+      const normalized = goal.goal_name.toLowerCase();
+      const mapping = goalMapping[normalized];
+      
+      if (!mapping) continue;
+
+      metricsArray.push({
+        id: mapping.id,
+        title: goal.goal_name,
+        value: 0,
+        unit: goal.target_unit || '',
+        target: goal.target_value || 0,
+        targetUnit: goal.target_unit || '',
+        trend: 0,
+        borderColor: `border-[${mapping.color}]`,
+        progressColor: `bg-[${mapping.color}]`,
+        chart: mapping.id === 'vo2max'
+      });
+    }
+
+    setMetrics(metricsArray);
   };
 
   const formatValue = (value: number, unit: string) => {
