@@ -204,8 +204,8 @@ const ProgressPage = () => {
               className={cn(
                 "px-6 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
                 selectedPeriod === period
-                  ? "bg-[#3B82F6] text-white"
-                  : "glass text-muted-foreground hover:text-foreground border border-border/50"
+                  ? "bg-gradient-secondary text-white shadow-glow-secondary"
+                  : "glass text-muted-foreground hover:text-foreground border border-border/30"
               )}
             >
               {period}
@@ -226,10 +226,23 @@ const ProgressPage = () => {
             <div
               key={metric.id}
               className={cn(
-                "glass-card p-3 relative overflow-hidden transition-all duration-300",
-                "border-2 rounded-2xl",
+                "p-4 relative overflow-hidden transition-all duration-300 rounded-2xl",
+                "border-2",
                 metric.borderColor
               )}
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                boxShadow: `0 0 20px ${
+                  metric.borderColor === "border-[#10B981]" ? "rgba(16, 185, 129, 0.4)" :
+                  metric.borderColor === "border-[#FF6B2C]" ? "rgba(255, 107, 44, 0.4)" :
+                  metric.borderColor === "border-[#3B82F6]" ? "rgba(59, 130, 246, 0.4)" :
+                  metric.borderColor === "border-[#A855F7]" ? "rgba(168, 85, 247, 0.4)" :
+                  metric.borderColor === "border-[#EF4444]" ? "rgba(239, 68, 68, 0.4)" :
+                  "rgba(6, 182, 212, 0.4)"
+                }`,
+              }}
             >
               {/* Title and Trend */}
               <div className="flex items-start justify-between mb-2">
@@ -240,9 +253,14 @@ const ProgressPage = () => {
                   className={cn(
                     "px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5",
                     isPositiveTrend
-                      ? "bg-[#10B981]/20 text-[#10B981]"
-                      : "bg-[#EF4444]/20 text-[#EF4444]"
+                      ? "bg-[#10B981] text-white"
+                      : "bg-[#EF4444] text-white"
                   )}
+                  style={{
+                    boxShadow: isPositiveTrend
+                      ? "0 0 10px rgba(16, 185, 129, 0.6)"
+                      : "0 0 10px rgba(239, 68, 68, 0.6)",
+                  }}
                 >
                   {isPositiveTrend ? <TrendingDown className="h-2.5 w-2.5" /> : <TrendingUp className="h-2.5 w-2.5" />}
                   {Math.abs(metric.trend).toFixed(1)}%
@@ -250,7 +268,7 @@ const ProgressPage = () => {
               </div>
 
               {/* Value */}
-              <div className="mb-2">
+              <div className="mb-3">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-foreground">
                     {formatValue(metric.value, metric.unit)}
@@ -261,34 +279,54 @@ const ProgressPage = () => {
                 </div>
               </div>
 
-              {/* Progress Info */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground">Progress to goal</span>
-                  <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
-                </div>
-                
-                {/* Progress Bar - removed, showing text only */}
-                <p className="text-[11px] text-muted-foreground">
-                  Target: {metric.target} {metric.targetUnit}
-                </p>
-              </div>
-
               {/* Mini Chart (for VO2 MAX) */}
               {metric.chart && (
-                <div className="mt-2 h-8 flex items-end gap-0.5">
+                <div className="mb-3 h-8 flex items-end gap-0.5">
                   {[45, 48, 46, 50, 52, 51, 52.1].map((value, i) => (
                     <div
                       key={i}
-                      className={cn("flex-1 rounded-t", metric.progressColor)}
+                      className={cn("flex-1 rounded-t")}
                       style={{
                         height: `${(value / 55) * 100}%`,
+                        background: metric.borderColor === "border-[#3B82F6]" ? "#3B82F6" : "#3B82F6",
                         opacity: 0.6,
                       }}
                     />
                   ))}
                 </div>
               )}
+
+              {/* Progress Bar */}
+              <div className="space-y-1.5 mb-2">
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all duration-500")}
+                    style={{
+                      width: `${progress}%`,
+                      background: 
+                        metric.borderColor === "border-[#10B981]" ? "#10B981" :
+                        metric.borderColor === "border-[#FF6B2C]" ? "#FF6B2C" :
+                        metric.borderColor === "border-[#3B82F6]" ? "#3B82F6" :
+                        metric.borderColor === "border-[#A855F7]" ? "#A855F7" :
+                        metric.borderColor === "border-[#EF4444]" ? "#EF4444" :
+                        "#06B6D4",
+                      boxShadow: `0 0 8px ${
+                        metric.borderColor === "border-[#10B981]" ? "rgba(16, 185, 129, 0.8)" :
+                        metric.borderColor === "border-[#FF6B2C]" ? "rgba(255, 107, 44, 0.8)" :
+                        metric.borderColor === "border-[#3B82F6]" ? "rgba(59, 130, 246, 0.8)" :
+                        metric.borderColor === "border-[#A855F7]" ? "rgba(168, 85, 247, 0.8)" :
+                        metric.borderColor === "border-[#EF4444]" ? "rgba(239, 68, 68, 0.8)" :
+                        "rgba(6, 182, 212, 0.8)"
+                      }`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Target Text */}
+              <p className="text-[11px] text-muted-foreground">
+                Target: {metric.target} {metric.targetUnit}
+              </p>
 
               {/* Settings Icon (for VO2 MAX) */}
               {metric.chart && (
