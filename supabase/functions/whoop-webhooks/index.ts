@@ -47,6 +47,84 @@ async function validateWhoopSignature(
   }
 }
 
+// Функция для обновления токена
+async function refreshWhoopToken(refreshToken: string) {
+  const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+  const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
+  
+  const response = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: clientId!,
+      client_secret: clientSecret!,
+    }).toString(),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Token refresh failed: ${response.statusText}`);
+  }
+  
+  return await response.json();
+}
+
+// Функция для получения валидного токена (с автообновлением)
+async function getValidAccessToken(userId: string) {
+  const { data: tokens, error } = await supabase
+    .from('whoop_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+    
+  if (error || !tokens || tokens.length === 0) {
+    throw new Error('No Whoop tokens found');
+  }
+  
+  const token = tokens[0];
+  const now = new Date();
+  const expiresAt = new Date(token.expires_at);
+  
+  // Если токен истекает в течение 5 минут, обновляем его
+  if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+    console.log('Token expires soon, refreshing...');
+    
+    try {
+      const refreshResult = await refreshWhoopToken(token.refresh_token);
+      
+      // Сохраняем новые токены
+      const newExpiresAt = new Date(now.getTime() + refreshResult.expires_in * 1000);
+      
+      const { error: updateError } = await supabase
+        .from('whoop_tokens')
+        .update({
+          access_token: refreshResult.access_token,
+          refresh_token: refreshResult.refresh_token || token.refresh_token,
+          expires_at: newExpiresAt.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('id', token.id);
+        
+      if (updateError) {
+        console.error('Failed to update tokens:', updateError);
+        throw new Error('Failed to update tokens');
+      }
+      
+      console.log('Token refreshed successfully');
+      return refreshResult.access_token;
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      throw new Error('Token refresh failed');
+    }
+  }
+  
+  return token.access_token;
+}
+
 // Функция для получения токена пользователя из базы данных
 async function getUserToken(whoopUserId: string): Promise<{ access_token: string, user_id: string } | null> {
   try {
@@ -66,20 +144,14 @@ async function getUserToken(whoopUserId: string): Promise<{ access_token: string
 
     console.log(`Found mapping: Whoop user ${whoopUserId} -> our user ${mapping.user_id}`);
 
-    // Получаем токен для нашего пользователя
-    const { data: token, error: tokenError } = await supabase
-      .from('whoop_tokens')
-      .select('access_token, user_id')
-      .eq('user_id', mapping.user_id)
-      .not('access_token', 'is', null)
-      .single();
-    
-    if (tokenError || !token) {
-      console.error('No token found for user:', mapping.user_id, tokenError);
+    // Получаем валидный токен с автообновлением
+    try {
+      const access_token = await getValidAccessToken(mapping.user_id);
+      return { access_token, user_id: mapping.user_id };
+    } catch (tokenError) {
+      console.error('Token validation/refresh failed:', tokenError);
       return null;
     }
-
-    return token;
   } catch (error) {
     console.error('Error in getUserToken:', error);
     return null;

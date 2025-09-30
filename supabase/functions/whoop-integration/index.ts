@@ -81,6 +81,84 @@ serve(async (req) => {
   }
 });
 
+// Функция для обновления токена
+async function refreshWhoopToken(refreshToken: string) {
+  const clientId = Deno.env.get('WHOOP_CLIENT_ID');
+  const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
+  
+  const response = await fetch(WHOOP_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: clientId!,
+      client_secret: clientSecret!,
+    }).toString(),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Token refresh failed: ${response.statusText}`);
+  }
+  
+  return await response.json();
+}
+
+// Функция для получения валидного токена (с автообновлением)
+async function getValidAccessToken(userId: string) {
+  const { data: tokens, error } = await supabase
+    .from('whoop_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+    
+  if (error || !tokens || tokens.length === 0) {
+    throw new Error('No Whoop tokens found');
+  }
+  
+  const token = tokens[0];
+  const now = new Date();
+  const expiresAt = new Date(token.expires_at);
+  
+  // Если токен истекает в течение 5 минут, обновляем его
+  if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+    console.log('Token expires soon, refreshing...');
+    
+    try {
+      const refreshResult = await refreshWhoopToken(token.refresh_token);
+      
+      // Сохраняем новые токены
+      const newExpiresAt = new Date(now.getTime() + refreshResult.expires_in * 1000);
+      
+      const { error: updateError } = await supabase
+        .from('whoop_tokens')
+        .update({
+          access_token: refreshResult.access_token,
+          refresh_token: refreshResult.refresh_token || token.refresh_token,
+          expires_at: newExpiresAt.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('id', token.id);
+        
+      if (updateError) {
+        console.error('Failed to update tokens:', updateError);
+        throw new Error('Failed to update tokens');
+      }
+      
+      console.log('Token refreshed successfully');
+      return refreshResult.access_token;
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      throw new Error('Token refresh failed');
+    }
+  }
+  
+  return token.access_token;
+}
+
 // Инициируем OAuth процесс
 async function handleAuth(req: Request) {
   const clientId = Deno.env.get('WHOOP_CLIENT_ID');
@@ -384,11 +462,22 @@ async function handleCheckStatus(req: Request) {
 
   const tokenData = allTokens && allTokens.length > 0 ? allTokens[0] : null;
 
-  const isConnected = tokenData && new Date(tokenData.expires_at) > new Date();
+  let isConnected = false;
+  let accessToken = null;
+  
+  if (tokenData) {
+    try {
+      accessToken = await getValidAccessToken(user.id);
+      isConnected = true;
+    } catch (error: any) {
+      console.log('Token validation failed during status check:', error?.message);
+      isConnected = false;
+    }
+  }
 
   return new Response(
     JSON.stringify({ 
-      isConnected: !!isConnected,
+      isConnected: isConnected,
       lastSync: tokenData?.updated_at || null
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -509,51 +598,22 @@ async function handleSync(req: Request, body: any = {}) {
       throw new Error('Failed to save tokens');
     }
   } else {
-    // Получаем токены из базы данных - используем самый свежий токен
-    const { data: allTokens, error: tokenError } = await supabase
-      .from('whoop_tokens')
-      .select('access_token, refresh_token, expires_at')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-
-    if (tokenError) {
-      console.error('Error fetching tokens:', tokenError);
-      throw new Error('Failed to fetch Whoop tokens');
+    // Получаем валидный токен (с автоматическим обновлением)
+    try {
+      accessToken = await getValidAccessToken(user.id);
+    } catch (tokenError: any) {
+      console.error('Error getting valid token:', tokenError?.message);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Token refresh failed',
+          message: tokenError?.message || 'Failed to get valid access token' 
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
-
-    // Если есть несколько токенов, используем самый свежий и удаляем остальные
-    if (!allTokens || allTokens.length === 0) {
-      throw new Error('No Whoop connection found');
-    }
-
-    const tokenData = allTokens[0];
-    
-    // Очищаем дублированные токены если есть
-    if (allTokens.length > 1) {
-      console.log(`Found ${allTokens.length} token records during sync, will cleanup later`);
-    }
-
-    // Проверяем срок действия токена
-    if (new Date(tokenData.expires_at) <= new Date()) {
-      console.log('Access token expired, attempting refresh...');
-      try {
-        accessToken = await refreshWhoopToken(user.id);
-        console.log('Token refreshed successfully');
-      } catch (e: any) {
-        console.error('Whoop token refresh failed:', e);
-        return new Response(
-          JSON.stringify({ 
-            error: 'token_refresh_failed',
-            message: 'Whoop token expired and refresh failed. Please reconnect your Whoop account.',
-            details: e.message
-          }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } else {
-      accessToken = tokenData.access_token;
-    }
-  }
 
   // Синхронизируем данные
   const syncResult = await syncWhoopData(user.id, accessToken!);
