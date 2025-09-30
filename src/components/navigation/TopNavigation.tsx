@@ -51,6 +51,7 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
   const navItems = [
     { type: 'home' as const, path: "/dashboard", label: "Home" },
     { type: 'stats' as const, path: "/progress", label: "Stats" },
+    { type: 'activity' as const, path: "/fitness-data", label: "Data" },
     { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
     { type: 'activity' as const, path: "/feed", label: "Activity" },
     { type: 'integrations' as const, path: "/integrations", label: "Integrations" },

@@ -170,7 +170,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
               <div className="p-1 rounded-full bg-white/20">
                 <Activity className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium">Данные трекеров</span>
+              <span className="text-sm font-medium">Фитнес данные</span>
             </CardContent>
           </Card>
         </div>
