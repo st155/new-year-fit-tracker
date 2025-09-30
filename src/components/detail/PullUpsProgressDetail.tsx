@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { Chart3D } from '@/components/ui/3d-progress-chart';
 
 interface PullUpsData {
   date: string;
@@ -221,72 +222,19 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
         </div>
       </div>
 
-      {/* Chart */}
+      {/* 3D Chart */}
       {pullUpsData.length > 0 ? (
-        <div 
-          className="p-4 rounded-2xl border-2 mb-6"
-          style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-          }}
-        >
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pullUpsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="pullupGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06B6D4" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#06B6D4" stopOpacity={0.6} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke="rgba(255, 255, 255, 0.1)" 
-                  vertical={false}
-                />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={formatTooltipDate}
-                  stroke="rgba(255, 255, 255, 0.3)"
-                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
-                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
-                />
-                <YAxis 
-                  domain={[0, Math.max(targetPullUps + 2, Math.max(...pullUpsData.map(d => d.pullUps)) + 2)]}
-                  stroke="rgba(255, 255, 255, 0.3)"
-                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
-                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    background: 'rgba(0, 0, 0, 0.9)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '8px 12px'
-                  }}
-                  labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
-                  itemStyle={{ color: '#06B6D4', fontSize: 14, fontWeight: 'bold' }}
-                  labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [value, 'Подтягивания']}
-                />
-                <Bar 
-                  dataKey="pullUps" 
-                  fill="url(#pullupGradient)"
-                  radius={[8, 8, 0, 0]}
-                  maxBarSize={40}
-                />
-                {/* Target line */}
-                <Line 
-                  type="monotone" 
-                  dataKey={() => targetPullUps}
-                  stroke="#FF6B2C" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="mb-6">
+          <Chart3D
+            data={pullUpsData.map(d => ({
+              date: d.date,
+              value: d.pullUps,
+              change: d.change
+            }))}
+            color="#06B6D4"
+            targetValue={targetPullUps}
+            height="400px"
+          />
         </div>
       ) : (
         <div 

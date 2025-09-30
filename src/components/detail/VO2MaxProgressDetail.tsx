@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { Chart3D } from '@/components/ui/3d-progress-chart';
 
 interface VO2MaxData {
   date: string;
@@ -200,66 +201,18 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
         </div>
       </div>
 
-      {/* Chart */}
+      {/* 3D Chart */}
       {vo2maxData.length > 0 ? (
-        <div 
-          className="p-4 rounded-2xl border-2 mb-6"
-          style={{
-            background: "rgba(255, 255, 255, 0.03)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-          }}
-        >
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={vo2maxData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="vo2Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#EF4444" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#EF4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke="rgba(255, 255, 255, 0.1)" 
-                  vertical={false}
-                />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={formatTooltipDate}
-                  stroke="rgba(255, 255, 255, 0.3)"
-                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
-                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
-                />
-                <YAxis 
-                  domain={['dataMin - 2', 'dataMax + 2']}
-                  stroke="rgba(255, 255, 255, 0.3)"
-                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
-                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    background: 'rgba(0, 0, 0, 0.9)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '8px 12px'
-                  }}
-                  labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
-                  itemStyle={{ color: '#EF4444', fontSize: 14, fontWeight: 'bold' }}
-                  labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [`${value.toFixed(1)} мл/кг/мин`, 'VO2Max']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="vo2max" 
-                  stroke="#EF4444" 
-                  strokeWidth={3}
-                  fill="url(#vo2Gradient)"
-                  dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="mb-6">
+          <Chart3D
+            data={vo2maxData.map(d => ({
+              date: d.date,
+              value: d.vo2max,
+              change: d.change
+            }))}
+            color="#EF4444"
+            height="400px"
+          />
         </div>
       ) : (
         <div 
