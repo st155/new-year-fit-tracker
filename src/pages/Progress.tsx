@@ -718,7 +718,7 @@ const ProgressPage = () => {
               }}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {getFilteredGoals().map((goal, index) => {
                 const progress = getProgressPercentage(goal);
                 const trend = getTrend(goal);
@@ -728,49 +728,47 @@ const ProgressPage = () => {
                   <FitnessCard 
                     key={goal.id} 
                     variant="default"
-                    className="animate-fade-in cursor-pointer hover-scale"
+                    className="animate-fade-in cursor-pointer hover-scale p-3 md:p-4"
                     style={{ animationDelay: `${index * 100}ms` }}
                     onClick={() => setViewingGoalDetail(goal)}
                   >
-                    <div className="space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Target className="h-4 w-4 text-primary" />
-                            <h3 className="font-semibold text-foreground truncate">
-                              {goal.goal_name}
-                            </h3>
-                          </div>
-                          <Badge className={getGoalTypeColor(goal.goal_type)}>
-                            {goal.goal_type}
-                          </Badge>
+                    <div className="space-y-2 md:space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Target className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                          <h3 className="text-xs md:text-sm font-semibold text-foreground truncate">
+                            {goal.goal_name}
+                          </h3>
                         </div>
-                        
-                        <div className="text-right">
-                          <div className="flex items-center gap-1">
-                            <span className="text-2xl font-bold text-foreground">
-                              {latestMeasurement ? latestMeasurement.value : '--'}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {goal.target_unit}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            цель: {goal.target_value} {goal.target_unit}
-                          </div>
+                        <Badge className={`text-[10px] md:text-xs h-4 px-1 ${getGoalTypeColor(goal.goal_type)}`}>
+                          {goal.goal_type}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-lg md:text-xl font-bold text-foreground">
+                            {latestMeasurement ? latestMeasurement.value : '--'}
+                          </span>
+                          <span className="text-[10px] md:text-xs text-muted-foreground">
+                            {goal.target_unit}
+                          </span>
+                        </div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground">
+                          цель: {goal.target_value}
                         </div>
                       </div>
 
-                      <Progress value={progress} className="h-2" />
+                      <Progress value={progress} className="h-1.5 md:h-2" />
 
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {progress}% достигнуто
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] md:text-xs text-muted-foreground">
+                          {progress}%
                         </span>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           {trend && (
-                            <div className={`flex items-center gap-1 ${
+                            <div className={`flex items-center ${
                               (goal.goal_type === 'body_composition' || 
                                goal.goal_name.toLowerCase().includes('жир') ||
                                goal.goal_name.toLowerCase().includes('вес'))
@@ -780,8 +778,8 @@ const ProgressPage = () => {
                               {((goal.goal_type === 'body_composition' || 
                                  goal.goal_name.toLowerCase().includes('жир') ||
                                  goal.goal_name.toLowerCase().includes('вес'))
-                                ? (trend === 'down' ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />)
-                                : (trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />)
+                                ? (trend === 'down' ? <TrendingDown className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <TrendingUp className="h-2.5 w-2.5 md:h-3 md:w-3" />)
+                                : (trend === 'up' ? <TrendingUp className="h-2.5 w-2.5 md:h-3 md:w-3" /> : <TrendingDown className="h-2.5 w-2.5 md:h-3 md:w-3" />)
                               )}
                             </div>
                           )}
@@ -789,13 +787,13 @@ const ProgressPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-2"
+                            className="h-6 w-6 p-0 md:h-7 md:w-7"
                             onClick={(e) => {
                               e.stopPropagation();
                               setQuickMeasurementGoal(goal);
                             }}
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-2.5 w-2.5 md:h-3 md:w-3" />
                           </Button>
                         </div>
                       </div>
