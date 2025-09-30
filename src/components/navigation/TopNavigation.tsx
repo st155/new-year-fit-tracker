@@ -51,9 +51,9 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
   const navItems = [
     { type: 'home' as const, path: "/dashboard", label: "Home" },
     { type: 'stats' as const, path: "/progress", label: "Stats" },
-    { type: 'activity' as const, path: "/fitness-data", label: "Data" },
+    { type: 'data' as const, path: "/fitness-data", label: "Data" },
     { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
-    { type: 'activity' as const, path: "/feed", label: "Activity" },
+    { type: 'feed' as const, path: "/feed", label: "Activity" },
     { type: 'integrations' as const, path: "/integrations", label: "Integrations" },
   ];
 
@@ -88,14 +88,20 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-10 p-0 relative"
+            className="h-10 w-10 p-0 relative hover:bg-transparent"
             onClick={() => navigate('/notifications')}
           >
-            <Bell className="h-5 w-5" />
+            <Bell 
+              className="h-5 w-5 transition-all duration-300" 
+              style={{
+                color: '#f59e0b',
+                filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.5))'
+              }}
+            />
             {notificationCount > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full flex items-center justify-center"
+                className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(239,68,68,0.6)]"
               >
                 {notificationCount}
               </Badge>
@@ -106,9 +112,15 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-10 p-0"
+            className="h-10 w-10 p-0 hover:bg-transparent"
           >
-            <Globe className="h-4 w-4" />
+            <Globe 
+              className="h-4 w-4 transition-all duration-300" 
+              style={{
+                color: '#3b82f6',
+                filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.5))'
+              }}
+            />
           </Button>
 
           {/* Settings */}
@@ -117,9 +129,15 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-10 w-10 p-0"
+                className="h-10 w-10 p-0 hover:bg-transparent"
               >
-                <Settings className="h-5 w-5" />
+                <Settings 
+                  className="h-5 w-5 transition-all duration-300" 
+                  style={{
+                    color: '#a855f7',
+                    filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.5))'
+                  }}
+                />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -142,13 +160,13 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-10 p-0"
+            className="h-10 w-10 p-0 hover:bg-transparent"
             onClick={() => navigate('/profile')}
           >
-            <Avatar className="h-9 w-9 border-2 border-accent/30">
+            <Avatar className="h-9 w-9 border-2 border-accent/30 ring-2 ring-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.4)]">
               <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
-                {getInitials(userName || 'User')}
+              <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-blue-500 text-white text-xs font-bold">
+                {getInitials(profile?.username || profile?.full_name || userName || 'U')}
               </AvatarFallback>
             </Avatar>
           </Button>
