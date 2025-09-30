@@ -123,7 +123,7 @@ export default function MetricDetail() {
             .from('metric_values')
             .select(`value, measurement_date, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'Body Fat Percentage')
+            .in('user_metrics.metric_name', ['Body Fat Percentage', 'Процент жира'])
             .gte('measurement_date', startDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
@@ -140,10 +140,22 @@ export default function MetricDetail() {
           source: (item.user_metrics as any)?.source || 'unknown'
         }));
 
-        metricData = [...bcEntries, ...mvEntries].sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-      } 
+        // Сортируем по дате и приоритету источника
+        const allEntries = [...bcEntries, ...mvEntries];
+        const priorityMap = { 'withings': 3, 'manual': 1, 'unknown': 0 };
+        
+        metricData = allEntries
+          .sort((a, b) => {
+            const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+            if (dateCompare !== 0) return dateCompare;
+            return (priorityMap[b.source as keyof typeof priorityMap] || 0) - (priorityMap[a.source as keyof typeof priorityMap] || 0);
+          })
+          .filter((entry, index, arr) => {
+            const sameDate = arr.filter(e => e.date === entry.date);
+            if (sameDate.length === 1) return true;
+            return sameDate.indexOf(entry) === 0;
+          });
+      }
       else if (metricType === 'weight') {
         const [bcData, mvData] = await Promise.all([
           supabase
@@ -157,7 +169,7 @@ export default function MetricDetail() {
             .from('metric_values')
             .select(`value, measurement_date, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'Weight')
+            .in('user_metrics.metric_name', ['Weight', 'Вес'])
             .gte('measurement_date', startDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
@@ -174,9 +186,22 @@ export default function MetricDetail() {
           source: (item.user_metrics as any)?.source || 'unknown'
         }));
 
-        metricData = [...bcEntries, ...mvEntries].sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
+        // Сортируем по дате и приоритету источника (Withings > manual)
+        const allEntries = [...bcEntries, ...mvEntries];
+        const priorityMap = { 'withings': 3, 'manual': 1, 'unknown': 0 };
+        
+        metricData = allEntries
+          .sort((a, b) => {
+            const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+            if (dateCompare !== 0) return dateCompare;
+            return (priorityMap[b.source as keyof typeof priorityMap] || 0) - (priorityMap[a.source as keyof typeof priorityMap] || 0);
+          })
+          .filter((entry, index, arr) => {
+            // Убираем дубликаты по дате, оставляя с высшим приоритетом
+            const sameDate = arr.filter(e => e.date === entry.date);
+            if (sameDate.length === 1) return true;
+            return sameDate.indexOf(entry) === 0;
+          });
       }
       else if (metricType === 'steps') {
         const [dhsData, mvData] = await Promise.all([
