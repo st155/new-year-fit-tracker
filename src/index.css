@@ -73,6 +73,7 @@ All colors MUST be HSL.
     
     /* Shadows with glow */
     --shadow-glow: 0 0 30px hsl(180 100% 50% / 0.4);
+    --shadow-glow-secondary: 0 0 30px hsl(349 100% 60% / 0.4);
     --shadow-enhanced: 0 0 30px hsl(180 100% 50% / 0.4);
     --shadow-success: 0 0 30px hsl(142 76% 45% / 0.4);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.3);
@@ -183,6 +184,13 @@ All colors MUST be HSL.
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1.5rem;
     box-shadow: var(--shadow-card);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   .glass-nav {

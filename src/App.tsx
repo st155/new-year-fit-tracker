@@ -29,6 +29,7 @@ import Landing from "./pages/Landing";
 import ModernProgress from "./pages/ModernProgress";
 import Feed from "./pages/Feed";
 import MetricDetail from "./pages/MetricDetail";
+import Leaderboard from "./pages/Leaderboard";
 import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,13 @@ const App = () => (
               <ProtectedRoute>
                 <ModernAppLayout>
                   <ModernProgress />
+                </ModernAppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <ModernAppLayout>
+                  <Leaderboard />
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
