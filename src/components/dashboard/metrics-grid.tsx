@@ -26,21 +26,27 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, unit, change, subtitle, color, onClick }: MetricCardProps & { onClick?: () => void }) {
-  const wrappers: Record<MetricCardProps['color'], { wrapper: string }> = {
-    'body-fat': { wrapper: 'bg-gradient-to-br from-metric-body-fat/60 via-metric-body-fat/20 to-transparent ring-1 ring-metric-body-fat/40' },
-    'weight': { wrapper: 'bg-gradient-to-br from-metric-weight/60 via-metric-weight/20 to-transparent ring-1 ring-metric-weight/40' },
-    'vo2max': { wrapper: 'bg-gradient-to-br from-metric-vo2max/60 via-metric-vo2max/20 to-transparent ring-1 ring-metric-vo2max/40' },
-    'row': { wrapper: 'bg-gradient-to-br from-metric-row/60 via-metric-row/20 to-transparent ring-1 ring-metric-row/40' },
-    'recovery': { wrapper: 'bg-gradient-to-br from-success/60 via-success/20 to-transparent ring-1 ring-success/40' },
-    'steps': { wrapper: 'bg-gradient-to-br from-accent/60 via-accent/20 to-transparent ring-1 ring-accent/40' },
+  const cssVarMap: Record<MetricCardProps['color'], string> = {
+    'body-fat': '--metric-body-fat',
+    'weight': '--metric-weight',
+    'vo2max': '--metric-vo2max',
+    'row': '--metric-row',
+    'recovery': '--success',
+    'steps': '--metric-steps',
+  };
+
+  const varName = cssVarMap[color];
+  const wrapperStyle = {
+    background: `linear-gradient(135deg, hsl(var(${varName}) / 0.5), hsl(var(${varName}) / 0.15) 35%, transparent)`,
+    boxShadow: `0 0 24px hsl(var(${varName}) / 0.35)`,
   };
 
   return (
     <div
       className={cn(
-        'relative rounded-xl p-[2px] transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer',
-        wrappers[color].wrapper
+        'relative rounded-xl p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer'
       )}
+      style={wrapperStyle}
       onClick={onClick}
     >
       <Card className="relative overflow-hidden bg-card rounded-[0.9rem] border-0 h-full">
