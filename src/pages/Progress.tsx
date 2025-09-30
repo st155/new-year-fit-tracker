@@ -912,43 +912,29 @@ const ProgressPage = () => {
             </FitnessCard>
           </div>
 
-          {/* Фильтры и сортировка */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <Select value={goalTypeFilter} onValueChange={setGoalTypeFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Тип цели" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="strength">Сила</SelectItem>
-                <SelectItem value="cardio">Кардио</SelectItem>
-                <SelectItem value="endurance">Выносливость</SelectItem>
-                <SelectItem value="body_composition">Состав тела</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Табы категорий и сортировка */}
+          <div className="mb-4 space-y-3">
+            <Tabs value={goalTypeFilter} onValueChange={setGoalTypeFilter}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">Основные</TabsTrigger>
+                <TabsTrigger value="body_composition">Состав тела</TabsTrigger>
+                <TabsTrigger value="strength">Силовые</TabsTrigger>
+                <TabsTrigger value="cardio">Кардио</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Период" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все время</SelectItem>
-                <SelectItem value="week">Последняя неделя</SelectItem>
-                <SelectItem value="month">Последний месяц</SelectItem>
-                <SelectItem value="quarter">Последние 3 месяца</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Сортировка" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">По дате измерения</SelectItem>
-                <SelectItem value="progress">По прогрессу</SelectItem>
-                <SelectItem value="name">По названию</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Сортировка" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">По дате измерения</SelectItem>
+                  <SelectItem value="progress">По прогрессу</SelectItem>
+                  <SelectItem value="name">По названию</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Отображение целей */}
@@ -964,7 +950,7 @@ const ProgressPage = () => {
             />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {getFilteredGoals().map((goal, index) => {
+              {getFilteredGoals().slice(0,10).map((goal, index) => {
                 const progress = getProgressPercentage(goal);
                 const trend = getTrend(goal);
                 const latestMeasurement = goal.measurements?.[0];
