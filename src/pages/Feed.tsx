@@ -143,35 +143,12 @@ export default function Feed() {
         });
       }
 
-      // Убираем дубликаты сна — оставляем один (самый длинный) на день
-      const isSleep = (a: ActivityItem) => {
-        const meta: any = (a as any).metadata || {};
-        const name = String(meta?.user_metrics?.metric_name || meta?.metric_name || a.action_text || '').toLowerCase();
-        return /sleep|сон|slept/.test(name);
-      };
-
-      const sleepMap = new Map<string, ActivityItem>();
-      const others: ActivityItem[] = [];
-      for (const a of enhancedActivities) {
-        if (a.action_type === 'metric_values' && isSleep(a)) {
-          const dateKey = String(((a as any).metadata?.measurement_date) || a.created_at?.substring(0, 10));
-          const prev = sleepMap.get(dateKey);
-          if (!prev) sleepMap.set(dateKey, a);
-          else {
-            const prevVal = Number((prev as any).metadata?.value ?? 0);
-            const curVal = Number((a as any).metadata?.value ?? 0);
-            if (curVal > prevVal) sleepMap.set(dateKey, a);
-          }
-        } else {
-          others.push(a);
-        }
-      }
-
-      enhancedActivities = [...others, ...Array.from(sleepMap.values())].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      // Убираем дубликаты по source_id (одна и та же запись может быть вставлена дважды)
+      const uniqueActivities = Array.from(
+        new Map(enhancedActivities.map(a => [a.id, a])).values()
       );
 
-      setActivities(enhancedActivities);
+      setActivities(uniqueActivities);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
