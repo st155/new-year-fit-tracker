@@ -92,22 +92,26 @@ const ProgressPage = () => {
 
     const detectId = (name: string) => {
       if (name.includes('вес') || name.includes('weight')) return 'weight';
-      if (name.includes('жир')) return 'body-fat';
+      if (name.includes('жир') || name.includes('fat')) return 'body-fat';
       if (name.includes('бег') || name.includes('run')) return 'run';
       if (name.includes('vo2') || name.includes('vo₂')) return 'vo2max';
-      if (name.includes('подтяг')) return 'pullups';
-      if (name.includes('отжим')) return 'pushups';
-      return 'generic';
+      if (name.includes('подтяг') || name.includes('pull-up')) return 'pullups';
+      if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? 'bench' : 'pushups';
+      if (name.includes('планк') || name.includes('plank')) return 'plank';
+      if (name.includes('выпад') || name.includes('lunge')) return 'lunges';
+      return `goal-${Math.random().toString(36).slice(2, 7)}`; // ensure unique key fallback
     };
 
     const detectColor = (name: string) => {
       if (name.includes('вес') || name.includes('weight')) return '#10B981';
-      if (name.includes('жир')) return '#FF6B2C';
+      if (name.includes('жир') || name.includes('fat')) return '#FF6B2C';
       if (name.includes('бег') || name.includes('run')) return '#06B6D4';
       if (name.includes('vo2') || name.includes('vo₂')) return '#3B82F6';
-      if (name.includes('подтяг')) return '#A855F7';
-      if (name.includes('отжим')) return '#FBBF24';
-      return '#64748B'; // slate
+      if (name.includes('подтяг') || name.includes('pull-up')) return '#A855F7';
+      if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? '#EF4444' : '#FBBF24';
+      if (name.includes('планк') || name.includes('plank')) return '#8B5CF6';
+      if (name.includes('выпад') || name.includes('lunge')) return '#84CC16';
+      return '#64748B';
     };
 
     // Calculate period start date
@@ -157,6 +161,7 @@ const ProgressPage = () => {
       });
     }
 
+    console.log('[Progress] built metrics:', metricsArray.length, metricsArray.map(m => m.title));
     setMetrics(metricsArray);
   };
 
@@ -222,7 +227,7 @@ const ProgressPage = () => {
 
           return (
             <div
-              key={metric.id}
+              key={`${metric.id}-${metric.title}`}
               className={cn(
                 "p-4 relative overflow-hidden transition-all duration-300 rounded-2xl",
                 "border-2",
