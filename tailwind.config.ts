@@ -72,14 +72,24 @@ export default {
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
+        'gradient-secondary': 'var(--gradient-secondary)',
         'gradient-success': 'var(--gradient-success)',
-        'gradient-accent': 'var(--gradient-accent)',
+        'gradient-gold': 'var(--gradient-gold)',
         'gradient-card': 'var(--gradient-card)',
       },
       boxShadow: {
         'glow': 'var(--shadow-glow)',
+        'glow-secondary': 'var(--shadow-glow-secondary)',
+        'glow-success': 'var(--shadow-glow-success)',
+        'glow-gold': 'var(--shadow-glow-gold)',
+        'glow-silver': 'var(--shadow-glow-silver)',
+        'glow-bronze': 'var(--shadow-glow-bronze)',
         'card': 'var(--shadow-card)',
-        'success': 'var(--shadow-success)',
+      },
+      colors: {
+        gold: "hsl(var(--gold))",
+        silver: "hsl(var(--silver))",
+        bronze: "hsl(var(--bronze))",
       },
       borderRadius: {
         lg: "var(--radius)",

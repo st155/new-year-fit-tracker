@@ -8,150 +8,144 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Fitness Challenge Theme - Dark Athletic */
-    --background: 222 47% 8%;
-    --foreground: 210 40% 98%;
+    /* Fluid Glow Design System */
+    --background: 226 34% 6%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 100% / 0.05;
+    --card-foreground: 0 0% 98%;
+    --popover: 226 30% 10%;
+    --popover-foreground: 0 0% 98%;
     
-    /* Enhanced gradients and shadows */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 40%));
-    --shadow-enhanced: 0 10px 40px -10px hsl(var(--primary) / 0.3);
-    --shadow-success: 0 10px 30px -10px hsl(var(--success) / 0.3);
-
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-
-    /* Fire Orange - Main brand color for motivation */
-    --primary: 16 90% 58%;
-    --primary-foreground: 222 47% 8%;
-
-    /* Steel Blue - Secondary actions */
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 15%;
-    --muted-foreground: 215 20% 65%;
-
-    /* Electric Blue - Accents and highlights */
-    --accent: 217 91% 60%;
-    --accent-foreground: 222 47% 8%;
-
+    /* Primary Accent: Cyan to Purple */
+    --primary: 180 100% 50%;
+    --primary-end: 271 76% 53%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary Accent: Red to Orange */
+    --secondary: 349 100% 60%;
+    --secondary-end: 14 100% 57%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 220 15% 25%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 32% 20%;
-    --input: 217 32% 17%;
-    --ring: 16 90% 58%;
-
-    /* Success Green - Progress indicators */
-    --success: 142 71% 45%;
-    --success-foreground: 210 40% 98%;
-
-    /* Metric color scheme */
-    --metric-body-fat: 142 71% 45%;      /* Green */
-    --metric-weight: 16 90% 58%;         /* Orange/Red */
-    --metric-vo2max: 217 91% 60%;        /* Blue */
-    --metric-row: 280 80% 65%;           /* Purple */
-    --metric-recovery: 142 71% 45%;      /* Green for recovery */
-    --metric-steps: 217 91% 60%;         /* Blue for steps */
-
-    /* Gradients for dynamic effects */
-    --gradient-primary: linear-gradient(135deg, hsl(16 90% 58%), hsl(25 95% 53%));
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 52%));
-    --gradient-accent: linear-gradient(135deg, hsl(217 91% 60%), hsl(237 76% 68%));
-    --gradient-card: linear-gradient(145deg, hsl(222 47% 11%), hsl(217 32% 17%));
-
-    /* Athletic shadows and glows */
-    --shadow-glow: 0 0 30px hsl(16 90% 58% / 0.3);
-    --shadow-card: 0 8px 32px hsl(222 47% 4% / 0.5);
-    --shadow-success: 0 0 20px hsl(142 71% 45% / 0.4);
-
-    /* Smooth athletic transitions */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 100% / 0.05;
+    --ring: 180 100% 50%;
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+    --radius: 1.5rem;
+    
+    /* Metric-specific glowing colors */
+    --metric-body-fat: 142 76% 45%;
+    --metric-weight: 24 95% 53%;
+    --metric-vo2max: 199 89% 48%;
+    --metric-row: 262 83% 58%;
+    --metric-recovery: 346 77% 50%;
+    --metric-steps: 158 64% 52%;
+    
+    /* Leaderboard colors */
+    --gold: 45 100% 51%;
+    --silver: 0 0% 75%;
+    --bronze: 28 100% 50%;
+    
+    /* Sidebar colors */
+    --sidebar-background: 226 30% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 100% / 0.05;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 100% / 0.1;
+    --sidebar-ring: 180 100% 50%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180, 100%, 50%), hsl(271, 76%, 53%));
+    --gradient-secondary: linear-gradient(135deg, hsl(349, 100%, 60%), hsl(14, 100%, 57%));
+    --gradient-success: linear-gradient(135deg, hsl(142, 76%, 45%), hsl(158, 64%, 52%));
+    --gradient-gold: linear-gradient(135deg, hsl(45, 100%, 51%), hsl(28, 100%, 50%));
+    --gradient-card: linear-gradient(135deg, hsl(226, 30%, 10%) 0%, hsl(226, 34%, 8%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(180, 100%, 50%), hsl(271, 76%, 53%));
+    --gradient-accent: linear-gradient(135deg, hsl(199, 89%, 48%), hsl(262, 83%, 58%));
+    
+    /* Shadows with glow */
+    --shadow-glow: 0 0 30px hsl(180 100% 50% / 0.4);
+    --shadow-enhanced: 0 0 30px hsl(180 100% 50% / 0.4);
+    --shadow-success: 0 0 30px hsl(142 76% 45% / 0.4);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.3);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Enhanced dark mode for fitness theme */
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 16 90% 60%;
-    --primary-foreground: 222 47% 6%;
-
-    --secondary: 217 32% 15%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 12%;
-    --muted-foreground: 215 20% 60%;
-
-    --accent: 217 91% 65%;
-    --accent-foreground: 222 47% 6%;
-
-    --destructive: 0 84% 65%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 32% 18%;
-    --input: 217 32% 15%;
-    --ring: 16 90% 60%;
-
-    --success: 142 71% 50%;
-    --success-foreground: 222 47% 6%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --background: 226 34% 6%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 100% / 0.05;
+    --card-foreground: 0 0% 98%;
+    --popover: 226 30% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 180 100% 50%;
+    --primary-end: 271 76% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 349 100% 60%;
+    --secondary-end: 14 100% 57%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 25%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 100% / 0.05;
+    --ring: 180 100% 50%;
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+    --metric-body-fat: 142 76% 45%;
+    --metric-weight: 24 95% 53%;
+    --metric-vo2max: 199 89% 48%;
+    --metric-row: 262 83% 58%;
+    --metric-recovery: 346 77% 50%;
+    --metric-steps: 158 64% 52%;
+    --gold: 45 100% 51%;
+    --silver: 0 0% 75%;
+    --bronze: 28 100% 50%;
+    --sidebar-background: 226 30% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 180 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 100% / 0.05;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 100% / 0.1;
+    --sidebar-ring: 180 100% 50%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    background: linear-gradient(135deg, hsl(var(--background)), hsl(222 47% 6%));
+    background: linear-gradient(180deg, #10121A 0%, #0d0f16 100%);
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
-    overflow-x: hidden; /* Предотвращаем горизонтальный скролл */
+    overflow-x: hidden;
   }
 
-  /* Athletic typography */
+  /* Typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: hsl(var(--foreground));
   }
 
-  /* Smooth transitions for all interactive elements */
+  /* Smooth transitions */
   button, a, input, select, textarea {
     transition: var(--transition);
   }
@@ -162,32 +156,71 @@ All colors MUST be HSL.
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-muted/30;
+    background: hsl(var(--muted) / 0.3);
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Glassmorphism utility classes */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Glow utilities */
+  .glow-primary {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.2);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 30px hsl(var(--success) / 0.4), 0 0 60px hsl(var(--success) / 0.2);
+  }
+
+  /* Text glow */
+  .text-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   }
 
   /* Interactive animations */
   .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
+    transition: transform 0.2s ease;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.05);
   }
 
-  .story-link {
-    @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
-  }
-
-  /* Loading animations */
   .pulse-glow {
     animation: glow-pulse 2s ease-in-out infinite;
   }
 
-  /* Stagger animations for lists */
+  /* Stagger animations */
   .stagger-fade-in > * {
     animation: fade-in 0.5s ease-out;
   }
@@ -199,28 +232,49 @@ All colors MUST be HSL.
   .stagger-fade-in > *:nth-child(5) { animation-delay: 400ms; }
   .stagger-fade-in > *:nth-child(6) { animation-delay: 500ms; }
 
-  /* Fitness-specific animations */
+  /* Progress bars */
   .progress-bar {
-    @apply relative overflow-hidden rounded-full bg-muted;
+    position: relative;
+    overflow: hidden;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
   }
 
-  .progress-bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
+  .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: shimmer 2s infinite;
+    border-radius: 999px;
+    background: var(--gradient-primary);
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+    transition: width 0.3s ease;
   }
 
-  @keyframes shimmer {
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 40px hsl(var(--primary) / 0.1);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes marquee {
     0% {
-      left: -100%;
+      transform: translateX(0);
     }
     100% {
-      left: 100%;
+      transform: translateX(-50%);
     }
   }
 }

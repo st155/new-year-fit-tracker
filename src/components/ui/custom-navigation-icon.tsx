@@ -8,14 +8,14 @@ interface CustomNavigationIconProps {
 }
 
 const iconConfig = {
-  home: { icon: Home, color: 'text-orange-400', activeColor: 'text-orange-500' },
-  stats: { icon: BarChart3, color: 'text-emerald-400', activeColor: 'text-emerald-500' },
-  challenges: { icon: Trophy, color: 'text-cyan-400', activeColor: 'text-cyan-500' },
-  activity: { icon: Activity, color: 'text-amber-400', activeColor: 'text-amber-500' },
-  integrations: { icon: Zap, color: 'text-blue-400', activeColor: 'text-blue-500' },
-  connections: { icon: Link2, color: 'text-purple-400', activeColor: 'text-purple-500' },
-  settings: { icon: Settings, color: 'text-gray-400', activeColor: 'text-gray-500' },
-  trainer: { icon: Users, color: 'text-rose-400', activeColor: 'text-rose-500' },
+  home: { icon: Home, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  stats: { icon: BarChart3, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  challenges: { icon: Trophy, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  activity: { icon: Activity, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  integrations: { icon: Zap, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  connections: { icon: Link2, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  settings: { icon: Settings, color: 'text-muted-foreground', activeColor: 'text-primary' },
+  trainer: { icon: Users, color: 'text-muted-foreground', activeColor: 'text-primary' },
 };
 
 export function CustomNavigationIcon({ type, isActive = false, className }: CustomNavigationIconProps) {
@@ -29,15 +29,12 @@ export function CustomNavigationIcon({ type, isActive = false, className }: Cust
     )}>
       <IconComponent 
         className={cn(
-          "h-6 w-6 transition-colors duration-200",
+          "h-6 w-6 transition-all duration-200",
           isActive ? config.activeColor : config.color,
-          isActive && "scale-110"
+          isActive && "scale-110 drop-shadow-[0_0_8px_hsl(var(--primary))]"
         )}
         strokeWidth={1.5}
       />
-      {isActive && (
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-current rounded-full opacity-60" />
-      )}
     </div>
   );
 }

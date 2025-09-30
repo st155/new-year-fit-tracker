@@ -10,11 +10,11 @@ export function FitnessCard({ className, variant = "default", children, ...props
   return (
     <Card
       className={cn(
-        "transition-all duration-300",
+        "transition-all duration-300 glass-card",
         {
-          "bg-gradient-card border-border/50 shadow-card hover:shadow-glow hover:scale-[1.02]": variant === "default",
-          "bg-gradient-primary border-primary/30 shadow-glow text-primary-foreground hover:scale-[1.02]": variant === "gradient",
-          "bg-gradient-success border-success/30 shadow-success text-success-foreground hover:scale-[1.02]": variant === "success",
+          "border-border hover:shadow-glow hover:scale-[1.02]": variant === "default",
+          "border-primary/50 shadow-glow glow-primary hover:scale-[1.02]": variant === "gradient",
+          "border-success/50 shadow-glow-success glow-success hover:scale-[1.02]": variant === "success",
         },
         className
       )}

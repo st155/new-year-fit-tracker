@@ -181,7 +181,7 @@ export function MainNavigation() {
   const allItems = [...navigationItems, ...(isTrainer ? trainerItems : [])];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full glass-nav">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 min-w-0">
