@@ -52,16 +52,27 @@ export default function Feed() {
 
       if (error) throw error;
 
-      // Filter out sleep activities
+      // Filter to show only specific activity types
       const filteredActivities = (activitiesData || []).filter(activity => {
         const actionText = activity.action_text?.toLowerCase() || '';
-        const actionType = activity.action_type?.toLowerCase() || '';
         
-        // Exclude sleep-related activities
-        return !actionText.includes('сон') && 
-               !actionText.includes('sleep') && 
-               !actionText.includes('slept') &&
-               !actionType.includes('sleep');
+        // Include these types:
+        // 1. Recovery (восстановился/recovered)
+        // 2. Workouts (тренировку/workout/completed)
+        // 3. VO2Max
+        // 4. Sleep (slept/спал) - but with HH:MM format only
+        // 5. Strain
+        // 6. Daily Steps (шаги/steps)
+        
+        const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
+        const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
+                          && !actionText.includes('качество'); // exclude Whoop quality sleep entries
+        const isVO2Max = actionText.includes('vo2max');
+        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/); // Only HH:MM format
+        const isStrain = actionText.includes('strain');
+        const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
+        
+        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
       });
 
       setActivities(filteredActivities);

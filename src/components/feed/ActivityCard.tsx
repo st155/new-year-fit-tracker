@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame } from "lucide-react";
+import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
@@ -48,29 +48,19 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
       return { icon: Zap, color: '#3B82F6' }; // Bright Blue
     }
     
-    // Running/Бег/1km - Neon Green
-    if (actionText.includes('бег') || actionText.includes('пробежал') || actionText.includes('1 км') || actionText.includes('1km') || actionType.includes('run')) {
-      return { icon: Activity, color: '#10B981' }; // Neon Green
+    // Workouts/Тренировки - Lime Green
+    if (actionText.includes('тренир') || actionText.includes('workout') || actionText.includes('completed')) {
+      return { icon: Dumbbell, color: '#84CC16' }; // Lime
     }
     
-    // Pull-ups/Подтягивания - Purple
-    if (actionText.includes('подтягив') || actionText.includes('pull') || actionText.includes('pullup')) {
-      return { icon: Target, color: '#A855F7' }; // Purple
+    // Sleep/Сон - Indigo
+    if (actionText.includes('slept') || actionText.includes('спал')) {
+      return { icon: Moon, color: '#6366F1' }; // Indigo
     }
     
-    // Bench Press/Жим лёжа - Orange
-    if (actionText.includes('жим') || actionText.includes('bench') || actionText.includes('press')) {
-      return { icon: Dumbbell, color: '#F97316' }; // Orange
-    }
-    
-    // Push-ups/Отжимания - Pink
-    if (actionText.includes('отжима') || actionText.includes('pushup') || actionText.includes('push-up')) {
-      return { icon: Flame, color: '#EC4899' }; // Pink
-    }
-    
-    // Weight Loss/Вес - Red
-    if (actionText.includes('вес') || actionText.includes('weight') || actionText.includes('кг') || actionType.includes('weight')) {
-      return { icon: TrendingUp, color: '#EF4444' }; // Red
+    // Strain/Нагрузка - Orange
+    if (actionText.includes('strain')) {
+      return { icon: Flame, color: '#F97316' }; // Orange
     }
     
     // VO2 Max - Cyan
@@ -83,23 +73,9 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
       return { icon: Footprints, color: '#FBBF24' }; // Yellow
     }
     
-    // Goals/Цели - Gold
-    if (actionText.includes('цел') || actionText.includes('goal') || actionType.includes('goal')) {
-      return { icon: Trophy, color: '#F59E0B' }; // Gold
-    }
-    
-    // Workout/Тренировка - Lime
-    if (actionText.includes('тренир') || actionText.includes('workout') || actionType.includes('workout')) {
-      return { icon: Dumbbell, color: '#84CC16' }; // Lime
-    }
-    
-    // Time-based activities - Teal
-    if (actionText.includes('мин') || actionText.includes('time') || actionText.includes('timer')) {
-      return { icon: Timer, color: '#14B8A6' }; // Teal
-    }
     
     // Default - Electric Purple
-    return { icon: Zap, color: '#8B5CF6' };
+    return { icon: Activity, color: '#8B5CF6' };
   };
   
   const { icon: ActivityIcon, color: iconColor } = getActivityIconAndColor();
@@ -107,70 +83,58 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   // Format activity text to be simple and readable
   const getFormattedActivityText = () => {
     const actionText = activity.action_text || '';
-    const metadata = activity.metadata;
     
     // Recovery
-    if (actionText.includes('recovered')) {
+    if (actionText.includes('recovered') || actionText.includes('восстановился')) {
       const match = actionText.match(/(\d+)%/);
       if (match) return `Recovery ${match[1]}%`;
     }
     
-    // Run/1km
-    if (actionText.includes('1 км') || actionText.includes('1km') || actionText.includes('пробежал')) {
-      const match = actionText.match(/(\d+:\d+)/);
-      if (match) return `Run ${match[1]}`;
+    // Workouts
+    if (actionText.includes('завершил тренировку') || actionText.includes('completed a workout')) {
+      const strainMatch = actionText.match(/Strain[:\s]+(\d+\.?\d*)/i);
+      const caloriesMatch = actionText.match(/(\d+)\s*ккал|(\d+)\s*kcal/i);
+      
+      if (strainMatch) {
+        return `Workout • Strain ${strainMatch[1]}`;
+      } else if (caloriesMatch) {
+        const calories = caloriesMatch[1] || caloriesMatch[2];
+        return `Workout • ${calories} kcal`;
+      }
+      return 'Workout';
     }
     
-    // Strain
-    if (actionText.includes('strain')) {
+    // Sleep
+    if (actionText.includes('slept')) {
+      const match = actionText.match(/(\d+:\d+)/);
+      if (match) return `Sleep ${match[1]}`;
+    }
+    
+    // Strain (standalone)
+    if (actionText.includes('strain') && !actionText.includes('workout')) {
       const match = actionText.match(/(\d+\.?\d*)/);
       if (match) return `Strain ${match[1]}`;
     }
     
-    // Pull-ups/Подтягивания
-    if (actionText.includes('Подтягивания') || actionText.includes('Pull-ups')) {
-      const match = actionText.match(/(\d+)\s*(раз|reps)/i);
-      if (match) return `Pull-ups ${match[1]} reps`;
-      return 'Pull-ups Goal';
-    }
-    
-    // Bench Press/Жим лёжа
-    if (actionText.includes('Жим лёжа') || actionText.includes('Bench')) {
-      const match = actionText.match(/(\d+)\s*кг/);
-      if (match) return `Bench Press ${match[1]} kg`;
-      return 'Bench Press Goal';
-    }
-    
-    // Push-ups/Отжимания
-    if (actionText.includes('Отжимания') || actionText.includes('Push-ups')) {
-      const match = actionText.match(/(\d+)\s*(раз|reps)/i);
-      if (match) return `Push-ups ${match[1]} reps`;
-      return 'Push-ups Goal';
-    }
-    
-    // Weight/Вес
-    if (actionText.includes('вес') || actionText.includes('weight')) {
-      const match = actionText.match(/(\d+\.?\d*)\s*кг/);
-      if (match) return `Weight ${match[1]} kg`;
-    }
-    
     // VO2 Max
-    if (actionText.includes('VO2') || actionText.includes('vo2')) {
+    if (actionText.includes('VO2Max') || actionText.includes('vo2max')) {
       const match = actionText.match(/(\d+\.?\d*)/);
       if (match) return `VO2 Max ${match[1]}`;
     }
     
-    // Goals - extract just the goal name
-    if (actionText.includes('created a new goal:') || actionText.includes('создал цель')) {
-      const match = actionText.match(/goal:\s*(.+?)(?:\s*\(|$)/i);
-      if (match) return `Goal: ${match[1].trim()}`;
+    // Steps
+    if (actionText.includes('steps') || actionText.includes('шаг')) {
+      const match = actionText.match(/(\d+[\d,]*)/);
+      if (match) {
+        const steps = match[1].replace(/,/g, '');
+        return `Steps ${parseInt(steps).toLocaleString()}`;
+      }
     }
     
-    // Default - clean up the text
+    // Default - clean up
     return actionText
       .replace(/st_\d+\.\d+\s*/gi, '')
-      .replace(/ST\s+created a new goal:\s*/gi, 'Goal: ')
-      .replace(/\s*\(\d+\s*(раз|reps|кг|kg)\)/gi, '')
+      .replace(/\[Whoop\]/gi, '')
       .trim();
   };
 
