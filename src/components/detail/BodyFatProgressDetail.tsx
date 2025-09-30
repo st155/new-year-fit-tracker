@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Chart3D } from '@/components/ui/3d-progress-chart';
 interface BodyFatData {
   date: string;
   bodyFat: number;
@@ -223,19 +222,75 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         </div>
       </div>
 
-      {/* 3D Chart */}
+      {/* Chart */}
       {bodyFatData.length > 0 ? (
-        <div className="mb-6">
-          <Chart3D
-            data={bodyFatData.map(d => ({
-              date: d.date,
-              value: d.bodyFat,
-              change: d.change
-            }))}
-            color="#FF6B2C"
-            targetValue={targetBodyFat}
-            height="400px"
-          />
+        <div 
+          className="p-4 rounded-2xl border-2 mb-6"
+          style={{
+            background: "rgba(255, 255, 255, 0.03)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={bodyFatData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="bodyFatGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF6B2C" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#FF6B2C" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="rgba(255, 255, 255, 0.1)" 
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatTooltipDate}
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
+                />
+                <YAxis 
+                  domain={['dataMin - 1', 'dataMax + 1']}
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
+                  axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    background: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '8px 12px'
+                  }}
+                  labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+                  itemStyle={{ color: '#FF6B2C', fontSize: 14, fontWeight: 'bold' }}
+                  labelFormatter={(value) => formatTooltipDate(value as string)}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Процент жира']}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="bodyFat" 
+                  stroke="#FF6B2C" 
+                  strokeWidth={3}
+                  fill="url(#bodyFatGradient)"
+                  dot={{ fill: '#FF6B2C', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#FF6B2C', strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey={() => targetBodyFat}
+                  stroke="#22C55E" 
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       ) : (
         <div 
