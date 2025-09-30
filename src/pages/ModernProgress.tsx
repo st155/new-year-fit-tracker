@@ -171,6 +171,72 @@ export default function ModernProgress() {
         });
       }
 
+      // Add general tracker metrics from daily summary to exceed 8 cards
+      const { data: summaryRows } = await supabase
+        .from('daily_health_summary')
+        .select('steps, active_calories, heart_rate_avg, sleep_hours')
+        .eq('user_id', user.id)
+        .gte('date', periodStart.toISOString().split('T')[0])
+        .order('date', { ascending: false })
+        .limit(1);
+      const summary = summaryRows?.[0];
+
+      if (summary?.steps != null) {
+        metricsArray.push({
+          id: 'steps',
+          title: 'Steps',
+          value: Number(summary.steps) || 0,
+          unit: '',
+          target: 10000,
+          targetUnit: 'steps',
+          trend: 0,
+          borderColor: '#22C55E',
+          progressColor: '#22C55E',
+        });
+      }
+
+      if (summary?.active_calories != null) {
+        metricsArray.push({
+          id: 'calories',
+          title: 'Active Calories',
+          value: Number(summary.active_calories) || 0,
+          unit: 'kcal',
+          target: 500,
+          targetUnit: 'kcal',
+          trend: 0,
+          borderColor: '#EF4444',
+          progressColor: '#EF4444',
+        });
+      }
+
+      if (summary?.heart_rate_avg != null) {
+        metricsArray.push({
+          id: 'hr_avg',
+          title: 'Avg HR',
+          value: Number(summary.heart_rate_avg) || 0,
+          unit: 'bpm',
+          target: 60,
+          targetUnit: 'bpm',
+          trend: 0,
+          borderColor: '#F43F5E',
+          progressColor: '#F43F5E',
+        });
+      }
+
+      if (summary?.sleep_hours != null) {
+        metricsArray.push({
+          id: 'sleep',
+          title: 'Sleep',
+          value: Number(summary.sleep_hours) || 0,
+          unit: 'h',
+          target: 8,
+          targetUnit: 'h',
+          trend: 0,
+          borderColor: '#6366F1',
+          progressColor: '#6366F1',
+        });
+      }
+
       setMetrics(metricsArray);
     } catch (error) {
       console.error('Error building progress metrics:', error);
