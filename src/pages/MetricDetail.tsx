@@ -287,10 +287,10 @@ export default function MetricDetail() {
         }));
       }
 
-      // Вычисляем статистику
+      // Вычисляем статистику за весь выбранный период
       if (metricData.length >= 2) {
         const current = metricData[metricData.length - 1].value;
-        const previous = metricData[metricData.length - 2].value;
+        const previous = metricData[0].value; // Первое значение в периоде
         const change = current - previous;
         const changePercent = previous !== 0 ? (change / previous) * 100 : 0;
         
