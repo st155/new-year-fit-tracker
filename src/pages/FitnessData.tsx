@@ -45,7 +45,7 @@ export default function FitnessData() {
     if (user && challengeGoals.length >= 0) {
       fetchDashboardData();
     }
-  }, [user, challengeGoals]);
+  }, [user, challengeGoals, selectedFilter]);
 
   const fetchChallengeGoals = async () => {
     try {
@@ -79,7 +79,23 @@ export default function FitnessData() {
     try {
       setLoading(true);
       
-      // Fetch latest metrics from user_metrics and metric_values
+      // Calculate date range based on selected filter
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (selectedFilter) {
+        case 'today':
+          startDate = new Date(now.setHours(0, 0, 0, 0));
+          break;
+        case 'week':
+          startDate = new Date(now.setDate(now.getDate() - 7));
+          break;
+        case 'month':
+          startDate = new Date(now.setDate(now.getDate() - 30));
+          break;
+      }
+      
+      // Fetch metrics with date filtering
       const { data: metrics, error } = await supabase
         .from('user_metrics')
         .select(`
@@ -87,13 +103,14 @@ export default function FitnessData() {
           metric_name,
           metric_category,
           unit,
-          metric_values (
+          metric_values!inner (
             value,
             measurement_date
           )
         `)
         .eq('user_id', user?.id)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .gte('metric_values.measurement_date', startDate.toISOString().split('T')[0]);
 
       if (error) throw error;
 
@@ -148,11 +165,15 @@ export default function FitnessData() {
       const sortedValues = [...values].sort((a, b) => 
         new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
       );
+      
+      // Calculate average for the period
+      const sum = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
+      const avgValue = sum / sortedValues.length;
       const latestValue = sortedValues[0]?.value;
       const previousValue = sortedValues[1]?.value;
 
       metricValues[metric.metric_name] = {
-        current: latestValue,
+        current: selectedFilter === 'today' ? latestValue : avgValue,
         previous: previousValue,
         category: metric.metric_category,
         unit: metric.unit
