@@ -21,7 +21,8 @@ import {
   BarChart3,
   ArrowUp,
   ArrowDown,
-  Minus
+  Minus,
+  Trophy
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -827,6 +828,45 @@ export const EnhancedFitnessDashboard = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
+            {/* This Month's Highlights */}
+            <Card className="bg-gradient-primary border-primary/30 text-primary-foreground">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Trophy className="h-5 w-5" />
+                  This Month's Highlights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div 
+                    className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setViewingDetailType('weight')}
+                  >
+                    <div className="text-2xl md:text-3xl font-bold">5.2kg</div>
+                    <div className="text-sm md:text-base opacity-90">Weight Lost</div>
+                  </div>
+                  <div 
+                    className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setViewingDetailType('body_fat')}
+                  >
+                    <div className="text-2xl md:text-3xl font-bold">2.1%</div>
+                    <div className="text-sm md:text-base opacity-90">Body Fat Reduced</div>
+                  </div>
+                  <div 
+                    className="space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setViewingDetailType('strain')}
+                  >
+                    <div className="text-2xl md:text-3xl font-bold">7</div>
+                    <div className="text-sm md:text-base opacity-90">PRs Hit</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-2xl md:text-3xl font-bold">24</div>
+                    <div className="text-sm md:text-base opacity-90">Workouts Completed</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Главные показатели с круговыми прогресс-барами */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="p-6 text-center cursor-pointer hover-scale transition-all duration-300" onClick={() => setViewingDetailType('recovery')}>
