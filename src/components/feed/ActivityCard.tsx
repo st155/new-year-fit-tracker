@@ -22,28 +22,32 @@ interface ActivityCardProps {
 }
 
 const getActivityIcon = (activity: ActivityCardProps["activity"]) => {
-  const meta = activity.metadata || {};
+  const meta: any = activity.metadata || {};
   const text = (activity.action_text || '').toLowerCase();
   const type = (meta.workout_type || '').toLowerCase();
+  const metricName = (meta.metric_name || '').toLowerCase();
 
-  const has = (s: string) => text.includes(s) || type.includes(s);
+  const has = (s: string) => text.includes(s) || type.includes(s) || metricName.includes(s);
 
-  if (activity.action_type === 'workouts') {
+  // Sleep / Recovery first (они часто приходят как metric_values)
+  if (has('sleep') || /slept|сон/i.test(text)) return <Moon className="h-8 w-8" strokeWidth={1.5} />;
+  if (has('recovery') || /recovered|восстанов/i.test(text)) return <Heart className="h-8 w-8" strokeWidth={1.5} />;
+
+  // Workouts
+  if (activity.action_type === 'workouts' || has('workout')) {
     if (has('run') || has('бег')) return <Footprints className="h-8 w-8" strokeWidth={1.5} />;
     if (has('swim') || has('плав')) return <Waves className="h-8 w-8" strokeWidth={1.5} />;
     if (has('bike') || has('велос') || has('cycle')) return <Bike className="h-8 w-8" strokeWidth={1.5} />;
     if (has('hike') || has('walk') || has('ходьб') || has('поход')) return <Mountain className="h-8 w-8" strokeWidth={1.5} />;
     if (has('strength') || has('силов') || has('weight') || has('barbell') || has('штанг')) return <Dumbbell className="h-8 w-8" strokeWidth={1.5} />;
-    return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
+    return <Dumbbell className="h-8 w-8" strokeWidth={1.5} />; // дефолт для тренировок
   }
 
+  // Метрические значения (strain и др.)
   if (activity.action_type === 'metric_values') {
-    if (has('recovery') || /восстанов/i.test(text)) return <Heart className="h-8 w-8" strokeWidth={1.5} />;
-    return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
+    if (has('strain')) return <TrendingUp className="h-8 w-8" strokeWidth={1.5} />;
+    return <Activity className="h-8 w-8" strokeWidth={1.5} />;
   }
-
-  if (/(sleep|сон)/i.test(text)) return <Moon className="h-8 w-8" strokeWidth={1.5} />;
-  if (/(boxing|бокс|martial|единобор)/i.test(text)) return <Zap className="h-8 w-8" strokeWidth={1.5} />;
 
   return <Activity className="h-8 w-8" strokeWidth={1.5} />;
 };
@@ -77,27 +81,36 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   const userInitials = getUserInitials();
   const parts = [userInitials];
 
-  if (activity.action_type === 'workouts') {
-    // Добавляем длительность (Duration)
-    if (m.duration_minutes) {
-      const totalMinutes = Number(m.duration_minutes);
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = Math.floor(totalMinutes % 60);
-      const seconds = Math.round((totalMinutes % 1) * 60);
-      
-      if (hours > 0) {
-        parts.push(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        parts.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      }
+  // Helper: формат длительности из минут
+  const pushDuration = (totalMinutes?: number) => {
+    if (totalMinutes === undefined || totalMinutes === null || isNaN(Number(totalMinutes))) return;
+    const t = Number(totalMinutes);
+    const hours = Math.floor(t / 60);
+    const minutes = Math.floor(t % 60);
+    const seconds = Math.round((t % 1) * 60);
+    if (hours > 0) {
+      parts.push(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    } else {
+      parts.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
     }
-    
-    // Добавляем Strain
+  };
+
+  if (activity.action_type === 'workouts') {
+    // Длительность из метаданных или по start/end
+    if (m.duration_minutes) {
+      pushDuration(Number(m.duration_minutes));
+    } else if (m.start_time && m.end_time) {
+      const diffMin = (new Date(m.end_time).getTime() - new Date(m.start_time).getTime()) / 60000;
+      pushDuration(diffMin);
+    }
+    // Strain из метаданных или из action_text
     if (m.strain || m.workout_strain) {
       const strain = m.strain || m.workout_strain;
       parts.push(`${Number(strain).toFixed(1)}`);
+    } else if (activity.action_text) {
+      const match = activity.action_text.match(/(\d+(?:\.\d+)?)\s*strain/i);
+      if (match) parts.push(`${Number(match[1]).toFixed(1)}`);
     }
-    
     return parts.join(', ');
   }
 
@@ -112,21 +125,44 @@ const buildDisplayText = (activity: ActivityCardProps["activity"]) => {
   }
 
   if (activity.action_type === 'metric_values') {
-    const metricName = m.user_metrics?.metric_name;
-    if (metricName === 'Recovery Score') {
-      parts.push(`${Math.round(Number(m.value))}%`);
-    } else if (metricName === 'Workout Strain') {
-      parts.push(`${Number(m.value).toFixed(1)}`);
-    } else if (metricName === 'Sleep Duration') {
-      const hours = Number(m.value);
-      const h = Math.floor(hours);
-      const min = Math.round((hours % 1) * 60);
-      parts.push(`${h}:${min.toString().padStart(2, '0')}`);
-    } else if (metricName === 'VO2Max') {
-      parts.push(`${Number(m.value).toFixed(1)}`);
-    } else if (m.value) {
-      parts.push(`${Number(m.value).toFixed(1)}${m.unit || ''}`);
+    const metricName: string = m.user_metrics?.metric_name || m.metric_name || '';
+    const unit: string | undefined = m.user_metrics?.unit || m.unit;
+
+    // Если это Strain — показываем Duration (если есть) и затем Strain
+    if (/strain/i.test(metricName) || /strain/i.test(activity.action_text || '')) {
+      if (m.duration_minutes) pushDuration(Number(m.duration_minutes));
+      if (m.value !== undefined && m.value !== null) {
+        parts.push(`${Number(m.value).toFixed(1)}`);
+      } else {
+        const match = (activity.action_text || '').match(/(\d+(?:\.\d+)?)\s*strain/i);
+        if (match) parts.push(`${Number(match[1]).toFixed(1)}`);
+      }
+      return parts.join(', ');
     }
+
+    // Сон — часы в формат H:MM
+    if (/sleep/i.test(metricName) || /slept/i.test(activity.action_text || '')) {
+      const hoursVal = Number(m.value);
+      if (!isNaN(hoursVal)) {
+        const h = Math.floor(hoursVal);
+        const min = Math.round((hoursVal % 1) * 60);
+        parts.push(`${h}:${min.toString().padStart(2, '0')}`);
+      }
+      return parts.join(', ');
+    }
+
+    // Если пришло значение в часах (unit содержит hour), конвертируем красиво
+    if (unit && /(hour|час)/i.test(unit) && m.value !== undefined) {
+      const hoursVal = Number(m.value);
+      if (!isNaN(hoursVal)) {
+        const h = Math.floor(hoursVal);
+        const min = Math.round((hoursVal % 1) * 60);
+        parts.push(`${h}:${min.toString().padStart(2, '0')}`);
+      }
+      return parts.join(', ');
+    }
+
+    // По умолчанию ничего не добавляем, чтобы не мусорить ленту
     return parts.join(', ');
   }
 
