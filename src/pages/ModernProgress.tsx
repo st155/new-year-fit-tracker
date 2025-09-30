@@ -168,16 +168,9 @@ export default function ModernProgress() {
             .order('measurement_date', { ascending: false });
           measurements = inPeriod || [];
 
-          if (measurements.length === 0) {
-            const { data: latestAny } = await supabase
-              .from('measurements')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('goal_id', realGoalId)
-              .order('measurement_date', { ascending: false })
-              .limit(1);
-            measurements = latestAny || [];
-          }
+          // No fallback outside the selected period: if no data in range, show 0 for this period
+          // This makes the period filter actually reflect the selected timeframe
+
         }
 
         if (measurements && measurements.length > 0) {
