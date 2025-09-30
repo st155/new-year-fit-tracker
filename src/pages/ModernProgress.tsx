@@ -171,14 +171,21 @@ export default function ModernProgress() {
         });
       }
 
-      // Add general tracker metrics from daily summary to exceed 8 cards
-      const { data: summaryRows } = await supabase
-        .from('daily_health_summary')
-        .select('steps, active_calories, heart_rate_avg, sleep_hours')
-        .eq('user_id', user.id)
-        .gte('date', periodStart.toISOString().split('T')[0])
-        .order('date', { ascending: false })
-        .limit(1);
+      // Add general tracker metrics from daily summary and user metrics to exceed 8 cards
+      const [{ data: summaryRows }, { data: userMetrics }] = await Promise.all([
+        supabase
+          .from('daily_health_summary')
+          .select('steps, active_calories, heart_rate_avg, sleep_hours, distance_km, exercise_minutes')
+          .eq('user_id', user.id)
+          .gte('date', periodStart.toISOString().split('T')[0])
+          .order('date', { ascending: false })
+          .limit(1),
+        supabase
+          .from('user_metrics')
+          .select(`id, metric_name, metric_category, unit, metric_values(value, measurement_date)`) 
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+      ]);
       const summary = summaryRows?.[0];
 
       if (summary?.steps != null) {
@@ -234,6 +241,46 @@ export default function ModernProgress() {
           trend: 0,
           borderColor: '#6366F1',
           progressColor: '#6366F1',
+        });
+      }
+
+      // Also add additional active user metrics beyond challenge goals
+      if (userMetrics && Array.isArray(userMetrics)) {
+        const existingTitles = new Set(metricsArray.map(m => m.title.toLowerCase()));
+        const getColorFor = (name: string) => {
+          const n = name.toLowerCase();
+          if (n.includes('strain')) return '#F97316';
+          if (n.includes('sleep')) return '#6366F1';
+          if (n.includes('vo2')) return '#3B82F6';
+          if (n.includes('calories')) return '#EF4444';
+          if (n.includes('steps')) return '#22C55E';
+          if (n.includes('hrv')) return '#8B5CF6';
+          if (n.includes('resting') || n.includes('heart')) return '#F43F5E';
+          if (n.includes('distance')) return '#06B6D4';
+          return '#64748B';
+        };
+
+        userMetrics.forEach((m: any) => {
+          const values = (m.metric_values || []) as Array<{ value: number; measurement_date: string }>;
+          if (!values.length) return;
+          const latest = values.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime())[0];
+          const title = m.metric_name;
+          if (existingTitles.has(title.toLowerCase())) return;
+
+          const color = getColorFor(title);
+          const id = title.toLowerCase().replace(/\s+/g, '-');
+          metricsArray.push({
+            id,
+            title,
+            value: Number(latest.value) || 0,
+            unit: m.unit || '',
+            target: 0,
+            targetUnit: m.unit || '',
+            trend: 0,
+            borderColor: color,
+            progressColor: color,
+            chart: title.toLowerCase().includes('vo2')
+          });
         });
       }
 
