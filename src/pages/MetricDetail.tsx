@@ -293,6 +293,8 @@ export default function MetricDetail() {
         const sum = metricData.reduce((acc, item) => acc + item.value, 0);
         const current = sum / metricData.length;
         
+        console.log(`[${metricType}] Period: ${timeRange}, Data points: ${metricData.length}, Average: ${current.toFixed(2)}`);
+        
         const previous = metricData[0].value; // Первое значение в периоде
         const change = current - previous;
         const changePercent = previous !== 0 ? (change / previous) * 100 : 0;
@@ -400,7 +402,7 @@ export default function MetricDetail() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Текущее значение
+                      Среднее за период
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
