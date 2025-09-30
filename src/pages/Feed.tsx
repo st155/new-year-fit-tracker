@@ -42,6 +42,7 @@ export default function Feed() {
           created_at,
           metadata
         `)
+.in('action_type', ['workouts','metric_values','measurements','body_composition'])
         .order('created_at', { ascending: false })
         .limit(50);
 
