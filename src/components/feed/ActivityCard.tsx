@@ -1,4 +1,4 @@
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Activity, Moon, Dumbbell, Utensils, Footprints, TrendingUp, Trophy, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
@@ -38,20 +38,36 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   const profiles = activity.profiles;
   const borderStyle = borderColors[index % borderColors.length];
   
-  // Get user initials
-  const getUserInitials = () => {
-    if (profiles?.full_name) {
-      const parts = profiles.full_name.split(' ');
-      if (parts.length >= 2) {
-        return parts[0].charAt(0) + parts[1].charAt(0);
-      }
-      return parts[0].substring(0, 2);
+  // Get activity icon based on action type or text
+  const getActivityIcon = () => {
+    const actionText = activity.action_text?.toLowerCase() || '';
+    const actionType = activity.action_type?.toLowerCase() || '';
+    
+    if (actionText.includes('сон') || actionText.includes('sleep') || actionType.includes('sleep')) {
+      return Moon;
     }
-    if (profiles?.username) {
-      return profiles.username.substring(0, 2).toUpperCase();
+    if (actionText.includes('бег') || actionText.includes('пробежал') || actionType.includes('run')) {
+      return Activity;
     }
-    return 'ST';
+    if (actionText.includes('тренир') || actionText.includes('workout') || actionType.includes('workout')) {
+      return Dumbbell;
+    }
+    if (actionText.includes('шаг') || actionText.includes('steps') || actionType.includes('steps')) {
+      return Footprints;
+    }
+    if (actionText.includes('вес') || actionText.includes('weight') || actionType.includes('weight')) {
+      return TrendingUp;
+    }
+    if (actionText.includes('цел') || actionText.includes('goal') || actionType.includes('goal')) {
+      return Trophy;
+    }
+    if (actionText.includes('калор') || actionText.includes('nutrition') || actionType.includes('nutrition')) {
+      return Utensils;
+    }
+    return Zap; // Default icon
   };
+  
+  const ActivityIcon = getActivityIcon();
 
   // Format time
   const getRelativeTime = () => {
@@ -71,7 +87,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   
   return (
     <div
-      className="relative rounded-full px-6 py-4 transition-all duration-300 animate-fade-in border-[3px]"
+      className="relative rounded-full px-4 py-2.5 transition-all duration-300 animate-fade-in border-[3px]"
       style={{
         background: "rgba(0, 0, 0, 0.3)",
         backdropFilter: "blur(10px)",
@@ -80,43 +96,40 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
         boxShadow: `0 0 20px ${borderStyle.shadow}`,
       }}
     >
-      <div className="flex items-center gap-4">
-        {/* Avatar */}
-        <Avatar
-          className="h-14 w-14 shrink-0 border-[3px]"
+      <div className="flex items-center gap-3">
+        {/* Avatar with Icon */}
+        <div
+          className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center bg-[#252b3d]"
           style={{
             borderColor: borderStyle.color,
           }}
         >
-          <AvatarImage src={profiles?.avatar_url || undefined} />
-          <AvatarFallback className="text-base font-bold bg-[#252b3d] text-white">
-            {getUserInitials()}
-          </AvatarFallback>
-        </Avatar>
+          <ActivityIcon className="h-5 w-5 text-white" />
+        </div>
         
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-white leading-tight mb-1">
+          <h3 className="text-sm font-bold text-white leading-tight">
             {displayName}
           </h3>
-          <p className="text-sm text-white/90 leading-snug mb-1">
+          <p className="text-xs text-white/90 leading-snug">
             {activity.action_text}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-[10px] text-gray-500 mt-0.5">
             {getRelativeTime()}
           </p>
         </div>
 
         {/* Likes & Comments */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <div className="flex items-center gap-1">
-            <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-            <span className="text-sm font-medium text-white">{likeCount}</span>
+            <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+            <span className="text-xs font-medium text-white">{likeCount}</span>
           </div>
           {commentCount > 0 && (
             <div className="flex items-center gap-1">
-              <MessageCircle className="h-5 w-5 text-gray-400" />
-              <span className="text-sm font-medium text-white">{commentCount}</span>
+              <MessageCircle className="h-4 w-4 text-gray-400" />
+              <span className="text-xs font-medium text-white">{commentCount}</span>
             </div>
           )}
         </div>
