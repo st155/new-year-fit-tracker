@@ -104,6 +104,80 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   
   const { icon: ActivityIcon, color: iconColor } = getActivityIconAndColor();
 
+  // Format activity text to be simple and readable
+  const getFormattedActivityText = () => {
+    const actionText = activity.action_text || '';
+    const metadata = activity.metadata;
+    
+    // Recovery
+    if (actionText.includes('recovered')) {
+      const match = actionText.match(/(\d+)%/);
+      if (match) return `Recovery ${match[1]}%`;
+    }
+    
+    // Run/1km
+    if (actionText.includes('1 км') || actionText.includes('1km') || actionText.includes('пробежал')) {
+      const match = actionText.match(/(\d+:\d+)/);
+      if (match) return `Run ${match[1]}`;
+    }
+    
+    // Strain
+    if (actionText.includes('strain')) {
+      const match = actionText.match(/(\d+\.?\d*)/);
+      if (match) return `Strain ${match[1]}`;
+    }
+    
+    // Pull-ups/Подтягивания
+    if (actionText.includes('Подтягивания') || actionText.includes('Pull-ups')) {
+      const match = actionText.match(/(\d+)\s*(раз|reps)/i);
+      if (match) return `Pull-ups ${match[1]} reps`;
+      return 'Pull-ups Goal';
+    }
+    
+    // Bench Press/Жим лёжа
+    if (actionText.includes('Жим лёжа') || actionText.includes('Bench')) {
+      const match = actionText.match(/(\d+)\s*кг/);
+      if (match) return `Bench Press ${match[1]} kg`;
+      return 'Bench Press Goal';
+    }
+    
+    // Push-ups/Отжимания
+    if (actionText.includes('Отжимания') || actionText.includes('Push-ups')) {
+      const match = actionText.match(/(\d+)\s*(раз|reps)/i);
+      if (match) return `Push-ups ${match[1]} reps`;
+      return 'Push-ups Goal';
+    }
+    
+    // Weight/Вес
+    if (actionText.includes('вес') || actionText.includes('weight')) {
+      const match = actionText.match(/(\d+\.?\d*)\s*кг/);
+      if (match) return `Weight ${match[1]} kg`;
+    }
+    
+    // VO2 Max
+    if (actionText.includes('VO2') || actionText.includes('vo2')) {
+      const match = actionText.match(/(\d+\.?\d*)/);
+      if (match) return `VO2 Max ${match[1]}`;
+    }
+    
+    // Goals - extract just the goal name
+    if (actionText.includes('created a new goal:') || actionText.includes('создал цель')) {
+      const match = actionText.match(/goal:\s*(.+?)(?:\s*\(|$)/i);
+      if (match) return `Goal: ${match[1].trim()}`;
+    }
+    
+    // Default - clean up the text
+    return actionText
+      .replace(/st_\d+\.\d+\s*/gi, '')
+      .replace(/ST\s+created a new goal:\s*/gi, 'Goal: ')
+      .replace(/\s*\(\d+\s*(раз|reps|кг|kg)\)/gi, '')
+      .trim();
+  };
+
+  const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
+  const likeCount = activity.like_count || 15;
+  const commentCount = activity.comment_count || 3;
+  
   // Format time
   const getRelativeTime = () => {
     try {
@@ -115,10 +189,6 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
       return '';
     }
   };
-
-  const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
-  const likeCount = activity.like_count || 15;
-  const commentCount = activity.comment_count || 3;
   
   return (
     <div
@@ -149,7 +219,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
             {displayName}
           </h3>
           <p className="text-xs text-white/90 leading-snug">
-            {activity.action_text}
+            {getFormattedActivityText()}
           </p>
           <p className="text-[10px] text-gray-500 mt-0.5">
             {getRelativeTime()}
