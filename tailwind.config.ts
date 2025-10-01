@@ -207,6 +207,26 @@ export default {
           "40%": { transform: "rotate(-10deg)" },
           "60%": { transform: "rotate(5deg)" },
           "80%": { transform: "rotate(-5deg)" }
+        },
+        "ripple": {
+          "0%": {
+            width: "0",
+            height: "0",
+            opacity: "0.5"
+          },
+          "100%": {
+            width: "500px",
+            height: "500px",
+            opacity: "0"
+          }
+        },
+        "shimmer": {
+          "0%": {
+            backgroundPosition: "-1000px 0"
+          },
+          "100%": {
+            backgroundPosition: "1000px 0"
+          }
         }
       },
       animation: {
@@ -226,7 +246,9 @@ export default {
         "shake": "shake 0.3s ease-in-out",
         "heartbeat": "heartbeat 1s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
-        "swing": "swing 1s ease-in-out"
+        "swing": "swing 1s ease-in-out",
+        "ripple": "ripple 0.6s ease-out",
+        "shimmer": "shimmer 2s linear infinite"
       },
     },
   },

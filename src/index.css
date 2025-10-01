@@ -228,6 +228,34 @@ All colors MUST be HSL.
     animation: glow-pulse 2s ease-in-out infinite;
   }
 
+  /* Additional interactive utilities */
+  .hover-glow {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Tap feedback for mobile */
+  .tap-feedback {
+    transition: transform 0.1s ease;
+  }
+
+  .tap-feedback:active {
+    transform: scale(0.95);
+  }
+
+
   /* Ripple effect */
   .ripple {
     position: relative;
