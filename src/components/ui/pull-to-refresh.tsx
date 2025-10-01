@@ -1,88 +1,141 @@
-import { ReactNode } from 'react';
-import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { Loader2, RefreshCw, ArrowDown } from 'lucide-react';
+import { ReactNode, useRef, useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
   children: ReactNode;
+  disabled?: boolean;
   threshold?: number;
-  className?: string;
+  resistance?: number;
 }
 
 export function PullToRefresh({
   onRefresh,
   children,
+  disabled = false,
   threshold = 80,
-  className,
+  resistance = 2.5,
 }: PullToRefreshProps) {
-  const { pullDistance, isRefreshing, isReady } = usePullToRefresh({
-    onRefresh,
-    threshold,
-  });
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [canPull, setCanPull] = useState(false);
+  
+  const touchStartY = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const getIndicatorRotation = () => {
-    if (isRefreshing) return 0;
-    return Math.min((pullDistance / threshold) * 180, 180);
+  const isAtTop = () => {
+    const container = containerRef.current;
+    if (!container) return false;
+    
+    // Check if we're at the top of the scrollable container
+    return container.scrollTop === 0 || window.scrollY === 0;
   };
 
+  const handleTouchStart = (e: TouchEvent) => {
+    if (disabled || isRefreshing) return;
+    
+    if (isAtTop()) {
+      touchStartY.current = e.touches[0].clientY;
+      setCanPull(true);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!canPull || disabled || isRefreshing) return;
+    
+    const touchY = e.touches[0].clientY;
+    const distance = touchY - touchStartY.current;
+    
+    // Only allow pulling down
+    if (distance > 0 && isAtTop()) {
+      // Apply resistance for a natural feel
+      const pullAmount = distance / resistance;
+      setPullDistance(Math.min(pullAmount, threshold * 1.5));
+      
+      // Prevent default scroll behavior when pulling
+      if (distance > 10) {
+        e.preventDefault();
+      }
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!canPull || disabled) return;
+    
+    setCanPull(false);
+    
+    if (pullDistance >= threshold && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(threshold);
+      
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [canPull, pullDistance, isRefreshing, disabled]);
+
+  const rotation = (pullDistance / threshold) * 360;
+  const opacity = Math.min(pullDistance / threshold, 1);
+  const scale = Math.min(0.5 + (pullDistance / threshold) * 0.5, 1);
+
   return (
-    <div className={cn('relative', className)}>
+    <div ref={containerRef} className="relative h-full overflow-auto">
       {/* Pull indicator */}
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center transition-all duration-200 pointer-events-none z-50"
+        className="absolute left-1/2 z-50 flex items-center justify-center transition-opacity"
         style={{
-          height: `${Math.min(pullDistance, threshold + 20)}px`,
-          opacity: pullDistance > 10 ? 1 : 0,
+          top: `${Math.max(pullDistance - 40, 0)}px`,
+          transform: 'translateX(-50%)',
+          opacity,
         }}
       >
         <div
           className={cn(
-            'flex items-center justify-center rounded-full transition-all duration-300',
-            'bg-background/90 backdrop-blur-sm border-2 shadow-lg',
-            isReady ? 'border-primary shadow-glow' : 'border-border',
-            'w-12 h-12'
+            "flex h-10 w-10 items-center justify-center rounded-full bg-background/95 shadow-lg backdrop-blur-sm",
+            "border border-border"
           )}
           style={{
-            transform: `scale(${Math.min(pullDistance / threshold, 1)})`,
+            transform: `scale(${scale})`,
           }}
         >
-          {isRefreshing ? (
-            <Loader2 className="h-5 w-5 text-primary animate-spin" />
-          ) : isReady ? (
-            <RefreshCw className="h-5 w-5 text-primary" />
-          ) : (
-            <ArrowDown
-              className="h-5 w-5 text-muted-foreground transition-transform duration-200"
-              style={{
-                transform: `rotate(${getIndicatorRotation()}deg)`,
-              }}
-            />
-          )}
-        </div>
-
-        {/* Pull text */}
-        <div
-          className={cn(
-            'absolute top-16 text-xs font-medium transition-all duration-200',
-            isReady ? 'text-primary' : 'text-muted-foreground'
-          )}
-        >
-          {isRefreshing
-            ? 'Обновление...'
-            : isReady
-            ? 'Отпустите для обновления'
-            : 'Потяните для обновления'}
+          <RefreshCw
+            className={cn(
+              "h-5 w-5 text-primary transition-transform",
+              isRefreshing && "animate-spin"
+            )}
+            style={{
+              transform: isRefreshing ? undefined : `rotate(${rotation}deg)`,
+            }}
+          />
         </div>
       </div>
 
       {/* Content */}
       <div
-        className="transition-transform duration-200"
         style={{
-          transform: isRefreshing
-            ? `translateY(${threshold}px)`
-            : `translateY(${Math.min(pullDistance, threshold)}px)`,
+          transform: `translateY(${pullDistance}px)`,
+          transition: canPull ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         {children}

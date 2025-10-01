@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { SimpleVirtualList } from "@/components/ui/virtualized-list";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LeaderboardListSkeleton } from "@/components/ui/universal-skeleton";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 interface LeaderboardUser {
   rank: number;
@@ -142,6 +144,14 @@ const LeaderboardPage = () => {
     [selectedChallenge]
   );
 
+  const { handleRefresh } = usePullToRefresh({
+    onRefresh: async () => {
+      await refetch();
+    },
+    successMessage: 'Leaderboard обновлён',
+    showToast: false,
+  });
+
   const getRankStyle = (rank: number, isCurrentUser: boolean) => {
     if (rank === 1) {
       return "bg-gradient-to-br from-yellow-600 via-orange-600 to-orange-800 border-orange-500/30 shadow-[0_0_40px_rgba(234,179,8,0.5)]";
@@ -261,8 +271,9 @@ const LeaderboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-8 overflow-y-auto bg-gradient-to-b from-background via-background to-background/80">
-      {/* Header */}
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen pb-24 px-4 pt-8 overflow-y-auto bg-gradient-to-b from-background via-background to-background/80">
+        {/* Header */}
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-3 mb-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
@@ -335,7 +346,8 @@ const LeaderboardPage = () => {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

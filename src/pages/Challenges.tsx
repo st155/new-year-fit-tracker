@@ -14,6 +14,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { ChallengesListSkeleton } from "@/components/ui/universal-skeleton";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 
 const Challenges = () => {
@@ -38,35 +40,44 @@ const Challenges = () => {
     enabled: true,
   });
 
+  const fetchChallenges = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      // Загружаем все активные челленджи
+      const { data: challengesData } = await supabase
+        .from('challenges')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      setChallenges(challengesData || []);
+      setFilteredChallenges(challengesData || []);
+
+      // Загружаем челленджи пользователя
+      const { data: participantData } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id')
+        .eq('user_id', user.id);
+
+      setUserChallenges(participantData?.map(p => p.challenge_id) || []);
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { handleRefresh } = usePullToRefresh({
+    onRefresh: async () => {
+      await fetchChallenges();
+    },
+    successMessage: 'Челленджи обновлены',
+    showToast: false,
+  });
+
   useEffect(() => {
-    const fetchChallenges = async () => {
-      if (!user) return;
-
-      try {
-        // Загружаем все активные челленджи
-        const { data: challengesData } = await supabase
-          .from('challenges')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
-        setChallenges(challengesData || []);
-        setFilteredChallenges(challengesData || []);
-
-        // Загружаем челленджи пользователя
-        const { data: participantData } = await supabase
-          .from('challenge_participants')
-          .select('challenge_id')
-          .eq('user_id', user.id);
-
-        setUserChallenges(participantData?.map(p => p.challenge_id) || []);
-      } catch (error) {
-        console.error('Error fetching challenges:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchChallenges();
   }, [user]);
 
@@ -188,14 +199,15 @@ const Challenges = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <SwipeIndicator 
-        progress={swipeProgress}
-        direction={swipeDirection}
-        currentIndex={currentIndex}
-        totalPages={routes.length}
-      />
-      <div className="space-y-8 pb-8">
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen bg-background relative">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
+        <div className="space-y-8 pb-8">
         <div className="px-4 py-3">
           <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -364,7 +376,8 @@ const Challenges = () => {
         )}
         </div>
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
