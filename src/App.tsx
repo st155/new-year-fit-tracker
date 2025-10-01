@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,28 +10,31 @@ import "@/i18n";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
-import Challenges from "./pages/Challenges";
-import ChallengeDetail from "./pages/ChallengeDetail";
-import CreateChallenge from "./pages/CreateChallenge";
-import Progress from "./pages/Progress";
-import Profile from "./pages/Profile";
-import CreateGoal from "./pages/CreateGoal";
-import EditGoal from "./pages/EditGoal";
-import FitnessData from "./pages/FitnessData";
-import WhoopCallback from "./pages/WhoopCallback";
-import WithingsCallback from "./pages/WithingsCallback";
-import Integrations from "./pages/Integrations";
-import NotFound from "./pages/NotFound";
-import TrainerDashboard from "./pages/TrainerDashboard";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Landing from "./pages/Landing";
-import ModernProgress from "./pages/ModernProgress";
-import Feed from "./pages/Feed";
-import MetricDetail from "./pages/MetricDetail";
-import Leaderboard from "./pages/Leaderboard";
+import { PageLoader } from "@/components/ui/page-loader";
+
+// Lazy load pages for better performance
+const Index = lazy(() => import("./pages/Index"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
+const CreateChallenge = lazy(() => import("./pages/CreateChallenge"));
+const Progress = lazy(() => import("./pages/Progress"));
+const Profile = lazy(() => import("./pages/Profile"));
+const CreateGoal = lazy(() => import("./pages/CreateGoal"));
+const EditGoal = lazy(() => import("./pages/EditGoal"));
+const FitnessData = lazy(() => import("./pages/FitnessData"));
+const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
+const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
+const Integrations = lazy(() => import("./pages/Integrations"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Landing = lazy(() => import("./pages/Landing"));
+const ModernProgress = lazy(() => import("./pages/ModernProgress"));
+const Feed = lazy(() => import("./pages/Feed"));
+const MetricDetail = lazy(() => import("./pages/MetricDetail"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 const queryClient = new QueryClient();
 
@@ -42,19 +46,20 @@ const App = () => (
           <BrowserRouter>
           <Toaster />
           <Sonner />
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/landing" element={<Landing />} />
-            <Route path="/" element={<Landing />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <PageTransition>
-                    <Index />
-                  </PageTransition>
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
+          <Suspense fallback={<PageLoader message="Загрузка..." />}>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/landing" element={<Landing />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <PageTransition>
+                      <Index />
+                    </PageTransition>
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
             <Route path="/app" element={
               <ProtectedRoute>
                 <ModernAppLayout>
@@ -183,9 +188,10 @@ const App = () => (
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-          </Routes>
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+            </Routes>
+          </Suspense>
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
