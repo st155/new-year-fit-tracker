@@ -166,6 +166,47 @@ export default {
           "50%": {
             boxShadow: "0 0 40px hsl(var(--primary) / 0.6)"
           }
+        },
+        "wiggle": {
+          "0%, 100%": { transform: "rotate(-3deg)" },
+          "50%": { transform: "rotate(3deg)" }
+        },
+        "bounce-in": {
+          "0%": {
+            transform: "scale(0.3)",
+            opacity: "0"
+          },
+          "50%": {
+            transform: "scale(1.05)"
+          },
+          "70%": {
+            transform: "scale(0.9)"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-5px)" },
+          "75%": { transform: "translateX(5px)" }
+        },
+        "heartbeat": {
+          "0%, 100%": { transform: "scale(1)" },
+          "25%": { transform: "scale(1.1)" },
+          "50%": { transform: "scale(1)" }
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" }
+        },
+        "swing": {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "20%": { transform: "rotate(15deg)" },
+          "40%": { transform: "rotate(-10deg)" },
+          "60%": { transform: "rotate(5deg)" },
+          "80%": { transform: "rotate(-5deg)" }
         }
       },
       animation: {
@@ -179,7 +220,13 @@ export default {
         "slide-out-right": "slide-out-right 0.3s ease-out",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "enter": "fade-in 0.3s ease-out",
-        "exit": "fade-out 0.3s ease-out"
+        "exit": "fade-out 0.3s ease-out",
+        "wiggle": "wiggle 0.5s ease-in-out",
+        "bounce-in": "bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+        "shake": "shake 0.3s ease-in-out",
+        "heartbeat": "heartbeat 1s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
+        "swing": "swing 1s ease-in-out"
       },
     },
   },
