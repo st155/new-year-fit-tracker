@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, Users, Target, Trophy, ArrowLeft, TrendingDown, Scale } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
+import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 
 
 interface ChallengeParticipant {
@@ -322,6 +323,11 @@ const ChallengeDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Рейтинг активности */}
+        <div className="mb-8">
+          <ChallengeLeaderboard challengeId={id!} />
+        </div>
 
         {/* Социальная стена челленджа */}
         <Card>

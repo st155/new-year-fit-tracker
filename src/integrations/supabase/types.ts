@@ -176,6 +176,53 @@ export type Database = {
           },
         ]
       }
+      challenge_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_name: string
+          achievement_type: string
+          challenge_id: string
+          icon: string | null
+          id: string
+          metadata: Json | null
+          points_awarded: number
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_name: string
+          achievement_type: string
+          challenge_id: string
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          points_awarded?: number
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_name?: string
+          achievement_type?: string
+          challenge_id?: string
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          points_awarded?: number
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_achievements_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -209,6 +256,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      challenge_points: {
+        Row: {
+          challenge_id: string
+          comments_count: number
+          created_at: string
+          id: string
+          last_activity_date: string | null
+          likes_given: number
+          likes_received: number
+          measurements_count: number
+          points: number
+          posts_count: number
+          streak_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          comments_count?: number
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          likes_given?: number
+          likes_received?: number
+          measurements_count?: number
+          points?: number
+          posts_count?: number
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          comments_count?: number
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          likes_given?: number
+          likes_received?: number
+          measurements_count?: number
+          points?: number
+          posts_count?: number
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_points_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
           },
         ]
       }
