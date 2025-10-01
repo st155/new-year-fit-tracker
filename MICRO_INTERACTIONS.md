@@ -161,17 +161,44 @@ import { PulseButton } from "@/components/ui/interactive-button";
 
 ```tsx
 import { Button } from "@/components/ui/button";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
 
-// Все варианты автоматически имеют:
+// Button - все варианты автоматически имеют:
 // - Ripple эффект
 // - Scale при hover
-// - Active state
+// - Active state (scale down)
 // - Shine эффект (для fitness варианта)
 
 <Button variant="default">Default</Button>
-<Button variant="fitness">Fitness</Button>
-<Button variant="success">Success</Button>
-<Button variant="hero">Hero</Button>
+<Button variant="fitness">Fitness с Ripple + Shine</Button>
+<Button variant="success">Success с Ripple</Button>
+<Button variant="hero">Hero с Glow Pulse</Button>
+
+// EnhancedButton - с поддержкой loading состояния
+<EnhancedButton variant="gradient" loading={isLoading}>
+  Сохранить
+</EnhancedButton>
+```
+
+## Улучшенный Badge компонент
+
+Badge теперь с микроинтеракциями:
+
+```tsx
+import { Badge } from "@/components/ui/badge";
+
+// Все варианты имеют hover:scale-105
+<Badge variant="default">Default</Badge>
+<Badge variant="success">Success</Badge>
+
+// Специальные анимированные варианты
+<Badge variant="pulse">Пульсация</Badge>
+<Badge variant="heartbeat">Сердцебиение</Badge>
+
+// Для уведомлений
+<Badge variant="heartbeat" className="absolute -top-1 -right-1">
+  3
+</Badge>
 ```
 
 ## Комбинирование эффектов
@@ -195,23 +222,46 @@ import { Button } from "@/components/ui/button";
 
 ### Уведомления с heartbeat
 ```tsx
-<Badge className="animate-heartbeat">
+<Badge variant="heartbeat">
   {notificationCount}
+</Badge>
+
+// Или с классом
+<Badge className="animate-heartbeat">
+  Новое
 </Badge>
 ```
 
 ### Навигационные иконки с bounce
 ```tsx
-<Button className="hover-bounce hover:scale-110">
+<Button className="hover-bounce hover:scale-110" size="icon">
   <Home className="h-5 w-5" />
 </Button>
+
+// Или использовать IconButton
+<IconButton onClick={handleClick}>
+  <Settings className="h-5 w-5" />
+</IconButton>
 ```
 
 ### Карточки с lift эффектом
 ```tsx
-<Card className="card-lift cursor-pointer">
-  <CardContent>...</CardContent>
+<Card className="card-lift cursor-pointer" onClick={handleClick}>
+  <CardContent>
+    <h3>Кликабельная карточка</h3>
+    <p>Поднимается при наведении</p>
+  </CardContent>
 </Card>
+```
+
+### Важные действия с pulse
+```tsx
+<PulseButton onClick={handleImportantAction}>
+  Начать тренировку
+</PulseButton>
+
+// Или с Badge
+<Badge variant="pulse">Новое</Badge>
 ```
 
 ### Аватар с вращением
@@ -221,10 +271,28 @@ import { Button } from "@/components/ui/button";
 </Avatar>
 ```
 
+### Floating Action Button
+```tsx
+<FloatingActionButton onClick={handleAdd}>
+  <Plus className="h-6 w-6" />
+</FloatingActionButton>
+```
+
 ## Кастомные анимации
 
 Все анимации определены в:
-- `src/index.css` - CSS анимации
-- `tailwind.config.ts` - Tailwind анимации
+- `src/index.css` - CSS анимации и utility классы
+- `tailwind.config.ts` - Tailwind keyframes и animations
 
 Вы можете добавлять свои собственные анимации, следуя той же структуре.
+
+## Интегрированные компоненты
+
+✅ **Button** - полная интеграция микроинтеракций (ripple, scale, shine, glow-pulse)
+✅ **EnhancedButton** - микроинтеракции + loading состояние
+✅ **Badge** - hover scale + анимированные варианты (pulse, heartbeat)
+✅ **Card** - hover shadow и glassmorphism эффекты
+✅ **InteractiveButton** - специализированные кнопки с разными эффектами
+✅ **FloatingActionButton** - FAB с bounce анимацией
+✅ **IconButton** - кнопка-иконка с spin эффектом
+✅ **PulseButton** - пульсирующая кнопка для важных действий
