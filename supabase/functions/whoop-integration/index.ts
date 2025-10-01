@@ -617,6 +617,7 @@ async function handleSync(req: Request, body: any = {}) {
         }
       );
     }
+  }
 
   // Синхронизируем данные
   const syncResult = await syncWhoopData(user.id, accessToken!);
