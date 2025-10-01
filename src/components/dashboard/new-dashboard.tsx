@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { NewDashboardHeader } from "./new-dashboard-header";
-import { MetricsGrid } from "./metrics-grid";
-import { GoalsProgress } from "./goals-progress";
-import { AdditionalMetrics } from "./additional-metrics";
-import { TodayActivity } from "./today-activity";
-import { QuickActions } from "./quick-actions";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { 
+  LazyMetricsGrid, 
+  LazyGoalsProgress, 
+  LazyAdditionalMetrics, 
+  LazyTodayActivity, 
+  LazyQuickActions 
+} from "./lazy-dashboard";
 
 export function NewDashboard() {
   const { user } = useAuth();
@@ -135,20 +137,20 @@ export function NewDashboard() {
           
           {/* Main metrics grid */}
           <div className="px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-            <MetricsGrid />
+            <LazyMetricsGrid />
           </div>
           
           {/* Quick Actions right after metrics */}
           <div className="px-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <QuickActions userRole={userRole} />
+            <LazyQuickActions userRole={userRole} />
           </div>
           
           {/* Compact, centered stack for remaining content */}
           <div className="px-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
             <div className="mx-auto max-w-5xl space-y-6">
-              <TodayActivity />
-              <AdditionalMetrics />
-              <GoalsProgress />
+              <LazyTodayActivity />
+              <LazyAdditionalMetrics />
+              <LazyGoalsProgress />
             </div>
           </div>
         </div>

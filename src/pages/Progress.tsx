@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, TrendingUp, TrendingDown, RefreshCw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useProgressCache } from "@/hooks/useProgressCache";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MetricCard {
   id: string;
@@ -208,18 +209,18 @@ const ProgressPage = () => {
   );
 
   const challengeGoals = data?.goals || [];
-  const metrics = data?.metrics || [];
+  const metrics = useMemo(() => data?.metrics || [], [data?.metrics]);
 
-  const formatValue = (value: number, unit: string) => {
+  const formatValue = useCallback((value: number, unit: string) => {
     if (unit === "min") {
       const minutes = Math.floor(value);
       const seconds = Math.round((value % 1) * 60);
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     return value % 1 === 0 ? value.toString() : value.toFixed(1);
-  };
+  }, []);
 
-  const getProgressPercentage = (metric: MetricCard) => {
+  const getProgressPercentage = useCallback((metric: MetricCard) => {
     if (metric.id === 'weight' || metric.id === 'body-fat' || metric.id === 'run') {
       // For metrics where lower is better
       if (metric.value <= metric.target) return 100;
@@ -227,7 +228,35 @@ const ProgressPage = () => {
     }
     // For metrics where higher is better
     return Math.min(100, (metric.value / metric.target) * 100);
-  };
+  }, []);
+
+  // Loading skeleton for metrics grid
+  if (loading && !fromCache) {
+    return (
+      <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-9 rounded" />
+        </div>
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-16" />
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-8 w-16 rounded-full" />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Skeleton key={i} className="h-40 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto relative">
