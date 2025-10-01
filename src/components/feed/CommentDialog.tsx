@@ -148,7 +148,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
 
   const commentsContent = (
     <>
-      <ScrollArea className="flex-1 pr-3 -mr-3 max-h-[40vh]">
+      <ScrollArea className="flex-1 min-h-0 pr-3 -mr-3">
         {loading ? (
           <div className="space-y-2">
             {[...Array(2)].map((_, i) => (
@@ -197,7 +197,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
         )}
       </ScrollArea>
 
-      <div className="border-t border-border bg-background/80 backdrop-blur-sm pt-3 mt-2 -mx-4 px-4 -mb-6 pb-6">
+      <div className="sticky bottom-0 z-10 border-t border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-3 mt-2 -mx-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <div className="flex gap-2 items-end">
           <Textarea
             placeholder="Напишите комментарий..."
@@ -230,7 +230,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[85vh] px-4 pb-6">
+        <DrawerContent className="h-[80dvh] px-4 pb-0">
           <DrawerHeader className="pb-3 pt-4 px-0">
             <div className="flex items-center justify-between">
               <DrawerTitle className="flex items-center gap-2 text-base">
@@ -247,7 +247,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
               </Button>
             </div>
           </DrawerHeader>
-          <div className="flex flex-col gap-3 overflow-hidden">
+          <div className="flex flex-col h-full gap-3 overflow-hidden">
             {commentsContent}
           </div>
         </DrawerContent>
@@ -257,7 +257,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[500px] flex flex-col gap-3 p-4">
+      <DialogContent className="max-w-md w-[min(100vw-2rem,28rem)] h-[min(80dvh,600px)] flex flex-col p-4 overflow-hidden">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-4 w-4" />
