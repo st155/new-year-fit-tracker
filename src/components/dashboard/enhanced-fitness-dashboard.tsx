@@ -49,6 +49,7 @@ import { BodyFatProgressDetail } from '@/components/detail/BodyFatProgressDetail
 import { VO2MaxProgressDetail } from '@/components/detail/VO2MaxProgressDetail';
 import { PullUpsProgressDetail } from '@/components/detail/PullUpsProgressDetail';
 import { MetricsSettings, type MetricVisibility } from './metrics-settings';
+import { ExportDataDialog } from './ExportDataDialog';
 
 interface MetricValue {
   id: string;
@@ -824,7 +825,7 @@ export const EnhancedFitnessDashboard = () => {
               </div>
               
               {/* Навигация по времени */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
@@ -862,6 +863,9 @@ export const EnhancedFitnessDashboard = () => {
                 >
                   {viewPeriod === 'day' ? 'Next Day' : viewPeriod === 'week' ? 'Next Week' : 'Next Month'} →
                 </Button>
+                
+                {/* Кнопка экспорта данных */}
+                <ExportDataDialog />
               </div>
             </div>
           </div>
