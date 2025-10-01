@@ -771,53 +771,6 @@ async function exchangeCodeForTokens(code: string) {
   return json;
 }
 
-// Refresh Whoop token using refresh_token
-async function refreshWhoopToken(userId: string): Promise<string> {
-  const clientId = Deno.env.get('WHOOP_CLIENT_ID');
-  const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
-  if (!clientId || !clientSecret) throw new Error('Whoop credentials not configured');
-
-  // Get latest refresh token from DB
-  const { data: tokens, error } = await supabase
-    .from('whoop_tokens')
-    .select('refresh_token')
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const refreshToken = tokens?.refresh_token;
-  if (!refreshToken) throw new Error('No refresh token available');
-
-  const resp = await fetch(WHOOP_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-    }),
-  });
-
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`Failed to refresh Whoop token: ${txt}`);
-  }
-
-  const json = await resp.json();
-  await supabase
-    .from('whoop_tokens')
-    .upsert({
-      user_id: userId,
-      access_token: json.access_token,
-      refresh_token: json.refresh_token || refreshToken,
-      expires_at: new Date(Date.now() + (json.expires_in || 3600) * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-  return json.access_token as string;
-}
 
 // Получаем информацию о пользователе
 async function fetchWhoopUserInfo(accessToken: string) {
