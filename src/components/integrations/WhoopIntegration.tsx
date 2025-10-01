@@ -64,15 +64,24 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'check-status' },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : undefined
-      });
+      
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'check-status' })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const data = await response.json();
       setStatus(data);
       
       if (data.isConnected) {
@@ -164,13 +173,24 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       
       // Получаем URL для авторизации
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'auth' },
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
-      });
+      
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'auth' })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const data = await response.json();
       setAuthUrl(data.authUrl);
 
       // Заменяем popup на прямой редирект - более надежно
@@ -220,14 +240,23 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync' },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : undefined
-      });
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'sync' })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       toast({
         title: 'Синхронизация завершена',
@@ -271,17 +300,26 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { 
-          action: 'sync',
-          tempTokens
-        },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : undefined
-      });
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ 
+            action: 'sync',
+            tempTokens
+          })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       toast({
         title: 'Первая синхронизация завершена',
@@ -314,13 +352,24 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync', code },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : undefined
-      });
-      if (error) throw error;
+      
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'sync', code })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       toast({
         title: 'Whoop подключен',
@@ -350,14 +399,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsDisconnecting(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'disconnect' },
-        headers: session?.access_token ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : undefined
-      });
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'disconnect' })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       toast({
         title: 'Whoop отключен',
