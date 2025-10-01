@@ -8,6 +8,8 @@ import { QuickActions } from "./quick-actions";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
 export function NewDashboard() {
   const { user } = useAuth();
@@ -16,49 +18,56 @@ export function NewDashboard() {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) return;
+  // Swipe navigation between main pages
+  useSwipeNavigation({
+    routes: ['/dashboard', '/progress', '/challenges', '/feed'],
+    enabled: true,
+  });
 
-      try {
-        // Загружаем профиль пользователя
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+  const fetchUserData = async () => {
+    if (!user) return;
 
-        setProfile(profileData);
+    setLoading(true);
+    try {
+      // Загружаем профиль пользователя
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-        // Загружаем активный челлендж пользователя
-        const { data: participantData } = await supabase
-          .from('challenge_participants')
-          .select(`
-            challenge_id,
-            challenges (
-              id,
-              title,
-              description,
-              start_date,
-              end_date,
-              is_active
-            )
-          `)
-          .eq('user_id', user.id);
+      setProfile(profileData);
 
-        if (participantData && participantData.length > 0) {
-          const activeChallenge = participantData.find(p => 
-            p.challenges && p.challenges.is_active
-          );
-          setActiveChallenge(activeChallenge?.challenges);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
+      // Загружаем активный челлендж пользователя
+      const { data: participantData } = await supabase
+        .from('challenge_participants')
+        .select(`
+          challenge_id,
+          challenges (
+            id,
+            title,
+            description,
+            start_date,
+            end_date,
+            is_active
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (participantData && participantData.length > 0) {
+        const activeChallenge = participantData.find(p => 
+          p.challenges && p.challenges.is_active
+        );
+        setActiveChallenge(activeChallenge?.challenges);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUserData();
 
     // Обновляем время каждую минуту для актуального счетчика
@@ -96,36 +105,42 @@ export function NewDashboard() {
   const userName = profile?.full_name || profile?.username || 'User';
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
+  const handleRefresh = async () => {
+    await fetchUserData();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="space-y-6 pb-8 animate-fade-in">
-        <NewDashboardHeader
-          userName={userName}
-          userRole={userRole}
-          challengeTitle={activeChallenge?.title}
-          challengeProgress={challengeProgress}
-          daysLeft={daysLeft}
-        />
-        
-        {/* Main metrics grid */}
-        <div className="px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <MetricsGrid />
-        </div>
-        
-        {/* Quick Actions right after metrics */}
-        <div className="px-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <QuickActions userRole={userRole} />
-        </div>
-        
-        {/* Compact, centered stack for remaining content */}
-        <div className="px-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <div className="mx-auto max-w-5xl space-y-6">
-            <TodayActivity />
-            <AdditionalMetrics />
-            <GoalsProgress />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen bg-background">
+        <div className="space-y-6 pb-8 animate-fade-in">
+          <NewDashboardHeader
+            userName={userName}
+            userRole={userRole}
+            challengeTitle={activeChallenge?.title}
+            challengeProgress={challengeProgress}
+            daysLeft={daysLeft}
+          />
+          
+          {/* Main metrics grid */}
+          <div className="px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <MetricsGrid />
+          </div>
+          
+          {/* Quick Actions right after metrics */}
+          <div className="px-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
+            <QuickActions userRole={userRole} />
+          </div>
+          
+          {/* Compact, centered stack for remaining content */}
+          <div className="px-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className="mx-auto max-w-5xl space-y-6">
+              <TodayActivity />
+              <AdditionalMetrics />
+              <GoalsProgress />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }

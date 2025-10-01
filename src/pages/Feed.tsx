@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProgressCache } from "@/hooks/useProgressCache";
 import { cn } from "@/lib/utils";
 import { NoActivityEmptyState } from "@/components/ui/enhanced-empty-state";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 
 interface ActivityItem {
   id: string;
@@ -213,38 +214,40 @@ export default function Feed() {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-foreground tracking-wider">
-          ACTIVITY FEED
-        </h1>
-        <button
-          onClick={() => refetch()}
-          disabled={loading}
-          className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110"
-          style={{
-            borderColor: "#10B981",
-            boxShadow: "0 0 15px rgba(16, 185, 129, 0.5)",
-          }}
-        >
-          <RefreshCw
-            className={cn("h-5 w-5 text-white", loading && "animate-spin")}
-          />
-        </button>
-      </div>
+    <PullToRefresh onRefresh={refetch}>
+      <div className="min-h-screen pb-24 px-4 pt-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-foreground tracking-wider">
+            ACTIVITY FEED
+          </h1>
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110"
+            style={{
+              borderColor: "#10B981",
+              boxShadow: "0 0 15px rgba(16, 185, 129, 0.5)",
+            }}
+          >
+            <RefreshCw
+              className={cn("h-5 w-5 text-white", loading && "animate-spin")}
+            />
+          </button>
+        </div>
 
-      {/* Activity List */}
-      <div className="space-y-4">
-        {activities.map((activity, index) => (
-          <ActivityCard
-            key={activity.id}
-            activity={activity}
-            onActivityUpdate={onActivityUpdate}
-            index={index}
-          />
-        ))}
+        {/* Activity List */}
+        <div className="space-y-4">
+          {activities.map((activity, index) => (
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              onActivityUpdate={onActivityUpdate}
+              index={index}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }
