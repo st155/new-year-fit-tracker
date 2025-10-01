@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Bell, MessageSquare, Mail, Award, Calendar, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
@@ -43,6 +44,18 @@ export function NotificationBell() {
             const newNotification = payload.new as Notification;
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
+            
+            // Показываем toast уведомление
+            toast(newNotification.title, {
+              description: newNotification.message,
+              icon: getNotificationIcon(newNotification.type),
+              duration: 5000,
+            });
+
+            // Воспроизводим звук уведомления (опционально)
+            if ('vibrate' in navigator) {
+              navigator.vibrate(200);
+            }
           }
         )
         .subscribe();
