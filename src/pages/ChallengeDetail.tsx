@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Users, Target, Trophy, ArrowLeft, TrendingDown, Scale } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 
 
 interface ChallengeParticipant {
@@ -239,7 +240,7 @@ const ChallengeDetail = () => {
         </Card>
 
         {/* Лидерборд участников */}
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
@@ -319,6 +320,13 @@ const ChallengeDetail = () => {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Социальная стена челленджа */}
+        <Card>
+          <CardContent className="pt-6">
+            <ChallengeFeed challengeId={id!} />
           </CardContent>
         </Card>
       </div>

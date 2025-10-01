@@ -212,6 +212,108 @@ export type Database = {
           },
         ]
       }
+      challenge_post_comments: {
+        Row: {
+          comment_text: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_posts: {
+        Row: {
+          challenge_id: string
+          content: string
+          created_at: string
+          id: string
+          photo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          content: string
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_posts_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
