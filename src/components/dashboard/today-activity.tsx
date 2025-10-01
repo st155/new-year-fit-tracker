@@ -55,7 +55,25 @@ export function TodayActivity() {
   }, [user]);
 
   if (loading || todayWorkouts.length === 0) {
-    return null;
+    return (
+      <div className="space-y-3 animate-fade-in">
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1 flex items-center gap-2">
+          <Activity className="h-3 w-3 text-primary" />
+          Today's Activity
+        </h3>
+        <div className="p-8 rounded-2xl border-2 border-dashed border-border/50 bg-card/20 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="p-4 rounded-full bg-primary/10">
+              <Dumbbell className="h-8 w-8 text-primary/50" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">No activity yet today</p>
+              <p className="text-xs text-muted-foreground">Start your workout to see it here!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const totalCalories = todayWorkouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);

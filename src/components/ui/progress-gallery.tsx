@@ -103,13 +103,20 @@ export function ProgressGallery() {
 
   if (photos.length === 0) {
     return (
-      <FitnessCard className="p-6">
-        <div className="text-center py-8">
-          <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-          <h3 className="text-lg font-semibold mb-2">Галерея пуста</h3>
-          <p className="text-muted-foreground text-sm">
-            Добавьте фотографии к своим измерениям, чтобы отслеживать визуальный прогресс
+      <FitnessCard className="p-6 animate-fade-in">
+        <div className="text-center py-12">
+          <div className="mb-6 p-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 inline-flex">
+            <Camera className="h-12 w-12 text-primary/70" />
+          </div>
+          <h3 className="text-xl font-bold mb-3 text-foreground">Галерея пуста</h3>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+            Начните документировать свой прогресс! Добавляйте фотографии к измерениям, чтобы видеть визуальные изменения и мотивировать себя.
           </p>
+          <div className="mt-8 p-4 rounded-xl bg-primary/5 border border-primary/20 max-w-md mx-auto">
+            <p className="text-sm text-primary/80 italic">
+              📸 Совет: Делайте фото в одном месте при одинаковом освещении
+            </p>
+          </div>
         </div>
       </FitnessCard>
     );

@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivityCard } from "@/components/feed/ActivityCard";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useProgressCache } from "@/hooks/useProgressCache";
 import { cn } from "@/lib/utils";
+import { NoActivityEmptyState } from "@/components/ui/enhanced-empty-state";
 
 interface ActivityItem {
   id: string;
@@ -195,7 +196,7 @@ export default function Feed() {
           <button
             onClick={() => refetch()}
             disabled={loading}
-            className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300"
+            className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110"
             style={{
               borderColor: "#10B981",
               boxShadow: "0 0 15px rgba(16, 185, 129, 0.5)",
@@ -206,14 +207,7 @@ export default function Feed() {
             />
           </button>
         </div>
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground text-lg">
-            Пока нет активности
-          </p>
-          <p className="text-muted-foreground/60 text-sm mt-2">
-            Начните тренировки, и ваши достижения появятся здесь!
-          </p>
-        </div>
+        <NoActivityEmptyState onAddActivity={() => {}} />
       </div>
     );
   }

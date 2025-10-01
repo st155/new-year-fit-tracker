@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+import { Settings, TrendingUp, TrendingDown, RefreshCw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -263,8 +263,26 @@ const ProgressPage = () => {
 
       {/* No data message */}
       {metrics.length === 0 && !loading && (
-        <div className="mb-4 p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground text-center">
-          No challenge goals found. Join a challenge to track your progress!
+        <div className="mb-4 animate-fade-in">
+          <div className="p-8 rounded-2xl border-2 border-dashed border-border/50 bg-card/20 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 rounded-full bg-primary/10">
+                <Target className="h-10 w-10 text-primary/50" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-base font-semibold text-foreground">No Goals Yet</p>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Join a challenge or create your own goals to start tracking your fitness journey!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/challenges')}
+                className="px-6 py-2.5 rounded-xl bg-gradient-primary text-white font-semibold hover:opacity-90 transition-all duration-300 hover:scale-105"
+              >
+                Explore Challenges
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
