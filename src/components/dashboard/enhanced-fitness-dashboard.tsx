@@ -51,6 +51,7 @@ import { PullUpsProgressDetail } from '@/components/detail/PullUpsProgressDetail
 import { MetricsSettings, type MetricVisibility } from './metrics-settings';
 import { ExportDataDialog } from './ExportDataDialog';
 import { StreakCard } from './StreakCard';
+import { AchievementsCard } from './AchievementsCard';
 
 interface MetricValue {
   id: string;
@@ -1233,6 +1234,9 @@ export const EnhancedFitnessDashboard = () => {
 
             {/* Streak Card */}
             <StreakCard />
+
+            {/* Achievements Card */}
+            <AchievementsCard />
           </TabsContent>
 
           <TabsContent value="composition" className="space-y-6">
