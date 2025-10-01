@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { GoalsProgressSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Trophy, Droplets, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -71,14 +71,7 @@ export function GoalsProgress() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-muted-foreground">YOUR GOALS</h2>
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
-        ))}
-      </div>
-    );
+    return <GoalsProgressSkeleton />;
   }
 
   return (

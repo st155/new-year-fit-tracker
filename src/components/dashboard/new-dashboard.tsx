@@ -7,7 +7,7 @@ import { TodayActivity } from "./today-activity";
 import { QuickActions } from "./quick-actions";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 
 export function NewDashboard() {
   const { user } = useAuth();
@@ -70,11 +70,7 @@ export function NewDashboard() {
   }, [user]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Расчет прогресса активного челленджа

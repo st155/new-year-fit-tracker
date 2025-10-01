@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { AuthLoadingSkeleton } from '@/components/ui/auth-skeleton';
 import { useTranslation } from 'react-i18next';
 
 interface ProtectedRouteProps {
@@ -20,11 +20,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, [user, loading, navigate]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AuthLoadingSkeleton />;
   }
 
   if (!user) {

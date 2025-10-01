@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Award, ChevronRight } from "lucide-react";
+import { Trophy, Medal, Award } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 interface LeaderboardUser {
   rank: number;
@@ -18,122 +20,125 @@ interface LeaderboardUser {
 export function Leaderboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchLeaderboard();
+    if (user) {
+      fetchLeaderboard();
+    }
   }, [user]);
 
   const fetchLeaderboard = async () => {
-    if (!user) return;
-
     try {
-      // Получаем активный челлендж пользователя
-      const { data: challengeParticipant } = await supabase
+      if (!user) return;
+
+      setLoading(true);
+
+      // Получаем текущий активный челлендж пользователя
+      const { data: participantData } = await supabase
         .from('challenge_participants')
         .select(`
           challenge_id,
-          challenges!inner(id, title, is_active)
+          challenges (
+            id,
+            is_active
+          )
         `)
-        .eq('user_id', user.id)
-        .eq('challenges.is_active', true)
-        .limit(1)
-        .single();
+        .eq('user_id', user.id);
 
-      if (!challengeParticipant) {
+      let challengeId = null;
+      if (participantData && participantData.length > 0) {
+        const activeChallenge = participantData.find(p => 
+          p.challenges && p.challenges.is_active
+        );
+        challengeId = activeChallenge?.challenge_id;
+      }
+
+      if (!challengeId) {
         setLeaderboardData([]);
         setLoading(false);
         return;
       }
 
-      const challengeId = challengeParticipant.challenge_id;
-
-      // Получаем всех участников челленджа с их профилями
-      const { data: participants } = await supabase
+      // Получаем всех участников данного челленджа
+      const { data: allParticipants } = await supabase
         .from('challenge_participants')
         .select(`
           user_id,
-          profiles!inner(username, full_name)
+          profiles (
+            username,
+            full_name,
+            avatar_url
+          )
         `)
         .eq('challenge_id', challengeId);
 
-      if (!participants) {
+      if (!allParticipants || allParticipants.length === 0) {
         setLeaderboardData([]);
         setLoading(false);
         return;
       }
 
-      // Вычисляем очки для каждого участника на основе их активности
-      const leaderboard = await Promise.all(
-        participants.map(async (participant) => {
-          // Получаем метрики и измерения участника за последние 30 дней
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          
-          const [workoutsData, measurementsData, bodyCompData] = await Promise.all([
-            supabase
-              .from('workouts')
-              .select('calories_burned, duration_minutes')
-              .eq('user_id', participant.user_id)
-              .gte('start_time', thirtyDaysAgo.toISOString()),
-            supabase
-              .from('measurements')
-              .select('value')
-              .eq('user_id', participant.user_id)
-              .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
-            supabase
-              .from('body_composition')
-              .select('weight, body_fat_percentage')
-              .eq('user_id', participant.user_id)
-              .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0])
-          ]);
+      // Для каждого участника вычисляем активность за последние 30 дней
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-          // Вычисляем очки
-          let points = 0;
-          
-          // Очки за тренировки
-          const workouts = workoutsData.data || [];
-          points += workouts.length * 50; // 50 очков за тренировку
-          
-          const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
-          points += Math.floor(totalCalories / 10); // 1 очко за 10 ккал
-          
-          const totalMinutes = workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0);
-          points += Math.floor(totalMinutes / 5); // 1 очко за 5 минут тренировки
-          
-          // Очки за измерения
-          const measurements = measurementsData.data || [];
-          points += measurements.length * 20; // 20 очков за измерение
-          
-          // Очки за обновления состава тела
-          const bodyComp = bodyCompData.data || [];
-          points += bodyComp.length * 30; // 30 очков за обновление состава тела
+      const leaderboardPromises = allParticipants.map(async (participant) => {
+        const [workoutsData, measurementsData, bodyCompositionData] = await Promise.all([
+          supabase
+            .from('workouts')
+            .select('id, calories_burned')
+            .eq('user_id', participant.user_id)
+            .gte('start_time', thirtyDaysAgo.toISOString()),
+          supabase
+            .from('measurements')
+            .select('value')
+            .eq('user_id', participant.user_id)
+            .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
+          supabase
+            .from('body_composition')
+            .select('weight, body_fat_percentage')
+            .eq('user_id', participant.user_id)
+            .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0])
+        ]);
 
-          const name = participant.profiles?.full_name || 
-                      participant.profiles?.username || 
-                      'Пользователь';
-          
-          const isCurrentUser = participant.user_id === user.id;
+        // Вычисляем очки
+        let points = 0;
+        
+        // Очки за тренировки
+        const workouts = workoutsData.data || [];
+        points += workouts.length * 50; // 50 очков за тренировку
+        
+        const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+        points += Math.floor(totalCalories / 10); // 1 очко за 10 ккал
+        
+        // Очки за измерения
+        const measurements = measurementsData.data || [];
+        points += measurements.length * 20; // 20 очков за каждое измерение
+        
+        // Очки за отслеживание состава тела
+        const bodyComp = bodyCompositionData.data || [];
+        points += bodyComp.length * 30; // 30 очков за измерение состава тела
 
-          return {
-            user_id: participant.user_id,
-            name: isCurrentUser ? 'Вы' : name,
-            points,
-            isUser: isCurrentUser
-          };
-        })
-      );
+        return {
+          user_id: participant.user_id,
+          username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
+          avatar_url: participant.profiles?.avatar_url,
+          points: points,
+          isUser: participant.user_id === user.id
+        };
+      });
 
-      // Сортируем по очкам и добавляем ранги и изменения
-      const sortedLeaderboard = leaderboard
+      const allResults = await Promise.all(leaderboardPromises);
+      
+      // Сортируем по очкам
+      const sortedLeaderboard = allResults
         .sort((a, b) => b.points - a.points)
-        .map((entry, index) => ({
+        .map((item, index) => ({
+          ...item,
           rank: index + 1,
-          name: entry.name,
-          points: entry.points,
-          change: `+${Math.floor(Math.random() * 20)}`, // Пока что случайное изменение
-          isUser: entry.isUser
+          change: '+2' // Placeholder для изменения позиции
         }));
 
       setLeaderboardData(sortedLeaderboard); // Показываем всех участников
@@ -146,29 +151,11 @@ export function Leaderboard() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Award className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Team Leaderboard
-          </h3>
-        </div>
-        <Card className="border-2 border-accent/20">
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              {[...Array(Math.min(leaderboardData.length, 10))].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LeaderboardSkeleton />;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div 
         className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
         onClick={() => navigate('/leaderboard')}
@@ -179,99 +166,85 @@ export function Leaderboard() {
             Team Leaderboard
           </h3>
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+          View all →
+        </span>
       </div>
-      
-      <Card 
-        className="border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-background cursor-pointer hover:border-accent/40 transition-all"
-        onClick={() => navigate('/leaderboard')}
-      >
+
+      <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm hover:border-accent/30 transition-all duration-500">
         <CardContent className="p-4">
-          {leaderboardData.length === 0 ? (
-            <div className="text-center py-6">
-              <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Нет активного челленджа или участников
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Показываем только топ-1 участника с выделением */}
-              {leaderboardData.slice(0, 1).map((user) => (
-                <div 
-                  key={user.rank}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-yellow-500/20 border-2 border-yellow-500/30"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg">
-                      <Award className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-base font-bold text-foreground block">
-                        {user.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Лидирует
-                      </span>
-                    </div>
+          <div className="space-y-2 stagger-fade-in">
+            {leaderboardData.slice(0, 5).map((item, index) => (
+              <div 
+                key={item.user_id}
+                onClick={() => navigate('/leaderboard')}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-xl transition-all duration-500 cursor-pointer group",
+                  "hover:bg-background/50 hover:scale-[1.02] active:scale-[0.98]",
+                  item.isUser ? "bg-primary/10 border-2 border-primary/30" : "bg-background/20"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Rank badge */}
+                  <div className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm transition-all duration-500",
+                    "group-hover:scale-110 group-hover:rotate-6",
+                    index === 0 && "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg",
+                    index === 1 && "bg-gradient-to-br from-gray-300 to-gray-500 text-white shadow-md",
+                    index === 2 && "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md",
+                    index > 2 && "bg-muted text-muted-foreground"
+                  )}>
+                    {index === 0 && <Trophy className="h-4 w-4" />}
+                    {index === 1 && <Medal className="h-4 w-4" />}
+                    {index === 2 && <Award className="h-3.5 w-3.5" />}
+                    {index > 2 && item.rank}
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-foreground">
-                        {user.points}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        очков
-                      </div>
-                    </div>
-                    <Badge 
-                      variant="default"
-                      className="text-xs bg-green-500 hover:bg-green-600"
-                    >
-                      {user.change}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Показываем текущего пользователя, если он не на первом месте */}
-              {leaderboardData.find(u => u.isUser && u.rank > 1) && (
-                <div 
-                  className="flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-primary/20 text-primary">
-                      {leaderboardData.find(u => u.isUser)?.rank}
-                    </div>
-                    <span className="text-sm font-medium text-primary">
-                      Вы
+
+                  {/* Avatar and name */}
+                  <Avatar className="h-10 w-10 border-2 border-border/50 transition-all duration-500 group-hover:scale-110">
+                    <AvatarImage src={item.avatar_url} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {item.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "text-sm font-semibold transition-colors",
+                      item.isUser ? "text-primary" : "text-foreground"
+                    )}>
+                      {item.username}
+                      {item.isUser && <span className="ml-1.5 text-xs text-primary/70">(You)</span>}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {item.points} points
                     </span>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">
-                      {leaderboardData.find(u => u.isUser)?.points}
-                    </span>
-                    <Badge 
-                      variant="default"
-                      className="text-xs"
-                    >
-                      {leaderboardData.find(u => u.isUser)?.change}
-                    </Badge>
-                  </div>
                 </div>
-              )}
-              
-              {/* Индикатор, что есть еще участники */}
-              {leaderboardData.length > 2 && (
-                <div className="text-center pt-2">
-                  <span className="text-xs text-muted-foreground">
-                    +{leaderboardData.length - (leaderboardData.find(u => u.isUser && u.rank > 1) ? 2 : 1)} участников
-                  </span>
-                </div>
-              )}
-            </div>
+
+                {/* Change indicator */}
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs transition-all duration-300 group-hover:scale-110",
+                    item.change.startsWith('+') 
+                      ? "border-success/50 bg-success/10 text-success" 
+                      : "border-destructive/50 bg-destructive/10 text-destructive"
+                  )}
+                >
+                  {item.change}
+                </Badge>
+              </div>
+            ))}
+          </div>
+
+          {leaderboardData.length > 5 && (
+            <button
+              onClick={() => navigate('/leaderboard')}
+              className="w-full mt-3 py-2 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              View full leaderboard →
+            </button>
           )}
         </CardContent>
       </Card>

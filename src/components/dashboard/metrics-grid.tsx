@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { MetricsGridSkeleton } from "@/components/ui/dashboard-skeleton";
 import { cn } from "@/lib/utils";
 
 interface MetricConfig {
@@ -333,13 +333,7 @@ export function MetricsGrid() {
   };
 
   if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-4 px-6 relative">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-lg" />
-        ))}
-      </div>
-    );
+    return <MetricsGridSkeleton />;
   }
 
   return (
