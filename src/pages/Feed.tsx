@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivityCard } from "@/components/feed/ActivityCard";
@@ -12,6 +12,7 @@ import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { VirtualizedList } from "@/components/ui/virtualized-list";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ActivityListSkeleton } from "@/components/ui/universal-skeleton";
 
 interface ActivityItem {
   id: string;
@@ -195,21 +196,8 @@ export default function Feed() {
           <h1 className="text-3xl font-bold text-foreground tracking-wider">
             ACTIVITY FEED
           </h1>
-          <button className="w-12 h-12 rounded-full border-2 border-muted flex items-center justify-center">
-            <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin" />
-          </button>
         </div>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-24 rounded-full animate-pulse"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-              }}
-            />
-          ))}
-        </div>
+        <ActivityListSkeleton count={8} />
       </div>
     );
   }

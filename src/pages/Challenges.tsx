@@ -11,9 +11,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { ChallengesListSkeleton } from "@/components/ui/universal-skeleton";
 
 
 const Challenges = () => {
@@ -167,8 +167,22 @@ const Challenges = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background relative pb-8">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
+        <div className="space-y-8 pt-6 px-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-foreground">Челленджи</h1>
+              <p className="text-muted-foreground">Загрузка активных челленджей...</p>
+            </div>
+          </div>
+          <ChallengesListSkeleton count={4} />
+        </div>
       </div>
     );
   }

@@ -2,6 +2,20 @@
 
 Документация по оптимизации производительности приложения.
 
+## 📑 Содержание
+
+1. [Lazy Loading](#-lazy-loading)
+2. [Lazy Loading с Preload](#-lazy-loading-с-preload)
+3. [Lazy Loading Images](#-lazy-loading-images)
+4. [Lazy Loading Charts](#-lazy-loading-charts)
+5. [Loading States & Skeleton Screens](#-loading-states--skeleton-screens)
+6. [Component-Level Code Splitting](#-component-level-code-splitting)
+7. [Best Practices](#-best-practices)
+8. [Advanced Techniques](#-advanced-techniques)
+9. [Measuring Performance](#-measuring-performance)
+
+> **📘 См. также:** [LOADING_STATES.md](./LOADING_STATES.md) - подробная документация по skeleton screens
+
 ---
 
 ## 📦 Lazy Loading
@@ -188,6 +202,68 @@ import { LineChart, Line, XAxis, YAxis } from "recharts";
 ### Когда использовать
 
 - Графики вне первого экрана
+- Дашборды с множественными графиками
+- Модальные окна с аналитикой
+
+---
+
+## 💀 Loading States & Skeleton Screens
+
+### Улучшенное UX во время загрузки
+
+Вместо пустых экранов или простых спиннеров, используйте skeleton screens:
+
+```tsx
+import { ActivityListSkeleton, ProgressGridSkeleton } from "@/components/ui/universal-skeleton";
+
+function Feed() {
+  const { data, loading, fromCache } = useProgressCache(...);
+
+  if (loading && !fromCache) {
+    return <ActivityListSkeleton count={8} />;
+  }
+
+  return <ActivityList data={data} />;
+}
+```
+
+### Доступные Skeleton компоненты
+
+- `ActivityListSkeleton` - для ленты активностей
+- `ProgressGridSkeleton` - для метрик прогресса
+- `ChallengesListSkeleton` - для списка челленджей
+- `LeaderboardListSkeleton` - для таблицы лидеров
+- `ChartSkeleton` - для графиков
+- `PageSkeleton` - универсальный для страниц
+
+### Интеграция с кешированием
+
+```tsx
+const { data, loading, fromCache } = useProgressCache(
+  'cache-key',
+  fetchFunction,
+  []
+);
+
+// Показываем skeleton только при первой загрузке
+if (loading && !fromCache) {
+  return <ListSkeleton />;
+}
+
+// Если есть кеш - показываем старые данные с индикатором обновления
+return (
+  <div>
+    {loading && <RefreshIndicator />}
+    <List data={data} />
+  </div>
+);
+```
+
+> **📘 Подробнее:** См. [LOADING_STATES.md](./LOADING_STATES.md) для детальной документации
+
+---
+
+## 🎨 Component-Level Code Splitting
 - Дашборды с множественными графиками
 - Модальные окна с аналитикой
 

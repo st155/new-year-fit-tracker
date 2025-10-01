@@ -8,6 +8,7 @@ import { useProgressCache } from "@/hooks/useProgressCache";
 import { Button } from "@/components/ui/button";
 import { SimpleVirtualList } from "@/components/ui/virtualized-list";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { LeaderboardListSkeleton } from "@/components/ui/universal-skeleton";
 
 interface LeaderboardUser {
   rank: number;
@@ -303,11 +304,7 @@ const LeaderboardPage = () => {
       {/* Leaderboard */}
       <div className="max-w-3xl mx-auto">
         {loading && !fromCache ? (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="rounded-3xl p-4 h-24 animate-pulse bg-card/50" />
-            ))}
-          </div>
+          <LeaderboardListSkeleton count={10} />
         ) : (
           <>
             {/* Use virtualization for long lists on mobile */}
