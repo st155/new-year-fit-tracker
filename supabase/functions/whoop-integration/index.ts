@@ -123,8 +123,8 @@ async function getValidAccessToken(userId: string) {
   const now = new Date();
   const expiresAt = new Date(token.expires_at);
   
-  // Если токен истекает в течение 5 минут, обновляем его
-  if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
+  // Если токен истекает в течение 10 минут, обновляем его
+  if (expiresAt.getTime() - now.getTime() < 10 * 60 * 1000) {
     console.log('Token expires soon, refreshing...');
     
     try {
