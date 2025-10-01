@@ -208,26 +208,25 @@ const Challenges = () => {
           totalPages={routes.length}
         />
         <div className="space-y-8 pb-8">
-        <div className="px-4 py-3">
-          <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Доступные челленджи
-                </h1>
-                <p className="text-muted-foreground">
-                  Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
-                </p>
-              </div>
-              
-              <Button
-                onClick={() => navigate('/challenges/create')}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Создать челлендж
-              </Button>
+        {/* Header с градиентом */}
+        <div className="px-4 py-6 bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10 border-b border-border/50">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
+                Доступные челленджи
+              </h1>
+              <p className="text-muted-foreground">
+                Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
+              </p>
             </div>
+            
+            <Button
+              onClick={() => navigate('/challenges/create')}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 text-white shadow-lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Создать челлендж
+            </Button>
           </div>
         </div>
 
@@ -287,39 +286,59 @@ const Challenges = () => {
             const isParticipant = userChallenges.includes(challenge.id);
             const daysRemaining = getDaysRemaining(challenge.end_date);
             
+            // Цвета для карточек
+            const cardColors = [
+              { border: 'border-purple-500/30', bg: 'from-purple-500/10 to-pink-500/10', icon: 'bg-purple-500/20', text: 'text-purple-500' },
+              { border: 'border-blue-500/30', bg: 'from-blue-500/10 to-cyan-500/10', icon: 'bg-blue-500/20', text: 'text-blue-500' },
+              { border: 'border-green-500/30', bg: 'from-green-500/10 to-emerald-500/10', icon: 'bg-green-500/20', text: 'text-green-500' },
+              { border: 'border-orange-500/30', bg: 'from-orange-500/10 to-yellow-500/10', icon: 'bg-orange-500/20', text: 'text-orange-500' },
+              { border: 'border-red-500/30', bg: 'from-red-500/10 to-pink-500/10', icon: 'bg-red-500/20', text: 'text-red-500' },
+            ];
+            const color = cardColors[index % cardColors.length];
+            
             return (
               <Card 
                 key={challenge.id} 
-                className="flex flex-col animate-fade-in hover-scale transition-all duration-300" 
+                className={`flex flex-col animate-fade-in hover:scale-[1.02] transition-all duration-300 border-2 ${color.border} bg-gradient-to-br ${color.bg} shadow-lg`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-xl text-foreground">
-                      {challenge.title}
-                    </CardTitle>
-                    <Trophy className="h-6 w-6 text-primary" />
+                    <div className="flex-1">
+                      <CardTitle className="text-xl text-foreground mb-2">
+                        {challenge.title}
+                      </CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        {challenge.description}
+                      </CardDescription>
+                    </div>
+                    <div className={`p-3 ${color.icon} rounded-xl ml-3`}>
+                      <Trophy className={`h-6 w-6 ${color.text}`} />
+                    </div>
                   </div>
-                  <CardDescription className="text-muted-foreground">
-                    {challenge.description}
-                  </CardDescription>
                 </CardHeader>
                 
                 <CardContent className="flex-1 space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`p-1.5 ${color.icon} rounded-lg`}>
+                      <Calendar className={`h-4 w-4 ${color.text}`} />
+                    </div>
+                    <span className="text-muted-foreground">
                       {formatDate(challenge.start_date)} - {formatDate(challenge.end_date)}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Target className="h-4 w-4" />
-                    <span>Осталось дней: {daysRemaining}</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`p-1.5 ${color.icon} rounded-lg`}>
+                      <Target className={`h-4 w-4 ${color.text}`} />
+                    </div>
+                    <span className={`font-semibold ${color.text}`}>
+                      Осталось дней: {daysRemaining}
+                    </span>
                   </div>
                   
                   {isParticipant && (
-                    <Badge variant="secondary" className="w-fit">
+                    <Badge variant="default" className={`w-fit ${color.icon} ${color.text} border-0`}>
                       <Users className="h-3 w-3 mr-1" />
                       Участвую
                     </Badge>
@@ -330,21 +349,21 @@ const Challenges = () => {
                   <Button 
                     onClick={() => navigate(`/challenges/${challenge.id}`)}
                     variant="outline"
-                    className="flex-1"
+                    className={`flex-1 ${color.text} border-current hover:bg-current/10`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Подробнее
                   </Button>
                   
                   {isParticipant ? (
-                    <Button disabled className="flex-1">
+                    <Button disabled className="flex-1 bg-muted">
                       Уже участвую
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       onClick={() => joinChallenge(challenge.id)}
                       disabled={joiningChallenge === challenge.id}
-                      className="flex-1"
+                      className={`flex-1 bg-gradient-to-r ${color.bg.includes('purple') ? 'from-purple-500 to-pink-500' : color.bg.includes('blue') ? 'from-blue-500 to-cyan-500' : color.bg.includes('green') ? 'from-green-500 to-emerald-500' : color.bg.includes('orange') ? 'from-orange-500 to-yellow-500' : 'from-red-500 to-pink-500'} text-white hover:opacity-90`}
                     >
                       {joiningChallenge === challenge.id ? (
                         <>

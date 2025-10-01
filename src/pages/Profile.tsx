@@ -118,32 +118,32 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="space-y-8 pb-8">
-        <div className="px-4 py-3">
-          <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+    <div className="min-h-screen bg-background pb-24">
+      <div className="space-y-8">
+        {/* Header с градиентом */}
+        <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
               Профиль
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground">
               Управляйте своими данными и настройками аккаунта
             </p>
           </div>
         </div>
 
-        <div className="px-4">
-
+        <div className="px-4 max-w-7xl mx-auto">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
+            <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <User className="h-4 w-4" />
               Профиль
             </TabsTrigger>
-            <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <TabsTrigger value="preferences" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <Settings className="h-4 w-4" />
               Настройки
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
+            <TabsTrigger value="security" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <Shield className="h-4 w-4" />
               Безопасность
             </TabsTrigger>
@@ -151,9 +151,12 @@ const ProfilePage = () => {
 
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Аватар */}
-              <Card>
+              {/* Аватар с градиентом */}
+              <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5 shadow-glow-primary">
                 <CardHeader className="text-center">
+                  <div className="inline-block p-1 bg-gradient-primary rounded-full mx-auto mb-2">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
                   <CardTitle className="text-lg">Фото профиля</CardTitle>
                   <CardDescription>
                     Загрузите свое фото или выберите аватар
@@ -168,16 +171,20 @@ const ProfilePage = () => {
                 </CardContent>
               </Card>
 
-              {/* Основная информация */}
-              <Card className="lg:col-span-2">
+              {/* Основная информация с градиентом */}
+              <Card className="lg:col-span-2 border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 shadow-glow-secondary">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
-                    Основная информация
-                  </CardTitle>
-                  <CardDescription>
-                    Обновите свои личные данные
-                  </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-gradient-secondary rounded-lg">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle>Основная информация</CardTitle>
+                      <CardDescription>
+                        Обновите свои личные данные
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,7 +238,8 @@ const ProfilePage = () => {
                   </div>
 
                   <div className="flex justify-end pt-4">
-                    <Button onClick={saveProfile} disabled={loading} className="bg-gradient-primary hover:opacity-90">
+                    <Button onClick={saveProfile} disabled={loading} className="bg-gradient-primary hover:opacity-90 shadow-lg">
+                      <Save className="h-4 w-4 mr-2" />
                       {loading ? "Сохранение..." : "Сохранить изменения"}
                     </Button>
                   </div>
@@ -242,15 +250,19 @@ const ProfilePage = () => {
 
           <TabsContent value="preferences" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+              <Card className="border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-primary" />
-                    Уведомления
-                  </CardTitle>
-                  <CardDescription>
-                    Настройте как вы хотите получать уведомления
-                  </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg">
+                      <Bell className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle>Уведомления</CardTitle>
+                      <CardDescription>
+                        Настройте как вы хотите получать уведомления
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -283,15 +295,19 @@ const ProfilePage = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-pink-500/5">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Share className="h-5 w-5 text-primary" />
-                    Приватность
-                  </CardTitle>
-                  <CardDescription>
-                    Управляйте видимостью ваших данных
-                  </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                      <Share className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle>Приватность</CardTitle>
+                      <CardDescription>
+                        Управляйте видимостью ваших данных
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -312,15 +328,19 @@ const ProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
-            <Card>
+            <Card className="border-2 border-red-500/20 bg-gradient-to-br from-red-500/5 to-orange-500/5">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Безопасность аккаунта
-                </CardTitle>
-                <CardDescription>
-                  Управляйте безопасностью вашего аккаунта
-                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle>Безопасность аккаунта</CardTitle>
+                    <CardDescription>
+                      Управляйте безопасностью вашего аккаунта
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">

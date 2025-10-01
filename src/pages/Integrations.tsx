@@ -201,23 +201,23 @@ const IntegrationsPage = () => {
   const connectedCount = Object.values(integrationStatus).filter(status => status === 'connected').length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto p-4 sm:p-6 max-w-7xl">
-        {/* Заголовок */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        {/* Заголовок с градиентом */}
+        <div className="mb-8 px-4 py-6 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl border border-border/50">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
                 Интеграции
               </h1>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-muted-foreground">
                 Подключите свои фитнес-устройства и приложения для автоматического сбора данных
               </p>
             </div>
             <Button 
               onClick={refreshIntegrations} 
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:bg-primary/10 border-primary/20"
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -226,47 +226,67 @@ const IntegrationsPage = () => {
           </div>
         </div>
 
-        {/* Статистика */}
+        {/* Статистика с градиентами */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <Card>
+          <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-500/10 to-emerald-500/10 shadow-lg hover:shadow-green-500/20 transition-all">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Подключено</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Zap className="h-5 w-5 text-green-500" />
+                </div>
+                <CardTitle className="text-sm font-medium">Подключено</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-3xl font-bold text-green-500">
                 {connectedCount}/4
               </div>
-              <p className="text-xs text-muted-foreground">устройств</p>
+              <p className="text-xs text-muted-foreground mt-1">устройств</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 shadow-lg hover:shadow-blue-500/20 transition-all">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Всего записей</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Database className="h-5 w-5 text-blue-500" />
+                </div>
+                <CardTitle className="text-sm font-medium">Всего записей</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{healthStats.totalRecords.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">данных</p>
+              <div className="text-3xl font-bold text-blue-500">{healthStats.totalRecords.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground mt-1">данных</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-pink-500/10 shadow-lg hover:shadow-purple-500/20 transition-all">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Activity className="h-5 w-5 text-purple-500" />
+                </div>
+                <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">{healthStats.lastWeek}</div>
-              <p className="text-xs text-muted-foreground">новых записей</p>
+              <div className="text-3xl font-bold text-purple-500">{healthStats.lastWeek}</div>
+              <p className="text-xs text-muted-foreground mt-1">новых записей</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-2 border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 shadow-lg hover:shadow-orange-500/20 transition-all">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Источники</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-orange-500/20 rounded-lg">
+                  <Settings className="h-5 w-5 text-orange-500" />
+                </div>
+                <CardTitle className="text-sm font-medium">Источники</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{Object.keys(healthStats.sources).length}</div>
-              <p className="text-xs text-muted-foreground">активных</p>
+              <div className="text-3xl font-bold text-orange-500">{Object.keys(healthStats.sources).length}</div>
+              <p className="text-xs text-muted-foreground mt-1">активных</p>
             </CardContent>
           </Card>
         </div>
@@ -296,34 +316,46 @@ const IntegrationsPage = () => {
               />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                {integrationItems.map((item) => (
-                  <Card key={item.id} className="relative overflow-hidden">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-primary/10 rounded-lg">
-                            <item.icon className="h-6 w-6 text-primary" />
+                {integrationItems.map((item, index) => {
+                  const colors = [
+                    { border: 'border-red-500/30', bg: 'from-red-500/10 to-orange-500/10', icon: 'bg-red-500/20', iconColor: 'text-red-500' },
+                    { border: 'border-blue-500/30', bg: 'from-blue-500/10 to-cyan-500/10', icon: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+                    { border: 'border-purple-500/30', bg: 'from-purple-500/10 to-pink-500/10', icon: 'bg-purple-500/20', iconColor: 'text-purple-500' },
+                    { border: 'border-green-500/30', bg: 'from-green-500/10 to-emerald-500/10', icon: 'bg-green-500/20', iconColor: 'text-green-500' }
+                  ];
+                  const color = colors[index % colors.length];
+                  
+                  return (
+                    <Card key={item.id} className={`relative overflow-hidden border-2 ${color.border} bg-gradient-to-br ${color.bg} shadow-lg hover:scale-[1.02] transition-all duration-300`}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-3 ${color.icon} rounded-xl`}>
+                              <item.icon className={`h-6 w-6 ${color.iconColor}`} />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">{item.name}</CardTitle>
+                              <CardDescription className="text-sm">
+                                {item.description}
+                              </CardDescription>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg">{item.name}</CardTitle>
-                            <CardDescription className="text-sm">
-                              {item.description}
-                            </CardDescription>
-                          </div>
+                          <StatusIndicator status={item.status} />
                         </div>
-                        <StatusIndicator status={item.status} />
-                      </div>
-                    </CardHeader>
+                      </CardHeader>
                     
-                    {item.status === 'connected' && (
-                      <CardContent>
-                        <div className="text-sm text-muted-foreground">
-                          <p>Записей от {item.name}: {healthStats.sources[item.id === 'appleHealth' ? 'apple_health' : item.id] || healthStats.sources[item.name] || 0}</p>
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
+                      {item.status === 'connected' && (
+                        <CardContent>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Badge variant="outline" className={`${color.iconColor} border-current`}>
+                              {healthStats.sources[item.id === 'appleHealth' ? 'apple_health' : item.id] || healthStats.sources[item.name] || 0} записей
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
