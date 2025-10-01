@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivityCard } from "@/components/feed/ActivityCard";
-import { RefreshCw, Activity } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useProgressCache } from "@/hooks/useProgressCache";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,8 @@ import { NoActivityEmptyState } from "@/components/ui/enhanced-empty-state";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { VirtualizedList } from "@/components/ui/virtualized-list";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActivityItem {
   id: string;
@@ -30,6 +32,7 @@ interface ActivityItem {
 export default function Feed() {
   const location = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const routes = ['/', '/progress', '/challenges', '/feed'];
   const currentIndex = routes.indexOf(location.pathname);
@@ -39,6 +42,11 @@ export default function Feed() {
     routes,
     enabled: true,
   });
+
+  // Calculate list height (viewport height minus header and padding)
+  const listHeight = typeof window !== 'undefined' 
+    ? window.innerHeight - 180 
+    : 600;
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -267,17 +275,33 @@ export default function Feed() {
           </button>
         </div>
 
-        {/* Activity List */}
-        <div className="space-y-4">
-          {activities.map((activity, index) => (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              onActivityUpdate={onActivityUpdate}
-              index={index}
-            />
-          ))}
-        </div>
+        {/* Activity List - Virtualized for better performance */}
+        {isMobile && activities && activities.length > 10 ? (
+          <VirtualizedList
+            items={activities}
+            itemHeight={120}
+            height={listHeight}
+            renderItem={(activity, index) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onActivityUpdate={onActivityUpdate}
+                index={index}
+              />
+            )}
+          />
+        ) : (
+          <div className="space-y-4">
+            {activities?.map((activity, index) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onActivityUpdate={onActivityUpdate}
+                index={index}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </PullToRefresh>
   );

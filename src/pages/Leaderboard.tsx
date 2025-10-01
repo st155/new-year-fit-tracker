@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { Trophy, TrendingUp, TrendingDown, Award, Medal, RefreshCw } from "lucide-react";
+import { Trophy, TrendingUp, Award, Medal, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProgressCache } from "@/hooks/useProgressCache";
 import { Button } from "@/components/ui/button";
+import { SimpleVirtualList } from "@/components/ui/virtualized-list";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LeaderboardUser {
   rank: number;
@@ -25,6 +27,7 @@ interface Challenge {
 
 const LeaderboardPage = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
 
@@ -154,11 +157,106 @@ const LeaderboardPage = () => {
     return "bg-card/40 backdrop-blur-sm border-border/30";
   };
 
-  const getRankIconColor = (rank: number) => {
-    if (rank === 1) return "text-yellow-300";
-    if (rank === 2) return "text-gray-300";
-    if (rank === 3) return "text-orange-400";
-    return "text-muted-foreground";
+  const renderLeaderboardItem = (userEntry: LeaderboardUser, index: number) => {
+    const isTopThree = userEntry.rank <= 3;
+    const isCurrentUser = userEntry.isCurrentUser || false;
+
+    return (
+      <div
+        className={cn(
+          "rounded-3xl border-2 transition-all duration-300 overflow-hidden",
+          getRankStyle(userEntry.rank, isCurrentUser),
+          isTopThree || isCurrentUser ? "p-6" : "p-4"
+        )}
+      >
+        {isTopThree ? (
+          // Large cards for top 3
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex flex-col items-center min-w-[60px]">
+                <div className="relative">
+                  {userEntry.rank === 1 ? (
+                    <Award className="w-14 h-14 text-yellow-200 drop-shadow-lg" />
+                  ) : userEntry.rank === 2 ? (
+                    <Medal className="w-14 h-14 text-slate-200 drop-shadow-lg" />
+                  ) : (
+                    <Medal className="w-14 h-14 text-amber-300 drop-shadow-lg" />
+                  )}
+                </div>
+                <span className="text-3xl font-black text-white/90 mt-1">
+                  {userEntry.rank}
+                </span>
+              </div>
+              <Avatar className="w-16 h-16 border-4 border-white/40 shadow-xl">
+                <AvatarImage src={userEntry.avatarUrl} />
+                <AvatarFallback className="text-2xl font-bold bg-white/20">
+                  {userEntry.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
+                <p className="text-white/80 text-base font-medium">{userEntry.points} очков</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-green-500/90 px-4 py-2 rounded-full">
+              <TrendingUp className="w-5 h-5 text-white" />
+              <span className="text-base font-bold text-white">
+                +{Math.abs(userEntry.trend)}
+              </span>
+            </div>
+          </div>
+        ) : isCurrentUser ? (
+          // Highlighted card for current user
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
+                <span className="text-2xl font-black text-white">{userEntry.rank}</span>
+              </div>
+              <Avatar className="w-16 h-16 border-4 border-white/40">
+                <AvatarImage src={userEntry.avatarUrl} />
+                <AvatarFallback className="text-xl font-bold bg-white/20">
+                  {userEntry.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
+                <p className="text-white/80 text-sm">{userEntry.points} очков</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-green-500/90 px-3 py-1.5 rounded-full">
+              <TrendingUp className="w-4 h-4 text-white" />
+              <span className="text-sm font-bold text-white">
+                +{Math.abs(userEntry.trend)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          // Compact cards for others
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center border border-border/50">
+                <span className="text-base font-bold text-foreground">{userEntry.rank}</span>
+              </div>
+              <Avatar className="w-12 h-12 border-2 border-border/30">
+                <AvatarImage src={userEntry.avatarUrl} />
+                <AvatarFallback className="text-sm font-semibold">
+                  {userEntry.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
+                <p className="text-sm text-muted-foreground">{userEntry.points} очков</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-green-500/80 px-3 py-1 rounded-full">
+              <span className="text-sm font-bold text-white">
+                +{Math.abs(userEntry.trend)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -211,110 +309,24 @@ const LeaderboardPage = () => {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
-            {(leaderboardData || []).map((userEntry) => {
-              const isTopThree = userEntry.rank <= 3;
-              const isCurrentUser = userEntry.isCurrentUser || false;
-
-              return (
-                <div
-                  key={`${userEntry.userId}-${userEntry.rank}`}
-                  className={cn(
-                    "rounded-3xl border-2 transition-all duration-300 overflow-hidden",
-                    getRankStyle(userEntry.rank, isCurrentUser),
-                    isTopThree || isCurrentUser ? "p-6" : "p-4"
-                  )}
-                >
-                  {isTopThree ? (
-                    // Large cards for top 3
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-5">
-                        <div className="flex flex-col items-center min-w-[60px]">
-                          <div className="relative">
-                            {userEntry.rank === 1 ? (
-                              <Award className="w-14 h-14 text-yellow-200 drop-shadow-lg" />
-                            ) : userEntry.rank === 2 ? (
-                              <Medal className="w-14 h-14 text-slate-200 drop-shadow-lg" />
-                            ) : (
-                              <Medal className="w-14 h-14 text-amber-300 drop-shadow-lg" />
-                            )}
-                          </div>
-                          <span className="text-3xl font-black text-white/90 mt-1">
-                            {userEntry.rank}
-                          </span>
-                        </div>
-                        <Avatar className="w-16 h-16 border-4 border-white/40 shadow-xl">
-                          <AvatarImage src={userEntry.avatarUrl} />
-                          <AvatarFallback className="text-2xl font-bold bg-white/20">
-                            {userEntry.name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
-                          <p className="text-white/80 text-base font-medium">{userEntry.points} очков</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 bg-green-500/90 px-4 py-2 rounded-full">
-                        <TrendingUp className="w-5 h-5 text-white" />
-                        <span className="text-base font-bold text-white">
-                          +{Math.abs(userEntry.trend)}
-                        </span>
-                      </div>
-                    </div>
-                  ) : isCurrentUser ? (
-                    // Highlighted card for current user
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center border-2 border-white/50">
-                          <span className="text-2xl font-black text-white">{userEntry.rank}</span>
-                        </div>
-                        <Avatar className="w-16 h-16 border-4 border-white/40">
-                          <AvatarImage src={userEntry.avatarUrl} />
-                          <AvatarFallback className="text-xl font-bold bg-white/20">
-                            {userEntry.name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
-                          <p className="text-white/80 text-sm">{userEntry.points} очков</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 bg-green-500/90 px-3 py-1.5 rounded-full">
-                        <TrendingUp className="w-4 h-4 text-white" />
-                        <span className="text-sm font-bold text-white">
-                          +{Math.abs(userEntry.trend)}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    // Compact cards for others
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-muted/50 backdrop-blur-sm flex items-center justify-center border border-border/50">
-                          <span className="text-base font-bold text-foreground">{userEntry.rank}</span>
-                        </div>
-                        <Avatar className="w-12 h-12 border-2 border-border/30">
-                          <AvatarImage src={userEntry.avatarUrl} />
-                          <AvatarFallback className="text-sm font-semibold">
-                            {userEntry.name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
-                          <p className="text-sm text-muted-foreground">{userEntry.points} очков</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 bg-green-500/80 px-3 py-1 rounded-full">
-                        <span className="text-sm font-bold text-white">
-                          +{Math.abs(userEntry.trend)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <>
+            {/* Use virtualization for long lists on mobile */}
+            {isMobile && (leaderboardData || []).length > 20 ? (
+              <SimpleVirtualList
+                items={leaderboardData || []}
+                renderItem={(userEntry, index) => renderLeaderboardItem(userEntry, index)}
+                threshold={10}
+              />
+            ) : (
+              <div className="space-y-4">
+                {(leaderboardData || []).map((userEntry, index) => (
+                  <div key={`${userEntry.userId}-${userEntry.rank}`}>
+                    {renderLeaderboardItem(userEntry, index)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
