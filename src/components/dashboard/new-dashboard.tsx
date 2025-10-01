@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { NewDashboardHeader } from "./new-dashboard-header";
 import { MetricsGrid } from "./metrics-grid";
 import { GoalsProgress } from "./goals-progress";
@@ -10,17 +11,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 
 export function NewDashboard() {
   const { user } = useAuth();
+  const location = useLocation();
   const [profile, setProfile] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Swipe navigation between main pages
-  useSwipeNavigation({
-    routes: ['/dashboard', '/progress', '/challenges', '/feed'],
+  const routes = ['/', '/progress', '/challenges', '/feed'];
+  const currentIndex = routes.indexOf(location.pathname);
+
+  // Swipe navigation between main pages with visual feedback
+  const { swipeProgress, swipeDirection } = useSwipeNavigation({
+    routes,
     enabled: true,
   });
 
@@ -111,7 +117,13 @@ export function NewDashboard() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
         <div className="space-y-6 pb-8 animate-fade-in">
           <NewDashboardHeader
             userName={userName}

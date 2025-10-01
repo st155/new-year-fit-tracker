@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, TrendingUp, TrendingDown, RefreshCw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useProgressCache } from "@/hooks/useProgressCache";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 
 interface MetricCard {
   id: string;
@@ -138,7 +140,17 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
 const ProgressPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
+
+  const routes = ['/', '/progress', '/challenges', '/feed'];
+  const currentIndex = routes.indexOf(location.pathname);
+
+  // Swipe navigation with visual feedback
+  const { swipeProgress, swipeDirection } = useSwipeNavigation({
+    routes,
+    enabled: true,
+  });
 
   // Оптимизированная функция загрузки всех данных одним запросом
   const fetchAllData = useCallback(async () => {
@@ -218,7 +230,13 @@ const ProgressPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">
+    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto relative">
+      <SwipeIndicator 
+        progress={swipeProgress}
+        direction={swipeDirection}
+        currentIndex={currentIndex}
+        totalPages={routes.length}
+      />
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div>

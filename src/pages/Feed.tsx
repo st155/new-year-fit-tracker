@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivityCard } from "@/components/feed/ActivityCard";
 import { RefreshCw, Activity } from "lucide-react";
@@ -7,6 +8,8 @@ import { useProgressCache } from "@/hooks/useProgressCache";
 import { cn } from "@/lib/utils";
 import { NoActivityEmptyState } from "@/components/ui/enhanced-empty-state";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 
 interface ActivityItem {
   id: string;
@@ -25,7 +28,17 @@ interface ActivityItem {
 }
 
 export default function Feed() {
+  const location = useLocation();
   const { toast } = useToast();
+
+  const routes = ['/', '/progress', '/challenges', '/feed'];
+  const currentIndex = routes.indexOf(location.pathname);
+
+  // Swipe navigation with visual feedback
+  const { swipeProgress, swipeDirection } = useSwipeNavigation({
+    routes,
+    enabled: true,
+  });
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -163,7 +176,13 @@ export default function Feed() {
 
   if (loading && !fromCache) {
     return (
-      <div className="min-h-screen pb-24 px-4 pt-6">
+      <div className="min-h-screen pb-24 px-4 pt-6 relative">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-foreground tracking-wider">
             ACTIVITY FEED
@@ -189,7 +208,13 @@ export default function Feed() {
 
   if (!activities || activities.length === 0) {
     return (
-      <div className="min-h-screen pb-24 px-4 pt-6">
+      <div className="min-h-screen pb-24 px-4 pt-6 relative">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-foreground tracking-wider">
             ACTIVITY FEED
@@ -215,7 +240,13 @@ export default function Feed() {
 
   return (
     <PullToRefresh onRefresh={refetch}>
-      <div className="min-h-screen pb-24 px-4 pt-6">
+      <div className="min-h-screen pb-24 px-4 pt-6 relative">
+        <SwipeIndicator 
+          progress={swipeProgress}
+          direction={swipeDirection}
+          currentIndex={currentIndex}
+          totalPages={routes.length}
+        />
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-foreground tracking-wider">

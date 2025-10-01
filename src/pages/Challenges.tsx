@@ -7,17 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Users, Target, Trophy, Eye, Plus, Search, Filter } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 
 
 const Challenges = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [challenges, setChallenges] = useState<any[]>([]);
   const [filteredChallenges, setFilteredChallenges] = useState<any[]>([]);
   const [userChallenges, setUserChallenges] = useState<string[]>([]);
@@ -25,6 +28,15 @@ const Challenges = () => {
   const [joiningChallenge, setJoiningChallenge] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const routes = ['/', '/progress', '/challenges', '/feed'];
+  const currentIndex = routes.indexOf(location.pathname);
+
+  // Swipe navigation with visual feedback
+  const { swipeProgress, swipeDirection } = useSwipeNavigation({
+    routes,
+    enabled: true,
+  });
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -162,7 +174,13 @@ const Challenges = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <SwipeIndicator 
+        progress={swipeProgress}
+        direction={swipeDirection}
+        currentIndex={currentIndex}
+        totalPages={routes.length}
+      />
       <div className="space-y-8 pb-8">
         <div className="px-4 py-3">
           <div className="bg-card/50 rounded-lg px-4 py-3 border border-border/50">
