@@ -153,10 +153,50 @@ async function getUserToken(whoopUserId: string): Promise<{ access_token: string
       .from('whoop_user_mapping')
       .select('user_id')
       .eq('whoop_user_id', whoopUserId)
-      .single();
+      .maybeSingle();
 
     if (mappingError || !mapping) {
       console.error('No user mapping found for Whoop user:', whoopUserId, mappingError);
+      
+      // Пытаемся найти пользователя по наличию токена и создать маппинг
+      console.log('Attempting to create mapping from existing token...');
+      const { data: tokens } = await supabase
+        .from('whoop_tokens')
+        .select('user_id, access_token')
+        .order('updated_at', { ascending: false })
+        .limit(10);
+      
+      if (tokens && tokens.length > 0) {
+        // Пытаемся проверить каждый токен, чтобы найти того пользователя, которому принадлежит этот Whoop ID
+        for (const token of tokens) {
+          try {
+            const userInfo = await fetch('https://api.prod.whoop.com/developer/v2/user/profile/basic', {
+              headers: { 'Authorization': `Bearer ${token.access_token}` }
+            });
+            
+            if (userInfo.ok) {
+              const info = await userInfo.json();
+              if (info.user_id && info.user_id.toString() === whoopUserId) {
+                console.log(`Found matching user ${token.user_id} for Whoop ID ${whoopUserId}, creating mapping`);
+                
+                // Создаем маппинг
+                await supabase
+                  .from('whoop_user_mapping')
+                  .upsert({
+                    user_id: token.user_id,
+                    whoop_user_id: whoopUserId,
+                    updated_at: new Date().toISOString()
+                  });
+                
+                return { access_token: token.access_token, user_id: token.user_id };
+              }
+            }
+          } catch (e) {
+            console.log(`Token check failed for user ${token.user_id}:`, e);
+          }
+        }
+      }
+      
       return null;
     }
 

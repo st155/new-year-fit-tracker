@@ -312,10 +312,13 @@ async function handleCallback(req: Request, code?: string | null, state?: string
 
     // Получаем информацию о пользователе Whoop и сохраняем связь
     try {
+      console.log('Fetching Whoop user info with access token...');
       const whoopUserInfo = await fetchWhoopUserInfo(tokens.access_token);
-      console.log('Whoop user info:', whoopUserInfo);
+      console.log('Whoop user info received:', JSON.stringify(whoopUserInfo));
       
       if (whoopUserInfo.user_id) {
+        console.log(`Attempting to save mapping: Whoop user ${whoopUserInfo.user_id} -> our user ${mapping.user_id}`);
+        
         // Сохраняем связь whoop_user_id с нашим пользователем
         const { error: mappingError } = await supabase
           .from('whoop_user_mapping')
@@ -328,15 +331,33 @@ async function handleCallback(req: Request, code?: string | null, state?: string
             { onConflict: 'user_id', ignoreDuplicates: false }
           );
           
-        if (mappingError && mappingError.code !== '23505') {
+        if (mappingError) {
           console.error('Error saving Whoop user mapping:', mappingError);
-        } else if (!mappingError) {
-          console.log(`Whoop user mapping saved: ${whoopUserInfo.user_id} -> ${mapping.user_id}`);
+          // Пробуем еще раз с игнорированием конфликтов
+          const { error: retryError } = await supabase
+            .from('whoop_user_mapping')
+            .upsert(
+              {
+                user_id: mapping.user_id,
+                whoop_user_id: whoopUserInfo.user_id.toString(),
+                updated_at: new Date().toISOString()
+              }
+            );
+          if (retryError) {
+            console.error('Retry failed:', retryError);
+          } else {
+            console.log(`Whoop user mapping saved on retry: ${whoopUserInfo.user_id} -> ${mapping.user_id}`);
+          }
+        } else {
+          console.log(`Whoop user mapping saved successfully: ${whoopUserInfo.user_id} -> ${mapping.user_id}`);
         }
+      } else {
+        console.error('No user_id in Whoop user info response');
       }
     } catch (userInfoError: any) {
-      console.error('Error fetching Whoop user info (non-critical):', userInfoError?.message);
-      // Не прерываем процесс при ошибке получения информации о пользователе
+      console.error('Error fetching Whoop user info:', userInfoError?.message, userInfoError?.stack);
+      // Пытаемся получить user_id из токена или другим способом
+      console.log('Will need to fetch user info on next sync or webhook');
     }
 
     // Сразу синхронизируем данные с новыми токенами
