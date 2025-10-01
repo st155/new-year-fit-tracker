@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { PageLoader } from "@/components/ui/page-loader";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -39,14 +40,15 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <TooltipProvider>
-        <AuthProvider>
-          <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <Suspense fallback={<PageLoader message="Загрузка..." />}>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <TooltipProvider>
+          <AuthProvider>
+            <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <Suspense fallback={<PageLoader message="Загрузка..." />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
@@ -197,6 +199,7 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
