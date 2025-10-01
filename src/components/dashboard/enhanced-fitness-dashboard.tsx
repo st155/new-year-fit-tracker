@@ -50,6 +50,7 @@ import { VO2MaxProgressDetail } from '@/components/detail/VO2MaxProgressDetail';
 import { PullUpsProgressDetail } from '@/components/detail/PullUpsProgressDetail';
 import { MetricsSettings, type MetricVisibility } from './metrics-settings';
 import { ExportDataDialog } from './ExportDataDialog';
+import { StreakCard } from './StreakCard';
 
 interface MetricValue {
   id: string;
@@ -1229,6 +1230,9 @@ export const EnhancedFitnessDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Streak Card */}
+            <StreakCard />
           </TabsContent>
 
           <TabsContent value="composition" className="space-y-6">
