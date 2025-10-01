@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TrendingDown, TrendingUp, Target } from 'lucide-react';
+import { ArrowLeft, TrendingDown, TrendingUp, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { format, subDays } from 'date-fns';
+import { format, subDays, addDays, isToday, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 interface BodyFatData {
   date: string;
@@ -24,18 +24,41 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
   const [currentBodyFat, setCurrentBodyFat] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [targetBodyFat, setTargetBodyFat] = useState<number>(11);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // По умолчанию сегодня
+
+  const handlePreviousDay = () => {
+    setSelectedDate(prev => subDays(prev, 1));
+  };
+
+  const handleNextDay = () => {
+    const nextDate = addDays(selectedDate, 1);
+    if (nextDate <= new Date()) {
+      setSelectedDate(nextDate);
+    }
+  };
+
+  const handleToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const getDateLabel = () => {
+    if (isToday(selectedDate)) {
+      return "Сегодня";
+    }
+    return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+  };
 
   useEffect(() => {
     if (user) {
       fetchBodyFatData();
     }
-  }, [user]);
+  }, [user, selectedDate]);
 
   const fetchBodyFatData = async () => {
     if (!user) return;
 
     try {
-      const endDate = new Date();
+      const endDate = selectedDate;
       const startDate = subDays(endDate, 30);
 
       // Получаем цель по жиру
@@ -64,6 +87,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .eq('user_metrics.metric_name', 'Процент жира')
         .eq('user_metrics.source', 'withings')
         .gte('measurement_date', startDate.toISOString().split('T')[0])
+        .lte('measurement_date', endDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
       // Fallback к данным из body_composition если нет Withings данных
@@ -72,6 +96,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .select('measurement_date, body_fat_percentage')
         .eq('user_id', user.id)
         .gte('measurement_date', startDate.toISOString().split('T')[0])
+        .lte('measurement_date', endDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
       // Используем данные Withings если есть, иначе body_composition
@@ -168,8 +193,42 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Прогресс процента жира</h1>
+          <h1 className="text-2xl font-bold text-foreground">Процент жировой массы тела</h1>
         </div>
+      </div>
+
+      {/* Date Navigation */}
+      <div className="flex items-center justify-center gap-2 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePreviousDay}
+          className="h-10 w-10 rounded-full"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        
+        <div 
+          onClick={!isToday(selectedDate) ? handleToday : undefined}
+          className={`
+            px-6 py-2 rounded-full font-semibold text-sm
+            bg-gradient-to-r from-primary/20 to-primary/10
+            border-2 border-primary/30
+            ${!isToday(selectedDate) ? 'cursor-pointer hover:border-primary/50 transition-all' : ''}
+          `}
+        >
+          {getDateLabel()}
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNextDay}
+          disabled={isSameDay(selectedDate, new Date())}
+          className="h-10 w-10 rounded-full disabled:opacity-30"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Key Metrics */}

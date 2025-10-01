@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProgressChart } from "@/components/ui/progress-chart";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { format, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay } from "date-fns";
 import { ru } from "date-fns/locale";
 
 interface MetricData {
@@ -81,8 +81,32 @@ export default function MetricDetail() {
   const [stats, setStats] = useState<MetricStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'week' | 'month' | '3months'>('month');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // По умолчанию сегодня
 
   const config = metricConfigs[metricType as keyof typeof metricConfigs];
+
+  const handlePreviousDay = () => {
+    setSelectedDate(prev => subDays(prev, 1));
+  };
+
+  const handleNextDay = () => {
+    const nextDate = addDays(selectedDate, 1);
+    // Не позволяем листать в будущее
+    if (nextDate <= new Date()) {
+      setSelectedDate(nextDate);
+    }
+  };
+
+  const handleToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const getDateLabel = () => {
+    if (isToday(selectedDate)) {
+      return "Сегодня";
+    }
+    return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+  };
 
   useEffect(() => {
     if (!user || !metricType || !config) {
@@ -91,7 +115,7 @@ export default function MetricDetail() {
     }
 
     fetchMetricData();
-  }, [user, metricType, timeRange]);
+  }, [user, metricType, timeRange, selectedDate]);
 
   const fetchMetricData = async () => {
     if (!user || !metricType) return;
@@ -99,18 +123,19 @@ export default function MetricDetail() {
     try {
       setLoading(true);
       
-      const now = new Date();
+      // Используем selectedDate как конечную точку периода
+      const endDate = selectedDate;
       let startDate: Date;
       
       switch (timeRange) {
         case 'week':
-          startDate = subDays(now, 7);
+          startDate = subDays(endDate, 7);
           break;
         case 'month':
-          startDate = subDays(now, 30);
+          startDate = subDays(endDate, 30);
           break;
         case '3months':
-          startDate = subDays(now, 90);
+          startDate = subDays(endDate, 90);
           break;
       }
 
@@ -127,12 +152,14 @@ export default function MetricDetail() {
             .eq('user_id', user.id)
             .not('body_fat_percentage', 'is', null)
             .gte('measurement_date', startDate.toISOString().split('T')[0])
+            .lte('measurement_date', endDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true }),
           supabase
             .from('metric_values')
             .select(`value, measurement_date, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
             .gte('measurement_date', startDate.toISOString().split('T')[0])
+            .lte('measurement_date', endDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
 
@@ -191,6 +218,7 @@ export default function MetricDetail() {
             .eq('user_id', user.id)
             .not('weight', 'is', null)
             .gte('measurement_date', startDate.toISOString().split('T')[0])
+            .lte('measurement_date', endDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true }),
           supabase
             .from('metric_values')
@@ -198,6 +226,7 @@ export default function MetricDetail() {
             .eq('user_id', user.id)
             .in('user_metrics.metric_name', ['Weight', 'Вес'])
             .gte('measurement_date', startDate.toISOString().split('T')[0])
+            .lte('measurement_date', endDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
 
@@ -240,6 +269,7 @@ export default function MetricDetail() {
             .eq('user_id', user.id)
             .not('steps', 'is', null)
             .gte('date', startDate.toISOString().split('T')[0])
+            .lte('date', endDate.toISOString().split('T')[0])
             .order('date', { ascending: true }),
           supabase
             .from('metric_values')
@@ -247,6 +277,7 @@ export default function MetricDetail() {
             .eq('user_id', user.id)
             .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
             .gte('measurement_date', startDate.toISOString().split('T')[0])
+            .lte('measurement_date', endDate.toISOString().split('T')[0])
             .order('measurement_date', { ascending: true })
         ]);
 
@@ -300,6 +331,7 @@ export default function MetricDetail() {
           .eq('user_id', user.id)
           .eq('user_metrics.metric_name', metricNames[metricType as keyof typeof metricNames])
           .gte('measurement_date', startDate.toISOString().split('T')[0])
+          .lte('measurement_date', endDate.toISOString().split('T')[0])
           .order('measurement_date', { ascending: true });
 
         metricData = (mvData || []).map(item => ({
@@ -391,6 +423,40 @@ export default function MetricDetail() {
             </h1>
             <p className="text-muted-foreground">{config.description}</p>
           </div>
+        </div>
+
+        {/* Date Navigation */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePreviousDay}
+            className="h-10 w-10 rounded-full"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          
+          <div 
+            onClick={!isToday(selectedDate) ? handleToday : undefined}
+            className={`
+              px-6 py-2 rounded-full font-semibold text-sm
+              bg-gradient-to-r from-primary/20 to-primary/10
+              border-2 border-primary/30
+              ${!isToday(selectedDate) ? 'cursor-pointer hover:border-primary/50 transition-all' : ''}
+            `}
+          >
+            {getDateLabel()}
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNextDay}
+            disabled={isSameDay(selectedDate, new Date())}
+            className="h-10 w-10 rounded-full disabled:opacity-30"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Time Range Selector */}
