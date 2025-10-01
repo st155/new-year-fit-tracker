@@ -198,12 +198,12 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
       </ScrollArea>
 
       <div className="sticky bottom-0 z-10 border-t border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-3 mt-2 -mx-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-        <div className="flex gap-2 items-end">
+        <div className="flex flex-col gap-2">
           <Textarea
             placeholder="Напишите комментарий..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[60px] max-h-[120px] resize-none text-sm flex-1 bg-muted/30"
+            className="min-h-[60px] max-h-[120px] resize-none text-sm bg-muted/30"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -215,14 +215,21 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
             onClick={handleSubmitComment}
             disabled={!newComment.trim() || submitting}
             size="default"
-            className="h-[60px] w-[60px] shrink-0 bg-primary hover:bg-primary/90"
+            className="w-full bg-primary hover:bg-primary/90"
           >
-            <Send className="h-5 w-5" />
+            {submitting ? (
+              <div className="h-4 w-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Отправить
+              </>
+            )}
           </Button>
+          <p className="text-[10px] text-muted-foreground px-1">
+            Enter для отправки • Shift+Enter для новой строки
+          </p>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-2 px-1">
-          Enter для отправки • Shift+Enter для новой строки
-        </p>
       </div>
     </>
   );
