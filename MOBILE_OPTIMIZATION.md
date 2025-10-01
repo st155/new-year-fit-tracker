@@ -62,34 +62,72 @@ function MyComponent() {
 
 ```tsx
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { SwipeIndicator } from '@/components/ui/swipe-indicator';
+import { useLocation } from 'react-router-dom';
 
 function MyPage() {
-  // Настраиваем навигацию между страницами
-  useSwipeNavigation({
-    routes: ['/dashboard', '/progress', '/challenges', '/feed'],
-    enabled: true, // Включить/выключить свайп
-    threshold: 50, // Минимальная дистанция свайпа
+  const location = useLocation();
+  const routes = ['/', '/progress', '/challenges', '/feed'];
+  const currentIndex = routes.indexOf(location.pathname);
+
+  // Настраиваем навигацию между страницами с визуальной обратной связью
+  const { swipeProgress, swipeDirection } = useSwipeNavigation({
+    routes,
+    enabled: true,
+    threshold: 80,
   });
 
-  return <div>{/* Контент */}</div>;
+  return (
+    <div className="relative">
+      <SwipeIndicator 
+        progress={swipeProgress}
+        direction={swipeDirection}
+        currentIndex={currentIndex}
+        totalPages={routes.length}
+      />
+      {/* Контент */}
+    </div>
+  );
 }
 ```
+
+### Возвращаемые значения
+
+- `swipeProgress` - прогресс свайпа от 0 до 100
+- `swipeDirection` - направление свайпа: `'left'`, `'right'` или `null`
+
+### Параметры
+
+- `routes` - массив путей для навигации (обязательно)
+- `threshold` - минимальная дистанция свайпа в пикселях (по умолчанию 80)
+- `enabled` - включить/выключить свайп (по умолчанию true)
+- `onSwipeStart` - callback при начале свайпа
+- `onSwipeEnd` - callback при завершении свайпа
+
+### Визуальные индикаторы
+
+Компонент `SwipeIndicator` показывает:
+- **Стрелки** по краям экрана во время свайпа
+- **Точки прогресса** внизу экрана (текущая страница подсвечена)
+- Анимации появления/исчезновения
 
 ### Как это работает
 
 - **Свайп влево** → следующая страница в массиве routes
 - **Свайп вправо** → предыдущая страница в массиве routes
+- Защита от случайных свайпов на интерактивных элементах (кнопки, инпуты)
+- Различает горизонтальные и вертикальные свайпы
 - Работает только на touch устройствах
-- Можно включать/выключать через `enabled`
 
 ### Примеры
 
 #### Навигация между разделами дашборда
 
 ```tsx
-useSwipeNavigation({
-  routes: ['/dashboard', '/progress', '/fitness-data'],
+const { swipeProgress, swipeDirection } = useSwipeNavigation({
+  routes: ['/', '/progress', '/challenges', '/feed'],
   enabled: true,
+  threshold: 80,
 });
 ```
 
@@ -103,7 +141,7 @@ useSwipeNavigation({
     '/metric/vo2max',
   ],
   enabled: true,
-  threshold: 75, // Более жесткий порог
+  threshold: 100, // Более жесткий порог
 });
 ```
 
@@ -203,6 +241,112 @@ function MyComponent() {
   <QuickMeasurementForm onSubmit={handleSubmit} />
 </BottomSheet>
 ```
+
+## Responsive Dialog (Адаптивный диалог)
+
+### Автоматический выбор UI для мобильных и десктопа
+
+`ResponsiveDialog` - это компонент, который автоматически использует:
+- **Dialog** на десктопе (≥768px)
+- **BottomSheet** на мобильных устройствах (<768px)
+
+### Базовое использование
+
+```tsx
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
+
+function MyComponent() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>Открыть</button>
+
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        title="Заголовок"
+        description="Описание (опционально)"
+        snapPoints={[50, 90]}
+      >
+        <div className="space-y-4">
+          {/* Контент */}
+        </div>
+      </ResponsiveDialog>
+    </>
+  );
+}
+```
+
+### С триггером
+
+```tsx
+<ResponsiveDialog
+  open={isOpen}
+  onOpenChange={setIsOpen}
+  title="Добавить измерение"
+  trigger={
+    <Button>
+      <Plus className="h-4 w-4 mr-2" />
+      Добавить
+    </Button>
+  }
+>
+  <MeasurementForm />
+</ResponsiveDialog>
+```
+
+### Параметры
+
+- `open` - состояние открыто/закрыто (обязательно)
+- `onOpenChange` - callback изменения состояния (обязательно)
+- `title` - заголовок диалога
+- `description` - описание (опционально)
+- `trigger` - элемент для открытия (опционально)
+- `className` - дополнительные CSS классы
+- `snapPoints` - точки привязки для мобильной версии (по умолчанию [50, 90])
+
+### Примеры использования
+
+#### Форма добавления измерения
+
+```tsx
+<ResponsiveDialog
+  open={isOpen}
+  onOpenChange={setIsOpen}
+  title="Добавить вес"
+  description="Введите текущий вес"
+  snapPoints={[65, 90]}
+>
+  <Input type="number" placeholder="70.5" />
+  <Button onClick={handleSave}>Сохранить</Button>
+</ResponsiveDialog>
+```
+
+#### Быстрые действия
+
+```tsx
+<ResponsiveDialog
+  open={isActionsOpen}
+  onOpenChange={setIsActionsOpen}
+  title="Действия"
+  snapPoints={[40]}
+>
+  <div className="space-y-2">
+    <Button onClick={handleEdit}>Редактировать</Button>
+    <Button onClick={handleDelete} variant="destructive">
+      Удалить
+    </Button>
+  </div>
+</ResponsiveDialog>
+```
+
+### Где используется
+
+- `QuickMeasurementDialog` - форма добавления измерений
+- `QuickWeightTracker` - быстрое добавление веса
+- И другие модальные окна приложения
+
 
 ## Responsive Design
 
@@ -314,28 +458,26 @@ function DashboardPage() {
 }
 ```
 
-### Modal с bottom sheet на мобильных
+### Modal с автоматической адаптацией
 
 ```tsx
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Dialog } from '@/components/ui/dialog';
+import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 
-function ResponsiveModal({ open, onOpenChange, children }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+function MyComponent() {
+  const [open, setOpen] = useState(false);
 
-  if (isMobile) {
-    return (
-      <BottomSheet open={open} onOpenChange={onOpenChange}>
-        {children}
-      </BottomSheet>
-    );
-  }
-
+  // ResponsiveDialog автоматически переключается
+  // между Dialog (десктоп) и BottomSheet (мобильный)
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {children}
-    </Dialog>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="Настройки"
+      description="Измените параметры"
+    >
+      {/* Контент автоматически адаптируется */}
+      <SettingsForm />
+    </ResponsiveDialog>
   );
 }
 ```

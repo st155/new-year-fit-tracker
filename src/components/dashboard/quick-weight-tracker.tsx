@@ -4,7 +4,7 @@ import { Scale, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -206,8 +206,13 @@ export function QuickWeightTracker() {
             <Scale className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Вес</CardTitle>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+            title="Добавить вес"
+            description="Введите текущий вес или загрузите фото весов"
+            snapPoints={[65, 90]}
+            trigger={
               <Button 
                 size="sm" 
                 variant="outline"
@@ -215,64 +220,56 @@ export function QuickWeightTracker() {
               >
                 <Plus className="h-4 w-4" />
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Добавить вес</DialogTitle>
-                <DialogDescription>
-                  Введите текущий вес или загрузите фото весов
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Tabs defaultValue="manual" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="manual">Ручной ввод</TabsTrigger>
-                  <TabsTrigger value="photo">Фото весов</TabsTrigger>
-                </TabsList>
+            }
+          >
+            <Tabs defaultValue="manual" className="space-y-4 pt-2">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">Ручной ввод</TabsTrigger>
+                <TabsTrigger value="photo">Фото весов</TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="manual" className="space-y-4">
-                  <div>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      placeholder="70.5"
-                      value={currentWeight}
-                      onChange={(e) => setCurrentWeight(e.target.value)}
-                    />
-                  </div>
-                  <Button onClick={addWeight} className="w-full">
-                    Сохранить вес
-                  </Button>
-                </TabsContent>
-
-                <TabsContent value="photo" className="space-y-4">
-                  <AIPhotoUpload
-                    onDataExtracted={(result) => {
-                      if (result.success && result.extractedData?.weight) {
-                        setCurrentWeight(result.extractedData.weight.toString());
-                        toast({
-                          title: "Вес распознан!",
-                          description: `Найден вес: ${result.extractedData.weight} кг`,
-                        });
-                      }
-                    }}
-                    label="Сфотографируйте весы"
+              <TabsContent value="manual" className="space-y-4">
+                <div>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    placeholder="70.5"
+                    value={currentWeight}
+                    onChange={(e) => setCurrentWeight(e.target.value)}
                   />
-                  
-                  {currentWeight && (
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <p className="text-sm font-medium text-green-800">
-                        Распознанный вес: {currentWeight} кг
-                      </p>
-                      <Button onClick={addWeight} className="mt-2 w-full">
-                        Сохранить вес
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+                </div>
+                <Button onClick={addWeight} className="w-full">
+                  Сохранить вес
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="photo" className="space-y-4">
+                <AIPhotoUpload
+                  onDataExtracted={(result) => {
+                    if (result.success && result.extractedData?.weight) {
+                      setCurrentWeight(result.extractedData.weight.toString());
+                      toast({
+                        title: "Вес распознан!",
+                        description: `Найден вес: ${result.extractedData.weight} кг`,
+                      });
+                    }
+                  }}
+                  label="Сфотографируйте весы"
+                />
+                
+                {currentWeight && (
+                  <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      Распознанный вес: {currentWeight} кг
+                    </p>
+                    <Button onClick={addWeight} className="mt-2 w-full">
+                      Сохранить вес
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </ResponsiveDialog>
         </div>
       </CardHeader>
       <CardContent>

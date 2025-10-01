@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,19 +136,16 @@ export function QuickMeasurementDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Добавить измерение
-          </DialogTitle>
-          <DialogDescription>
-            Быстрое добавление результата для цели: <strong>{goal.goal_name}</strong>
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog 
+      open={isOpen} 
+      onOpenChange={onOpenChange}
+      title="Добавить измерение"
+      description={`Быстрое добавление результата для цели: ${goal.goal_name}`}
+      snapPoints={[75, 95]}
+      className="max-w-[95vw] sm:max-w-md"
+    >
         
-        <div className="space-y-4">
+        <div className="space-y-4 pt-2">
           <div>
             <Label htmlFor="quick-value">
               Результат ({goal.target_unit})
@@ -220,7 +217,6 @@ export function QuickMeasurementDialog({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 }
