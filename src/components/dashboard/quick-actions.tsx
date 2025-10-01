@@ -87,120 +87,98 @@ export function QuickActions({ userRole }: QuickActionsProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2 px-1">
-        <Target className="h-4 w-4 text-primary" />
-        Быстрые действия
-      </h3>
-      
-      <div className="space-y-4">
-        {/* Top row - 3 square cards */}
-        <div className="grid grid-cols-3 gap-2">
-          <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
-            <DialogTrigger asChild>
-              <Card className="h-16 border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer group hover:scale-105 transition-transform">
-                <CardContent className="p-2 h-full flex items-center justify-center text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <Brain className="h-4 w-4" />
-                    <span className="text-xs font-medium">ИИ-анализ</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>ИИ-анализ фитнес-трекера</DialogTitle>
-              </DialogHeader>
-              <AIPhotoUpload
-                onDataExtracted={(result) => {
-                  if (result.success && result.saved) {
-                    setIsAIDialogOpen(false);
-                    navigate('/progress');
-                  }
-                }}
-                label="Загрузить скриншот трекера"
-              />
-            </DialogContent>
-          </Dialog>
-          
-          <Card 
-            className="h-16 border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer group hover:scale-105 transition-transform"
-            onClick={() => navigate('/progress')}
-          >
-            <CardContent className="p-2 h-full flex items-center justify-center text-center">
-              <div className="flex flex-col items-center gap-1">
-                <Upload className="h-4 w-4" />
-                <span className="text-xs font-medium">Загрузить</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card 
-            className="h-16 border-0 bg-gradient-to-br from-blue-400 via-purple-500 to-violet-600 text-white cursor-pointer group hover:scale-105 transition-transform"
-            onClick={() => navigate('/goals/create')}
-          >
-            <CardContent className="p-2 h-full flex items-center justify-center text-center">
-              <div className="flex flex-col items-center gap-1">
-                <Target className="h-4 w-4" />
-                <span className="text-xs font-medium">Новая цель</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="space-y-3">
+      {/* Compact grid - 3 columns */}
+      <div className="grid grid-cols-3 gap-2">
+        {/* Row 1 */}
+        <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+          <DialogTrigger asChild>
+            <button className="group h-20 rounded-2xl border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex flex-col items-center justify-center gap-1.5 p-3">
+              <Brain className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">ИИ-анализ</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>ИИ-анализ фитнес-трекера</DialogTitle>
+            </DialogHeader>
+            <AIPhotoUpload
+              onDataExtracted={(result) => {
+                if (result.success && result.saved) {
+                  setIsAIDialogOpen(false);
+                  navigate('/progress');
+                }
+              }}
+              label="Загрузить скриншот трекера"
+            />
+          </DialogContent>
+        </Dialog>
         
-        {/* Bottom row - 3 rectangular cards */}
-        <div className="grid grid-cols-3 gap-2">
-          <Card 
-            className="h-14 border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer group hover:scale-105 transition-transform"
-            onClick={() => navigate('/progress')}
-          >
-            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
-              <div className="p-1 rounded-full bg-white/20">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-medium">Прогресс</span>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="h-14 border-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-orange-600 text-white cursor-pointer group hover:scale-105 transition-transform"
-            onClick={() => navigate('/leaderboard')}
-          >
-            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
-              <div className="p-1 rounded-full bg-white/20">
-                <Trophy className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-medium">Рейтинг</span>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="h-14 border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer group hover:scale-105 transition-transform"
-            onClick={() => navigate('/fitness-data')}
-          >
-            <CardContent className="p-2 flex items-center gap-2 h-full justify-center">
-              <div className="p-1 rounded-full bg-white/20">
-                <Activity className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-medium">Данные</span>
-            </CardContent>
-          </Card>
-        </div>
+        <button 
+          className="h-20 rounded-2xl border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex flex-col items-center justify-center gap-1.5 p-3"
+          onClick={() => navigate('/progress')}
+        >
+          <Upload className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Загрузить</span>
+        </button>
+        
+        <button 
+          className="h-20 rounded-2xl border-0 bg-gradient-to-br from-blue-400 via-purple-500 to-violet-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex flex-col items-center justify-center gap-1.5 p-3"
+          onClick={() => navigate('/goals/create')}
+        >
+          <Target className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Новая цель</span>
+        </button>
       </div>
       
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background animate-fade-in">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="text-2xl">💡</div>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-primary">Совет дня</p>
-              <p className="text-xs text-muted-foreground">
-                Подключите фитнес-трекеры для автоматического сбора всех показателей здоровья и активности!
-              </p>
-            </div>
+      {/* Row 2 */}
+      <div className="grid grid-cols-3 gap-2">
+        <button 
+          className="h-16 rounded-2xl border-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 justify-center px-3"
+          onClick={() => navigate('/progress')}
+        >
+          <div className="p-1 rounded-full bg-white/20">
+            <TrendingUp className="h-4 w-4" />
           </div>
-        </CardContent>
-      </Card>
+          <span className="text-xs font-semibold">Прогресс</span>
+        </button>
+
+        <button 
+          className="h-16 rounded-2xl border-0 bg-gradient-to-br from-yellow-400 via-orange-500 to-orange-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 justify-center px-3"
+          onClick={() => navigate('/leaderboard')}
+        >
+          <div className="p-1 rounded-full bg-white/20">
+            <Trophy className="h-4 w-4" />
+          </div>
+          <span className="text-xs font-semibold">Рейтинг</span>
+        </button>
+
+        <button 
+          className="h-16 rounded-2xl border-0 bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white cursor-pointer hover:scale-105 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 justify-center px-3"
+          onClick={() => navigate('/fitness-data')}
+        >
+          <div className="p-1 rounded-full bg-white/20">
+            <Activity className="h-4 w-4" />
+          </div>
+          <span className="text-xs font-semibold">Данные</span>
+        </button>
+      </div>
+      
+      {/* Tip card - more compact */}
+      <button 
+        className="w-full rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background hover:border-primary/40 transition-all cursor-pointer p-3"
+        onClick={() => navigate('/integrations')}
+      >
+        <div className="flex items-start gap-2.5">
+          <div className="text-xl shrink-0">💡</div>
+          <div className="text-left space-y-0.5">
+            <p className="text-xs font-semibold text-primary">Совет дня</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">
+              Подключите фитнес-трекеры для автоматического сбора всех показателей здоровья и активности!
+            </p>
+          </div>
+        </div>
+      </button>
     </div>
   );
 }

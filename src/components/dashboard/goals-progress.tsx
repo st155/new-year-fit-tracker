@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Droplets, Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -11,11 +13,13 @@ interface Goal {
   progress: number;
   target: number;
   current: number;
+  unit?: string;
   icon: "trophy" | "droplets" | "activity";
 }
 
 export function GoalsProgress() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +36,7 @@ export function GoalsProgress() {
             progress: 75,
             target: 3,
             current: 2.25,
+            unit: 'L',
             icon: 'droplets' as const
           },
           {
@@ -40,6 +45,7 @@ export function GoalsProgress() {
             progress: 90,
             target: 100,
             current: 90,
+            unit: 'reps',
             icon: 'activity' as const
           }
         ]);
@@ -76,42 +82,40 @@ export function GoalsProgress() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-bold text-muted-foreground">YOUR GOALS</h2>
+    <div className="space-y-3">
+      <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">Weekly Goals</h2>
       
-      <div className="space-y-3">
+      <div className="space-y-2">
         {goals.map((goal) => (
-          <div 
+          <button 
             key={goal.id}
-            className="bg-card/30 rounded-lg p-4 border border-border/30"
+            className="w-full bg-card/40 hover:bg-card/60 rounded-xl p-3 border border-border/30 hover:border-border/50 transition-all cursor-pointer text-left"
+            onClick={() => navigate('/goals/create')}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
                 {getIcon(goal.icon)}
-                {goal.progress >= 100 ? (
-                  <span className="text-2xl font-bold text-success">
-                    {goal.progress}%
-                  </span>
-                ) : (
-                  <span className="text-2xl font-bold text-foreground">
-                    {goal.progress}%
-                  </span>
-                )}
+                <span className="text-sm font-semibold text-foreground">
+                  {goal.title}
+                </span>
               </div>
-              <span className="text-lg font-bold text-foreground">
+              <span className={cn(
+                "text-lg font-bold",
+                goal.progress >= 100 ? "text-success" : "text-foreground"
+              )}>
                 {goal.progress}%
               </span>
             </div>
             
             <Progress 
               value={goal.progress} 
-              className="h-2 mb-2"
+              className="h-1.5"
             />
             
-            <p className="text-sm text-muted-foreground">
-              {goal.title}
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              {goal.current} / {goal.target} {goal.unit}
             </p>
-          </div>
+          </button>
         ))}
       </div>
     </div>

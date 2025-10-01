@@ -148,41 +148,33 @@ export function AdditionalMetrics() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Three-column layout for compact tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Team Rank - Compact tile */}
-        <div className="bg-card border-2 border-primary rounded-xl p-4 text-center">
-          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">TEAM RANK</div>
-          <div className="text-3xl font-bold text-primary mb-1">#3</div>
-          <div className="text-xs text-muted-foreground">2KM ROW</div>
-        </div>
+    <div className="space-y-4">
+      {/* Compact grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {/* Team Rank - Compact and clickable */}
+        <button 
+          className="bg-card border-2 border-primary/20 hover:border-primary/40 rounded-xl p-3 text-center transition-all hover:scale-105 cursor-pointer shadow-sm hover:shadow-md"
+          onClick={() => navigate('/leaderboard')}
+        >
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">TEAM RANK</div>
+          <div className="text-2xl font-bold text-primary mb-0.5">#3</div>
+          <div className="text-[10px] text-muted-foreground">2KM ROW</div>
+        </button>
 
-        {/* Weekly Goals - Compact version */}
-        <div className="space-y-2">
-          <WeeklyGoals />
-        </div>
-
-        {/* First Health Metric */}
+        {/* First Health Metric - Sleep */}
         <MetricCard {...healthMetrics[0]} onClick={() => navigate('/metric/recovery')} />
-
-        {/* Leaderboard - Full width */}
-        <div className="md:col-span-2 lg:col-span-3">
-          <Leaderboard />
-        </div>
-
-        {/* Remaining Health Metrics - Three columns */}
-        {healthMetrics.slice(1).map((metric, index) => {
-          const routeMap = ['steps', 'steps', 'steps']; // strain, hydration, workouts пока без детального экрана
-          return (
-            <MetricCard 
-              key={index + 1} 
-              {...metric} 
-              onClick={routeMap[index] ? () => navigate(`/metric/${routeMap[index]}`) : undefined}
-            />
-          );
-        })}
+        
+        {/* Second Health Metric - Strain */}
+        <MetricCard {...healthMetrics[1]} onClick={() => navigate('/metric/steps')} />
       </div>
+
+      {/* Weekly Goals - Full width compact */}
+      <div className="bg-card/30 rounded-xl p-3 border border-border/20">
+        <WeeklyGoals />
+      </div>
+
+      {/* Leaderboard - Full width */}
+      <Leaderboard />
     </div>
   );
 }
