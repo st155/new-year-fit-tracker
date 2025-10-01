@@ -301,6 +301,8 @@ async function handleCallback(req: Request, code?: string | null, state?: string
         refresh_token: tokens.refresh_token || null,
         expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
       });
       
     if (saveError) {
