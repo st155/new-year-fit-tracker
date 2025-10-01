@@ -17,106 +17,68 @@ interface MetricCardProps {
   onClick?: () => void;
 }
 
-function MetricCard({ icon, title, value, unit, change, subtitle, color, onClick }: MetricCardProps) {
+function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, onClick }: MetricCardProps) {
   return (
-    <Card 
+    <button 
       className={cn(
-        "border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
-        `border-${color} bg-${color}/5`,
+        "border-2 transition-all duration-300 hover:scale-105 rounded-xl p-3 text-left w-full",
+        `border-${color}/20 bg-${color}/5 hover:border-${color}/40`,
         onClick && "cursor-pointer"
       )}
       onClick={onClick}
+      disabled={!onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className={cn("p-2 rounded-xl", `bg-${color}/10`)}>
-            {icon}
-          </div>
-          {change && (
-            <Badge 
-              variant={change.startsWith('-') ? "destructive" : "default"}
-              className="text-xs"
-            >
-              {change}
-            </Badge>
-          )}
+      <div className="flex items-start justify-between mb-2">
+        <div className={cn("p-1.5 rounded-lg", `bg-${color}/10`)}>
+          {icon}
         </div>
-        
-        <div className="space-y-1">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            {title}
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-foreground">
-              {value}
+        {change && (
+          <Badge 
+            variant={change.startsWith('-') ? "destructive" : "default"}
+            className="text-[9px] h-4 px-1.5"
+          >
+            {change}
+          </Badge>
+        )}
+      </div>
+      
+      <div className="space-y-0.5">
+        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          {title}
+        </div>
+        <div className="flex items-baseline gap-0.5">
+          <span className="text-xl font-bold text-foreground">
+            {value}
+          </span>
+          {unit && (
+            <span className="text-[10px] text-muted-foreground">
+              {unit}
             </span>
-            {unit && (
-              <span className="text-sm text-muted-foreground">
-                {unit}
-              </span>
-            )}
-          </div>
-          {subtitle && (
-            <div className="text-xs text-muted-foreground">
-              {subtitle}
-            </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+        {subtitle && (
+          <div className="text-[9px] text-muted-foreground">
+            {subtitle}
+          </div>
+        )}
+      </div>
+    </button>
   );
 }
 
 export function AdditionalMetrics() {
   const navigate = useNavigate();
-  const weeklyMetrics = [
-    {
-      icon: <Activity className="h-4 w-4 text-primary" />,
-      title: "ACTIVE MINUTES",
-      value: "847",
-      unit: "min",
-      change: "+15%",
-      subtitle: "This week",
-      color: "primary"
-    },
-    {
-      icon: <Flame className="h-4 w-4 text-orange-500" />,
-      title: "CALORIES BURNED",
-      value: "2,845",
-      unit: "kcal",
-      change: "+8%",
-      subtitle: "Daily average",
-      color: "orange-500"
-    },
-    {
-      icon: <Footprints className="h-4 w-4 text-accent" />,
-      title: "AVG STEPS",
-      value: "11,234",
-      unit: "steps",
-      change: "+12%",
-      subtitle: "This week",
-      color: "accent"
-    },
-    {
-      icon: <Heart className="h-4 w-4 text-red-500" />,
-      title: "RESTING HR",
-      value: "58",
-      unit: "bpm",
-      change: "-3%",
-      subtitle: "Morning average",
-      color: "red-500"
-    }
-  ];
-
-  const healthMetrics = [
+  
+  const allMetrics = [
     {
       icon: <Moon className="h-4 w-4 text-purple-500" />,
-      title: "SLEEP QUALITY",
+      title: "SLEEP",
       value: "8.2",
       unit: "hrs",
       change: "+5%",
       subtitle: "Avg per night",
-      color: "purple-500"
+      color: "purple-500",
+      route: "/metric/recovery"
     },
     {
       icon: <TrendingUp className="h-4 w-4 text-green-500" />,
@@ -125,7 +87,48 @@ export function AdditionalMetrics() {
       unit: "/21",
       change: "+10%",
       subtitle: "Today",
-      color: "green-500"
+      color: "green-500",
+      route: "/metric/steps"
+    },
+    {
+      icon: <Activity className="h-4 w-4 text-primary" />,
+      title: "ACTIVE MIN",
+      value: "847",
+      unit: "min",
+      change: "+15%",
+      subtitle: "This week",
+      color: "primary",
+      route: "/metric/steps"
+    },
+    {
+      icon: <Flame className="h-4 w-4 text-orange-500" />,
+      title: "CALORIES",
+      value: "2,845",
+      unit: "kcal",
+      change: "+8%",
+      subtitle: "Daily avg",
+      color: "orange-500",
+      route: "/metric/steps"
+    },
+    {
+      icon: <Footprints className="h-4 w-4 text-accent" />,
+      title: "AVG STEPS",
+      value: "11,234",
+      unit: "steps",
+      change: "+12%",
+      subtitle: "This week",
+      color: "accent",
+      route: "/metric/steps"
+    },
+    {
+      icon: <Heart className="h-4 w-4 text-red-500" />,
+      title: "REST HR",
+      value: "58",
+      unit: "bpm",
+      change: "-3%",
+      subtitle: "Morning avg",
+      color: "red-500",
+      route: "/metric/recovery"
     },
     {
       icon: <Droplets className="h-4 w-4 text-blue-500" />,
@@ -134,7 +137,8 @@ export function AdditionalMetrics() {
       unit: "L",
       change: "-5%",
       subtitle: "Today",
-      color: "blue-500"
+      color: "blue-500",
+      route: "/metric/steps"
     },
     {
       icon: <Dumbbell className="h-4 w-4 text-primary" />,
@@ -143,14 +147,16 @@ export function AdditionalMetrics() {
       unit: "times",
       change: "+2",
       subtitle: "This week",
-      color: "primary"
+      color: "primary",
+      route: "/metric/steps"
     }
   ];
 
+
   return (
     <div className="space-y-4">
-      {/* Compact grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Compact grid layout - 2 columns on mobile, 3 on tablet, 4 on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
         {/* Team Rank - Compact and clickable */}
         <button 
           className="bg-card border-2 border-primary/20 hover:border-primary/40 rounded-xl p-3 text-center transition-all hover:scale-105 cursor-pointer shadow-sm hover:shadow-md"
@@ -161,11 +167,14 @@ export function AdditionalMetrics() {
           <div className="text-[10px] text-muted-foreground">2KM ROW</div>
         </button>
 
-        {/* First Health Metric - Sleep */}
-        <MetricCard {...healthMetrics[0]} onClick={() => navigate('/metric/recovery')} />
-        
-        {/* Second Health Metric - Strain */}
-        <MetricCard {...healthMetrics[1]} onClick={() => navigate('/metric/steps')} />
+        {/* All metrics as compact cards */}
+        {allMetrics.map((metric, index) => (
+          <CompactMetricCard 
+            key={index} 
+            {...metric} 
+            onClick={metric.route ? () => navigate(metric.route) : undefined}
+          />
+        ))}
       </div>
 
       {/* Weekly Goals - Full width compact */}
