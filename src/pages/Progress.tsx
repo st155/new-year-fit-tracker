@@ -25,31 +25,33 @@ interface MetricCard {
 
 // Вспомогательные функции вне компонента
 const detectId = (name: string) => {
-  if (name.includes('вес') || name.includes('weight')) return 'weight';
-  if (name.includes('жир') || name.includes('fat')) return 'body-fat';
-  if (name.includes('бег') || name.includes('run')) return 'run';
-  if (name.includes('vo2') || name.includes('vo₂')) return 'vo2max';
-  if (name.includes('подтяг') || name.includes('pull-up')) return 'pullups';
-  if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? 'bench' : 'pushups';
-  if (name.includes('планк') || name.includes('plank')) return 'plank';
-  if (name.includes('выпад') || name.includes('lunge')) return 'lunges';
+  const n = name.toLowerCase();
+  if (n.includes('вес') || n.includes('weight')) return 'weight';
+  if (n.includes('жир') || n.includes('fat')) return 'body-fat';
+  if (n.includes('бег') || n.includes('run')) return 'run';
+  if (n.includes('vo2') || n.includes('vo₂')) return 'vo2max';
+  if (n.includes('подтяг') || n.includes('pull-up')) return 'pullups';
+  if (n.includes('отжим') || n.includes('push-up') || n.includes('bench')) return n.includes('bench') ? 'bench' : 'pushups';
+  if (n.includes('планк') || n.includes('plank')) return 'plank';
+  if (n.includes('выпад') || n.includes('lunge')) return 'lunges';
   return `goal-${Math.random().toString(36).slice(2, 7)}`;
 };
 
 const detectColor = (name: string) => {
-  if (name.includes('вес') || name.includes('weight')) return '#10B981';
-  if (name.includes('жир') || name.includes('fat')) return '#FF6B2C';
-  if (name.includes('бег') || name.includes('run')) return '#06B6D4';
-  if (name.includes('vo2') || name.includes('vo₂')) return '#3B82F6';
-  if (name.includes('подтяг') || name.includes('pull-up')) return '#A855F7';
-  if (name.includes('отжим') || name.includes('push-up') || name.includes('bench')) return name.includes('bench') ? '#EF4444' : '#FBBF24';
-  if (name.includes('планк') || name.includes('plank')) return '#8B5CF6';
-  if (name.includes('выпад') || name.includes('lunge')) return '#84CC16';
+  const n = name.toLowerCase();
+  if (n.includes('вес') || n.includes('weight')) return '#10B981';
+  if (n.includes('жир') || n.includes('fat')) return '#FF6B2C';
+  if (n.includes('бег') || n.includes('run')) return '#06B6D4';
+  if (n.includes('vo2') || n.includes('vo₂')) return '#3B82F6';
+  if (n.includes('подтяг') || n.includes('pull-up')) return '#A855F7';
+  if (n.includes('отжим') || n.includes('push-up') || n.includes('bench')) return n.includes('bench') ? '#EF4444' : '#FBBF24';
+  if (n.includes('планк') || n.includes('plank')) return '#8B5CF6';
+  if (n.includes('выпад') || n.includes('lunge')) return '#84CC16';
   return '#64748B';
 };
 
 const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] => {
-  const goalMapping: { [key: string]: { id: string; color: string } } = {
+  const goalMapping: Record<string, { id: string; color: string }> = {
     'подтягивания': { id: 'pullups', color: '#A855F7' },
     'жим лёжа': { id: 'bench', color: '#EF4444' },
     'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
@@ -63,47 +65,19 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
   };
 
   // Дедупликация целей по имени
-  let uniqueGoals: any[] = Array.from(new Map(goals.map((g: any) => [g.goal_name, g])).values());
+  const uniqueGoals = Array.from(new Map(goals.map(g => [g.goal_name?.toLowerCase(), g])).values());
 
-  // Добавить отсутствующие базовые цели
-  const coreGoals = [
-    { name: 'Подтягивания', value: 17, unit: 'раз' },
-    { name: 'Жим лёжа', value: 90, unit: 'кг' },
-    { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
-    { name: 'Планка', value: 4, unit: 'мин' },
-    { name: 'Отжимания', value: 60, unit: 'раз' },
-    { name: 'VO₂max', value: 50, unit: 'мл/кг/мин' },
-    { name: 'Бег 1 км', value: 4.0, unit: 'мин' },
-    { name: 'Процент жира', value: 11, unit: '%' },
-  ];
-
-  const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
-  const placeholders = coreGoals
-    .filter(cg => !existing.has(cg.name.toLowerCase()))
-    .map(cg => ({
-      id: `synthetic-${cg.name}`,
-      goal_name: cg.name,
-      goal_type: 'challenge',
-      target_value: cg.value,
-      target_unit: cg.unit,
-      is_personal: false,
-    }));
-
-  uniqueGoals = [...uniqueGoals, ...placeholders];
-
-  // Группируем измерения по goal_id для быстрого доступа
+  // Группируем измерения по goal_id
   const measurementsByGoal = measurements.reduce((acc, m) => {
     if (!acc[m.goal_id]) acc[m.goal_id] = [];
     acc[m.goal_id].push(m);
     return acc;
   }, {} as Record<string, any[]>);
 
-  const metricsArray: MetricCard[] = [];
-
-  for (const goal of uniqueGoals) {
+  return uniqueGoals.map(goal => {
     const normalized = (goal.goal_name || '').toLowerCase();
     const mapping = goalMapping[normalized];
-    const id = mapping?.id ?? detectId(normalized) ?? `goal-${goal.id}`;
+    const id = mapping?.id ?? detectId(normalized);
     const color = mapping?.color ?? detectColor(normalized);
 
     const goalMeasurements = measurementsByGoal[goal.id] || [];
@@ -121,7 +95,7 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
       }
     }
 
-    metricsArray.push({
+    return {
       id,
       title: goal.goal_name,
       value: currentValue,
@@ -132,10 +106,8 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
       borderColor: `border-[${color}]`,
       progressColor: `bg-[${color}]`,
       chart: id === 'vo2max'
-    });
-  }
-
-  return metricsArray;
+    };
+  });
 };
 
 const ProgressPage = () => {
@@ -162,39 +134,46 @@ const ProgressPage = () => {
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - periodDays);
 
-      // 1. Получить все цели
-      const { data: participations } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id')
-        .eq('user_id', user.id);
+      // Параллельная загрузка участий и целей
+      const [participationsRes, goalsRes] = await Promise.all([
+        supabase
+          .from('challenge_participants')
+          .select('challenge_id')
+          .eq('user_id', user.id),
+        supabase
+          .from('goals')
+          .select('*')
+          .eq('is_personal', false)
+      ]);
 
-      if (!participations || participations.length === 0) {
+      if (!participationsRes.data || participationsRes.data.length === 0) {
         return { goals: [], metrics: [] };
       }
 
-      const { data: goals } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('is_personal', false)
-        .in('challenge_id', participations.map(p => p.challenge_id));
+      const challengeIds = participationsRes.data.map(p => p.challenge_id);
+      
+      // Фильтруем цели по челленджам пользователя на клиенте (быстрее)
+      const userGoals = (goalsRes.data || []).filter(g => 
+        g.challenge_id && challengeIds.includes(g.challenge_id)
+      );
 
-      if (!goals || goals.length === 0) {
+      if (userGoals.length === 0) {
         return { goals: [], metrics: [] };
       }
 
-      // 2. Получить ВСЕ измерения одним запросом
-      const goalIds = goals.map(g => g.id);
+      // Загружаем только измерения за выбранный период
+      const goalIds = userGoals.map(g => g.id);
       const { data: allMeasurements } = await supabase
         .from('measurements')
-        .select('*')
+        .select('goal_id, value, measurement_date')
         .in('goal_id', goalIds)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
-      // 3. Построить метрики на клиенте
-      const metrics = buildMetricsFromData(goals, allMeasurements || []);
+      // Быстрое построение метрик
+      const metrics = buildMetricsFromData(userGoals, allMeasurements || []);
 
-      return { goals, metrics };
+      return { goals: userGoals, metrics };
     } catch (error) {
       console.error('Error fetching data:', error);
       return { goals: [], metrics: [] };
