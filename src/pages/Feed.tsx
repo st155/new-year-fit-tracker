@@ -81,6 +81,62 @@ export default function Feed() {
         });
       }
 
+      // Deduplicate Workouts - group by base external_id (without suffixes)
+      const workoutItems = dedupedActivities.filter(a => {
+        const text = a.action_text?.toLowerCase() || '';
+        return (text.includes('тренировку') || text.includes('workout') || text.includes('completed')) 
+               && !text.includes('качество');
+      });
+
+      if (workoutItems.length > 1) {
+        // Group workouts by base external_id (remove _calories, _hr, _max_hr suffixes)
+        const workoutGroups = new Map<string, typeof workoutItems>();
+        workoutItems.forEach(item => {
+          const metadata = item.metadata as any;
+          const externalId = (metadata?.external_id || '') as string;
+          const baseId = externalId.replace(/_calories|_hr|_max_hr/g, '');
+          const measurementDate = metadata?.measurement_date || new Date(item.created_at).toISOString().split('T')[0];
+          const key = baseId || `${item.user_id}_${measurementDate}`;
+          
+          if (!workoutGroups.has(key)) {
+            workoutGroups.set(key, []);
+          }
+          workoutGroups.get(key)!.push(item);
+        });
+
+        // For each group, keep only the most complete entry (with calories and strain)
+        const workoutIdsToKeep = new Set<string>();
+        workoutGroups.forEach(group => {
+          if (group.length === 1) {
+            workoutIdsToKeep.add(group[0].id);
+          } else {
+            // Prefer entries with both calories and strain info
+            const withCaloriesAndStrain = group.find(a => 
+              a.action_text?.toLowerCase().includes('kcal') && 
+              a.action_text?.toLowerCase().includes('strain')
+            );
+            const withCalories = group.find(a => a.action_text?.toLowerCase().includes('kcal'));
+            const withStrain = group.find(a => a.action_text?.toLowerCase().includes('strain'));
+            
+            // Sort by created_at and pick the latest
+            const sorted = [...group].sort((a, b) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+            
+            const bestEntry = withCaloriesAndStrain || withCalories || withStrain || sorted[0];
+            workoutIdsToKeep.add(bestEntry.id);
+          }
+        });
+
+        // Filter out duplicate workouts
+        dedupedActivities = dedupedActivities.filter(a => {
+          const text = a.action_text?.toLowerCase() || '';
+          const isWorkout = (text.includes('тренировку') || text.includes('workout') || text.includes('completed')) 
+                           && !text.includes('качество');
+          return !isWorkout || workoutIdsToKeep.has(a.id);
+        });
+      }
+
       return dedupedActivities;
     } catch (error) {
       console.error('Error fetching activities:', error);
