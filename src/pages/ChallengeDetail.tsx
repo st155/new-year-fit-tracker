@@ -11,6 +11,8 @@ import { Calendar, Users, Target, Trophy, ArrowLeft, TrendingDown, Scale } from 
 import { Loader2 } from "lucide-react";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
+import { ChallengeChat } from "@/components/challenge/ChallengeChat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 interface ChallengeParticipant {
@@ -329,10 +331,23 @@ const ChallengeDetail = () => {
           <ChallengeLeaderboard challengeId={id!} />
         </div>
 
-        {/* Социальная стена челленджа */}
+        {/* Социальная секция с табами */}
         <Card>
           <CardContent className="pt-6">
-            <ChallengeFeed challengeId={id!} />
+            <Tabs defaultValue="feed" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="feed">Лента постов</TabsTrigger>
+                <TabsTrigger value="chat">Чат</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="feed">
+                <ChallengeFeed challengeId={id!} />
+              </TabsContent>
+              
+              <TabsContent value="chat">
+                <ChallengeChat challengeId={id!} />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
