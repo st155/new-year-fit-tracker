@@ -69,18 +69,33 @@ export function useProgressCache<T>(
   }, [fetchFn, saveToCache]);
 
   useEffect(() => {
-    // 1. Сначала показываем кэш (мгновенно)
-    const hasCache = loadFromCache();
-    
-    if (hasCache) {
-      setLoading(false);
-      // 2. В фоне обновляем данные
-      fetchFresh();
-    } else {
-      // Нет кэша - загружаем с сервера
-      fetchFresh();
-    }
-  }, [loadFromCache, fetchFresh, ...dependencies]);
+    let isMounted = true;
+
+    const loadData = async () => {
+      // 1. Сначала показываем кэш (мгновенно)
+      const hasCache = loadFromCache();
+      
+      if (hasCache) {
+        setLoading(false);
+        // 2. В фоне обновляем данные
+        if (isMounted) {
+          await fetchFresh();
+        }
+      } else {
+        // Нет кэша - загружаем с сервера
+        if (isMounted) {
+          await fetchFresh();
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, dependencies);
 
   return { data, loading, fromCache, refetch: fetchFresh };
 }
