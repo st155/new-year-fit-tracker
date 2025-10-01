@@ -267,7 +267,7 @@ export default function Feed() {
         {isMobile && activities && activities.length > 10 ? (
           <VirtualizedList
             items={activities}
-            itemHeight={120}
+            itemHeight={70}
             height={listHeight}
             renderItem={(activity, index) => (
               <ActivityCard
@@ -279,7 +279,7 @@ export default function Feed() {
             )}
           />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {activities?.map((activity, index) => (
               <ActivityCard
                 key={activity.id}
