@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp } from "lucide-react";
+import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function FitnessData() {
   
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<TimeFilter>('today');
+  const [dateOffset, setDateOffset] = useState(0); // Days offset from today
   const [challengeGoals, setChallengeGoals] = useState<string[]>([]);
   const [data, setData] = useState<DashboardData>({
     readiness: { score: 0, status: '' },
@@ -45,7 +46,7 @@ export default function FitnessData() {
     if (user && challengeGoals.length >= 0) {
       fetchDashboardData();
     }
-  }, [user, challengeGoals, selectedFilter]);
+  }, [user, challengeGoals, selectedFilter, dateOffset]);
 
   const fetchChallengeGoals = async () => {
     try {
@@ -79,19 +80,31 @@ export default function FitnessData() {
     try {
       setLoading(true);
       
-      // Calculate date range based on selected filter
+      // Calculate date range based on selected filter and offset
       const now = new Date();
       let startDate: Date;
+      let endDate: Date;
       
       switch (selectedFilter) {
         case 'today':
-          startDate = new Date(now.setHours(0, 0, 0, 0));
+          const targetDay = new Date();
+          targetDay.setDate(targetDay.getDate() + dateOffset);
+          startDate = new Date(targetDay.setHours(0, 0, 0, 0));
+          endDate = new Date(targetDay.setHours(23, 59, 59, 999));
           break;
         case 'week':
-          startDate = new Date(now.setDate(now.getDate() - 7));
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() + (dateOffset * 7) - 7);
+          startDate = new Date(weekStart.setHours(0, 0, 0, 0));
+          endDate = new Date();
+          endDate.setDate(weekStart.getDate() + 7);
           break;
         case 'month':
-          startDate = new Date(now.setDate(now.getDate() - 30));
+          const monthStart = new Date();
+          monthStart.setDate(monthStart.getDate() + (dateOffset * 30) - 30);
+          startDate = new Date(monthStart.setHours(0, 0, 0, 0));
+          endDate = new Date();
+          endDate.setDate(monthStart.getDate() + 30);
           break;
       }
       
@@ -110,7 +123,8 @@ export default function FitnessData() {
         `)
         .eq('user_id', user?.id)
         .eq('is_active', true)
-        .gte('metric_values.measurement_date', startDate.toISOString().split('T')[0]);
+        .gte('metric_values.measurement_date', startDate.toISOString().split('T')[0])
+        .lte('metric_values.measurement_date', endDate.toISOString().split('T')[0]);
 
       if (error) throw error;
 
@@ -127,6 +141,34 @@ export default function FitnessData() {
         variant: 'destructive'
       });
       setLoading(false);
+    }
+  };
+
+  const handlePreviousPeriod = () => {
+    setDateOffset(dateOffset - 1);
+  };
+
+  const handleNextPeriod = () => {
+    if (dateOffset < 0) {
+      setDateOffset(dateOffset + 1);
+    }
+  };
+
+  const getDateLabel = () => {
+    const now = new Date();
+    switch (selectedFilter) {
+      case 'today':
+        const targetDay = new Date();
+        targetDay.setDate(targetDay.getDate() + dateOffset);
+        if (dateOffset === 0) return 'Сегодня';
+        if (dateOffset === -1) return 'Вчера';
+        return targetDay.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      case 'week':
+        if (dateOffset === 0) return 'Неделя';
+        return `${Math.abs(dateOffset)} нед. назад`;
+      case 'month':
+        if (dateOffset === 0) return 'Месяц';
+        return `${Math.abs(dateOffset)} мес. назад`;
     }
   };
 
@@ -483,52 +525,89 @@ export default function FitnessData() {
           ДАННЫЕ ТРЕКЕРОВ
         </h1>
         
-        {/* Filter Pills */}
-        <div className="flex gap-2">
+        {/* Filter Pills with Navigation */}
+        <div className="flex items-center gap-2">
+          {/* Previous Period Arrow */}
           <button
-            onClick={() => setSelectedFilter('today')}
-            className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
+            onClick={handlePreviousPeriod}
+            className="p-2 rounded-full transition-all duration-300 hover:bg-white/10"
             style={{
-              background: selectedFilter === 'today' 
-                ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                : 'rgba(255, 255, 255, 0.05)',
               color: 'white',
-              border: '2px solid',
-              borderColor: selectedFilter === 'today' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-              boxShadow: selectedFilter === 'today' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
+              border: '2px solid rgba(255, 255, 255, 0.2)',
             }}
           >
-            Сегодня
+            <ChevronLeft className="h-5 w-5" />
           </button>
+
+          {/* Filter Pills */}
+          <div className="flex gap-2 flex-1">
+            <button
+              onClick={() => {
+                setSelectedFilter('today');
+                setDateOffset(0);
+              }}
+              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
+              style={{
+                background: selectedFilter === 'today' 
+                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
+                  : 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '2px solid',
+                borderColor: selectedFilter === 'today' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
+                boxShadow: selectedFilter === 'today' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
+              }}
+            >
+              {selectedFilter === 'today' ? getDateLabel() : 'Сегодня'}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedFilter('week');
+                setDateOffset(0);
+              }}
+              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
+              style={{
+                background: selectedFilter === 'week' 
+                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
+                  : 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '2px solid',
+                borderColor: selectedFilter === 'week' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
+                boxShadow: selectedFilter === 'week' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
+              }}
+            >
+              {selectedFilter === 'week' ? getDateLabel() : 'Неделя'}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedFilter('month');
+                setDateOffset(0);
+              }}
+              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
+              style={{
+                background: selectedFilter === 'month' 
+                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
+                  : 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '2px solid',
+                borderColor: selectedFilter === 'month' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
+                boxShadow: selectedFilter === 'month' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
+              }}
+            >
+              {selectedFilter === 'month' ? getDateLabel() : 'Месяц'}
+            </button>
+          </div>
+
+          {/* Next Period Arrow */}
           <button
-            onClick={() => setSelectedFilter('week')}
-            className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
+            onClick={handleNextPeriod}
+            disabled={dateOffset >= 0}
+            className="p-2 rounded-full transition-all duration-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
             style={{
-              background: selectedFilter === 'week' 
-                ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                : 'rgba(255, 255, 255, 0.05)',
               color: 'white',
-              border: '2px solid',
-              borderColor: selectedFilter === 'week' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-              boxShadow: selectedFilter === 'week' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
+              border: '2px solid rgba(255, 255, 255, 0.2)',
             }}
           >
-            Неделя
-          </button>
-          <button
-            onClick={() => setSelectedFilter('month')}
-            className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
-            style={{
-              background: selectedFilter === 'month' 
-                ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                : 'rgba(255, 255, 255, 0.05)',
-              color: 'white',
-              border: '2px solid',
-              borderColor: selectedFilter === 'month' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-              boxShadow: selectedFilter === 'month' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
-            }}
-          >
-            Месяц
+            <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
