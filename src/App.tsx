@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +12,9 @@ import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { PageLoader } from "@/components/ui/page-loader";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
+import { registerServiceWorker } from "@/lib/pwa-utils";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -39,16 +42,24 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <TooltipProvider>
-          <AuthProvider>
-            <BrowserRouter>
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={<PageLoader message="Загрузка..." />}>
+const App = () => {
+  // Регистрируем Service Worker
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <TooltipProvider>
+            <AuthProvider>
+              <BrowserRouter>
+              <Toaster />
+              <Sonner />
+              <InstallPrompt />
+              <UpdatePrompt />
+              <Suspense fallback={<PageLoader message="Загрузка..." />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
@@ -200,6 +211,7 @@ const App = () => (
     </ThemeProvider>
   </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;
