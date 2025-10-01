@@ -18,18 +18,33 @@ interface MetricCardProps {
 }
 
 function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, onClick }: MetricCardProps) {
+  const getColorClasses = () => {
+    const colorMap: Record<string, string> = {
+      'purple-500': 'border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40',
+      'green-500': 'border-green-500/20 bg-green-500/5 hover:border-green-500/40',
+      'primary': 'border-primary/20 bg-primary/5 hover:border-primary/40',
+      'orange-500': 'border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40',
+      'accent': 'border-accent/20 bg-accent/5 hover:border-accent/40',
+      'red-500': 'border-red-500/20 bg-red-500/5 hover:border-red-500/40',
+      'blue-500': 'border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40',
+    };
+    return colorMap[color] || 'border-border/20 bg-card/5 hover:border-border/40';
+  };
+
   return (
     <button 
       className={cn(
-        "border-2 transition-all duration-300 hover:scale-105 rounded-xl p-3 text-left w-full",
-        `border-${color}/20 bg-${color}/5 hover:border-${color}/40`,
+        "border-2 transition-all duration-500 rounded-xl p-3 text-left w-full",
+        "hover:scale-105 hover:shadow-lg active:scale-95",
+        "animate-fade-in group",
+        getColorClasses(),
         onClick && "cursor-pointer"
       )}
       onClick={onClick}
       disabled={!onClick}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className={cn("p-1.5 rounded-lg", `bg-${color}/10`)}>
+        <div className="p-1.5 rounded-lg bg-background/50 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
           {icon}
         </div>
         {change && (
@@ -156,14 +171,14 @@ export function AdditionalMetrics() {
   return (
     <div className="space-y-4">
       {/* Compact grid layout - 2 columns on mobile, 3 on tablet, 4 on desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 stagger-fade-in">
         {/* Team Rank - Compact and clickable */}
         <button 
-          className="bg-card border-2 border-primary/20 hover:border-primary/40 rounded-xl p-3 text-center transition-all hover:scale-105 cursor-pointer shadow-sm hover:shadow-md"
+          className="bg-card border-2 border-primary/20 hover:border-primary/40 rounded-xl p-3 text-center transition-all duration-500 hover:scale-105 active:scale-95 cursor-pointer shadow-sm hover:shadow-glow group"
           onClick={() => navigate('/leaderboard')}
         >
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">TEAM RANK</div>
-          <div className="text-2xl font-bold text-primary mb-0.5">#3</div>
+          <div className="text-2xl font-bold text-primary mb-0.5 transition-all duration-300 group-hover:scale-110">#3</div>
           <div className="text-[10px] text-muted-foreground">2KM ROW</div>
         </button>
 
@@ -178,12 +193,14 @@ export function AdditionalMetrics() {
       </div>
 
       {/* Weekly Goals - Full width compact */}
-      <div className="bg-card/30 rounded-xl p-3 border border-border/20">
+      <div className="bg-card/30 rounded-xl p-3 border border-border/20 animate-fade-in">
         <WeeklyGoals />
       </div>
 
       {/* Leaderboard - Full width */}
-      <Leaderboard />
+      <div className="animate-fade-in">
+        <Leaderboard />
+      </div>
     </div>
   );
 }

@@ -102,7 +102,7 @@ export function NewDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="space-y-6 pb-8">
+      <div className="space-y-6 pb-8 animate-fade-in">
         <NewDashboardHeader
           userName={userName}
           userRole={userRole}
@@ -112,17 +112,17 @@ export function NewDashboard() {
         />
         
         {/* Main metrics grid */}
-        <div className="px-6">
+        <div className="px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <MetricsGrid />
         </div>
         
         {/* Quick Actions right after metrics */}
-        <div className="px-6">
+        <div className="px-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
           <QuickActions userRole={userRole} />
         </div>
         
         {/* Compact, centered stack for remaining content */}
-        <div className="px-6">
+        <div className="px-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
           <div className="mx-auto max-w-5xl space-y-6">
             <TodayActivity />
             <AdditionalMetrics />

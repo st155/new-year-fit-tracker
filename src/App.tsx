@@ -7,7 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import "@/i18n";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
+import { PageTransition } from "@/components/layout/PageTransition";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -30,13 +31,12 @@ import ModernProgress from "./pages/ModernProgress";
 import Feed from "./pages/Feed";
 import MetricDetail from "./pages/MetricDetail";
 import Leaderboard from "./pages/Leaderboard";
-import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <TooltipProvider>
         <AuthProvider>
           <BrowserRouter>
@@ -49,91 +49,117 @@ const App = () => (
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Index />
+                  <PageTransition>
+                    <Index />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/app" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Dashboard />
+                  <PageTransition>
+                    <Dashboard />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Challenges />
+                  <PageTransition>
+                    <Challenges />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/:id" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <ChallengeDetail />
+                  <PageTransition>
+                    <ChallengeDetail />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/challenges/create" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <CreateChallenge />
+                  <PageTransition>
+                    <CreateChallenge />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/progress" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <ModernProgress />
+                  <PageTransition>
+                    <ModernProgress />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/leaderboard" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Leaderboard />
+                  <PageTransition>
+                    <Leaderboard />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/metric/:metricType" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <MetricDetail />
+                  <PageTransition>
+                    <MetricDetail />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Profile />
+                  <PageTransition>
+                    <Profile />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/create" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <CreateGoal />
+                  <PageTransition>
+                    <CreateGoal />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/goals/edit/:id" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <EditGoal />
+                  <PageTransition>
+                    <EditGoal />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/fitness-data" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <FitnessData />
+                  <PageTransition>
+                    <FitnessData />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/integrations" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Integrations />
+                  <PageTransition>
+                    <Integrations />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
@@ -142,20 +168,23 @@ const App = () => (
             <Route path="/feed" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <Feed />
+                  <PageTransition>
+                    <Feed />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/trainer-dashboard" element={
               <ProtectedRoute>
                 <ModernAppLayout>
-                  <TrainerDashboard />
+                  <PageTransition>
+                    <TrainerDashboard />
+                  </PageTransition>
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
           </Routes>
           </BrowserRouter>
         </AuthProvider>

@@ -82,19 +82,21 @@ export function GoalsProgress() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 animate-fade-in">
       <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">Weekly Goals</h2>
       
-      <div className="space-y-2">
+      <div className="space-y-2 stagger-fade-in">
         {goals.map((goal) => (
           <button 
             key={goal.id}
-            className="w-full bg-card/40 hover:bg-card/60 rounded-xl p-3 border border-border/30 hover:border-border/50 transition-all cursor-pointer text-left"
+            className="w-full bg-card/40 hover:bg-card/60 rounded-xl p-3 border border-border/30 hover:border-border/50 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-left group"
             onClick={() => navigate('/goals/create')}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                {getIcon(goal.icon)}
+                <div className="transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+                  {getIcon(goal.icon)}
+                </div>
                 <span className="text-sm font-semibold text-foreground">
                   {goal.title}
                 </span>
