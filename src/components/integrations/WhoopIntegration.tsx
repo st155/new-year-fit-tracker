@@ -206,8 +206,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       );
 
       toast({
-        title: 'Ошибка подключения',
-        description: error.message || 'Не удалось подключить Whoop.',
+        title: 'Connection Error',
+        description: error.message || 'Failed to connect Whoop.',
         variant: 'destructive'
       });
     } finally {
@@ -219,13 +219,13 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       await navigator.clipboard.writeText(authUrl);
       toast({
-        title: 'Ссылка скопирована',
-        description: 'Ссылка для авторизации скопирована в буфер обмена.',
+        title: 'Link Copied',
+        description: 'Authorization link copied to clipboard.',
       });
     } catch (error) {
       toast({
-        title: 'Ошибка копирования',
-        description: 'Не удалось скопировать ссылку. Попробуйте выделить и скопировать вручную.',
+        title: 'Copy Error',
+        description: 'Failed to copy link. Try selecting and copying manually.',
         variant: 'destructive'
       });
     }
@@ -259,8 +259,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       const data = await response.json();
 
       toast({
-        title: 'Синхронизация завершена',
-        description: `Загружено ${data.syncResult?.totalSaved || 0} новых записей.`,
+        title: 'Sync Complete',
+        description: `Loaded ${data.syncResult?.totalSaved || 0} new records.`,
       });
 
       await loadRecentData();
@@ -279,14 +279,14 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       if (error.message?.includes('401') || error.message?.includes('Authorization') || error.message?.includes('expired') || error.message?.includes('non-2xx')) {
         setStatus({ isConnected: false });
         toast({
-          title: 'Требуется переподключение',
-          description: 'Токен доступа истек. Пожалуйста, переподключите Whoop.',
+          title: 'Reconnection Required',
+          description: 'Access token expired. Please reconnect Whoop.',
           variant: 'destructive'
         });
       } else {
         toast({
-          title: 'Ошибка синхронизации',
-          description: error.message || 'Не удалось синхронизировать данные.',
+          title: 'Sync Error',
+          description: error.message || 'Failed to synchronize data.',
           variant: 'destructive'
         });
       }
@@ -322,8 +322,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       const data = await response.json();
 
       toast({
-        title: 'Первая синхронизация завершена',
-        description: `Загружено ${data.syncResult?.totalSaved || 0} записей из Whoop.`,
+        title: 'Initial Sync Complete',
+        description: `Loaded ${data.syncResult?.totalSaved || 0} records from Whoop.`,
       });
 
       await loadRecentData();
@@ -338,8 +338,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       );
 
       toast({
-        title: 'Ошибка синхронизации',
-        description: error.message || 'Не удалось синхронизировать данные.',
+        title: 'Sync Error',
+        description: error.message || 'Failed to synchronize data.',
         variant: 'destructive'
       });
     } finally {
@@ -372,8 +372,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       const data = await response.json();
 
       toast({
-        title: 'Whoop подключен',
-        description: `Синхронизировано ${data.syncResult?.totalSaved || 0} записей.`,
+        title: 'Whoop Connected',
+        description: `Synced ${data.syncResult?.totalSaved || 0} records.`,
       });
 
       await loadWhoopStatus();
@@ -386,8 +386,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
         userId
       );
       toast({
-        title: 'Ошибка подключения',
-        description: error.message || 'Не удалось завершить подключение Whoop.',
+        title: 'Connection Error',
+        description: error.message || 'Failed to complete Whoop connection.',
         variant: 'destructive'
       });
     } finally {
@@ -416,8 +416,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       }
 
       toast({
-        title: 'Whoop отключен',
-        description: 'Ваш аккаунт Whoop был отключен.',
+        title: 'Whoop Disconnected',
+        description: 'Your Whoop account has been disconnected.',
       });
 
       setStatus({ isConnected: false });
@@ -433,8 +433,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       );
 
       toast({
-        title: 'Ошибка отключения',
-        description: error.message || 'Не удалось отключить Whoop.',
+        title: 'Disconnect Error',
+        description: error.message || 'Failed to disconnect Whoop.',
         variant: 'destructive'
       });
     } finally {
@@ -443,7 +443,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short'
     });
@@ -485,7 +485,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       <Card>
         <CardContent className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Загрузка статуса Whoop...</span>
+          <span>Loading Whoop status...</span>
         </CardContent>
       </Card>
     );
@@ -505,14 +505,14 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 {status.isConnected && (
                   <Badge variant="default" className="bg-green-100 text-green-800">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Подключено
+                    Connected
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription>
                 {status.isConnected 
-                  ? `Последняя синхронизация: ${status.lastSync ? new Date(status.lastSync).toLocaleString('ru-RU') : 'Никогда'}`
-                  : 'Подключите ваш аккаунт Whoop для автоматической синхронизации данных о восстановлении, сне и тренировках'
+                  ? `Last sync: ${status.lastSync ? new Date(status.lastSync).toLocaleString('en-US') : 'Never'}`
+                  : 'Connect your Whoop account to automatically sync recovery, sleep, and workout data'
                 }
               </CardDescription>
             </div>
@@ -531,7 +531,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
               ) : (
                 <Unlink className="h-4 w-4 mr-2" />
               )}
-              Отключить
+              Disconnect
             </Button>
           )}
         </div>
@@ -543,10 +543,10 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Что такое Whoop?</strong>
+                <strong>What is Whoop?</strong>
                 <br />
-                Whoop - это носимое устройство для отслеживания восстановления, сна, нагрузки и частоты сердечных сокращений. 
-                Подключив ваш аккаунт, вы сможете автоматически импортировать все ваши показатели.
+                Whoop is a wearable device for tracking recovery, sleep, strain, and heart rate. 
+                By connecting your account, you can automatically import all your metrics.
               </AlertDescription>
             </Alert>
 
@@ -559,12 +559,12 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 {isConnecting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Подключение...
+                    Connecting...
                   </>
                 ) : (
                   <>
                     <Heart className="h-4 w-4 mr-2" />
-                    Подключить Whoop
+                    Connect Whoop
                   </>
                 )}
               </Button>
@@ -573,11 +573,11 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <AlertCircle className="h-4 w-4" />
-                    Ручное открытие ссылки
+                    Manual Link Opening
                   </div>
                   
                   <p className="text-sm text-muted-foreground">
-                    Скопируйте ссылку ниже и откройте её в браузере для авторизации:
+                    Copy the link below and open it in your browser to authorize:
                   </p>
                   
                   <div className="flex gap-2">
@@ -588,7 +588,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                       className="flex-1"
                     >
                       <Copy className="h-4 w-4 mr-2" />
-                      Скопировать ссылку
+                      Copy Link
                     </Button>
                     
                     <Button
@@ -598,7 +598,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                       className="flex-1"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
-                      Открыть ссылку
+                      Open Link
                     </Button>
                   </div>
                   
@@ -610,8 +610,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
               
               <p className="text-sm text-muted-foreground text-center">
                 {isMobile 
-                  ? "Если кнопка не работает, используйте ручное открытие ссылки выше"
-                  : "Вы будете перенаправлены на сайт Whoop для авторизации"
+                  ? "If the button doesn't work, use manual link opening above"
+                  : "You will be redirected to Whoop's website for authorization"
                 }
               </p>
             </div>
@@ -628,12 +628,12 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 {isSyncing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Синхронизация...
+                    Syncing...
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Синхронизировать
+                    Sync
                   </>
                 )}
               </Button>
@@ -641,7 +641,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
 
             {recentData.length > 0 && (
               <div className="space-y-3">
-                <h4 className="font-medium text-sm">Последние данные</h4>
+                <h4 className="font-medium text-sm">Recent Data</h4>
                 <div className="space-y-2">
                   {recentData.map((data, index) => (
                     <div key={index} className="p-3 rounded-lg border bg-muted/20">
@@ -653,7 +653,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                          {data.recoveryScore && (
                            <div className="flex items-center gap-2">
                              {getMetricIcon('recovery')}
-                             <span className="text-muted-foreground">Восстановление:</span>
+                             <span className="text-muted-foreground">Recovery:</span>
                              <span className={`font-medium ${getMetricColor('recovery', data.recoveryScore)}`}>
                                {data.recoveryScore}%
                              </span>
@@ -663,7 +663,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                          {data.sleepEfficiency && (
                            <div className="flex items-center gap-2">
                              {getMetricIcon('sleep')}
-                             <span className="text-muted-foreground">Сон:</span>
+                             <span className="text-muted-foreground">Sleep:</span>
                              <span className={`font-medium ${getMetricColor('sleep', data.sleepEfficiency)}`}>
                                {data.sleepEfficiency}%
                              </span>
@@ -673,7 +673,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                          {data.strain && (
                            <div className="flex items-center gap-2">
                              {getMetricIcon('strain')}
-                             <span className="text-muted-foreground">Нагрузка:</span>
+                             <span className="text-muted-foreground">Strain:</span>
                              <span className={`font-medium ${getMetricColor('strain', data.strain)}`}>
                                {data.strain}
                              </span>
@@ -683,7 +683,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                          {data.heartRate && (
                            <div className="flex items-center gap-2">
                              {getMetricIcon('heartRate')}
-                             <span className="text-muted-foreground">ЧСС:</span>
+                             <span className="text-muted-foreground">HR:</span>
                              <span className={`font-medium ${getMetricColor('heartRate', data.heartRate)}`}>
                                {data.heartRate} bpm
                              </span>
@@ -695,7 +695,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                              <Activity className="h-4 w-4" />
                              <span className="text-muted-foreground">VO2Max:</span>
                              <span className="font-medium text-blue-600">
-                               {data.vo2Max} мл/кг/мин
+                               {data.vo2Max} ml/kg/min
                              </span>
                            </div>
                          )}
@@ -703,9 +703,9 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                          {data.weight && (
                            <div className="flex items-center gap-2">
                              <Activity className="h-4 w-4" />
-                             <span className="text-muted-foreground">Вес:</span>
+                             <span className="text-muted-foreground">Weight:</span>
                              <span className="font-medium text-green-600">
-                               {data.weight} кг
+                               {data.weight} kg
                              </span>
                            </div>
                          )}
@@ -720,7 +720,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Нет данных для отображения. Нажмите "Синхронизировать" для загрузки последних данных с Whoop.
+                  No data to display. Click "Sync" to load the latest data from Whoop.
                 </AlertDescription>
               </Alert>
             )}
