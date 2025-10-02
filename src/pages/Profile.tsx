@@ -59,6 +59,12 @@ const ProfilePage = () => {
           avatar_url: data.avatar_url || '',
           trainer_role: data.trainer_role || false
         });
+        // Load preferences from profile columns (with fallbacks)
+        setPreferences({
+          notifications: (data as any).notifications_enabled ?? true,
+          email_updates: (data as any).email_updates ?? true,
+          progress_sharing: (data as any).progress_sharing ?? false,
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -96,6 +102,23 @@ const ProfilePage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updatePreference = async (key: 'notifications' | 'email_updates' | 'progress_sharing', value: boolean) => {
+    if (!user) return;
+    const column = key === 'notifications' ? 'notifications_enabled' : key;
+    try {
+      setPreferences(prev => ({ ...prev, [key]: value }));
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [column]: value } as any)
+        .eq('user_id', user.id);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating preference:', error);
+      toast({ title: 'Ошибка', description: 'Не удалось сохранить настройки', variant: 'destructive' });
+      setPreferences(prev => ({ ...prev, [key]: !value }));
     }
   };
 
@@ -274,7 +297,7 @@ const ProfilePage = () => {
                     </div>
                     <Switch
                       checked={preferences.notifications}
-                      onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, notifications: checked }))}
+                      onCheckedChange={(checked) => updatePreference('notifications', checked)}
                     />
                   </div>
                   
@@ -289,7 +312,7 @@ const ProfilePage = () => {
                     </div>
                     <Switch
                       checked={preferences.email_updates}
-                      onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, email_updates: checked }))}
+                      onCheckedChange={(checked) => updatePreference('email_updates', checked)}
                     />
                   </div>
                 </CardContent>
@@ -319,7 +342,7 @@ const ProfilePage = () => {
                     </div>
                     <Switch
                       checked={preferences.progress_sharing}
-                      onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, progress_sharing: checked }))}
+                      onCheckedChange={(checked) => updatePreference('progress_sharing', checked)}
                     />
                   </div>
                 </CardContent>
