@@ -179,6 +179,7 @@ export default function ModernProgress() {
         let currentValue = 0;
         let trend = 0;
 
+        // Try measurements first
         const measurements = measurementsByGoal[realGoalId] || [];
         if (measurements.length > 0) {
           currentValue = Number(measurements[0].value);
@@ -186,6 +187,26 @@ export default function ModernProgress() {
             const oldValue = Number(measurements[measurements.length - 1].value);
             if (oldValue !== 0) {
               trend = ((currentValue - oldValue) / oldValue) * 100;
+            }
+          }
+        }
+
+        // If no measurements, try user_metrics by name (for synthetic goals)
+        if (currentValue === 0) {
+          const matchingMetric = (userMetricsRes.data || []).find((m: any) => 
+            (m.metric_name || '').toLowerCase() === normalized
+          );
+          if (matchingMetric) {
+            const values = (matchingMetric.metric_values || []) as Array<{ value: number; measurement_date: string }>;
+            if (values.length > 0) {
+              const sorted = values.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
+              currentValue = Number(sorted[0].value) || 0;
+              if (sorted.length > 1) {
+                const oldValue = Number(sorted[sorted.length - 1].value);
+                if (oldValue !== 0) {
+                  trend = ((currentValue - oldValue) / oldValue) * 100;
+                }
+              }
             }
           }
         }
