@@ -1,10 +1,13 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Camera, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import Cropper from "react-easy-crop"
+import type { Area } from "react-easy-crop"
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string
@@ -16,8 +19,60 @@ interface AvatarUploadProps {
 export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, className }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [cropDialogOpen, setCropDialogOpen] = useState(false)
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
+
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new Image()
+      image.addEventListener('load', () => resolve(image))
+      image.addEventListener('error', error => reject(error))
+      image.src = url
+    })
+
+  const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+    const image = await createImage(imageSrc)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) {
+      throw new Error('No 2d context')
+    }
+
+    canvas.width = pixelCrop.width
+    canvas.height = pixelCrop.height
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    )
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'))
+          return
+        }
+        resolve(blob)
+      }, 'image/jpeg', 0.95)
+    })
+  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -43,15 +98,40 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
       return
     }
 
-    // Create preview
+    // Create preview for cropping
     const reader = new FileReader()
     reader.onload = () => {
-      setPreviewUrl(reader.result as string)
+      setImageSrc(reader.result as string)
+      setCropDialogOpen(true)
     }
     reader.readAsDataURL(file)
+  }
 
-    // Upload file
-    uploadAvatar(file)
+  const handleCropConfirm = async () => {
+    if (!imageSrc || !croppedAreaPixels) return
+
+    try {
+      setUploading(true)
+      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels)
+      
+      // Create a file from the blob
+      const file = new File([croppedImage], `avatar-${Date.now()}.jpg`, { type: 'image/jpeg' })
+      
+      // Upload the cropped image
+      await uploadAvatar(file)
+      
+      setCropDialogOpen(false)
+      setImageSrc(null)
+    } catch (error) {
+      console.error('Error cropping image:', error)
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обрезать изображение",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
+    }
   }
 
   const uploadAvatar = async (file: File) => {
@@ -104,50 +184,106 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
   }
 
   return (
-    <div className={cn("flex flex-col items-center gap-4", className)}>
-      <div className="relative">
-        <Avatar className="h-24 w-24">
-          <AvatarImage src={previewUrl || currentAvatarUrl} alt="Аватар" />
-          <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
-        </Avatar>
-        
-        {(currentAvatarUrl || previewUrl) && (
-          <Button
-            variant="destructive"
-            size="icon"
-            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-            onClick={removeAvatar}
-            disabled={uploading}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
-
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="flex items-center gap-2"
-        >
-          {uploading ? (
-            <Upload className="h-4 w-4 animate-pulse" />
-          ) : (
-            <Camera className="h-4 w-4" />
+    <>
+      <div className={cn("flex flex-col items-center gap-4", className)}>
+        <div className="relative">
+          <Avatar className="h-24 w-24">
+            <AvatarImage 
+              src={previewUrl || currentAvatarUrl} 
+              alt="Аватар"
+              className="object-cover"
+            />
+            <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
+          </Avatar>
+          
+          {(currentAvatarUrl || previewUrl) && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+              onClick={removeAvatar}
+              disabled={uploading}
+            >
+              <X className="h-3 w-3" />
+            </Button>
           )}
-          {uploading ? "Загрузка..." : "Изменить"}
-        </Button>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2"
+          >
+            {uploading ? (
+              <Upload className="h-4 w-4 animate-pulse" />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
+            {uploading ? "Загрузка..." : "Изменить"}
+          </Button>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-    </div>
+      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Обрезать фото</DialogTitle>
+          </DialogHeader>
+          <div className="relative h-[400px] bg-muted rounded-lg overflow-hidden">
+            {imageSrc && (
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Масштаб</label>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.1}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCropDialogOpen(false)
+                setImageSrc(null)
+              }}
+              disabled={uploading}
+            >
+              Отмена
+            </Button>
+            <Button onClick={handleCropConfirm} disabled={uploading}>
+              {uploading ? "Загрузка..." : "Сохранить"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
