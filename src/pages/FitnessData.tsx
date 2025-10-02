@@ -3,6 +3,7 @@ import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, T
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
 
 interface MetricCard {
   name: string;
@@ -26,10 +27,11 @@ type TimeFilter = 'today' | 'week' | 'month';
 export default function FitnessData() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getMetrics, loading: cacheLoading } = useFitnessDataCache(user?.id);
   
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<TimeFilter>('today');
-  const [dateOffset, setDateOffset] = useState(0); // Days offset from today
+  const [dateOffset, setDateOffset] = useState(0);
   const [challengeGoals, setChallengeGoals] = useState<string[]>([]);
   const [data, setData] = useState<DashboardData>({
     readiness: { score: 0, status: '' },
@@ -81,7 +83,6 @@ export default function FitnessData() {
       setLoading(true);
       
       // Calculate date range based on selected filter and offset
-      const now = new Date();
       let startDate: Date;
       let endDate: Date;
       
@@ -108,25 +109,8 @@ export default function FitnessData() {
           break;
       }
       
-      // Fetch metrics with date filtering
-      const { data: metrics, error } = await supabase
-        .from('user_metrics')
-        .select(`
-          id,
-          metric_name,
-          metric_category,
-          unit,
-          metric_values!inner (
-            value,
-            measurement_date
-          )
-        `)
-        .eq('user_id', user?.id)
-        .eq('is_active', true)
-        .gte('metric_values.measurement_date', startDate.toISOString().split('T')[0])
-        .lte('metric_values.measurement_date', endDate.toISOString().split('T')[0]);
-
-      if (error) throw error;
+      // Use cached metrics with prefetching
+      const metrics = await getMetrics(startDate, endDate, selectedFilter);
 
       // Process metrics to populate dashboard
       const processed = processMetrics(metrics);
