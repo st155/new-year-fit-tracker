@@ -1274,6 +1274,27 @@ async function saveCycleData(userId: string, records: any[]) {
 
     console.log('Processing cycle record:', JSON.stringify(record, null, 2));
 
+    // Day Strain - общая дневная нагрузка (это то что нужно!)
+    if (record.score && record.score.strain !== undefined) {
+      const metricId = await getOrCreateMetric(userId, 'Day Strain', 'activity', 'strain', 'whoop');
+      
+      const { error } = await supabase
+        .from('metric_values')
+        .upsert({
+          user_id: userId,
+          metric_id: metricId,
+          value: record.score.strain,
+          measurement_date: record.start.split('T')[0],
+          external_id: `${record.id}_strain`,
+          source_data: record,
+        }, {
+          onConflict: 'metric_id,measurement_date,external_id'
+        });
+
+      if (!error) savedCount++;
+      else console.error('Error saving day strain from cycle:', error);
+    }
+
     // Проверяем есть ли кардио данные в цикле
     if (record.score && record.score.vo2_max !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'VO2Max', 'cardio', 'мл/кг/мин', 'whoop');
