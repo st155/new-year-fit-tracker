@@ -48,7 +48,7 @@ export function InstallPrompt() {
         setShowPrompt(false);
       }
     } catch (error) {
-      console.error('Ошибка установки:', error);
+      console.error('Installation error:', error);
     } finally {
       setIsInstalling(false);
     }
@@ -56,7 +56,7 @@ export function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    // Сохраняем в localStorage, чтобы не показывать снова
+    // Save to localStorage to not show again
     localStorage.setItem('install-prompt-dismissed', Date.now().toString());
   };
 
@@ -84,9 +84,9 @@ export function InstallPrompt() {
               <Download className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <CardTitle className="text-lg">Установить приложение</CardTitle>
+              <CardTitle className="text-lg">Install App</CardTitle>
               <CardDescription className="text-xs">
-                Быстрый доступ с домашнего экрана
+                Quick access from home screen
               </CardDescription>
             </div>
           </div>
@@ -95,15 +95,15 @@ export function InstallPrompt() {
           <ul className="text-sm text-muted-foreground space-y-1">
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Работает офлайн
+              Works offline
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Быстрая загрузка
+              Fast loading
             </li>
             <li className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Push-уведомления
+              Push notifications
             </li>
           </ul>
           <Button
@@ -112,11 +112,11 @@ export function InstallPrompt() {
             className="w-full bg-gradient-primary ripple"
           >
             {isInstalling ? (
-              'Установка...'
+              'Installing...'
             ) : (
               <>
                 <Download className="h-4 w-4 mr-2" />
-                Установить
+                Install
               </>
             )}
           </Button>
