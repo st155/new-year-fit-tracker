@@ -116,7 +116,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
         
         <button 
           className="h-20 rounded-2xl border-0 bg-gradient-to-br from-green-400 via-teal-500 to-cyan-600 text-white cursor-pointer hover:scale-105 active:scale-95 transition-all duration-500 shadow-lg hover:shadow-2xl flex flex-col items-center justify-center gap-1.5 p-3 group"
-          onClick={() => navigate('/progress')}
+          onClick={() => setIsAIDialogOpen(true)}
         >
           <Upload className="h-5 w-5 transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-1" />
           <span className="text-[10px] font-semibold">Upload</span>
