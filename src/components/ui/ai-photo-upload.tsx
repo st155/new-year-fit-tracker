@@ -22,7 +22,7 @@ export function AIPhotoUpload({
   onPhotoUploaded,
   existingPhotoUrl, 
   className,
-  label = "Загрузить скриншот фитнес-трекера",
+  label = "Upload fitness tracker screenshot",
   goalId
 }: AIPhotoUploadProps) {
   const { user } = useAuth();
@@ -37,8 +37,8 @@ export function AIPhotoUpload({
   const handleFileSelect = async (file: File) => {
     if (!user) {
       toast({
-        title: "Ошибка",
-        description: "Необходимо войти в систему",
+        title: "Error",
+        description: "Please sign in to continue",
         variant: "destructive",
       });
       return;
@@ -49,8 +49,8 @@ export function AIPhotoUpload({
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Ошибка",
-        description: "Пожалуйста, выберите изображение",
+        title: "Error",
+        description: "Please select an image",
         variant: "destructive",
       });
       return;
@@ -59,8 +59,8 @@ export function AIPhotoUpload({
     // Проверка размера файла (максимум 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Ошибка",
-        description: "Размер файла не должен превышать 5MB",
+        title: "Error",
+        description: "File size must not exceed 5MB",
         variant: "destructive",
       });
       return;
@@ -106,8 +106,8 @@ export function AIPhotoUpload({
       onPhotoUploaded?.(photoUrl);
 
       toast({
-        title: "Фото загружено!",
-        description: "Начинаем анализ с помощью ИИ...",
+        title: "Photo uploaded!",
+        description: "Starting AI analysis...",
       });
 
       // Запускаем анализ с помощью ChatGPT
@@ -117,8 +117,8 @@ export function AIPhotoUpload({
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: "Ошибка",
-        description: `Не удалось загрузить фото: ${error.message}`,
+        title: "Error",
+        description: `Failed to upload photo: ${error.message}`,
         variant: "destructive",
       });
       setPreviewUrl(existingPhotoUrl || null);
@@ -150,14 +150,14 @@ export function AIPhotoUpload({
 
       if (data.success && data.saved) {
         toast({
-          title: "Анализ завершен!",
+          title: "Analysis complete!",
           description: data.message,
         });
         onDataExtracted?.(data);
       } else {
         toast({
-          title: "Анализ завершен",
-          description: data.message || "Данные не найдены на изображении",
+          title: "Analysis complete",
+          description: data.message || "No data found in the image",
           variant: "destructive",
         });
       }
@@ -165,8 +165,8 @@ export function AIPhotoUpload({
     } catch (error) {
       console.error('Error analyzing image:', error);
       toast({
-        title: "Ошибка анализа",
-        description: "Не удалось проанализировать изображение с помощью ИИ",
+        title: "Analysis error",
+        description: "Failed to analyze the image with AI",
         variant: "destructive",
       });
     } finally {
@@ -242,7 +242,7 @@ export function AIPhotoUpload({
                 className="animate-scale-in"
               >
                 <Camera className="h-4 w-4 mr-1" />
-                Заменить
+                Replace
               </Button>
               <Button
                 size="sm"
@@ -267,7 +267,7 @@ export function AIPhotoUpload({
                   )}
                 </div>
                 <p className="text-sm">
-                  {analyzing ? "Анализируем данные с ИИ..." : "Загружаем фото..."}
+                  {analyzing ? "Analyzing with AI..." : "Uploading photo..."}
                 </p>
               </div>
             </div>
@@ -283,8 +283,8 @@ export function AIPhotoUpload({
                   <AlertCircle className="h-4 w-4 text-warning" />
                 )}
                 <Badge className={getQualityColor(analysisResult.analysis?.dataQuality)}>
-                  {analysisResult.analysis?.dataQuality === 'high' ? 'Высокое качество' :
-                   analysisResult.analysis?.dataQuality === 'medium' ? 'Среднее качество' : 'Низкое качество'}
+                  {analysisResult.analysis?.dataQuality === 'high' ? 'High quality' :
+                   analysisResult.analysis?.dataQuality === 'medium' ? 'Medium quality' : 'Low quality'}
                 </Badge>
               </div>
               <p className="text-xs">
@@ -335,24 +335,24 @@ export function AIPhotoUpload({
               <h3 className="font-medium">{label}</h3>
               <p className="text-sm text-muted-foreground">
                 {uploading 
-                  ? "Загружаем фото..." 
+                  ? "Uploading photo..." 
                   : analyzing
-                  ? "Анализируем данные с помощью ИИ..."
-                  : "Перетащите скриншот фитнес-трекера или нажмите для выбора"
+                  ? "Analyzing data with AI..."
+                  : "Drag and drop fitness tracker screenshot or click to select"
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                ИИ автоматически извлечет данные: вес, процент жира, пульс, шаги и другие показатели
+                AI will automatically extract data: weight, body fat %, heart rate, steps and other metrics
               </p>
               <p className="text-xs text-muted-foreground">
-                Поддерживаются: JPG, PNG, WebP (до 5MB)
+                Supported: JPG, PNG, WebP (up to 5MB)
               </p>
             </div>
 
             {!uploading && !analyzing && (
               <Button variant="outline" size="sm" className="animate-scale-in">
                 <Upload className="h-4 w-4 mr-2" />
-                Выбрать скриншот
+                Select screenshot
               </Button>
             )}
           </div>
