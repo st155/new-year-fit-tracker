@@ -156,17 +156,22 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
         .from('progress-photos')
         .getPublicUrl(filePath)
 
+      const publicUrl = data.publicUrl
+
       // Persist avatar URL to user profile before reload
       if (user?.id) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ avatar_url: data.publicUrl })
+          .update({ avatar_url: publicUrl })
           .eq('user_id', user.id);
         if (profileError) throw profileError;
+
+        // Also update auth user metadata for components reading from user.user_metadata
+        await supabase.auth.updateUser({ data: { avatar_url: publicUrl } }).catch(() => {});
       }
 
       // Update parent state for immediate UI feedback
-      onAvatarUpdate(data.publicUrl)
+      onAvatarUpdate(publicUrl)
       setPreviewUrl(null)
 
       toast({
