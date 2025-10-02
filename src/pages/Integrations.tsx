@@ -158,8 +158,8 @@ const IntegrationsPage = () => {
     await checkIntegrationStatus();
     await loadHealthStats();
     toast({
-      title: "Обновлено",
-      description: "Статус интеграций обновлен",
+      title: "Updated",
+      description: "Integration status updated",
     });
   };
 
@@ -167,7 +167,7 @@ const IntegrationsPage = () => {
     {
       id: 'whoop',
       name: 'Whoop',
-      description: 'Ремешок для отслеживания активности и восстановления',
+      description: 'Band for tracking activity and recovery',
       icon: Activity,
       status: integrationStatus.whoop,
       component: <WhoopIntegration userId={user?.id || ''} />
@@ -175,7 +175,7 @@ const IntegrationsPage = () => {
     {
       id: 'withings',
       name: 'Withings',
-      description: 'Умные весы и трекеры здоровья',
+      description: 'Smart scales and health trackers',
       icon: Heart,
       status: integrationStatus.withings,
       component: <WithingsIntegration />
@@ -183,7 +183,7 @@ const IntegrationsPage = () => {
     {
       id: 'appleHealth',
       name: 'Apple Health',
-      description: 'Импорт данных из приложения Здоровье',
+      description: 'Import data from Health app',
       icon: Smartphone,
       status: integrationStatus.appleHealth,
       component: <AppleHealthIntegration />
@@ -191,7 +191,7 @@ const IntegrationsPage = () => {
     {
       id: 'garmin',
       name: 'Garmin',
-      description: 'Спортивные часы и фитнес-трекеры',
+      description: 'Sports watches and fitness trackers',
       icon: Watch,
       status: integrationStatus.garmin,
       component: <GarminIntegration userId={user?.id || ''} />
@@ -208,10 +208,10 @@ const IntegrationsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                Интеграции
+                Integrations
               </h1>
               <p className="text-muted-foreground">
-                Подключите свои фитнес-устройства и приложения для автоматического сбора данных
+                Connect your fitness devices and apps for automatic data collection
               </p>
             </div>
             <Button 
@@ -221,7 +221,7 @@ const IntegrationsPage = () => {
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Обновить
+              Refresh
             </Button>
           </div>
         </div>
@@ -234,14 +234,14 @@ const IntegrationsPage = () => {
                 <div className="p-2 bg-green-500/20 rounded-lg">
                   <Zap className="h-5 w-5 text-green-500" />
                 </div>
-                <CardTitle className="text-sm font-medium">Подключено</CardTitle>
+                <CardTitle className="text-sm font-medium">Connected</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-500">
                 {connectedCount}/4
               </div>
-              <p className="text-xs text-muted-foreground mt-1">устройств</p>
+              <p className="text-xs text-muted-foreground mt-1">devices</p>
             </CardContent>
           </Card>
           
@@ -251,12 +251,12 @@ const IntegrationsPage = () => {
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <Database className="h-5 w-5 text-blue-500" />
                 </div>
-                <CardTitle className="text-sm font-medium">Всего записей</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Records</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-500">{healthStats.totalRecords.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">данных</p>
+              <p className="text-xs text-muted-foreground mt-1">data points</p>
             </CardContent>
           </Card>
           
@@ -266,12 +266,12 @@ const IntegrationsPage = () => {
                 <div className="p-2 bg-purple-500/20 rounded-lg">
                   <Activity className="h-5 w-5 text-purple-500" />
                 </div>
-                <CardTitle className="text-sm font-medium">За неделю</CardTitle>
+                <CardTitle className="text-sm font-medium">This Week</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-500">{healthStats.lastWeek}</div>
-              <p className="text-xs text-muted-foreground mt-1">новых записей</p>
+              <p className="text-xs text-muted-foreground mt-1">new records</p>
             </CardContent>
           </Card>
           
@@ -281,12 +281,12 @@ const IntegrationsPage = () => {
                 <div className="p-2 bg-orange-500/20 rounded-lg">
                   <Settings className="h-5 w-5 text-orange-500" />
                 </div>
-                <CardTitle className="text-sm font-medium">Источники</CardTitle>
+                <CardTitle className="text-sm font-medium">Sources</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-500">{Object.keys(healthStats.sources).length}</div>
-              <p className="text-xs text-muted-foreground mt-1">активных</p>
+              <p className="text-xs text-muted-foreground mt-1">active</p>
             </CardContent>
           </Card>
         </div>
@@ -295,11 +295,11 @@ const IntegrationsPage = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Zap className="h-4 w-4" />
-              Обзор
+              Overview
             </TabsTrigger>
             <TabsTrigger value="setup" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Настройка
+              Setup
             </TabsTrigger>
           </TabsList>
 
@@ -307,10 +307,10 @@ const IntegrationsPage = () => {
             {connectedCount === 0 ? (
               <EmptyState
                 icon={<Zap className="h-16 w-16" />}
-                title="Нет подключенных устройств"
-                description="Подключите свои фитнес-трекеры и приложения для автоматического сбора данных о тренировках, сне и здоровье."
+                title="No Connected Devices"
+                description="Connect your fitness trackers and apps to automatically collect data about workouts, sleep, and health."
                 action={{
-                  label: "Настроить интеграции",
+                  label: "Setup Integrations",
                   onClick: () => setActiveTab('setup')
                 }}
               />
@@ -348,7 +348,7 @@ const IntegrationsPage = () => {
                         <CardContent>
                           <div className="flex items-center gap-2 text-sm">
                             <Badge variant="outline" className={`${color.iconColor} border-current`}>
-                              {healthStats.sources[item.id === 'appleHealth' ? 'apple_health' : item.id] || healthStats.sources[item.name] || 0} записей
+                              {healthStats.sources[item.id === 'appleHealth' ? 'apple_health' : item.id] || healthStats.sources[item.name] || 0} records
                             </Badge>
                           </div>
                         </CardContent>

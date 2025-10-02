@@ -90,14 +90,14 @@ const ProfilePage = () => {
       if (error) throw error;
 
       toast({
-        title: "Профиль обновлен",
-        description: "Ваши данные успешно сохранены",
+        title: "Profile updated",
+        description: "Your data has been successfully saved",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить профиль",
+        title: "Error",
+        description: "Failed to update profile",
         variant: "destructive",
       });
     } finally {
@@ -117,7 +117,7 @@ const ProfilePage = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating preference:', error);
-      toast({ title: 'Ошибка', description: 'Не удалось сохранить настройки', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to save settings', variant: 'destructive' });
       setPreferences(prev => ({ ...prev, [key]: !value }));
     }
   };
@@ -147,10 +147,10 @@ const ProfilePage = () => {
         <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              Профиль
+              Profile
             </h1>
             <p className="text-muted-foreground">
-              Управляйте своими данными и настройками аккаунта
+              Manage your data and account settings
             </p>
           </div>
         </div>
@@ -160,15 +160,15 @@ const ProfilePage = () => {
           <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
             <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <User className="h-4 w-4" />
-              Профиль
+              Profile
             </TabsTrigger>
             <TabsTrigger value="preferences" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <Settings className="h-4 w-4" />
-              Настройки
+              Settings
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <Shield className="h-4 w-4" />
-              Безопасность
+              Security
             </TabsTrigger>
           </TabsList>
 
@@ -180,9 +180,9 @@ const ProfilePage = () => {
                   <div className="inline-block p-1 bg-gradient-primary rounded-full mx-auto mb-2">
                     <Camera className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-lg">Фото профиля</CardTitle>
+                  <CardTitle className="text-lg">Profile Photo</CardTitle>
                   <CardDescription>
-                    Загрузите свое фото или выберите аватар
+                    Upload your photo or choose an avatar
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
@@ -202,9 +202,9 @@ const ProfilePage = () => {
                       <User className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle>Основная информация</CardTitle>
+                      <CardTitle>Basic Information</CardTitle>
                       <CardDescription>
-                        Обновите свои личные данные
+                        Update your personal details
                       </CardDescription>
                     </div>
                   </div>
@@ -212,21 +212,21 @@ const ProfilePage = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="username">Имя пользователя</Label>
+                      <Label htmlFor="username">Username</Label>
                       <Input
                         id="username"
                         value={profile.username}
                         onChange={(e) => setProfile(prev => ({ ...prev, username: e.target.value }))}
-                        placeholder="Введите имя пользователя"
+                        placeholder="Enter username"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="full_name">Полное имя</Label>
+                      <Label htmlFor="full_name">Full Name</Label>
                       <Input
                         id="full_name"
                         value={profile.full_name}
                         onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                        placeholder="Введите полное имя"
+                        placeholder="Enter full name"
                       />
                     </div>
                   </div>
@@ -240,7 +240,7 @@ const ProfilePage = () => {
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Email нельзя изменить после регистрации
+                      Email cannot be changed after registration
                     </p>
                   </div>
 
@@ -252,10 +252,10 @@ const ProfilePage = () => {
                     />
                     <div className="space-y-0.5">
                       <Label htmlFor="trainer-mode" className="text-sm font-medium">
-                        Режим тренера
+                        Trainer Mode
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        Включите для доступа к функциям управления клиентами
+                        Enable to access client management features
                       </p>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ const ProfilePage = () => {
                   <div className="flex justify-end pt-4">
                     <Button onClick={saveProfile} disabled={loading} className="bg-gradient-primary hover:opacity-90 shadow-lg">
                       <Save className="h-4 w-4 mr-2" />
-                      {loading ? "Сохранение..." : "Сохранить изменения"}
+                      {loading ? "Saving..." : "Save Changes"}
                     </Button>
                   </div>
                 </CardContent>
@@ -280,9 +280,9 @@ const ProfilePage = () => {
                       <Bell className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle>Уведомления</CardTitle>
+                      <CardTitle>Notifications</CardTitle>
                       <CardDescription>
-                        Настройте как вы хотите получать уведомления
+                        Configure how you want to receive notifications
                       </CardDescription>
                     </div>
                   </div>
@@ -290,9 +290,9 @@ const ProfilePage = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Push уведомления</Label>
+                      <Label>Push Notifications</Label>
                       <p className="text-xs text-muted-foreground">
-                        Получать уведомления в браузере
+                        Receive notifications in browser
                       </p>
                     </div>
                     <Switch
@@ -305,9 +305,9 @@ const ProfilePage = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Email уведомления</Label>
+                      <Label>Email Notifications</Label>
                       <p className="text-xs text-muted-foreground">
-                        Получать новости и обновления на email
+                        Receive news and updates via email
                       </p>
                     </div>
                     <Switch
@@ -325,9 +325,9 @@ const ProfilePage = () => {
                       <Share className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle>Приватность</CardTitle>
+                      <CardTitle>Privacy</CardTitle>
                       <CardDescription>
-                        Управляйте видимостью ваших данных
+                        Manage the visibility of your data
                       </CardDescription>
                     </div>
                   </div>
@@ -335,9 +335,9 @@ const ProfilePage = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Публичный прогресс</Label>
+                      <Label>Public Progress</Label>
                       <p className="text-xs text-muted-foreground">
-                        Разрешить другим видеть ваш прогресс
+                        Allow others to see your progress
                       </p>
                     </div>
                     <Switch
@@ -358,11 +358,11 @@ const ProfilePage = () => {
                     <Shield className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle>Безопасность аккаунта</CardTitle>
-                    <CardDescription>
-                      Управляйте безопасностью вашего аккаунта
-                    </CardDescription>
-                  </div>
+                      <CardTitle>Account Security</CardTitle>
+                      <CardDescription>
+                        Manage your account security
+                      </CardDescription>
+                    </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -370,10 +370,10 @@ const ProfilePage = () => {
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">Email: {user?.email}</p>
-                      <p className="text-sm text-muted-foreground">Подтвержден</p>
+                      <p className="text-sm text-muted-foreground">Confirmed</p>
                     </div>
                     <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                      Активен
+                      Active
                     </Badge>
                   </div>
                 </div>
@@ -382,16 +382,16 @@ const ProfilePage = () => {
 
                 <div className="space-y-4">
                   <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-destructive">
-                    <h4 className="font-medium text-destructive mb-2">Опасная зона</h4>
+                    <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Выход из аккаунта удалит сессию на этом устройстве.
+                      Signing out will remove the session on this device.
                     </p>
                     <Button 
                       variant="destructive" 
                       onClick={handleLogout}
                       className="w-full"
                     >
-                      Выйти из аккаунта
+                      Sign Out
                     </Button>
                   </div>
                 </div>
