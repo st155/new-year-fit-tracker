@@ -76,7 +76,8 @@ const LeaderboardPage = () => {
     if (!user || !selectedChallenge) return [];
 
     try {
-      const { data: participants } = await supabase
+      // Fetch all participants - no limit
+      const { data: participants, error: participantsError } = await supabase
         .from('challenge_participants')
         .select(`
           user_id,
@@ -84,9 +85,16 @@ const LeaderboardPage = () => {
         `)
         .eq('challenge_id', selectedChallenge);
 
-      if (!participants) {
+      if (participantsError) {
+        console.error('Error fetching participants:', participantsError);
         return [];
       }
+
+      if (!participants || participants.length === 0) {
+        return [];
+      }
+
+      console.log(`Fetching leaderboard for ${participants.length} participants`);
 
       const leaderboard = await Promise.all(
         participants.map(async (participant: any) => {
@@ -134,6 +142,7 @@ const LeaderboardPage = () => {
         })
       );
 
+      // Sort by points and assign ranks - show ALL participants
       const sortedLeaderboard = leaderboard
         .sort((a, b) => b.points - a.points)
         .map((entry, index) => ({
@@ -141,6 +150,8 @@ const LeaderboardPage = () => {
           ...entry,
         }));
 
+      console.log(`Leaderboard prepared with ${sortedLeaderboard.length} entries`);
+      
       return sortedLeaderboard;
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
