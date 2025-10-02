@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Trophy, TrendingUp, Award, Medal, RefreshCw } from "lucide-react";
+import { Trophy, TrendingUp, Award, Medal, RefreshCw, Target, Flame, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LeaderboardListSkeleton } from "@/components/ui/universal-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface LeaderboardUser {
   rank: number;
@@ -33,6 +40,9 @@ const LeaderboardPage = () => {
   const isMobile = useIsMobile();
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [selectedUser, setSelectedUser] = useState<LeaderboardUser | null>(null);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -152,6 +162,62 @@ const LeaderboardPage = () => {
     showToast: false,
   });
 
+  const fetchUserStats = async (userId: string) => {
+    setLoadingStats(true);
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const [workoutsData, measurementsData, goalsData, bodyCompositionData] = await Promise.all([
+        supabase
+          .from('workouts')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('start_time', thirtyDaysAgo.toISOString()),
+        supabase
+          .from('measurements')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
+        supabase
+          .from('goals')
+          .select('*')
+          .eq('user_id', userId),
+        supabase
+          .from('body_composition')
+          .select('*')
+          .eq('user_id', userId)
+          .order('measurement_date', { ascending: false })
+          .limit(1)
+      ]);
+
+      const workouts = workoutsData.data || [];
+      const totalWorkouts = workouts.length;
+      const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+      const totalMinutes = workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0);
+      const avgCaloriesPerWorkout = totalWorkouts > 0 ? Math.round(totalCalories / totalWorkouts) : 0;
+
+      setUserStats({
+        workouts: totalWorkouts,
+        totalCalories,
+        totalMinutes,
+        avgCaloriesPerWorkout,
+        measurements: measurementsData.data?.length || 0,
+        goals: goalsData.data?.length || 0,
+        bodyComposition: bodyCompositionData.data?.[0],
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const handleUserClick = (userEntry: LeaderboardUser) => {
+    setSelectedUser(userEntry);
+    fetchUserStats(userEntry.userId);
+  };
+
   const getRankStyle = (rank: number, isCurrentUser: boolean) => {
     if (rank === 1) {
       return "bg-gradient-to-br from-yellow-600 via-orange-600 to-orange-800 border-orange-500/30 shadow-[0_0_40px_rgba(234,179,8,0.5)]";
@@ -165,7 +231,7 @@ const LeaderboardPage = () => {
     if (isCurrentUser) {
       return "bg-gradient-to-br from-cyan-500 via-teal-600 to-blue-700 border-cyan-400/30 shadow-[0_0_40px_rgba(6,182,212,0.5)]";
     }
-    return "bg-card/40 backdrop-blur-sm border-border/30";
+    return "bg-card border-border";
   };
 
   const renderLeaderboardItem = (userEntry: LeaderboardUser, index: number) => {
@@ -174,8 +240,9 @@ const LeaderboardPage = () => {
 
     return (
       <div
+        onClick={() => handleUserClick(userEntry)}
         className={cn(
-          "rounded-3xl border-2 transition-all duration-300 overflow-hidden",
+          "rounded-3xl border-2 transition-all duration-300 overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
           getRankStyle(userEntry.rank, isCurrentUser),
           isTopThree || isCurrentUser ? "p-6" : "p-4"
         )}
@@ -347,6 +414,129 @@ const LeaderboardPage = () => {
         </div>
       )}
       </div>
+
+      {/* User Profile Dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-4">
+              <Avatar className="w-16 h-16 border-2 border-primary">
+                <AvatarImage src={selectedUser?.avatarUrl} />
+                <AvatarFallback className="text-xl font-bold">
+                  {selectedUser?.name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-left">
+                <h2 className="text-2xl font-bold">{selectedUser?.name}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="secondary" className="text-lg">
+                    #{selectedUser?.rank}
+                  </Badge>
+                  <Badge variant="outline" className="text-lg">
+                    {selectedUser?.points} очков
+                  </Badge>
+                </div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {loadingStats ? (
+            <div className="flex justify-center py-8">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : userStats && (
+            <div className="space-y-6 mt-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm font-medium text-muted-foreground">Тренировки</span>
+                  </div>
+                  <p className="text-3xl font-bold">{userStats.workouts}</p>
+                  <p className="text-xs text-muted-foreground mt-1">За 30 дней</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-5 h-5 text-orange-500" />
+                    <span className="text-sm font-medium text-muted-foreground">Калории</span>
+                  </div>
+                  <p className="text-3xl font-bold">{userStats.totalCalories}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Всего сожжено</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 text-purple-500" />
+                    <span className="text-sm font-medium text-muted-foreground">Минуты</span>
+                  </div>
+                  <p className="text-3xl font-bold">{userStats.totalMinutes}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Время тренировок</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trophy className="w-5 h-5 text-green-500" />
+                    <span className="text-sm font-medium text-muted-foreground">Замеры</span>
+                  </div>
+                  <p className="text-3xl font-bold">{userStats.measurements}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Записано</p>
+                </div>
+              </div>
+
+              {/* Body Composition */}
+              {userStats.bodyComposition && (
+                <div className="bg-card border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <TrendingDown className="w-5 h-5" />
+                    Последние замеры тела
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    {userStats.bodyComposition.weight && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Вес</p>
+                        <p className="text-xl font-bold">{userStats.bodyComposition.weight} кг</p>
+                      </div>
+                    )}
+                    {userStats.bodyComposition.body_fat_percentage && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Жир</p>
+                        <p className="text-xl font-bold">{userStats.bodyComposition.body_fat_percentage}%</p>
+                      </div>
+                    )}
+                    {userStats.bodyComposition.muscle_mass && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Мышцы</p>
+                        <p className="text-xl font-bold">{userStats.bodyComposition.muscle_mass} кг</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Goals */}
+              <div className="bg-card border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Активные цели
+                </h3>
+                <p className="text-3xl font-bold">{userStats.goals}</p>
+                <p className="text-sm text-muted-foreground mt-1">целей в работе</p>
+              </div>
+
+              {/* Average Stats */}
+              <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-2">Средние показатели</h3>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Калории за тренировку:</span>
+                  <span className="text-2xl font-bold text-primary">{userStats.avgCaloriesPerWorkout}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PullToRefresh>
   );
 };
