@@ -106,7 +106,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
               onDataExtracted={(result) => {
                 if (result.success && result.saved) {
                   setIsAIDialogOpen(false);
-                  navigate('/progress');
+                  navigate('/');
                 }
               }}
               label="Загрузить скриншот трекера"

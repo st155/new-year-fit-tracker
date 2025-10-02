@@ -92,9 +92,9 @@ const WhoopCallback = () => {
             description: 'Ваши данные Whoop успешно синхронизированы.',
           });
 
-          // Перенаправляем на страницу прогресса
+          // Перенаправляем на главную страницу где видны новые данные
           setTimeout(() => {
-            navigate('/progress');
+            navigate('/fitness-data?view=day');
           }, 2000);
 
         } else {
@@ -220,16 +220,16 @@ const WhoopCallback = () => {
               <p className="text-sm text-muted-foreground mb-3">
                 Перенаправление через 2 секунды...
               </p>
-              <Button onClick={() => navigate('/progress')} className="w-full">
-                Перейти к прогрессу
+              <Button onClick={() => navigate('/fitness-data?view=day')} className="w-full">
+                Посмотреть данные
               </Button>
             </div>
           )}
 
           {status === 'error' && (
             <div className="flex gap-2">
-              <Button onClick={() => navigate('/progress')} variant="outline" className="flex-1">
-                Назад
+              <Button onClick={() => navigate('/integrations')} variant="outline" className="flex-1">
+                Назад к интеграциям
               </Button>
               <Button onClick={() => window.location.reload()} className="flex-1">
                 Повторить
