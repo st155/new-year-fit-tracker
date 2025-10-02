@@ -120,8 +120,8 @@ export default function FitnessData() {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить данные',
+        title: 'Error',
+        description: 'Failed to load data',
         variant: 'destructive'
       });
       setLoading(false);
@@ -144,15 +144,15 @@ export default function FitnessData() {
       case 'today':
         const targetDay = new Date();
         targetDay.setDate(targetDay.getDate() + dateOffset);
-        if (dateOffset === 0) return 'Сегодня';
-        if (dateOffset === -1) return 'Вчера';
-        return targetDay.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        if (dateOffset === 0) return 'Today';
+        if (dateOffset === -1) return 'Yesterday';
+        return targetDay.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
       case 'week':
-        if (dateOffset === 0) return 'Неделя';
-        return `${Math.abs(dateOffset)} нед. назад`;
+        if (dateOffset === 0) return 'Week';
+        return `${Math.abs(dateOffset)} week${Math.abs(dateOffset) > 1 ? 's' : ''} ago`;
       case 'month':
-        if (dateOffset === 0) return 'Месяц';
-        return `${Math.abs(dateOffset)} мес. назад`;
+        if (dateOffset === 0) return 'Month';
+        return `${Math.abs(dateOffset)} month${Math.abs(dateOffset) > 1 ? 's' : ''} ago`;
     }
   };
 
@@ -176,7 +176,7 @@ export default function FitnessData() {
 
   const processMetrics = (metrics: any[]): DashboardData => {
     const result: DashboardData = {
-      readiness: { score: 85, status: 'Оптимально' },
+      readiness: { score: 85, status: 'Optimal' },
       cards: []
     };
 
@@ -214,7 +214,7 @@ export default function FitnessData() {
     if (metricValues['Recovery Score'] || metricValues['Recovery']) {
       const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
       result.readiness.score = Math.round(recovery.current);
-      result.readiness.status = recovery.current > 70 ? 'Оптимально' : recovery.current > 40 ? 'Нормально' : 'Низкий';
+      result.readiness.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
     }
 
     // Build cards - only for challenge goals
@@ -225,9 +225,9 @@ export default function FitnessData() {
       const strain = metricValues['Day Strain'] || metricValues['Workout Strain'];
       const value = Math.round(strain.current * 10) / 10;
       cards.push({
-        name: 'Нагрузка',
+        name: 'Strain',
         value: value.toString(),
-        subtitle: value > 15 ? 'Очень высокая' : value > 10 ? 'Высокая' : 'Умеренная',
+        subtitle: value > 15 ? 'Very High' : value > 10 ? 'High' : 'Moderate',
         icon: Flame,
         color: '#F97316',
         borderColor: '#F97316'
@@ -241,9 +241,9 @@ export default function FitnessData() {
       const minutes = Math.round((sleepDur.current - hours) * 60);
       const quality = metricValues['Sleep Quality'] || metricValues['Sleep Performance'];
       cards.push({
-        name: 'Сон',
-        value: `${hours}ч ${minutes}м`,
-        subtitle: quality ? `Качество: ${Math.round(quality.current)}%` : '',
+        name: 'Sleep',
+        value: `${hours}h ${minutes}m`,
+        subtitle: quality ? `Quality: ${Math.round(quality.current)}%` : '',
         icon: Moon,
         color: '#6366F1',
         borderColor: '#6366F1'
@@ -256,7 +256,7 @@ export default function FitnessData() {
       cards.push({
         name: 'VO2 Max',
         value: Math.round(vo2.current * 10) / 10 + '',
-        subtitle: 'мл/кг/мин',
+        subtitle: 'ml/kg/min',
         icon: Wind,
         color: '#06B6D4',
         borderColor: '#06B6D4'
@@ -269,7 +269,7 @@ export default function FitnessData() {
       const diff = fat.previous ? fat.current - fat.previous : 0;
       const trend = diff > 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`;
       cards.push({
-        name: 'Процент жира',
+        name: 'Body Fat %',
         value: `${Math.round(fat.current * 10) / 10}%`,
         subtitle: trend,
         icon: Scale,
@@ -282,9 +282,9 @@ export default function FitnessData() {
     if (metricValues['Pull-ups'] && isInChallengeGoals('подтягивания')) {
       const pullups = metricValues['Pull-ups'];
       cards.push({
-        name: 'Подтягивания',
+        name: 'Pull-ups',
         value: Math.round(pullups.current) + '',
-        subtitle: 'раз',
+        subtitle: 'reps',
         icon: Dumbbell,
         color: '#A855F7',
         borderColor: '#A855F7'
@@ -295,9 +295,9 @@ export default function FitnessData() {
     if (metricValues['Bench Press'] && isInChallengeGoals('жим')) {
       const bench = metricValues['Bench Press'];
       cards.push({
-        name: 'Жим лёжа',
+        name: 'Bench Press',
         value: Math.round(bench.current) + '',
-        subtitle: 'кг',
+        subtitle: 'kg',
         icon: Dumbbell,
         color: '#EF4444',
         borderColor: '#EF4444'
@@ -308,9 +308,9 @@ export default function FitnessData() {
     if (metricValues['Push-ups'] && isInChallengeGoals('отжимания')) {
       const pushups = metricValues['Push-ups'];
       cards.push({
-        name: 'Отжимания',
+        name: 'Push-ups',
         value: Math.round(pushups.current) + '',
-        subtitle: 'раз',
+        subtitle: 'reps',
         icon: Dumbbell,
         color: '#FBBF24',
         borderColor: '#FBBF24'
@@ -321,9 +321,9 @@ export default function FitnessData() {
     if (metricValues['Plank'] && isInChallengeGoals('планка')) {
       const plank = metricValues['Plank'];
       cards.push({
-        name: 'Планка',
+        name: 'Plank',
         value: Math.round(plank.current) + '',
-        subtitle: 'мин',
+        subtitle: 'min',
         icon: Activity,
         color: '#8B5CF6',
         borderColor: '#8B5CF6'
@@ -334,9 +334,9 @@ export default function FitnessData() {
     if (metricValues['1km Run'] && isInChallengeGoals('бег')) {
       const run = metricValues['1km Run'];
       cards.push({
-        name: 'Бег 1 км',
+        name: '1km Run',
         value: Math.round(run.current * 10) / 10 + '',
-        subtitle: 'мин',
+        subtitle: 'min',
         icon: Footprints,
         color: '#06B6D4',
         borderColor: '#06B6D4'
@@ -347,9 +347,9 @@ export default function FitnessData() {
     if (metricValues['Lunges'] && isInChallengeGoals('выпады')) {
       const lunges = metricValues['Lunges'];
       cards.push({
-        name: 'Выпады со штангой',
+        name: 'Lunges',
         value: Math.round(lunges.current) + '',
-        subtitle: 'кг×8',
+        subtitle: 'kg×8',
         icon: Dumbbell,
         color: '#84CC16',
         borderColor: '#84CC16'
@@ -360,9 +360,9 @@ export default function FitnessData() {
     if (metricValues['Steps']) {
       const steps = metricValues['Steps'];
       cards.push({
-        name: 'Шаги',
+        name: 'Steps',
         value: Math.round(steps.current).toString(),
-        subtitle: 'за день',
+        subtitle: 'per day',
         icon: Footprints,
         color: '#22C55E',
         borderColor: '#22C55E'
@@ -372,9 +372,9 @@ export default function FitnessData() {
     if (metricValues['Workout Calories'] || metricValues['Active Calories']) {
       const cals = metricValues['Workout Calories'] || metricValues['Active Calories'];
       cards.push({
-        name: 'Калории',
+        name: 'Calories',
         value: Math.round(cals.current).toString(),
-        subtitle: 'ккал',
+        subtitle: 'kcal',
         icon: Flame,
         color: '#EF4444',
         borderColor: '#EF4444'
@@ -384,9 +384,9 @@ export default function FitnessData() {
     if (metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate']) {
       const hr = metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate'];
       cards.push({
-        name: 'Пульс ср.',
+        name: 'Avg Heart Rate',
         value: Math.round(hr.current).toString(),
-        subtitle: 'уд/мин',
+        subtitle: 'bpm',
         icon: Heart,
         color: '#F43F5E',
         borderColor: '#F43F5E'
@@ -396,9 +396,9 @@ export default function FitnessData() {
     if (metricValues['Resting Heart Rate']) {
       const rhr = metricValues['Resting Heart Rate'];
       cards.push({
-        name: 'Пульс покоя',
+        name: 'Resting HR',
         value: Math.round(rhr.current).toString(),
-        subtitle: 'уд/мин',
+        subtitle: 'bpm',
         icon: Heart,
         color: '#EC4899',
         borderColor: '#EC4899'
@@ -408,9 +408,9 @@ export default function FitnessData() {
     if (metricValues['Weight']) {
       const w = metricValues['Weight'];
       cards.push({
-        name: 'Вес',
+        name: 'Weight',
         value: (Math.round(w.current * 10) / 10).toString(),
-        subtitle: 'кг',
+        subtitle: 'kg',
         icon: Scale,
         color: '#10B981',
         borderColor: '#10B981'
@@ -420,9 +420,9 @@ export default function FitnessData() {
     if (metricValues['Distance']) {
       const d = metricValues['Distance'];
       cards.push({
-        name: 'Дистанция',
+        name: 'Distance',
         value: (Math.round(d.current * 10) / 10).toString(),
-        subtitle: 'км',
+        subtitle: 'km',
         icon: Activity,
         color: '#06B6D4',
         borderColor: '#06B6D4'
@@ -434,7 +434,7 @@ export default function FitnessData() {
       cards.push({
         name: 'HRV',
         value: Math.round(hrv.current).toString(),
-        subtitle: 'мс',
+        subtitle: 'ms',
         icon: Heart,
         color: '#8B5CF6',
         borderColor: '#8B5CF6'
@@ -444,9 +444,9 @@ export default function FitnessData() {
     if (metricValues['Workout Count']) {
       const wc = metricValues['Workout Count'];
       cards.push({
-        name: 'Тренировки',
+        name: 'Workouts',
         value: Math.round(wc.current).toString(),
-        subtitle: 'за период',
+        subtitle: 'total',
         icon: Dumbbell,
         color: '#F59E0B',
         borderColor: '#F59E0B'
@@ -456,9 +456,9 @@ export default function FitnessData() {
     if (metricValues['Exercise Minutes']) {
       const em = metricValues['Exercise Minutes'];
       cards.push({
-        name: 'Активность',
+        name: 'Activity',
         value: Math.round(em.current).toString(),
-        subtitle: 'мин',
+        subtitle: 'min',
         icon: Zap,
         color: '#FBBF24',
         borderColor: '#FBBF24'
@@ -490,9 +490,9 @@ export default function FitnessData() {
   };
 
   const getReadinessColor = (score: number) => {
-    if (score > 70) return { color: '#10B981', label: 'Отлично' };
-    if (score > 40) return { color: '#F59E0B', label: 'Нормально' };
-    return { color: '#EF4444', label: 'Низкий' };
+    if (score > 70) return { color: '#10B981', label: 'Excellent' };
+    if (score > 40) return { color: '#F59E0B', label: 'Normal' };
+    return { color: '#EF4444', label: 'Low' };
   };
 
   const readinessColor = getReadinessColor(data.readiness.score);
@@ -510,7 +510,7 @@ export default function FitnessData() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground tracking-wider mb-4">
-          ДАННЫЕ ТРЕКЕРОВ
+          FITNESS TRACKER DATA
         </h1>
         
         {/* Filter Pills with Navigation */}
@@ -545,7 +545,7 @@ export default function FitnessData() {
                 boxShadow: selectedFilter === 'today' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
               }}
             >
-              {selectedFilter === 'today' ? getDateLabel() : 'Сегодня'}
+              {selectedFilter === 'today' ? getDateLabel() : 'Today'}
             </button>
             <button
               onClick={() => {
@@ -563,7 +563,7 @@ export default function FitnessData() {
                 boxShadow: selectedFilter === 'week' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
               }}
             >
-              {selectedFilter === 'week' ? getDateLabel() : 'Неделя'}
+              {selectedFilter === 'week' ? getDateLabel() : 'Week'}
             </button>
             <button
               onClick={() => {
@@ -581,7 +581,7 @@ export default function FitnessData() {
                 boxShadow: selectedFilter === 'month' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
               }}
             >
-              {selectedFilter === 'month' ? getDateLabel() : 'Месяц'}
+              {selectedFilter === 'month' ? getDateLabel() : 'Month'}
             </button>
           </div>
 
@@ -612,7 +612,7 @@ export default function FitnessData() {
           boxShadow: `0 0 30px ${readinessColor.color}66`
         }}
       >
-        <h2 className="text-xl font-bold text-white mb-4">Готовность</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Readiness</h2>
         
         <div className="flex items-center justify-center">
           {/* Donut Chart - Smaller */}
