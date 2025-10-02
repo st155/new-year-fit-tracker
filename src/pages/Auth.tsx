@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/language-toggle';
+import { OnboardingTutorial } from '@/components/tutorial/OnboardingTutorial';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -65,6 +66,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center p-4">
+      <OnboardingTutorial />
       <div className="absolute top-4 right-4">
         <LanguageToggle />
       </div>

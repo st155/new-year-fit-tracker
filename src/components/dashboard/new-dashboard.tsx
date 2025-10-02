@@ -8,6 +8,7 @@ import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { ChallengeReminder } from "@/components/challenges/ChallengeReminder";
 import { 
   LazyMetricsGrid, 
   LazyGoalsProgress, 
@@ -110,6 +111,7 @@ export const NewDashboard = memo(function NewDashboard() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-screen bg-background relative">
+        <ChallengeReminder />
         <SwipeIndicator 
           progress={swipeProgress}
           direction={swipeDirection}
