@@ -116,8 +116,8 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
             <TrendingUp className="h-5 w-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-xl">Рейтинг активности</CardTitle>
-            <CardDescription>Топ-10 самых активных участников</CardDescription>
+            <CardTitle className="text-xl">Activity Ranking</CardTitle>
+            <CardDescription>Top 10 most active participants</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -126,7 +126,7 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
           {leaderboard.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Пока нет данных об активности</p>
+              <p>No activity data yet</p>
             </div>
           ) : (
             leaderboard.map((entry, index) => (
@@ -157,9 +157,9 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
                 <div className="flex-1">
                   <p className="font-bold text-foreground">{entry.profiles.full_name || entry.profiles.username}</p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                    <span>📝 {entry.posts_count} постов</span>
-                    <span>💬 {entry.comments_count} комментов</span>
-                    <span>❤️ {entry.likes_received} лайков</span>
+                    <span>📝 {entry.posts_count} posts</span>
+                    <span>💬 {entry.comments_count} comments</span>
+                    <span>❤️ {entry.likes_received} likes</span>
                   </div>
                 </div>
 
@@ -174,7 +174,7 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
                   </Badge>
                   {entry.streak_days > 0 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      🔥 {entry.streak_days} дней стрик
+                      🔥 {entry.streak_days} day streak
                     </p>
                   )}
                 </div>
@@ -185,12 +185,12 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
 
         {/* Легенда очков */}
         <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-          <p className="text-sm font-semibold mb-2 text-foreground">Как получить очки:</p>
+          <p className="text-sm font-semibold mb-2 text-foreground">How to earn points:</p>
           <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-            <div>• Пост: <span className="text-purple-500 font-bold">+10</span></div>
-            <div>• Комментарий: <span className="text-blue-500 font-bold">+5</span></div>
-            <div>• Лайк поставлен: <span className="text-pink-500 font-bold">+2</span></div>
-            <div>• Лайк получен: <span className="text-green-500 font-bold">+3</span></div>
+            <div>• Post: <span className="text-purple-500 font-bold">+10</span></div>
+            <div>• Comment: <span className="text-blue-500 font-bold">+5</span></div>
+            <div>• Like given: <span className="text-pink-500 font-bold">+2</span></div>
+            <div>• Like received: <span className="text-green-500 font-bold">+3</span></div>
           </div>
         </div>
       </CardContent>

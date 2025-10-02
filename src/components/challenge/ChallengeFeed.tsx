@@ -85,8 +85,8 @@ export const ChallengeFeed = ({ challengeId }: ChallengeFeedProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Стена челленджа</h2>
-          <p className="text-muted-foreground">Делитесь прогрессом и мотивируйте друг друга</p>
+          <h2 className="text-2xl font-bold text-foreground">Challenge Feed</h2>
+          <p className="text-muted-foreground">Share progress and motivate each other</p>
         </div>
         <CreatePostDialog challengeId={challengeId} onPostCreated={fetchPosts} />
       </div>
@@ -94,8 +94,8 @@ export const ChallengeFeed = ({ challengeId }: ChallengeFeedProps) => {
       {posts.length === 0 ? (
         <EmptyState
           icon={<MessageCircle className="h-16 w-16" />}
-          title="Пока нет постов"
-          description="Станьте первым, кто поделится своим прогрессом! Создайте пост и мотивируйте других участников."
+          title="No posts yet"
+          description="Be the first to share your progress! Create a post and motivate other participants."
         />
       ) : (
         <div className="space-y-4">

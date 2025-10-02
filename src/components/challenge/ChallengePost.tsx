@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface ChallengePostProps {
   post: {
@@ -72,8 +72,8 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить лайк",
+        title: "Error",
+        description: "Failed to update like",
         variant: "destructive"
       });
     }
@@ -96,15 +96,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
 
       setNewComment("");
       toast({
-        title: "Успешно!",
-        description: "Комментарий добавлен"
+        title: "Success!",
+        description: "Comment added"
       });
       onUpdate();
     } catch (error) {
       console.error('Error adding comment:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось добавить комментарий",
+        title: "Error",
+        description: "Failed to add comment",
         variant: "destructive"
       });
     } finally {
@@ -124,15 +124,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
       if (error) throw error;
 
       toast({
-        title: "Успешно!",
-        description: "Пост удален"
+        title: "Success!",
+        description: "Post deleted"
       });
       onUpdate();
     } catch (error) {
       console.error('Error deleting post:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось удалить пост",
+        title: "Error",
+        description: "Failed to delete post",
         variant: "destructive"
       });
     }
@@ -150,15 +150,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
       if (error) throw error;
 
       toast({
-        title: "Успешно!",
-        description: "Комментарий удален"
+        title: "Success!",
+        description: "Comment deleted"
       });
       onUpdate();
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось удалить комментарий",
+        title: "Error",
+        description: "Failed to delete comment",
         variant: "destructive"
       });
     }
@@ -178,7 +178,7 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
             <div>
               <p className="font-semibold text-foreground">{post.profiles?.username}</p>
               <p className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ru })}
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: enUS })}
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
                   </div>
                   <p className="text-sm text-foreground">{comment.comment_text}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ru })}
+                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: enUS })}
                   </p>
                 </div>
               </div>
@@ -263,7 +263,7 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
             {/* Форма нового комментария */}
             <div className="flex gap-2">
               <Textarea
-                placeholder="Написать комментарий..."
+                placeholder="Write a comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 className="min-h-[60px]"

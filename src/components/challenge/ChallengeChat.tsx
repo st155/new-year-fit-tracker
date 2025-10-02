@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatMessage {
@@ -112,8 +112,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить сообщения",
+        title: "Error",
+        description: "Failed to load messages",
         variant: "destructive"
       });
     } finally {
@@ -140,8 +140,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось отправить сообщение",
+        title: "Error",
+        description: "Failed to send message",
         variant: "destructive"
       });
     } finally {
@@ -164,8 +164,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
             <MessageCircle className="h-5 w-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-xl">Чат челленджа</CardTitle>
-            <CardDescription>Общайтесь с участниками в реальном времени</CardDescription>
+            <CardTitle className="text-xl">Challenge Chat</CardTitle>
+            <CardDescription>Communicate with participants in real-time</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -180,8 +180,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <MessageCircle className="h-12 w-12 mb-3 opacity-50" />
-                <p>Пока нет сообщений</p>
-                <p className="text-sm">Начните общение первым!</p>
+                <p>No messages yet</p>
+                <p className="text-sm">Be the first to start the conversation!</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -203,10 +203,10 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
                       <div className={`flex flex-col gap-1 max-w-[70%] ${isCurrentUser ? 'items-end' : ''}`}>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-foreground">
-                            {isCurrentUser ? 'Вы' : message.profiles?.username}
+                            {isCurrentUser ? 'You' : message.profiles?.username}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: ru })}
+                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: enUS })}
                           </span>
                         </div>
                         
@@ -231,7 +231,7 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
           {/* Форма отправки */}
           <div className="flex gap-2">
             <Input
-              placeholder="Напишите сообщение..."
+              placeholder="Type a message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
