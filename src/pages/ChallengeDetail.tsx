@@ -163,7 +163,7 @@ const ChallengeDetail = () => {
   if (!challenge) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Челлендж не найден</p>
+        <p>Challenge not found</p>
       </div>
     );
   }
@@ -182,7 +182,7 @@ const ChallengeDetail = () => {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к челленджам
+            Back to Challenges
           </Button>
         </div>
 
@@ -200,7 +200,7 @@ const ChallengeDetail = () => {
                 </CardDescription>
               </div>
               <Badge variant="secondary" className="text-lg px-4 py-2">
-                {daysRemaining} дней осталось
+                {daysRemaining} days left
               </Badge>
             </div>
           </CardHeader>
@@ -208,22 +208,22 @@ const ChallengeDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Начало: {formatDate(challenge.start_date)}</span>
+                <span>Start: {formatDate(challenge.start_date)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Конец: {formatDate(challenge.end_date)}</span>
+                <span>End: {formatDate(challenge.end_date)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span>Участников: {participants.length}</span>
+                <span>Participants: {participants.length}</span>
               </div>
             </div>
 
             {/* Цели челленджа */}
             {goals.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">Цели челленджа:</h3>
+                <h3 className="text-lg font-semibold mb-3">Challenge Goals:</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {goals.map((goal) => (
                     <div key={goal.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -231,7 +231,7 @@ const ChallengeDetail = () => {
                       <div>
                         <div className="font-medium">{goal.goal_name}</div>
                         <div className="text-sm text-muted-foreground">
-                          Цель: {goal.target_value} {goal.target_unit}
+                          Target: {goal.target_value} {goal.target_unit}
                         </div>
                       </div>
                     </div>
@@ -247,10 +247,10 @@ const ChallengeDetail = () => {
           <CardHeader>
             <CardTitle className="text-xl text-foreground flex items-center gap-2">
               <Trophy className="h-5 w-5 text-primary" />
-              Лидерборд участников
+              Participants Leaderboard
             </CardTitle>
             <CardDescription>
-              Прогресс участников в достижении целей челленджа
+              Participant progress towards challenge goals
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -289,14 +289,14 @@ const ChallengeDetail = () => {
                         <Scale className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">
                           {participant.startWeight > 0 && participant.latestMeasurement > 0 
-                            ? `${participant.startWeight} → ${participant.latestMeasurement} кг`
-                            : 'Нет данных'
+                            ? `${participant.startWeight} → ${participant.latestMeasurement} kg`
+                            : 'No data'
                           }
                         </span>
                       </div>
                       <Progress value={participant.progress} className="h-2" />
                       <div className="text-xs text-muted-foreground mt-1">
-                        {participant.progress.toFixed(1)}% от цели
+                        {participant.progress.toFixed(1)}% of goal
                       </div>
                     </div>
                   )}
@@ -305,7 +305,7 @@ const ChallengeDetail = () => {
                   {participant.startWeight > 0 && participant.latestMeasurement > 0 && participant.startWeight > participant.latestMeasurement && (
                     <Badge variant="secondary" className="text-green-600">
                       <TrendingDown className="h-3 w-3 mr-1" />
-                      -{(participant.startWeight - participant.latestMeasurement).toFixed(1)} кг
+                      -{(participant.startWeight - participant.latestMeasurement).toFixed(1)} kg
                     </Badge>
                   )}
                 </div>
@@ -315,10 +315,10 @@ const ChallengeDetail = () => {
                 <div className="text-center py-8">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Нет участников
+                    No Participants
                   </h3>
                   <p className="text-muted-foreground">
-                    Пока никто не присоединился к этому челленджу
+                    No one has joined this challenge yet
                   </p>
                 </div>
               )}
@@ -336,8 +336,8 @@ const ChallengeDetail = () => {
           <CardContent className="pt-6">
             <Tabs defaultValue="feed" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="feed">Лента постов</TabsTrigger>
-                <TabsTrigger value="chat">Чат</TabsTrigger>
+                <TabsTrigger value="feed">Feed</TabsTrigger>
+                <TabsTrigger value="chat">Chat</TabsTrigger>
               </TabsList>
               
               <TabsContent value="feed">

@@ -15,16 +15,16 @@ interface BreadcrumbItem {
 }
 
 const routeLabels: Record<string, string> = {
-  "/": "Главная",
-  "/dashboard": "Дашборд",
-  "/challenges": "Челленджи",
-  "/challenges/create": "Создать челлендж",
-  "/progress": "Прогресс",
-  "/profile": "Профиль",
-  "/goals/create": "Создать цель",
-  "/fitness-data": "Фитнес данные",
-  "/integrations": "Интеграции",
-  "/trainer-dashboard": "Управление клиентами",
+  "/": "Home",
+  "/dashboard": "Dashboard",
+  "/challenges": "Challenges",
+  "/challenges/create": "Create Challenge",
+  "/progress": "Progress",
+  "/profile": "Profile",
+  "/goals/create": "Create Goal",
+  "/fitness-data": "Fitness Data",
+  "/integrations": "Integrations",
+  "/trainer-dashboard": "Client Management",
 };
 
 export function Breadcrumbs() {
@@ -37,7 +37,7 @@ export function Breadcrumbs() {
   }
 
   const breadcrumbItems: BreadcrumbItem[] = [
-    { label: "Главная", href: "/" },
+    { label: "Home", href: "/" },
   ];
 
   let currentPath = "";
@@ -53,13 +53,13 @@ export function Breadcrumbs() {
       if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name) || /^\d+$/.test(name)) {
         const parentPath = currentPath.replace(`/${name}`, "");
         const parentLabel = routeLabels[parentPath];
-        if (parentLabel === "Челленджи") {
-          label = "Детали челленджа";
+        if (parentLabel === "Challenges") {
+          label = "Challenge Details";
         } else if (parentPath.includes("/goals")) {
-          label = "Редактировать цель";
+          label = "Edit Goal";
         }
       } else {
-        // Капитализируем название
+        // Capitalize name
         label = name.charAt(0).toUpperCase() + name.slice(1);
       }
     }

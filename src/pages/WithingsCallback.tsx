@@ -33,13 +33,13 @@ import { useToast } from '@/hooks/use-toast';
 
       if (oauthError) {
         setStatus('error');
-        setErrorMessage(`Ошибка авторизации: ${oauthError}`);
+        setErrorMessage(`Authorization error: ${oauthError}`);
         return;
       }
 
       if (!code) {
         setStatus('error');
-        setErrorMessage('Отсутствует код авторизации');
+        setErrorMessage('Missing authorization code');
         return;
       }
 
@@ -76,8 +76,8 @@ import { useToast } from '@/hooks/use-toast';
         setStatus('success');
 
         toast({
-          title: 'Withings подключен!',
-          description: 'Авторизация прошла успешно. Запускаем синхронизацию данных...',
+          title: 'Withings Connected!',
+          description: 'Authorization successful. Starting data synchronization...',
         });
 
         // После успешного колбэка можно перенаправить в интеграции
@@ -112,17 +112,17 @@ import { useToast } from '@/hooks/use-toast';
   const getStatusText = () => {
     switch (status) {
       case 'pending':
-        return 'Подготовка к подключению...';
+        return 'Preparing to connect...';
       case 'authenticating':
-        return 'Авторизация в Withings...';
+        return 'Authenticating with Withings...';
       case 'syncing':
-        return 'Синхронизация данных...';
+        return 'Syncing data...';
       case 'success':
-        return 'Готово!';
+        return 'Done!';
       case 'error':
-        return 'Произошла ошибка';
+        return 'An error occurred';
       default:
-        return 'Ожидание...';
+        return 'Waiting...';
     }
   };
 
@@ -144,7 +144,7 @@ import { useToast } from '@/hooks/use-toast';
           <div className="flex justify-center mb-4">
             {getStatusIcon()}
           </div>
-          <CardTitle className="text-xl">Подключение Withings</CardTitle>
+          <CardTitle className="text-xl">Connecting Withings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
@@ -153,7 +153,7 @@ import { useToast } from '@/hooks/use-toast';
 
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Прогресс</span>
+              <span>Progress</span>
               <span>{getProgressValue()}%</span>
             </div>
             <Progress value={getProgressValue()} className="w-full" />
@@ -168,10 +168,10 @@ import { useToast } from '@/hooks/use-toast';
           {status === 'success' && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-3">
-                Перенаправление через 1.5 секунды...
+                Redirecting in 1.5 seconds...
               </p>
               <Button onClick={() => navigate('/integrations')} className="w-full">
-                Перейти к интеграциям
+                Go to Integrations
               </Button>
             </div>
           )}
@@ -179,10 +179,10 @@ import { useToast } from '@/hooks/use-toast';
           {status === 'error' && (
             <div className="flex gap-2">
               <Button onClick={() => navigate('/integrations')} variant="outline" className="flex-1">
-                Назад
+                Back
               </Button>
               <Button onClick={() => window.location.reload()} className="flex-1">
-                Повторить
+                Retry
               </Button>
             </div>
           )}

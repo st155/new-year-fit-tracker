@@ -120,17 +120,17 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Настройки</DropdownMenuLabel>
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/integrations')}>
-                <span>Интеграции с устройствами</span>
+                <span>Device Integrations</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <span>Профиль</span>
+                <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/privacy-policy')}>
-                <span>Конфиденциальность</span>
+                <span>Privacy</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

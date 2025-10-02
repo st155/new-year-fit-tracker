@@ -30,7 +30,7 @@ const WhoopCallback = () => {
 
       if (error) {
         setStatus('error');
-        setErrorMessage(`Ошибка авторизации: ${error}`);
+        setErrorMessage(`Authorization error: ${error}`);
         return;
       }
 
@@ -43,7 +43,7 @@ const WhoopCallback = () => {
           setProgress(25);
         } else {
           setStatus('error');
-          setErrorMessage('Отсутствует код авторизации или состояние');
+          setErrorMessage('Missing authorization code or state');
           return;
         }
       }
@@ -88,8 +88,8 @@ const WhoopCallback = () => {
           setSyncResult(data.syncResult);
 
           toast({
-            title: 'Whoop подключен!',
-            description: 'Ваши данные Whoop успешно синхронизированы.',
+            title: 'Whoop Connected!',
+            description: 'Your Whoop data has been successfully synchronized.',
           });
 
           // Перенаправляем на главную страницу где видны новые данные
@@ -104,8 +104,8 @@ const WhoopCallback = () => {
           setStatus('success');
           
           toast({
-            title: 'Whoop подключен!',
-            description: 'Авторизация прошла успешно. Войдите в приложение для синхронизации данных.',
+            title: 'Whoop Connected!',
+            description: 'Authorization successful. Log in to the app to sync your data.',
           });
 
           // Перенаправляем на страницу входа
@@ -144,17 +144,17 @@ const WhoopCallback = () => {
   const getStatusText = () => {
     switch (status) {
       case 'pending':
-        return 'Подготовка к подключению...';
+        return 'Preparing to connect...';
       case 'authenticating':
-        return 'Авторизация в Whoop...';
+        return 'Authenticating with Whoop...';
       case 'syncing':
-        return 'Синхронизация данных...';
+        return 'Syncing data...';
       case 'success':
-        return 'Данные успешно синхронизированы!';
+        return 'Data successfully synchronized!';
       case 'error':
-        return 'Произошла ошибка';
+        return 'An error occurred';
       default:
-        return 'Ожидание...';
+        return 'Waiting...';
     }
   };
 
@@ -176,7 +176,7 @@ const WhoopCallback = () => {
           <div className="flex justify-center mb-4">
             {getStatusIcon()}
           </div>
-          <CardTitle className="text-xl">Подключение Whoop</CardTitle>
+          <CardTitle className="text-xl">Connecting Whoop</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
@@ -185,7 +185,7 @@ const WhoopCallback = () => {
 
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Прогресс</span>
+              <span>Progress</span>
               <span>{getProgressValue()}%</span>
             </div>
             <Progress value={getProgressValue()} className="w-full" />
@@ -199,18 +199,18 @@ const WhoopCallback = () => {
 
           {status === 'success' && syncResult && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
-              <p className="text-green-800 font-medium">Синхронизировано:</p>
+              <p className="text-green-800 font-medium">Synchronized:</p>
               <ul className="text-green-700 text-sm space-y-1">
                 {syncResult.recoveryRecords > 0 && (
-                  <li>• Восстановление: {syncResult.recoveryRecords} записей</li>
+                  <li>• Recovery: {syncResult.recoveryRecords} records</li>
                 )}
                 {syncResult.sleepRecords > 0 && (
-                  <li>• Сон: {syncResult.sleepRecords} записей</li>
+                  <li>• Sleep: {syncResult.sleepRecords} records</li>
                 )}
                 {syncResult.workoutRecords > 0 && (
-                  <li>• Тренировки: {syncResult.workoutRecords} записей</li>
+                  <li>• Workouts: {syncResult.workoutRecords} records</li>
                 )}
-                <li className="font-medium">Всего сохранено: {syncResult.totalSaved} метрик</li>
+                <li className="font-medium">Total saved: {syncResult.totalSaved} metrics</li>
               </ul>
             </div>
           )}
@@ -218,10 +218,10 @@ const WhoopCallback = () => {
           {status === 'success' && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-3">
-                Перенаправление через 2 секунды...
+                Redirecting in 2 seconds...
               </p>
               <Button onClick={() => navigate('/fitness-data?view=day')} className="w-full">
-                Посмотреть данные
+                View Data
               </Button>
             </div>
           )}
@@ -229,10 +229,10 @@ const WhoopCallback = () => {
           {status === 'error' && (
             <div className="flex gap-2">
               <Button onClick={() => navigate('/integrations')} variant="outline" className="flex-1">
-                Назад к интеграциям
+                Back to Integrations
               </Button>
               <Button onClick={() => window.location.reload()} className="flex-1">
-                Повторить
+                Retry
               </Button>
             </div>
           )}

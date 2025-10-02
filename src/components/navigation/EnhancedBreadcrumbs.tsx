@@ -4,16 +4,16 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Home, ChevronRight } from "lucide-react"
 
 const routeLabels: Record<string, string> = {
-  '/': 'Главная',
-  '/dashboard': 'Дашборд',
-  '/challenges': 'Челленджи',
-  '/challenges/create': 'Создание челленджа',
-  '/progress': 'Прогресс',
-  '/profile': 'Профиль',
-  '/goals/create': 'Создание цели',
-  '/fitness-data': 'Фитнес данные',
-  '/integrations': 'Интеграции',
-  '/trainer-dashboard': 'Тренерский дашборд'
+  '/': 'Home',
+  '/dashboard': 'Dashboard',
+  '/challenges': 'Challenges',
+  '/challenges/create': 'Create Challenge',
+  '/progress': 'Progress',
+  '/profile': 'Profile',
+  '/goals/create': 'Create Goal',
+  '/fitness-data': 'Fitness Data',
+  '/integrations': 'Integrations',
+  '/trainer-dashboard': 'Trainer Dashboard'
 }
 
 export function EnhancedBreadcrumbs() {
@@ -46,7 +46,7 @@ export function EnhancedBreadcrumbs() {
             <BreadcrumbItem>
               <BreadcrumbLink href="/" className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Home className="h-4 w-4" />
-                <span className="sr-only">Главная</span>
+                <span className="sr-only">Home</span>
               </BreadcrumbLink>
             </BreadcrumbItem>
             
