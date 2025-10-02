@@ -2,7 +2,7 @@ import { Lightbulb } from "lucide-react";
 
 export function GlobalTicker() {
   const tips = [
-    "Следуй своей программе и помчуй свой рост!",
+    "Follow your plan and track your growth!",
     "Consistency is key to achieving your fitness goals!",
     "Stay hydrated and track your progress daily!",
     "Push yourself, because no one else is going to do it for you!",
@@ -16,7 +16,7 @@ export function GlobalTicker() {
           <div className="flex gap-12 animate-[marquee_30s_linear_infinite] whitespace-nowrap">
             {[...tips, ...tips].map((tip, i) => (
               <span key={i} className="text-sm text-foreground/80 text-glow">
-                Совет дня: {tip}
+                Pro tip: {tip}
               </span>
             ))}
           </div>
