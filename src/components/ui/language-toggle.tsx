@@ -56,7 +56,8 @@ export function LanguageToggle() {
         aria-label="Toggle language"
         variant="ghost"
         size="icon"
-        className="relative isolate z-[100] pointer-events-auto touch-auto"
+        className="relative isolate z-[100000] pointer-events-auto touch-auto"
+        style={{ pointerEvents: 'auto' }}
         onPointerDown={(e) => {
           console.log("LanguageToggle: pointerdown", { target: (e.target as HTMLElement)?.tagName });
         }}
