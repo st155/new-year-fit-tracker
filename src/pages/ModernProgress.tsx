@@ -42,34 +42,43 @@ export default function ModernProgress() {
     if (!user) return;
 
     try {
-      // Determine period
       const periodDays = selectedPeriod === '1M' ? 30 : selectedPeriod === '3M' ? 90 : selectedPeriod === '6M' ? 180 : 365;
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - periodDays);
 
-      // Active participations
-      const { data: participations } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id')
-        .eq('user_id', user.id);
+      // OPTIMIZED: Parallel fetch of all data
+      const [participationsRes, goalsRes, userGoalsRes, summaryRes, userMetricsRes] = await Promise.all([
+        supabase.from('challenge_participants').select('challenge_id').eq('user_id', user.id),
+        supabase.from('goals').select('*').eq('is_personal', false),
+        supabase.from('goals').select('*').eq('user_id', user.id),
+        supabase.from('daily_health_summary')
+          .select('steps, active_calories, heart_rate_avg, sleep_hours, distance_km, exercise_minutes')
+          .eq('user_id', user.id)
+          .gte('date', periodStart.toISOString().split('T')[0])
+          .order('date', { ascending: false })
+          .limit(1),
+        supabase.from('user_metrics')
+          .select(`id, metric_name, metric_category, unit, metric_values(value, measurement_date)`)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+      ]);
 
-      if (!participations || participations.length === 0) {
+      if (!participationsRes.data || participationsRes.data.length === 0) {
         setMetrics([]);
         return;
       }
 
-      // Goals for those challenges (challenge level goals)
-      const { data: goals } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('is_personal', false)
-        .in('challenge_id', participations.map(p => p.challenge_id));
+      const challengeIds = participationsRes.data.map(p => p.challenge_id);
+      let uniqueGoals = Array.from(
+        new Map(
+          (goalsRes.data || [])
+            .filter((g: any) => g.challenge_id && challengeIds.includes(g.challenge_id))
+            .map((g: any) => [g.goal_name, g])
+        ).values()
+      );
 
-      // Deduplicate by goal_name
-      let uniqueGoals: any[] = Array.from(new Map((goals || []).map((g: any) => [g.goal_name, g])).values());
-
-      // Ensure core challenge goals present
-      const coreGoals: Array<{ name: string; value: number; unit: string }> = [
+      // Add core goals as placeholders
+      const coreGoals = [
         { name: 'Подтягивания', value: 17, unit: 'раз' },
         { name: 'Жим лёжа', value: 90, unit: 'кг' },
         { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
@@ -80,8 +89,8 @@ export default function ModernProgress() {
         { name: 'Процент жира', value: 11, unit: '%' },
       ];
 
-      const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()))
-      const placeholders: any[] = coreGoals
+      const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
+      const placeholders = coreGoals
         .filter(cg => !existing.has(cg.name.toLowerCase()))
         .map(cg => ({
           id: `synthetic-${cg.name}`,
@@ -94,14 +103,28 @@ export default function ModernProgress() {
 
       uniqueGoals = [...uniqueGoals, ...placeholders];
 
-      // Fetch user personal goals and index by name for mapping
-      const { data: userGoals } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', user.id);
-      const userGoalsByName = new Map((userGoals || []).map((g: any) => [((g.goal_name || '') as string).toLowerCase(), g]));
+      const userGoalsByName = new Map((userGoalsRes.data || []).map((g: any) => [(g.goal_name || '').toLowerCase(), g]));
 
-      // Build metric cards
+      // OPTIMIZED: Single batch fetch of all measurements
+      const goalIds = uniqueGoals
+        .map((g: any) => g.id)
+        .filter((id: string) => !String(id).startsWith('synthetic-'));
+
+      const { data: allMeasurements } = await supabase
+        .from('measurements')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('goal_id', goalIds)
+        .gte('measurement_date', periodStart.toISOString().split('T')[0])
+        .order('measurement_date', { ascending: false });
+
+      // Index measurements by goal_id for fast lookup
+      const measurementsByGoal: Record<string, any[]> = {};
+      (allMeasurements || []).forEach(m => {
+        if (!measurementsByGoal[m.goal_id]) measurementsByGoal[m.goal_id] = [];
+        measurementsByGoal[m.goal_id].push(m);
+      });
+
       const goalMapping: { [key: string]: { id: string; color: string } } = {
         'подтягивания': { id: 'pullups', color: '#A855F7' },
         'жим лёжа': { id: 'bench', color: '#EF4444' },
@@ -143,37 +166,21 @@ export default function ModernProgress() {
 
       const metricsArray: MetricCard[] = [];
 
+      // Build metrics from goals
       for (const goal of uniqueGoals) {
         const normalized = (goal.goal_name || '').toLowerCase();
         const mapping = goalMapping[normalized];
         const id = mapping?.id ?? detectId(normalized);
         const color = mapping?.color ?? detectColor(normalized);
 
-        let currentValue = 0;
-        let trend = 0;
-
-        // Prefer user's personal goal with the same name (for measurements and targets)
         const userGoal = userGoalsByName.get(normalized);
         const realGoalId = userGoal?.id ?? goal.id;
 
-        // Fetch measurements for this goal: within period, then fallback to latest ever
-        let measurements: any[] = [];
-        if (!String(realGoalId).startsWith('synthetic-')) {
-          const { data: inPeriod } = await supabase
-            .from('measurements')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('goal_id', realGoalId)
-            .gte('measurement_date', periodStart.toISOString().split('T')[0])
-            .order('measurement_date', { ascending: false });
-          measurements = inPeriod || [];
+        let currentValue = 0;
+        let trend = 0;
 
-          // No fallback outside the selected period: if no data in range, show 0 for this period
-          // This makes the period filter actually reflect the selected timeframe
-
-        }
-
-        if (measurements && measurements.length > 0) {
+        const measurements = measurementsByGoal[realGoalId] || [];
+        if (measurements.length > 0) {
           currentValue = Number(measurements[0].value);
           if (measurements.length > 1) {
             const oldValue = Number(measurements[measurements.length - 1].value);
@@ -199,23 +206,8 @@ export default function ModernProgress() {
         });
       }
 
-      // Add general tracker metrics from daily summary and user metrics to exceed 8 cards
-      const [{ data: summaryRows }, { data: userMetrics }] = await Promise.all([
-        supabase
-          .from('daily_health_summary')
-          .select('steps, active_calories, heart_rate_avg, sleep_hours, distance_km, exercise_minutes')
-          .eq('user_id', user.id)
-          .gte('date', periodStart.toISOString().split('T')[0])
-          .order('date', { ascending: false })
-          .limit(1),
-        supabase
-          .from('user_metrics')
-          .select(`id, metric_name, metric_category, unit, metric_values(value, measurement_date)`) 
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-      ]);
-      const summary = summaryRows?.[0];
-
+      // Add summary metrics
+      const summary = summaryRes.data?.[0];
       if (summary?.steps != null) {
         metricsArray.push({
           id: 'steps',
@@ -272,45 +264,43 @@ export default function ModernProgress() {
         });
       }
 
-      // Also add additional active user metrics beyond challenge goals
-      if (userMetrics && Array.isArray(userMetrics)) {
-        const existingTitles = new Set(metricsArray.map(m => m.title.toLowerCase()));
-        const getColorFor = (name: string) => {
-          const n = name.toLowerCase();
-          if (n.includes('strain')) return '#F97316';
-          if (n.includes('sleep')) return '#6366F1';
-          if (n.includes('vo2')) return '#3B82F6';
-          if (n.includes('calories')) return '#EF4444';
-          if (n.includes('steps')) return '#22C55E';
-          if (n.includes('hrv')) return '#8B5CF6';
-          if (n.includes('resting') || n.includes('heart')) return '#F43F5E';
-          if (n.includes('distance')) return '#06B6D4';
-          return '#64748B';
-        };
+      // Add user metrics
+      const existingTitles = new Set(metricsArray.map(m => m.title.toLowerCase()));
+      const getColorFor = (name: string) => {
+        const n = name.toLowerCase();
+        if (n.includes('strain')) return '#F97316';
+        if (n.includes('sleep')) return '#6366F1';
+        if (n.includes('vo2')) return '#3B82F6';
+        if (n.includes('calories')) return '#EF4444';
+        if (n.includes('steps')) return '#22C55E';
+        if (n.includes('hrv')) return '#8B5CF6';
+        if (n.includes('resting') || n.includes('heart')) return '#F43F5E';
+        if (n.includes('distance')) return '#06B6D4';
+        return '#64748B';
+      };
 
-        userMetrics.forEach((m: any) => {
-          const values = (m.metric_values || []) as Array<{ value: number; measurement_date: string }>;
-          if (!values.length) return;
-          const latest = values.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime())[0];
-          const title = m.metric_name;
-          if (existingTitles.has(title.toLowerCase())) return;
+      (userMetricsRes.data || []).forEach((m: any) => {
+        const values = (m.metric_values || []) as Array<{ value: number; measurement_date: string }>;
+        if (!values.length) return;
+        const latest = values.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime())[0];
+        const title = m.metric_name;
+        if (existingTitles.has(title.toLowerCase())) return;
 
-          const color = getColorFor(title);
-          const id = title.toLowerCase().replace(/\s+/g, '-');
-          metricsArray.push({
-            id,
-            title,
-            value: Number(latest.value) || 0,
-            unit: m.unit || '',
-            target: 0,
-            targetUnit: m.unit || '',
-            trend: 0,
-            borderColor: color,
-            progressColor: color,
-            chart: title.toLowerCase().includes('vo2')
-          });
+        const color = getColorFor(title);
+        const id = title.toLowerCase().replace(/\s+/g, '-');
+        metricsArray.push({
+          id,
+          title,
+          value: Number(latest.value) || 0,
+          unit: m.unit || '',
+          target: 0,
+          targetUnit: m.unit || '',
+          trend: 0,
+          borderColor: color,
+          progressColor: color,
+          chart: title.toLowerCase().includes('vo2')
         });
-      }
+      });
 
       setMetrics(metricsArray);
     } catch (error) {
