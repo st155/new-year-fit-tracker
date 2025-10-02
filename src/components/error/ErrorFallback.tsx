@@ -3,7 +3,6 @@ import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useState } from 'react';
 
@@ -14,12 +13,11 @@ interface ErrorFallbackProps {
 }
 
 export function ErrorFallback({ error, errorInfo, resetError }: ErrorFallbackProps) {
-  const navigate = useNavigate();
   const [showDetails, setShowDetails] = useState(false);
 
   const handleGoHome = () => {
     resetError();
-    navigate('/');
+    window.location.href = '/';
   };
 
   const handleReload = () => {
