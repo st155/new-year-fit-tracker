@@ -73,7 +73,7 @@ const Challenges = () => {
     onRefresh: async () => {
       await fetchChallenges();
     },
-    successMessage: 'Челленджи обновлены',
+    successMessage: 'Challenges updated',
     showToast: false,
   });
 
@@ -127,8 +127,8 @@ const Challenges = () => {
         });
         
         toast({
-          title: "Уже участвуете",
-          description: "Вы уже участвуете в этом челлендже"
+          title: "Already Participating",
+          description: "You are already participating in this challenge"
         });
         return;
       }
@@ -146,14 +146,14 @@ const Challenges = () => {
       setUserChallenges(prev => [...prev, challengeId]);
       
       toast({
-        title: "Успешно!",
-        description: "Вы присоединились к челленджу"
+        title: "Success!",
+        description: "You have joined the challenge"
       });
     } catch (error) {
       console.error('Error joining challenge:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось присоединиться к челленджу",
+        title: "Error",
+        description: "Failed to join the challenge",
         variant: "destructive"
       });
     } finally {
@@ -162,7 +162,7 @@ const Challenges = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   const getDaysRemaining = (endDate: string) => {
@@ -188,8 +188,8 @@ const Challenges = () => {
         <div className="space-y-8 pt-6 px-4">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-foreground">Челленджи</h1>
-              <p className="text-muted-foreground">Загрузка активных челленджей...</p>
+              <h1 className="text-3xl font-bold text-foreground">Challenges</h1>
+              <p className="text-muted-foreground">Loading active challenges...</p>
             </div>
           </div>
           <ChallengesListSkeleton count={4} />
@@ -213,10 +213,10 @@ const Challenges = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-2">
-                Доступные челленджи
+                Available Challenges
               </h1>
               <p className="text-muted-foreground">
-                Присоединяйтесь к фитнес-вызовам и достигайте целей вместе с сообществом
+                Join fitness challenges and achieve goals together with the community
               </p>
             </div>
             
@@ -225,7 +225,7 @@ const Challenges = () => {
               className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 text-white shadow-lg"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Создать челлендж
+              Create Challenge
             </Button>
           </div>
         </div>
@@ -237,7 +237,7 @@ const Challenges = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск челленджей..."
+              placeholder="Search challenges..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -250,9 +250,9 @@ const Challenges = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все челленджи</SelectItem>
-              <SelectItem value="available">Доступные</SelectItem>
-              <SelectItem value="joined">Мои челленджи</SelectItem>
+              <SelectItem value="all">All Challenges</SelectItem>
+              <SelectItem value="available">Available</SelectItem>
+              <SelectItem value="joined">My Challenges</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -260,10 +260,10 @@ const Challenges = () => {
         {filteredChallenges.length === 0 && challenges.length > 0 ? (
           <EmptyState
             icon={<Search className="h-16 w-16" />}
-            title="Ничего не найдено"
-            description="Попробуйте изменить критерии поиска или фильтры."
+            title="Nothing Found"
+            description="Try changing your search criteria or filters."
             action={{
-              label: "Очистить фильтры",
+              label: "Clear Filters",
               onClick: () => {
                 setSearchTerm("");
                 setStatusFilter("all");
@@ -273,10 +273,10 @@ const Challenges = () => {
         ) : challenges.length === 0 ? (
           <EmptyState
             icon={<Trophy className="h-16 w-16" />}
-            title="Пока нет челленджей"
-            description="Станьте первым, кто создаст челлендж! Приглашайте друзей к соревнованиям и достигайте целей вместе."
+            title="No Challenges Yet"
+            description="Be the first to create a challenge! Invite friends to compete and achieve goals together."
             action={{
-              label: "Создать первый челлендж",
+              label: "Create First Challenge",
               onClick: () => navigate('/challenges/create')
             }}
           />
@@ -333,14 +333,14 @@ const Challenges = () => {
                       <Target className={`h-4 w-4 ${color.text}`} />
                     </div>
                     <span className={`font-semibold ${color.text}`}>
-                      Осталось дней: {daysRemaining}
+                      Days left: {daysRemaining}
                     </span>
                   </div>
                   
                   {isParticipant && (
                     <Badge variant="default" className={`w-fit ${color.icon} ${color.text} border-0`}>
                       <Users className="h-3 w-3 mr-1" />
-                      Участвую
+                      Participating
                     </Badge>
                   )}
                 </CardContent>
@@ -352,12 +352,12 @@ const Challenges = () => {
                     className={`flex-1 ${color.text} border-current hover:bg-current/10`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Подробнее
+                    Details
                   </Button>
                   
                   {isParticipant ? (
                     <Button disabled className="flex-1 bg-muted">
-                      Уже участвую
+                      Already Participating
                     </Button>
                   ) : (
                     <Button
@@ -368,10 +368,10 @@ const Challenges = () => {
                       {joiningChallenge === challenge.id ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Присоединяюсь...
+                          Joining...
                         </>
                       ) : (
-                        'Присоединиться'
+                        'Join'
                       )}
                     </Button>
                   )}
@@ -386,10 +386,10 @@ const Challenges = () => {
           <div className="text-center py-12">
             <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              Нет доступных челленджей
+              No Available Challenges
             </h3>
             <p className="text-muted-foreground">
-              В данный момент нет активных челленджей. Загляните позже!
+              There are no active challenges at the moment. Check back later!
             </p>
           </div>
         )}
