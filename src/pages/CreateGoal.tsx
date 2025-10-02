@@ -30,39 +30,39 @@ const CreateGoalPage = () => {
   const goalTypes = [
     { 
       value: 'strength', 
-      label: 'Силовые упражнения', 
+      label: 'Strength Exercises', 
       color: 'bg-primary/10 text-primary border-primary/20', 
-      description: 'Подтягивания, отжимания, приседания, жим лежа',
-      examples: ['Подтягивания - 50 раз', 'Отжимания - 100 раз', 'Приседания - 200 раз']
+      description: 'Pull-ups, push-ups, squats, bench press',
+      examples: ['Pull-ups - 50 reps', 'Push-ups - 100 reps', 'Squats - 200 reps']
     },
     { 
       value: 'cardio', 
-      label: 'Кардио', 
+      label: 'Cardio', 
       color: 'bg-accent/10 text-accent border-accent/20', 
-      description: 'Бег, велосипед, плавание, ходьба',
-      examples: ['Бег - 10 км', 'Велосипед - 50 км', 'Плавание - 2 км']
+      description: 'Running, cycling, swimming, walking',
+      examples: ['Running - 10 km', 'Cycling - 50 km', 'Swimming - 2 km']
     },
     { 
       value: 'endurance', 
-      label: 'Выносливость', 
+      label: 'Endurance', 
       color: 'bg-success/10 text-success border-success/20', 
-      description: 'Длительность тренировок, количество кругов',
-      examples: ['Тренировка - 90 мин', 'Круги - 20 кругов', 'Планка - 10 мин']
+      description: 'Workout duration, number of rounds',
+      examples: ['Workout - 90 min', 'Rounds - 20 rounds', 'Plank - 10 min']
     },
     { 
       value: 'body_composition', 
-      label: 'Состав тела', 
+      label: 'Body Composition', 
       color: 'bg-secondary/10 text-secondary-foreground border-secondary/20', 
-      description: 'Вес, процент жира, объемы тела',
-      examples: ['Вес - 70 кг', 'Процент жира - 15 %', 'Талия - 80 см']
+      description: 'Weight, body fat %, body measurements',
+      examples: ['Weight - 70 kg', 'Body fat - 15 %', 'Waist - 80 cm']
     }
   ];
 
   const createGoal = async () => {
     if (!goalForm.goal_name || !goalForm.target_value || !goalForm.target_unit) {
       toast({
-        title: "Ошибка",
-        description: "Заполните все обязательные поля",
+        title: "Error",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
@@ -107,16 +107,16 @@ const CreateGoalPage = () => {
       if (error) throw error;
 
       toast({
-        title: "Успех!",
-        description: "Цель создана успешно",
+        title: "Success!",
+        description: "Goal created successfully",
       });
 
       navigate('/progress');
     } catch (error) {
       console.error('Error creating goal:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать цель",
+        title: "Error",
+        description: "Failed to create goal",
         variant: "destructive",
       });
     } finally {
@@ -137,14 +137,14 @@ const CreateGoalPage = () => {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к прогрессу
+            Back to Progress
           </Button>
           
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Создать новую цель
+            Create New Goal
           </h1>
           <p className="text-muted-foreground mt-2">
-            Установите персональную цель для отслеживания прогресса
+            Set a personal goal to track your progress
           </p>
         </div>
 
@@ -153,23 +153,23 @@ const CreateGoalPage = () => {
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                Информация о цели
+                Goal Information
               </h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="goal_name">Название цели *</Label>
+                <Label htmlFor="goal_name">Goal Name *</Label>
                 <Input
                   id="goal_name"
-                  placeholder="Например: Подтягивания"
+                  placeholder="Example: Pull-ups"
                   value={goalForm.goal_name}
                   onChange={(e) => setGoalForm(prev => ({ ...prev, goal_name: e.target.value }))}
                 />
               </div>
 
               <div>
-                <Label htmlFor="goal_type">Тип цели *</Label>
+                <Label htmlFor="goal_type">Goal Type *</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {goalTypes.map((type) => (
                     <Card
@@ -201,7 +201,7 @@ const CreateGoalPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="target_value">Целевое значение *</Label>
+                  <Label htmlFor="target_value">Target Value *</Label>
                   <Input
                     id="target_value"
                     type="number"
@@ -212,10 +212,10 @@ const CreateGoalPage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="target_unit">Единица измерения *</Label>
+                  <Label htmlFor="target_unit">Unit of Measurement *</Label>
                   <Input
                     id="target_unit"
-                    placeholder="кг, раз, км, мин"
+                    placeholder="kg, reps, km, min"
                     value={goalForm.target_unit}
                     onChange={(e) => setGoalForm(prev => ({ ...prev, target_unit: e.target.value }))}
                   />
@@ -223,10 +223,10 @@ const CreateGoalPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="notes">Описание (опционально)</Label>
+                <Label htmlFor="notes">Description (optional)</Label>
                 <Textarea
                   id="notes"
-                  placeholder="Добавьте описание или заметки к цели..."
+                  placeholder="Add description or notes to the goal..."
                   value={goalForm.notes}
                   onChange={(e) => setGoalForm(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
@@ -237,15 +237,15 @@ const CreateGoalPage = () => {
             {selectedGoalType && (
               <Card className="bg-muted/30 border-dashed">
                 <CardContent className="p-4">
-                  <h4 className="font-medium mb-2">Предварительный просмотр:</h4>
+                  <h4 className="font-medium mb-2">Preview:</h4>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold">{goalForm.goal_name || 'Название цели'}</span>
+                    <span className="font-semibold">{goalForm.goal_name || 'Goal Name'}</span>
                     <Badge className={selectedGoalType.color}>
                       {selectedGoalType.label}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Цель: {goalForm.target_value || '0'} {goalForm.target_unit || 'единиц'}
+                    Target: {goalForm.target_value || '0'} {goalForm.target_unit || 'units'}
                   </p>
                 </CardContent>
               </Card>
@@ -257,7 +257,7 @@ const CreateGoalPage = () => {
                 onClick={() => navigate('/progress')}
                 className="flex-1"
               >
-                Отмена
+                Cancel
               </Button>
               <Button
                 onClick={createGoal}
@@ -267,12 +267,12 @@ const CreateGoalPage = () => {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Создание...
+                    Creating...
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Создать цель
+                    Create Goal
                   </>
                 )}
               </Button>
