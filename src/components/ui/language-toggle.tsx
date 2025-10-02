@@ -57,13 +57,28 @@ export function LanguageToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-[10000] pointer-events-auto">
-        <DropdownMenuItem onClick={() => changeLanguage('en')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            console.log('LanguageToggle: select en');
+            changeLanguage('en');
+          }}
+        >
           🇺🇸 English
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => changeLanguage('ru')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            console.log('LanguageToggle: select ru');
+            changeLanguage('ru');
+          }}
+        >
           🇷🇺 Русский
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => changeLanguage('bg')}>
+        <DropdownMenuItem
+          onSelect={() => {
+            console.log('LanguageToggle: select bg');
+            changeLanguage('bg');
+          }}
+        >
           🇧🇬 Български
         </DropdownMenuItem>
       </DropdownMenuContent>
