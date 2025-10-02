@@ -1,11 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -36,15 +31,15 @@ export function LanguageToggle() {
   }, []);
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <Button
           ref={btnRef}
           type="button"
           aria-label="Toggle language"
           variant="ghost"
           size="icon"
-          className="relative z-[9999] pointer-events-auto touch-auto [&_svg]:pointer-events-auto"
+          className="relative z-[9999] pointer-events-auto touch-auto"
           onPointerDown={(e) => {
             console.log("LanguageToggle: pointerdown", { target: (e.target as HTMLElement)?.tagName });
           }}
@@ -55,33 +50,36 @@ export function LanguageToggle() {
           <Globe className="h-[1.2rem] w-[1.2rem]" />
           <span className="sr-only">Toggle language</span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="z-[10000] pointer-events-auto">
-        <DropdownMenuItem
-          onSelect={() => {
+      </PopoverTrigger>
+      <PopoverContent align="end" className="z-[10000] pointer-events-auto p-1 w-44">
+        <button
+          className="block w-full text-left px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground"
+          onClick={() => {
             console.log('LanguageToggle: select en');
             changeLanguage('en');
           }}
         >
           🇺🇸 English
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={() => {
+        </button>
+        <button
+          className="block w-full text-left px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground"
+          onClick={() => {
             console.log('LanguageToggle: select ru');
             changeLanguage('ru');
           }}
         >
           🇷🇺 Русский
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={() => {
+        </button>
+        <button
+          className="block w-full text-left px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground"
+          onClick={() => {
             console.log('LanguageToggle: select bg');
             changeLanguage('bg');
           }}
         >
           🇧🇬 Български
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </button>
+      </PopoverContent>
+    </Popover>
   );
 }
