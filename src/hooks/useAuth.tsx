@@ -33,8 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Handle successful OAuth login
         if (event === 'SIGNED_IN' && session?.user) {
           toast({
-            title: "Добро пожаловать!",
-            description: `Вы вошли как ${session.user.email}`,
+            title: "Welcome!",
+            description: `Signed in as ${session.user.email}`,
           });
 
           // Deferred Whoop sync after login
@@ -53,8 +53,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   if (!error) {
                     localStorage.removeItem('whoop_pending_code');
                     toast({
-                      title: 'Whoop подключен!',
-                      description: 'Данные Whoop синхронизируются.'
+                      title: 'Whoop connected!',
+                      description: 'Whoop data is syncing.'
                     });
                     setTimeout(() => { window.location.assign('/progress'); }, 500);
                   } else {
@@ -99,33 +99,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       if (error.message.includes('already registered')) {
         toast({
-          title: "Пользователь уже зарегистрирован",
-          description: "Попробуйте войти в систему вместо регистрации",
+          title: "User already registered",
+          description: "Try signing in instead of signing up",
           variant: "destructive"
         });
       } else if (error.message.includes('Invalid email')) {
         toast({
-          title: "Неверный email",
-          description: "Проверьте правильность введенного email адреса",
+          title: "Invalid email",
+          description: "Please check your email address",
           variant: "destructive"
         });
       } else if (error.message.includes('Password')) {
         toast({
-          title: "Слишком простой пароль",
-          description: "Пароль должен содержать минимум 6 символов",
+          title: "Password too simple",
+          description: "Password must be at least 6 characters",
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Ошибка регистрации",
+          title: "Registration error",
           description: error.message,
           variant: "destructive"
         });
       }
     } else {
       toast({
-        title: "Проверьте почту",
-        description: "Мы отправили вам ссылку для подтверждения. Если письмо не пришло, проверьте папку спам."
+        title: "Check your email",
+        description: "We sent you a confirmation link. If you don't see it, check your spam folder."
       });
     }
 
@@ -140,7 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (error) {
       toast({
-        title: "Ошибка входа",
+        title: "Sign in error",
         description: error.message,
         variant: "destructive"
       });
@@ -178,19 +178,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             error.message.includes('signature is invalid') ||
             error.message.includes('Invalid token')) {
           toast({
-            title: "Ошибка конфигурации OAuth",
-            description: "Необходимо настроить Site URL и Redirect URLs в панели Supabase. Обратитесь к администратору.",
+            title: "OAuth Configuration Error",
+            description: "Need to configure Site URL and Redirect URLs in Supabase panel. Contact administrator.",
             variant: "destructive"
           });
         } else if (error.message.includes('Network')) {
           toast({
-            title: "Ошибка сети",
-            description: "Проверьте подключение к интернету и повторите попытку",
+            title: "Network error",
+            description: "Check your internet connection and try again",
             variant: "destructive"
           });
         } else {
           toast({
-            title: "Ошибка входа через Google",
+            title: "Google sign in error",
             description: error.message,
             variant: "destructive"
           });
@@ -203,8 +203,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err: any) {
       console.error('Google auth catch error:', err);
       toast({
-        title: "Ошибка входа через Google", 
-        description: "Попробуйте позже или используйте вход по email",
+        title: "Google sign in error", 
+        description: "Try again later or use email sign in",
         variant: "destructive"
       });
       return { error: err };
@@ -216,14 +216,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (error) {
       toast({
-        title: "Ошибка выхода",
+        title: "Sign out error",
         description: error.message,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "До свидания!",
-        description: "Вы успешно вышли из системы"
+        title: "Goodbye!",
+        description: "You have successfully signed out"
       });
     }
 

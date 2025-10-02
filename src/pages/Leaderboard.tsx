@@ -120,12 +120,12 @@ const LeaderboardPage = () => {
           const measurements = measurementsData.data || [];
           points += measurements.length * 20;
 
-          const name = participant.profiles?.full_name || participant.profiles?.username || 'Пользователь';
+          const name = participant.profiles?.full_name || participant.profiles?.username || 'User';
           const isCurrentUser = participant.user_id === user.id;
 
           return {
             userId: participant.user_id,
-            name: isCurrentUser ? 'Вы' : name,
+            name: isCurrentUser ? 'You' : name,
             avatarUrl: participant.profiles?.avatar_url,
             points,
             trend: Math.floor(Math.random() * 30) - 10,
@@ -158,7 +158,7 @@ const LeaderboardPage = () => {
     onRefresh: async () => {
       await refetch();
     },
-    successMessage: 'Leaderboard обновлён',
+    successMessage: 'Leaderboard updated',
     showToast: false,
   });
 
@@ -273,7 +273,7 @@ const LeaderboardPage = () => {
               </Avatar>
               <div>
                 <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
-                <p className="text-white/80 text-base font-medium">{userEntry.points} очков</p>
+                <p className="text-white/80 text-base font-medium">{userEntry.points} points</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-green-500/90 px-4 py-2 rounded-full">
@@ -298,7 +298,7 @@ const LeaderboardPage = () => {
               </Avatar>
               <div>
                 <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
-                <p className="text-white/80 text-sm">{userEntry.points} очков</p>
+                <p className="text-white/80 text-sm">{userEntry.points} points</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-green-500/90 px-3 py-1.5 rounded-full">
@@ -323,7 +323,7 @@ const LeaderboardPage = () => {
               </Avatar>
               <div>
                 <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
-                <p className="text-sm text-muted-foreground">{userEntry.points} очков</p>
+                <p className="text-sm text-muted-foreground">{userEntry.points} points</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-green-500/80 px-3 py-1 rounded-full">
@@ -347,7 +347,7 @@ const LeaderboardPage = () => {
           <h1 className="text-4xl font-bold tracking-tight">TEAM LEADERBOARD</h1>
         </div>
         <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
-          Отслеживайте прогресс команды и соревнуйтесь за место на вершина! {fromCache && '(кэш)'}
+          Track your team's progress and compete for the top spot! {fromCache && '(cached)'}
         </p>
         <Button
           variant="ghost"
@@ -409,7 +409,7 @@ const LeaderboardPage = () => {
         <div className="text-center py-12">
           <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
-            Нет данных по участникам челленджа
+            No challenge participants data available
           </p>
         </div>
       )}
@@ -433,7 +433,7 @@ const LeaderboardPage = () => {
                     #{selectedUser?.rank}
                   </Badge>
                   <Badge variant="outline" className="text-lg">
-                    {selectedUser?.points} очков
+                    {selectedUser?.points} points
                   </Badge>
                 </div>
               </div>
