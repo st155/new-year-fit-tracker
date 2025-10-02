@@ -49,7 +49,7 @@ export function LanguageToggle() {
           <span className="sr-only">Toggle language</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="z-[100]">
+      <DropdownMenuContent align="end" className="z-[10000] pointer-events-auto">
         <DropdownMenuItem onClick={() => changeLanguage('en')}>
           🇺🇸 English
         </DropdownMenuItem>
