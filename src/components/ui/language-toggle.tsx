@@ -13,11 +13,18 @@ export function LanguageToggle() {
   const { i18n } = useTranslation();
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    console.log("LanguageToggle: changeLanguage", lng);
+  const changeLanguage = async (lng: string) => {
+    try {
+      await i18n.changeLanguage(lng);
+      localStorage.setItem('i18nextLng', lng);
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = lng;
+      }
+      console.log("LanguageToggle: changeLanguage", lng);
+    } catch (e) {
+      console.error('LanguageToggle: changeLanguage failed', e);
+    }
   };
-
   useEffect(() => {
     const btn = btnRef.current;
     if (!btn) return;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Target, ArrowLeft, Plus, Save } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Target, ArrowLeft, Save } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +11,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FitnessCard } from "@/components/ui/fitness-card";
-
-
+import { useTranslation } from "react-i18next";
 const CreateGoalPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [loading, setLoading] = useState(false);
   const [goalForm, setGoalForm] = useState({
@@ -28,33 +28,33 @@ const CreateGoalPage = () => {
   });
 
   const goalTypes = [
-    { 
-      value: 'strength', 
-      label: 'Strength Exercises', 
-      color: 'bg-primary/10 text-primary border-primary/20', 
-      description: 'Pull-ups, push-ups, squats, bench press',
-      examples: ['Pull-ups - 50 reps', 'Push-ups - 100 reps', 'Squats - 200 reps']
+    {
+      value: 'strength',
+      label: t('createGoalPage.goalTypes.strength.label'),
+      color: 'bg-primary/10 text-primary border-primary/20',
+      description: t('createGoalPage.goalTypes.strength.desc'),
+      examples: []
     },
-    { 
-      value: 'cardio', 
-      label: 'Cardio', 
-      color: 'bg-accent/10 text-accent border-accent/20', 
-      description: 'Running, cycling, swimming, walking',
-      examples: ['Running - 10 km', 'Cycling - 50 km', 'Swimming - 2 km']
+    {
+      value: 'cardio',
+      label: t('createGoalPage.goalTypes.cardio.label'),
+      color: 'bg-accent/10 text-accent border-accent/20',
+      description: t('createGoalPage.goalTypes.cardio.desc'),
+      examples: []
     },
-    { 
-      value: 'endurance', 
-      label: 'Endurance', 
-      color: 'bg-success/10 text-success border-success/20', 
-      description: 'Workout duration, number of rounds',
-      examples: ['Workout - 90 min', 'Rounds - 20 rounds', 'Plank - 10 min']
+    {
+      value: 'endurance',
+      label: t('createGoalPage.goalTypes.endurance.label'),
+      color: 'bg-success/10 text-success border-success/20',
+      description: t('createGoalPage.goalTypes.endurance.desc'),
+      examples: []
     },
-    { 
-      value: 'body_composition', 
-      label: 'Body Composition', 
-      color: 'bg-secondary/10 text-secondary-foreground border-secondary/20', 
-      description: 'Weight, body fat %, body measurements',
-      examples: ['Weight - 70 kg', 'Body fat - 15 %', 'Waist - 80 cm']
+    {
+      value: 'body_composition',
+      label: t('createGoalPage.goalTypes.bodyComposition.label'),
+      color: 'bg-secondary/10 text-secondary-foreground border-secondary/20',
+      description: t('createGoalPage.goalTypes.bodyComposition.desc'),
+      examples: []
     }
   ];
 
@@ -137,14 +137,14 @@ const CreateGoalPage = () => {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Progress
+            {t('createGoalPage.backToProgress')}
           </Button>
           
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Create New Goal
+            {t('createGoalPage.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Set a personal goal to track your progress
+            {t('createGoalPage.subtitle')}
           </p>
         </div>
 
@@ -153,23 +153,23 @@ const CreateGoalPage = () => {
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                Goal Information
+                {t('createGoalPage.sectionInfo')}
               </h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="goal_name">Goal Name *</Label>
+                <Label htmlFor="goal_name">{t('createGoalPage.fields.goalName')}</Label>
                 <Input
                   id="goal_name"
-                  placeholder="Example: Pull-ups"
+                  placeholder={t('createGoalPage.fields.goalNamePlaceholder')}
                   value={goalForm.goal_name}
                   onChange={(e) => setGoalForm(prev => ({ ...prev, goal_name: e.target.value }))}
                 />
               </div>
 
               <div>
-                <Label htmlFor="goal_type">Goal Type *</Label>
+                <Label htmlFor="goal_type">{t('createGoalPage.fields.goalType')}</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                   {goalTypes.map((type) => (
                     <Card
@@ -201,7 +201,7 @@ const CreateGoalPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="target_value">Target Value *</Label>
+                  <Label htmlFor="target_value">{t('createGoalPage.fields.targetValue')}</Label>
                   <Input
                     id="target_value"
                     type="number"
@@ -212,10 +212,10 @@ const CreateGoalPage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="target_unit">Unit of Measurement *</Label>
+                  <Label htmlFor="target_unit">{t('createGoalPage.fields.unit')}</Label>
                   <Input
                     id="target_unit"
-                    placeholder="kg, reps, km, min"
+                    placeholder={t('createGoalPage.fields.unitPlaceholder')}
                     value={goalForm.target_unit}
                     onChange={(e) => setGoalForm(prev => ({ ...prev, target_unit: e.target.value }))}
                   />
@@ -223,10 +223,10 @@ const CreateGoalPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="notes">Description (optional)</Label>
+                <Label htmlFor="notes">{t('createGoalPage.fields.description')}</Label>
                 <Textarea
                   id="notes"
-                  placeholder="Add description or notes to the goal..."
+                  placeholder={t('createGoalPage.fields.descriptionPlaceholder')}
                   value={goalForm.notes}
                   onChange={(e) => setGoalForm(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
@@ -237,15 +237,15 @@ const CreateGoalPage = () => {
             {selectedGoalType && (
               <Card className="bg-muted/30 border-dashed">
                 <CardContent className="p-4">
-                  <h4 className="font-medium mb-2">Preview:</h4>
+                  <h4 className="font-medium mb-2">{t('createGoalPage.preview.title')}</h4>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold">{goalForm.goal_name || 'Goal Name'}</span>
+                    <span className="font-semibold">{goalForm.goal_name || t('createGoalPage.preview.defaultGoalName')}</span>
                     <Badge className={selectedGoalType.color}>
                       {selectedGoalType.label}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Target: {goalForm.target_value || '0'} {goalForm.target_unit || 'units'}
+                    {t('createGoalPage.preview.targetPrefix')} {goalForm.target_value || '0'} {goalForm.target_unit || 'units'}
                   </p>
                 </CardContent>
               </Card>
@@ -257,7 +257,7 @@ const CreateGoalPage = () => {
                 onClick={() => navigate('/progress')}
                 className="flex-1"
               >
-                Cancel
+                {t('createGoalPage.actions.cancel')}
               </Button>
               <Button
                 onClick={createGoal}
@@ -267,12 +267,12 @@ const CreateGoalPage = () => {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
+                    {t('createGoalPage.actions.creating')}
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Create Goal
+                    {t('createGoalPage.actions.create')}
                   </>
                 )}
               </Button>

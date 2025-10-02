@@ -197,5 +197,44 @@
     "created": "Successfully created",
     "connected": "Successfully connected",
     "synced": "Successfully synced"
+  },
+  "createGoalPage": {
+    "backToProgress": "Back to Progress",
+    "title": "Create New Goal",
+    "subtitle": "Set a personal goal to track your progress",
+    "sectionInfo": "Goal Information",
+    "fields": {
+      "goalName": "Goal Name *",
+      "goalNamePlaceholder": "Example: Pull-ups",
+      "goalType": "Goal Type *",
+      "targetValue": "Target Value *",
+      "unit": "Unit of Measurement *",
+      "unitPlaceholder": "kg, reps, km, min",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Add description or notes to the goal..."
+    },
+    "preview": {
+      "title": "Preview:",
+      "defaultGoalName": "Goal Name",
+      "targetPrefix": "Target:"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Goal",
+      "creating": "Creating..."
+    },
+    "toasts": {
+      "errorTitle": "Error",
+      "errorRequired": "Please fill in all required fields",
+      "successTitle": "Success!",
+      "successCreated": "Goal created successfully",
+      "errorCreate": "Failed to create goal"
+    },
+    "goalTypes": {
+      "strength": { "label": "Strength Exercises", "desc": "Pull-ups, push-ups, squats, bench press" },
+      "cardio": { "label": "Cardio", "desc": "Running, cycling, swimming, walking" },
+      "endurance": { "label": "Endurance", "desc": "Workout duration, number of rounds" },
+      "bodyComposition": { "label": "Body Composition", "desc": "Weight, body fat %, body measurements" }
+    }
   }
 }
