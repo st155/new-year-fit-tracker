@@ -161,6 +161,11 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
         title: "Успешно!",
         description: "Аватар обновлен",
       })
+
+      // Reload page to show updated avatar
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (error) {
       console.error('Error uploading avatar:', error)
       toast({
