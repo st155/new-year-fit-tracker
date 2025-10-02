@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
+import { useAuth } from "@/hooks/useAuth"
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string
@@ -26,6 +27,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels)
@@ -154,6 +156,16 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
         .from('progress-photos')
         .getPublicUrl(filePath)
 
+      // Persist avatar URL to user profile before reload
+      if (user?.id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: data.publicUrl })
+          .eq('user_id', user.id);
+        if (profileError) throw profileError;
+      }
+
+      // Update parent state for immediate UI feedback
       onAvatarUpdate(data.publicUrl)
       setPreviewUrl(null)
 
@@ -162,7 +174,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
         description: "Аватар обновлен",
       })
 
-      // Reload page to show updated avatar
+      // Reload page to show updated avatar from DB
       setTimeout(() => {
         window.location.reload()
       }, 500)
