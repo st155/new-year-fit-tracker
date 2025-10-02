@@ -24,7 +24,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/30 bg-card/30 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border/30 bg-card/30 backdrop-blur-sm sticky top-0 z-[9999]">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
@@ -35,7 +35,7 @@ const Landing = () => {
             </span>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 pointer-events-auto relative isolate z-[60]">
             <LanguageToggle />
             <Button 
               onClick={handleGetStarted}
@@ -125,7 +125,7 @@ const Landing = () => {
                       <span className="text-sm text-muted-foreground">%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">полненькей</span>
+                      <span className="text-xs text-muted-foreground">overweight</span>
                       <Badge variant="destructive" className="text-xs">-3%</Badge>
                     </div>
                   </CardContent>
@@ -136,10 +136,10 @@ const Landing = () => {
                     <div className="text-sm font-medium text-muted-foreground mb-2">WEIGHT</div>
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-2xl font-bold text-foreground">72.0</span>
-                      <span className="text-sm text-muted-foreground">кг</span>
+                      <span className="text-sm text-muted-foreground">kg</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">по ланзей</span>
+                      <span className="text-xs text-muted-foreground">on track</span>
                       <Badge variant="destructive" className="text-xs">-2%</Badge>
                     </div>
                   </CardContent>
@@ -152,7 +152,7 @@ const Landing = () => {
                       <span className="text-2xl font-bold text-foreground">52.1</span>
                       <span className="text-sm text-muted-foreground">ML/KG/MIN</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">71 записей</span>
+                    <span className="text-xs text-muted-foreground">71 records</span>
                   </CardContent>
                 </Card>
 
@@ -164,7 +164,7 @@ const Landing = () => {
                       <span className="text-sm text-muted-foreground">MIN</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">34 попыток</span>
+                      <span className="text-xs text-muted-foreground">34 attempts</span>
                       <Badge variant="destructive" className="text-xs">-2%</Badge>
                     </div>
                   </CardContent>
@@ -207,7 +207,7 @@ const Landing = () => {
                {
                 icon: Trophy,
                 title: "Team Leaderboard",
-                description: "Отслеживайте прогресс команды и соревнуйтесь за место на вершине.",
+                description: "Track team progress and compete for the top spot.",
                 color: "text-accent",
                 link: "/leaderboard"
               },
