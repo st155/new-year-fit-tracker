@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, memo } from "react";
+import { useProfile } from "@/contexts/ProfileContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,31 +21,11 @@ interface TopNavigationProps {
   userRole?: string;
 }
 
-export function TopNavigation({ userName, userRole }: TopNavigationProps) {
+export const TopNavigation = memo(function TopNavigation({ userName, userRole }: TopNavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [notificationCount, setNotificationCount] = useState(1);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        setProfile(data);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
+  const { profile } = useProfile();
+  const [notificationCount] = useState(1);
 
   const navItems = [
     { type: 'home' as const, path: "/dashboard", label: "Home" },
@@ -194,4 +173,4 @@ export function TopNavigation({ userName, userRole }: TopNavigationProps) {
       </div>
     </header>
   );
-}
+});

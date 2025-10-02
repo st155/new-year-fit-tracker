@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useLocation } from "react-router-dom";
 import { NewDashboardHeader } from "./new-dashboard-header";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -15,10 +16,10 @@ import {
   LazyQuickActions 
 } from "./lazy-dashboard";
 
-export function NewDashboard() {
+export const NewDashboard = memo(function NewDashboard() {
   const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const location = useLocation();
-  const [profile, setProfile] = useState<any>(null);
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -32,21 +33,11 @@ export function NewDashboard() {
     enabled: true,
   });
 
-  const fetchUserData = async () => {
+  const fetchChallengeData = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Загружаем профиль пользователя
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      setProfile(profileData);
-
-      // Загружаем активный челлендж пользователя
       const { data: participantData } = await supabase
         .from('challenge_participants')
         .select(`
@@ -69,16 +60,15 @@ export function NewDashboard() {
         setActiveChallenge(activeChallenge?.challenges);
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error fetching challenge data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUserData();
+    fetchChallengeData();
 
-    // Обновляем время каждую минуту для актуального счетчика
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
@@ -86,7 +76,7 @@ export function NewDashboard() {
     return () => clearInterval(timer);
   }, [user]);
 
-  if (loading) {
+  if (loading || profileLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -114,7 +104,7 @@ export function NewDashboard() {
   const userRole = profile?.trainer_role ? 'trainer' : 'participant';
 
   const handleRefresh = async () => {
-    await fetchUserData();
+    await fetchChallengeData();
   };
 
   return (
@@ -157,4 +147,4 @@ export function NewDashboard() {
       </div>
     </PullToRefresh>
   );
-}
+});
