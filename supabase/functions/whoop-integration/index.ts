@@ -826,20 +826,16 @@ async function syncWhoopData(userId: string, accessToken: string) {
       // Продолжаем без body measurement данных
     }
 
-    // Пытаемся получить данные циклов для VO2Max (могут содержать cardio data)
+    // Получаем данные циклов (содержат дневной Strain и иногда VO2Max)
     let cycleData = null;
-    if (ENABLE_VO2MAX) {
-      try {
-        cycleData = await fetchWhoopData(accessToken, 'cycle', {
-          start: startDate,
-          end: endDate,
-        });
-        console.log('Cycle data received:', JSON.stringify(cycleData?.records?.slice(0,2), null, 2));
-      } catch (error: any) {
-        console.log('Cycle endpoint error:', error.message);
-      }
-    } else {
-      console.log('VO2Max sync disabled by feature flag');
+    try {
+      cycleData = await fetchWhoopData(accessToken, 'cycle', {
+        start: startDate,
+        end: endDate,
+      });
+      console.log('Cycle data received:', JSON.stringify(cycleData?.records?.slice(0,2), null, 2));
+    } catch (error: any) {
+      console.log('Cycle endpoint error:', error.message);
     }
 
     // Сохраняем данные в базу
@@ -861,7 +857,7 @@ async function syncWhoopData(userId: string, accessToken: string) {
       savedRecords += await saveBodyData(userId, [bodyData]);
     }
 
-    if (ENABLE_VO2MAX && cycleData?.records) {
+    if (cycleData?.records) {
       savedRecords += await saveCycleData(userId, cycleData.records);
     }
 

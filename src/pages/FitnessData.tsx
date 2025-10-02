@@ -214,8 +214,12 @@ export default function FitnessData() {
       const latestValue = sortedValues[0]?.value;
       const previousValue = sortedValues[1]?.value;
 
+      const currentValue = (selectedFilter === 'today' && metric.metric_name === 'Workout Strain')
+        ? sum
+        : (selectedFilter === 'today' ? latestValue : avgValue);
+
       metricValues[metric.metric_name] = {
-        current: selectedFilter === 'today' ? latestValue : avgValue,
+        current: currentValue,
         previous: previousValue,
         category: metric.metric_category,
         unit: metric.unit
@@ -233,8 +237,8 @@ export default function FitnessData() {
     const cards: MetricCard[] = [];
 
     // Strain (always show if available)
-    if ((metricValues['Workout Strain'] || metricValues['Day Strain'])) {
-      const strain = metricValues['Workout Strain'] || metricValues['Day Strain'];
+    if ((metricValues['Day Strain'] || metricValues['Workout Strain'])) {
+      const strain = metricValues['Day Strain'] || metricValues['Workout Strain'];
       const value = Math.round(strain.current * 10) / 10;
       cards.push({
         name: 'Нагрузка',
