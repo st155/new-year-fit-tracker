@@ -40,6 +40,7 @@ const Integrations = lazy(() => import("./pages/Integrations"));
 const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
 const MetricDetail = lazy(() => import("./pages/MetricDetail"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 // Callbacks - load on demand
 const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
@@ -187,6 +188,13 @@ const App = () => {
               <ProtectedRoute>
                 <ModernAppLayout>
                   <TrainerDashboard />
+                </ModernAppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <ModernAppLayout>
+                  <Notifications />
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
