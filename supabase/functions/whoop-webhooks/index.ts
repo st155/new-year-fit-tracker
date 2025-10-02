@@ -170,26 +170,39 @@ async function getUserToken(whoopUserId: string): Promise<{ access_token: string
         // Пытаемся проверить каждый токен, чтобы найти того пользователя, которому принадлежит этот Whoop ID
         for (const token of tokens) {
           try {
+            console.log(`Checking token for user ${token.user_id}...`);
             const userInfo = await fetch('https://api.prod.whoop.com/developer/v2/user/profile/basic', {
               headers: { 'Authorization': `Bearer ${token.access_token}` }
             });
             
             if (userInfo.ok) {
               const info = await userInfo.json();
-              if (info.user_id && info.user_id.toString() === whoopUserId) {
-                console.log(`Found matching user ${token.user_id} for Whoop ID ${whoopUserId}, creating mapping`);
+              console.log(`Got Whoop user info for token: user_id=${info.user_id}, email=${info.email}`);
+              
+              if (info.user_id && info.user_id.toString() === whoopUserId.toString()) {
+                console.log(`✅ Found matching user ${token.user_id} for Whoop ID ${whoopUserId}, creating mapping`);
                 
                 // Создаем маппинг
-                await supabase
+                const { error: mappingInsertError } = await supabase
                   .from('whoop_user_mapping')
                   .upsert({
                     user_id: token.user_id,
-                    whoop_user_id: whoopUserId,
+                    whoop_user_id: whoopUserId.toString(),
                     updated_at: new Date().toISOString()
-                  });
+                  }, { onConflict: 'user_id' });
+                
+                if (mappingInsertError) {
+                  console.error('Error creating mapping:', mappingInsertError);
+                } else {
+                  console.log(`✅ Mapping created successfully`);
+                }
                 
                 return { access_token: token.access_token, user_id: token.user_id };
+              } else {
+                console.log(`Whoop user_id mismatch: ${info.user_id} !== ${whoopUserId}`);
               }
+            } else {
+              console.log(`Token check failed with status ${userInfo.status}`);
             }
           } catch (e) {
             console.log(`Token check failed for user ${token.user_id}:`, e);
@@ -197,6 +210,7 @@ async function getUserToken(whoopUserId: string): Promise<{ access_token: string
         }
       }
       
+      console.error(`❌ No token found for Whoop user ${whoopUserId}`);
       return null;
     }
 
