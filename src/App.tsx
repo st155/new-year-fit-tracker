@@ -85,7 +85,7 @@ const App = () => {
               <Sonner />
               <InstallPrompt />
               <UpdatePrompt />
-              <Suspense fallback={<PageLoader message="Загрузка..." />}>
+              <Suspense fallback={<PageLoader message="Loading..." />}>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />

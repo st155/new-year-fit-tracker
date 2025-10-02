@@ -1,4 +1,4 @@
-// Система достижений
+// Achievement System
 
 export type AchievementCategory = 'streak' | 'milestone' | 'workout' | 'social' | 'elite';
 
@@ -17,13 +17,13 @@ export interface Achievement {
   glowColor: string;
 }
 
-// Определения всех достижений
+// All achievement definitions
 export const ACHIEVEMENTS: Achievement[] = [
   // Streak Achievements
   {
     id: 'streak_7',
-    title: 'Неделя силы',
-    description: 'Тренировки 7 дней подряд',
+    title: 'Week of Power',
+    description: 'Train 7 days in a row',
     category: 'streak',
     icon: '🔥',
     rarity: 'common',
@@ -34,8 +34,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'streak_30',
-    title: 'Железная воля',
-    description: 'Тренировки 30 дней подряд',
+    title: 'Iron Will',
+    description: 'Train 30 days in a row',
     category: 'streak',
     icon: '⚡',
     rarity: 'rare',
@@ -46,8 +46,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'streak_100',
-    title: 'Легенда',
-    description: 'Тренировки 100 дней подряд',
+    title: 'Legend',
+    description: 'Train 100 days in a row',
     category: 'streak',
     icon: '👑',
     rarity: 'legendary',
@@ -60,8 +60,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Milestone Achievements
   {
     id: 'weight_lost_5',
-    title: 'Первые результаты',
-    description: 'Сбросить 5 кг веса',
+    title: 'First Results',
+    description: 'Lose 5 kg',
     category: 'milestone',
     icon: '🎯',
     rarity: 'common',
@@ -72,8 +72,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'weight_lost_10',
-    title: 'Трансформация',
-    description: 'Сбросить 10 кг веса',
+    title: 'Transformation',
+    description: 'Lose 10 kg',
     category: 'milestone',
     icon: '🏆',
     rarity: 'rare',
@@ -84,8 +84,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'bodyfat_15',
-    title: 'Пресс виден',
-    description: 'Достичь 15% жира',
+    title: 'Abs Visible',
+    description: 'Reach 15% body fat',
     category: 'milestone',
     icon: '💪',
     rarity: 'epic',
@@ -96,8 +96,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'bodyfat_10',
-    title: 'Рельеф',
-    description: 'Достичь 10% жира',
+    title: 'Shredded',
+    description: 'Reach 10% body fat',
     category: 'milestone',
     icon: '🔱',
     rarity: 'legendary',
@@ -110,8 +110,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Workout Achievements
   {
     id: 'workouts_10',
-    title: 'Начинающий атлет',
-    description: 'Завершить 10 тренировок',
+    title: 'Beginner Athlete',
+    description: 'Complete 10 workouts',
     category: 'workout',
     icon: '🏃',
     rarity: 'common',
@@ -122,8 +122,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'workouts_50',
-    title: 'Опытный боец',
-    description: 'Завершить 50 тренировок',
+    title: 'Experienced Fighter',
+    description: 'Complete 50 workouts',
     category: 'workout',
     icon: '🥊',
     rarity: 'rare',
@@ -134,8 +134,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'workouts_100',
-    title: 'Мастер спорта',
-    description: 'Завершить 100 тренировок',
+    title: 'Sports Master',
+    description: 'Complete 100 workouts',
     category: 'workout',
     icon: '🎖️',
     rarity: 'epic',
@@ -146,8 +146,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'calories_10k',
-    title: 'Печка',
-    description: 'Сжечь 10,000 калорий',
+    title: 'Calorie Burner',
+    description: 'Burn 10,000 calories',
     category: 'workout',
     icon: '🔥',
     rarity: 'rare',
@@ -160,8 +160,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Elite Achievements
   {
     id: 'pullups_20',
-    title: 'Сила спины',
-    description: 'Выполнить 20 подтягиваний',
+    title: 'Back Strength',
+    description: 'Do 20 pull-ups',
     category: 'elite',
     icon: '💎',
     rarity: 'epic',
@@ -172,8 +172,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'vo2max_50',
-    title: 'Аэробная машина',
-    description: 'Достичь VO2Max 50+',
+    title: 'Aerobic Machine',
+    description: 'Reach VO2Max 50+',
     category: 'elite',
     icon: '🌟',
     rarity: 'legendary',
@@ -184,8 +184,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'recovery_perfect_week',
-    title: 'Мастер восстановления',
-    description: 'Неделя с восстановлением 90+%',
+    title: 'Recovery Master',
+    description: 'Week with 90+% recovery',
     category: 'elite',
     icon: '✨',
     rarity: 'legendary',
@@ -216,10 +216,10 @@ export const getRarityBadgeVariant = (rarity: Achievement['rarity']): 'default' 
 
 export const getCategoryName = (category: AchievementCategory): string => {
   switch (category) {
-    case 'streak': return 'Серии';
-    case 'milestone': return 'Вехи';
-    case 'workout': return 'Тренировки';
-    case 'social': return 'Социальные';
-    case 'elite': return 'Элитные';
+    case 'streak': return 'Streaks';
+    case 'milestone': return 'Milestones';
+    case 'workout': return 'Workouts';
+    case 'social': return 'Social';
+    case 'elite': return 'Elite';
   }
 };
