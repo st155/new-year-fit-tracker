@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Globe, Settings } from "lucide-react";
+import { Bell, Settings } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 
 interface TopNavigationProps {
   userName?: string;
@@ -88,19 +89,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
           </Button>
 
           {/* Language/Region */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 w-10 p-0 hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
-          >
-            <Globe 
-              className="h-4 w-4 transition-all duration-300 icon-spin-hover" 
-              style={{
-                color: '#3b82f6',
-                filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.5))'
-              }}
-            />
-          </Button>
+          <LanguageToggle />
 
           {/* Settings */}
           <DropdownMenu>
