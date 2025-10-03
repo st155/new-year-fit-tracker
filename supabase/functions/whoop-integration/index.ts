@@ -1150,67 +1150,102 @@ async function saveBodyData(userId: string, records: any[]) {
 
     console.log('Processing body measurement record:', JSON.stringify(record, null, 2));
 
-    // Рост
+    // Рост - статический параметр, проверяем существующую запись
     if (record.height_meter !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Рост', 'body', 'м', 'whoop');
       
-      const { error } = await supabase
+      // Проверяем, есть ли уже запись
+      const { data: existing } = await supabase
         .from('metric_values')
-        .upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: record.height_meter,
-          measurement_date: new Date().toISOString().split('T')[0],
-          external_id: `whoop_height`,
-          source_data: record,
-        }, {
-          onConflict: 'metric_id,measurement_date,external_id'
-        });
+        .select('id, value')
+        .eq('user_id', userId)
+        .eq('metric_id', metricId)
+        .eq('external_id', 'whoop_height')
+        .maybeSingle();
+      
+      // Обновляем только если значение изменилось
+      if (!existing || existing.value !== record.height_meter) {
+        const { error } = await supabase
+          .from('metric_values')
+          .upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: record.height_meter,
+            measurement_date: new Date().toISOString().split('T')[0],
+            external_id: 'whoop_height',
+            source_data: record,
+          }, {
+            onConflict: 'user_id,metric_id,external_id',
+            ignoreDuplicates: false
+          });
 
-      if (!error) savedCount++;
-      else console.error('Error saving height:', error);
+        if (!error) savedCount++;
+        else console.error('Error saving height:', error);
+      }
     }
 
-    // Вес
+    // Вес - статический параметр
     if (record.weight_kilogram !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Вес', 'body', 'кг', 'whoop');
       
-      const { error } = await supabase
+      const { data: existing } = await supabase
         .from('metric_values')
-        .upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: record.weight_kilogram,
-          measurement_date: new Date().toISOString().split('T')[0],
-          external_id: `whoop_weight`,
-          source_data: record,
-        }, {
-          onConflict: 'metric_id,measurement_date,external_id'
-        });
+        .select('id, value')
+        .eq('user_id', userId)
+        .eq('metric_id', metricId)
+        .eq('external_id', 'whoop_weight')
+        .maybeSingle();
+      
+      if (!existing || existing.value !== record.weight_kilogram) {
+        const { error } = await supabase
+          .from('metric_values')
+          .upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: record.weight_kilogram,
+            measurement_date: new Date().toISOString().split('T')[0],
+            external_id: 'whoop_weight',
+            source_data: record,
+          }, {
+            onConflict: 'user_id,metric_id,external_id',
+            ignoreDuplicates: false
+          });
 
-      if (!error) savedCount++;
-      else console.error('Error saving weight:', error);
+        if (!error) savedCount++;
+        else console.error('Error saving weight:', error);
+      }
     }
 
-    // Максимальный пульс
+    // Максимальный пульс - статический параметр
     if (record.max_heart_rate !== undefined) {
       const metricId = await getOrCreateMetric(userId, 'Максимальный пульс', 'cardio', 'bpm', 'whoop');
       
-      const { error } = await supabase
+      const { data: existing } = await supabase
         .from('metric_values')
-        .upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: record.max_heart_rate,
-          measurement_date: new Date().toISOString().split('T')[0],
-          external_id: `whoop_max_hr`,
-          source_data: record,
-        }, {
-          onConflict: 'metric_id,measurement_date,external_id'
-        });
+        .select('id, value')
+        .eq('user_id', userId)
+        .eq('metric_id', metricId)
+        .eq('external_id', 'whoop_max_hr')
+        .maybeSingle();
+      
+      if (!existing || existing.value !== record.max_heart_rate) {
+        const { error } = await supabase
+          .from('metric_values')
+          .upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: record.max_heart_rate,
+            measurement_date: new Date().toISOString().split('T')[0],
+            external_id: 'whoop_max_hr',
+            source_data: record,
+          }, {
+            onConflict: 'user_id,metric_id,external_id',
+            ignoreDuplicates: false
+          });
 
-      if (!error) savedCount++;
-      else console.error('Error saving max heart rate:', error);
+        if (!error) savedCount++;
+        else console.error('Error saving max heart rate:', error);
+      }
     }
 
     // Height (рост)
