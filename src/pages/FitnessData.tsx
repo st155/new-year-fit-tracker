@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
 import { IntegrationsCard } from "@/components/dashboard/integrations-card";
+import { DateNavigator } from "@/components/dashboard/DateNavigator";
 
 interface MetricCard {
   name: string;
@@ -514,91 +515,13 @@ export default function FitnessData() {
           FITNESS TRACKER DATA
         </h1>
         
-        {/* Filter Pills with Navigation */}
-        <div className="flex items-center gap-2">
-          {/* Previous Period Arrow */}
-          <button
-            onClick={handlePreviousPeriod}
-            className="p-2 rounded-full transition-all duration-300 hover:bg-white/10"
-            style={{
-              color: 'white',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-
-          {/* Filter Pills */}
-          <div className="flex gap-2 flex-1">
-            <button
-              onClick={() => {
-                setSelectedFilter('today');
-                setDateOffset(0);
-              }}
-              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
-              style={{
-                background: selectedFilter === 'today' 
-                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                  : 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                border: '2px solid',
-                borderColor: selectedFilter === 'today' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-                boxShadow: selectedFilter === 'today' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
-              }}
-            >
-              {selectedFilter === 'today' ? getDateLabel() : 'Today'}
-            </button>
-            <button
-              onClick={() => {
-                setSelectedFilter('week');
-                setDateOffset(0);
-              }}
-              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
-              style={{
-                background: selectedFilter === 'week' 
-                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                  : 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                border: '2px solid',
-                borderColor: selectedFilter === 'week' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-                boxShadow: selectedFilter === 'week' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
-              }}
-            >
-              {selectedFilter === 'week' ? getDateLabel() : 'Week'}
-            </button>
-            <button
-              onClick={() => {
-                setSelectedFilter('month');
-                setDateOffset(0);
-              }}
-              className="px-6 py-2 rounded-full text-sm font-medium transition-all duration-300"
-              style={{
-                background: selectedFilter === 'month' 
-                  ? 'linear-gradient(135deg, #F97316, #FB923C)'
-                  : 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                border: '2px solid',
-                borderColor: selectedFilter === 'month' ? '#F97316' : 'rgba(255, 255, 255, 0.1)',
-                boxShadow: selectedFilter === 'month' ? '0 0 20px rgba(249, 115, 22, 0.5)' : 'none'
-              }}
-            >
-              {selectedFilter === 'month' ? getDateLabel() : 'Month'}
-            </button>
-          </div>
-
-          {/* Next Period Arrow */}
-          <button
-            onClick={handleNextPeriod}
-            disabled={dateOffset >= 0}
-            className="p-2 rounded-full transition-all duration-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{
-              color: 'white',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
+        <DateNavigator
+          selectedFilter={selectedFilter}
+          dateOffset={dateOffset}
+          onFilterChange={setSelectedFilter}
+          onDateOffsetChange={setDateOffset}
+          getDateLabel={getDateLabel}
+        />
       </div>
 
       {/* Integrations Status */}
