@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
+import { IntegrationsCard } from "@/components/dashboard/integrations-card";
 
 interface MetricCard {
   name: string;
@@ -600,8 +601,13 @@ export default function FitnessData() {
         </div>
       </div>
 
+      {/* Integrations Status */}
+      <div className="mb-4">
+        <IntegrationsCard />
+      </div>
+
       {/* Hero Card: Readiness - More Compact */}
-      <div 
+      <div
         className="relative rounded-3xl p-6 mb-4 transition-all duration-300"
         style={{
           background: 'rgba(0, 0, 0, 0.3)',
