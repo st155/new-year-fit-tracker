@@ -16,6 +16,7 @@ import {
   LazyTodayActivity, 
   LazyQuickActions 
 } from "./lazy-dashboard";
+import { IntegrationsCard } from "./integrations-card";
 
 export const NewDashboard = memo(function NewDashboard() {
   const { user } = useAuth();
@@ -135,6 +136,11 @@ export const NewDashboard = memo(function NewDashboard() {
           {/* Quick Actions right after metrics */}
           <div className="px-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <LazyQuickActions userRole={userRole} />
+          </div>
+          
+          {/* Integrations Status */}
+          <div className="px-6 animate-fade-in" style={{ animationDelay: '250ms' }}>
+            <IntegrationsCard />
           </div>
           
           {/* Compact, centered stack for remaining content */}
