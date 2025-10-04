@@ -35,15 +35,32 @@ Deno.serve(async (req) => {
         try {
           console.log(`Syncing Whoop data for user: ${user.user_id}`)
           
-          const { data, error } = await supabase.functions.invoke('whoop-integration', {
-            body: {
+          // Get user's access token
+          const { data: tokenData, error: tokenError } = await supabase
+            .from('whoop_tokens')
+            .select('access_token')
+            .eq('user_id', user.user_id)
+            .single()
+          
+          if (tokenError || !tokenData) {
+            console.error(`No token found for user ${user.user_id}`)
+            continue
+          }
+          
+          const response = await fetch(`${supabaseUrl}/functions/v1/whoop-integration`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${tokenData.access_token}`
+            },
+            body: JSON.stringify({
               action: 'sync',
               userId: user.user_id
-            }
+            })
           })
           
-          if (error) {
-            console.error(`Error syncing Whoop for user ${user.user_id}:`, error)
+          if (!response.ok) {
+            console.error(`Error syncing Whoop for user ${user.user_id}: ${response.statusText}`)
           } else {
             console.log(`Successfully synced Whoop data for user ${user.user_id}`)
           }
@@ -69,15 +86,31 @@ Deno.serve(async (req) => {
         try {
           console.log(`Syncing Withings data for user: ${user.user_id}`)
           
-          const { data, error } = await supabase.functions.invoke('withings-integration', {
-            body: {
-              action: 'sync-data',
-              userId: user.user_id
-            }
+          // Get user's access token
+          const { data: tokenData, error: tokenError } = await supabase
+            .from('withings_tokens')
+            .select('access_token')
+            .eq('user_id', user.user_id)
+            .single()
+          
+          if (tokenError || !tokenData) {
+            console.error(`No token found for user ${user.user_id}`)
+            continue
+          }
+          
+          const response = await fetch(`${supabaseUrl}/functions/v1/withings-integration`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${tokenData.access_token}`
+            },
+            body: JSON.stringify({
+              action: 'sync-data'
+            })
           })
           
-          if (error) {
-            console.error(`Error syncing Withings for user ${user.user_id}:`, error)
+          if (!response.ok) {
+            console.error(`Error syncing Withings for user ${user.user_id}: ${response.statusText}`)
           } else {
             console.log(`Successfully synced Withings data for user ${user.user_id}`)
           }
