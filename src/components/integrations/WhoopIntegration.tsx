@@ -258,12 +258,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       const data = await response.json();
       console.log('Webhook setup result:', data);
 
-      const successCount = data.results?.filter((r: any) => r.status === 'success').length || 0;
-      
-      toast({
-        title: 'Webhooks Setup',
-        description: `Successfully registered ${successCount} webhooks for automatic updates.`,
-      });
+      const isV2 = typeof data.message === 'string' && data.message.toLowerCase().includes('v2');
+      const infoResult = data.results?.[0]?.status === 'info';
+
+      if (isV2 || infoResult) {
+        toast({
+          title: 'Webhooks Ready',
+          description: 'WHOOP v2 управляется в Dashboard. Endpoint активен — события придут автоматически.',
+        });
+      } else {
+        const successCount = data.results?.filter((r: any) => r.status === 'success').length || 0;
+        toast({
+          title: 'Webhooks Setup',
+          description: `Successfully registered ${successCount} webhooks for automatic updates.`,
+        });
+      }
 
     } catch (error: any) {
       console.error('Webhook setup error:', error);
