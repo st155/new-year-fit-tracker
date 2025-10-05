@@ -284,7 +284,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
         .from('whoop_user_mapping')
         .select('whoop_user_id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       if (!mapping?.whoop_user_id) {
         toast({

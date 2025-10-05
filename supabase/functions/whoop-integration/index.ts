@@ -1424,42 +1424,18 @@ async function handleSetupWebhooks(req: Request) {
     // События для подписки
     const events = ['recovery.updated', 'sleep.updated', 'workout.updated'];
     
-    console.log('Registering webhooks for events:', events);
+    console.log('WHOOP v2 uses dashboard-configured webhooks. Skipping API registration.');
     console.log('Webhook URL:', webhookUrl);
-    
-    const results = [];
-    
-    for (const event of events) {
-      try {
-        const response = await fetch(`${WHOOP_API_BASE}/webhook/subscription`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: webhookUrl,
-            event_type: event
-          })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`Webhook registered for ${event}:`, data);
-          results.push({ event, status: 'success', data });
-        } else {
-          const errorText = await response.text();
-          console.error(`Failed to register webhook for ${event}:`, response.status, errorText);
-          results.push({ event, status: 'error', error: errorText, statusCode: response.status });
-        }
-      } catch (error: any) {
-        console.error(`Error registering webhook for ${event}:`, error);
-        results.push({ event, status: 'error', error: error.message });
-      }
-    }
+
+    const results = [{
+      status: 'info',
+      message: 'No API registration required for WHOOP v2. Set Webhook URL in Developer Dashboard.',
+      webhookUrl,
+      events
+    }];
     
     return new Response(JSON.stringify({ 
-      message: 'Webhook setup completed',
+      message: 'Webhook setup not required (v2)',
       results 
     }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
