@@ -275,6 +275,42 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     }
   };
 
+  const testWebhookEndpoint = async () => {
+    try {
+      const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-webhooks';
+      
+      const testData = {
+        user_id: 123456,
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        type: "sleep.updated",
+        trace_id: "test-trace-id"
+      };
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testData)
+      });
+
+      const status = response.status;
+      const responseText = await response.text();
+
+      toast({
+        title: response.ok ? "✅ Endpoint доступен" : "❌ Endpoint недоступен",
+        description: `Статус: ${status}. ${response.ok ? 'Webhook endpoint работает!' : 'Проверьте настройки.'}`,
+        variant: response.ok ? "default" : "destructive",
+      });
+
+      console.log('Webhook test result:', { status, responseText });
+    } catch (error: any) {
+      toast({
+        title: "❌ Ошибка теста",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const syncData = async () => {
     try {
       setIsSyncing(true);
@@ -658,32 +694,43 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex gap-3">
+            <div className="space-y-2">
+              <div className="flex gap-3">
+                <Button 
+                  onClick={syncData}
+                  disabled={isSyncing}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isSyncing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Sync
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={setupWebhooks}
+                  variant="outline"
+                  size="icon"
+                  title="Setup Webhooks for automatic updates"
+                >
+                  <Zap className="h-4 w-4" />
+                </Button>
+              </div>
+              
               <Button 
-                onClick={syncData}
-                disabled={isSyncing}
+                onClick={testWebhookEndpoint}
                 variant="outline"
-                className="flex-1"
+                size="sm"
+                className="w-full"
               >
-                {isSyncing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={setupWebhooks}
-                variant="outline"
-                size="icon"
-                title="Setup Webhooks for automatic updates"
-              >
-                <Zap className="h-4 w-4" />
+                🧪 Проверить webhook endpoint
               </Button>
             </div>
 
