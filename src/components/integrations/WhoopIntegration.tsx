@@ -279,8 +279,24 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-webhooks';
       
+      // Get real Whoop user_id from mapping
+      const { data: mapping } = await supabase
+        .from('whoop_user_mapping')
+        .select('whoop_user_id')
+        .eq('user_id', userId)
+        .single();
+      
+      if (!mapping?.whoop_user_id) {
+        toast({
+          title: "⚠️ Нет Whoop ID",
+          description: "Сначала подключите Whoop аккаунт",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const testData = {
-        user_id: 123456,
+        user_id: parseInt(mapping.whoop_user_id),
         id: "550e8400-e29b-41d4-a716-446655440000",
         type: "sleep.updated",
         trace_id: "test-trace-id"
