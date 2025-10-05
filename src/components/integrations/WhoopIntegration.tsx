@@ -235,6 +235,46 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     window.open(authUrl, '_blank');
   };
 
+  const setupWebhooks = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
+          body: JSON.stringify({ action: 'setup-webhooks' })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Webhook setup result:', data);
+
+      const successCount = data.results?.filter((r: any) => r.status === 'success').length || 0;
+      
+      toast({
+        title: 'Webhooks Setup',
+        description: `Successfully registered ${successCount} webhooks for automatic updates.`,
+      });
+
+    } catch (error: any) {
+      console.error('Webhook setup error:', error);
+      toast({
+        title: 'Webhook Setup Error',
+        description: error.message || 'Failed to setup webhooks.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const syncData = async () => {
     try {
       setIsSyncing(true);
@@ -636,6 +676,14 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                     Sync
                   </>
                 )}
+              </Button>
+              <Button 
+                onClick={setupWebhooks}
+                variant="outline"
+                size="icon"
+                title="Setup Webhooks for automatic updates"
+              >
+                <Zap className="h-4 w-4" />
               </Button>
             </div>
 

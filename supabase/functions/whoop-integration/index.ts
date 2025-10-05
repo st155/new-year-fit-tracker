@@ -62,6 +62,8 @@ serve(async (req) => {
         return await handleSync(req, parsedBody);
       case 'disconnect':
         return await handleDisconnect(req);
+      case 'setup-webhooks':
+        return await handleSetupWebhooks(req);
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),
@@ -1388,6 +1390,91 @@ async function getOrCreateMetric(userId: string, metricName: string, category: s
   }
 
   return data;
+}
+
+// Функция для регистрации вебхуков в Whoop API
+async function handleSetupWebhooks(req: Request) {
+  try {
+    const authHeader = req.headers.get('authorization');
+    console.log('Setup webhooks - Auth header present:', !!authHeader);
+    
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Authorization required' }), { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+    
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
+    // Получаем access token пользователя
+    const accessToken = await getValidAccessToken(user.id);
+    
+    // URL вебхука - указываем на нашу edge function
+    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whoop-webhooks`;
+    
+    // События для подписки
+    const events = ['recovery.updated', 'sleep.updated', 'workout.updated'];
+    
+    console.log('Registering webhooks for events:', events);
+    console.log('Webhook URL:', webhookUrl);
+    
+    const results = [];
+    
+    for (const event of events) {
+      try {
+        const response = await fetch(`${WHOOP_API_BASE}/webhook/subscription`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: webhookUrl,
+            event_type: event
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Webhook registered for ${event}:`, data);
+          results.push({ event, status: 'success', data });
+        } else {
+          const errorText = await response.text();
+          console.error(`Failed to register webhook for ${event}:`, response.status, errorText);
+          results.push({ event, status: 'error', error: errorText, statusCode: response.status });
+        }
+      } catch (error: any) {
+        console.error(`Error registering webhook for ${event}:`, error);
+        results.push({ event, status: 'error', error: error.message });
+      }
+    }
+    
+    return new Response(JSON.stringify({ 
+      message: 'Webhook setup completed',
+      results 
+    }), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    });
+    
+  } catch (error: any) {
+    console.error('Setup webhooks error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to setup webhooks',
+      message: error?.message 
+    }), { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    });
+  }
 }
 
 // Логируем события Whoop
