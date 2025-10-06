@@ -147,11 +147,29 @@ export const WithingsIntegration = () => {
       });
 
       if (error) throw error;
+      
+      // Check for errors in response data
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      // Clear all caches
+      localStorage.removeItem('fitness_metrics_cache');
+      localStorage.removeItem('weight_data_cache');
+      localStorage.removeItem('body_fat_cache');
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('withings-data-updated'));
 
       toast({
         title: 'Синхронизация завершена!',
-        description: `Импортировано: ${data.measurements} измерений, ${data.activities} активностей, ${data.sleep} записей сна, ${data.workouts} тренировок`,
+        description: `Импортировано: ${data.measurements} измерений, ${data.activities} активностей, ${data.sleep} записей сна, ${data.workouts} тренировок. Обновите страницу для просмотра данных.`,
       });
+
+      // Optional: auto-reload after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
 
     } catch (error: any) {
       console.error('Failed to sync Withings data:', error);
@@ -169,16 +187,13 @@ export const WithingsIntegration = () => {
     try {
       setIsRefreshing(true);
       
-      // Очистить кэш
+      // Очистить все кэши
       localStorage.removeItem('fitness_metrics_cache');
+      localStorage.removeItem('weight_data_cache');
+      localStorage.removeItem('body_fat_cache');
       
-      // Синхронизировать данные
-      await syncData();
-      
-      toast({
-        title: '🔄 Данные обновлены',
-        description: 'Кэш очищен, данные синхронизированы',
-      });
+      // Перезагрузить страницу для получения свежих данных
+      window.location.reload();
       
     } catch (error: any) {
       console.error('Refresh error:', error);
