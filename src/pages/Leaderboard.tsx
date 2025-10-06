@@ -27,6 +27,7 @@ interface LeaderboardUser {
   points: number;
   trend: number;
   isCurrentUser?: boolean;
+  isTrainer?: boolean;
 }
 
 interface Challenge {
@@ -81,7 +82,7 @@ const LeaderboardPage = () => {
         .from('challenge_participants')
         .select(`
           user_id,
-          profiles!inner(username, full_name, avatar_url)
+          profiles!inner(username, full_name, avatar_url, trainer_role)
         `)
         .eq('challenge_id', selectedChallenge);
 
@@ -138,6 +139,7 @@ const LeaderboardPage = () => {
             points,
             trend: Math.floor(Math.random() * 30) - 10,
             isCurrentUser,
+            isTrainer: participant.profiles?.trainer_role || false,
           };
         })
       );
@@ -283,7 +285,14 @@ const LeaderboardPage = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-2xl font-bold text-white drop-shadow-md">{userEntry.name}</h3>
+                  {userEntry.isTrainer && (
+                    <Badge variant="secondary" className="text-xs bg-white/90 text-purple-600 font-bold">
+                      Trainer
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-white/80 text-base font-medium">{userEntry.points} points</p>
               </div>
             </div>
@@ -308,7 +317,14 @@ const LeaderboardPage = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-white">{userEntry.name}</h3>
+                  {userEntry.isTrainer && (
+                    <Badge variant="secondary" className="text-xs bg-white/90 text-purple-600 font-bold">
+                      Trainer
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-white/80 text-sm">{userEntry.points} points</p>
               </div>
             </div>
@@ -333,7 +349,14 @@ const LeaderboardPage = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-foreground">{userEntry.name}</h3>
+                  {userEntry.isTrainer && (
+                    <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      Trainer
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">{userEntry.points} points</p>
               </div>
             </div>

@@ -17,6 +17,7 @@ interface LeaderboardEntry {
     username: string;
     full_name: string;
     avatar_url?: string;
+    trainer_role?: boolean;
   };
 }
 
@@ -52,7 +53,7 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
       const userIds = pointsData.map(p => p.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, username, full_name, avatar_url')
+        .select('user_id, username, full_name, avatar_url, trainer_role')
         .in('user_id', userIds);
 
       if (profilesError) throw profilesError;
@@ -155,7 +156,14 @@ export const ChallengeLeaderboard = ({ challengeId }: ChallengeLeaderboardProps)
 
                 {/* Информация */}
                 <div className="flex-1">
-                  <p className="font-bold text-foreground">{entry.profiles.full_name || entry.profiles.username}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-foreground">{entry.profiles.full_name || entry.profiles.username}</p>
+                    {entry.profiles.trainer_role && (
+                      <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                        Trainer
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                     <span>📝 {entry.posts_count} posts</span>
                     <span>💬 {entry.comments_count} comments</span>

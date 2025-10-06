@@ -21,6 +21,7 @@ interface ChallengeParticipant {
     username: string;
     full_name: string;
     avatar_url?: string;
+    trainer_role?: boolean;
   };
   progress?: number;
   latestMeasurement?: number;
@@ -59,7 +60,8 @@ const ChallengeDetail = () => {
             profiles (
               username,
               full_name,
-              avatar_url
+              avatar_url,
+              trainer_role
             )
           `)
           .eq('challenge_id', id);
@@ -274,8 +276,15 @@ const ChallengeDetail = () => {
                   </Avatar>
 
                   <div className="flex-1">
-                    <div className="font-semibold text-foreground">
-                      {participant.profiles.full_name || participant.profiles.username}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">
+                        {participant.profiles.full_name || participant.profiles.username}
+                      </span>
+                      {participant.profiles.trainer_role && (
+                        <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                          Trainer
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       @{participant.profiles.username}
