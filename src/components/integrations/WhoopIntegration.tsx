@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ErrorLogger } from '@/lib/error-logger';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useFitnessDataCache } from '@/hooks/useFitnessDataCache';
 import { 
   Heart, 
   Zap, 
@@ -55,7 +54,6 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { clearCache } = useFitnessDataCache(userId);
 
   useEffect(() => {
     loadWhoopStatus();
@@ -404,8 +402,8 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       setIsRefreshing(true);
       
-      // Очистить кэш
-      clearCache();
+      // Очистить кэш из localStorage
+      localStorage.removeItem('fitness_metrics_cache');
       
       // Принудительно синхронизировать данные
       await syncData();
