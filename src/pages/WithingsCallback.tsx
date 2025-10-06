@@ -75,12 +75,23 @@ import { useToast } from '@/hooks/use-toast';
         setProgress(100);
         setStatus('success');
 
+        // Notify opener window (popup flow) and close
+        try {
+          if (window.opener) {
+            window.opener.postMessage({ type: 'withings-auth-success' }, '*');
+          }
+          // Give a moment for the message to deliver, then attempt to close
+          setTimeout(() => {
+            try { window.close(); } catch {}
+          }, 300);
+        } catch {}
+
         toast({
           title: 'Withings Connected!',
           description: 'Authorization successful. Starting data synchronization...',
         });
 
-        // После успешного колбэка можно перенаправить в интеграции
+        // Fallback: if opened directly (no opener), redirect this window
         setTimeout(() => {
           navigate('/integrations');
         }, 1500);

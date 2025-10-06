@@ -175,8 +175,9 @@ const App = () => {
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
-            <Route path="/whoop-callback" element={<WhoopCallback />} />
-            <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
+              <Route path="/whoop-callback" element={<WhoopCallback />} />
+              <Route path="/withings-callback" element={<WithingsCallback />} />
+              <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
             <Route path="/feed" element={
               <ProtectedRoute>
                 <ModernAppLayout>
