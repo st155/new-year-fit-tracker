@@ -17,7 +17,8 @@ import {
   TrendingUp, 
   RefreshCw,
   Unlink,
-  ExternalLink
+  ExternalLink,
+  Database
 } from 'lucide-react';
 
 interface WithingsStatus {
@@ -32,6 +33,7 @@ export const WithingsIntegration = () => {
   const [status, setStatus] = useState<WithingsStatus>({ connected: false });
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -163,6 +165,33 @@ export const WithingsIntegration = () => {
     }
   };
 
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+      
+      // Очистить кэш
+      localStorage.removeItem('fitness_metrics_cache');
+      
+      // Синхронизировать данные
+      await syncData();
+      
+      toast({
+        title: '🔄 Данные обновлены',
+        description: 'Кэш очищен, данные синхронизированы',
+      });
+      
+    } catch (error: any) {
+      console.error('Refresh error:', error);
+      toast({
+        title: '❌ Ошибка обновления',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const disconnectWithings = async () => {
     if (!user) return;
     
@@ -250,6 +279,18 @@ export const WithingsIntegration = () => {
                   <RefreshCw className="h-4 w-4" />
                 )}
                 {isSyncing ? 'Синхронизация...' : 'Синхронизировать'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshData}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
               </Button>
               <Button
                 variant="outline"

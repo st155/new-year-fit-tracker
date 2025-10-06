@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.withings-integration]
 verify_jwt = false
 
+[functions.withings-webhooks]
+verify_jwt = false
+
 [functions.apple-health-import]
 verify_jwt = true
 
