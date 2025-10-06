@@ -28,16 +28,23 @@ export function PullToRefresh({
     const container = containerRef.current;
     if (!container) return false;
     
-    // Check if we're at the top of the scrollable container
-    return container.scrollTop === 0 || window.scrollY === 0;
+    // Check if we're at the very top of the scrollable container (with small tolerance)
+    const scrollTop = container.scrollTop;
+    const windowScrollY = window.scrollY;
+    
+    // Must be within 5px of the top to enable pull-to-refresh
+    return scrollTop <= 5 && windowScrollY <= 5;
   };
 
   const handleTouchStart = (e: TouchEvent) => {
     if (disabled || isRefreshing) return;
     
+    // Only enable pull-to-refresh if we're at the very top
     if (isAtTop()) {
       touchStartY.current = e.touches[0].clientY;
       setCanPull(true);
+    } else {
+      setCanPull(false);
     }
   };
 
@@ -47,16 +54,20 @@ export function PullToRefresh({
     const touchY = e.touches[0].clientY;
     const distance = touchY - touchStartY.current;
     
-    // Only allow pulling down
+    // Only allow pulling down when at top
     if (distance > 0 && isAtTop()) {
       // Apply resistance for a natural feel
       const pullAmount = distance / resistance;
       setPullDistance(Math.min(pullAmount, threshold * 1.5));
       
-      // Prevent default scroll behavior when pulling
-      if (distance > 10) {
+      // Prevent default scroll behavior only when actually pulling with significant distance
+      if (distance > 20) {
         e.preventDefault();
       }
+    } else {
+      // If user scrolls up or we're not at top, disable pull
+      setCanPull(false);
+      setPullDistance(0);
     }
   };
 
