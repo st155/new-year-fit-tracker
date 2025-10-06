@@ -54,18 +54,19 @@ export function PullToRefresh({
     const touchY = e.touches[0].clientY;
     const distance = touchY - touchStartY.current;
     
-    // Only allow pulling down when at top
-    if (distance > 0 && isAtTop()) {
+    // Only allow pulling down
+    if (distance > 0) {
       // Apply resistance for a natural feel
       const pullAmount = distance / resistance;
-      setPullDistance(Math.min(pullAmount, threshold * 1.5));
+      const newPullDistance = Math.min(pullAmount, threshold * 1.5);
+      setPullDistance(newPullDistance);
       
-      // Prevent default scroll behavior only when actually pulling with significant distance
-      if (distance > 20) {
+      // Prevent default scroll behavior only when we have significant pull distance
+      if (newPullDistance > 10) {
         e.preventDefault();
       }
     } else {
-      // If user scrolls up or we're not at top, disable pull
+      // If user scrolls up, disable pull
       setCanPull(false);
       setPullDistance(0);
     }
