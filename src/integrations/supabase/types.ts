@@ -1279,6 +1279,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_challenge_participant: {
+        Args: { _challenge_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_trainer: {
         Args: { _user_id: string }
         Returns: boolean
