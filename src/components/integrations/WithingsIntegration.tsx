@@ -244,65 +244,72 @@ export const WithingsIntegration = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center shrink-0">
               <Scale className="h-6 w-6 text-white" />
             </div>
-            <div>
-              <CardTitle className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="flex items-center gap-2 flex-wrap">
                 Withings
                 {status.connected && (
-                  <Badge variant="outline" className="text-green-600 border-green-600">
+                  <Badge variant="outline" className="text-green-600 border-green-600 shrink-0">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Подключено
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="truncate">
                 Умные весы и устройства здоровья
               </CardDescription>
             </div>
           </div>
-          
-          {status.connected && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={syncData}
-                disabled={isSyncing}
-              >
-                {isSyncing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                {isSyncing ? 'Синхронизация...' : 'Синхронизировать'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refreshData}
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Database className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={disconnectWithings}
-              >
-                <Unlink className="h-4 w-4 mr-2" />
-                Отключить
-              </Button>
-            </div>
-          )}
         </div>
+        
+        {status.connected && (
+          <div className="flex gap-2 mt-4 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={syncData}
+              disabled={isSyncing}
+              className="flex-1 sm:flex-none"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Синхронизация...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Синхронизировать
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              disabled={isRefreshing}
+              title="Обновить данные"
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Database className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={disconnectWithings}
+            >
+              <Unlink className="h-4 w-4 mr-2" />
+              Отключить
+            </Button>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-4">
