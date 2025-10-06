@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ErrorLogger } from '@/lib/error-logger';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useFitnessDataCache } from '@/hooks/useFitnessDataCache';
 import { 
   Heart, 
   Zap, 
@@ -19,7 +20,8 @@ import {
   Unlink,
   Loader2,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Database
 } from 'lucide-react';
 
 interface WhoopIntegrationProps {
@@ -50,8 +52,10 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [authUrl, setAuthUrl] = useState<string>('');
   const [showManualAuth, setShowManualAuth] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { clearCache } = useFitnessDataCache(userId);
 
   useEffect(() => {
     loadWhoopStatus();
@@ -393,6 +397,33 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       }
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+      
+      // Очистить кэш
+      clearCache();
+      
+      // Принудительно синхронизировать данные
+      await syncData();
+      
+      toast({
+        title: '🔄 Данные обновлены',
+        description: 'Кэш очищен, данные синхронизированы заново',
+      });
+      
+    } catch (error: any) {
+      console.error('Refresh error:', error);
+      toast({
+        title: '❌ Ошибка обновления',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -749,14 +780,36 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
                 </Button>
               </div>
               
-              <Button 
-                onClick={testWebhookEndpoint}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                🧪 Проверить webhook endpoint
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={testWebhookEndpoint}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
+                  🧪 Проверить webhook endpoint
+                </Button>
+                
+                <Button 
+                  onClick={refreshData}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Обновление...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="h-4 w-4 mr-2" />
+                      Обновить данные
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {recentData.length > 0 && (
