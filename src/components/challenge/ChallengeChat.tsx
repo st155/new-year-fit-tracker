@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -19,6 +21,7 @@ interface ChatMessage {
   profiles?: {
     username: string;
     avatar_url?: string;
+    trainer_role?: boolean;
   };
 }
 
@@ -28,6 +31,7 @@ interface ChallengeChatProps {
 
 export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -51,22 +55,44 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
           filter: `challenge_id=eq.${challengeId}`
         },
         async (payload) => {
-          console.log('New message:', payload);
+          console.log('📨 New realtime message:', payload);
           const newMsg = payload.new as ChatMessage;
           
-          // Загружаем профиль для нового сообщения
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('user_id', newMsg.user_id)
-            .single();
-          
-          setMessages(prev => [...prev, { ...newMsg, profiles: profile || undefined }]);
+          // Проверяем, не добавили ли мы уже это сообщение (оптимистичное обновление)
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === newMsg.id);
+            if (exists) {
+              console.log('Message already exists, skipping');
+              return prev;
+            }
+            
+            // Загружаем профиль для нового сообщения асинхронно
+            supabase
+              .from('profiles')
+              .select('username, avatar_url, trainer_role')
+              .eq('user_id', newMsg.user_id)
+              .single()
+              .then(({ data: profile }) => {
+                if (profile) {
+                  setMessages(current => 
+                    current.map(m => 
+                      m.id === newMsg.id ? { ...m, profiles: profile } : m
+                    )
+                  );
+                }
+              });
+            
+            console.log('✅ Adding new message to state');
+            return [...prev, { ...newMsg, profiles: undefined }];
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [challengeId]);
@@ -96,7 +122,7 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
       const userIds = Array.from(new Set(messagesData.map(m => m.user_id)));
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, username, avatar_url')
+        .select('user_id, username, avatar_url, trainer_role')
         .in('user_id', userIds);
 
       // Объединяем данные
@@ -122,23 +148,53 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
   };
 
   const handleSend = async () => {
-    if (!user || !newMessage.trim()) return;
+    if (!user || !newMessage.trim() || !profile) return;
 
+    const messageText = newMessage.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Оптимистичное обновление UI - сразу показываем сообщение
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      user_id: user.id,
+      message_text: messageText,
+      created_at: new Date().toISOString(),
+      profiles: {
+        username: profile.username,
+        avatar_url: profile.avatar_url || undefined,
+        trainer_role: profile.trainer_role || false,
+      }
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage("");
     setSending(true);
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('challenge_chat_messages')
         .insert({
           challenge_id: challengeId,
           user_id: user.id,
-          message_text: newMessage.trim()
-        });
+          message_text: messageText
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setNewMessage("");
+      // Заменяем временное сообщение на реальное с правильным ID
+      setMessages(prev => 
+        prev.map(m => m.id === tempId ? { ...data, profiles: optimisticMessage.profiles } : m)
+      );
+      
+      console.log('✅ Message sent successfully');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      // Удаляем временное сообщение при ошибке
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(messageText); // Восстанавливаем текст
+      
       toast({
         title: "Error",
         description: "Failed to send message",
@@ -205,6 +261,11 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
                           <span className="text-xs font-semibold text-foreground">
                             {isCurrentUser ? 'You' : message.profiles?.username}
                           </span>
+                          {message.profiles?.trainer_role && (
+                            <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                              Trainer
+                            </Badge>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: enUS })}
                           </span>
