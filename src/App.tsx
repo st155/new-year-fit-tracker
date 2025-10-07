@@ -41,6 +41,7 @@ const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
 const MetricDetail = lazy(() => import("./pages/MetricDetail"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const BodyComposition = lazy(() => import("./pages/BodyComposition"));
 
 // Callbacks - load on demand
 const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
@@ -165,6 +166,13 @@ const App = () => {
               <ProtectedRoute>
                 <ModernAppLayout>
                   <FitnessData />
+                </ModernAppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/body-composition" element={
+              <ProtectedRoute>
+                <ModernAppLayout>
+                  <BodyComposition />
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
