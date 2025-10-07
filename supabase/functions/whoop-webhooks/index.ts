@@ -559,12 +559,41 @@ async function saveWorkoutData(data: any, userId: string, whoopWorkoutId: string
 }
 
 Deno.serve(async (req) => {
+  const url = new URL(req.url);
+  
+  console.log(`📥 Request received: ${req.method} ${url.pathname}`);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ CORS preflight - returning 200');
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle Whoop webhook verification (GET request with challenge parameter)
+  if (req.method === 'GET') {
+    const challenge = url.searchParams.get('challenge');
+    if (challenge) {
+      console.log('✅ Whoop webhook verification challenge received:', challenge);
+      return new Response(challenge, { 
+        status: 200,
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'text/plain' 
+        }
+      });
+    }
+    
+    // Health check endpoint
+    console.log('✅ Health check');
+    return new Response('Whoop webhook endpoint is running', { 
+      status: 200, 
+      headers: corsHeaders 
+    });
+  }
+
   if (req.method !== 'POST') {
+    console.log(`❌ Method not allowed: ${req.method}`);
     return new Response('Method not allowed', { 
       status: 405, 
       headers: corsHeaders 
@@ -572,7 +601,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Whoop webhook received');
+    console.log('📨 Whoop webhook POST received');
     
     const signature = req.headers.get('x-whoop-signature');
     const timestamp = req.headers.get('x-whoop-signature-timestamp');
