@@ -154,11 +154,15 @@ const ProgressPage = () => {
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - periodDays);
 
-      // Параллельная загрузка участий, целей и body composition
-      const [participationsRes, goalsRes, bodyCompositionRes] = await Promise.all([
+      // Параллельная загрузка участий, целей пользователя и body composition
+      const [participationsRes, userGoalsRes, challengeGoalsRes, bodyCompositionRes] = await Promise.all([
         supabase
           .from('challenge_participants')
           .select('challenge_id')
+          .eq('user_id', user.id),
+        supabase
+          .from('goals')
+          .select('*')
           .eq('user_id', user.id),
         supabase
           .from('goals')
@@ -172,38 +176,48 @@ const ProgressPage = () => {
           .order('measurement_date', { ascending: false })
       ]);
 
-      if (!participationsRes.data || participationsRes.data.length === 0) {
-        return { goals: [], metrics: [] };
-      }
-
-      const challengeIds = participationsRes.data.map(p => p.challenge_id);
+      const challengeIds = participationsRes.data?.map(p => p.challenge_id) || [];
       
-      // Фильтруем цели по челленджам пользователя на клиенте (быстрее)
-      const userGoals = (goalsRes.data || []).filter(g => 
+      // Комбинируем персональные цели пользователя и цели из челленджей
+      const challengeGoals = (challengeGoalsRes.data || []).filter(g => 
         g.challenge_id && challengeIds.includes(g.challenge_id)
       );
-
-      if (userGoals.length === 0) {
+      
+      const userGoals = userGoalsRes.data || [];
+      
+      // Объединяем персональные и челленджные цели, приоритет персональным
+      const goalsMap = new Map();
+      [...challengeGoals, ...userGoals].forEach(goal => {
+        const key = goal.goal_name?.toLowerCase();
+        if (key && (!goalsMap.has(key) || goal.user_id === user.id)) {
+          goalsMap.set(key, goal);
+        }
+      });
+      
+      const allGoals = Array.from(goalsMap.values());
+      
+      if (allGoals.length === 0) {
         return { goals: [], metrics: [] };
       }
 
-      // Загружаем только измерения за выбранный период
-      const goalIds = userGoals.map(g => g.id);
+      // Загружаем только измерения за выбранный период для всех целей
+      const goalIds = allGoals.map(g => g.id);
       const { data: allMeasurements } = await supabase
         .from('measurements')
         .select('goal_id, value, measurement_date')
+        .eq('user_id', user.id)
         .in('goal_id', goalIds)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
       // Быстрое построение метрик с учетом body_composition
       const metrics = buildMetricsFromData(
-        userGoals, 
+        allGoals, 
         allMeasurements || [], 
         bodyCompositionRes.data || []
       );
 
-      return { goals: userGoals, metrics };
+      return { goals: allGoals, metrics };
     } catch (error) {
       console.error('Error fetching data:', error);
       return { goals: [], metrics: [] };
