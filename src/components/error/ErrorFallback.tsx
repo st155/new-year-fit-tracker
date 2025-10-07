@@ -16,12 +16,10 @@ export function ErrorFallback({ error, errorInfo, resetError }: ErrorFallbackPro
   const [showDetails, setShowDetails] = useState(false);
 
   const handleGoHome = () => {
-    resetError();
     window.location.href = '/';
   };
 
   const handleReload = () => {
-    resetError();
     window.location.reload();
   };
 
