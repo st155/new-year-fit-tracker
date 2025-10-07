@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, TrendingUp, TrendingDown, RefreshCw, Target } from "lucide-react";
+import { Settings, TrendingUp, TrendingDown, RefreshCw, Target, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { useProgressCache } from "@/hooks/useProgressCache";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QuickMeasurementBatch } from "@/components/goals/QuickMeasurementBatch";
 
 interface MetricCard {
   id: string;
@@ -50,7 +51,7 @@ const detectColor = (name: string) => {
   return '#64748B';
 };
 
-const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] => {
+const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition: any[]): MetricCard[] => {
   const goalMapping: Record<string, { id: string; color: string }> = {
     'подтягивания': { id: 'pullups', color: '#A855F7' },
     'жим лёжа': { id: 'bench', color: '#EF4444' },
@@ -64,15 +65,20 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
     'вес': { id: 'weight', color: '#10B981' }
   };
 
-  // Дедупликация целей по имени
+  // Дедупликация целей по имени (берем первую цель с таким именем)
   const uniqueGoals = Array.from(new Map(goals.map(g => [g.goal_name?.toLowerCase(), g])).values());
 
-  // Группируем измерения по goal_id
+  // Группируем измерения по goal_id и сортируем по дате
   const measurementsByGoal = measurements.reduce((acc, m) => {
     if (!acc[m.goal_id]) acc[m.goal_id] = [];
     acc[m.goal_id].push(m);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Сортируем измерения по дате для корректного расчета тренда
+  Object.values(measurementsByGoal).forEach((measurementsList: any[]) => {
+    measurementsList.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
+  });
 
   return uniqueGoals.map(goal => {
     const normalized = (goal.goal_name || '').toLowerCase();
@@ -84,11 +90,24 @@ const buildMetricsFromData = (goals: any[], measurements: any[]): MetricCard[] =
     let currentValue = 0;
     let trend = 0;
 
-    if (goalMeasurements.length > 0) {
-      currentValue = Number(goalMeasurements[0].value);
+    // Для процента жира попробуем взять данные из body_composition, если нет измерений
+    if (id === 'body-fat' && goalMeasurements.length === 0 && bodyComposition.length > 0) {
+      const latestBC = bodyComposition[0];
+      currentValue = Number(latestBC.body_fat_percentage) || 0;
+      
+      // Считаем тренд по body_composition
+      if (bodyComposition.length > 1) {
+        const oldBC = bodyComposition[bodyComposition.length - 1];
+        const oldValue = Number(oldBC.body_fat_percentage) || 0;
+        if (oldValue !== 0) {
+          trend = ((currentValue - oldValue) / oldValue) * 100;
+        }
+      }
+    } else if (goalMeasurements.length > 0) {
+      currentValue = Number(goalMeasurements[0].value) || 0;
 
       if (goalMeasurements.length > 1) {
-        const oldValue = Number(goalMeasurements[goalMeasurements.length - 1].value);
+        const oldValue = Number(goalMeasurements[goalMeasurements.length - 1].value) || 0;
         if (oldValue !== 0) {
           trend = ((currentValue - oldValue) / oldValue) * 100;
         }
@@ -115,6 +134,7 @@ const ProgressPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const routes = ['/', '/progress', '/challenges', '/feed'];
   const currentIndex = routes.indexOf(location.pathname);
@@ -134,8 +154,8 @@ const ProgressPage = () => {
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - periodDays);
 
-      // Параллельная загрузка участий и целей
-      const [participationsRes, goalsRes] = await Promise.all([
+      // Параллельная загрузка участий, целей и body composition
+      const [participationsRes, goalsRes, bodyCompositionRes] = await Promise.all([
         supabase
           .from('challenge_participants')
           .select('challenge_id')
@@ -143,7 +163,13 @@ const ProgressPage = () => {
         supabase
           .from('goals')
           .select('*')
-          .eq('is_personal', false)
+          .eq('is_personal', false),
+        supabase
+          .from('body_composition')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('measurement_date', periodStart.toISOString().split('T')[0])
+          .order('measurement_date', { ascending: false })
       ]);
 
       if (!participationsRes.data || participationsRes.data.length === 0) {
@@ -170,8 +196,12 @@ const ProgressPage = () => {
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
-      // Быстрое построение метрик
-      const metrics = buildMetricsFromData(userGoals, allMeasurements || []);
+      // Быстрое построение метрик с учетом body_composition
+      const metrics = buildMetricsFromData(
+        userGoals, 
+        allMeasurements || [], 
+        bodyCompositionRes.data || []
+      );
 
       return { goals: userGoals, metrics };
     } catch (error) {
@@ -189,6 +219,14 @@ const ProgressPage = () => {
 
   const challengeGoals = data?.goals || [];
   const metrics = useMemo(() => data?.metrics || [], [data?.metrics]);
+  
+  // Проверяем, есть ли цели без измерений
+  const goalsWithoutMeasurements = useMemo(() => {
+    return challengeGoals.filter(goal => {
+      const metric = metrics.find(m => m.title === goal.goal_name);
+      return !metric || metric.value === 0;
+    });
+  }, [challengeGoals, metrics]);
 
   const formatValue = useCallback((value: number, unit: string) => {
     if (unit === "min") {
@@ -287,7 +325,7 @@ const ProgressPage = () => {
         </div>
       </div>
 
-      {/* No data message */}
+      {/* No data message or Quick Add */}
       {metrics.length === 0 && !loading && (
         <div className="mb-4 animate-fade-in">
           <div className="p-8 rounded-2xl border-2 border-dashed border-border/50 bg-card/20 text-center">
@@ -309,6 +347,33 @@ const ProgressPage = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Quick Add measurements for goals without data */}
+      {metrics.length > 0 && goalsWithoutMeasurements.length > 0 && !showQuickAdd && (
+        <div className="mb-4">
+          <Button
+            onClick={() => setShowQuickAdd(true)}
+            variant="outline"
+            className="w-full"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Добавить измерения для {goalsWithoutMeasurements.length} целей
+          </Button>
+        </div>
+      )}
+
+      {showQuickAdd && user && (
+        <div className="mb-4">
+          <QuickMeasurementBatch
+            goals={goalsWithoutMeasurements}
+            userId={user.id}
+            onComplete={() => {
+              setShowQuickAdd(false);
+              refetch();
+            }}
+          />
         </div>
       )}
 
