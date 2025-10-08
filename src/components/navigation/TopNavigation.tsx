@@ -29,12 +29,14 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const [notificationCount] = useState(1);
 
   const navItems = [
-    { type: 'home' as const, path: "/dashboard", label: "Home" },
-    { type: 'stats' as const, path: "/progress", label: "Stats" },
-    { type: 'data' as const, path: "/fitness-data", label: "Data" },
+    { type: 'home' as const, path: "/dashboard", label: "Dashboard" },
+    { type: 'stats' as const, path: "/progress", label: "Progress" },
+    { type: 'activity' as const, path: "/habits", label: "Habits" },
+    { type: 'activity' as const, path: "/body-composition", label: "Body" },
     { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
-    { type: 'feed' as const, path: "/feed", label: "Activity" },
-    { type: 'integrations' as const, path: "/integrations", label: "Integrations" },
+    { type: 'activity' as const, path: "/goals/create", label: "Goals" },
+    { type: 'feed' as const, path: "/feed", label: "Feed" },
+    { type: 'data' as const, path: "/fitness-data", label: "Data" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -142,20 +144,29 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
       </div>
 
       {/* Second row - Navigation Icons */}
-      <div className="flex items-center justify-center px-4 py-4">
-        <nav className="flex items-center gap-6">
+      <div className="flex items-center justify-center px-4 py-3 border-b border-border/20">
+        <nav className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
           {navItems.map((item) => (
             <Button
               key={item.path}
               variant="ghost"
               size="sm"
               onClick={() => navigate(item.path)}
-              className="h-12 w-12 p-0 relative hover:bg-transparent hover:scale-110 active:scale-95 hover-bounce transition-all duration-300"
+              className={cn(
+                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300",
+                isActive(item.path) && "bg-accent/30"
+              )}
             >
               <CustomNavigationIcon 
                 type={item.type} 
                 isActive={isActive(item.path)}
               />
+              <span className={cn(
+                "text-[10px] font-medium transition-colors",
+                isActive(item.path) ? "text-primary" : "text-muted-foreground"
+              )}>
+                {item.label}
+              </span>
             </Button>
           ))}
         </nav>
