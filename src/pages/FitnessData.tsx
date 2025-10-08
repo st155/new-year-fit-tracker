@@ -524,11 +524,6 @@ export default function FitnessData() {
         />
       </div>
 
-      {/* Integrations Status */}
-      <div className="mb-4">
-        <IntegrationsCard />
-      </div>
-
       {/* Hero Card: Readiness - More Compact */}
       <div
         className="relative rounded-3xl p-6 mb-4 transition-all duration-300"
@@ -579,7 +574,7 @@ export default function FitnessData() {
       </div>
 
       {/* Compact Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {data.cards.map((card, idx) => (
           <div
             key={idx}
@@ -607,6 +602,11 @@ export default function FitnessData() {
             <div className="text-white/70 text-xs">{card.subtitle}</div>
           </div>
         ))}
+      </div>
+
+      {/* Integrations Status - moved to bottom */}
+      <div className="mt-6">
+        <IntegrationsCard />
       </div>
     </div>
   );
