@@ -184,7 +184,7 @@ export default function Feed() {
     // Лайки и комментарии не влияют на activity_feed, не нужно перезагружать
   };
 
-  // Group activities by date
+  // Group activities by date using measurement_date from metadata
   const groupActivitiesByDate = (activities: ActivityItem[]) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -197,7 +197,9 @@ export default function Feed() {
     const olderItems: ActivityItem[] = [];
 
     activities.forEach(activity => {
-      const activityDate = new Date(activity.created_at);
+      // Use measurement_date from metadata if available, otherwise fall back to created_at
+      const dateStr = activity.metadata?.measurement_date || activity.created_at;
+      const activityDate = new Date(dateStr);
       activityDate.setHours(0, 0, 0, 0);
 
       if (activityDate.getTime() === today.getTime()) {
