@@ -16,7 +16,10 @@
     "confirm": "Подтвердить",
     "user": "Пользователь",
     "trainer": "Тренер",
-    "admin": "Администратор"
+    "admin": "Администратор",
+    "records": "записей",
+    "attempts": "попыток",
+    "dailyAverage": "среднее за день"
   },
   "navigation": {
     "home": "Главная",
@@ -131,6 +134,26 @@
     "seconds": "сек",
     "percent": "%",
     "mlkgmin": "мл/кг/мин"
+  },
+  "metrics": {
+    "bodyFat": "BODY FAT ЖИРА",
+    "weight": "WEIGHT",
+    "vo2max": "VO₂MAX",
+    "recovery": "RECOVERY SCORE",
+    "steps": "DAILY STEPS",
+    "subtitles": {
+      "fuller": "полненькей",
+      "byLansey": "по ланзей",
+      "excellent": "отлично",
+      "good": "хорошо",
+      "low": "низко",
+      "latestSteps": "последние шаги"
+    },
+    "units": {
+      "kg": "кг",
+      "percent": "%",
+      "steps": "шагов"
+    }
   },
   "goals": {
     "title": "Цели",

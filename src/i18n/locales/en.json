@@ -16,7 +16,10 @@
     "confirm": "Confirm",
     "user": "User",
     "trainer": "Trainer",
-    "admin": "Admin"
+    "admin": "Admin",
+    "records": "records",
+    "attempts": "attempts",
+    "dailyAverage": "daily average"
   },
   "navigation": {
     "home": "Home",
@@ -130,6 +133,26 @@
     "seconds": "sec",
     "percent": "%",
     "mlkgmin": "ml/kg/min"
+  },
+  "metrics": {
+    "bodyFat": "BODY FAT",
+    "weight": "WEIGHT",
+    "vo2max": "VO₂MAX",
+    "recovery": "RECOVERY SCORE",
+    "steps": "DAILY STEPS",
+    "subtitles": {
+      "fuller": "fuller",
+      "byLansey": "by lansey",
+      "excellent": "excellent",
+      "good": "good",
+      "low": "low",
+      "latestSteps": "latest steps"
+    },
+    "units": {
+      "kg": "kg",
+      "percent": "%",
+      "steps": "steps"
+    }
   },
   "goals": {
     "title": "Goals",

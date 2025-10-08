@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,24 +89,25 @@ function MetricCard({ title, value, unit, change, subtitle, color, onClick }: Me
 export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "vo2max", "row_2km"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
-    body_fat: { value: "18.5", change: "-3%", subtitle: "полненькей" },
-    weight: { value: "72.0", change: "-2%", subtitle: "по ланзей" },
-    vo2max: { value: "52.1", records: 71, subtitle: "71 записей" },
-    row_2km: { value: "7:25", change: "-2%", attempts: 34, subtitle: "34 попыток" },
-    recovery: { value: "85", change: "+5%", subtitle: "excellent" },
-    steps: { value: "12,847", change: "+12%", subtitle: "daily average" }
+    body_fat: { value: "18.5", change: "-3%", subtitle: t('metrics.subtitles.fuller') },
+    weight: { value: "72.0", change: "-2%", subtitle: t('metrics.subtitles.byLansey') },
+    vo2max: { value: "52.1", records: 71, subtitle: "71 " + t('common.records', { defaultValue: 'records' }) },
+    row_2km: { value: "7:25", change: "-2%", attempts: 34, subtitle: "34 " + t('common.attempts', { defaultValue: 'attempts' }) },
+    recovery: { value: "85", change: "+5%", subtitle: t('metrics.subtitles.excellent') },
+    steps: { value: "12,847", change: "+12%", subtitle: t('common.dailyAverage', { defaultValue: 'daily average' }) }
   });
   const [loading, setLoading] = useState(true);
 
   const metricConfig: Record<string, MetricConfig> = {
-    body_fat: { key: "body_fat", title: "BODY FAT ЖИРА", unit: "%", color: "body-fat", description: "Body fat percentage", category: "body" },
-    weight: { key: "weight", title: "WEIGHT", unit: "кг", color: "weight", description: "Weight measurements", category: "body" },
-    vo2max: { key: "vo2max", title: "VO₂MAX", unit: "ML/KG/MIN", color: "vo2max", description: "Cardiovascular fitness", category: "performance" },
+    body_fat: { key: "body_fat", title: t('metrics.bodyFat'), unit: t('metrics.units.percent'), color: "body-fat", description: "Body fat percentage", category: "body" },
+    weight: { key: "weight", title: t('metrics.weight'), unit: t('metrics.units.kg'), color: "weight", description: "Weight measurements", category: "body" },
+    vo2max: { key: "vo2max", title: t('metrics.vo2max'), unit: "ML/KG/MIN", color: "vo2max", description: "Cardiovascular fitness", category: "performance" },
     row_2km: { key: "row_2km", title: "2KM ROW", unit: "MIN", color: "row", description: "Rowing performance", category: "performance" },
-    recovery: { key: "recovery", title: "RECOVERY SCORE", unit: "%", color: "recovery", description: "Daily recovery", category: "health" },
-    steps: { key: "steps", title: "DAILY STEPS", unit: "steps", color: "steps", description: "Step count", category: "health" }
+    recovery: { key: "recovery", title: t('metrics.recovery'), unit: t('metrics.units.percent'), color: "recovery", description: "Daily recovery", category: "health" },
+    steps: { key: "steps", title: t('metrics.steps'), unit: t('metrics.units.steps'), color: "steps", description: "Step count", category: "health" }
   };
 
   useEffect(() => {
@@ -242,7 +244,7 @@ export function MetricsGrid() {
             const change = Math.round(recoveryData[0].value - recoveryData[1].value);
             newMetrics.recovery.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.recovery.subtitle = current >= 67 ? 'excellent' : current >= 34 ? 'good' : 'low';
+          newMetrics.recovery.subtitle = current >= 67 ? t('metrics.subtitles.excellent') : current >= 34 ? t('metrics.subtitles.good') : t('metrics.subtitles.low');
         }
 
         // Steps
@@ -252,7 +254,7 @@ export function MetricsGrid() {
             const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
             newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.steps.subtitle = 'daily average';
+          newMetrics.steps.subtitle = t('common.dailyAverage');
         } else if (stepsMV.length > 0) {
           const curr = Number(stepsMV[0].value) || 0;
           newMetrics.steps.value = curr.toLocaleString();
@@ -263,7 +265,7 @@ export function MetricsGrid() {
               newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.steps.subtitle = 'latest steps';
+          newMetrics.steps.subtitle = t('metrics.subtitles.latestSteps');
         }
 
         // Weight
@@ -273,7 +275,7 @@ export function MetricsGrid() {
             const change = Math.round(((weightData[0].value - weightData[1].value) / weightData[1].value) * 100);
             newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.weight.subtitle = 'по ланзей';
+          newMetrics.weight.subtitle = t('metrics.subtitles.byLansey');
         } else if (weightBC.length > 0) {
           const curr = Number(weightBC[0].weight);
           newMetrics.weight.value = curr.toFixed(1);
@@ -284,7 +286,7 @@ export function MetricsGrid() {
               newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.weight.subtitle = 'по ланзей';
+          newMetrics.weight.subtitle = t('metrics.subtitles.byLansey');
         }
 
         // Body Fat
@@ -294,7 +296,7 @@ export function MetricsGrid() {
             const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
             newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.body_fat.subtitle = 'полненькей';
+          newMetrics.body_fat.subtitle = t('metrics.subtitles.fuller');
         } else if (bodyFatBC.length > 0) {
           const curr = Number(bodyFatBC[0].body_fat_percentage);
           newMetrics.body_fat.value = curr.toFixed(1);
@@ -305,7 +307,7 @@ export function MetricsGrid() {
               newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.body_fat.subtitle = 'полненькей';
+          newMetrics.body_fat.subtitle = t('metrics.subtitles.fuller');
         }
 
         // VO2Max
