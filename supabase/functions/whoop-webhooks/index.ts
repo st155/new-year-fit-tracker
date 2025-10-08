@@ -232,6 +232,11 @@ async function getUserToken(whoopUserId: string): Promise<{ access_token: string
   }
 }
 
+// Helper to detect UUID (v2) vs numeric (v1) IDs
+function isUuid(value: string): boolean {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 // Функция для получения данных от Whoop API v2
 async function fetchWhoopData(
   endpoint: string,
@@ -677,7 +682,21 @@ Deno.serve(async (req) => {
 
         case 'sleep.updated':
           console.log('Processing sleep update...');
-          const sleepData = await fetchWhoopData(`activity/sleep/${id}`, userToken.access_token);
+          let sleepData: any = null;
+          if (isUuid(id)) {
+            console.log('Detected v2 webhook (UUID), using v2 endpoint');
+            sleepData = await fetchWhoopData(`activity/sleep/${id}`, userToken.access_token);
+          } else {
+            console.log('Detected v1 webhook (numeric id), using v1 endpoint');
+            const resp = await fetch(`https://api.prod.whoop.com/developer/v1/activity/sleep/${id}`, {
+              headers: { 'Authorization': `Bearer ${userToken.access_token}`, 'Content-Type': 'application/json' },
+            });
+            if (resp.ok) {
+              sleepData = await resp.json();
+            } else {
+              console.error('Whoop v1 sleep fetch failed', resp.status);
+            }
+          }
           if (sleepData) {
             await saveSleepData(sleepData, userToken.user_id, id);
           }
@@ -694,7 +713,21 @@ Deno.serve(async (req) => {
 
         case 'workout.updated':
           console.log('Processing workout update...');
-          const workoutData = await fetchWhoopData(`activity/workout/${id}`, userToken.access_token);
+          let workoutData: any = null;
+          if (isUuid(id)) {
+            console.log('Detected v2 webhook (UUID), using v2 endpoint');
+            workoutData = await fetchWhoopData(`activity/workout/${id}`, userToken.access_token);
+          } else {
+            console.log('Detected v1 webhook (numeric id), using v1 endpoint');
+            const resp = await fetch(`https://api.prod.whoop.com/developer/v1/activity/workout/${id}`, {
+              headers: { 'Authorization': `Bearer ${userToken.access_token}`, 'Content-Type': 'application/json' },
+            });
+            if (resp.ok) {
+              workoutData = await resp.json();
+            } else {
+              console.error('Whoop v1 workout fetch failed', resp.status);
+            }
+          }
           if (workoutData) {
             await saveWorkoutData(workoutData, userToken.user_id, id);
           }
