@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -30,6 +31,7 @@ interface WithingsStatus {
 export const WithingsIntegration = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<WithingsStatus>({ connected: false });
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -96,8 +98,8 @@ export const WithingsIntegration = () => {
           window.removeEventListener('message', handleMessage);
           
           toast({
-            title: 'Подключено!',
-            description: 'Withings успешно подключен к вашему аккаунту',
+            title: t('withings.connectedSuccess'),
+            description: t('withings.connectedDescription'),
           });
           
           checkConnectionStatus();
@@ -119,8 +121,8 @@ export const WithingsIntegration = () => {
     } catch (error: any) {
       console.error('Failed to connect Withings:', error);
       toast({
-        title: 'Ошибка подключения',
-        description: error.message || 'Не удалось подключить Withings',
+        title: t('withings.connectionError'),
+        description: error.message || t('withings.connectionErrorDescription'),
         variant: 'destructive'
       });
       setIsConnecting(false);
@@ -162,8 +164,13 @@ export const WithingsIntegration = () => {
       window.dispatchEvent(new CustomEvent('withings-data-updated'));
 
       toast({
-        title: 'Синхронизация завершена!',
-        description: `Импортировано: ${data.measurements} измерений, ${data.activities} активностей, ${data.sleep} записей сна, ${data.workouts} тренировок. Обновите страницу для просмотра данных.`,
+        title: t('withings.syncComplete'),
+        description: t('withings.syncCompleteDescription', {
+          measurements: data.measurements,
+          activities: data.activities,
+          sleep: data.sleep,
+          workouts: data.workouts
+        }),
       });
 
       // Optional: auto-reload after 2 seconds
@@ -174,8 +181,8 @@ export const WithingsIntegration = () => {
     } catch (error: any) {
       console.error('Failed to sync Withings data:', error);
       toast({
-        title: 'Ошибка синхронизации',
-        description: error.message || 'Не удалось синхронизировать данные',
+        title: t('withings.syncError'),
+        description: error.message || t('withings.syncErrorDescription'),
         variant: 'destructive'
       });
     } finally {
@@ -221,15 +228,15 @@ export const WithingsIntegration = () => {
       setStatus({ connected: false });
       
       toast({
-        title: 'Отключено',
-        description: 'Withings отключен от вашего аккаунта',
+        title: t('withings.disconnected'),
+        description: t('withings.disconnectedDescription'),
       });
 
     } catch (error: any) {
       console.error('Failed to disconnect Withings:', error);
       toast({
-        title: 'Ошибка отключения',
-        description: error.message || 'Не удалось отключить Withings',
+        title: t('withings.disconnectError'),
+        description: error.message || t('withings.disconnectErrorDescription'),
         variant: 'destructive'
       });
     }
@@ -244,8 +251,8 @@ export const WithingsIntegration = () => {
               <Scale className="h-6 w-6 text-white" />
             </div>
             <div>
-              <CardTitle>Withings</CardTitle>
-              <CardDescription>Умные весы и устройства здоровья</CardDescription>
+              <CardTitle>{t('withings.title')}</CardTitle>
+              <CardDescription>{t('withings.description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -266,16 +273,16 @@ export const WithingsIntegration = () => {
             </div>
             <div className="min-w-0 flex-1">
               <CardTitle className="flex items-center gap-2 flex-wrap">
-                Withings
+                {t('withings.title')}
                 {status.connected && (
                   <Badge variant="outline" className="text-green-600 border-green-600 shrink-0">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Подключено
+                    {t('withings.connected')}
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription className="truncate">
-                Умные весы и устройства здоровья
+                {t('withings.description')}
               </CardDescription>
             </div>
           </div>
@@ -293,12 +300,12 @@ export const WithingsIntegration = () => {
               {isSyncing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Синхронизация...
+                  {t('withings.syncing')}
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Синхронизировать
+                  {t('withings.sync')}
                 </>
               )}
             </Button>
@@ -321,7 +328,7 @@ export const WithingsIntegration = () => {
               onClick={disconnectWithings}
             >
               <Unlink className="h-4 w-4 mr-2" />
-              Отключить
+              {t('withings.disconnect')}
             </Button>
           </div>
         )}
@@ -333,12 +340,12 @@ export const WithingsIntegration = () => {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Что синхронизируется:</strong>
+                <strong>{t('withings.whatSyncs')}</strong>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li><strong>Состав тела:</strong> вес, процент жира, мышечная масса, костная масса</li>
-                  <li><strong>Активность:</strong> шаги, дистанция, калории</li>
-                  <li><strong>Сон:</strong> длительность, фазы сна, качество</li>
-                  <li><strong>Тренировки:</strong> автоматически распознанные активности</li>
+                  <li><strong>{t('withings.bodyComposition')}</strong></li>
+                  <li><strong>{t('withings.activity')}</strong></li>
+                  <li><strong>{t('withings.sleep')}</strong></li>
+                  <li><strong>{t('withings.workouts')}</strong></li>
                 </ul>
               </AlertDescription>
             </Alert>
@@ -346,19 +353,19 @@ export const WithingsIntegration = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex flex-col items-center p-3 bg-muted/30 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-blue-500 mb-2" />
-                <span className="text-sm font-medium">Вес и состав</span>
+                <span className="text-sm font-medium">{t('withings.weightAndComposition')}</span>
               </div>
               <div className="flex flex-col items-center p-3 bg-muted/30 rounded-lg">
                 <Activity className="h-6 w-6 text-green-500 mb-2" />
-                <span className="text-sm font-medium">Активность</span>
+                <span className="text-sm font-medium">{t('withings.activityData')}</span>
               </div>
               <div className="flex flex-col items-center p-3 bg-muted/30 rounded-lg">
                 <Moon className="h-6 w-6 text-purple-500 mb-2" />
-                <span className="text-sm font-medium">Сон</span>
+                <span className="text-sm font-medium">{t('withings.sleepData')}</span>
               </div>
               <div className="flex flex-col items-center p-3 bg-muted/30 rounded-lg">
                 <Heart className="h-6 w-6 text-red-500 mb-2" />
-                <span className="text-sm font-medium">Пульс</span>
+                <span className="text-sm font-medium">{t('withings.heartRate')}</span>
               </div>
             </div>
 
@@ -370,12 +377,12 @@ export const WithingsIntegration = () => {
               {isConnecting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Подключение...
+                  {t('withings.connecting')}
                 </>
               ) : (
                 <>
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Подключить Withings
+                  {t('withings.connect')}
                 </>
               )}
             </Button>
@@ -385,44 +392,43 @@ export const WithingsIntegration = () => {
             <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription>
-                <strong>Withings подключен!</strong>
+                <strong>{t('withings.connectedSuccess')}</strong>
                 <br />
-                Подключено: {new Date(status.connectedAt!).toLocaleDateString('ru-RU')}
+                {t('withings.connectedAt')}: {new Date(status.connectedAt!).toLocaleDateString('ru-RU')}
                 {status.scope && (
                   <>
                     <br />
-                    Права доступа: {status.scope.split(',').join(', ')}
+                    Scope: {status.scope.split(',').join(', ')}
                   </>
                 )}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <h4 className="font-medium">Доступные данные:</h4>
+              <h4 className="font-medium">{t('withings.availableData')}</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
                   <TrendingUp className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm">Измерения тела</span>
+                  <span className="text-sm">{t('withings.bodyMeasurements')}</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
                   <Activity className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Активность</span>
+                  <span className="text-sm">{t('withings.activityData')}</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
                   <Moon className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm">Данные сна</span>
+                  <span className="text-sm">{t('withings.sleepData')}</span>
                 </div>
                 <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
                   <Heart className="h-4 w-4 text-red-500" />
-                  <span className="text-sm">Тренировки</span>
+                  <span className="text-sm">{t('withings.workoutsData')}</span>
                 </div>
               </div>
             </div>
 
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground mb-3">
-                <strong>Автоматическая синхронизация:</strong> данные синхронизируются автоматически при подключении. 
-                Используйте кнопку "Синхронизировать" для получения последних данных.
+                <strong>{t('withings.autoSync')}</strong>
               </p>
               
               <div className="flex gap-2">
@@ -430,12 +436,12 @@ export const WithingsIntegration = () => {
                   {isSyncing ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Синхронизация...
+                      {t('withings.syncing')}
                     </>
                   ) : (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Синхронизировать данные
+                      {t('withings.syncData')}
                     </>
                   )}
                 </Button>
@@ -446,15 +452,15 @@ export const WithingsIntegration = () => {
 
         <div className="pt-4 border-t">
           <div className="text-sm text-muted-foreground space-y-1">
-            <p className="font-medium">Поддерживаемые устройства:</p>
+            <p className="font-medium">{t('withings.supportedDevices')}</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Умные весы Body+ / Body Cardio / Body Comp</li>
-              <li>Фитнес-трекеры Steel HR / ScanWatch</li>
-              <li>Термометры Thermo</li>
-              <li>Тонометры BPM Connect / BPM Core</li>
+              <li>{t('withings.smartScales')}</li>
+              <li>{t('withings.fitnessTrackers')}</li>
+              <li>{t('withings.thermometers')}</li>
+              <li>{t('withings.bloodPressure')}</li>
             </ul>
             <p className="text-xs pt-2">
-              Для получения данных необходимо иметь аккаунт Withings и подключенные устройства.
+              {t('withings.requiresAccount')}
             </p>
           </div>
         </div>
