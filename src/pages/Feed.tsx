@@ -69,12 +69,24 @@ export default function Feed() {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
 
-      // Show all activities without filtering
-      const filteredActivities = activitiesData || [];
+      // Filter to show only real fitness activities
+      const filteredActivities = (activitiesData || []).filter(activity => {
+        const actionText = activity.action_text?.toLowerCase() || '';
+        
+        const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
+        const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
+                          && !actionText.includes('качество');
+        const isVO2Max = actionText.includes('vo2max');
+        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/);
+        const isStrain = actionText.includes('strain');
+        const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
+        
+        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
+      });
 
       // Deduplicate Sleep
       const sleepItems = filteredActivities.filter(a => (a.action_text?.toLowerCase().includes('slept') && /\d+:\d+/.test(a.action_text)));
@@ -149,7 +161,8 @@ export default function Feed() {
         });
       }
 
-      return dedupedActivities;
+      // Limit to 40 events max
+      return dedupedActivities.slice(0, 40);
     } catch (error) {
       console.error('Error fetching activities:', error);
       toast({
@@ -170,6 +183,46 @@ export default function Feed() {
   const onActivityUpdate = () => {
     // Лайки и комментарии не влияют на activity_feed, не нужно перезагружать
   };
+
+  // Group activities by date
+  const groupActivitiesByDate = (activities: ActivityItem[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const groups: { label: string; items: ActivityItem[] }[] = [];
+    const todayItems: ActivityItem[] = [];
+    const yesterdayItems: ActivityItem[] = [];
+    const olderItems: ActivityItem[] = [];
+
+    activities.forEach(activity => {
+      const activityDate = new Date(activity.created_at);
+      activityDate.setHours(0, 0, 0, 0);
+
+      if (activityDate.getTime() === today.getTime()) {
+        todayItems.push(activity);
+      } else if (activityDate.getTime() === yesterday.getTime()) {
+        yesterdayItems.push(activity);
+      } else {
+        olderItems.push(activity);
+      }
+    });
+
+    if (todayItems.length > 0) {
+      groups.push({ label: 'Сегодня', items: todayItems });
+    }
+    if (yesterdayItems.length > 0) {
+      groups.push({ label: 'Вчера', items: yesterdayItems });
+    }
+    if (olderItems.length > 0) {
+      groups.push({ label: 'Более старые', items: olderItems });
+    }
+
+    return groups;
+  };
+
+  const groupedActivities = activities ? groupActivitiesByDate(activities) : [];
 
   if (loading && !fromCache) {
     return (
@@ -251,33 +304,33 @@ export default function Feed() {
           </button>
         </div>
 
-        {/* Activity List - Virtualized for better performance */}
-        {isMobile && activities && activities.length > 10 ? (
-          <VirtualizedList
-            items={activities}
-            itemHeight={70}
-            height={listHeight}
-            renderItem={(activity, index) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                onActivityUpdate={onActivityUpdate}
-                index={index}
-              />
-            )}
-          />
-        ) : (
-          <div className="space-y-2">
-            {activities?.map((activity, index) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                onActivityUpdate={onActivityUpdate}
-                index={index}
-              />
-            ))}
-          </div>
-        )}
+        {/* Activity List - Grouped by date */}
+        <div className="space-y-6">
+          {groupedActivities.map((group, groupIndex) => (
+            <div key={group.label}>
+              {/* Date separator */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-px bg-border flex-1" />
+                <span className="text-sm font-medium text-muted-foreground px-2">
+                  {group.label}
+                </span>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              
+              {/* Activities for this date group */}
+              <div className="space-y-2">
+                {group.items.map((activity, index) => (
+                  <ActivityCard
+                    key={activity.id}
+                    activity={activity}
+                    onActivityUpdate={onActivityUpdate}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </PullToRefresh>
   );
