@@ -1,8 +1,8 @@
-import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbbell, Rss } from "lucide-react";
+import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbbell, Rss, Target, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CustomNavigationIconProps {
-  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed';
+  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body';
   isActive?: boolean;
   className?: string;
 }
@@ -68,6 +68,18 @@ const iconConfig = {
     glow: 'drop-shadow-[0_0_12px_rgba(45,212,191,0.6)]',
     activeGlow: 'drop-shadow-[0_0_20px_rgba(45,212,191,0.8)]'
   },
+  goals: { 
+    icon: Target, 
+    gradient: 'from-red-400 to-pink-500',
+    glow: 'drop-shadow-[0_0_12px_rgba(248,113,113,0.6)]',
+    activeGlow: 'drop-shadow-[0_0_20px_rgba(248,113,113,0.8)]'
+  },
+  body: { 
+    icon: Scale, 
+    gradient: 'from-fuchsia-400 to-violet-500',
+    glow: 'drop-shadow-[0_0_12px_rgba(232,121,249,0.6)]',
+    activeGlow: 'drop-shadow-[0_0_20px_rgba(232,121,249,0.8)]'
+  },
 };
 
 export function CustomNavigationIcon({ type, isActive = false, className }: CustomNavigationIconProps) {
@@ -85,6 +97,8 @@ export function CustomNavigationIcon({ type, isActive = false, className }: Cust
     'from-indigo-400 to-purple-500': { from: '#818cf8', to: '#a855f7' },
     'from-gray-400 to-slate-500': { from: '#94a3b8', to: '#64748b' },
     'from-teal-400 to-cyan-500': { from: '#2dd4bf', to: '#06b6d4' },
+    'from-red-400 to-pink-500': { from: '#f87171', to: '#ec4899' },
+    'from-fuchsia-400 to-violet-500': { from: '#e879f9', to: '#8b5cf6' },
   };
   
   const colors = gradientColors[config.gradient];

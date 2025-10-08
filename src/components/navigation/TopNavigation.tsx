@@ -31,12 +31,12 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const navItems = [
     { type: 'home' as const, path: "/dashboard", label: "Dashboard" },
     { type: 'stats' as const, path: "/progress", label: "Progress" },
-    { type: 'activity' as const, path: "/habits", label: "Habits" },
-    { type: 'activity' as const, path: "/body-composition", label: "Body" },
+    { type: 'body' as const, path: "/body-composition", label: "Body" },
     { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
-    { type: 'activity' as const, path: "/goals/create", label: "Goals" },
+    { type: 'goals' as const, path: "/goals/create", label: "Goals" },
     { type: 'feed' as const, path: "/feed", label: "Feed" },
     { type: 'data' as const, path: "/fitness-data", label: "Data" },
+    { type: 'activity' as const, path: "/habits", label: "Habits" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -153,14 +153,16 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               size="sm"
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300",
+                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",
                 isActive(item.path) && "bg-accent/30"
               )}
             >
-              <CustomNavigationIcon 
-                type={item.type} 
-                isActive={isActive(item.path)}
-              />
+              <div className="transition-all duration-300 hover:animate-bounce">
+                <CustomNavigationIcon 
+                  type={item.type} 
+                  isActive={isActive(item.path)}
+                />
+              </div>
               <span className={cn(
                 "text-[10px] font-medium transition-colors",
                 isActive(item.path) ? "text-primary" : "text-muted-foreground"
