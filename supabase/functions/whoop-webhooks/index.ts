@@ -10,6 +10,9 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+// Boot log to confirm deployment/version
+console.log('whoop-webhooks booted', { version: 'v2025-10-08-1' });
+
 // Функция для валидации подписи Whoop
 async function validateWhoopSignature(
   body: string,
