@@ -158,20 +158,11 @@ const ProgressPage = () => {
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - periodDays);
 
-      // Параллельная загрузка участий, целей пользователя и body composition
-      const [participationsRes, userGoalsRes, challengeGoalsRes, bodyCompositionRes] = await Promise.all([
-        supabase
-          .from('challenge_participants')
-          .select('challenge_id')
-          .eq('user_id', user.id),
+      // Загружаем ВСЕ цели и body composition параллельно
+      const [allGoalsRes, bodyCompositionRes] = await Promise.all([
         supabase
           .from('goals')
           .select('*')
-          .eq('user_id', user.id),
-        supabase
-          .from('goals')
-          .select('*')
-          .eq('is_personal', false)
           .eq('user_id', user.id),
         supabase
           .from('body_composition')
@@ -181,30 +172,16 @@ const ProgressPage = () => {
           .order('measurement_date', { ascending: false })
       ]);
 
-      const challengeIds = participationsRes.data?.map(p => p.challenge_id) || [];
+      const allGoals = allGoalsRes.data || [];
       
-      // Комбинируем персональные цели пользователя и цели из челленджей
-      const challengeGoals = (challengeGoalsRes.data || []) as any[];
-      
-      const userGoals = userGoalsRes.data || [];
-      
-      // Объединяем персональные и челленджные цели, приоритет персональным
-      const goalsMap = new Map();
-      [...challengeGoals, ...userGoals].forEach(goal => {
-        const key = goal.goal_name?.toLowerCase();
-        if (key && (!goalsMap.has(key) || goal.user_id === user.id)) {
-          goalsMap.set(key, goal);
-        }
-      });
-      
-      const allGoals = Array.from(goalsMap.values());
+      console.log('[Progress DEBUG] Total goals fetched:', allGoals.length);
+      console.log('[Progress DEBUG] Goals:', allGoals.map(g => ({ name: g.goal_name, id: g.id, is_personal: g.is_personal })));
       
       if (allGoals.length === 0) {
         return { goals: [], metrics: [] };
       }
 
-      // Загружаем измерения за выбранный период для ВСЕХ goal_id (включая дубликаты имён)
-      const allGoalIdsForMeasurements = [...challengeGoals, ...userGoals].map(g => g.id);
+      // Загружаем ВСЕ измерения пользователя за период
       const { data: periodMeasurements } = await supabase
         .from('measurements')
         .select('goal_id, value, measurement_date')
@@ -233,7 +210,8 @@ const ProgressPage = () => {
         periodByGoal.set(m.goal_id, arr);
       });
       const mergedMeasurements: any[] = [...(periodMeasurements || [])];
-      for (const gid of allGoalIdsForMeasurements) {
+      const allGoalIds = allGoals.map(g => g.id);
+      for (const gid of allGoalIds) {
         if (!(periodByGoal.get(gid)?.length) && latestByGoal.has(gid)) {
           mergedMeasurements.push(latestByGoal.get(gid)!);
         }
@@ -250,11 +228,7 @@ const ProgressPage = () => {
         .limit(1);
 
       // Быстрое построение метрик с учетом body_composition
-      let metrics = buildMetricsFromData(
-        [...challengeGoals, ...userGoals], 
-        mergedMeasurements, 
-        bodyCompositionRes.data || []
-      );
+      let metrics = buildMetricsFromData(allGoals, mergedMeasurements, bodyCompositionRes.data || []);
 
       // Подставляем VO2Max из metric_values, если метрика есть, но измерений не было
       if (vo2Values && vo2Values.length > 0) {
@@ -266,7 +240,7 @@ const ProgressPage = () => {
       }
 
       // Жёсткий фолбэк: если для метрики по имени всё ещё 0 — возьмём последнее значение по любому goal_id с таким именем
-      const idToName = new Map<string, string>([...challengeGoals, ...userGoals].map(g => [g.id, (g.goal_name || '').toLowerCase()]));
+      const idToName = new Map<string, string>(allGoals.map(g => [g.id, (g.goal_name || '').toLowerCase()]));
       metrics = metrics.map(m => {
         if (m.value && m.value !== 0) return m;
         const targetName = (m.title || '').toLowerCase();
@@ -297,7 +271,7 @@ const ProgressPage = () => {
 
   // Используем кэш
   const { data, loading, fromCache, refetch } = useProgressCache(
-    `progress_v5_${user?.id}_${selectedPeriod}`,
+    `progress_v6_${user?.id}_${selectedPeriod}`,
     fetchAllData,
     [user?.id, selectedPeriod]
   );
