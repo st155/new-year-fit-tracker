@@ -80,15 +80,12 @@ export default function Feed() {
         const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
         const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
                           && !actionText.includes('качество');
-        const isVO2Max = actionText.includes('vo2max') || actionText.includes('во2макс');
-        const isSleep = actionText.includes('slept') || actionText.includes('спал');
+        const isVO2Max = actionText.includes('vo2max');
+        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/);
         const isStrain = actionText.includes('strain');
         const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
-        const isGoalCreated = actionText.includes('created a new goal') || actionText.includes('создал цель');
-        const isBodyComposition = actionText.includes('updated body composition') || actionText.includes('обновил состав тела');
-        const isMeasurement = actionText.includes('recorded:') || actionText.includes('записал:');
         
-        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps || isGoalCreated || isBodyComposition || isMeasurement;
+        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
       });
 
       // Deduplicate Sleep
