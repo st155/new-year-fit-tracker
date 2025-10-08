@@ -209,7 +209,6 @@ const ProgressPage = () => {
         .from('measurements')
         .select('goal_id, value, measurement_date')
         .eq('user_id', user.id)
-        .in('goal_id', allGoalIdsForMeasurements)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
@@ -218,7 +217,6 @@ const ProgressPage = () => {
         .from('measurements')
         .select('goal_id, value, measurement_date')
         .eq('user_id', user.id)
-        .in('goal_id', allGoalIdsForMeasurements)
         .order('measurement_date', { ascending: false });
 
       // Берём по одному самому свежему значению на цель
@@ -299,7 +297,7 @@ const ProgressPage = () => {
 
   // Используем кэш
   const { data, loading, fromCache, refetch } = useProgressCache(
-    `progress_v4_${user?.id}_${selectedPeriod}`,
+    `progress_v5_${user?.id}_${selectedPeriod}`,
     fetchAllData,
     [user?.id, selectedPeriod]
   );
