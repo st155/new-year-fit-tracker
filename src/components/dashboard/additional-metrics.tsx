@@ -5,6 +5,7 @@ import { Activity, Heart, Flame, Footprints, Moon, TrendingUp, Droplets, Dumbbel
 import { useNavigate } from "react-router-dom";
 import { Leaderboard } from "./leaderboard";
 import { WeeklyGoals } from "./weekly-goals";
+import { useTranslation } from "react-i18next";
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -84,84 +85,85 @@ function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, 
 export function AdditionalMetrics() {
   const navigate = useNavigate();
   
+  const { t } = useTranslation();
   const allMetrics = [
     {
       icon: <Moon className="h-4 w-4 text-purple-500" />,
-      title: "SLEEP",
+      title: t('extraMetrics.sleep'),
       value: "8.2",
-      unit: "hrs",
+      unit: t('extraMetrics.units.hours'),
       change: "+5%",
-      subtitle: "Avg per night",
+      subtitle: t('extraMetrics.avgPerNight'),
       color: "purple-500",
       route: "/metric/recovery"
     },
     {
       icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-      title: "STRAIN",
+      title: t('extraMetrics.strain'),
       value: "14.8",
       unit: "/21",
       change: "+10%",
-      subtitle: "Today",
+      subtitle: t('extraMetrics.today'),
       color: "green-500",
       route: "/metric/steps"
     },
     {
       icon: <Activity className="h-4 w-4 text-primary" />,
-      title: "ACTIVE MIN",
+      title: t('extraMetrics.activeMin'),
       value: "847",
-      unit: "min",
+      unit: t('extraMetrics.units.min'),
       change: "+15%",
-      subtitle: "This week",
+      subtitle: t('extraMetrics.thisWeek'),
       color: "primary",
       route: "/metric/steps"
     },
     {
       icon: <Flame className="h-4 w-4 text-orange-500" />,
-      title: "CALORIES",
+      title: t('extraMetrics.calories'),
       value: "2,845",
-      unit: "kcal",
+      unit: t('extraMetrics.units.kcal'),
       change: "+8%",
-      subtitle: "Daily avg",
+      subtitle: t('extraMetrics.dailyAvg'),
       color: "orange-500",
       route: "/metric/steps"
     },
     {
       icon: <Footprints className="h-4 w-4 text-accent" />,
-      title: "AVG STEPS",
+      title: t('extraMetrics.avgSteps'),
       value: "11,234",
-      unit: "steps",
+      unit: t('metrics.units.steps'),
       change: "+12%",
-      subtitle: "This week",
+      subtitle: t('extraMetrics.thisWeek'),
       color: "accent",
       route: "/metric/steps"
     },
     {
       icon: <Heart className="h-4 w-4 text-red-500" />,
-      title: "REST HR",
+      title: t('extraMetrics.restHr'),
       value: "58",
-      unit: "bpm",
+      unit: t('extraMetrics.units.bpm'),
       change: "-3%",
-      subtitle: "Morning avg",
+      subtitle: t('extraMetrics.morningAvg'),
       color: "red-500",
       route: "/metric/recovery"
     },
     {
       icon: <Droplets className="h-4 w-4 text-blue-500" />,
-      title: "HYDRATION",
+      title: t('extraMetrics.hydration'),
       value: "2.4",
-      unit: "L",
+      unit: t('extraMetrics.units.liters'),
       change: "-5%",
-      subtitle: "Today",
+      subtitle: t('extraMetrics.today'),
       color: "blue-500",
       route: "/metric/steps"
     },
     {
       icon: <Dumbbell className="h-4 w-4 text-primary" />,
-      title: "WORKOUTS",
+      title: t('extraMetrics.workouts'),
       value: "5",
-      unit: "times",
+      unit: t('extraMetrics.units.times'),
       change: "+2",
-      subtitle: "This week",
+      subtitle: t('extraMetrics.thisWeek'),
       color: "primary",
       route: "/metric/steps"
     }
@@ -177,7 +179,7 @@ export function AdditionalMetrics() {
           className="bg-card border-2 border-primary/20 hover:border-primary/40 rounded-xl p-3 text-center transition-all duration-500 hover:scale-105 active:scale-95 cursor-pointer shadow-sm hover:shadow-glow group"
           onClick={() => navigate('/leaderboard')}
         >
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">TEAM RANK</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('leaderboard.title')} {t('leaderboard.rank')}</div>
           <div className="text-2xl font-bold text-primary mb-0.5 transition-all duration-300 group-hover:scale-110">#3</div>
           <div className="text-[10px] text-muted-foreground">2KM ROW</div>
         </button>

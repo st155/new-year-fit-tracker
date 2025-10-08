@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface NewDashboardHeaderProps {
   userName: string;
@@ -19,6 +20,7 @@ export function NewDashboardHeader({
   daysLeft = 0 
 }: NewDashboardHeaderProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const getInitials = (name: string) => {
     return name
@@ -48,7 +50,7 @@ export function NewDashboardHeader({
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-primary whitespace-nowrap">
-              {daysLeft} DAYS LEFT
+              {t('dashboard.daysLeft', { count: daysLeft })}
             </span>
             <span className="text-xs text-muted-foreground">
               {Math.round(challengeProgress)}%

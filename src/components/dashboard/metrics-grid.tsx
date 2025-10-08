@@ -374,8 +374,8 @@ export function MetricsGrid() {
         {/* Team Rank Circle - only show on mobile/tablet */}
         <div className="lg:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
           <div className="bg-card border-2 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-glow">
-            <div className="text-xs text-muted-foreground">TEAM</div>
-            <div className="text-xs text-muted-foreground">RANK:</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.title')}</div>
+            <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.rank')}</div>
             <div className="text-lg font-bold text-primary">#3</div>
           </div>
         </div>
