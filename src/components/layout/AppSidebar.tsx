@@ -72,7 +72,7 @@ export function AppSidebar() {
   const mainItems = [
     { title: "Dashboard", url: "/dashboard", iconType: "home" as const },
     { title: "Progress", url: "/progress", iconType: "stats" as const },
-    { title: "Habits", url: "/habits", iconType: "activity" as const },
+    { title: "Habits", url: "/habits", iconType: "habits" as const },
     { title: "Body Composition", url: "/body-composition", iconType: "activity" as const },
     { title: "Challenges", url: "/challenges", iconType: "challenges" as const },
     { title: "Goals", url: "/goals/create", iconType: "activity" as const },

@@ -36,7 +36,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'goals' as const, path: "/goals/create", label: "Goals" },
     { type: 'feed' as const, path: "/feed", label: "Feed" },
     { type: 'data' as const, path: "/fitness-data", label: "Data" },
-    { type: 'activity' as const, path: "/habits", label: "Habits" },
+    { type: 'habits' as const, path: "/habits", label: "Habits" },
   ];
 
   const isActive = (path: string) => location.pathname === path;

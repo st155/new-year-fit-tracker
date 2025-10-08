@@ -1,8 +1,8 @@
-import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbbell, Rss, Target, Scale } from "lucide-react";
+import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbbell, Rss, Target, Scale, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CustomNavigationIconProps {
-  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body';
+  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body' | 'habits';
   isActive?: boolean;
   className?: string;
 }
@@ -80,6 +80,12 @@ const iconConfig = {
     glow: 'drop-shadow-[0_0_12px_rgba(232,121,249,0.6)]',
     activeGlow: 'drop-shadow-[0_0_20px_rgba(232,121,249,0.8)]'
   },
+  habits: { 
+    icon: Sparkles, 
+    gradient: 'from-amber-400 to-yellow-500',
+    glow: 'drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]',
+    activeGlow: 'drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]'
+  },
 };
 
 export function CustomNavigationIcon({ type, isActive = false, className }: CustomNavigationIconProps) {
@@ -99,6 +105,7 @@ export function CustomNavigationIcon({ type, isActive = false, className }: Cust
     'from-teal-400 to-cyan-500': { from: '#2dd4bf', to: '#06b6d4' },
     'from-red-400 to-pink-500': { from: '#f87171', to: '#ec4899' },
     'from-fuchsia-400 to-violet-500': { from: '#e879f9', to: '#8b5cf6' },
+    'from-amber-400 to-yellow-500': { from: '#fbbf24', to: '#eab308' },
   };
   
   const colors = gradientColors[config.gradient];
