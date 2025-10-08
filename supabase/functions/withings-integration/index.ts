@@ -204,8 +204,10 @@ async function handleCallback(req: Request) {
     .delete()
     .eq('state', state);
 
-  // Start initial data sync
-  await syncUserData(userId, tokenData.body.access_token);
+  // Start initial data sync asynchronously (don't wait for it to complete)
+  syncUserData(userId, tokenData.body.access_token)
+    .then(() => console.log('Initial sync completed'))
+    .catch((e) => console.error('Initial sync failed:', e));
 
   // Check if it's an API call (has authorization header) or browser redirect
   const authHeader = req.headers.get('authorization');
