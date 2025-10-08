@@ -24,11 +24,18 @@ export function OnboardingTutorial() {
     if (!user) return;
 
     const checkOnboarding = async () => {
-      // Проверяем, прошел ли пользователь онбординг
       const onboardingKey = `onboarding_completed_${user.id}`;
+      const newUserKey = `new_user_${user.id}`;
+      
       const completed = localStorage.getItem(onboardingKey);
-
-      if (!completed) {
+      const isNewUser = localStorage.getItem(newUserKey);
+      
+      // Show tutorial if user hasn't completed it, or if they're a new user
+      if (!completed || isNewUser) {
+        // Clear the new user flag
+        if (isNewUser) {
+          localStorage.removeItem(newUserKey);
+        }
         setIsOpen(true);
       }
     };

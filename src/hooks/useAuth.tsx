@@ -32,6 +32,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Handle successful OAuth login
         if (event === 'SIGNED_IN' && session?.user) {
+          // Check if this is a new user (first login)
+          const isNewUser = !session.user.email_confirmed_at || 
+                           (session.user.created_at && 
+                            new Date(session.user.created_at).getTime() > Date.now() - 60000); // Less than 1 min old
+          
+          if (isNewUser) {
+            localStorage.setItem(`new_user_${session.user.id}`, 'true');
+          }
+          
           toast({
             title: "Welcome!",
             description: `Signed in as ${session.user.email}`,
@@ -84,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, username: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -123,6 +132,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
     } else {
+      // Mark this user as a new user for onboarding
+      if (data.user) {
+        localStorage.setItem(`new_user_${data.user.id}`, 'true');
+      }
+      
       toast({
         title: "Check your email",
         description: "We sent you a confirmation link. If you don't see it, check your spam folder."
