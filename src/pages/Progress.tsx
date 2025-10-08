@@ -203,13 +203,41 @@ const ProgressPage = () => {
 
       // Загружаем только измерения за выбранный период для всех целей
       const goalIds = allGoals.map(g => g.id);
-      const { data: allMeasurements } = await supabase
+      const { data: periodMeasurements } = await supabase
         .from('measurements')
         .select('goal_id, value, measurement_date')
         .eq('user_id', user.id)
         .in('goal_id', goalIds)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
+
+      // Фолбэк: последние измерения за всё время по каждой цели, если в периоде нет
+      const { data: latestAll } = await supabase
+        .from('measurements')
+        .select('goal_id, value, measurement_date')
+        .eq('user_id', user.id)
+        .in('goal_id', goalIds)
+        .order('measurement_date', { ascending: false });
+
+      // Берём по одному самому свежему значению на цель
+      const latestByGoal = new Map<string, { goal_id: string; value: number; measurement_date: string }>();
+      (latestAll || []).forEach((m: any) => {
+        if (!latestByGoal.has(m.goal_id)) latestByGoal.set(m.goal_id, m);
+      });
+
+      // Если в выбранном периоде по цели нет измерений — добавим последнее как текущую точку
+      const periodByGoal = new Map<string, any[]>();
+      (periodMeasurements || []).forEach((m: any) => {
+        const arr = periodByGoal.get(m.goal_id) || [];
+        arr.push(m);
+        periodByGoal.set(m.goal_id, arr);
+      });
+      const mergedMeasurements: any[] = [...(periodMeasurements || [])];
+      for (const gid of goalIds) {
+        if (!(periodByGoal.get(gid)?.length) && latestByGoal.has(gid)) {
+          mergedMeasurements.push(latestByGoal.get(gid)!);
+        }
+      }
 
       // VO2Max как резерв из metric_values (если нет измерений)
       const { data: vo2Values } = await supabase
@@ -224,7 +252,7 @@ const ProgressPage = () => {
       // Быстрое построение метрик с учетом body_composition
       let metrics = buildMetricsFromData(
         allGoals, 
-        allMeasurements || [], 
+        mergedMeasurements, 
         bodyCompositionRes.data || []
       );
 
