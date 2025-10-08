@@ -73,20 +73,8 @@ export default function Feed() {
 
       if (error) throw error;
 
-      // Filter to show only specific activity types
-      const filteredActivities = (activitiesData || []).filter(activity => {
-        const actionText = activity.action_text?.toLowerCase() || '';
-        
-        const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
-        const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
-                          && !actionText.includes('качество');
-        const isVO2Max = actionText.includes('vo2max');
-        const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/);
-        const isStrain = actionText.includes('strain');
-        const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
-        
-        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
-      });
+      // Show all activities without filtering
+      const filteredActivities = activitiesData || [];
 
       // Deduplicate Sleep
       const sleepItems = filteredActivities.filter(a => (a.action_text?.toLowerCase().includes('slept') && /\d+:\d+/.test(a.action_text)));
