@@ -93,7 +93,7 @@ export function AdditionalMetrics() {
       value: "8.2",
       unit: t('extraMetrics.units.hours'),
       change: "+5%",
-      subtitle: t('extraMetrics.avgPerNight'),
+      subtitle: t('extraMetrics.subtitles.avgPerNight'),
       color: "purple-500",
       route: "/metric/recovery"
     },
@@ -103,7 +103,7 @@ export function AdditionalMetrics() {
       value: "14.8",
       unit: "/21",
       change: "+10%",
-      subtitle: t('extraMetrics.today'),
+      subtitle: t('extraMetrics.subtitles.today'),
       color: "green-500",
       route: "/metric/steps"
     },
@@ -113,7 +113,7 @@ export function AdditionalMetrics() {
       value: "847",
       unit: t('extraMetrics.units.min'),
       change: "+15%",
-      subtitle: t('extraMetrics.thisWeek'),
+      subtitle: t('extraMetrics.subtitles.thisWeek'),
       color: "primary",
       route: "/metric/steps"
     },
@@ -123,7 +123,7 @@ export function AdditionalMetrics() {
       value: "2,845",
       unit: t('extraMetrics.units.kcal'),
       change: "+8%",
-      subtitle: t('extraMetrics.dailyAvg'),
+      subtitle: t('extraMetrics.subtitles.dailyAvg'),
       color: "orange-500",
       route: "/metric/steps"
     },
@@ -133,7 +133,7 @@ export function AdditionalMetrics() {
       value: "11,234",
       unit: t('metrics.units.steps'),
       change: "+12%",
-      subtitle: t('extraMetrics.thisWeek'),
+      subtitle: t('extraMetrics.subtitles.thisWeek'),
       color: "accent",
       route: "/metric/steps"
     },
@@ -143,7 +143,7 @@ export function AdditionalMetrics() {
       value: "58",
       unit: t('extraMetrics.units.bpm'),
       change: "-3%",
-      subtitle: t('extraMetrics.morningAvg'),
+      subtitle: t('extraMetrics.subtitles.morningAvg'),
       color: "red-500",
       route: "/metric/recovery"
     },
@@ -153,7 +153,7 @@ export function AdditionalMetrics() {
       value: "2.4",
       unit: t('extraMetrics.units.liters'),
       change: "-5%",
-      subtitle: t('extraMetrics.today'),
+      subtitle: t('extraMetrics.subtitles.today'),
       color: "blue-500",
       route: "/metric/steps"
     },
@@ -163,7 +163,7 @@ export function AdditionalMetrics() {
       value: "5",
       unit: t('extraMetrics.units.times'),
       change: "+2",
-      subtitle: t('extraMetrics.thisWeek'),
+      subtitle: t('extraMetrics.subtitles.thisWeek'),
       color: "primary",
       route: "/metric/steps"
     }

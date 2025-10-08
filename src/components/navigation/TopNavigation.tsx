@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,17 +27,18 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useProfile();
+  const { t } = useTranslation();
   const [notificationCount] = useState(1);
 
   const navItems = [
-    { type: 'home' as const, path: "/dashboard", label: "Dashboard" },
-    { type: 'stats' as const, path: "/progress", label: "Progress" },
-    { type: 'body' as const, path: "/body-composition", label: "Body" },
-    { type: 'challenges' as const, path: "/challenges", label: "Challenges" },
-    { type: 'goals' as const, path: "/goals/create", label: "Goals" },
-    { type: 'feed' as const, path: "/feed", label: "Feed" },
-    { type: 'data' as const, path: "/fitness-data", label: "Data" },
-    { type: 'habits' as const, path: "/habits", label: "Habits" },
+    { type: 'home' as const, path: "/dashboard", label: t('navigation.dashboard') },
+    { type: 'stats' as const, path: "/progress", label: t('navigation.progress') },
+    { type: 'body' as const, path: "/body-composition", label: t('navigation.bodyComposition') },
+    { type: 'challenges' as const, path: "/challenges", label: t('navigation.challenges') },
+    { type: 'goals' as const, path: "/goals/create", label: t('navigation.goals') },
+    { type: 'feed' as const, path: "/feed", label: t('navigation.feed') },
+    { type: 'data' as const, path: "/fitness-data", label: t('navigation.fitnessData') },
+    { type: 'habits' as const, path: "/habits", label: t('navigation.habits') },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -111,17 +113,17 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/integrations')}>
-                <span>Device Integrations</span>
+                <span>{t('navigation.integrations')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <span>Profile</span>
+                <span>{t('navigation.profile')}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/privacy-policy')}>
-                <span>Privacy</span>
+                <span>{t('dashboard.privacyPolicy')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
