@@ -24,7 +24,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    debug: false,
+    debug: true,
     
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag', 'path', 'subdomain'],
@@ -34,6 +34,12 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    
+    react: {
+      useSuspense: false,
+    }
   });
+
+console.log('i18n initialized with language:', i18n.language);
 
 export default i18n;
