@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { OnboardingTutorial } from "@/components/tutorial/OnboardingTutorial";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
@@ -18,6 +19,7 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
             <TopNavigation />
             {children}
           </main>
+          <OnboardingTutorial />
         </div>
       </SidebarProvider>
     </ProfileProvider>

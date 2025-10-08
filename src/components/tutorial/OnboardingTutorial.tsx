@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trophy, Zap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Trophy, Zap, Target, Activity, ChevronLeft } from "lucide-react";
 
 export function OnboardingTutorial() {
   const { user } = useAuth();
@@ -36,32 +37,40 @@ export function OnboardingTutorial() {
   }, [user]);
 
   const handleNext = () => {
-    if (currentStep === 0) {
-      // Переходим на страницу челленджей
-      setIsOpen(false);
-      navigate("/challenges");
-      localStorage.setItem(`tutorial_step_${user?.id}`, "1");
-      // Откроем второй шаг через небольшую задержку
-      setTimeout(() => {
-        setCurrentStep(1);
-        setIsOpen(true);
-      }, 500);
-    } else if (currentStep === 1) {
-      // Переходим на страницу интеграций
-      setIsOpen(false);
-      navigate("/integrations");
-      localStorage.setItem(`tutorial_step_${user?.id}`, "2");
-      setTimeout(() => {
-        setCurrentStep(2);
-        setIsOpen(true);
-      }, 500);
+    const nextStep = currentStep + 1;
+    
+    if (nextStep < steps.length) {
+      setCurrentStep(nextStep);
+      if (user) {
+        localStorage.setItem(`tutorial_step_${user.id}`, String(nextStep));
+      }
+      
+      // Navigate based on step
+      if (nextStep === 1) {
+        navigate("/goals/create");
+      } else if (nextStep === 2) {
+        navigate("/challenges");
+      } else if (nextStep === 3) {
+        navigate("/integrations");
+      } else if (nextStep === 4) {
+        navigate("/habits");
+      }
     } else {
-      // Завершаем туториал
+      // Complete onboarding
       setIsOpen(false);
       if (user) {
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
       }
       navigate("/");
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      if (user) {
+        localStorage.setItem(`tutorial_step_${user.id}`, String(currentStep - 1));
+      }
     }
   };
 
@@ -75,29 +84,50 @@ export function OnboardingTutorial() {
 
   const steps = [
     {
-      title: "Welcome to FitnessChallenge! 🎉",
-      description: "Let's get you started! First, join a challenge to compete with others and achieve your fitness goals.",
-      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "View Challenges",
+      title: "Добро пожаловать! 🎉",
+      description: "Создайте свою первую персональную цель и начните отслеживать прогресс к достижению ваших фитнес-целей.",
+      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />,
+      buttonText: "Создать цель",
     },
     {
-      title: "Connect Your Devices 📱",
-      description: "Now, connect your fitness trackers (Whoop, Garmin, Apple Health) to automatically sync your progress and compete in real-time.",
+      title: "Создайте свои цели 🎯",
+      description: "Определите конкретные цели: вес, процент жира, подтягивания, VO2max и другие показатели.",
+      icon: <Target className="h-16 w-16 text-primary mx-auto mb-4" />,
+      buttonText: "Продолжить",
+    },
+    {
+      title: "Присоединяйтесь к челленджам 🏆",
+      description: "Соревнуйтесь с другими участниками, делитесь прогрессом и достигайте целей вместе!",
+      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />,
+      buttonText: "Смотреть челленджи",
+    },
+    {
+      title: "Подключите устройства 📱",
+      description: "Автоматически синхронизируйте данные с Whoop, Apple Health или Withings для точного отслеживания.",
       icon: <Zap className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Setup Integrations",
+      buttonText: "Настроить интеграции",
     },
     {
-      title: "You're All Set! ✅",
-      description: "Great! You're ready to start your fitness journey. Track your progress, compete in challenges, and achieve your goals!",
-      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Start Using App",
+      title: "Новое: Трекер привычек! ✨",
+      description: "Отслеживайте ежедневные привычки, стройте серии выполнения и развивайте дисциплину. Gamification система с достижениями!",
+      icon: <Activity className="h-16 w-16 text-primary mx-auto mb-4" />,
+      buttonText: "Начать!",
     },
   ];
+
+  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-muted-foreground mb-2">
+              <span>Шаг {currentStep + 1} из {steps.length}</span>
+              <span>{Math.round(progressPercentage)}%</span>
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
           <DialogTitle className="text-2xl text-center">
             {steps[currentStep].title}
           </DialogTitle>
@@ -111,11 +141,19 @@ export function OnboardingTutorial() {
         </div>
 
         <DialogFooter className="flex-col sm:flex-col gap-2">
-          <Button onClick={handleNext} className="w-full">
-            {steps[currentStep].buttonText}
-          </Button>
+          <div className="flex gap-2 w-full">
+            {currentStep > 0 && (
+              <Button onClick={handlePrevious} variant="outline" className="w-full">
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Назад
+              </Button>
+            )}
+            <Button onClick={handleNext} className="w-full">
+              {steps[currentStep].buttonText}
+            </Button>
+          </div>
           <Button onClick={handleSkip} variant="ghost" className="w-full">
-            Skip Tutorial
+            Пропустить обучение
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -644,6 +644,123 @@ export type Database = {
           },
         ]
       }
+      habit_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          habit_id: string
+          id: string
+          mood: string | null
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_stats: {
+        Row: {
+          completion_rate: number
+          created_at: string
+          current_streak: number
+          habit_id: string
+          id: string
+          last_completed_at: string | null
+          longest_streak: number
+          total_completions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completion_rate?: number
+          created_at?: string
+          current_streak?: number
+          habit_id: string
+          id?: string
+          last_completed_at?: string | null
+          longest_streak?: number
+          total_completions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completion_rate?: number
+          created_at?: string
+          current_streak?: number
+          habit_id?: string
+          id?: string
+          last_completed_at?: string | null
+          longest_streak?: number
+          total_completions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habits: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string
+          description: string | null
+          frequency: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          reminder_time: string | null
+          target_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          reminder_time?: string | null
+          target_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          reminder_time?: string | null
+          target_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_records: {
         Row: {
           created_at: string
