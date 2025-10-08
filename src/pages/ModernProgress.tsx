@@ -49,7 +49,8 @@ export default function ModernProgress() {
       // OPTIMIZED: Parallel fetch of all data
       const [participationsRes, goalsRes, userGoalsRes, summaryRes, userMetricsRes] = await Promise.all([
         supabase.from('challenge_participants').select('challenge_id').eq('user_id', user.id),
-        supabase.from('goals').select('*').eq('is_personal', false),
+        // IMPORTANT: fetch challenge goals for THIS user only
+        supabase.from('goals').select('*').eq('is_personal', false).eq('user_id', user.id),
         supabase.from('goals').select('*').eq('user_id', user.id),
         supabase.from('daily_health_summary')
           .select('steps, active_calories, heart_rate_avg, sleep_hours, distance_km, exercise_minutes')
