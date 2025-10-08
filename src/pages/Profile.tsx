@@ -381,6 +381,32 @@ const ProfilePage = () => {
                 <Separator />
 
                 <div className="space-y-4">
+                  <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-yellow-500">
+                    <h4 className="font-medium text-yellow-600 mb-2">Reset Onboarding</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Restart the onboarding tutorial to see the getting started guide again.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        if (user) {
+                          localStorage.removeItem(`onboarding_completed_${user.id}`);
+                          localStorage.removeItem(`onboarding_steps_${user.id}`);
+                          localStorage.removeItem(`tutorial_step_${user.id}`);
+                          toast({
+                            title: "Onboarding Reset",
+                            description: "Reload the page to see the tutorial again",
+                          });
+                          setTimeout(() => window.location.reload(), 1000);
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Reset Onboarding Tutorial
+                    </Button>
+                  </div>
+
                   <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-destructive">
                     <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
                     <p className="text-sm text-muted-foreground mb-4">
