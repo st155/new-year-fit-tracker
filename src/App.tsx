@@ -82,10 +82,10 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <>
+            <Toaster />
+            <Sonner />
             <AuthProvider>
               <BrowserRouter>
-              <Toaster />
-              <Sonner />
               <InstallPrompt />
               <UpdatePrompt />
               <Suspense fallback={<PageLoader message="Loading..." />}>
