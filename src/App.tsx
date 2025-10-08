@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -80,14 +81,15 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <BrowserRouter>
-          <AuthProvider>
-            <ErrorBoundary>
-              <InstallPrompt />
-              <UpdatePrompt />
-              <Toaster />
-              <Sonner />
-              <Suspense fallback={<PageLoader message="Loading..." />}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <ErrorBoundary>
+                <InstallPrompt />
+                <UpdatePrompt />
+                <Toaster />
+                <Sonner />
+                <Suspense fallback={<PageLoader message="Loading..." />}>
                 <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
@@ -217,10 +219,11 @@ const App = () => {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
                 </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </AuthProvider>
-        </BrowserRouter>
+               </Suspense>
+              </ErrorBoundary>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
