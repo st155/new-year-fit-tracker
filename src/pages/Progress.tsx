@@ -255,7 +255,7 @@ const ProgressPage = () => {
 
       // Быстрое построение метрик с учетом body_composition
       let metrics = buildMetricsFromData(
-        allGoals, 
+        [...challengeGoals, ...userGoals], 
         mergedMeasurements, 
         bodyCompositionRes.data || []
       );
