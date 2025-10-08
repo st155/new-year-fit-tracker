@@ -227,6 +227,11 @@
     "title": "Create New Goal",
     "subtitle": "Set a personal goal to track your progress",
     "sectionInfo": "Goal Information",
+    "tabs": {
+      "custom": "Custom Goal",
+      "copy": "Like Others",
+      "trainer": "From Trainer"
+    },
     "fields": {
       "goalName": "Goal Name *",
       "goalNamePlaceholder": "Example: Pull-ups",
@@ -252,13 +257,37 @@
       "errorRequired": "Please fill in all required fields",
       "successTitle": "Success!",
       "successCreated": "Goal created successfully",
-      "errorCreate": "Failed to create goal"
+      "errorCreate": "Failed to create goal",
+      "selectUser": "Please select a user",
+      "selectTrainer": "Please select a trainer",
+      "noUserGoals": "This user has no goals",
+      "noTrainerGoals": "Trainer has no recommended goals",
+      "copiedGoals": "Copied {{count}} goals",
+      "receivedGoals": "Received {{count}} goals from trainer",
+      "errorCopying": "Failed to copy goals",
+      "errorReceiving": "Failed to receive trainer goals"
     },
     "goalTypes": {
       "strength": { "label": "Strength Exercises", "desc": "Pull-ups, push-ups, squats, bench press" },
       "cardio": { "label": "Cardio", "desc": "Running, cycling, swimming, walking" },
       "endurance": { "label": "Endurance", "desc": "Workout duration, number of rounds" },
       "bodyComposition": { "label": "Body Composition", "desc": "Weight, body fat %, body measurements" }
+    },
+    "copyTab": {
+      "title": "Copy Goals from Other Users",
+      "description": "Select a user to copy their goals",
+      "selectUser": "Select user",
+      "loadingUsers": "Loading users...",
+      "noUsers": "No users found",
+      "copyButton": "Copy Goals"
+    },
+    "trainerTab": {
+      "title": "Get Goals from Trainer",
+      "description": "Select your trainer to receive recommended goals",
+      "selectTrainer": "Select trainer",
+      "loadingTrainers": "Loading trainers...",
+      "noTrainers": "No trainers found",
+      "getButton": "Get Goals"
     }
   }
 }

@@ -130,8 +130,8 @@ const CreateGoalPage = () => {
   const copyUserGoals = async () => {
     if (!selectedUserId) {
       toast({
-        title: "Ошибка",
-        description: "Выберите пользователя",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.selectUser'),
         variant: "destructive",
       });
       return;
@@ -149,8 +149,8 @@ const CreateGoalPage = () => {
 
       if (!userGoals || userGoals.length === 0) {
         toast({
-          title: "Информация",
-          description: "У этого пользователя нет целей",
+          title: t('createGoalPage.toasts.errorTitle'),
+          description: t('createGoalPage.toasts.noUserGoals'),
         });
         return;
       }
@@ -171,8 +171,8 @@ const CreateGoalPage = () => {
       if (insertError) throw insertError;
 
       toast({
-        title: "Успешно!",
-        description: `Скопировано ${userGoals.length} целей`,
+        title: t('createGoalPage.toasts.successTitle'),
+        description: t('createGoalPage.toasts.copiedGoals', { count: userGoals.length }),
       });
 
       // Mark onboarding step as completed
@@ -182,8 +182,8 @@ const CreateGoalPage = () => {
     } catch (error) {
       console.error('Error copying goals:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось скопировать цели",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.errorCopying'),
         variant: "destructive",
       });
     } finally {
@@ -194,8 +194,8 @@ const CreateGoalPage = () => {
   const getTrainerGoals = async () => {
     if (!selectedTrainerId) {
       toast({
-        title: "Ошибка",
-        description: "Выберите тренера",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.selectTrainer'),
         variant: "destructive",
       });
       return;
@@ -213,8 +213,8 @@ const CreateGoalPage = () => {
 
       if (!trainerGoals || trainerGoals.length === 0) {
         toast({
-          title: "Информация",
-          description: "У тренера нет рекомендованных целей",
+          title: t('createGoalPage.toasts.errorTitle'),
+          description: t('createGoalPage.toasts.noTrainerGoals'),
         });
         return;
       }
@@ -235,8 +235,8 @@ const CreateGoalPage = () => {
       if (insertError) throw insertError;
 
       toast({
-        title: "Успешно!",
-        description: `Получено ${trainerGoals.length} целей от тренера`,
+        title: t('createGoalPage.toasts.successTitle'),
+        description: t('createGoalPage.toasts.receivedGoals', { count: trainerGoals.length }),
       });
 
       // Mark onboarding step as completed
@@ -246,8 +246,8 @@ const CreateGoalPage = () => {
     } catch (error) {
       console.error('Error getting trainer goals:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось получить цели от тренера",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.errorReceiving'),
         variant: "destructive",
       });
     } finally {
@@ -258,8 +258,8 @@ const CreateGoalPage = () => {
   const createGoal = async () => {
     if (!goalForm.goal_name || !goalForm.target_value || !goalForm.target_unit) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.errorRequired'),
         variant: "destructive",
       });
       return;
@@ -304,8 +304,8 @@ const CreateGoalPage = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Goal created successfully",
+        title: t('createGoalPage.toasts.successTitle'),
+        description: t('createGoalPage.toasts.successCreated'),
       });
 
       // Mark onboarding step as completed
@@ -315,8 +315,8 @@ const CreateGoalPage = () => {
     } catch (error) {
       console.error('Error creating goal:', error);
       toast({
-        title: "Error",
-        description: "Failed to create goal",
+        title: t('createGoalPage.toasts.errorTitle'),
+        description: t('createGoalPage.toasts.errorCreate'),
         variant: "destructive",
       });
     } finally {
@@ -354,15 +354,15 @@ const CreateGoalPage = () => {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="custom" className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
-                Своя цель
+                {t('createGoalPage.tabs.custom')}
               </TabsTrigger>
               <TabsTrigger value="copy" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Как у других
+                {t('createGoalPage.tabs.copy')}
               </TabsTrigger>
               <TabsTrigger value="trainer" className="flex items-center gap-2">
                 <UserCheck className="h-4 w-4" />
-                От тренера
+                {t('createGoalPage.tabs.trainer')}
               </TabsTrigger>
             </TabsList>
 
@@ -502,10 +502,10 @@ const CreateGoalPage = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  Скопировать цели другого участника
+                  {t('createGoalPage.copyTab.title')}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Выберите участника челленджа и скопируйте все его цели себе
+                  {t('createGoalPage.copyTab.description')}
                 </p>
               </div>
 
@@ -517,7 +517,7 @@ const CreateGoalPage = () => {
                 <Card className="bg-muted/30">
                   <CardContent className="p-8 text-center">
                     <p className="text-muted-foreground">
-                      Нет доступных участников для копирования целей
+                      {t('createGoalPage.copyTab.noUsers')}
                     </p>
                   </CardContent>
                 </Card>
@@ -565,7 +565,7 @@ const CreateGoalPage = () => {
                   onClick={() => navigate('/progress')}
                   className="flex-1"
                 >
-                  Отмена
+                  {t('createGoalPage.actions.cancel')}
                 </Button>
                 <Button
                   onClick={copyUserGoals}
@@ -575,12 +575,12 @@ const CreateGoalPage = () => {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Копирование...
+                      {t('createGoalPage.actions.creating')}
                     </>
                   ) : (
                     <>
                       <Copy className="h-4 w-4 mr-2" />
-                      Скопировать цели
+                      {t('createGoalPage.copyTab.copyButton')}
                     </>
                   )}
                 </Button>
@@ -592,10 +592,10 @@ const CreateGoalPage = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                   <UserCheck className="h-5 w-5 text-primary" />
-                  Получить цели от тренера
+                  {t('createGoalPage.trainerTab.title')}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Выберите тренера и получите рекомендованные им цели
+                  {t('createGoalPage.trainerTab.description')}
                 </p>
               </div>
 
@@ -607,7 +607,7 @@ const CreateGoalPage = () => {
                 <Card className="bg-muted/30">
                   <CardContent className="p-8 text-center">
                     <p className="text-muted-foreground">
-                      У вас пока нет назначенных тренеров
+                      {t('createGoalPage.trainerTab.noTrainers')}
                     </p>
                   </CardContent>
                 </Card>
@@ -639,7 +639,7 @@ const CreateGoalPage = () => {
                               @{trainerProfile.username}
                             </p>
                           </div>
-                          <Badge variant="secondary">Тренер</Badge>
+                          <Badge variant="secondary">{t('common.trainer')}</Badge>
                           {selectedTrainerId === trainerProfile.user_id && (
                             <div className="w-2 h-2 bg-primary rounded-full"></div>
                           )}
@@ -656,7 +656,7 @@ const CreateGoalPage = () => {
                   onClick={() => navigate('/progress')}
                   className="flex-1"
                 >
-                  Отмена
+                  {t('createGoalPage.actions.cancel')}
                 </Button>
                 <Button
                   onClick={getTrainerGoals}
@@ -666,12 +666,12 @@ const CreateGoalPage = () => {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Получение...
+                      {t('createGoalPage.actions.creating')}
                     </>
                   ) : (
                     <>
                       <UserCheck className="h-4 w-4 mr-2" />
-                      Получить цели
+                      {t('createGoalPage.trainerTab.getButton')}
                     </>
                   )}
                 </Button>
