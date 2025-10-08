@@ -136,24 +136,46 @@
     "mlkgmin": "мл/кг/мин"
   },
   "metrics": {
-    "bodyFat": "BODY FAT ЖИРА",
-    "weight": "WEIGHT",
+    "bodyFat": "ПРОЦЕНТ ЖИРА",
+    "weight": "ВЕС",
     "vo2max": "VO₂MAX",
-    "recovery": "RECOVERY SCORE",
-    "steps": "DAILY STEPS",
+    "recovery": "ВОССТАНОВЛЕНИЕ",
+    "steps": "ШАГИ",
     "subtitles": {
-      "fuller": "полненькей",
-      "byLansey": "по ланзей",
-      "excellent": "отлично",
-      "good": "хорошо",
-      "low": "низко",
-      "latestSteps": "последние шаги"
+      "fuller": "Метод Фуллера",
+      "byLansey": "По методу Лэнси",
+      "excellent": "Отлично",
+      "good": "Хорошо",
+      "low": "Низко",
+      "latestSteps": "Последние данные"
     },
     "units": {
-      "kg": "кг",
+      "kg": "КГ",
       "percent": "%",
       "steps": "шагов"
     }
+  },
+  "actions": {
+    "aiAnalysis": "AI Анализ",
+    "upload": "Загрузить",
+    "newGoal": "Новая цель",
+    "progress": "Прогресс",
+    "leaderboard": "Лидеры",
+    "data": "Данные",
+    "tipTitle": "Совет дня",
+    "tipText": "Подключите устройства для автоматической синхронизации данных"
+  },
+  "ai": {
+    "fitnessTitle": "AI Анализ фитнес данных",
+    "uploadTracker": "Загрузите скриншот вашего фитнес трекера"
+  },
+  "leaderboard": {
+    "title": "Таблица лидеров",
+    "team": "КОМАНДА",
+    "rank": "МЕСТО",
+    "participant": "Участник",
+    "points": "Очки",
+    "progress": "Прогресс"
   },
   "goals": {
     "title": "Цели",
@@ -195,12 +217,35 @@
     "endDate": "Дата окончания",
     "description": "Описание"
   },
-  "leaderboard": {
-    "title": "Таблица лидеров",
-    "rank": "Место",
-    "participant": "Участник",
-    "points": "Очки",
-    "progress": "Прогресс"
+  "extraMetrics": {
+    "sleep": "СОН",
+    "strain": "НАГРУЗКА",
+    "activeMinutes": "АКТИВНЫЕ МИНУТЫ",
+    "calories": "КАЛОРИИ",
+    "avgSteps": "СР. ШАГИ",
+    "restHR": "ЧСС ПОКОЯ",
+    "hydration": "ГИДРАТАЦИЯ",
+    "workouts": "ТРЕНИРОВКИ",
+    "subtitles": {
+      "optimal": "Оптимально",
+      "moderate": "Умеренно",
+      "high": "Высоко",
+      "avgDaily": "Среднее за день",
+      "weekly": "За неделю",
+      "normal": "Норма",
+      "liters": "литров/день",
+      "thisWeek": "На этой неделе"
+    },
+    "units": {
+      "hours": "ч",
+      "score": "балл",
+      "minutes": "мин",
+      "kcal": "ккал",
+      "steps": "шагов",
+      "bpm": "уд/мин",
+      "liters": "л",
+      "count": "раз"
+    }
   },
   "notifications": {
     "title": "Уведомления",

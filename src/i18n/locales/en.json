@@ -194,12 +194,57 @@
     "endDate": "End Date",
     "description": "Description"
   },
+  "actions": {
+    "aiAnalysis": "AI Analysis",
+    "upload": "Upload",
+    "newGoal": "New Goal",
+    "progress": "Progress",
+    "leaderboard": "Leaderboard",
+    "data": "Data",
+    "tipTitle": "Tip of the Day",
+    "tipText": "Connect your devices for automatic data sync"
+  },
+  "ai": {
+    "fitnessTitle": "AI Fitness Data Analysis",
+    "uploadTracker": "Upload your fitness tracker screenshot"
+  },
   "leaderboard": {
     "title": "Leaderboard",
-    "rank": "Rank",
+    "team": "TEAM",
+    "rank": "RANK",
     "participant": "Participant", 
     "points": "Points",
     "progress": "Progress"
+  },
+  "extraMetrics": {
+    "sleep": "SLEEP",
+    "strain": "STRAIN",
+    "activeMinutes": "ACTIVE MINUTES",
+    "calories": "CALORIES",
+    "avgSteps": "AVG STEPS",
+    "restHR": "RESTING HR",
+    "hydration": "HYDRATION",
+    "workouts": "WORKOUTS",
+    "subtitles": {
+      "optimal": "Optimal",
+      "moderate": "Moderate",
+      "high": "High",
+      "avgDaily": "Daily average",
+      "weekly": "This week",
+      "normal": "Normal",
+      "liters": "liters/day",
+      "thisWeek": "This week"
+    },
+    "units": {
+      "hours": "hrs",
+      "score": "score",
+      "minutes": "min",
+      "kcal": "kcal",
+      "steps": "steps",
+      "bpm": "bpm",
+      "liters": "L",
+      "count": "times"
+    }
   },
   "notifications": {
     "title": "Notifications",
