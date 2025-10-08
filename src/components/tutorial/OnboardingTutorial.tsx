@@ -1,169 +1,223 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Zap, Target, Activity, ChevronLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Trophy, 
+  Target, 
+  Activity, 
+  Zap, 
+  CheckCircle2, 
+  Circle, 
+  ChevronDown, 
+  ChevronUp,
+  X
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function OnboardingTutorial() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+
+  const steps = [
+    {
+      id: 1,
+      title: "Создайте цели",
+      description: "Определите свои фитнес-цели",
+      icon: Target,
+      path: "/goals/create",
+      color: "text-blue-500",
+    },
+    {
+      id: 2,
+      title: "Присоединитесь к челленджу",
+      description: "Соревнуйтесь с другими",
+      icon: Trophy,
+      path: "/challenges",
+      color: "text-yellow-500",
+    },
+    {
+      id: 3,
+      title: "Подключите устройства",
+      description: "Синхронизируйте данные",
+      icon: Zap,
+      path: "/integrations",
+      color: "text-purple-500",
+    },
+    {
+      id: 4,
+      title: "Создайте привычки",
+      description: "Отслеживайте ежедневные привычки",
+      icon: Activity,
+      path: "/habits",
+      color: "text-green-500",
+    },
+  ];
 
   useEffect(() => {
     if (!user) return;
 
-    const checkOnboarding = async () => {
-      const onboardingKey = `onboarding_completed_${user.id}`;
-      const newUserKey = `new_user_${user.id}`;
-      
-      const completed = localStorage.getItem(onboardingKey);
-      const isNewUser = localStorage.getItem(newUserKey);
-      
-      // Show tutorial if user hasn't completed it, or if they're a new user
-      if (!completed || isNewUser) {
-        // Clear the new user flag
-        if (isNewUser) {
-          localStorage.removeItem(newUserKey);
-        }
-        setIsOpen(true);
+    const onboardingKey = `onboarding_completed_${user.id}`;
+    const newUserKey = `new_user_${user.id}`;
+    const completedStepsKey = `onboarding_steps_${user.id}`;
+    
+    const completed = localStorage.getItem(onboardingKey);
+    const isNewUser = localStorage.getItem(newUserKey);
+    const savedSteps = localStorage.getItem(completedStepsKey);
+    
+    if (savedSteps) {
+      setCompletedSteps(JSON.parse(savedSteps));
+    }
+    
+    if (!completed || isNewUser) {
+      if (isNewUser) {
+        localStorage.removeItem(newUserKey);
       }
-    };
-
-    checkOnboarding();
+      setIsOpen(true);
+    }
   }, [user]);
 
-  const handleNext = () => {
-    const nextStep = currentStep + 1;
+  const handleStepClick = (stepId: number, path: string) => {
+    navigate(path);
+  };
+
+  const handleStepComplete = (stepId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     
-    if (nextStep < steps.length) {
-      setCurrentStep(nextStep);
-      if (user) {
-        localStorage.setItem(`tutorial_step_${user.id}`, String(nextStep));
-      }
+    const newCompletedSteps = completedSteps.includes(stepId)
+      ? completedSteps.filter(id => id !== stepId)
+      : [...completedSteps, stepId];
+    
+    setCompletedSteps(newCompletedSteps);
+    
+    if (user) {
+      localStorage.setItem(
+        `onboarding_steps_${user.id}`,
+        JSON.stringify(newCompletedSteps)
+      );
       
-      // Navigate based on step
-      if (nextStep === 1) {
-        navigate("/goals/create");
-      } else if (nextStep === 2) {
-        navigate("/challenges");
-      } else if (nextStep === 3) {
-        navigate("/integrations");
-      } else if (nextStep === 4) {
-        navigate("/habits");
-      }
-    } else {
-      // Complete onboarding
-      setIsOpen(false);
-      if (user) {
+      // If all steps completed, mark onboarding as done
+      if (newCompletedSteps.length === steps.length) {
         localStorage.setItem(`onboarding_completed_${user.id}`, "true");
-      }
-      navigate("/");
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      if (user) {
-        localStorage.setItem(`tutorial_step_${user.id}`, String(currentStep - 1));
+        setTimeout(() => setIsOpen(false), 1000);
       }
     }
   };
 
-  const handleSkip = () => {
-    setIsOpen(false);
+  const handleClose = () => {
     if (user) {
       localStorage.setItem(`onboarding_completed_${user.id}`, "true");
     }
-    navigate("/");
+    setIsOpen(false);
   };
 
-  const steps = [
-    {
-      title: "Добро пожаловать! 🎉",
-      description: "Создайте свою первую персональную цель и начните отслеживать прогресс к достижению ваших фитнес-целей.",
-      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />,
-      buttonText: "Создать цель",
-    },
-    {
-      title: "Создайте свои цели 🎯",
-      description: "Определите конкретные цели: вес, процент жира, подтягивания, VO2max и другие показатели.",
-      icon: <Target className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Продолжить",
-    },
-    {
-      title: "Присоединяйтесь к челленджам 🏆",
-      description: "Соревнуйтесь с другими участниками, делитесь прогрессом и достигайте целей вместе!",
-      icon: <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Смотреть челленджи",
-    },
-    {
-      title: "Подключите устройства 📱",
-      description: "Автоматически синхронизируйте данные с Whoop, Apple Health или Withings для точного отслеживания.",
-      icon: <Zap className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Настроить интеграции",
-    },
-    {
-      title: "Новое: Трекер привычек! ✨",
-      description: "Отслеживайте ежедневные привычки, стройте серии выполнения и развивайте дисциплину. Gamification система с достижениями!",
-      icon: <Activity className="h-16 w-16 text-primary mx-auto mb-4" />,
-      buttonText: "Начать!",
-    },
-  ];
+  const progressPercentage = (completedSteps.length / steps.length) * 100;
 
-  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-muted-foreground mb-2">
-              <span>Шаг {currentStep + 1} из {steps.length}</span>
-              <span>{Math.round(progressPercentage)}%</span>
+    <div className="fixed bottom-4 right-4 z-50 w-80 animate-fade-in">
+      <Card className="shadow-2xl border-2 border-primary/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Trophy className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Начало работы</CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {completedSteps.length} из {steps.length} выполнено
+                </p>
+              </div>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
-          <DialogTitle className="text-2xl text-center">
-            {steps[currentStep].title}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="py-6">
-          {steps[currentStep].icon}
-          <DialogDescription className="text-center text-base">
-            {steps[currentStep].description}
-          </DialogDescription>
-        </div>
-
-        <DialogFooter className="flex-col sm:flex-col gap-2">
-          <div className="flex gap-2 w-full">
-            {currentStep > 0 && (
-              <Button onClick={handlePrevious} variant="outline" className="w-full">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Назад
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
               </Button>
-            )}
-            <Button onClick={handleNext} className="w-full">
-              {steps[currentStep].buttonText}
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={handleClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleSkip} variant="ghost" className="w-full">
-            Пропустить обучение
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Progress value={progressPercentage} className="h-2 mt-3" />
+        </CardHeader>
+
+        {isExpanded && (
+          <CardContent className="space-y-2 pt-0">
+            {steps.map((step) => {
+              const isCompleted = completedSteps.includes(step.id);
+              const Icon = step.icon;
+              
+              return (
+                <div
+                  key={step.id}
+                  onClick={() => handleStepClick(step.id, step.path)}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                    "hover:bg-accent/50 hover:border-primary/50",
+                    isCompleted && "bg-success/5 border-success/30"
+                  )}
+                >
+                  <div
+                    onClick={(e) => handleStepComplete(step.id, e)}
+                    className="cursor-pointer"
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  
+                  <Icon className={cn("h-5 w-5", step.color)} />
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "text-sm font-medium",
+                      isCompleted && "line-through text-muted-foreground"
+                    )}>
+                      {step.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+
+            {completedSteps.length === steps.length && (
+              <div className="pt-2">
+                <Badge className="w-full justify-center py-2" variant="default">
+                  🎉 Отлично! Все готово к старту!
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    </div>
   );
 }
