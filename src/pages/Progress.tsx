@@ -184,9 +184,7 @@ const ProgressPage = () => {
       const challengeIds = participationsRes.data?.map(p => p.challenge_id) || [];
       
       // Комбинируем персональные цели пользователя и цели из челленджей
-      const challengeGoals = (challengeGoalsRes.data || []).filter(g => 
-        g.challenge_id && challengeIds.includes(g.challenge_id)
-      );
+      const challengeGoals = (challengeGoalsRes.data || []) as any[];
       
       const userGoals = userGoalsRes.data || [];
       
@@ -285,7 +283,7 @@ const ProgressPage = () => {
 
   // Используем кэш
   const { data, loading, fromCache, refetch } = useProgressCache(
-    `progress_v2_${user?.id}_${selectedPeriod}`,
+    `progress_v3_${user?.id}_${selectedPeriod}`,
     fetchAllData,
     [user?.id, selectedPeriod]
   );
