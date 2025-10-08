@@ -68,17 +68,21 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
   // Дедупликация целей по имени (берем первую цель с таким именем)
   const uniqueGoals = Array.from(new Map(goals.map(g => [g.goal_name?.toLowerCase(), g])).values());
 
-  // Группируем измерения по goal_id и сортируем по дате
-  const measurementsByGoal = measurements.reduce((acc, m) => {
-    if (!acc[m.goal_id]) acc[m.goal_id] = [];
-    acc[m.goal_id].push(m);
-    return acc;
-  }, {} as Record<string, any[]>);
-
-  // Сортируем измерения по дате для корректного расчета тренда
-  Object.values(measurementsByGoal).forEach((measurementsList: any[]) => {
-    measurementsList.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
+  // Карта: имя цели -> список всех goal_id с таким именем (учитываем одинаковые цели из разных челленджей)
+  const nameToIds = new Map<string, string[]>();
+  goals.forEach(g => {
+    const key = (g.goal_name || '').toLowerCase();
+    if (!nameToIds.has(key)) nameToIds.set(key, []);
+    nameToIds.get(key)!.push(g.id);
   });
+
+  // Получить и отсортировать измерения для всех goal_id, соответствующих имени
+  const getMeasurementsForName = (normalizedName: string) => {
+    const ids = nameToIds.get(normalizedName) || [];
+    const list = measurements.filter((m: any) => ids.includes(m.goal_id));
+    list.sort((a: any, b: any) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
+    return list;
+  };
 
   return uniqueGoals.map(goal => {
     const normalized = (goal.goal_name || '').toLowerCase();
@@ -86,7 +90,7 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
     const id = mapping?.id ?? detectId(normalized);
     const color = mapping?.color ?? detectColor(normalized);
 
-    const goalMeasurements = measurementsByGoal[goal.id] || [];
+    const goalMeasurements = getMeasurementsForName(normalized);
     let currentValue = 0;
     let trend = 0;
 
@@ -274,7 +278,7 @@ const ProgressPage = () => {
 
   // Используем кэш
   const { data, loading, fromCache, refetch } = useProgressCache(
-    `progress_${user?.id}_${selectedPeriod}`,
+    `progress_v2_${user?.id}_${selectedPeriod}`,
     fetchAllData,
     [user?.id, selectedPeriod]
   );
