@@ -39,9 +39,9 @@
     "openMenu": "Открыть меню",
     "selectPage": "Выберите страницу для перехода",
     "habits": "Привычки",
-    "bodyComposition": "Состав тела",
+    "bodyComposition": "Композиция",
     "goals": "Цели",
-    "trainerDashboard": "Панель Тренера",
+    "trainerDashboard": "Тренер",
     "analytics": "Аналитика"
   },
   "descriptions": {
@@ -53,9 +53,9 @@
     "integrations": "Подключенные устройства",
     "feed": "Социальная лента активности",
     "clients": "Управление клиентами",
-    "habits": "Отслеживание привычек",
-    "bodyComposition": "Измерения тела",
-    "goals": "Создание целей"
+    "habits": "Привычки",
+    "bodyComposition": "Композиция тела",
+    "goals": "Цели"
   },
   "onboarding": {
     "title": "Начало работы",
@@ -144,10 +144,10 @@
     "mlkgmin": "мл/кг/мин"
   },
   "metrics": {
-    "bodyFat": "ПРОЦЕНТ ЖИРА",
+    "bodyFat": "% ЖИРА",
     "weight": "ВЕС",
     "vo2max": "VO₂MAX",
-    "recovery": "ВОССТАНОВЛЕНИЕ",
+    "recovery": "ВОССТ.",
     "steps": "ШАГИ",
     "subtitles": {
       "fuller": "Метод Фуллера",
@@ -228,13 +228,13 @@
   "extraMetrics": {
     "sleep": "СОН",
     "strain": "НАГРУЗКА",
-    "activeMinutes": "АКТИВНЫЕ МИНУТЫ",
-    "activeMin": "АКТИВНЫХ МИНУТ",
+    "activeMinutes": "АКТ. МИН",
+    "activeMin": "АКТ. МИН",
     "calories": "КАЛОРИИ",
-    "avgSteps": "СР. ШАГИ",
-    "restHR": "ЧСС ПОКОЯ",
-    "restHr": "ЧСС ПОКОЯ",
-    "hydration": "ГИДРАТАЦИЯ",
+    "avgSteps": "ШАГИ",
+    "restHR": "ЧСС",
+    "restHr": "ЧСС",
+    "hydration": "ВОДА",
     "workouts": "ТРЕНИРОВКИ",
     "subtitles": {
       "optimal": "Оптимально",
