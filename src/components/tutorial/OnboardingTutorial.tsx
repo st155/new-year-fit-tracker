@@ -17,11 +17,13 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export function OnboardingTutorial() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -29,32 +31,32 @@ export function OnboardingTutorial() {
   const steps = [
     {
       id: 1,
-      title: "Создайте цели",
-      description: "Определите свои фитнес-цели",
+      title: t("onboarding.steps.createGoals.title"),
+      description: t("onboarding.steps.createGoals.description"),
       icon: Target,
       path: "/goals/create",
       color: "text-blue-500",
     },
     {
       id: 2,
-      title: "Присоединитесь к челленджу",
-      description: "Соревнуйтесь с другими",
+      title: t("onboarding.steps.joinChallenge.title"),
+      description: t("onboarding.steps.joinChallenge.description"),
       icon: Trophy,
       path: "/challenges",
       color: "text-yellow-500",
     },
     {
       id: 3,
-      title: "Подключите устройства",
-      description: "Синхронизируйте данные",
+      title: t("onboarding.steps.connectDevices.title"),
+      description: t("onboarding.steps.connectDevices.description"),
       icon: Zap,
       path: "/integrations",
       color: "text-purple-500",
     },
     {
       id: 4,
-      title: "Создайте привычки",
-      description: "Отслеживайте ежедневные привычки",
+      title: t("onboarding.steps.createHabits.title"),
+      description: t("onboarding.steps.createHabits.description"),
       icon: Activity,
       path: "/habits",
       color: "text-green-500",
@@ -65,21 +67,17 @@ export function OnboardingTutorial() {
     if (!user) return;
 
     const onboardingKey = `onboarding_completed_${user.id}`;
-    const newUserKey = `new_user_${user.id}`;
     const completedStepsKey = `onboarding_steps_${user.id}`;
     
     const completed = localStorage.getItem(onboardingKey);
-    const isNewUser = localStorage.getItem(newUserKey);
     const savedSteps = localStorage.getItem(completedStepsKey);
     
     if (savedSteps) {
       setCompletedSteps(JSON.parse(savedSteps));
     }
     
-    if (!completed || isNewUser) {
-      if (isNewUser) {
-        localStorage.removeItem(newUserKey);
-      }
+    // Only show if not completed
+    if (!completed) {
       setIsOpen(true);
     }
   }, [user]);
@@ -132,9 +130,9 @@ export function OnboardingTutorial() {
                 <Trophy className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Начало работы</CardTitle>
+                <CardTitle className="text-lg">{t("onboarding.title")}</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  {completedSteps.length} из {steps.length} выполнено
+                  {completedSteps.length} {t("onboarding.of")} {steps.length} {t("onboarding.completed")}
                 </p>
               </div>
             </div>
@@ -211,7 +209,7 @@ export function OnboardingTutorial() {
             {completedSteps.length === steps.length && (
               <div className="pt-2">
                 <Badge className="w-full justify-center py-2" variant="default">
-                  🎉 Отлично! Все готово к старту!
+                  {t("onboarding.allDone")}
                 </Badge>
               </div>
             )}

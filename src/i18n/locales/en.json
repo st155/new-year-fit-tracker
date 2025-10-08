@@ -46,6 +46,30 @@
     "feed": "Social activity feed",
     "clients": "Client management"
   },
+  "onboarding": {
+    "title": "Getting Started",
+    "completed": "completed",
+    "of": "of",
+    "allDone": "🎉 Great! All set!",
+    "steps": {
+      "createGoals": {
+        "title": "Create Goals",
+        "description": "Define your fitness goals"
+      },
+      "joinChallenge": {
+        "title": "Join a Challenge",
+        "description": "Compete with others"
+      },
+      "connectDevices": {
+        "title": "Connect Devices",
+        "description": "Sync your data"
+      },
+      "createHabits": {
+        "title": "Create Habits",
+        "description": "Track daily habits"
+      }
+    }
+  },
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up", 
