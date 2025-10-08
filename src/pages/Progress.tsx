@@ -267,6 +267,22 @@ const ProgressPage = () => {
         );
       }
 
+      // Жёсткий фолбэк: если для метрики по имени всё ещё 0 — возьмём последнее значение по любому goal_id с таким именем
+      const idToName = new Map<string, string>([...challengeGoals, ...userGoals].map(g => [g.id, (g.goal_name || '').toLowerCase()]));
+      metrics = metrics.map(m => {
+        if (m.value && m.value !== 0) return m;
+        const targetName = (m.title || '').toLowerCase();
+        for (const [gid, name] of idToName.entries()) {
+          if (name === targetName) {
+            const latest = latestByGoal.get(gid);
+            if (latest && latest.value != null) {
+              return { ...m, value: Number(latest.value) || 0 };
+            }
+          }
+        }
+        return m;
+      });
+
       // Debug logs
       try {
         console.log('[Progress] goals:', allGoals.map(g => ({ name: g.goal_name, id: g.id })));
@@ -283,7 +299,7 @@ const ProgressPage = () => {
 
   // Используем кэш
   const { data, loading, fromCache, refetch } = useProgressCache(
-    `progress_v3_${user?.id}_${selectedPeriod}`,
+    `progress_v4_${user?.id}_${selectedPeriod}`,
     fetchAllData,
     [user?.id, selectedPeriod]
   );

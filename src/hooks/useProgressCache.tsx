@@ -27,8 +27,8 @@ export function useProgressCache<T>(
         const parsed: CachedData<T> = JSON.parse(cached);
         const age = Date.now() - parsed.timestamp;
         
-        // Показываем кэш если он не слишком старый (до 1 часа)
-        if (age < 60 * 60 * 1000) {
+        // Показываем кэш если он не слишком старый (по умолчанию 5 минут)
+        if (age < CACHE_EXPIRY) {
           setData(parsed.data);
           setFromCache(true);
           return true;
