@@ -37,7 +37,12 @@
     "account": "Account",
     "theme": "Theme",
     "openMenu": "Open menu",
-    "selectPage": "Select a page to navigate"
+    "selectPage": "Select a page to navigate",
+    "habits": "Habits",
+    "bodyComposition": "Body Composition",
+    "goals": "Goals",
+    "trainerDashboard": "Trainer Dashboard",
+    "analytics": "Analytics"
   },
   "descriptions": {
     "home": "Overview and statistics",
@@ -47,7 +52,10 @@
     "fitnessData": "Workout data",
     "integrations": "Connected devices",
     "feed": "Social activity feed",
-    "clients": "Client management"
+    "clients": "Client management",
+    "habits": "Track daily habits",
+    "bodyComposition": "Body measurements",
+    "goals": "Create goals"
   },
   "onboarding": {
     "title": "Getting Started",
@@ -220,9 +228,11 @@
     "sleep": "SLEEP",
     "strain": "STRAIN",
     "activeMinutes": "ACTIVE MINUTES",
+    "activeMin": "ACTIVE MIN",
     "calories": "CALORIES",
     "avgSteps": "AVG STEPS",
     "restHR": "RESTING HR",
+    "restHr": "RESTING HR",
     "hydration": "HYDRATION",
     "workouts": "WORKOUTS",
     "subtitles": {
@@ -230,20 +240,26 @@
       "moderate": "Moderate",
       "high": "High",
       "avgDaily": "Daily average",
+      "dailyAvg": "Daily average",
       "weekly": "This week",
       "normal": "Normal",
       "liters": "liters/day",
-      "thisWeek": "This week"
+      "thisWeek": "This week",
+      "avgPerNight": "Avg per night",
+      "morningAvg": "Morning avg",
+      "today": "Today"
     },
     "units": {
       "hours": "hrs",
       "score": "score",
       "minutes": "min",
+      "min": "min",
       "kcal": "kcal",
       "steps": "steps",
       "bpm": "bpm",
       "liters": "L",
-      "count": "times"
+      "count": "times",
+      "times": "times"
     }
   },
   "notifications": {

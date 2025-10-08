@@ -24,7 +24,7 @@
   "navigation": {
     "home": "Главная",
     "dashboard": "Дашборд",
-    "challenges": "Челленджи",
+    "challenges": "Челленджы",
     "progress": "Прогресс", 
     "fitnessData": "Фитнес данные",
     "integrations": "Интеграции",
@@ -37,7 +37,12 @@
     "account": "Аккаунт",
     "theme": "Тема",
     "openMenu": "Открыть меню",
-    "selectPage": "Выберите страницу для перехода"
+    "selectPage": "Выберите страницу для перехода",
+    "habits": "Привычки",
+    "bodyComposition": "Состав тела",
+    "goals": "Цели",
+    "trainerDashboard": "Панель Тренера",
+    "analytics": "Аналитика"
   },
   "descriptions": {
     "home": "Обзор и статистика",
@@ -47,7 +52,10 @@
     "fitnessData": "Данные о тренировках",
     "integrations": "Подключенные устройства",
     "feed": "Социальная лента активности",
-    "clients": "Управление клиентами"
+    "clients": "Управление клиентами",
+    "habits": "Отслеживание привычек",
+    "bodyComposition": "Измерения тела",
+    "goals": "Создание целей"
   },
   "onboarding": {
     "title": "Начало работы",
@@ -221,9 +229,11 @@
     "sleep": "СОН",
     "strain": "НАГРУЗКА",
     "activeMinutes": "АКТИВНЫЕ МИНУТЫ",
+    "activeMin": "АКТИВНЫХ МИНУТ",
     "calories": "КАЛОРИИ",
     "avgSteps": "СР. ШАГИ",
     "restHR": "ЧСС ПОКОЯ",
+    "restHr": "ЧСС ПОКОЯ",
     "hydration": "ГИДРАТАЦИЯ",
     "workouts": "ТРЕНИРОВКИ",
     "subtitles": {
@@ -231,20 +241,26 @@
       "moderate": "Умеренно",
       "high": "Высоко",
       "avgDaily": "Среднее за день",
+      "dailyAvg": "Среднее за день",
       "weekly": "За неделю",
       "normal": "Норма",
       "liters": "литров/день",
-      "thisWeek": "На этой неделе"
+      "thisWeek": "На этой неделе",
+      "avgPerNight": "Среднее за ночь",
+      "morningAvg": "Утреннее среднее",
+      "today": "Сегодня"
     },
     "units": {
       "hours": "ч",
       "score": "балл",
       "minutes": "мин",
+      "min": "мин",
       "kcal": "ккал",
       "steps": "шагов",
       "bpm": "уд/мин",
       "liters": "л",
-      "count": "раз"
+      "count": "раз",
+      "times": "раз"
     }
   },
   "notifications": {

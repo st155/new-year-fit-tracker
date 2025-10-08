@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface LeaderboardUser {
   rank: number;
@@ -20,6 +21,7 @@ interface LeaderboardUser {
 export function Leaderboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
 
@@ -163,11 +165,11 @@ export function Leaderboard() {
         <div className="flex items-center gap-2">
           <Award className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            Team Leaderboard
+            {t('leaderboard.team')} {t('leaderboard.title')}
           </h3>
         </div>
         <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-          View all →
+          {t('navigation.selectPage')} →
         </span>
       </div>
 
@@ -217,7 +219,7 @@ export function Leaderboard() {
                       {item.isUser && <span className="ml-1.5 text-xs text-primary/70">(You)</span>}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {item.points} points
+                      {item.points} {t('leaderboard.points')}
                     </span>
                   </div>
                 </div>
