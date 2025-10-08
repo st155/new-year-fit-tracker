@@ -14,6 +14,7 @@ import { FitnessCard } from "@/components/ui/fitness-card";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
 
 const CreateGoalPage = () => {
   const { user } = useAuth();
@@ -174,6 +175,9 @@ const CreateGoalPage = () => {
         description: `Скопировано ${userGoals.length} целей`,
       });
 
+      // Mark onboarding step as completed
+      completeOnboardingStep(user!.id, ONBOARDING_STEPS.CREATE_GOALS);
+
       navigate('/progress');
     } catch (error) {
       console.error('Error copying goals:', error);
@@ -234,6 +238,9 @@ const CreateGoalPage = () => {
         title: "Успешно!",
         description: `Получено ${trainerGoals.length} целей от тренера`,
       });
+
+      // Mark onboarding step as completed
+      completeOnboardingStep(user!.id, ONBOARDING_STEPS.CREATE_GOALS);
 
       navigate('/progress');
     } catch (error) {
@@ -300,6 +307,9 @@ const CreateGoalPage = () => {
         title: "Success!",
         description: "Goal created successfully",
       });
+
+      // Mark onboarding step as completed
+      completeOnboardingStep(user!.id, ONBOARDING_STEPS.CREATE_GOALS);
 
       navigate('/progress');
     } catch (error) {

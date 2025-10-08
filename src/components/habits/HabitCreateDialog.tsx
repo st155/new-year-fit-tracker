@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
 
 interface HabitCreateDialogProps {
   open: boolean;
@@ -71,6 +72,10 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
       if (error) throw error;
 
       toast.success("Привычка создана! 🎉");
+      
+      // Mark onboarding step as completed
+      completeOnboardingStep(user.id, ONBOARDING_STEPS.CREATE_HABITS);
+      
       onOpenChange(false);
       
       // Reset form

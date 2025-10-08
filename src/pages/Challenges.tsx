@@ -16,6 +16,7 @@ import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { ChallengesListSkeleton } from "@/components/ui/universal-skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
 
 
 const Challenges = () => {
@@ -149,6 +150,9 @@ const Challenges = () => {
         title: "Success!",
         description: "You have joined the challenge"
       });
+
+      // Mark onboarding step as completed
+      completeOnboardingStep(user.id, ONBOARDING_STEPS.JOIN_CHALLENGE);
     } catch (error) {
       console.error('Error joining challenge:', error);
       toast({
