@@ -395,7 +395,7 @@ async function saveSleepData(data: any, userId: string, whoopSleepId: string) {
       // Сохраняем значения сна
       if (metric.metric_name === 'Sleep Duration' && data.score?.sleep_duration_score !== undefined) {
         const durationHours = data.score.sleep_duration_score / 100 * 8; // примерный расчет
-        const { error } = await supabase.from('metric_values').upsert(
+        const { error } = await supabase.from('metric_values').insert(
           {
             user_id: userId,
             metric_id: metricId,
@@ -403,8 +403,7 @@ async function saveSleepData(data: any, userId: string, whoopSleepId: string) {
             measurement_date: sleepDate,
             external_id: whoopSleepId,
             source_data: { sleep_data: data, source: 'whoop_webhook' }
-          },
-          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+          }
         );
         
         if (error && error.code !== '23505') {
@@ -413,7 +412,7 @@ async function saveSleepData(data: any, userId: string, whoopSleepId: string) {
       }
 
       if (metric.metric_name === 'Sleep Efficiency' && data.score?.sleep_efficiency_percentage !== undefined) {
-        const { error } = await supabase.from('metric_values').upsert(
+        const { error } = await supabase.from('metric_values').insert(
           {
             user_id: userId,
             metric_id: metricId,
@@ -421,8 +420,7 @@ async function saveSleepData(data: any, userId: string, whoopSleepId: string) {
             measurement_date: sleepDate,
             external_id: whoopSleepId,
             source_data: { sleep_data: data, source: 'whoop_webhook' }
-          },
-          { onConflict: 'user_id,metric_id,measurement_date', ignoreDuplicates: false }
+          }
         );
         
         if (error && error.code !== '23505') {
