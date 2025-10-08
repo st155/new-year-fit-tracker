@@ -78,18 +78,17 @@ const App = () => {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <>
-            <AuthProvider>
-              <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <BrowserRouter>
+          <AuthProvider>
+            <ErrorBoundary>
               <InstallPrompt />
               <UpdatePrompt />
               <Toaster />
               <Sonner />
               <Suspense fallback={<PageLoader message="Loading..." />}>
-            <Routes>
+                <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/" element={<Landing />} />
@@ -217,14 +216,13 @@ const App = () => {
             } />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          </BrowserRouter>
-        </AuthProvider>
-      </>
-    </ThemeProvider>
-  </QueryClientProvider>
-  </ErrorBoundary>
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
