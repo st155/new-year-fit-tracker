@@ -167,7 +167,8 @@ const ProgressPage = () => {
         supabase
           .from('goals')
           .select('*')
-          .eq('is_personal', false),
+          .eq('is_personal', false)
+          .eq('user_id', user.id),
         supabase
           .from('body_composition')
           .select('*')
@@ -210,12 +211,31 @@ const ProgressPage = () => {
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
+      // VO2Max как резерв из metric_values (если нет измерений)
+      const { data: vo2Values } = await supabase
+        .from('metric_values')
+        .select(`value, measurement_date, user_metrics!inner(metric_name)`) 
+        .eq('user_id', user.id)
+        .eq('user_metrics.metric_name', 'VO2Max')
+        .gte('measurement_date', periodStart.toISOString().split('T')[0])
+        .order('measurement_date', { ascending: false })
+        .limit(1);
+
       // Быстрое построение метрик с учетом body_composition
-      const metrics = buildMetricsFromData(
+      let metrics = buildMetricsFromData(
         allGoals, 
         allMeasurements || [], 
         bodyCompositionRes.data || []
       );
+
+      // Подставляем VO2Max из metric_values, если метрика есть, но измерений не было
+      if (vo2Values && vo2Values.length > 0) {
+        metrics = metrics.map(m =>
+          m.id === 'vo2max' && (!m.value || m.value === 0)
+            ? { ...m, value: Number(vo2Values[0].value) || 0 }
+            : m
+        );
+      }
 
       return { goals: allGoals, metrics };
     } catch (error) {
