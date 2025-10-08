@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { CommentDialog } from "./CommentDialog";
@@ -270,13 +270,29 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
   const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
   
-  // Format time
-  const getRelativeTime = () => {
+  // Format time - use measurement_date from metadata if available
+  const getFormattedDate = () => {
     try {
-      return formatDistanceToNow(new Date(activity.created_at), { 
-        addSuffix: true, 
-        locale: ru 
-      });
+      const dateStr = activity.metadata?.measurement_date || activity.created_at;
+      const date = new Date(dateStr);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const measurementDate = new Date(date);
+      measurementDate.setHours(0, 0, 0, 0);
+      
+      if (measurementDate.getTime() === today.getTime()) {
+        return 'Сегодня';
+      }
+      
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (measurementDate.getTime() === yesterday.getTime()) {
+        return 'Вчера';
+      }
+      
+      // For older dates, show the date
+      return format(date, 'd MMM', { locale: ru });
     } catch {
       return '';
     }
@@ -314,7 +330,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
             {getFormattedActivityText()}
           </p>
           <p className="text-[10px] text-gray-500 mt-0.5">
-            {getRelativeTime()}
+            {getFormattedDate()}
           </p>
         </div>
 
