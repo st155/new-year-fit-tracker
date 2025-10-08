@@ -67,23 +67,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'check-status' })
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'check-status' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
-      );
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       setStatus(data);
       
       if (data.isConnected) {
@@ -176,23 +174,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       // Получаем URL для авторизации
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'auth' })
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'auth' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
-      );
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       setAuthUrl(data.authUrl);
 
       // Заменяем popup на прямой редирект - более надежно
@@ -241,23 +237,21 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'setup-webhooks' })
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'setup-webhooks' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
-      );
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       console.log('Webhook setup result:', data);
 
       const isV2 = typeof data.message === 'string' && data.message.toLowerCase().includes('v2');
@@ -343,23 +337,20 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'sync' })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!session?.access_token) {
+        throw new Error('No active session');
       }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'sync' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      const data = await response.json();
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: 'Sync Complete',
@@ -430,26 +421,23 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ 
-            action: 'sync',
-            tempTokens
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!session?.access_token) {
+        throw new Error('No active session');
       }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { 
+          action: 'sync',
+          tempTokens
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      const data = await response.json();
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: 'Initial Sync Complete',
@@ -483,23 +471,20 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsSyncing(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'sync', code })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!session?.access_token) {
+        throw new Error('No active session');
       }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'sync', code },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      const data = await response.json();
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: 'Whoop Connected',
@@ -529,20 +514,19 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
       setIsDisconnecting(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(
-        `https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`
-          },
-          body: JSON.stringify({ action: 'disconnect' })
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+      
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'disconnect' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
-      );
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
       toast({
