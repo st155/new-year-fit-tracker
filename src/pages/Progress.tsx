@@ -205,13 +205,13 @@ const ProgressPage = () => {
         return { goals: [], metrics: [] };
       }
 
-      // Загружаем только измерения за выбранный период для всех целей
-      const goalIds = allGoals.map(g => g.id);
+      // Загружаем измерения за выбранный период для ВСЕХ goal_id (включая дубликаты имён)
+      const allGoalIdsForMeasurements = [...challengeGoals, ...userGoals].map(g => g.id);
       const { data: periodMeasurements } = await supabase
         .from('measurements')
         .select('goal_id, value, measurement_date')
         .eq('user_id', user.id)
-        .in('goal_id', goalIds)
+        .in('goal_id', allGoalIdsForMeasurements)
         .gte('measurement_date', periodStart.toISOString().split('T')[0])
         .order('measurement_date', { ascending: false });
 
@@ -220,7 +220,7 @@ const ProgressPage = () => {
         .from('measurements')
         .select('goal_id, value, measurement_date')
         .eq('user_id', user.id)
-        .in('goal_id', goalIds)
+        .in('goal_id', allGoalIdsForMeasurements)
         .order('measurement_date', { ascending: false });
 
       // Берём по одному самому свежему значению на цель
@@ -237,7 +237,7 @@ const ProgressPage = () => {
         periodByGoal.set(m.goal_id, arr);
       });
       const mergedMeasurements: any[] = [...(periodMeasurements || [])];
-      for (const gid of goalIds) {
+      for (const gid of allGoalIdsForMeasurements) {
         if (!(periodByGoal.get(gid)?.length) && latestByGoal.has(gid)) {
           mergedMeasurements.push(latestByGoal.get(gid)!);
         }
@@ -268,6 +268,13 @@ const ProgressPage = () => {
             : m
         );
       }
+
+      // Debug logs
+      try {
+        console.log('[Progress] goals:', allGoals.map(g => ({ name: g.goal_name, id: g.id })));
+        console.log('[Progress] measurements:', mergedMeasurements.length);
+        console.log('[Progress] metrics preview:', metrics.map(m => ({ title: m.title, value: m.value })));
+      } catch {}
 
       return { goals: allGoals, metrics };
     } catch (error) {
