@@ -515,35 +515,46 @@ async function handleSync(req: Request, body: any = {}) {
   const authHeader = req.headers.get('authorization');
   console.log('Sync request - Auth header present:', !!authHeader);
   
-  if (!authHeader) {
-    console.error('Missing authorization header for sync');
-    return new Response(
-      JSON.stringify({ 
-        error: 'Authorization required',
-        message: 'No authorization header provided' 
-      }),
-      { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-  }
-
-  const jwt = authHeader.replace('Bearer ', '');
-  const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+  let userId: string;
   
-  if (userError || !user) {
-    console.error('Invalid user token:', userError?.message);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Invalid token',
-        message: userError?.message || 'Invalid user token' 
-      }),
-      { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+  // Если передан userId в body, используем его (для scheduled sync с service role)
+  if (body?.userId) {
+    console.log('Using userId from body for scheduled sync:', body.userId);
+    userId = body.userId;
+  } else {
+    // Иначе требуем авторизацию пользователя
+    if (!authHeader) {
+      console.error('Missing authorization header for sync');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Authorization required',
+          message: 'No authorization header provided' 
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      console.error('Invalid user token:', userError?.message);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid token',
+          message: userError?.message || 'Invalid user token' 
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    userId = user.id;
   }
 
   // Сначала проверяем, есть ли временные токены или код авторизации в запросе
@@ -552,7 +563,7 @@ async function handleSync(req: Request, body: any = {}) {
   let refreshToken: string | null | undefined;
   let expiresIn: number | undefined;
 
-  console.log('Sync request body:', { hasCode: !!body?.code, hasTempTokens: !!body?.tempTokens, userId: user.id });
+  console.log('Sync request body:', { hasCode: !!body?.code, hasTempTokens: !!body?.tempTokens, userId });
 
   if (body?.code) {
     console.log('Processing authorization code for sync');
@@ -568,7 +579,7 @@ async function handleSync(req: Request, body: any = {}) {
       const { error: saveError } = await supabase
         .from('whoop_tokens')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           access_token: accessToken,
           refresh_token: refreshToken,
           expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
@@ -588,7 +599,7 @@ async function handleSync(req: Request, body: any = {}) {
         const { data: existingTokens, error: tokenErr } = await supabase
           .from('whoop_tokens')
           .select('access_token, refresh_token, expires_at')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .order('updated_at', { ascending: false });
           
         const existing = existingTokens && existingTokens.length > 0 ? existingTokens[0] : null;
@@ -612,7 +623,7 @@ async function handleSync(req: Request, body: any = {}) {
     const { error: saveError } = await supabase
       .from('whoop_tokens')
       .upsert({
-        user_id: user.id,
+        user_id: userId,
         access_token: accessToken,
         refresh_token: refreshToken,
         expires_at: new Date(Date.now() + (expiresIn ?? 3600) * 1000).toISOString(),
@@ -626,7 +637,7 @@ async function handleSync(req: Request, body: any = {}) {
   } else {
     // Получаем валидный токен (с автоматическим обновлением)
     try {
-      accessToken = await getValidAccessToken(user.id);
+      accessToken = await getValidAccessToken(userId);
     } catch (tokenError: any) {
       console.error('Error getting valid token:', tokenError?.message);
       return new Response(
@@ -643,7 +654,7 @@ async function handleSync(req: Request, body: any = {}) {
   }
 
   // Синхронизируем данные
-  const syncResult = await syncWhoopData(user.id, accessToken!);
+  const syncResult = await syncWhoopData(userId, accessToken!);
 
   return new Response(
     JSON.stringify({ 
