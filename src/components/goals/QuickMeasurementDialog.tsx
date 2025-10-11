@@ -141,11 +141,11 @@ export function QuickMeasurementDialog({
       onOpenChange={onOpenChange}
       title="Добавить измерение"
       description={`Быстрое добавление результата для цели: ${goal.goal_name}`}
-      snapPoints={[75, 95]}
+      snapPoints={[85, 95]}
       className="max-w-[95vw] sm:max-w-md"
     >
         
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4 pt-2 pb-4 overflow-y-auto max-h-[60vh]">
           <div>
             <Label htmlFor="quick-value">
               Результат ({goal.target_unit})
@@ -198,24 +198,24 @@ export function QuickMeasurementDialog({
               label="Добавить фото"
             />
           </div>
+        </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={addMeasurement}
-              className="flex-1 bg-gradient-primary hover:opacity-90"
-              disabled={isSubmitting || !form.value.trim()}
-            >
-              {isSubmitting ? "Добавляю..." : "Добавить"}
-            </Button>
-          </div>
+        <div className="flex gap-2 pt-2 pb-2 border-t bg-background sticky bottom-0">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            Отмена
+          </Button>
+          <Button
+            onClick={addMeasurement}
+            className="flex-1 bg-gradient-primary hover:opacity-90"
+            disabled={isSubmitting || !form.value.trim()}
+          >
+            {isSubmitting ? "Добавляю..." : "Добавить"}
+          </Button>
         </div>
     </ResponsiveDialog>
   );
