@@ -43,6 +43,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const BodyComposition = lazy(() => import("./pages/BodyComposition"));
 const Habits = lazy(() => import("./pages/Habits"));
+const Goals = lazy(() => import("./pages/Goals"));
 
 // Callbacks - load on demand
 const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
@@ -211,6 +212,13 @@ const App = () => {
               <ProtectedRoute>
                 <ModernAppLayout>
                   <Habits />
+                </ModernAppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/goals" element={
+              <ProtectedRoute>
+                <ModernAppLayout>
+                  <Goals />
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
