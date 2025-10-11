@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TrendingDown, TrendingUp, Target } from 'lucide-react';
+import { ArrowLeft, TrendingDown, TrendingUp, Target, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
 
 interface WeightData {
   date: string;
@@ -24,6 +25,8 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
   const [loading, setLoading] = useState(true);
   const [currentWeight, setCurrentWeight] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
+  const [weightGoal, setWeightGoal] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -36,7 +39,21 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
 
     try {
       const endDate = new Date();
-      const startDate = subDays(endDate, 30); // Последние 30 дней
+      const startDate = subDays(endDate, 30);
+
+      // Получаем цель по весу
+      const { data: weightGoalData } = await supabase
+        .from('goals')
+        .select('id, goal_name, goal_type, target_value, target_unit')
+        .eq('user_id', user.id)
+        .ilike('goal_name', '%вес%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (weightGoalData) {
+        setWeightGoal(weightGoalData);
+      }
 
       // Сначала получаем данные из Withings (metric_values)
       const { data: withingsWeight } = await supabase
@@ -134,20 +151,31 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+    <div className="h-full pb-6 px-4 pt-4 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onBack}
-          className="rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Прогресс веса</h1>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onBack}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Прогресс веса</h1>
+          </div>
         </div>
+        {weightGoal && (
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            size="icon"
+            className="rounded-full bg-gradient-primary hover:opacity-90 shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Key Metrics */}
@@ -315,6 +343,16 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
           ))}
         </div>
       </div>
+
+      {/* Quick Measurement Dialog */}
+      {weightGoal && (
+        <QuickMeasurementDialog
+          goal={weightGoal}
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onMeasurementAdded={fetchWeightData}
+        />
+      )}
     </div>
   );
 }

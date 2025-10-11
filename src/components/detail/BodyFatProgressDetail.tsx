@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TrendingDown, TrendingUp, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, TrendingDown, TrendingUp, Target, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, addDays, isToday, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
 interface BodyFatData {
   date: string;
   bodyFat: number;
@@ -24,7 +25,9 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
   const [currentBodyFat, setCurrentBodyFat] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [targetBodyFat, setTargetBodyFat] = useState<number>(11);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // По умолчанию сегодня
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [bodyFatGoal, setBodyFatGoal] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const handlePreviousDay = () => {
     setSelectedDate(prev => subDays(prev, 1));
@@ -62,17 +65,20 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
       const startDate = subDays(endDate, 30);
 
       // Получаем цель по жиру
-      const { data: bodyFatGoal } = await supabase
+      const { data: bodyFatGoalData } = await supabase
         .from('goals')
-        .select('target_value')
+        .select('id, goal_name, goal_type, target_value, target_unit')
         .eq('user_id', user.id)
         .ilike('goal_name', '%жир%')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (bodyFatGoal?.target_value) {
-        setTargetBodyFat(Number(bodyFatGoal.target_value));
+      if (bodyFatGoalData) {
+        setBodyFatGoal(bodyFatGoalData);
+        if (bodyFatGoalData.target_value) {
+          setTargetBodyFat(Number(bodyFatGoalData.target_value));
+        }
       }
 
       // Сначала получаем данные из Withings (metric_values)
@@ -181,20 +187,31 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+    <div className="h-full pb-6 px-4 pt-4 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onBack}
-          className="rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Процент жировой массы тела</h1>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onBack}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Процент жировой массы тела</h1>
+          </div>
         </div>
+        {bodyFatGoal && (
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            size="icon"
+            className="rounded-full bg-gradient-primary hover:opacity-90 shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Date Navigation */}
@@ -404,6 +421,16 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
           ))}
         </div>
       </div>
+
+      {/* Quick Measurement Dialog */}
+      {bodyFatGoal && (
+        <QuickMeasurementDialog
+          goal={bodyFatGoal}
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onMeasurementAdded={fetchBodyFatData}
+        />
+      )}
     </div>
   );
 }

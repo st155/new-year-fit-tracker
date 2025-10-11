@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 
 interface GoalData {
   date: string;
@@ -34,6 +35,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
   const [loading, setLoading] = useState(true);
   const [currentValue, setCurrentValue] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user && goal) {
@@ -123,20 +125,29 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
   return (
     <div className="space-y-6">
       {/* Заголовок с навигацией */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={onBack} className="shrink-0">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад
-        </Button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{goal.goal_name}</h2>
-          <Badge className={`mt-2 ${getGoalTypeColor(goal.goal_type)}`}>
-            {goal.goal_type === 'strength' ? 'Сила' :
-             goal.goal_type === 'cardio' ? 'Кардио' :
-             goal.goal_type === 'endurance' ? 'Выносливость' :
-             'Состав тела'}
-          </Badge>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={onBack} className="shrink-0">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Button>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold">{goal.goal_name}</h2>
+            <Badge className={`mt-2 ${getGoalTypeColor(goal.goal_type)}`}>
+              {goal.goal_type === 'strength' ? 'Сила' :
+               goal.goal_type === 'cardio' ? 'Кардио' :
+               goal.goal_type === 'endurance' ? 'Выносливость' :
+               'Состав тела'}
+            </Badge>
+          </div>
         </div>
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          size="icon"
+          className="rounded-full bg-gradient-primary hover:opacity-90 shrink-0"
+        >
+          <Plus className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* Ключевые метрики */}
@@ -273,6 +284,14 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Quick Measurement Dialog */}
+      <QuickMeasurementDialog
+        goal={goal}
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onMeasurementAdded={fetchGoalData}
+      />
     </div>
   );
 };

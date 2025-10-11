@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TrendingDown, TrendingUp, Heart } from 'lucide-react';
+import { ArrowLeft, TrendingDown, TrendingUp, Heart, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
 
 interface VO2MaxData {
   date: string;
@@ -24,6 +25,8 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
   const [loading, setLoading] = useState(true);
   const [currentVO2Max, setCurrentVO2Max] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
+  const [vo2maxGoal, setVO2maxGoal] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -36,7 +39,21 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
 
     try {
       const endDate = new Date();
-      const startDate = subDays(endDate, 90); // Последние 90 дней для VO2Max
+      const startDate = subDays(endDate, 90);
+
+      // Получаем цель по VO2Max
+      const { data: vo2maxGoalData } = await supabase
+        .from('goals')
+        .select('id, goal_name, goal_type, target_value, target_unit')
+        .eq('user_id', user.id)
+        .ilike('goal_name', '%vo2%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (vo2maxGoalData) {
+        setVO2maxGoal(vo2maxGoalData);
+      }
 
       // Получаем данные VO2Max из metric_values
       const { data: vo2maxMetrics } = await supabase
@@ -125,20 +142,31 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+    <div className="h-full pb-6 px-4 pt-4 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onBack}
-          className="rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Прогресс VO2Max</h1>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onBack}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Прогресс VO2Max</h1>
+          </div>
         </div>
+        {vo2maxGoal && (
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            size="icon"
+            className="rounded-full bg-gradient-primary hover:opacity-90 shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Key Metrics */}
@@ -349,6 +377,16 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* Quick Measurement Dialog */}
+      {vo2maxGoal && (
+        <QuickMeasurementDialog
+          goal={vo2maxGoal}
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onMeasurementAdded={fetchVO2MaxData}
+        />
+      )}
     </div>
   );
 }
