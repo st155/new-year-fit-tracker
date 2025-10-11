@@ -145,7 +145,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
+    <div className="h-full pb-6 px-4 pt-4 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
