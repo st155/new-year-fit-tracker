@@ -309,7 +309,7 @@ const ProgressPage = () => {
   // Loading skeleton for metrics grid
   if (loading && !fromCache) {
     return (
-      <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto">
+      <div className="h-full pb-6 px-4 pt-4 overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <Skeleton className="h-8 w-48 mb-2" />
@@ -335,7 +335,7 @@ const ProgressPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto relative">
+    <div className="h-full pb-6 px-4 pt-4 overflow-y-auto relative">
       <SwipeIndicator 
         progress={swipeProgress}
         direction={swipeDirection}
