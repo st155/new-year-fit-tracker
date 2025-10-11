@@ -327,50 +327,48 @@ const CreateGoalPage = () => {
   const selectedGoalType = goalTypes.find(type => type.value === goalForm.goal_type);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto p-6">
-        {/* Заголовок */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-2xl mx-auto p-4">
+        {/* Compact Header */}
+        <div className="mb-4">
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => navigate('/progress')}
-            className="mb-4"
+            className="mb-2 -ml-2 h-8 px-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
             {t('createGoalPage.backToProgress')}
           </Button>
           
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             {t('createGoalPage.title')}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-1">
             {t('createGoalPage.subtitle')}
           </p>
         </div>
 
-        <FitnessCard className="p-6 animate-fade-in">
+        <FitnessCard className="p-4 animate-fade-in">
           {/* Табы для выбора способа создания */}
-          <Tabs value={creationMode} onValueChange={(v) => setCreationMode(v as any)} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="custom" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
+          <Tabs value={creationMode} onValueChange={(v) => setCreationMode(v as any)} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3 h-9">
+              <TabsTrigger value="custom" className="text-xs">
                 {t('createGoalPage.tabs.custom')}
               </TabsTrigger>
-              <TabsTrigger value="copy" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
+              <TabsTrigger value="copy" className="text-xs">
                 {t('createGoalPage.tabs.copy')}
               </TabsTrigger>
-              <TabsTrigger value="trainer" className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4" />
+              <TabsTrigger value="trainer" className="text-xs">
                 {t('createGoalPage.tabs.trainer')}
               </TabsTrigger>
             </TabsList>
 
             {/* Создать свою цель */}
-            <TabsContent value="custom" className="space-y-6">
+            <TabsContent value="custom" className="space-y-4 mt-3">
               <div>
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Target className="h-5 w-5 text-primary" />
+                <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <Target className="h-4 w-4 text-primary" />
                   {t('createGoalPage.sectionInfo')}
                 </h2>
               </div>

@@ -43,21 +43,45 @@ const GoalsPage = () => {
 
       if (error) throw error;
 
+      console.log('[Goals Page] Loaded goals:', allGoals?.length, allGoals);
+
       if (allGoals && allGoals.length > 0) {
         // Загружаем измерения для каждой цели
         const goalsWithProgress = await Promise.all(
           allGoals.map(async (goal) => {
             const { data: measurements } = await supabase
               .from('measurements')
-              .select('value')
+              .select('value, measurement_date')
               .eq('goal_id', goal.id)
               .order('measurement_date', { ascending: false })
+              .order('created_at', { ascending: false })
               .limit(1);
 
             const currentValue = measurements?.[0]?.value || 0;
-            const progress = goal.target_value 
-              ? Math.min(100, Math.round((currentValue / goal.target_value) * 100))
-              : 0;
+            
+            // Более умный расчет прогресса
+            let progress = 0;
+            if (goal.target_value) {
+              const isLowerBetter = ['вес', 'жир', 'fat', 'weight', 'бег', 'run'].some(word => 
+                goal.goal_name.toLowerCase().includes(word)
+              );
+              
+              if (isLowerBetter) {
+                if (currentValue <= 0) {
+                  progress = 0;
+                } else if (currentValue <= goal.target_value) {
+                  progress = 100;
+                } else {
+                  const maxReasonable = goal.target_value * 2;
+                  const capped = Math.min(currentValue, maxReasonable);
+                  progress = Math.max(0, Math.round(((maxReasonable - capped) / (maxReasonable - goal.target_value)) * 100));
+                }
+              } else {
+                progress = Math.min(100, Math.round((currentValue / goal.target_value) * 100));
+              }
+            }
+            
+            console.log(`[Goals Page] ${goal.goal_name}: current=${currentValue}, target=${goal.target_value}, progress=${progress}%`);
 
             return {
               ...goal,
@@ -113,53 +137,53 @@ const GoalsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+    <div className="min-h-screen pb-20 px-4 pt-4">
+      {/* Compact Header */}
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
           Goals
         </h1>
-        <p className="text-muted-foreground">
-          Track and achieve your fitness targets
+        <p className="text-xs text-muted-foreground">
+          Track your fitness targets
         </p>
       </div>
 
-      {/* Create Goal Button */}
-      <div className="mb-6">
+      {/* Create Goal Button - Compact */}
+      <div className="mb-4">
         <Button 
           onClick={() => navigate('/goals/create')}
-          className="w-full h-14 bg-gradient-primary hover:opacity-90 transition-all"
+          className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-all"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-4 w-4 mr-2" />
           Create New Goal
         </Button>
       </div>
 
       {/* Current Goals Section */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : goals.length === 0 ? (
-        <div className="text-center py-12 px-4">
-          <div className="p-6 rounded-full bg-muted/20 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-            <Target className="w-12 h-12 text-muted-foreground/50" />
+        <div className="text-center py-8 px-4">
+          <div className="p-4 rounded-full bg-muted/20 w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+            <Target className="w-8 h-8 text-muted-foreground/50" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No Goals Yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <h3 className="text-base font-semibold mb-1">No Goals Yet</h3>
+          <p className="text-xs text-muted-foreground">
             Create your first goal to start tracking progress
           </p>
         </div>
       ) : (
         <>
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              My Current Goals
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              My Current Goals ({goals.length})
             </h2>
           </div>
 
-          <div className="space-y-3 mb-8">
+          <div className="space-y-2.5 mb-6">
             {goals.map((goal) => {
               const isHigherBetter = !['вес', 'жир', 'бег'].some(word => 
                 goal.goal_name.toLowerCase().includes(word)
@@ -169,23 +193,23 @@ const GoalsPage = () => {
                 <div
                   key={goal.id}
                   onClick={() => handleGoalClick(goal)}
-                  className="p-4 rounded-xl glass border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
+                  className="p-3 rounded-xl glass border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
                 >
-                  {/* Goal Header */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {/* Goal Header - More Compact */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                         {goal.goal_name}
                       </h3>
                       {!goal.is_personal && (
-                        <Badge variant="outline" className="mt-1 text-xs">
-                          Challenge Goal
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 mt-0.5">
+                          Challenge
                         </Badge>
                       )}
                     </div>
                     <Badge 
                       className={cn(
-                        "ml-2 font-semibold",
+                        "ml-2 font-semibold text-xs h-6 px-2",
                         goal.progress >= 100 ? "bg-gradient-success" : 
                         goal.progress >= 50 ? "bg-gradient-primary" : 
                         "bg-gradient-accent"
@@ -195,12 +219,12 @@ const GoalsPage = () => {
                     </Badge>
                   </div>
 
-                  {/* Progress Bar */}
-                  <Progress value={goal.progress} className="h-2 mb-3" />
+                  {/* Progress Bar - Thinner */}
+                  <Progress value={goal.progress} className="h-1.5 mb-2" />
 
-                  {/* Stats */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-4">
+                  {/* Stats - More Compact */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
                       <div>
                         <span className="text-muted-foreground">Current: </span>
                         <span className="font-medium">
@@ -217,7 +241,7 @@ const GoalsPage = () => {
 
                     {goal.current_value && goal.current_value > 0 && (
                       <div className={cn(
-                        "flex items-center gap-1 text-xs font-medium",
+                        "flex items-center gap-1 text-[10px] font-medium",
                         isHigherBetter 
                           ? (goal.current_value >= goal.target_value ? "text-success" : "text-muted-foreground")
                           : (goal.current_value <= goal.target_value ? "text-success" : "text-muted-foreground")
@@ -226,24 +250,24 @@ const GoalsPage = () => {
                           goal.current_value >= goal.target_value ? (
                             <>
                               <TrendingUp className="h-3 w-3" />
-                              <span>Achieved</span>
+                              <span>Done</span>
                             </>
                           ) : (
                             <>
                               <TrendingUp className="h-3 w-3" />
-                              <span>In Progress</span>
+                              <span>Active</span>
                             </>
                           )
                         ) : (
                           goal.current_value <= goal.target_value ? (
                             <>
                               <TrendingDown className="h-3 w-3" />
-                              <span>Achieved</span>
+                              <span>Done</span>
                             </>
                           ) : (
                             <>
                               <Minus className="h-3 w-3" />
-                              <span>In Progress</span>
+                              <span>Active</span>
                             </>
                           )
                         )}
@@ -257,19 +281,19 @@ const GoalsPage = () => {
         </>
       )}
 
-      {/* Additional sections can go here */}
+      {/* Stats Summary - Compact */}
       {goals.length > 0 && (
-        <div className="pt-4 border-t border-border/30">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl glass text-center">
-              <div className="text-2xl font-bold text-primary mb-1">{goals.length}</div>
-              <div className="text-xs text-muted-foreground">Total Goals</div>
+        <div className="pt-3 border-t border-border/30">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-xl glass text-center">
+              <div className="text-xl font-bold text-primary mb-0.5">{goals.length}</div>
+              <div className="text-[10px] text-muted-foreground">Total Goals</div>
             </div>
-            <div className="p-4 rounded-xl glass text-center">
-              <div className="text-2xl font-bold text-success mb-1">
+            <div className="p-3 rounded-xl glass text-center">
+              <div className="text-xl font-bold text-success mb-0.5">
                 {goals.filter(g => g.progress >= 100).length}
               </div>
-              <div className="text-xs text-muted-foreground">Completed</div>
+              <div className="text-[10px] text-muted-foreground">Completed</div>
             </div>
           </div>
         </div>
