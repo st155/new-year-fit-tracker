@@ -83,11 +83,11 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <ErrorBoundary>
-              <InstallPrompt />
-              <UpdatePrompt />
-              <Toaster />
-              <Sonner />
               <Suspense fallback={<PageLoader message="Loading..." />}>
+                <InstallPrompt />
+                <UpdatePrompt />
+                <Toaster />
+                <Sonner />
                 <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
