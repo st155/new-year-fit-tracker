@@ -637,6 +637,22 @@ Deno.serve(async (req) => {
 
     const webhookData = JSON.parse(rawBody);
     console.log('Webhook data:', webhookData);
+    
+    // Проверяем, это тестовый вебхук от Whoop
+    if (webhookData.trace_id === 'test-trace-id' || webhookData.id === '550e8400-e29b-41d4-a716-446655440000') {
+      console.log('✅ Test webhook received successfully - webhook endpoint is working!');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Test webhook received successfully',
+          test: true 
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     const { user_id, id, type, trace_id } = webhookData;
 
