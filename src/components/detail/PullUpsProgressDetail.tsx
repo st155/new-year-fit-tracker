@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, TrendingDown, TrendingUp, Target } from 'lucide-react';
+import { ArrowLeft, TrendingDown, TrendingUp, Target, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
 
 interface PullUpsData {
   date: string;
@@ -25,6 +26,8 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   const [currentPullUps, setCurrentPullUps] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [targetPullUps, setTargetPullUps] = useState<number>(17);
+  const [pullUpGoal, setPullUpGoal] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -40,25 +43,28 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
       const startDate = subDays(endDate, 30);
 
       // Получаем цель по подтягиваниям
-      const { data: pullUpGoal } = await supabase
+      const { data: pullUpGoalData } = await supabase
         .from('goals')
-        .select('id, target_value')
+        .select('id, goal_name, goal_type, target_value, target_unit')
         .eq('user_id', user.id)
         .ilike('goal_name', '%подтяг%')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (pullUpGoal?.target_value) {
-        setTargetPullUps(Number(pullUpGoal.target_value));
+      if (pullUpGoalData) {
+        setPullUpGoal(pullUpGoalData);
+        if (pullUpGoalData.target_value) {
+          setTargetPullUps(Number(pullUpGoalData.target_value));
+        }
       }
 
-      if (pullUpGoal) {
+      if (pullUpGoalData) {
         // Получаем измерения подтягиваний
         const { data: measurements } = await supabase
           .from('measurements')
           .select('measurement_date, value')
-          .eq('goal_id', pullUpGoal.id)
+          .eq('goal_id', pullUpGoalData.id)
           .eq('user_id', user.id)
           .gte('measurement_date', startDate.toISOString().split('T')[0])
           .order('measurement_date', { ascending: true });
@@ -141,18 +147,29 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 overflow-y-auto bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onBack}
-          className="rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Прогресс подтягиваний</h1>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onBack}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Прогресс подтягиваний</h1>
+          </div>
         </div>
+        {pullUpGoal && (
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            size="icon"
+            className="rounded-full bg-gradient-primary hover:opacity-90 shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Key Metrics */}
@@ -340,6 +357,16 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
           ))}
         </div>
       </div>
+
+      {/* Quick Measurement Dialog */}
+      {pullUpGoal && (
+        <QuickMeasurementDialog
+          goal={pullUpGoal}
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onMeasurementAdded={fetchPullUpsData}
+        />
+      )}
     </div>
   );
 }
