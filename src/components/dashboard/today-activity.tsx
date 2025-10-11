@@ -16,6 +16,7 @@ interface TodayWorkout {
   heart_rate_avg: number | null;
   heart_rate_max: number | null;
   source: string;
+  strain?: number;
 }
 
 export function TodayActivity() {
@@ -30,7 +31,8 @@ export function TodayActivity() {
       try {
         const today = new Date().toISOString().split('T')[0];
         
-        const { data, error } = await supabase
+        // Загружаем тренировки из таблицы workouts
+        const { data: workoutsData, error: workoutsError } = await supabase
           .from('workouts')
           .select('*')
           .eq('user_id', user.id)
@@ -38,12 +40,92 @@ export function TodayActivity() {
           .lte('start_time', `${today}T23:59:59`)
           .order('start_time', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching today workouts:', error);
-          return;
+        if (workoutsError) {
+          console.error('Error fetching today workouts:', workoutsError);
         }
 
-        setTodayWorkouts(data || []);
+        // Загружаем тренировки из Whoop (metric_values)
+        const { data: whoopMetrics, error: whoopError } = await supabase
+          .from('metric_values')
+          .select(`
+            *,
+            user_metrics!inner(metric_name, metric_category, source)
+          `)
+          .eq('user_id', user.id)
+          .eq('measurement_date', today)
+          .eq('user_metrics.metric_category', 'workout')
+          .eq('user_metrics.source', 'whoop')
+          .eq('user_metrics.metric_name', 'Workout Strain');
+
+        if (whoopError) {
+          console.error('Error fetching Whoop workouts:', whoopError);
+        }
+
+        // Группируем Whoop метрики по external_id (каждая тренировка)
+        const whoopWorkoutsMap = new Map<string, any>();
+        (whoopMetrics || []).forEach((metric: any) => {
+          const workoutId = metric.external_id;
+          if (!whoopWorkoutsMap.has(workoutId)) {
+            whoopWorkoutsMap.set(workoutId, {
+              id: workoutId,
+              workout_type: metric.notes || 'Whoop Workout',
+              start_time: `${today}T12:00:00`, // Whoop не всегда предоставляет точное время
+              end_time: null,
+              duration_minutes: null,
+              calories_burned: null,
+              heart_rate_avg: null,
+              heart_rate_max: null,
+              source: 'whoop',
+              strain: null
+            });
+          }
+        });
+
+        // Загружаем дополнительные метрики для каждой тренировки
+        if (whoopWorkoutsMap.size > 0) {
+          const workoutIds = Array.from(whoopWorkoutsMap.keys());
+          
+          // Получаем все метрики для этих тренировок
+          const { data: allMetrics } = await supabase
+            .from('metric_values')
+            .select(`
+              *,
+              user_metrics!inner(metric_name, source)
+            `)
+            .eq('user_id', user.id)
+            .eq('measurement_date', today)
+            .eq('user_metrics.source', 'whoop')
+            .in('external_id', workoutIds);
+
+          // Распределяем метрики по тренировкам
+          (allMetrics || []).forEach((metric: any) => {
+            const baseId = metric.external_id.replace(/_calories|_hr|_max_hr/g, '');
+            const workout = whoopWorkoutsMap.get(baseId);
+            
+            if (workout) {
+              const metricName = metric.user_metrics.metric_name;
+              
+              if (metricName === 'Workout Strain') {
+                workout.strain = metric.value;
+                workout.workout_type = metric.notes || 'Whoop Workout';
+              } else if (metricName === 'Workout Calories') {
+                workout.calories_burned = metric.value;
+              } else if (metricName === 'Average Heart Rate') {
+                workout.heart_rate_avg = metric.value;
+              } else if (metricName === 'Max Heart Rate') {
+                workout.heart_rate_max = metric.value;
+              }
+            }
+          });
+        }
+
+        // Объединяем оба источника данных
+        const allWorkouts = [
+          ...(workoutsData || []),
+          ...Array.from(whoopWorkoutsMap.values())
+        ];
+
+        setTodayWorkouts(allWorkouts);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -166,6 +248,12 @@ export function TodayActivity() {
                     </div>
                     
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {workout.strain && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          {workout.strain.toFixed(1)} strain
+                        </span>
+                      )}
                       {workout.duration_minutes && (
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
