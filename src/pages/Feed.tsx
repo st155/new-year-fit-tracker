@@ -77,15 +77,21 @@ export default function Feed() {
       const filteredActivities = (activitiesData || []).filter(activity => {
         const actionText = activity.action_text?.toLowerCase() || '';
         
+        // Skip invalid entries (empty or just username)
+        if (!actionText || actionText.trim().length < 10) {
+          return false;
+        }
+        
         const isRecovery = actionText.includes('recovered') || actionText.includes('восстановился');
-        const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed')) 
+        const isWorkout = (actionText.includes('тренировку') || actionText.includes('workout') || actionText.includes('completed a workout')) 
                           && !actionText.includes('качество');
         const isVO2Max = actionText.includes('vo2max');
         const isSleep = actionText.includes('slept') && actionText.match(/\d+:\d+/);
         const isStrain = actionText.includes('strain');
         const isSteps = actionText.includes('шаг') || (actionText.includes('steps') && !actionText.includes('made an activity'));
+        const isGoalRecord = actionText.includes('recorded:') && (actionText.includes('=') || actionText.includes('раз') || actionText.includes('мин') || actionText.includes('кг'));
         
-        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps;
+        return isRecovery || isWorkout || isVO2Max || isSleep || isStrain || isSteps || isGoalRecord;
       });
 
       // Deduplicate Sleep
