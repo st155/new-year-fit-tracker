@@ -1,5 +1,8 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.backfill-activity-feed]
+verify_jwt = false
+
 [functions.whoop-integration]
 verify_jwt = false
 
