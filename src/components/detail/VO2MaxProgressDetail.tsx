@@ -55,6 +55,15 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
         setVO2maxGoal(vo2maxGoalData);
       }
 
+      // Получаем ID метрики VO2Max
+      const { data: vo2Metric } = await supabase
+        .from('user_metrics')
+        .select('id')
+        .eq('user_id', user.id)
+        .or('metric_name.ilike.%vo2%')
+        .limit(1)
+        .maybeSingle();
+
       // Получаем данные VO2Max из metric_values
       const { data: vo2maxMetrics } = await supabase
         .from('metric_values')
@@ -64,7 +73,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
           user_metrics!inner(metric_name, unit, source)
         `)
         .eq('user_id', user.id)
-        .or('user_metrics.metric_name.ilike.%vo2%,user_metrics.metric_name.ilike.%кардио%,user_metrics.metric_name.ilike.%cardiovascular%')
+        .eq('metric_id', vo2Metric?.id)
         .gte('measurement_date', startDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
