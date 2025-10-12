@@ -34,12 +34,12 @@ const GoalsPage = () => {
     
     setLoading(true);
     try {
-      // Загружаем только челленджевые цели
+      // Загружаем цели, связанные с челленджами (независимо от is_personal)
       const { data: allGoals, error } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_personal', false)  // Только челленджевые цели
+        .not('challenge_id', 'is', null)  // Только цели с challenge_id
         .order('created_at', { ascending: false });
 
       if (error) throw error;
