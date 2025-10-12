@@ -27,6 +27,7 @@ interface MetricCard {
 // Вспомогательные функции вне компонента
 const detectId = (name: string) => {
   const n = name.toLowerCase();
+  if (n.includes('мышеч')) return 'weight';
   if (n.includes('вес') || n.includes('weight')) return 'weight';
   if (n.includes('жир') || n.includes('fat')) return 'body-fat';
   if (n.includes('бег') || n.includes('run')) return 'run';
@@ -59,20 +60,21 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
     'планка': { id: 'plank', color: '#8B5CF6' },
     'отжимания': { id: 'pushups', color: '#FBBF24' },
     'vo2max': { id: 'vo2max', color: '#3B82F6' },
-    'vo₂max': { id: 'vo2max', color: '#3B82F6' },
-    'бег 1 км': { id: 'run', color: '#06B6D4' },
-    'процент жира': { id: 'body-fat', color: '#FF6B2C' },
-    'процент жира в организме': { id: 'body-fat', color: '#FF6B2C' },
-    'вес': { id: 'weight', color: '#10B981' },
-    'вес тела': { id: 'weight', color: '#10B981' },
-    'мышечная масса': { id: 'muscle', color: '#10B981' }
-  };
+  'vo₂max': { id: 'vo2max', color: '#3B82F6' },
+  'бег 1 км': { id: 'run', color: '#06B6D4' },
+  'процент жира': { id: 'body-fat', color: '#FF6B2C' },
+  'процент жира в организме': { id: 'body-fat', color: '#FF6B2C' },
+  'вес': { id: 'weight', color: '#10B981' },
+  'вес тела': { id: 'weight', color: '#10B981' },
+  'масса тела': { id: 'weight', color: '#10B981' },
+  'мышечная масса': { id: 'weight', color: '#10B981' }
+};
 
   // Дедупликация целей по ID (чтобы "Процент жира" и "Процент жира в организме" слились в одну)
   const uniqueGoals = Array.from(
     new Map(
       goals.map(g => {
-        const normalized = (g.goal_name || '').toLowerCase();
+        const normalized = (g.goal_name || '').toLowerCase().trim();
         const mapping = goalMapping[normalized];
         const id = mapping?.id ?? detectId(normalized);
         return [id, g]; // Группируем по итоговому ID, а не по имени
@@ -83,7 +85,7 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
   // Карта: имя цели -> список всех goal_id с таким именем (учитываем одинаковые цели из разных челленджей)
   const nameToIds = new Map<string, string[]>();
   goals.forEach(g => {
-    const normalized = (g.goal_name || '').toLowerCase();
+    const normalized = (g.goal_name || '').toLowerCase().trim();
     const mapping = goalMapping[normalized];
     const id = mapping?.id ?? detectId(normalized);
     if (!nameToIds.has(id)) nameToIds.set(id, []);
@@ -99,7 +101,7 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
   };
 
   return uniqueGoals.map(goal => {
-    const normalized = (goal.goal_name || '').toLowerCase();
+    const normalized = (goal.goal_name || '').toLowerCase().trim();
     const mapping = goalMapping[normalized];
     const id = mapping?.id ?? detectId(normalized);
     const color = mapping?.color ?? detectColor(normalized);
