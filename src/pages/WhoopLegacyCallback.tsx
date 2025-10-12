@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function WhoopLegacyCallback() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [connecting, setConnecting] = useState(false);
 
   const connectViaTerra = async () => {
@@ -46,10 +47,7 @@ export default function WhoopLegacyCallback() {
   };
 
   useEffect(() => {
-    const [params] = ((): any => {
-      try { return (new URL(window.location.href)).searchParams; } catch { return new URLSearchParams(); }
-    })();
-    const hasWhoopCode = params?.has('code') && params?.has('state');
+    const hasWhoopCode = searchParams.has('code') && searchParams.has('state');
     const alreadyRedirected = sessionStorage.getItem('whoop_legacy_redirected') === '1';
 
     // Автозапуск Terra только если это не возврат со старого Whoop и мы ещё не редиректили в этой сессии
