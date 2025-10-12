@@ -48,6 +48,7 @@ const Goals = lazy(() => import("./pages/Goals"));
 // Callbacks - load on demand
 const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
+const WhoopLegacyCallback = lazy(() => import("./pages/WhoopLegacyCallback"));
 
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
