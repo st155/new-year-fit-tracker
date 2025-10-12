@@ -86,6 +86,8 @@ export function TerraIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
+      console.log('🔌 Requesting Terra widget URL...');
+
       const { data, error } = await supabase.functions.invoke('terra-integration', {
         method: 'POST',
         body: { 
@@ -97,43 +99,28 @@ export function TerraIntegration() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Terra integration error:', error);
+        throw error;
+      }
 
-      // Открыть Terra Widget в новом окне
-      const width = 500;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
+      if (!data?.url) {
+        console.error('❌ No widget URL received:', data);
+        throw new Error('Не получен URL виджета Terra');
+      }
 
-      const popup = window.open(
-        data.url,
-        'Terra Connect',
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
+      console.log('✅ Terra widget URL received:', data.url);
 
-      // Слушать сообщение об успешном подключении
-      const handleMessage = (event: MessageEvent) => {
-        if (event.data === 'terra-success') {
-          popup?.close();
-          checkConnectionStatus();
-          toast({
-            title: "✅ Успешно подключено",
-            description: "Устройство подключено через Terra API",
-          });
-          window.removeEventListener('message', handleMessage);
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
+      // Открыть Terra Widget в той же вкладке (надежнее чем popup)
+      window.location.href = data.url;
 
     } catch (error: any) {
-      console.error('Error connecting Terra:', error);
+      console.error('❌ Error connecting Terra:', error);
       toast({
         title: "Ошибка подключения",
-        description: error.message,
+        description: error.message || 'Не удалось загрузить виджет Terra',
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
