@@ -69,11 +69,15 @@ serve(async (req) => {
       const providers = (typeof requestedProviders === 'string' && requestedProviders.trim().length > 0)
         ? requestedProviders
         : defaultProviders;
+      // CRITICAL: webhook_url MUST be set для получения auth событий от Terra
+      const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/webhook-terra`;
+      
       const widgetRequestBody = {
         reference_id: userId,  // Используем Supabase user_id как reference_id
         providers,
         auth_success_redirect_url: `${baseUrl}/terra-callback?success=true`,
         auth_failure_redirect_url: `${baseUrl}/terra-callback?error=auth_failed`,
+        webhook_url: webhookUrl,  // Критически важно для получения auth событий!
         language: 'en',
       };
       
