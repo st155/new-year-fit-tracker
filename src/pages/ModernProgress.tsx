@@ -70,11 +70,46 @@ export default function ModernProgress() {
       }
 
       const challengeIds = participationsRes.data.map(p => p.challenge_id);
+      
+      // Deduplication by ID 
+      const goalMapping: { [key: string]: { id: string; color: string } } = {
+        'подтягивания': { id: 'pullups', color: '#A855F7' },
+        'жим лёжа': { id: 'bench', color: '#EF4444' },
+        'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
+        'планка': { id: 'plank', color: '#8B5CF6' },
+        'отжимания': { id: 'pushups', color: '#FBBF24' },
+        'vo2max': { id: 'vo2max', color: '#3B82F6' },
+        'vo₂max': { id: 'vo2max', color: '#3B82F6' },
+        'бег 1 км': { id: 'run', color: '#06B6D4' },
+
+        // Body fat synonyms
+        'процент жира': { id: 'body-fat', color: '#FF6B2C' },
+        'процент жира в организме': { id: 'body-fat', color: '#FF6B2C' },
+        'жир %': { id: 'body-fat', color: '#FF6B2C' },
+        'body fat': { id: 'body-fat', color: '#FF6B2C' },
+        'bodyfat': { id: 'body-fat', color: '#FF6B2C' },
+        'fat %': { id: 'body-fat', color: '#FF6B2C' },
+
+        // Weight/muscle synonyms (unified)
+        'вес': { id: 'weight', color: '#10B981' },
+        'вес тела': { id: 'weight', color: '#10B981' },
+        'масса тела': { id: 'weight', color: '#10B981' },
+        'мышечная масса': { id: 'weight', color: '#10B981' },
+        'body weight': { id: 'weight', color: '#10B981' },
+        'weight': { id: 'weight', color: '#10B981' },
+        'muscle mass': { id: 'weight', color: '#10B981' },
+      };
+
       let uniqueGoals = Array.from(
         new Map(
           (goalsRes.data || [])
             .filter((g: any) => g.challenge_id && challengeIds.includes(g.challenge_id))
-            .map((g: any) => [g.goal_name, g])
+            .map((g: any) => {
+              const normalized = (g.goal_name || '').toLowerCase().trim();
+              const mapping = goalMapping[normalized];
+              const id = mapping?.id ?? g.goal_name;
+              return [id, g]; // Dedup by canonical ID, not name
+            })
         ).values()
       );
 
@@ -126,30 +161,20 @@ export default function ModernProgress() {
         measurementsByGoal[m.goal_id].push(m);
       });
 
-      const goalMapping: { [key: string]: { id: string; color: string } } = {
-        'подтягивания': { id: 'pullups', color: '#A855F7' },
-        'жим лёжа': { id: 'bench', color: '#EF4444' },
-        'выпады назад со штангой': { id: 'lunges', color: '#84CC16' },
-        'планка': { id: 'plank', color: '#8B5CF6' },
-        'отжимания': { id: 'pushups', color: '#FBBF24' },
-        'vo2max': { id: 'vo2max', color: '#3B82F6' },
-        'vo₂max': { id: 'vo2max', color: '#3B82F6' },
-        'бег 1 км': { id: 'run', color: '#06B6D4' },
-        'процент жира': { id: 'body-fat', color: '#FF6B2C' },
-        'вес': { id: 'weight', color: '#10B981' },
-      };
-
       const detectId = (name: string) => {
-        const n = name.toLowerCase();
-        if (n.includes('вес') || n.includes('weight')) return 'weight';
-        if (n.includes('жир') || n.includes('fat')) return 'body-fat';
+        const n = name.toLowerCase().trim();
+        // Unify duplicates into canonical categories
+        if (n.includes('мышеч') || n.includes('muscle')) return 'weight'; // treat muscle mass as weight per user request
+        if (n.includes('вес') || n.includes('масса тела') || n.includes('body weight') || n.includes('weight')) return 'weight';
+        if (n.includes('жир') || n.includes('body fat') || n.includes('bodyfat') || n.includes('fat')) return 'body-fat';
         if (n.includes('бег') || n.includes('run')) return 'run';
         if (n.includes('vo2') || n.includes('vo₂')) return 'vo2max';
         if (n.includes('подтяг') || n.includes('pull-up')) return 'pullups';
         if (n.includes('отжим') || n.includes('push-up') || n.includes('bench')) return n.includes('bench') ? 'bench' : 'pushups';
         if (n.includes('планк') || n.includes('plank')) return 'plank';
         if (n.includes('выпад') || n.includes('lunge')) return 'lunges';
-        return `goal-${Math.random().toString(36).slice(2, 7)}`;
+        // Stable fallback: slugify the name so the same text maps to the same id (no random IDs)
+        return n.replace(/\s+/g, '-').replace(/[^a-z0-9-а-яё_%-]/gi, '');
       };
 
       const detectColor = (name: string) => {
