@@ -194,7 +194,7 @@ export default function ModernProgress() {
 
       // Build metrics from goals
       for (const goal of uniqueGoals) {
-        const normalized = (goal.goal_name || '').toLowerCase();
+        const normalized = (goal.goal_name || '').toLowerCase().trim();
         const mapping = goalMapping[normalized];
         const id = mapping?.id ?? detectId(normalized);
         const color = mapping?.color ?? detectColor(normalized);
@@ -220,7 +220,7 @@ export default function ModernProgress() {
         // If no measurements, try user_metrics by name (for synthetic goals)
         if (currentValue === 0) {
           const matchingMetric = (userMetricsRes.data || []).find((m: any) => 
-            (m.metric_name || '').toLowerCase() === normalized
+            (m.metric_name || '').toLowerCase().trim() === normalized
           );
           if (matchingMetric) {
             const values = (matchingMetric.metric_values || []) as Array<{ value: number; measurement_date: string }>;
@@ -312,29 +312,17 @@ export default function ModernProgress() {
       }
 
       // Add user metrics
-      const existingTitles = new Set(metricsArray.map(m => m.title.toLowerCase()));
-      const getColorFor = (name: string) => {
-        const n = name.toLowerCase();
-        if (n.includes('strain')) return '#F97316';
-        if (n.includes('sleep')) return '#6366F1';
-        if (n.includes('vo2')) return '#3B82F6';
-        if (n.includes('calories')) return '#EF4444';
-        if (n.includes('steps')) return '#22C55E';
-        if (n.includes('hrv')) return '#8B5CF6';
-        if (n.includes('resting') || n.includes('heart')) return '#F43F5E';
-        if (n.includes('distance')) return '#06B6D4';
-        return '#64748B';
-      };
-
       (userMetricsRes.data || []).forEach((m: any) => {
         const values = (m.metric_values || []) as Array<{ value: number; measurement_date: string }>;
         if (!values.length) return;
         const latest = values.sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime())[0];
         const title = m.metric_name;
-        if (existingTitles.has(title.toLowerCase())) return;
+        const normalized = title.toLowerCase().trim();
+        
+        // Detect canonical ID for this metric
+        const id = detectId(normalized);
+        const color = detectColor(normalized);
 
-        const color = getColorFor(title);
-        const id = title.toLowerCase().replace(/\s+/g, '-');
         metricsArray.push({
           id,
           title,
@@ -345,11 +333,28 @@ export default function ModernProgress() {
           trend: 0,
           borderColor: color,
           progressColor: color,
-          chart: title.toLowerCase().includes('vo2')
+          chart: normalized.includes('vo2')
         });
       });
 
-      setMetrics(metricsArray);
+      // DEDUPLICATE by ID (keep first occurrence with best data)
+      const dedupedMetrics = Array.from(
+        new Map(
+          metricsArray
+            .sort((a, b) => {
+              // Prefer metrics with targets
+              if (a.target > 0 && b.target === 0) return -1;
+              if (a.target === 0 && b.target > 0) return 1;
+              // Prefer metrics with values
+              if (a.value > 0 && b.value === 0) return -1;
+              if (a.value === 0 && b.value > 0) return 1;
+              return 0;
+            })
+            .map(m => [m.id, m])
+        ).values()
+      );
+
+      setMetrics(dedupedMetrics);
     } catch (error) {
       console.error('Error building progress metrics:', error);
       setMetrics([]);
