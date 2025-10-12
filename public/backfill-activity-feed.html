@@ -88,6 +88,7 @@
       status.innerHTML = '⏳ Выполняется backfill...';
       
       try {
+        console.log('Starting backfill request...');
         const response = await fetch('https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/backfill-activity-feed', {
           method: 'POST',
           headers: {
@@ -96,7 +97,11 @@
           }
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (response.ok && data.success) {
           status.className = 'success';
@@ -107,14 +112,15 @@
             <pre>${JSON.stringify(data, null, 2)}</pre>
           `;
         } else {
-          throw new Error(data.error || 'Unknown error');
+          throw new Error(data.error || JSON.stringify(data));
         }
       } catch (error) {
+        console.error('Backfill error:', error);
         status.className = 'error';
         status.innerHTML = `
           <strong>❌ Ошибка</strong><br>
-          ${error.message}
-          <pre>${error.stack || ''}</pre>
+          ${error.message || 'Network error'}
+          <pre>Попробуйте:\n1. Обновить страницу\n2. Проверить соединение\n3. Войти в приложение\n\nОшибка: ${error.toString()}</pre>
         `;
       } finally {
         btn.disabled = false;
