@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Activity, Calendar, CheckCircle2, XCircle, Zap, Heart, Watch, Smartphone } from "lucide-react";
+import { Loader2, Activity, Calendar, CheckCircle2, XCircle, Zap, Heart, Watch, Smartphone, AlertCircle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TerraProvider {
   provider: string;
@@ -47,6 +48,8 @@ export function TerraIntegration() {
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [testingWebhook, setTestingWebhook] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -211,55 +214,94 @@ export function TerraIntegration() {
   const testWebhook = async () => {
     try {
       setTestingWebhook(true);
+      setShowDiagnostics(true);
       
-      // Проверяем webhook URL и получаем последние логи
       const webhookUrl = 'https://ueykmmzmguzjppdudvef.functions.supabase.co/webhook-terra';
       
       toast({
-        title: "🧪 Диагностика webhook",
-        description: "Проверка подключения к Terra...",
+        title: "🧪 Запуск диагностики",
+        description: "Проверка webhook подключения...",
       });
 
-      // Получаем статус токенов
+      // 1. Проверяем токены в БД
       const { data: tokens, error: tokensError } = await supabase
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user?.id);
 
-      if (tokensError) throw tokensError;
-
-      // Получаем последние события
+      // 2. Проверяем последние события
       const { data: payloads, error: payloadsError } = await supabase
         .from('terra_data_payloads')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (payloadsError) throw payloadsError;
+      // 3. Пробуем сделать запрос к webhook напрямую
+      let webhookReachable = false;
+      try {
+        const response = await fetch(webhookUrl);
+        webhookReachable = response.status === 400; // Должно быть 400 (missing signature)
+      } catch (e) {
+        webhookReachable = false;
+      }
 
-      const diagnostics = {
-        webhookUrl,
-        tokensCount: tokens?.length || 0,
-        hasTokens: tokens && tokens.length > 0,
-        latestPayloads: payloads?.length || 0,
-        userIdFromAuth: user?.id,
+      const result = {
+        timestamp: new Date().toISOString(),
+        checks: {
+          webhookUrl: {
+            url: webhookUrl,
+            status: webhookReachable ? 'ok' : 'fail',
+            message: webhookReachable 
+              ? 'Webhook доступен (ожидает подпись Terra)' 
+              : 'Webhook недоступен - проверьте деплой',
+          },
+          terraTokens: {
+            status: tokens && tokens.length > 0 ? 'ok' : 'fail',
+            count: tokens?.length || 0,
+            message: tokens && tokens.length > 0
+              ? `Найдено ${tokens.length} подключений`
+              : 'Нет auth событий от Terra - проверьте настройки Webhooks',
+          },
+          dataEvents: {
+            status: payloads && payloads.length > 0 ? 'ok' : 'warning',
+            count: payloads?.length || 0,
+            message: payloads && payloads.length > 0
+              ? `Получено ${payloads.length} событий`
+              : 'Нет данных от устройств (нормально если только подключили)',
+          },
+          configuration: {
+            status: 'info',
+            steps: [
+              { 
+                text: 'В Terra Dashboard → Webhooks включён event "auth"',
+                link: 'https://dashboard.tryterra.co/webhooks'
+              },
+              {
+                text: 'Webhook URL правильный',
+                value: webhookUrl
+              },
+              {
+                text: 'Signing Secret соответствует проекту Terra',
+                link: 'https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/settings/functions'
+              }
+            ]
+          }
+        },
+        userId: user?.id,
       };
 
-      console.log('🧪 Диагностика Terra:', diagnostics);
+      setDiagnostics(result);
+      console.log('🧪 Полная диагностика Terra:', result);
 
+      const hasIssues = result.checks.terraTokens.status === 'fail' || !webhookReachable;
+      
       toast({
-        title: "✅ Диагностика завершена",
-        description: `Токенов: ${diagnostics.tokensCount}, Событий: ${diagnostics.latestPayloads}. Проверьте консоль для деталей.`,
+        title: hasIssues ? "⚠️ Обнаружены проблемы" : "✅ Диагностика завершена",
+        description: hasIssues 
+          ? "Смотрите детали на странице ниже"
+          : "Все проверки пройдены успешно",
+        variant: hasIssues ? "destructive" : "default",
       });
-
-      // Если токенов нет - значит auth event не приходит
-      if (!diagnostics.hasTokens) {
-        toast({
-          title: "⚠️ Auth события не получены",
-          description: "Проверьте: 1) Включён ли 'auth' в Terra Webhooks 2) Корректность webhook URL 3) Signing Secret",
-          variant: "destructive",
-        });
-      }
 
     } catch (error: any) {
       console.error('Error testing webhook:', error);
@@ -481,6 +523,107 @@ export function TerraIntegration() {
             ℹ️ Данные автоматически синхронизируются через webhook от Terra API
           </p>
         </div>
+
+        {/* Диагностика */}
+        {showDiagnostics && diagnostics && (
+          <div className="pt-4 border-t space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Диагностика webhook</h3>
+              <Badge variant="outline" className="text-xs">
+                {new Date(diagnostics.timestamp).toLocaleTimeString('ru-RU')}
+              </Badge>
+            </div>
+
+            {/* Webhook URL */}
+            <Alert className={diagnostics.checks.webhookUrl.status === 'ok' ? 'border-green-500' : 'border-red-500'}>
+              <div className="flex items-start gap-2">
+                {diagnostics.checks.webhookUrl.status === 'ok' ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <AlertDescription className="text-xs">
+                    <strong>Webhook endpoint:</strong> {diagnostics.checks.webhookUrl.message}
+                    <div className="mt-1 text-muted-foreground break-all">
+                      {diagnostics.checks.webhookUrl.url}
+                    </div>
+                  </AlertDescription>
+                </div>
+              </div>
+            </Alert>
+
+            {/* Terra Tokens */}
+            <Alert className={diagnostics.checks.terraTokens.status === 'ok' ? 'border-green-500' : 'border-red-500'}>
+              <div className="flex items-start gap-2">
+                {diagnostics.checks.terraTokens.status === 'ok' ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <AlertDescription className="text-xs">
+                    <strong>Auth события:</strong> {diagnostics.checks.terraTokens.message}
+                  </AlertDescription>
+                </div>
+              </div>
+            </Alert>
+
+            {/* Data Events */}
+            <Alert className="border-blue-500">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                <div className="flex-1">
+                  <AlertDescription className="text-xs">
+                    <strong>События данных:</strong> {diagnostics.checks.dataEvents.message}
+                  </AlertDescription>
+                </div>
+              </div>
+            </Alert>
+
+            {/* Инструкции по настройке */}
+            {diagnostics.checks.terraTokens.status === 'fail' && (
+              <Alert className="border-orange-500">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <AlertDescription className="text-xs space-y-2">
+                  <strong className="block">Что проверить:</strong>
+                  {diagnostics.checks.configuration.steps.map((step: any, idx: number) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-muted-foreground">{idx + 1}.</span>
+                      <div className="flex-1">
+                        {step.text}
+                        {step.link && (
+                          <a 
+                            href={step.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="ml-2 text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            Открыть <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                        {step.value && (
+                          <div className="mt-1 text-muted-foreground font-mono text-xs break-all">
+                            {step.value}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              onClick={() => setShowDiagnostics(false)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              Скрыть диагностику
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
