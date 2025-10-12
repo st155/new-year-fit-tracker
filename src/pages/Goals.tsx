@@ -34,11 +34,12 @@ const GoalsPage = () => {
     
     setLoading(true);
     try {
-      // Загружаем все цели пользователя
+      // Загружаем все цели пользователя, сначала челленджевые, потом персональные
       const { data: allGoals, error } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', user.id)
+        .order('is_personal', { ascending: true })  // Сначала челленджевые (false), потом персональные (true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -44,7 +44,9 @@ export default function BodyComposition() {
     <div className="container mx-auto p-4 max-w-7xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Body Composition</h1>
+          <h1 className="text-3xl font-bold mb-2 sm:whitespace-nowrap whitespace-normal leading-tight">
+            Body<br className="sm:hidden" /> Composition
+          </h1>
           <p className="text-muted-foreground">
             Track and compare your body composition metrics
           </p>

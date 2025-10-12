@@ -196,6 +196,82 @@ export const IntegrationsCard = () => {
     );
   }
 
+  // Если нет подключенных интеграций, показываем полную карточку для новых пользователей
+  if (connectedCount === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Интеграции
+              </CardTitle>
+              <CardDescription>
+                Подключите ваши устройства и приложения для автоматической синхронизации данных
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/integrations')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Управление
+            </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          {/* Список интеграций для новых пользователей */}
+          <div className="space-y-3">
+            {integrations.map((integration) => (
+              <div
+                key={integration.name}
+                className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex-shrink-0">
+                  {integration.icon}
+                </div>
+                
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{integration.name}</span>
+                    
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleConnect(integration.name)}
+                      disabled={integration.name === 'Garmin'}
+                      className="flex-shrink-0"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Подключить
+                    </Button>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground line-clamp-2 pr-2">
+                    {integration.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center py-4">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+              <Smartphone className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Подключите ваши устройства для автоматической синхронизации данных о здоровье и фитнесе
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Для пользователей с интеграциями показываем только статус
   return (
     <Card>
       <CardHeader>
@@ -205,9 +281,6 @@ export const IntegrationsCard = () => {
               <Database className="h-5 w-5" />
               Интеграции
             </CardTitle>
-            <CardDescription>
-              Подключите ваши устройства и приложения для автоматической синхронизации данных
-            </CardDescription>
           </div>
           <Button
             variant="outline"
@@ -220,8 +293,8 @@ export const IntegrationsCard = () => {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        {/* Общая статистика */}
+      <CardContent>
+        {/* Только статус для существующих пользователей */}
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
             <div className="flex items-center gap-2 mb-1">
@@ -233,94 +306,16 @@ export const IntegrationsCard = () => {
             </p>
           </div>
           
-          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+          <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
             <div className="flex items-center gap-2 mb-1">
               <Database className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium">Данных</span>
             </div>
-            <p className="text-2xl font-bold text-green-700">
+            <p className="text-2xl font-bold text-green-700 dark:text-green-400">
               {totalDataPoints.toLocaleString()}
             </p>
           </div>
         </div>
-
-        {/* Список интеграций */}
-        <div className="space-y-3">
-          {integrations.map((integration) => (
-            <div
-              key={integration.name}
-              className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex-shrink-0">
-                {integration.icon}
-              </div>
-              
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{integration.name}</span>
-                    <div className="flex items-center gap-1">
-                      {getStatusIcon(integration.status, integration.isConnected)}
-                      <span className="text-xs text-muted-foreground">
-                        {getStatusText(integration.status, integration.isConnected)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    variant={integration.isConnected ? "outline" : "default"}
-                    size="sm"
-                    onClick={() => handleConnect(integration.name)}
-                    disabled={integration.name === 'Garmin'}
-                    className="flex-shrink-0"
-                  >
-                    {integration.isConnected ? (
-                      <>
-                        <Activity className="h-4 w-4 mr-1" />
-                        Управление
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Подключить
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-muted-foreground line-clamp-2 pr-2">
-                  {integration.description}
-                </p>
-                
-                {integration.isConnected && (
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      📊 {integration.dataCount?.toLocaleString() || 0} записей
-                    </span>
-                    <span className="flex items-center gap-1">
-                      🕒 {formatLastSync(integration.lastSync)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {connectedCount === 0 && (
-          <div className="text-center py-4">
-            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-              <Smartphone className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              Подключите ваши устройства для автоматической синхронизации данных о здоровье и фитнесе
-            </p>
-            <Button onClick={() => navigate('/integrations')}>
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить интеграцию
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

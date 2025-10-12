@@ -65,8 +65,12 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
     'вес': { id: 'weight', color: '#10B981' }
   };
 
-  // Дедупликация целей по имени (берем первую цель с таким именем)
-  const uniqueGoals = Array.from(new Map(goals.map(g => [g.goal_name?.toLowerCase(), g])).values());
+  // Дедупликация целей по имени (берем первую цель с таким именем) и типу
+  const uniqueGoals = Array.from(
+    new Map(
+      goals.map(g => [`${g.goal_name?.toLowerCase()}_${g.goal_type}`, g])
+    ).values()
+  );
 
   // Карта: имя цели -> список всех goal_id с таким именем (учитываем одинаковые цели из разных челленджей)
   const nameToIds = new Map<string, string[]>();
