@@ -272,16 +272,16 @@ export function TerraIntegration() {
           configuration: {
             status: 'info',
             steps: [
-              { 
-                text: 'В Terra Dashboard → Webhooks включён event "auth"',
+              {
+                text: 'Auth приходит автоматически после подключения через Terra Connect (отдельно включать не нужно)',
                 link: 'https://dashboard.tryterra.co/webhooks'
               },
               {
-                text: 'Webhook URL правильный',
+                text: 'Webhook URL (точно такой): https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra',
                 value: webhookUrl
               },
               {
-                text: 'Signing Secret соответствует проекту Terra',
+                text: 'Signing Secret совпадает у Terra и в Supabase (TERRA_SIGNING_SECRET)',
                 link: 'https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/settings/functions'
               }
             ]
