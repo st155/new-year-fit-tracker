@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
-import { WithingsIntegration } from '@/components/integrations/WithingsIntegration';
-import { AppleHealthIntegration } from '@/components/integrations/AppleHealthIntegration';
-import { GarminIntegration } from '@/components/integrations/GarminIntegration';
+// Legacy integrations - disabled temporarily
+// import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
+// import { WithingsIntegration } from '@/components/integrations/WithingsIntegration';
+// import { AppleHealthIntegration } from '@/components/integrations/AppleHealthIntegration';
+// import { GarminIntegration } from '@/components/integrations/GarminIntegration';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,10 +33,11 @@ interface HealthStats {
 }
 
 interface IntegrationStatus {
-  whoop: 'connected' | 'disconnected' | 'pending' | 'error';
-  withings: 'connected' | 'disconnected' | 'pending' | 'error';
-  appleHealth: 'connected' | 'disconnected' | 'pending' | 'error';
-  garmin: 'connected' | 'disconnected' | 'pending' | 'error';
+  // Legacy integrations - disabled
+  // whoop: 'connected' | 'disconnected' | 'pending' | 'error';
+  // withings: 'connected' | 'disconnected' | 'pending' | 'error';
+  // appleHealth: 'connected' | 'disconnected' | 'pending' | 'error';
+  // garmin: 'connected' | 'disconnected' | 'pending' | 'error';
   terra: 'connected' | 'disconnected' | 'pending' | 'error';
 }
 
@@ -44,10 +46,11 @@ const IntegrationsPage = () => {
   const { toast } = useToast();
   const [healthStats, setHealthStats] = useState<HealthStats>({ totalRecords: 0, lastWeek: 0, sources: {} });
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus>({
-    whoop: 'disconnected',
-    withings: 'disconnected', 
-    appleHealth: 'disconnected',
-    garmin: 'disconnected',
+    // Legacy integrations - disabled
+    // whoop: 'disconnected',
+    // withings: 'disconnected', 
+    // appleHealth: 'disconnected',
+    // garmin: 'disconnected',
     terra: 'disconnected'
   });
   const [activeTab, setActiveTab] = useState('overview');
@@ -66,35 +69,14 @@ const IntegrationsPage = () => {
     try {
       setLoading(true);
       
-      // Проверяем статус подключений по наличию токенов
-      const { data: whoopTokens } = await supabase
-        .from('whoop_tokens')
-        .select('id')
-        .eq('user_id', user.id)
-        .not('access_token', 'is', null);
-
-      const { data: withingsTokens } = await supabase
-        .from('withings_tokens')
-        .select('id')
-        .eq('user_id', user.id)
-        .not('access_token', 'is', null);
-
-      const { data: appleHealthData } = await supabase
-        .from('health_records')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
-
+      // Only check Terra integration status
       const { data: terraTokens } = await supabase
         .from('terra_tokens')
         .select('id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('is_active', true);
       
       setIntegrationStatus({
-        whoop: whoopTokens && whoopTokens.length > 0 ? 'connected' : 'disconnected',
-        withings: withingsTokens && withingsTokens.length > 0 ? 'connected' : 'disconnected',
-        appleHealth: appleHealthData && appleHealthData.length > 0 ? 'connected' : 'disconnected',
-        garmin: 'disconnected',
         terra: terraTokens && terraTokens.length > 0 ? 'connected' : 'disconnected'
       });
     } catch (error) {
@@ -176,48 +158,49 @@ const IntegrationsPage = () => {
     {
       id: 'terra',
       name: 'Terra API',
-      description: 'Universal API for all wearables (recommended)',
+      description: 'Universal API for all wearables - connect Whoop, UltraHuman, Garmin, Withings, Apple Health and more',
       icon: Zap,
       status: integrationStatus.terra,
       component: <TerraIntegration />,
       featured: true,
     },
-    {
-      id: 'whoop',
-      name: 'Whoop',
-      description: 'Band for tracking activity and recovery (Legacy)',
-      icon: Activity,
-      status: integrationStatus.whoop,
-      component: <WhoopIntegration userId={user?.id || ''} />,
-      legacy: true,
-    },
-    {
-      id: 'withings',
-      name: 'Withings',
-      description: 'Smart scales and health trackers (Legacy)',
-      icon: Heart,
-      status: integrationStatus.withings,
-      component: <WithingsIntegration />,
-      legacy: true,
-    },
-    {
-      id: 'appleHealth',
-      name: 'Apple Health',
-      description: 'Import data from Health app (Legacy)',
-      icon: Smartphone,
-      status: integrationStatus.appleHealth,
-      component: <AppleHealthIntegration />,
-      legacy: true,
-    },
-    {
-      id: 'garmin',
-      name: 'Garmin',
-      description: 'Sports watches and fitness trackers (Legacy)',
-      icon: Watch,
-      status: integrationStatus.garmin,
-      component: <GarminIntegration userId={user?.id || ''} />,
-      legacy: true,
-    }
+    // Legacy integrations - disabled temporarily
+    // {
+    //   id: 'whoop',
+    //   name: 'Whoop',
+    //   description: 'Band for tracking activity and recovery (Legacy)',
+    //   icon: Activity,
+    //   status: integrationStatus.whoop,
+    //   component: <WhoopIntegration userId={user?.id || ''} />,
+    //   legacy: true,
+    // },
+    // {
+    //   id: 'withings',
+    //   name: 'Withings',
+    //   description: 'Smart scales and health trackers (Legacy)',
+    //   icon: Heart,
+    //   status: integrationStatus.withings,
+    //   component: <WithingsIntegration />,
+    //   legacy: true,
+    // },
+    // {
+    //   id: 'appleHealth',
+    //   name: 'Apple Health',
+    //   description: 'Import data from Health app (Legacy)',
+    //   icon: Smartphone,
+    //   status: integrationStatus.appleHealth,
+    //   component: <AppleHealthIntegration />,
+    //   legacy: true,
+    // },
+    // {
+    //   id: 'garmin',
+    //   name: 'Garmin',
+    //   description: 'Sports watches and fitness trackers (Legacy)',
+    //   icon: Watch,
+    //   status: integrationStatus.garmin,
+    //   component: <GarminIntegration userId={user?.id || ''} />,
+    //   legacy: true,
+    // }
   ];
 
   const connectedCount = Object.values(integrationStatus).filter(status => status === 'connected').length;
@@ -261,7 +244,7 @@ const IntegrationsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-500">
-                {connectedCount}/5
+                {connectedCount}/1
               </div>
               <p className="text-xs text-muted-foreground mt-1">devices</p>
             </CardContent>
@@ -428,7 +411,8 @@ const IntegrationsPage = () => {
                   </Card>
                 ))}
 
-              {/* Legacy Integrations */}
+              {/* Legacy Integrations - Disabled temporarily */}
+              {/* 
               <div className="pt-4">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                   <Settings className="h-4 w-4" />
@@ -472,6 +456,7 @@ const IntegrationsPage = () => {
                     </CardContent>
                   </Card>
                 ))}
+              */}
             </div>
           </TabsContent>
         </Tabs>
