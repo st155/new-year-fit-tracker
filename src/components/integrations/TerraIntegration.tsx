@@ -46,6 +46,7 @@ export function TerraIntegration() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [testingWebhook, setTestingWebhook] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -204,6 +205,71 @@ export function TerraIntegration() {
       });
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const testWebhook = async () => {
+    try {
+      setTestingWebhook(true);
+      
+      // Проверяем webhook URL и получаем последние логи
+      const webhookUrl = 'https://ueykmmzmguzjppdudvef.functions.supabase.co/webhook-terra';
+      
+      toast({
+        title: "🧪 Диагностика webhook",
+        description: "Проверка подключения к Terra...",
+      });
+
+      // Получаем статус токенов
+      const { data: tokens, error: tokensError } = await supabase
+        .from('terra_tokens')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (tokensError) throw tokensError;
+
+      // Получаем последние события
+      const { data: payloads, error: payloadsError } = await supabase
+        .from('terra_data_payloads')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (payloadsError) throw payloadsError;
+
+      const diagnostics = {
+        webhookUrl,
+        tokensCount: tokens?.length || 0,
+        hasTokens: tokens && tokens.length > 0,
+        latestPayloads: payloads?.length || 0,
+        userIdFromAuth: user?.id,
+      };
+
+      console.log('🧪 Диагностика Terra:', diagnostics);
+
+      toast({
+        title: "✅ Диагностика завершена",
+        description: `Токенов: ${diagnostics.tokensCount}, Событий: ${diagnostics.latestPayloads}. Проверьте консоль для деталей.`,
+      });
+
+      // Если токенов нет - значит auth event не приходит
+      if (!diagnostics.hasTokens) {
+        toast({
+          title: "⚠️ Auth события не получены",
+          description: "Проверьте: 1) Включён ли 'auth' в Terra Webhooks 2) Корректность webhook URL 3) Signing Secret",
+          variant: "destructive",
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Error testing webhook:', error);
+      toast({
+        title: "Ошибка диагностики",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setTestingWebhook(false);
     }
   };
 
@@ -388,9 +454,23 @@ export function TerraIntegration() {
           </Button>
 
           <Button
+            onClick={testWebhook}
+            disabled={testingWebhook}
+            variant="outline"
+            size="sm"
+          >
+            {testingWebhook ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "🧪 Тест"
+            )}
+          </Button>
+
+          <Button
             onClick={connectTerra}
             disabled={loading}
             variant="outline"
+            size="sm"
           >
             <Zap className="h-4 w-4" />
           </Button>

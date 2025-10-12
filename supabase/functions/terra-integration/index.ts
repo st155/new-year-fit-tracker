@@ -51,13 +51,15 @@ serve(async (req) => {
         throw new Error('Unauthorized');
       }
 
-      console.log(`Generating widget session for user: ${user.id}`);
+      const userId = user.id;
+      console.log(`Generating widget session for user: ${userId}`);
       const baseUrl = requestBody.baseUrl || 
                      url.searchParams.get('baseUrl') ||
                      req.headers.get('origin') || 
                      'https://elite10.club';
       
       console.log('Auth redirect baseUrl:', baseUrl);
+      console.log('Reference ID (user.id):', userId);
 
       // Используем официальный Terra API endpoint для генерации widget session
       const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
@@ -68,7 +70,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          reference_id: user.id,
+          reference_id: userId,  // Используем Supabase user_id как reference_id
           providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
           auth_success_redirect_url: `${baseUrl}/terra-callback?success=true`,
           auth_failure_redirect_url: `${baseUrl}/terra-callback?error=auth_failed`,
