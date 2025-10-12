@@ -134,10 +134,15 @@ serve(async (req) => {
 
     // Обработать webhook от Terra
     if (action === 'webhook') {
+      console.log('🔔 Terra webhook received:', {
+        method: req.method,
+        headers: Object.fromEntries(req.headers.entries()),
+      });
+      
       // Проверить подпись для безопасности
       const signature = req.headers.get('terra-signature');
       if (!signature) {
-        console.error('Missing terra-signature header');
+        console.error('❌ Missing terra-signature header');
         return new Response(
           JSON.stringify({ error: 'Missing signature' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -157,10 +162,21 @@ serve(async (req) => {
       }
 
       const payload = JSON.parse(rawBody);
-      console.log('Valid Terra webhook received:', JSON.stringify(payload, null, 2));
+      console.log('✅ Valid Terra webhook received:', {
+        type: payload.type,
+        user: payload.user,
+        reference_id: payload.reference_id,
+        fullPayload: JSON.stringify(payload, null, 2)
+      });
 
       // Terra отправляет различные типы событий
       if (payload.type === 'auth') {
+        console.log('🔐 Processing auth event:', {
+          reference_id: payload.reference_id,
+          provider: payload.user?.provider,
+          terra_user_id: payload.user?.user_id
+        });
+        
         // Пользователь подключил устройство
         const { reference_id, user: terraUser } = payload;
         
@@ -194,13 +210,21 @@ serve(async (req) => {
             .update(payloadToSave)
             .eq('id', existing.id);
           tokenError = updateError;
-          console.log('Updated existing terra_tokens record', { id: existing.id });
+          console.log('✅ Updated existing terra_tokens record', { 
+            id: existing.id, 
+            provider,
+            terra_user_id: terraUser.user_id 
+          });
         } else {
           const { error: insertError } = await supabase
             .from('terra_tokens')
             .insert(payloadToSave);
           tokenError = insertError;
-          console.log('Inserted new terra_tokens record');
+          console.log('✅ Inserted new terra_tokens record', {
+            provider,
+            terra_user_id: terraUser.user_id,
+            user_id: reference_id
+          });
         }
 
         if (tokenError) {

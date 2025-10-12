@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terra Webhook Setup</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 10px;
+    }
+    .webhook-url {
+      background: #f3f4f6;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      margin: 20px 0;
+      word-break: break-all;
+    }
+    .step {
+      background: #eff6ff;
+      padding: 15px;
+      margin: 15px 0;
+      border-left: 4px solid #2563eb;
+      border-radius: 4px;
+    }
+    .important {
+      background: #fef3c7;
+      padding: 15px;
+      border-left: 4px solid #f59e0b;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    code {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌍 Terra API Webhook Setup</h1>
+  
+  <p>To enable Terra integration webhooks, you need to configure the webhook URL in Terra Dashboard.</p>
+
+  <div class="webhook-url">
+    <strong>Webhook URL:</strong><br>
+    https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/terra-integration?action=webhook
+  </div>
+
+  <div class="important">
+    <strong>⚠️ Important:</strong> Terra requires webhook URLs to be publicly accessible and use HTTPS.
+  </div>
+
+  <h2>Setup Steps</h2>
+
+  <div class="step">
+    <strong>Step 1:</strong> Go to <a href="https://dashboard.tryterra.co/" target="_blank">Terra Dashboard</a>
+  </div>
+
+  <div class="step">
+    <strong>Step 2:</strong> Navigate to <strong>Settings → Webhooks</strong>
+  </div>
+
+  <div class="step">
+    <strong>Step 3:</strong> Click <strong>Add Webhook Endpoint</strong>
+  </div>
+
+  <div class="step">
+    <strong>Step 4:</strong> Enter the webhook URL from above
+  </div>
+
+  <div class="step">
+    <strong>Step 5:</strong> Select events to subscribe to:
+    <ul>
+      <li><code>auth</code> - User authentication events</li>
+      <li><code>activity</code> - Workout and activity data</li>
+      <li><code>body</code> - Body composition data</li>
+      <li><code>daily</code> - Daily aggregate data</li>
+      <li><code>sleep</code> - Sleep data</li>
+      <li><code>nutrition</code> - Nutrition data</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <strong>Step 6:</strong> Save the webhook configuration
+  </div>
+
+  <div class="step">
+    <strong>Step 7:</strong> Test the webhook by:
+    <ol>
+      <li>Going to Integrations page</li>
+      <li>Clicking "Connect" on Terra integration</li>
+      <li>Connecting any device (WHOOP, Garmin, etc.)</li>
+      <li>Checking Edge Function logs for webhook events</li>
+    </ol>
+  </div>
+
+  <h2>Verify Setup</h2>
+  
+  <p>After setup, you should see webhook events in the Edge Function logs:</p>
+  
+  <div class="webhook-url">
+    <strong>Check logs at:</strong><br>
+    <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/terra-integration/logs" target="_blank">
+      Terra Integration Logs
+    </a>
+  </div>
+
+  <h2>Troubleshooting</h2>
+  
+  <div class="important">
+    <strong>No webhook events?</strong>
+    <ul>
+      <li>Verify the webhook URL is correctly configured in Terra Dashboard</li>
+      <li>Check that webhook is enabled and event types are selected</li>
+      <li>Ensure TERRA_SIGNING_SECRET is set in Supabase Edge Function secrets</li>
+      <li>Check Edge Function logs for any errors</li>
+      <li>Try disconnecting and reconnecting the device</li>
+    </ul>
+  </div>
+
+  <h2>Required Secrets</h2>
+  
+  <p>Make sure these secrets are configured in Supabase:</p>
+  <ul>
+    <li><code>TERRA_API_KEY</code> - Your Terra API key</li>
+    <li><code>TERRA_DEV_ID</code> - Your Terra Developer ID</li>
+    <li><code>TERRA_SIGNING_SECRET</code> - Your Terra webhook signing secret</li>
+  </ul>
+
+  <div class="webhook-url">
+    <strong>Configure secrets at:</strong><br>
+    <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/settings/functions" target="_blank">
+      Edge Function Secrets
+    </a>
+  </div>
+</body>
+</html>
