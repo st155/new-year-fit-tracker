@@ -42,7 +42,10 @@ const GoalsPage = () => {
         .not('challenge_id', 'is', null)  // Только цели с challenge_id
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Goals Page] Error loading goals:', error);
+        throw error;
+      }
 
       console.log('[Goals Page] Loaded challenge goals:', allGoals?.length, allGoals);
 
@@ -92,8 +95,10 @@ const GoalsPage = () => {
           })
         );
 
+        console.log('[Goals Page] Setting goals with progress:', goalsWithProgress);
         setGoals(goalsWithProgress);
       } else {
+        console.log('[Goals Page] No goals found');
         setGoals([]);
       }
     } catch (error: any) {
