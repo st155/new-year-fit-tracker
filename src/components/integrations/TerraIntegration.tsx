@@ -102,12 +102,12 @@ export function TerraIntegration() {
         });
       };
 
-      // 1) попытка с провайдерами по умолчанию
-      let { data, error } = await tryRequest();
+      // 1) пробуем сразу с точным списком провайдеров как в Terra Dashboard
+      let { data, error } = await tryRequest('WHOOP,GARMIN,OURA,WITHINGS,ULTRAHUMAN');
 
       // 2) если ошибка — fallback на одного провайдера (WITHINGS)
       if (error) {
-        console.warn('Terra default providers failed, retrying WITHINGS only...', error);
+        console.warn('Terra providers failed, retrying WITHINGS only...', error);
         ({ data, error } = await tryRequest('WITHINGS'));
       }
 
