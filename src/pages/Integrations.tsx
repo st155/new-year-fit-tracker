@@ -9,6 +9,7 @@ import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
 import { WithingsIntegration } from '@/components/integrations/WithingsIntegration';
 import { AppleHealthIntegration } from '@/components/integrations/AppleHealthIntegration';
 import { GarminIntegration } from '@/components/integrations/GarminIntegration';
+import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { EmptyState } from '@/components/ui/empty-state';
 import { 
@@ -35,6 +36,7 @@ interface IntegrationStatus {
   withings: 'connected' | 'disconnected' | 'pending' | 'error';
   appleHealth: 'connected' | 'disconnected' | 'pending' | 'error';
   garmin: 'connected' | 'disconnected' | 'pending' | 'error';
+  terra: 'connected' | 'disconnected' | 'pending' | 'error';
 }
 
 const IntegrationsPage = () => {
@@ -45,7 +47,8 @@ const IntegrationsPage = () => {
     whoop: 'disconnected',
     withings: 'disconnected', 
     appleHealth: 'disconnected',
-    garmin: 'disconnected'
+    garmin: 'disconnected',
+    terra: 'disconnected'
   });
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
@@ -81,12 +84,18 @@ const IntegrationsPage = () => {
         .select('id')
         .eq('user_id', user.id)
         .limit(1);
+
+      const { data: terraTokens } = await supabase
+        .from('terra_tokens')
+        .select('id')
+        .eq('user_id', user.id);
       
       setIntegrationStatus({
         whoop: whoopTokens && whoopTokens.length > 0 ? 'connected' : 'disconnected',
         withings: withingsTokens && withingsTokens.length > 0 ? 'connected' : 'disconnected',
         appleHealth: appleHealthData && appleHealthData.length > 0 ? 'connected' : 'disconnected',
-        garmin: 'disconnected'
+        garmin: 'disconnected',
+        terra: terraTokens && terraTokens.length > 0 ? 'connected' : 'disconnected'
       });
     } catch (error) {
       console.error('Error checking integration status:', error);
@@ -195,6 +204,14 @@ const IntegrationsPage = () => {
       icon: Watch,
       status: integrationStatus.garmin,
       component: <GarminIntegration userId={user?.id || ''} />
+    },
+    {
+      id: 'terra',
+      name: 'Terra API',
+      description: 'UltraHuman, Oura, Fitbit and more',
+      icon: Zap,
+      status: integrationStatus.terra,
+      component: <TerraIntegration />
     }
   ];
 
@@ -239,7 +256,7 @@ const IntegrationsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-500">
-                {connectedCount}/4
+                {connectedCount}/5
               </div>
               <p className="text-xs text-muted-foreground mt-1">devices</p>
             </CardContent>
