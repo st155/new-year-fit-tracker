@@ -216,7 +216,7 @@ export function TerraIntegration() {
       setTestingWebhook(true);
       setShowDiagnostics(true);
       
-      const webhookUrl = 'https://ueykmmzmguzjppdudvef.functions.supabase.co/webhook-terra';
+      const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra';
       
       toast({
         title: "🧪 Запуск диагностики",
