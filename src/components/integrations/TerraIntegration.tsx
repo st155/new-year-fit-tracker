@@ -88,20 +88,32 @@ export function TerraIntegration() {
 
       console.log('🔌 Requesting Terra widget URL...');
 
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        method: 'POST',
-        body: { 
-          action: 'get-auth-url',
-          baseUrl: window.location.origin
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const tryRequest = async (providers?: string) => {
+        return await supabase.functions.invoke('terra-integration', {
+          method: 'POST',
+          body: { 
+            action: 'get-auth-url',
+            baseUrl: window.location.origin,
+            ...(providers ? { providers } : {})
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+      };
+
+      // 1) попытка с провайдерами по умолчанию
+      let { data, error } = await tryRequest();
+
+      // 2) если ошибка — fallback на одного провайдера (WITHINGS)
+      if (error) {
+        console.warn('Terra default providers failed, retrying WITHINGS only...', error);
+        ({ data, error } = await tryRequest('WITHINGS'));
+      }
 
       if (error) {
-        console.error('❌ Terra integration error:', error);
-        throw error;
+        console.error('❌ Terra integration error (after fallback):', error);
+        throw new Error(error.message || 'Terra вернула ошибку при генерации сессии');
       }
 
       if (!data?.url) {
@@ -120,9 +132,9 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('❌ Error connecting Terra:', error);
       toast({
-        title: "Ошибка подключения",
-        description: error.message || 'Не удалось загрузить виджет Terra',
-        variant: "destructive",
+        title: 'Ошибка подключения',
+        description: error?.message || 'Не удалось загрузить виджет Terra',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);

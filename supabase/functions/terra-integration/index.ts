@@ -63,12 +63,15 @@ serve(async (req) => {
 
       // Используем официальный Terra API endpoint для генерации widget session
       // Список провайдеров: https://docs.tryterra.co/reference#post-auth-generatewidgetsession
-      // Только API провайдеры (не SDK): WHOOP, GARMIN, FITBIT, OURA, WITHINGS, SUUNTO, ULTRAHУMAN и др.
+      // Только API провайдеры (не SDK). По умолчанию без ULTRAHUMAN (часто требует отдельной активации)
+      const requestedProviders = requestBody.providers || url.searchParams.get('providers');
+      const defaultProviders = 'WHOOP,GARMIN,FITBIT,OURA,WITHINGS';
+      const providers = (typeof requestedProviders === 'string' && requestedProviders.trim().length > 0)
+        ? requestedProviders
+        : defaultProviders;
       const widgetRequestBody = {
         reference_id: userId,  // Используем Supabase user_id как reference_id
-        // Убрали APPLE_HEALTH (это SDK, не API provider)
-        // Провайдеры должны быть активированы в Terra Dashboard для production
-        providers: 'WHOOP,GARMIN,FITBIT,OURA,WITHINGS,ULTRAHUMAN',
+        providers,
         auth_success_redirect_url: `${baseUrl}/terra-callback?success=true`,
         auth_failure_redirect_url: `${baseUrl}/terra-callback?error=auth_failed`,
         language: 'en',
@@ -86,14 +89,24 @@ serve(async (req) => {
           'dev-id': terraDevId,
           'x-api-key': terraApiKey,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(widgetRequestBody),
       });
 
       if (!widgetResponse.ok) {
         const errorText = await widgetResponse.text();
-        console.error('Terra API error:', errorText);
-        throw new Error(`Terra API error: ${widgetResponse.statusText}`);
+        let terraDetails: any = null;
+        try { terraDetails = JSON.parse(errorText); } catch {}
+        console.error('Terra API error:', terraDetails || errorText);
+        return new Response(
+          JSON.stringify({
+            status: 'error',
+            message: 'Terra generateWidgetSession failed',
+            terra: terraDetails || errorText,
+          }),
+          { status: widgetResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       const widgetData = await widgetResponse.json();
