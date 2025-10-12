@@ -55,16 +55,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
         setVO2maxGoal(vo2maxGoalData);
       }
 
-      // Получаем ID метрики VO2Max
-      const { data: vo2Metric } = await supabase
-        .from('user_metrics')
-        .select('id')
-        .eq('user_id', user.id)
-        .or('metric_name.ilike.%vo2%')
-        .limit(1)
-        .maybeSingle();
-
-      // Получаем данные VO2Max из metric_values
+      // Получаем данные VO2Max из metric_values через user_metrics
       const { data: vo2maxMetrics } = await supabase
         .from('metric_values')
         .select(`
@@ -73,14 +64,18 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
           user_metrics!inner(metric_name, unit, source)
         `)
         .eq('user_id', user.id)
-        .eq('metric_id', vo2Metric?.id)
         .gte('measurement_date', startDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
+      // Фильтруем только VO2Max метрики
+      const filteredMetrics = vo2maxMetrics?.filter(item => 
+        item.user_metrics?.metric_name?.toLowerCase().includes('vo2')
+      ) || [];
+
       let formattedData: VO2MaxData[] = [];
       
-      if (vo2maxMetrics && vo2maxMetrics.length > 0) {
-        formattedData = vo2maxMetrics
+      if (filteredMetrics && filteredMetrics.length > 0) {
+        formattedData = filteredMetrics
           .map((item, index, arr) => ({
             date: item.measurement_date,
             vo2max: Number(item.value),
