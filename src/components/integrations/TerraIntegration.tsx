@@ -59,7 +59,7 @@ export function TerraIntegration() {
       if (!session) return;
 
       const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'check-status' },
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -82,7 +82,7 @@ export function TerraIntegration() {
       if (!session) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'get-auth-url' },
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -136,7 +136,7 @@ export function TerraIntegration() {
       if (!session) throw new Error('Not authenticated');
 
       const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'disconnect', provider },
+        method: 'DELETE',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -169,7 +169,7 @@ export function TerraIntegration() {
       if (!session) throw new Error('Not authenticated');
 
       const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'sync-data' },
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

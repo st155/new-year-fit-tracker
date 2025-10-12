@@ -21,42 +21,75 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    
+    // Получить action из query параметров или body
+    let action = url.searchParams.get('action');
+    
+    // Если action нет в query параметрах, попробовать получить из body
+    if (!action && req.method === 'POST') {
+      try {
+        const body = await req.json();
+        action = body.action;
+      } catch (e) {
+        // Если не JSON, оставить action null
+      }
+    }
 
-    console.log(`Terra Integration - Action: ${action}, User: ${user.id}`);
+    console.log(`Terra Integration - Action: ${action}, Method: ${req.method}`);
 
-    // Получить URL для авторизации
-    if (action === 'get-auth-url') {
-      const widgetUrl = `https://widget.tryterra.co/session?${new URLSearchParams({
-        reference_id: user.id,
-        providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH',
-        auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
-        auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
-        language: 'en',
-      })}`;
+    // Для webhook не требуется авторизация
+    if (action === 'webhook') {
+      // Webhook обработка ниже
+    } else {
+      // Для всех остальных действий требуется авторизация
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        throw new Error('No authorization header');
+      }
 
-      return new Response(
-        JSON.stringify({ url: widgetUrl }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
       );
+
+      if (userError || !user) {
+        throw new Error('Unauthorized');
+      }
+
+      console.log(`User: ${user.id}`);
+
+      // Получить URL для авторизации
+      if (action === 'get-auth-url') {
+        const widgetUrl = `https://widget.tryterra.co/session?${new URLSearchParams({
+          reference_id: user.id,
+          providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
+          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+          auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
+          language: 'en',
+        })}`;
+
+        return new Response(
+          JSON.stringify({ url: widgetUrl }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Проверить статус подключения
     if (action === 'check-status') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        throw new Error('No authorization header');
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (userError || !user) {
+        throw new Error('Unauthorized');
+      }
+
       const { data: tokens } = await supabase
         .from('terra_tokens')
         .select('*')
@@ -158,6 +191,19 @@ serve(async (req) => {
 
     // Синхронизировать данные вручную
     if (action === 'sync-data') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        throw new Error('No authorization header');
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (userError || !user) {
+        throw new Error('Unauthorized');
+      }
+
       const { data: token } = await supabase
         .from('terra_tokens')
         .select('*')
@@ -196,6 +242,19 @@ serve(async (req) => {
 
     // Отключить конкретный провайдер или все подключения
     if (action === 'disconnect') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        throw new Error('No authorization header');
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (userError || !user) {
+        throw new Error('Unauthorized');
+      }
+
       const provider = url.searchParams.get('provider');
       
       if (provider) {
