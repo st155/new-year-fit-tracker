@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Activity, Calendar, CheckCircle2, XCircle, Zap, Heart, Watch, Smartphone, AlertCircle, ExternalLink } from "lucide-react";
+import { Loader2, Activity, Calendar, CheckCircle2, XCircle, Zap, Heart, Watch, Smartphone, AlertCircle, ExternalLink, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,6 +46,7 @@ export function TerraIntegration() {
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
@@ -77,6 +78,48 @@ export function TerraIntegration() {
       console.error('Error checking Terra status:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    try {
+      setIsSyncing(true);
+      toast({
+        title: "Синхронизация данных...",
+        description: "Получаем данные от всех подключенных устройств",
+      });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        method: 'POST',
+        body: { action: 'sync-data' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Данные успешно синхронизированы!",
+        description: "Все данные от подключенных устройств обновлены",
+      });
+      
+      console.log('Sync results:', data);
+      
+      // Обновляем статус
+      await checkConnectionStatus();
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Ошибка синхронизации",
+        description: error.message || 'Не удалось синхронизировать данные',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -605,6 +648,18 @@ export function TerraIntegration() {
             {status.providers.length} устройств
           </Badge>
         </div>
+        {/* Кнопка синхронизации */}
+        <div className="mb-4">
+          <Button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Синхронизация...' : 'Синхронизировать данные'}
+          </Button>
+        </div>
+
         {/* Список подключенных устройств */}
         <div className="space-y-2">
           {status.providers.map((provider) => {

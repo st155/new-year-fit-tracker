@@ -36,6 +36,114 @@ serve(async (req) => {
 
     console.log(`Terra Integration - Action: ${action}, Method: ${req.method}`);
 
+    // Ручная синхронизация данных
+    if (action === 'sync-data') {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        throw new Error('No authorization header');
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (userError || !user) {
+        throw new Error('Unauthorized');
+      }
+
+      const userId = user.id;
+      console.log(`🔄 Manual sync requested for user: ${userId}`);
+
+      // Получаем все активные токены пользователя
+      const { data: tokens, error: tokensError } = await supabase
+        .from('terra_tokens')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (tokensError || !tokens || tokens.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No active Terra connections found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`Found ${tokens.length} active providers:`, tokens.map(t => t.provider));
+
+      const results: any = {};
+
+      // Для каждого провайдера запрашиваем данные
+      for (const token of tokens) {
+        const provider = token.provider;
+        const terraUserId = token.terra_user_id;
+        
+        console.log(`📥 Fetching data for ${provider} (${terraUserId})`);
+        
+        const dataTypes = ['activity', 'body', 'daily', 'sleep', 'nutrition'];
+        const providerResults: any = {};
+
+        for (const dataType of dataTypes) {
+          try {
+            // Запрашиваем данные за последние 30 дней
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+
+            const response = await fetch(
+              `https://api.tryterra.co/v2/${dataType}?user_id=${terraUserId}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`,
+              {
+                method: 'GET',
+                headers: {
+                  'dev-id': terraDevId,
+                  'x-api-key': terraApiKey,
+                  'Accept': 'application/json',
+                },
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`✅ ${provider} ${dataType}:`, data.data?.length || 0, 'records');
+              
+              if (data.data && data.data.length > 0) {
+                // Обрабатываем данные используя ту же логику что и webhook
+                await processTerraData(supabase, {
+                  type: dataType,
+                  user: { user_id: terraUserId, provider },
+                  data: data.data
+                });
+                providerResults[dataType] = { success: true, count: data.data.length };
+              } else {
+                providerResults[dataType] = { success: true, count: 0 };
+              }
+            } else {
+              const errorText = await response.text();
+              console.error(`❌ Error fetching ${dataType} from ${provider}:`, errorText);
+              providerResults[dataType] = { success: false, error: errorText };
+            }
+          } catch (error: any) {
+            console.error(`❌ Exception fetching ${dataType} from ${provider}:`, error);
+            providerResults[dataType] = { success: false, error: error.message };
+          }
+        }
+
+        results[provider] = providerResults;
+
+        // Обновляем last_sync_date
+        await supabase
+          .from('terra_tokens')
+          .update({ last_sync_date: new Date().toISOString() })
+          .eq('id', token.id);
+      }
+
+      console.log('✅ Manual sync completed:', results);
+
+      return new Response(
+        JSON.stringify({ success: true, results }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Получить URL для авторизации через Terra API
     if (action === 'get-auth-url') {
       const authHeader = req.headers.get('Authorization');
