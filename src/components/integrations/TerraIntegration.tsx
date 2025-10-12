@@ -377,29 +377,145 @@ export function TerraIntegration() {
             </div>
           </div>
 
-          <Button
-            onClick={connectTerra}
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Подключение...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-2 h-4 w-4" />
-                Подключить устройство
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={connectTerra}
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Подключение...
+                </>
+              ) : (
+                <>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Подключить устройство
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={testWebhook}
+              disabled={testingWebhook}
+              variant="outline"
+              size="icon"
+            >
+              {testingWebhook ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "🧪"
+              )}
+            </Button>
+          </div>
 
           <div className="pt-4 border-t">
             <p className="text-xs text-muted-foreground">
               💡 После подключения данные будут автоматически синхронизироваться через webhook
             </p>
           </div>
+
+          {/* Диагностика для disconnected state */}
+          {showDiagnostics && diagnostics && (
+            <div className="pt-4 border-t space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Диагностика webhook</h3>
+                <Badge variant="outline" className="text-xs">
+                  {new Date(diagnostics.timestamp).toLocaleTimeString('ru-RU')}
+                </Badge>
+              </div>
+
+              {/* Webhook URL */}
+              <Alert className={diagnostics.checks.webhookUrl.status === 'ok' ? 'border-green-500' : 'border-red-500'}>
+                <div className="flex items-start gap-2">
+                  {diagnostics.checks.webhookUrl.status === 'ok' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <AlertDescription className="text-xs">
+                      <strong>Webhook endpoint:</strong> {diagnostics.checks.webhookUrl.message}
+                      <div className="mt-1 text-muted-foreground break-all">
+                        {diagnostics.checks.webhookUrl.url}
+                      </div>
+                    </AlertDescription>
+                  </div>
+                </div>
+              </Alert>
+
+              {/* Terra Tokens */}
+              <Alert className={diagnostics.checks.terraTokens.status === 'ok' ? 'border-green-500' : 'border-red-500'}>
+                <div className="flex items-start gap-2">
+                  {diagnostics.checks.terraTokens.status === 'ok' ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <AlertDescription className="text-xs">
+                      <strong>Auth события:</strong> {diagnostics.checks.terraTokens.message}
+                    </AlertDescription>
+                  </div>
+                </div>
+              </Alert>
+
+              {/* Data Events */}
+              <Alert className="border-blue-500">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                  <div className="flex-1">
+                    <AlertDescription className="text-xs">
+                      <strong>События данных:</strong> {diagnostics.checks.dataEvents.message}
+                    </AlertDescription>
+                  </div>
+                </div>
+              </Alert>
+
+              {/* Инструкции по настройке */}
+              {diagnostics.checks.terraTokens.status === 'fail' && (
+                <Alert className="border-orange-500">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  <AlertDescription className="text-xs space-y-2">
+                    <strong className="block">Что проверить:</strong>
+                    {diagnostics.checks.configuration.steps.map((step: any, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <span className="text-muted-foreground">{idx + 1}.</span>
+                        <div className="flex-1">
+                          {step.text}
+                          {step.link && (
+                            <a 
+                              href={step.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="ml-2 text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                              Открыть <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                          {step.value && (
+                            <div className="mt-1 text-muted-foreground font-mono text-xs break-all">
+                              {step.value}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                onClick={() => setShowDiagnostics(false)}
+                variant="ghost"
+                size="sm"
+                className="w-full"
+              >
+                Скрыть диагностику
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
