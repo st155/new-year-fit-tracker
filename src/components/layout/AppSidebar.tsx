@@ -77,7 +77,7 @@ export function AppSidebar() {
     { title: "navigation.habits", url: "/habits", iconType: "habits" as const },
     { title: "navigation.bodyComposition", url: "/body-composition", iconType: "activity" as const },
     { title: "navigation.challenges", url: "/challenges", iconType: "challenges" as const },
-    { title: "navigation.goals", url: "/goals/create", iconType: "activity" as const },
+    { title: "navigation.goals", url: "/goals", iconType: "activity" as const },
     { title: "navigation.feed", url: "/feed", iconType: "activity" as const },
   ];
 

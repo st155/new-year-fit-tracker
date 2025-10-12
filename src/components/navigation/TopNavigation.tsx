@@ -35,7 +35,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'stats' as const, path: "/progress", label: t('navigation.progress') },
     { type: 'body' as const, path: "/body-composition", label: t('navigation.bodyComposition') },
     { type: 'challenges' as const, path: "/challenges", label: t('navigation.challenges') },
-    { type: 'goals' as const, path: "/goals/create", label: t('navigation.goals') },
+    { type: 'goals' as const, path: "/goals", label: t('navigation.goals') },
     { type: 'feed' as const, path: "/feed", label: t('navigation.feed') },
     { type: 'data' as const, path: "/fitness-data", label: t('navigation.fitnessData') },
     { type: 'habits' as const, path: "/habits", label: t('navigation.habits') },
