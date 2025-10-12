@@ -289,10 +289,10 @@ async function handleCallback(req: Request, code?: string | null, state?: string
 
       console.log('State mapping lookup result:', { stateFound: !!stateMap?.user_id, mappingError });
       if (mappingError) {
-        console.error('Database error during state lookup:', mappingError);
-        throw new Error(`State lookup failed: ${mappingError.message}`);
+        console.warn('State lookup failed, falling back if possible:', mappingError);
+      } else {
+        targetUserId = stateMap?.user_id || null;
       }
-      targetUserId = stateMap?.user_id || null;
     }
 
     // 3) Фолбэк: если state отсутствует/не найден, но есть аутентифицированный пользователь — используем его
@@ -320,13 +320,16 @@ async function handleCallback(req: Request, code?: string | null, state?: string
     const expiresIn = tokens.expires_in || 3600;
     const { error: saveError } = await supabase
       .from('whoop_tokens')
-      .upsert({
-        user_id: targetUserId,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token || null,
-        expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      .upsert(
+        {
+          user_id: targetUserId,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token || null,
+          expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
 
     if (saveError) {
       console.error('Error saving tokens in callback:', saveError);
