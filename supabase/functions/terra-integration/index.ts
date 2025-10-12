@@ -38,7 +38,7 @@ serve(async (req) => {
 
     console.log(`Terra Integration - Action: ${action}, Method: ${req.method}`);
 
-    // Получить URL для авторизации
+    // Получить URL для авторизации через Terra API
     if (action === 'get-auth-url') {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
@@ -53,18 +53,36 @@ serve(async (req) => {
         throw new Error('Unauthorized');
       }
 
-      console.log(`User: ${user.id}`);
+      console.log(`Generating widget session for user: ${user.id}`);
 
-      const widgetUrl = `https://widget.tryterra.co/session?${new URLSearchParams({
-        reference_id: user.id,
-        providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
-        auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
-        auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
-        language: 'en',
-      })}`;
+      // Используем официальный Terra API endpoint для генерации widget session
+      const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
+        method: 'POST',
+        headers: {
+          'dev-id': terraDevId,
+          'x-api-key': terraApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference_id: user.id,
+          providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
+          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+          auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
+          language: 'en',
+        }),
+      });
+
+      if (!widgetResponse.ok) {
+        const errorText = await widgetResponse.text();
+        console.error('Terra API error:', errorText);
+        throw new Error(`Terra API error: ${widgetResponse.statusText}`);
+      }
+
+      const widgetData = await widgetResponse.json();
+      console.log('Widget session generated:', widgetData);
 
       return new Response(
-        JSON.stringify({ url: widgetUrl }),
+        JSON.stringify({ url: widgetData.url }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
