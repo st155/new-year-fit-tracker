@@ -114,18 +114,26 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      const providers = tokens?.map(t => ({
+      // Фильтруем тестовые подключения (terra_test_*)
+      const realTokens = tokens?.filter(t => !t.terra_user_id?.includes('terra_test_')) || [];
+
+      const providers = realTokens.map(t => ({
         provider: t.provider,
         connectedAt: t.created_at,
         lastSync: t.last_sync_date,
         terraUserId: t.terra_user_id,
-      })) || [];
+      }));
 
-      console.log('check-status result', { hasTokens: !!tokens?.length, count: tokens?.length || 0, providers: providers.map(p=>p.provider) });
+      console.log('check-status result', { 
+        hasTokens: realTokens.length > 0, 
+        count: realTokens.length, 
+        providers: providers.map(p=>p.provider),
+        filteredOutTestTokens: (tokens?.length || 0) - realTokens.length
+      });
       
       return new Response(
         JSON.stringify({
-          connected: tokens && tokens.length > 0,
+          connected: realTokens.length > 0,
           providers,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
