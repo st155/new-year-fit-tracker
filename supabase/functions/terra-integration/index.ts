@@ -318,22 +318,32 @@ serve(async (req) => {
       // Запросить исторические данные через Terra API
       const endDate = new Date();
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30); // последние 30 дней
+      startDate.setDate(startDate.getDate() - 7); // последние 7 дней
 
-      const response = await fetch(`https://api.tryterra.co/v2/daily`, {
-        method: 'GET',
-        headers: {
-          'dev-id': terraDevId,
-          'x-api-key': terraApiKey,
-        },
-      });
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+
+      console.log(`Requesting Terra data for user ${token.terra_user_id} from ${startDateStr} to ${endDateStr}`);
+
+      const response = await fetch(
+        `https://api.tryterra.co/v2/daily?user_id=${token.terra_user_id}&start_date=${startDateStr}&end_date=${endDateStr}`,
+        {
+          method: 'GET',
+          headers: {
+            'dev-id': terraDevId,
+            'x-api-key': terraApiKey,
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`Terra API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Terra API error:', response.status, errorText);
+        throw new Error(`Terra API error: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Terra sync data:', JSON.stringify(data, null, 2));
+      console.log('Terra sync response:', JSON.stringify(data, null, 2));
 
       return new Response(
         JSON.stringify({ success: true, message: 'Данные синхронизируются через webhook' }),
