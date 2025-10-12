@@ -377,59 +377,60 @@ export function TerraIntegration() {
 
   if (!status.connected) {
     return (
-      <Card>
+      <Card className="glass-card border-primary/20">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              <CardTitle>Terra API - Универсальная интеграция</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-primary">
+                <Zap className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Terra API</CardTitle>
+                <Badge className="mt-1 bg-gradient-secondary border-0">Рекомендуем</Badge>
+              </div>
             </div>
-            <Badge variant="outline">Не подключено</Badge>
+            <Badge variant="outline" className="border-muted-foreground/30">Не подключено</Badge>
           </div>
-          <CardDescription>
-            Подключите все носимые устройства через одну интеграцию
+          <CardDescription className="text-base">
+            Universal API for all wearables - connect Whoop, UltraHuman, Garmin, Withings, Apple Health and more
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">
               📱 Поддерживаемые устройства:
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Zap className="h-4 w-4" />
-                <span>UltraHuman Ring - глюкоза, метаболизм</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-primary/5 to-transparent border border-primary/10">
+                <Zap className="h-5 w-5 text-primary" />
+                <span className="text-sm">UltraHuman Ring - глюкоза, метаболизм</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Activity className="h-4 w-4" />
-                <span>Whoop - восстановление, нагрузка</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-secondary/5 to-transparent border border-secondary/10">
+                <Activity className="h-5 w-5 text-secondary" />
+                <span className="text-sm">Whoop - восстановление, нагрузка</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Watch className="h-4 w-4" />
-                <span>Garmin - тренировки, VO2max</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-accent/5 to-transparent border border-accent/10">
+                <Watch className="h-5 w-5 text-accent" />
+                <span className="text-sm">Garmin - тренировки, VO2max</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Heart className="h-4 w-4" />
-                <span>Fitbit - активность, сердце</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-metric-recovery/5 to-transparent border border-metric-recovery/10">
+                <Heart className="h-5 w-5 text-metric-recovery" />
+                <span className="text-sm">Fitbit - активность, сердце</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Activity className="h-4 w-4" />
-                <span>Oura - восстановление, сон</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-success/5 to-transparent border border-success/10">
+                <Activity className="h-5 w-5 text-success" />
+                <span className="text-sm">Oura - восстановление, сон</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Smartphone className="h-4 w-4" />
-                <span>Apple Health - все данные</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Heart className="h-4 w-4" />
-                <span>Withings - вес, давление</span>
+              <div className="flex items-center gap-3 p-3 rounded-lg glass bg-gradient-to-r from-primary/5 to-transparent border border-primary/10">
+                <Smartphone className="h-5 w-5 text-primary" />
+                <span className="text-sm">Apple Health - все данные</span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Выберите устройство:</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-4">
+            <p className="text-sm font-semibold">Выберите устройство:</p>
+            <div className="grid grid-cols-2 gap-3">
               {['ULTRAHUMAN', 'WHOOP', 'GARMIN', 'OURA', 'WITHINGS'].map((provider) => {
                 const Icon = providerIcons[provider];
                 return (
@@ -438,14 +439,14 @@ export function TerraIntegration() {
                     onClick={() => connectTerra(provider)}
                     disabled={loading}
                     variant="outline"
-                    className="justify-start"
+                    className="justify-start h-auto py-3 glass hover:bg-gradient-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
                   >
                     {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     ) : (
-                      <Icon className="mr-2 h-4 w-4" />
+                      <Icon className="mr-2 h-5 w-5" />
                     )}
-                    {providerNames[provider]}
+                    <span className="text-base">{providerNames[provider]}</span>
                   </Button>
                 );
               })}
@@ -476,10 +477,13 @@ export function TerraIntegration() {
             </Button>
           </div>
 
-          <div className="pt-4 border-t">
-            <p className="text-xs text-muted-foreground">
-              💡 После подключения данные будут автоматически синхронизироваться через webhook
-            </p>
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
+              <p className="text-sm">
+                💡 После подключения данные будут автоматически синхронизироваться через webhook
+              </p>
+            </div>
           </div>
 
           {/* Диагностика для disconnected state */}
