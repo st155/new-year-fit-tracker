@@ -34,17 +34,17 @@ const GoalsPage = () => {
     
     setLoading(true);
     try {
-      // Загружаем все цели пользователя, сначала челленджевые, потом персональные
+      // Загружаем только челленджевые цели
       const { data: allGoals, error } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', user.id)
-        .order('is_personal', { ascending: true })  // Сначала челленджевые (false), потом персональные (true)
+        .eq('is_personal', false)  // Только челленджевые цели
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      console.log('[Goals Page] Loaded goals:', allGoals?.length, allGoals);
+      console.log('[Goals Page] Loaded challenge goals:', allGoals?.length, allGoals);
 
       if (allGoals && allGoals.length > 0) {
         // Загружаем измерения для каждой цели
@@ -176,127 +176,95 @@ const GoalsPage = () => {
           </p>
         </div>
       ) : (
-        <>
-          <div className="mb-3">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Target className="h-4 w-4 text-primary" />
-              My Current Goals ({goals.length})
-            </h2>
-          </div>
-
-          <div className="space-y-2.5 mb-6">
-            {goals.map((goal) => {
-              const isHigherBetter = !['вес', 'жир', 'бег'].some(word => 
-                goal.goal_name.toLowerCase().includes(word)
-              );
-              
-              return (
-                <div
-                  key={goal.id}
-                  onClick={() => handleGoalClick(goal)}
-                  className="p-3 rounded-xl glass border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
-                >
-                  {/* Goal Header - More Compact */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                        {goal.goal_name}
-                      </h3>
-                      {!goal.is_personal && (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 mt-0.5">
-                          Challenge
-                        </Badge>
-                      )}
-                    </div>
-                    <Badge 
-                      className={cn(
-                        "ml-2 font-semibold text-xs h-6 px-2",
-                        goal.progress >= 100 ? "bg-gradient-success" : 
-                        goal.progress >= 50 ? "bg-gradient-primary" : 
-                        "bg-gradient-accent"
-                      )}
-                    >
-                      {goal.progress}%
-                    </Badge>
+        <div className="space-y-2.5">
+          {goals.map((goal) => {
+            const isHigherBetter = !['вес', 'жир', 'бег'].some(word => 
+              goal.goal_name.toLowerCase().includes(word)
+            );
+            
+            return (
+              <div
+                key={goal.id}
+                onClick={() => handleGoalClick(goal)}
+                className="p-3 rounded-xl glass border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
+              >
+                {/* Goal Header - More Compact */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                      {goal.goal_name}
+                    </h3>
                   </div>
-
-                  {/* Progress Bar - Thinner */}
-                  <Progress value={goal.progress} className="h-1.5 mb-2" />
-
-                  {/* Stats - More Compact */}
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <span className="text-muted-foreground">Current: </span>
-                        <span className="font-medium">
-                          {goal.current_value?.toFixed(1) || 0} {goal.target_unit}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Target: </span>
-                        <span className="font-medium text-primary">
-                          {goal.target_value} {goal.target_unit}
-                        </span>
-                      </div>
-                    </div>
-
-                    {goal.current_value && goal.current_value > 0 && (
-                      <div className={cn(
-                        "flex items-center gap-1 text-[10px] font-medium",
-                        isHigherBetter 
-                          ? (goal.current_value >= goal.target_value ? "text-success" : "text-muted-foreground")
-                          : (goal.current_value <= goal.target_value ? "text-success" : "text-muted-foreground")
-                      )}>
-                        {isHigherBetter ? (
-                          goal.current_value >= goal.target_value ? (
-                            <>
-                              <TrendingUp className="h-3 w-3" />
-                              <span>Done</span>
-                            </>
-                          ) : (
-                            <>
-                              <TrendingUp className="h-3 w-3" />
-                              <span>Active</span>
-                            </>
-                          )
-                        ) : (
-                          goal.current_value <= goal.target_value ? (
-                            <>
-                              <TrendingDown className="h-3 w-3" />
-                              <span>Done</span>
-                            </>
-                          ) : (
-                            <>
-                              <Minus className="h-3 w-3" />
-                              <span>Active</span>
-                            </>
-                          )
-                        )}
-                      </div>
+                  <Badge 
+                    className={cn(
+                      "ml-2 font-semibold text-xs h-6 px-2",
+                      goal.progress >= 100 ? "bg-gradient-success" : 
+                      goal.progress >= 50 ? "bg-gradient-primary" : 
+                      "bg-gradient-accent"
                     )}
-                  </div>
+                  >
+                    {goal.progress}%
+                  </Badge>
                 </div>
-              );
-            })}
-          </div>
-        </>
-      )}
 
-      {/* Stats Summary - Compact */}
-      {goals.length > 0 && (
-        <div className="pt-3 border-t border-border/30">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-3 rounded-xl glass text-center">
-              <div className="text-xl font-bold text-primary mb-0.5">{goals.length}</div>
-              <div className="text-[10px] text-muted-foreground">Total Goals</div>
-            </div>
-            <div className="p-3 rounded-xl glass text-center">
-              <div className="text-xl font-bold text-success mb-0.5">
-                {goals.filter(g => g.progress >= 100).length}
+                {/* Progress Bar - Thinner */}
+                <Progress value={goal.progress} className="h-1.5 mb-2" />
+
+                {/* Stats - More Compact */}
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <span className="text-muted-foreground">Current: </span>
+                      <span className="font-medium">
+                        {goal.current_value?.toFixed(1) || 0} {goal.target_unit}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Target: </span>
+                      <span className="font-medium text-primary">
+                        {goal.target_value} {goal.target_unit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {goal.current_value && goal.current_value > 0 && (
+                    <div className={cn(
+                      "flex items-center gap-1 text-[10px] font-medium",
+                      isHigherBetter 
+                        ? (goal.current_value >= goal.target_value ? "text-success" : "text-muted-foreground")
+                        : (goal.current_value <= goal.target_value ? "text-success" : "text-muted-foreground")
+                    )}>
+                      {isHigherBetter ? (
+                        goal.current_value >= goal.target_value ? (
+                          <>
+                            <TrendingUp className="h-3 w-3" />
+                            <span>Done</span>
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="h-3 w-3" />
+                            <span>Active</span>
+                          </>
+                        )
+                      ) : (
+                        goal.current_value <= goal.target_value ? (
+                          <>
+                            <TrendingDown className="h-3 w-3" />
+                            <span>Done</span>
+                          </>
+                        ) : (
+                          <>
+                            <Minus className="h-3 w-3" />
+                            <span>Active</span>
+                          </>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="text-[10px] text-muted-foreground">Completed</div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
     </div>
