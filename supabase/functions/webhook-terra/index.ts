@@ -16,6 +16,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
+
+  try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const terraSigningSecret = Deno.env.get('TERRA_SIGNING_SECRET')!;
@@ -27,14 +29,6 @@ serve(async (req) => {
       headers: Object.fromEntries(req.headers.entries())
     });
     
-    // Allow simple GET health checks without signature (useful for dashboards/testing)
-    if (req.method === 'GET') {
-      return new Response(
-        JSON.stringify({ ok: true, message: 'Terra webhook live. Send signed POST webhooks here.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const signature = req.headers.get('terra-signature') || req.headers.get('x-terra-signature');
     if (!signature) {
       console.error('❌ Missing terra-signature header');
