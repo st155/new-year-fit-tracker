@@ -58,6 +58,20 @@ serve(async (req) => {
       reference_id: payload.reference_id
     });
 
+    // Persist minimal payload audit trail for diagnostics
+    try {
+      const auditUser = payload.user?.user_id || payload.reference_id || 'unknown';
+      await supabase.from('terra_misc_payloads').insert({
+        user_id: String(auditUser),
+        payload_type: payload.type,
+        data_type: payload.type,
+        payload_id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error('⚠️ Failed to insert payload audit:', e);
+    }
+
     // Обработка healthcheck от Terra
     if (payload.type === 'healthcheck') {
       console.log('💚 Healthcheck received from Terra - responding OK');

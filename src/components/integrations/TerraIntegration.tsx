@@ -334,6 +334,24 @@ export function TerraIntegration() {
     }
   };
 
+  const simulateAuth = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const res = await supabase.functions.invoke('terra-webhook-test', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { type: 'auth', provider: 'WHOOP' }
+      });
+      console.log('🧪 Симулированный auth ответ:', res);
+      toast({ title: 'Отправлен тестовый auth', description: 'Проверяю статус подключения...' });
+      await checkConnectionStatus();
+      setShowDiagnostics(true);
+    } catch (e: any) {
+      console.error('simulateAuth error', e);
+      toast({ title: 'Ошибка симуляции', description: e.message, variant: 'destructive' });
+    }
+  };
   if (loading) {
     return (
       <Card>
@@ -419,14 +437,22 @@ export function TerraIntegration() {
               onClick={testWebhook}
               disabled={testingWebhook}
               variant="outline"
+              className="shrink-0"
             >
               {testingWebhook ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Проверка
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                '🧪 Диагностика'
+                "🧪"
               )}
+            </Button>
+
+            <Button
+              onClick={simulateAuth}
+              variant="secondary"
+              size="sm"
+              className="ml-2"
+            >
+              ⚗️ Симуляция auth
             </Button>
           </div>
 
