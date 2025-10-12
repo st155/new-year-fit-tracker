@@ -367,35 +367,31 @@ export function TerraIntegration() {
   };
   if (loading) {
     return (
-      <Card>
-        <CardContent className="pt-6 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </CardContent>
-      </Card>
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (!status.connected) {
     return (
-      <Card className="glass-card border-primary/20">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <div className="space-y-6">
+        <div className="glass-card border-primary/20 p-6">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-primary">
+              <div className="p-3 rounded-lg bg-gradient-primary">
                 <Zap className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-2xl">Terra API</CardTitle>
+                <h2 className="text-2xl font-bold">Terra API - Универсальная интеграция</h2>
                 <Badge className="mt-1 bg-gradient-secondary border-0">Рекомендуем</Badge>
               </div>
             </div>
             <Badge variant="outline" className="border-muted-foreground/30">Не подключено</Badge>
           </div>
-          <CardDescription className="text-base">
-            Universal API for all wearables - connect Whoop, UltraHuman, Garmin, Withings, Apple Health and more
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+          <p className="text-base text-muted-foreground mb-6">
+            Подключите все носимые устройства через одну интеграцию
+          </p>
           <div className="space-y-3">
             <p className="text-sm font-semibold">
               📱 Поддерживаемые устройства:
@@ -586,29 +582,29 @@ export function TerraIntegration() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-green-500" />
-            <CardTitle>Terra API</CardTitle>
+    <div className="space-y-6">
+      <div className="glass-card border-primary/20 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-gradient-primary">
+              <Zap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Terra API</h2>
+              <p className="text-sm text-muted-foreground">Подключенные носимые устройства</p>
+            </div>
           </div>
-          <Badge className="bg-green-500">
+          <Badge className="bg-success border-0">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             {status.providers.length} устройств
           </Badge>
         </div>
-        <CardDescription>
-          Подключенные носимые устройства
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
         {/* Список подключенных устройств */}
         <div className="space-y-2">
           {status.providers.map((provider) => {
@@ -830,7 +826,7 @@ export function TerraIntegration() {
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
