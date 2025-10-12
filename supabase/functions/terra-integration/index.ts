@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { createHmac } from "node:crypto";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, terra-signature',
 };
 
 serve(async (req) => {
@@ -54,6 +53,13 @@ serve(async (req) => {
       }
 
       console.log(`Generating widget session for user: ${user.id}`);
+      const baseUrlParam = url.searchParams.get('baseUrl');
+      const reqOrigin = req.headers.get('origin') || '';
+      const referer = req.headers.get('referer') || '';
+      let refOrigin = '';
+      try { refOrigin = referer ? new URL(referer).origin : ''; } catch (_) {}
+      const baseUrl = baseUrlParam || reqOrigin || refOrigin || 'https://elite10.club';
+      console.log('Auth redirect baseUrl resolved to:', { baseUrl, reqOrigin, referer });
 
       // Используем официальный Terra API endpoint для генерации widget session
       const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
@@ -66,8 +72,8 @@ serve(async (req) => {
         body: JSON.stringify({
           reference_id: user.id,
           providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
-          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
-          auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
+          auth_success_redirect_url: `${baseUrl}/terra-callback?success=true`,
+          auth_failure_redirect_url: `${baseUrl}/terra-callback?error=auth_failed`,
           language: 'en',
         }),
       });
@@ -115,7 +121,7 @@ serve(async (req) => {
         terraUserId: t.terra_user_id,
       })) || [];
 
-      return new Response(
+      console.log('check-status result', { hasTokens: !!tokens?.length, count: tokens?.length || 0, providers: providers.map(p=>p.provider) });
         JSON.stringify({
           connected: tokens && tokens.length > 0,
           providers,
@@ -138,7 +144,7 @@ serve(async (req) => {
 
       // Получить raw body для проверки подписи
       const rawBody = await req.text();
-      const isValidSignature = verifyTerraSignature(rawBody, signature, terraSigningSecret);
+      const isValidSignature = await verifyTerraSignature(rawBody, signature, terraSigningSecret);
       
       if (!isValidSignature) {
         console.error('Invalid signature');
@@ -156,19 +162,44 @@ serve(async (req) => {
         // Пользователь подключил устройство
         const { reference_id, user: terraUser } = payload;
         
-        const { error: tokenError } = await supabase
+        // Сохраняем/обновляем запись terra_tokens без требования уникального индекса
+        const provider = terraUser.provider?.toUpperCase();
+        const { data: existing, error: findError } = await supabase
           .from('terra_tokens')
-          .upsert({
-            user_id: reference_id,
-            terra_user_id: terraUser.user_id,
-            provider: terraUser.provider?.toUpperCase(),
-            is_active: true,
-            last_sync_date: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id,provider'
-          });
+          .select('id')
+          .eq('user_id', reference_id)
+          .eq('provider', provider)
+          .maybeSingle();
+
+        if (findError) {
+          console.error('Error finding existing Terra token:', findError);
+        }
+
+        const payloadToSave = {
+          user_id: reference_id,
+          terra_user_id: terraUser.user_id,
+          provider,
+          is_active: true,
+          last_sync_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        };
+
+        let tokenError = null as any;
+        if (existing?.id) {
+          const { error: updateError } = await supabase
+            .from('terra_tokens')
+            .update(payloadToSave)
+            .eq('id', existing.id);
+          tokenError = updateError;
+          console.log('Updated existing terra_tokens record', { id: existing.id });
+        } else {
+          const { error: insertError } = await supabase
+            .from('terra_tokens')
+            .insert(payloadToSave);
+          tokenError = insertError;
+          console.log('Inserted new terra_tokens record');
+        }
 
         if (tokenError) {
           console.error('Error saving Terra token:', tokenError);
@@ -309,8 +340,8 @@ serve(async (req) => {
   }
 });
 
-// Функция проверки подписи Terra
-function verifyTerraSignature(rawBody: string, signature: string, secret: string): boolean {
+// Функция проверки подписи Terra (Web Crypto API)
+async function verifyTerraSignature(rawBody: string, signature: string, secret: string): Promise<boolean> {
   try {
     // Парсим заголовок terra-signature: "t=timestamp,v1=signature"
     const parts = signature.split(',');
@@ -324,35 +355,36 @@ function verifyTerraSignature(rawBody: string, signature: string, secret: string
     }
     
     if (!timestamp || !sig) {
-      console.error('Invalid signature format');
+      console.error('Invalid signature format', { signature });
       return false;
     }
     
-    // Создаем payload для подписи (timestamp + rawBody)
     const payload = timestamp + rawBody;
-    
-    // Создаем HMAC SHA256 подпись
-    const hmac = createHmac('sha256', secret);
-    hmac.update(payload);
-    const computedSignature = hmac.digest('hex');
-    
-    // Сравниваем подписи
-    const isValid = computedSignature === sig;
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+    const computed = bufferToHex(signatureBuffer);
+    const isValid = computed === sig;
     
     if (!isValid) {
-      console.error('Signature verification failed', {
-        expected: sig,
-        computed: computedSignature,
-        timestamp,
-        payloadLength: payload.length
-      });
+      console.error('Signature verification failed', { expected: sig, computed, timestamp, payloadLength: payload.length });
     }
-    
     return isValid;
   } catch (error) {
     console.error('Error verifying signature:', error);
     return false;
   }
+}
+
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 async function processTerraData(supabase: any, payload: any) {
