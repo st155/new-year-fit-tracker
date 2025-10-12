@@ -10,8 +10,12 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
-  try {
+  // Health checks for GET/HEAD without signature
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return new Response(req.method === 'HEAD' ? null : JSON.stringify({ ok: true, message: 'Terra webhook live. Send signed POST webhooks here.' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const terraSigningSecret = Deno.env.get('TERRA_SIGNING_SECRET')!;
