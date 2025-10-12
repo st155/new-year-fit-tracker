@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import "@/i18n";
@@ -187,6 +187,7 @@ const App = () => {
               
               <Route path="/withings-callback" element={<WithingsCallback />} />
               <Route path="/terra-callback" element={<TerraCallback />} />
+              <Route path="/whoop-callback" element={<Navigate to="/integrations" replace />} />
               <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
             <Route path="/feed" element={
               <ProtectedRoute>
