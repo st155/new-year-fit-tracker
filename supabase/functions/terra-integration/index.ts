@@ -122,6 +122,8 @@ serve(async (req) => {
       })) || [];
 
       console.log('check-status result', { hasTokens: !!tokens?.length, count: tokens?.length || 0, providers: providers.map(p=>p.provider) });
+      
+      return new Response(
         JSON.stringify({
           connected: tokens && tokens.length > 0,
           providers,
