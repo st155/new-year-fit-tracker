@@ -63,8 +63,8 @@ serve(async (req) => {
 
       // Используем официальный Terra API endpoint для генерации widget session
       // Список провайдеров: https://docs.tryterra.co/reference#post-auth-generatewidgetsession
-      // Только API провайдеры (не SDK): WHOOP, GARMIN, FITBIT, OURA, WITHINGS, SUUNTO, ULTRAHUMAN и др.
-      const requestBody = {
+      // Только API провайдеры (не SDK): WHOOP, GARMIN, FITBIT, OURA, WITHINGS, SUUNTO, ULTRAHУMAN и др.
+      const widgetRequestBody = {
         reference_id: userId,  // Используем Supabase user_id как reference_id
         // Убрали APPLE_HEALTH (это SDK, не API provider)
         // Провайдеры должны быть активированы в Terra Dashboard для production
@@ -77,7 +77,7 @@ serve(async (req) => {
       console.log('📤 Terra Widget Session Request:', {
         url: 'https://api.tryterra.co/v2/auth/generateWidgetSession',
         devId: terraDevId,
-        body: requestBody
+        body: widgetRequestBody
       });
       
       const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
@@ -87,7 +87,7 @@ serve(async (req) => {
           'x-api-key': terraApiKey,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(widgetRequestBody),
       });
 
       if (!widgetResponse.ok) {
