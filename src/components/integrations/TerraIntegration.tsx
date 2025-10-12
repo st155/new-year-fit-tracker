@@ -58,8 +58,9 @@ export function TerraIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await supabase.functions.invoke('terra-integration?action=check-status', {
-        method: 'GET',
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        method: 'POST',
+        body: { action: 'check-status' },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -81,8 +82,12 @@ export function TerraIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke(`terra-integration?action=get-auth-url&baseUrl=${encodeURIComponent(window.location.origin)}`, {
-        method: 'GET',
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        method: 'POST',
+        body: { 
+          action: 'get-auth-url',
+          baseUrl: window.location.origin
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -135,8 +140,12 @@ export function TerraIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const { error } = await supabase.functions.invoke(`terra-integration?action=disconnect&provider=${provider}`, {
-        method: 'DELETE',
+      const { error } = await supabase.functions.invoke('terra-integration', {
+        method: 'POST',
+        body: {
+          action: 'disconnect',
+          provider
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -168,8 +177,9 @@ export function TerraIntegration() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const { error } = await supabase.functions.invoke('terra-integration?action=sync-data', {
+      const { error } = await supabase.functions.invoke('terra-integration', {
         method: 'POST',
+        body: { action: 'sync-data' },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

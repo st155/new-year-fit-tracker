@@ -22,16 +22,15 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     
-    // Получить action из query параметров или body
     let action = url.searchParams.get('action');
+    let requestBody: any = {};
     
-    // Если action нет в query параметрах, попробовать получить из body
-    if (!action && req.method === 'POST') {
+    if (req.method === 'POST') {
       try {
-        const body = await req.json();
-        action = body.action;
+        requestBody = await req.json();
+        action = action || requestBody.action;
       } catch (e) {
-        // Если не JSON, оставить action null
+        // Empty body or invalid JSON
       }
     }
 
@@ -53,13 +52,12 @@ serve(async (req) => {
       }
 
       console.log(`Generating widget session for user: ${user.id}`);
-      const baseUrlParam = url.searchParams.get('baseUrl');
-      const reqOrigin = req.headers.get('origin') || '';
-      const referer = req.headers.get('referer') || '';
-      let refOrigin = '';
-      try { refOrigin = referer ? new URL(referer).origin : ''; } catch (_) {}
-      const baseUrl = baseUrlParam || reqOrigin || refOrigin || 'https://elite10.club';
-      console.log('Auth redirect baseUrl resolved to:', { baseUrl, reqOrigin, referer });
+      const baseUrl = requestBody.baseUrl || 
+                     url.searchParams.get('baseUrl') ||
+                     req.headers.get('origin') || 
+                     'https://elite10.club';
+      
+      console.log('Auth redirect baseUrl:', baseUrl);
 
       // Используем официальный Terra API endpoint для генерации widget session
       const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
@@ -324,7 +322,7 @@ serve(async (req) => {
         throw new Error('Unauthorized');
       }
 
-      const provider = url.searchParams.get('provider');
+      const provider = requestBody.provider || url.searchParams.get('provider');
       
       if (provider) {
         // Отключить конкретный провайдер
