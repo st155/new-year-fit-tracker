@@ -174,44 +174,49 @@ const IntegrationsPage = () => {
 
   const integrationItems = [
     {
+      id: 'terra',
+      name: 'Terra API',
+      description: 'Universal API for all wearables (recommended)',
+      icon: Zap,
+      status: integrationStatus.terra,
+      component: <TerraIntegration />,
+      featured: true,
+    },
+    {
       id: 'whoop',
       name: 'Whoop',
-      description: 'Band for tracking activity and recovery',
+      description: 'Band for tracking activity and recovery (Legacy)',
       icon: Activity,
       status: integrationStatus.whoop,
-      component: <WhoopIntegration userId={user?.id || ''} />
+      component: <WhoopIntegration userId={user?.id || ''} />,
+      legacy: true,
     },
     {
       id: 'withings',
       name: 'Withings',
-      description: 'Smart scales and health trackers',
+      description: 'Smart scales and health trackers (Legacy)',
       icon: Heart,
       status: integrationStatus.withings,
-      component: <WithingsIntegration />
+      component: <WithingsIntegration />,
+      legacy: true,
     },
     {
       id: 'appleHealth',
       name: 'Apple Health',
-      description: 'Import data from Health app',
+      description: 'Import data from Health app (Legacy)',
       icon: Smartphone,
       status: integrationStatus.appleHealth,
-      component: <AppleHealthIntegration />
+      component: <AppleHealthIntegration />,
+      legacy: true,
     },
     {
       id: 'garmin',
       name: 'Garmin',
-      description: 'Sports watches and fitness trackers',
+      description: 'Sports watches and fitness trackers (Legacy)',
       icon: Watch,
       status: integrationStatus.garmin,
-      component: <GarminIntegration userId={user?.id || ''} />
-    },
-    {
-      id: 'terra',
-      name: 'Terra API',
-      description: 'UltraHuman, Oura, Fitbit and more',
-      icon: Zap,
-      status: integrationStatus.terra,
-      component: <TerraIntegration />
+      component: <GarminIntegration userId={user?.id || ''} />,
+      legacy: true,
     }
   ];
 
@@ -378,30 +383,95 @@ const IntegrationsPage = () => {
           </TabsContent>
 
           <TabsContent value="setup" className="space-y-6">
+            {/* Featured Integration - Terra API */}
+            <Alert className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 to-purple-500/10">
+              <Zap className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm">
+                <span className="font-semibold">Рекомендуем Terra API</span> - универсальная интеграция для всех носимых устройств. 
+                Подключите UltraHuman, Whoop, Garmin, Fitbit, Oura, Withings и Apple Health через одно API.
+              </AlertDescription>
+            </Alert>
+
             <div className="grid grid-cols-1 gap-4 sm:gap-6">
-              {integrationItems.map((item) => (
-                <Card key={item.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <item.icon className="h-6 w-6 text-primary" />
+              {/* Featured - Terra API */}
+              {integrationItems
+                .filter(item => item.featured)
+                .map((item) => (
+                  <Card 
+                    key={item.id} 
+                    className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-purple-500/5 shadow-lg"
+                  >
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-primary/20 rounded-xl">
+                            <item.icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg">{item.name}</CardTitle>
+                              <Badge variant="default" className="bg-primary">
+                                Рекомендуем
+                              </Badge>
+                            </div>
+                            <CardDescription className="text-sm mt-1">
+                              {item.description}
+                            </CardDescription>
+                          </div>
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">{item.name}</CardTitle>
-                          <CardDescription>
-                            {item.description}
-                          </CardDescription>
-                        </div>
+                        <StatusIndicator status={item.status} />
                       </div>
-                      <StatusIndicator status={item.status} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {item.component}
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      {item.component}
+                    </CardContent>
+                  </Card>
+                ))}
+
+              {/* Legacy Integrations */}
+              <div className="pt-4">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Прямые интеграции (Legacy)
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Эти интеграции будут постепенно заменены на Terra API. 
+                  Используйте их только если у вас уже есть подключенные устройства.
+                </p>
+              </div>
+
+              {integrationItems
+                .filter(item => item.legacy)
+                .map((item) => (
+                  <Card key={item.id} className="opacity-80">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-muted rounded-lg">
+                            <item.icon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg text-muted-foreground">
+                                {item.name}
+                              </CardTitle>
+                              <Badge variant="outline" className="text-xs">
+                                Legacy
+                              </Badge>
+                            </div>
+                            <CardDescription className="text-sm">
+                              {item.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <StatusIndicator status={item.status} />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {item.component}
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           </TabsContent>
         </Tabs>

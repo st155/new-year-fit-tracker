@@ -61,13 +61,19 @@ serve(async (req) => {
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .eq('is_active', true);
+
+      const providers = tokens?.map(t => ({
+        provider: t.provider,
+        connectedAt: t.created_at,
+        lastSync: t.last_sync_date,
+        terraUserId: t.terra_user_id,
+      })) || [];
 
       return new Response(
         JSON.stringify({
-          connected: !!tokens,
-          connectedAt: tokens?.created_at,
-          userId: tokens?.terra_user_id,
+          connected: tokens && tokens.length > 0,
+          providers,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -110,15 +116,20 @@ serve(async (req) => {
           .upsert({
             user_id: reference_id,
             terra_user_id: terraUser.user_id,
-            provider: terraUser.provider,
+            provider: terraUser.provider?.toUpperCase(),
+            is_active: true,
+            last_sync_date: new Date().toISOString(),
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }, {
-            onConflict: 'user_id'
+            onConflict: 'user_id,provider'
           });
 
         if (tokenError) {
           console.error('Error saving Terra token:', tokenError);
         }
+
+        console.log(`User ${reference_id} connected ${terraUser.provider} via Terra`);
 
         return new Response(
           JSON.stringify({ success: true }),
@@ -126,9 +137,17 @@ serve(async (req) => {
         );
       }
 
-      // Данные от устройства (activity, body, daily, sleep, etc.)
-      if (payload.type === 'activity' || payload.type === 'body' || payload.type === 'daily' || payload.type === 'sleep') {
+      // Данные от устройства (activity, body, daily, sleep, nutrition, etc.)
+      if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
         await processTerraData(supabase, payload);
+        
+        // Обновить last_sync_date
+        if (payload.user?.user_id) {
+          await supabase
+            .from('terra_tokens')
+            .update({ last_sync_date: new Date().toISOString() })
+            .eq('terra_user_id', payload.user.user_id);
+        }
       }
 
       return new Response(
@@ -175,15 +194,31 @@ serve(async (req) => {
       );
     }
 
-    // Отключить Terra
+    // Отключить конкретный провайдер или все подключения
     if (action === 'disconnect') {
-      const { error: deleteError } = await supabase
-        .from('terra_tokens')
-        .delete()
-        .eq('user_id', user.id);
+      const provider = url.searchParams.get('provider');
+      
+      if (provider) {
+        // Отключить конкретный провайдер
+        const { error: updateError } = await supabase
+          .from('terra_tokens')
+          .update({ is_active: false })
+          .eq('user_id', user.id)
+          .eq('provider', provider);
 
-      if (deleteError) {
-        throw new Error(deleteError.message);
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+      } else {
+        // Отключить все подключения
+        const { error: updateError } = await supabase
+          .from('terra_tokens')
+          .update({ is_active: false })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
       }
 
       return new Response(
@@ -252,11 +287,12 @@ function verifyTerraSignature(rawBody: string, signature: string, secret: string
 async function processTerraData(supabase: any, payload: any) {
   const { user, data } = payload;
   
-  // Получить user_id из reference_id
+  // Получить user_id из terra_user_id
   const { data: tokenData } = await supabase
     .from('terra_tokens')
-    .select('user_id')
+    .select('user_id, provider')
     .eq('terra_user_id', user.user_id)
+    .eq('is_active', true)
     .single();
 
   if (!tokenData) {
@@ -265,6 +301,7 @@ async function processTerraData(supabase: any, payload: any) {
   }
 
   const userId = tokenData.user_id;
+  const provider = tokenData.provider;
 
   // Обработать различные типы данных
   if (payload.type === 'activity') {
@@ -281,10 +318,34 @@ async function processTerraData(supabase: any, payload: any) {
             calories_burned: activity.calories_data?.total_burned_calories,
             heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
             heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
-            source: 'terra',
-            external_id: `terra_${workout.start_time}`,
+            source: provider.toLowerCase(),
+            external_id: `terra_${provider}_${workout.start_time}`,
           }, {
             onConflict: 'external_id',
+            ignoreDuplicates: true,
+          });
+        }
+      }
+      
+      // Сохранить метрики Strain для Whoop/Ultrahuman
+      if (activity.metadata?.strain) {
+        const strainMetricId = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'Workout Strain',
+          p_metric_category: 'workout',
+          p_unit: 'strain',
+          p_source: provider.toLowerCase(),
+        }).then((res: any) => res.data);
+
+        if (strainMetricId) {
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: strainMetricId,
+            value: activity.metadata.strain,
+            measurement_date: activity.metadata.start_time?.split('T')[0],
+            external_id: `terra_${provider}_strain_${activity.metadata.start_time}`,
+          }, {
+            onConflict: 'metric_id,measurement_date,external_id',
             ignoreDuplicates: true,
           });
         }
@@ -302,10 +363,38 @@ async function processTerraData(supabase: any, payload: any) {
           weight: bodyData.weight_kg,
           body_fat_percentage: bodyData.body_fat_percentage,
           muscle_mass: bodyData.muscle_mass_kg,
-          measurement_method: 'terra',
+          measurement_method: provider.toLowerCase(),
         }, {
           onConflict: 'user_id,measurement_date',
         });
+      }
+      
+      // Withings - дополнительные метрики
+      if (bodyData.measurements) {
+        for (const [metricName, value] of Object.entries(bodyData.measurements)) {
+          if (value && typeof value === 'number') {
+            const metricId = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: metricName,
+              p_metric_category: 'body_composition',
+              p_unit: 'kg',
+              p_source: provider.toLowerCase(),
+            }).then((res: any) => res.data);
+
+            if (metricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: metricId,
+                value,
+                measurement_date: bodyData.timestamp?.split('T')[0],
+                external_id: `terra_${provider}_${metricName}_${bodyData.timestamp}`,
+              }, {
+                onConflict: 'metric_id,measurement_date,external_id',
+                ignoreDuplicates: true,
+              });
+            }
+          }
+        }
       }
     }
   }
@@ -313,28 +402,113 @@ async function processTerraData(supabase: any, payload: any) {
   if (payload.type === 'sleep') {
     // Сохранить данные о сне
     for (const sleepData of data) {
-      const metricId = await supabase.rpc('create_or_get_metric', {
-        p_user_id: userId,
-        p_metric_name: 'Sleep Duration',
-        p_metric_category: 'sleep',
-        p_unit: 'hours',
-        p_source: 'terra',
-      });
+      // Sleep Duration
+      if (sleepData.sleep_durations_data?.asleep?.duration_asleep_state_seconds) {
+        const sleepMetricId = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'Sleep Duration',
+          p_metric_category: 'sleep',
+          p_unit: 'hours',
+          p_source: provider.toLowerCase(),
+        }).then((res: any) => res.data);
 
-      if (metricId && sleepData.sleep_durations_data?.asleep?.duration_asleep_state_seconds) {
-        await supabase.from('metric_values').upsert({
-          user_id: userId,
-          metric_id: metricId,
-          value: sleepData.sleep_durations_data.asleep.duration_asleep_state_seconds / 3600,
-          measurement_date: sleepData.day,
-          external_id: `terra_sleep_${sleepData.day}`,
-        }, {
-          onConflict: 'external_id',
-          ignoreDuplicates: true,
-        });
+        if (sleepMetricId) {
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: sleepMetricId,
+            value: sleepData.sleep_durations_data.asleep.duration_asleep_state_seconds / 3600,
+            measurement_date: sleepData.day,
+            external_id: `terra_${provider}_sleep_${sleepData.day}`,
+          }, {
+            onConflict: 'metric_id,measurement_date,external_id',
+            ignoreDuplicates: true,
+          });
+        }
+      }
+      
+      // Recovery Score для Whoop/Oura
+      if (sleepData.metadata?.recovery_score) {
+        const recoveryMetricId = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'Recovery Score',
+          p_metric_category: 'recovery',
+          p_unit: '%',
+          p_source: provider.toLowerCase(),
+        }).then((res: any) => res.data);
+
+        if (recoveryMetricId) {
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: recoveryMetricId,
+            value: sleepData.metadata.recovery_score,
+            measurement_date: sleepData.day,
+            external_id: `terra_${provider}_recovery_${sleepData.day}`,
+          }, {
+            onConflict: 'metric_id,measurement_date,external_id',
+            ignoreDuplicates: true,
+          });
+        }
+      }
+    }
+  }
+  
+  // Nutrition для Ultrahuman (глюкоза)
+  if (payload.type === 'nutrition') {
+    for (const nutritionData of data) {
+      if (nutritionData.metadata?.glucose_data) {
+        const glucoseMetricId = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'Blood Glucose',
+          p_metric_category: 'health',
+          p_unit: 'mg/dL',
+          p_source: provider.toLowerCase(),
+        }).then((res: any) => res.data);
+
+        if (glucoseMetricId && nutritionData.metadata.glucose_data.avg_glucose_mg_per_dL) {
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: glucoseMetricId,
+            value: nutritionData.metadata.glucose_data.avg_glucose_mg_per_dL,
+            measurement_date: nutritionData.metadata.start_time?.split('T')[0],
+            external_id: `terra_${provider}_glucose_${nutritionData.metadata.start_time}`,
+            source_data: nutritionData.metadata.glucose_data,
+          }, {
+            onConflict: 'metric_id,measurement_date,external_id',
+            ignoreDuplicates: true,
+          });
+        }
+      }
+    }
+  }
+  
+  // Daily data (aggregate metrics)
+  if (payload.type === 'daily') {
+    for (const dailyData of data) {
+      // VO2Max для Garmin
+      if (dailyData.vo2max_ml_per_min_per_kg) {
+        const vo2maxMetricId = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'VO2Max',
+          p_metric_category: 'cardio',
+          p_unit: 'ml/kg/min',
+          p_source: provider.toLowerCase(),
+        }).then((res: any) => res.data);
+
+        if (vo2maxMetricId) {
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: vo2maxMetricId,
+            value: dailyData.vo2max_ml_per_min_per_kg,
+            measurement_date: dailyData.metadata?.start_time?.split('T')[0],
+            external_id: `terra_${provider}_vo2max_${dailyData.metadata?.start_time}`,
+          }, {
+            onConflict: 'metric_id,measurement_date,external_id',
+            ignoreDuplicates: true,
+          });
+        }
       }
     }
   }
 
-  console.log(`Processed Terra ${payload.type} data for user ${userId}`);
+  console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
 }
