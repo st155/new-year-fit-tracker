@@ -7,6 +7,14 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Log every request immediately
+  console.log('🌐 Incoming request:', {
+    method: req.method,
+    url: req.url,
+    provider: req.headers.get('user-id') || req.headers.get('dev-id'),
+    type: req.headers.get('type')
+  });
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
