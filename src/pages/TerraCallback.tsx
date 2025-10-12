@@ -43,34 +43,24 @@ export default function TerraCallback() {
           ? `${provider} успешно подключен через Terra API!` 
           : 'Устройство успешно подключено через Terra API!');
         
-        // Уведомить родительское окно об успешном подключении
-        if (window.opener) {
-          window.opener.postMessage('terra-success', '*');
-        }
+        // Получаем URL для возврата
+        const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
+        sessionStorage.removeItem('terra_return_url');
         
         // Автоматически перенаправить через 2 секунды
         setTimeout(() => {
-          if (window.opener) {
-            window.close();
-          } else {
-            navigate('/integrations');
-          }
+          navigate(returnUrl);
         }, 2000);
       } else {
         setStatus('success');
         setMessage('Подключение завершено');
         
-        // Уведомить родительское окно
-        if (window.opener) {
-          window.opener.postMessage('terra-success', '*');
-        }
+        // Получаем URL для возврата
+        const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
+        sessionStorage.removeItem('terra_return_url');
         
         setTimeout(() => {
-          if (window.opener) {
-            window.close();
-          } else {
-            navigate('/integrations');
-          }
+          navigate(returnUrl);
         }, 2000);
       }
     }, 2000);
