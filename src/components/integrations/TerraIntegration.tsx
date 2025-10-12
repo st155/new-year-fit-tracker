@@ -239,8 +239,9 @@ export function TerraIntegration() {
       // 3. Пробуем сделать запрос к webhook напрямую
       let webhookReachable = false;
       try {
-        const response = await fetch(webhookUrl);
-        webhookReachable = response.status === 400; // Должно быть 400 (missing signature)
+        const response = await fetch(webhookUrl, { method: 'GET' });
+        // Считаем доступным, если функция отвечает (200 для health, 400/405 без подписи)
+        webhookReachable = [200, 400, 405].includes(response.status);
       } catch (e) {
         webhookReachable = false;
       }
