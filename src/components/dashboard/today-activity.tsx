@@ -29,15 +29,18 @@ export function TodayActivity() {
       if (!user) return;
 
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const localStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const localEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
         // Загружаем тренировки из таблицы workouts
         const { data: workoutsData, error: workoutsError } = await supabase
           .from('workouts')
           .select('*')
           .eq('user_id', user.id)
-          .gte('start_time', `${today}T00:00:00`)
-          .lte('start_time', `${today}T23:59:59`)
+          .gte('start_time', localStart.toISOString())
+          .lte('start_time', localEnd.toISOString())
           .order('start_time', { ascending: false });
 
         if (workoutsError) {
@@ -45,7 +48,12 @@ export function TodayActivity() {
         }
 
         // Загружаем тренировки из Whoop (metric_values)
-        const { data: whoopMetrics, error: whoopError } = await supabase
+        const yesterdayDate = new Date(now);
+        yesterdayDate.setDate(now.getDate() - 1);
+        const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+
+        let whoopMetricsFinal: any[] = [];
+        const { data: whoopToday, error: whoopError } = await supabase
           .from('metric_values')
           .select(`
             *,
@@ -61,15 +69,38 @@ export function TodayActivity() {
           console.error('Error fetching Whoop workouts:', whoopError);
         }
 
+        whoopMetricsFinal = whoopToday || [];
+
+        // Fallback: если за "сегодня" нет метрик Whoop, попробуем вчера (таймзона)
+        if (whoopMetricsFinal.length === 0) {
+          const { data: whoopYesterday, error: whoopYesterdayError } = await supabase
+            .from('metric_values')
+            .select(`
+              *,
+              user_metrics!inner(metric_name, metric_category, source)
+            `)
+            .eq('user_id', user.id)
+            .eq('measurement_date', yesterday)
+            .eq('user_metrics.metric_category', 'workout')
+            .eq('user_metrics.source', 'whoop')
+            .eq('user_metrics.metric_name', 'Workout Strain');
+
+          if (whoopYesterdayError) {
+            console.error('Error fetching Whoop workouts (yesterday fallback):', whoopYesterdayError);
+          }
+
+          whoopMetricsFinal = whoopYesterday || [];
+        }
+
         // Группируем Whoop метрики по external_id (каждая тренировка)
         const whoopWorkoutsMap = new Map<string, any>();
-        (whoopMetrics || []).forEach((metric: any) => {
+        (whoopMetricsFinal || []).forEach((metric: any) => {
           const workoutId = metric.external_id;
           if (!whoopWorkoutsMap.has(workoutId)) {
             whoopWorkoutsMap.set(workoutId, {
               id: workoutId,
               workout_type: metric.notes || 'Whoop Workout',
-              start_time: `${today}T12:00:00`, // Whoop не всегда предоставляет точное время
+              start_time: metric.created_at || `${today}T12:00:00`, // Approximate start time
               end_time: null,
               duration_minutes: null,
               calories_burned: null,
@@ -93,7 +124,6 @@ export function TodayActivity() {
               user_metrics!inner(metric_name, source)
             `)
             .eq('user_id', user.id)
-            .eq('measurement_date', today)
             .eq('user_metrics.source', 'whoop')
             .in('external_id', workoutIds);
 
