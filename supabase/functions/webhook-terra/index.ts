@@ -18,7 +18,10 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🔔 Terra webhook received');
+    console.log('🔔 Terra webhook received', {
+      method: req.method,
+      headers: Object.fromEntries(req.headers.entries())
+    });
     
     const signature = req.headers.get('terra-signature');
     if (!signature) {
@@ -41,7 +44,11 @@ serve(async (req) => {
     }
 
     const payload = JSON.parse(rawBody);
-    console.log('✅ Valid Terra webhook:', payload.type);
+    console.log('✅ Valid Terra webhook received:', {
+      type: payload.type,
+      user: payload.user,
+      reference_id: payload.reference_id
+    });
 
     if (payload.type === 'auth') {
       const { reference_id, user: terraUser } = payload;
@@ -115,9 +122,13 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
       if (key === 'v1') sig = value;
     }
     
-    if (!timestamp || !sig) return false;
+    if (!timestamp || !sig) {
+      console.error('❌ Invalid signature format', { signature });
+      return false;
+    }
     
-    const signedPayload = `${timestamp}.${rawBody}`;
+    // Terra использует формат: timestamp + rawBody (БЕЗ точки!)
+    const payload = timestamp + rawBody;
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
@@ -125,12 +136,24 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
       false,
       ['sign']
     );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
     const computed = bufferToHex(signatureBuffer);
+    const isValid = computed === sig;
     
-    return computed === sig;
+    if (!isValid) {
+      console.error('❌ Signature mismatch', { 
+        expected: sig, 
+        computed, 
+        timestamp,
+        bodyLength: rawBody.length 
+      });
+    } else {
+      console.log('✅ Signature verified successfully');
+    }
+    
+    return isValid;
   } catch (error) {
-    console.error('Error verifying signature:', error);
+    console.error('❌ Error verifying signature:', error);
     return false;
   }
 }
