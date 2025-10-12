@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export default function WhoopLegacyCallback() {
@@ -46,11 +46,19 @@ export default function WhoopLegacyCallback() {
   };
 
   useEffect(() => {
-    // Автозапуск перенаправления через Terra
-    connectViaTerra();
+    const [params] = ((): any => {
+      try { return (new URL(window.location.href)).searchParams; } catch { return new URLSearchParams(); }
+    })();
+    const hasWhoopCode = params?.has('code') && params?.has('state');
+    const alreadyRedirected = sessionStorage.getItem('whoop_legacy_redirected') === '1';
+
+    // Автозапуск Terra только если это не возврат со старого Whoop и мы ещё не редиректили в этой сессии
+    if (!hasWhoopCode && !alreadyRedirected) {
+      sessionStorage.setItem('whoop_legacy_redirected', '1');
+      connectViaTerra();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-2xl">
       <Card>
