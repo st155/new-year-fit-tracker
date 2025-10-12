@@ -126,10 +126,8 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Фильтруем тестовые подключения (terra_test_*)
-      const realTokens = tokens?.filter(t => !t.terra_user_id?.includes('terra_test_')) || [];
-
-      const providers = realTokens.map(t => ({
+      // Раньше мы исключали тестовые токены (terra_test_*), но для диагностики учитываем все
+      const providers = (tokens || []).map(t => ({
         provider: t.provider,
         connectedAt: t.created_at,
         lastSync: t.last_sync_date,
@@ -137,15 +135,14 @@ serve(async (req) => {
       }));
 
       console.log('check-status result', { 
-        hasTokens: realTokens.length > 0, 
-        count: realTokens.length, 
-        providers: providers.map(p=>p.provider),
-        filteredOutTestTokens: (tokens?.length || 0) - realTokens.length
+        hasTokens: (tokens?.length || 0) > 0, 
+        count: tokens?.length || 0, 
+        providers: providers.map(p=>p.provider)
       });
       
       return new Response(
         JSON.stringify({
-          connected: realTokens.length > 0,
+          connected: (tokens?.length || 0) > 0,
           providers,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
