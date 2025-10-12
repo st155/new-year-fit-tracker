@@ -168,6 +168,15 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
   };
 
   const handleConnect = async () => {
+    // TEMPORARILY DISABLED - Whoop integration is being migrated to Terra
+    toast({
+      title: 'Whoop Integration Temporarily Disabled',
+      description: 'We are migrating to Terra API. Please use Terra integration for Whoop data.',
+      variant: 'default'
+    });
+    return;
+    
+    /* Original code commented out
     try {
       setIsConnecting(true);
       
@@ -211,6 +220,7 @@ export function WhoopIntegration({ userId }: WhoopIntegrationProps) {
     } finally {
       setIsConnecting(false);
     }
+    */
   };
 
   const copyAuthUrl = async () => {
