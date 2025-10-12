@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.whoop-token-refresh]
 verify_jwt = false
+
+[functions.terra-integration]
+verify_jwt = false
