@@ -63,9 +63,9 @@ serve(async (req) => {
 
       // Используем официальный Terra API endpoint для генерации widget session
       // Список провайдеров: https://docs.tryterra.co/reference#post-auth-generatewidgetsession
-      // Только API провайдеры (не SDK). По умолчанию без ULTRAHUMAN (часто требует отдельной активации)
+      // Провайдеры должны совпадать с теми, что включены в Terra Dashboard
       const requestedProviders = requestBody.providers || url.searchParams.get('providers');
-      const defaultProviders = 'WHOOP,GARMIN,FITBIT,OURA,WITHINGS';
+      const defaultProviders = 'WHOOP,GARMIN,OURA,WITHINGS,ULTRAHUMAN';
       const providers = (typeof requestedProviders === 'string' && requestedProviders.trim().length > 0)
         ? requestedProviders
         : defaultProviders;
