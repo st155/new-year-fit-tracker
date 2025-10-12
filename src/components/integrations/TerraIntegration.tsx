@@ -217,6 +217,7 @@ export function TerraIntegration() {
       setShowDiagnostics(true);
       
       const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra';
+      const { data: { session } } = await supabase.auth.getSession();
       
       toast({
         title: "🧪 Запуск диагностики",
@@ -246,6 +247,19 @@ export function TerraIntegration() {
         webhookReachable = false;
       }
 
+      // 4. Генерируем пример подписи сервером (dryRun)
+      let signatureDiag: any = null;
+      try {
+        if (session) {
+          const resp = await supabase.functions.invoke('terra-webhook-test', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+            body: { type: 'auth', provider: 'WHOOP', dryRun: true }
+          });
+          signatureDiag = resp.data;
+        }
+      } catch {}
+
       const result = {
         timestamp: new Date().toISOString(),
         checks: {
@@ -269,6 +283,13 @@ export function TerraIntegration() {
             message: payloads && payloads.length > 0
               ? `Получено ${payloads.length} событий`
               : 'Нет данных от устройств (нормально если только подключили)',
+          },
+          signature: {
+            status: 'info',
+            headerPreferred: signatureDiag?.header_examples?.preferred,
+            headerAlternative: signatureDiag?.header_examples?.alternative,
+            timestamp: signatureDiag?.timestamp,
+            bodyPreview: signatureDiag?.bodyPreview,
           },
           configuration: {
             status: 'info',

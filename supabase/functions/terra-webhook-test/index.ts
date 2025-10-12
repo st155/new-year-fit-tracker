@@ -32,9 +32,12 @@ serve(async (req) => {
     try { body = await req.json(); } catch {}
     const type = body.type || 'auth';
     const provider = (body.provider || 'WHOOP').toUpperCase();
+    const dryRun = !!body.dryRun;
+    const customRawBody = body.rawBody as string | undefined;
+    const overrideTimestamp = body.timestamp as string | undefined;
 
-    // Minimal Terra-like payloads
-    const payload: any = type === 'auth'
+    // Minimal Terra-like payloads (or use provided rawBody)
+    const payload: any = customRawBody ? null : (type === 'auth'
       ? {
           type: 'auth',
           reference_id: user.id,
@@ -44,31 +47,48 @@ serve(async (req) => {
           type: type,
           user: { user_id: `terra_test_${user.id.slice(0,8)}`, provider },
           data: [],
-        };
+        });
 
-    const rawBody = JSON.stringify(payload);
-    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const rawBody = customRawBody ?? JSON.stringify(payload);
+    const timestamp = (overrideTimestamp ?? Math.floor(Date.now() / 1000).toString());
 
-    // Sign using Terra format (timestamp.body)
+    // Sign using Terra formats
     const key = await crypto.subtle.importKey(
       'raw', new TextEncoder().encode(terraSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
     );
-    const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${rawBody}`));
-    const signature = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    const sigBuf1 = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${rawBody}`));
+    const sig1 = Array.from(new Uint8Array(sigBuf1)).map(b => b.toString(16).padStart(2,'0')).join('');
+    const sigBuf2 = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}${rawBody}`));
+    const sig2 = Array.from(new Uint8Array(sigBuf2)).map(b => b.toString(16).padStart(2,'0')).join('');
+
+    const header1 = `t=${timestamp},v1=${sig1}`;
+    const header2 = `t=${timestamp},v1=${sig2}`;
 
     const webhookUrl = `${supabaseUrl}/functions/v1/webhook-terra`;
+
+    if (dryRun) {
+      return new Response(JSON.stringify({
+        ok: true,
+        dryRun: true,
+        timestamp,
+        header_examples: { preferred: header1, alternative: header2 },
+        bodyPreview: rawBody.slice(0, 120),
+        webhookUrl,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const resp = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'terra-signature': `t=${timestamp},v1=${signature}`,
+        'terra-signature': header1,
       },
       body: rawBody,
     });
 
     const text = await resp.text();
 
-    return new Response(JSON.stringify({ ok: resp.ok, status: resp.status, response: text, sent: payload }), {
+    return new Response(JSON.stringify({ ok: resp.ok, status: resp.status, response: text, sent: payload ?? rawBody, used_header: header1, timestamp }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
