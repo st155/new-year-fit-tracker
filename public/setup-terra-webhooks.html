@@ -151,5 +151,71 @@
       Edge Function Secrets
     </a>
   </div>
+
+  <h2>Testing Webhooks</h2>
+  
+  <p>Use these methods to verify your webhook is working:</p>
+
+  <div class="step">
+    <strong>Method 1: Automated Test Script</strong>
+    <p>Run the test script in your browser console:</p>
+    <div class="webhook-url">
+      <code>
+        node test-terra-webhook.js
+      </code>
+    </div>
+    <p>This will test the endpoint accessibility and CORS configuration.</p>
+  </div>
+
+  <div class="step">
+    <strong>Method 2: Manual curl Test</strong>
+    <p>Test the webhook directly with curl:</p>
+    <div class="webhook-url">
+      <code style="white-space: pre-wrap; word-break: break-all;">
+curl -X POST 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/terra-integration?action=webhook' \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"auth","status":"success","user":{"user_id":"test-123","provider":"GARMIN"}}'
+      </code>
+    </div>
+  </div>
+
+  <div class="step">
+    <strong>Method 3: Terra Dashboard Webhook Tester</strong>
+    <ol>
+      <li>Go to <a href="https://dashboard.tryterra.co/" target="_blank">Terra Dashboard</a></li>
+      <li>Navigate to <strong>Settings → Webhooks</strong></li>
+      <li>Find your webhook endpoint</li>
+      <li>Click <strong>Test Webhook</strong> button</li>
+      <li>Select event type to test</li>
+      <li>Check the response and Edge Function logs</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <strong>Method 4: Check Edge Function Logs</strong>
+    <p>Monitor real-time webhook events:</p>
+    <div class="webhook-url">
+      <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/terra-integration/logs" target="_blank">
+        View Terra Integration Logs
+      </a>
+    </div>
+    <p>Look for:</p>
+    <ul>
+      <li>Webhook received messages with event type</li>
+      <li>Signature verification results</li>
+      <li>Database insertion/update outcomes</li>
+      <li>Any error messages</li>
+    </ul>
+  </div>
+
+  <div class="important">
+    <strong>Common Issues:</strong>
+    <ul>
+      <li><strong>Signature verification fails:</strong> Check TERRA_SIGNING_SECRET is correctly set</li>
+      <li><strong>No webhooks received:</strong> Verify webhook URL is saved in Terra Dashboard</li>
+      <li><strong>Database errors:</strong> Check terra_tokens table and RLS policies</li>
+      <li><strong>Connection not saved:</strong> Ensure user has completed Terra widget flow</li>
+    </ul>
+  </div>
 </body>
 </html>
