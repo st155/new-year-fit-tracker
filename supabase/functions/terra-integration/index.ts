@@ -563,6 +563,203 @@ function bufferToHex(buffer: ArrayBuffer): string {
     .join('');
 }
 
+// Функция обработки данных Terra (копия из webhook-terra)
+async function processTerraData(supabase: any, payload: any) {
+  try {
+    console.log('🔍 Processing Terra data:', { 
+      type: payload.type, 
+      provider: payload.user?.provider,
+      hasData: !!payload.data,
+      dataLength: payload.data?.length 
+    });
+
+    const { user, data } = payload;
+    
+    if (!user?.user_id) {
+      console.error('❌ Missing user.user_id in payload');
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('⚠️ Empty data array, skipping processing');
+      return;
+    }
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('terra_tokens')
+      .select('user_id, provider')
+      .eq('terra_user_id', user.user_id)
+      .eq('is_active', true)
+      .single();
+
+    if (tokenError) {
+      console.error('❌ Error fetching terra_tokens:', tokenError);
+      return;
+    }
+
+    if (!tokenData) {
+      console.error('❌ User not found for Terra user_id:', user.user_id);
+      return;
+    }
+
+    const userId = tokenData.user_id;
+    const provider = tokenData.provider;
+    
+    console.log('✅ Found user:', { userId, provider });
+
+    if (payload.type === 'activity') {
+      console.log('📊 Processing activity data');
+      for (const activity of data) {
+        console.log('Activity item:', { 
+          hasActiveDurations: !!activity.active_durations,
+          durationsCount: activity.active_durations?.length 
+        });
+        
+        if (activity.active_durations?.length > 0) {
+          for (const workout of activity.active_durations) {
+            const { error: workoutError } = await supabase.from('workouts').upsert({
+              user_id: userId,
+              workout_type: workout.activity_type || 'Activity',
+              start_time: workout.start_time,
+              end_time: workout.end_time,
+              duration_minutes: Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000),
+              calories_burned: activity.calories_data?.total_burned_calories,
+              heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
+              heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
+              source: provider.toLowerCase(),
+              external_id: `terra_${provider}_${workout.start_time}`,
+            }, {
+              onConflict: 'external_id',
+              ignoreDuplicates: true,
+            });
+            
+            if (workoutError) {
+              console.error('❌ Error upserting workout:', workoutError);
+            }
+          }
+        }
+      }
+    }
+
+    if (payload.type === 'body') {
+      console.log('📊 Processing body data');
+      for (const bodyData of data) {
+        console.log('Body item:', { 
+          hasWeight: !!bodyData.weight_kg,
+          hasFat: !!bodyData.body_fat_percentage,
+          timestamp: bodyData.timestamp
+        });
+        
+        if (bodyData.body_fat_percentage || bodyData.weight_kg) {
+          const { error: bodyError } = await supabase.from('body_composition').upsert({
+            user_id: userId,
+            measurement_date: bodyData.timestamp?.split('T')[0],
+            weight: bodyData.weight_kg,
+            body_fat_percentage: bodyData.body_fat_percentage,
+            muscle_mass: bodyData.muscle_mass_kg,
+            measurement_method: provider.toLowerCase(),
+          }, {
+            onConflict: 'user_id,measurement_date',
+          });
+          
+          if (bodyError) {
+            console.error('❌ Error upserting body composition:', bodyError);
+          }
+        }
+      }
+    }
+    
+    if (payload.type === 'sleep') {
+      console.log('📊 Processing sleep data');
+      for (const sleepData of data) {
+        // Создаем или получаем метрику для Sleep Duration
+        const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+          p_user_id: userId,
+          p_metric_name: 'Sleep Duration',
+          p_metric_category: 'sleep',
+          p_unit: 'hours',
+          p_source: provider
+        });
+
+        if (metricId && sleepData.sleep_durations_data?.asleep?.duration_asleep_state_seconds) {
+          const sleepHours = sleepData.sleep_durations_data.asleep.duration_asleep_state_seconds / 3600;
+          
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: sleepHours,
+            measurement_date: sleepData.day?.split('T')[0] || new Date().toISOString().split('T')[0],
+            external_id: `terra_${provider}_sleep_${sleepData.day}`,
+          }, {
+            onConflict: 'external_id',
+          });
+        }
+      }
+    }
+    
+    if (payload.type === 'daily') {
+      console.log('📊 Processing daily data');
+      for (const dailyData of data) {
+        // VO2Max
+        if (dailyData.oxygen_data?.vo2max_ml_per_min_per_kg) {
+          const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'VO2Max',
+            p_metric_category: 'cardio',
+            p_unit: 'ml/kg/min',
+            p_source: provider
+          });
+
+          if (metricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: metricId,
+              value: dailyData.oxygen_data.vo2max_ml_per_min_per_kg,
+              measurement_date: dailyData.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0],
+              external_id: `terra_${provider}_vo2max_${dailyData.metadata?.start_time}`,
+            }, {
+              onConflict: 'external_id',
+            });
+          }
+        }
+      }
+    }
+
+    if (payload.type === 'nutrition') {
+      console.log('📊 Processing nutrition data');
+      for (const nutritionData of data) {
+        // Blood Glucose от Ultrahuman
+        if (nutritionData.blood_glucose_data_mg_per_dL) {
+          const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'Blood Glucose',
+            p_metric_category: 'health',
+            p_unit: 'mg/dL',
+            p_source: provider
+          });
+
+          if (metricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: metricId,
+              value: nutritionData.blood_glucose_data_mg_per_dL,
+              measurement_date: nutritionData.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0],
+              external_id: `terra_${provider}_glucose_${nutritionData.metadata?.start_time}`,
+            }, {
+              onConflict: 'external_id',
+            });
+          }
+        }
+      }
+    }
+
+    console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
+  } catch (error) {
+    console.error('❌ Error in processTerraData:', error);
+    throw error;
+  }
+}
+
 async function processTerraData(supabase: any, payload: any) {
   const { user, data } = payload;
   
