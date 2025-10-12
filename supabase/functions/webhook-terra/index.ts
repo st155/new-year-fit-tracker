@@ -117,7 +117,7 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
     
     if (!timestamp || !sig) return false;
     
-    const payload = timestamp + rawBody;
+    const signedPayload = `${timestamp}.${rawBody}`;
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
@@ -125,7 +125,7 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
       false,
       ['sign']
     );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
     const computed = bufferToHex(signatureBuffer);
     
     return computed === sig;
