@@ -1304,54 +1304,6 @@ export type Database = {
         }
         Relationships: []
       }
-      whoop_oauth_states: {
-        Row: {
-          created_at: string
-          state: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          state: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          state?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      whoop_tokens: {
-        Row: {
-          access_token: string
-          created_at: string
-          expires_at: string
-          id: string
-          refresh_token: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          refresh_token?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          refresh_token?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       whoop_user_mapping: {
         Row: {
           created_at: string

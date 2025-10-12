@@ -45,36 +45,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             title: "Welcome!",
             description: `Signed in as ${session.user.email}`,
           });
-
-          // Deferred Whoop sync after login
-          setTimeout(async () => {
-            try {
-              const raw = localStorage.getItem('whoop_pending_code');
-              if (raw) {
-                const { code } = JSON.parse(raw);
-                if (code) {
-                  const { data: { session: current } } = await supabase.auth.getSession();
-                  const { error } = await supabase.functions.invoke('whoop-integration', {
-                    body: { action: 'sync', code },
-                    headers: current?.access_token ? { Authorization: `Bearer ${current.access_token}` } : undefined
-                  });
-
-                  if (!error) {
-                    localStorage.removeItem('whoop_pending_code');
-                    toast({
-                      title: 'Whoop connected!',
-                      description: 'Whoop data is syncing.'
-                    });
-                    setTimeout(() => { window.location.assign('/progress'); }, 500);
-                  } else {
-                    console.error('Whoop sync after login failed:', error);
-                  }
-                }
-              }
-            } catch (e) {
-              console.error('Deferred post-login task error:', e);
-            }
-          }, 0);
         }
       }
     );

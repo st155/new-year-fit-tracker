@@ -46,7 +46,6 @@ const Habits = lazy(() => import("./pages/Habits"));
 const Goals = lazy(() => import("./pages/Goals"));
 
 // Callbacks - load on demand
-const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
 const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
 
@@ -185,7 +184,7 @@ const App = () => {
                 </ModernAppLayout>
               </ProtectedRoute>
             } />
-              <Route path="/whoop-callback" element={<WhoopCallback />} />
+              
               <Route path="/withings-callback" element={<WithingsCallback />} />
               <Route path="/terra-callback" element={<TerraCallback />} />
               <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />

@@ -18,7 +18,8 @@ import {
   Plus,
   ExternalLink,
   Loader2,
-  Scale
+  Scale,
+  Zap
 } from 'lucide-react';
 
 interface IntegrationStatus {
@@ -56,35 +57,19 @@ export const IntegrationsCard = () => {
     try {
       setLoading(true);
 
-      // Проверяем Whoop интеграцию
-      const { data: whoopTokens } = await supabase
-        .from('whoop_tokens')
-        .select('updated_at, access_token')
+      // Проверяем Terra интеграцию
+      const { data: terraTokens } = await supabase
+        .from('terra_tokens')
+        .select('*')
         .eq('user_id', user.id)
-        .not('access_token', 'is', null)
-        .order('updated_at', { ascending: false })
-        .limit(1);
+        .eq('is_active', true);
 
-      const { data: whoopData } = await supabase
+      const { data: terraData } = await supabase
         .from('metric_values')
         .select('id, user_metrics!inner(source)')
         .eq('user_id', user.id)
-        .eq('user_metrics.source', 'whoop');
+        .in('user_metrics.source', ['WHOOP', 'WITHINGS', 'GARMIN', 'ULTRAHUMAN']);
 
-      // Проверяем Withings интеграцию
-      const { data: withingsTokens } = await supabase
-        .from('withings_tokens')
-        .select('updated_at, access_token')
-        .eq('user_id', user.id)
-        .not('access_token', 'is', null)
-        .order('updated_at', { ascending: false })
-        .limit(1);
-
-      const { data: withingsData } = await supabase
-        .from('metric_values')
-        .select('id, user_metrics!inner(source)')
-        .eq('user_id', user.id)
-        .eq('user_metrics.source', 'withings');
 
       // Проверяем Apple Health интеграцию
       const { data: appleHealthData } = await supabase
@@ -101,22 +86,13 @@ export const IntegrationsCard = () => {
 
       const integrationsList: IntegrationStatus[] = [
         {
-          name: 'Withings',
-          icon: <Scale className="w-6 h-6 text-red-500" />,
-          isConnected: !!withingsTokens?.length,
-          lastSync: withingsTokens?.[0]?.updated_at,
-          dataCount: withingsData?.length || 0,
-          status: withingsTokens?.length ? 'active' : 'pending',
-          description: 'Умные весы и устройства здоровья для отслеживания состава тела'
-        },
-        {
-          name: 'Whoop',
-          icon: <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">W</div>,
-          isConnected: !!whoopTokens?.length,
-          lastSync: whoopTokens?.[0]?.updated_at,
-          dataCount: whoopData?.length || 0,
-          status: whoopTokens?.length ? 'active' : 'pending',
-          description: 'Автоматическая синхронизация данных о восстановлении, сне и тренировках'
+          name: 'Terra API',
+          icon: <Zap className="w-6 h-6 text-purple-500" />,
+          isConnected: !!terraTokens?.length,
+          lastSync: terraTokens?.[0]?.last_sync_date,
+          dataCount: terraData?.length || 0,
+          status: terraTokens?.length ? 'active' : 'pending',
+          description: `Подключено ${terraTokens?.length || 0} устройств: ${terraTokens?.map(t => t.provider).join(', ')}`
         },
         {
           name: 'Apple Health',

@@ -108,14 +108,6 @@ export function AppTestSuite() {
       icon: <Upload className="w-4 h-4" />
     },
     {
-      id: 'whoop-integration',
-      name: 'Whoop интеграция',
-      category: 'Интеграции',
-      status: 'pending',
-      message: 'Ожидание...',
-      icon: <Wifi className="w-4 h-4" />
-    },
-    {
       id: 'apple-health-function',
       name: 'Apple Health обработка',
       category: 'Интеграции',
@@ -184,9 +176,6 @@ export function AppTestSuite() {
           break;
         case 'storage-test':
           await testStorage();
-          break;
-        case 'whoop-integration':
-          await testWhoopIntegration();
           break;
         case 'apple-health-function':
           await testAppleHealthFunction();
@@ -388,37 +377,6 @@ export function AppTestSuite() {
       .remove([data.path]);
   };
 
-  const testWhoopIntegration = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: {
-          action: 'auth',
-          userId: user?.id,
-          redirectUri: `${window.location.origin}/whoop-callback`
-        }
-      });
-
-      if (error) {
-        throw new Error(`Whoop интеграция недоступна: ${error.message}`);
-      }
-
-      updateTestResult('whoop-integration', {
-        status: 'warning',
-        message: 'Функция доступна, но требует настройки API ключей'
-      });
-      return;
-
-    } catch (error: any) {
-      if (error.message.includes('Whoop Client ID not configured')) {
-        updateTestResult('whoop-integration', {
-          status: 'warning',
-          message: 'Требуется настройка Whoop API ключей'
-        });
-        return;
-      }
-      throw error;
-    }
-  };
 
   const testAppleHealthFunction = async () => {
     try {
