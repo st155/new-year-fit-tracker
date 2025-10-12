@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const terraApiKey = Deno.env.get('TERRA_API_KEY')!;
     const terraDevId = Deno.env.get('TERRA_DEV_ID')!;
+    const terraSigningSecret = Deno.env.get('TERRA_SIGNING_SECRET')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -73,8 +75,30 @@ serve(async (req) => {
 
     // Обработать webhook от Terra
     if (action === 'webhook') {
-      const payload = await req.json();
-      console.log('Terra webhook received:', JSON.stringify(payload, null, 2));
+      // Проверить подпись для безопасности
+      const signature = req.headers.get('terra-signature');
+      if (!signature) {
+        console.error('Missing terra-signature header');
+        return new Response(
+          JSON.stringify({ error: 'Missing signature' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Получить raw body для проверки подписи
+      const rawBody = await req.text();
+      const isValidSignature = verifyTerraSignature(rawBody, signature, terraSigningSecret);
+      
+      if (!isValidSignature) {
+        console.error('Invalid signature');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const payload = JSON.parse(rawBody);
+      console.log('Valid Terra webhook received:', JSON.stringify(payload, null, 2));
 
       // Terra отправляет различные типы событий
       if (payload.type === 'auth') {
@@ -178,6 +202,52 @@ serve(async (req) => {
     );
   }
 });
+
+// Функция проверки подписи Terra
+function verifyTerraSignature(rawBody: string, signature: string, secret: string): boolean {
+  try {
+    // Парсим заголовок terra-signature: "t=timestamp,v1=signature"
+    const parts = signature.split(',');
+    let timestamp = '';
+    let sig = '';
+    
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key === 't') timestamp = value;
+      if (key === 'v1') sig = value;
+    }
+    
+    if (!timestamp || !sig) {
+      console.error('Invalid signature format');
+      return false;
+    }
+    
+    // Создаем payload для подписи (timestamp + rawBody)
+    const payload = timestamp + rawBody;
+    
+    // Создаем HMAC SHA256 подпись
+    const hmac = createHmac('sha256', secret);
+    hmac.update(payload);
+    const computedSignature = hmac.digest('hex');
+    
+    // Сравниваем подписи
+    const isValid = computedSignature === sig;
+    
+    if (!isValid) {
+      console.error('Signature verification failed', {
+        expected: sig,
+        computed: computedSignature,
+        timestamp,
+        payloadLength: payload.length
+      });
+    }
+    
+    return isValid;
+  } catch (error) {
+    console.error('Error verifying signature:', error);
+    return false;
+  }
+}
 
 async function processTerraData(supabase: any, payload: any) {
   const { user, data } = payload;
