@@ -72,7 +72,10 @@ const WhoopCallback = () => {
               action: 'callback',
               code: code || '',
               state: state || ''
-            }
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
           });
 
           if (error) {

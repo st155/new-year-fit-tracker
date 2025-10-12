@@ -236,11 +236,11 @@ async function handleCallback(req: Request, code?: string | null, state?: string
     `;
     return new Response(html, { headers: { 'Content-Type': 'text/html' } });
   }
-
-  if (!code || !state) {
-    console.error('Missing code or state:', { code: !!code, state: !!state });
+  // Требуем хотя бы code; state может отсутствовать (например, Safari/iOS теряет параметр)
+  if (!code) {
+    console.error('Missing code parameter');
     if (isJson) {
-      return new Response(JSON.stringify({ error: 'missing_code_or_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'missing_code' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const html = `
       <!DOCTYPE html>
@@ -252,7 +252,7 @@ async function handleCallback(req: Request, code?: string | null, state?: string
           <script>
             window.opener?.postMessage({
               type: 'whoop-auth-error',
-              error: 'Missing authorization code or state'
+              error: 'Missing authorization code'
             }, '*');
             window.close();
           </script>
@@ -264,23 +264,46 @@ async function handleCallback(req: Request, code?: string | null, state?: string
 
   try {
     console.log('Starting token exchange process with code:', code?.substring(0, 10) + '...');
-    
-    // Найдём пользователя по state
-    const { data: mapping, error: mappingError } = await supabase
-      .from('whoop_oauth_states')
-      .select('user_id')
-      .eq('state', state)
-      .maybeSingle();
 
-    console.log('State mapping lookup result:', { mapping, mappingError });
-
-    if (mappingError) {
-      console.error('Database error during state lookup:', mappingError);
-      throw new Error(`State lookup failed: ${mappingError.message}`);
+    // 1) Попробуем определить пользователя из Authorization, если есть
+    const authHeader = req.headers.get('authorization');
+    let authUserId: string | null = null;
+    if (authHeader) {
+      try {
+        const jwt = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(jwt);
+        authUserId = user?.id || null;
+      } catch (e) {
+        console.warn('Auth header present but failed to resolve user');
+      }
     }
 
-    if (!mapping?.user_id) {
-      console.error('No mapping found for state:', state);
+    // 2) Если есть state — используем стандартное сопоставление
+    let targetUserId: string | null = null;
+    if (state) {
+      const { data: stateMap, error: mappingError } = await supabase
+        .from('whoop_oauth_states')
+        .select('user_id')
+        .eq('state', state)
+        .maybeSingle();
+
+      console.log('State mapping lookup result:', { stateFound: !!stateMap?.user_id, mappingError });
+      if (mappingError) {
+        console.error('Database error during state lookup:', mappingError);
+        throw new Error(`State lookup failed: ${mappingError.message}`);
+      }
+      targetUserId = stateMap?.user_id || null;
+    }
+
+    // 3) Фолбэк: если state отсутствует/не найден, но есть аутентифицированный пользователь — используем его
+    if (!targetUserId && authUserId) {
+      console.log('Using authenticated user as mapping fallback due to missing state');
+      targetUserId = authUserId;
+    }
+
+    // Если всё ещё нет пользователя — сообщаем об ошибке
+    if (!targetUserId) {
+      console.error('No user mapping available (no state and no authenticated user)');
       if (isJson) {
         return new Response(JSON.stringify({ error: 'no_state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -288,27 +311,31 @@ async function handleCallback(req: Request, code?: string | null, state?: string
       return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
     }
 
-    console.log('Found user mapping, proceeding with token exchange for user:', mapping.user_id);
-    
+    console.log('Proceeding with token exchange for user:', targetUserId);
+
     // Обмениваем код на токены и сохраняем к пользователю
     const tokens = await exchangeCodeForTokens(code);
     console.log('Token exchange successful, saving to database...');
-    
+
     const expiresIn = tokens.expires_in || 3600;
     const { error: saveError } = await supabase
       .from('whoop_tokens')
       .upsert({
-        user_id: mapping.user_id,
+        user_id: targetUserId,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token || null,
         expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
         updated_at: new Date().toISOString()
       });
-      
+
     if (saveError) {
       console.error('Error saving tokens in callback:', saveError);
       throw new Error(`Failed to save tokens: ${saveError.message}`);
     }
+
+    // Поддерживаем прежнюю переменную mapping для кода ниже
+    const mapping = { user_id: targetUserId } as const;
+
     
     console.log('Tokens saved successfully to database');
 
