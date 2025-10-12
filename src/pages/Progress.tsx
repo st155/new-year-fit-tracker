@@ -62,27 +62,37 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
     'vo₂max': { id: 'vo2max', color: '#3B82F6' },
     'бег 1 км': { id: 'run', color: '#06B6D4' },
     'процент жира': { id: 'body-fat', color: '#FF6B2C' },
-    'вес': { id: 'weight', color: '#10B981' }
+    'процент жира в организме': { id: 'body-fat', color: '#FF6B2C' },
+    'вес': { id: 'weight', color: '#10B981' },
+    'вес тела': { id: 'weight', color: '#10B981' },
+    'мышечная масса': { id: 'muscle', color: '#10B981' }
   };
 
-  // Дедупликация целей по имени (берем первую цель с таким именем) и типу
+  // Дедупликация целей по ID (чтобы "Процент жира" и "Процент жира в организме" слились в одну)
   const uniqueGoals = Array.from(
     new Map(
-      goals.map(g => [`${g.goal_name?.toLowerCase()}_${g.goal_type}`, g])
+      goals.map(g => {
+        const normalized = (g.goal_name || '').toLowerCase();
+        const mapping = goalMapping[normalized];
+        const id = mapping?.id ?? detectId(normalized);
+        return [id, g]; // Группируем по итоговому ID, а не по имени
+      })
     ).values()
   );
 
   // Карта: имя цели -> список всех goal_id с таким именем (учитываем одинаковые цели из разных челленджей)
   const nameToIds = new Map<string, string[]>();
   goals.forEach(g => {
-    const key = (g.goal_name || '').toLowerCase();
-    if (!nameToIds.has(key)) nameToIds.set(key, []);
-    nameToIds.get(key)!.push(g.id);
+    const normalized = (g.goal_name || '').toLowerCase();
+    const mapping = goalMapping[normalized];
+    const id = mapping?.id ?? detectId(normalized);
+    if (!nameToIds.has(id)) nameToIds.set(id, []);
+    nameToIds.get(id)!.push(g.id);
   });
 
-  // Получить и отсортировать измерения для всех goal_id, соответствующих имени
-  const getMeasurementsForName = (normalizedName: string) => {
-    const ids = nameToIds.get(normalizedName) || [];
+  // Получить и отсортировать измерения для всех goal_id, соответствующих ID
+  const getMeasurementsForId = (id: string) => {
+    const ids = nameToIds.get(id) || [];
     const list = measurements.filter((m: any) => ids.includes(m.goal_id));
     list.sort((a: any, b: any) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
     return list;
@@ -94,7 +104,7 @@ const buildMetricsFromData = (goals: any[], measurements: any[], bodyComposition
     const id = mapping?.id ?? detectId(normalized);
     const color = mapping?.color ?? detectColor(normalized);
 
-    const goalMeasurements = getMeasurementsForName(normalized);
+    const goalMeasurements = getMeasurementsForId(id);
     let currentValue = 0;
     let trend = 0;
 
