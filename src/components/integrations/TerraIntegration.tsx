@@ -50,6 +50,8 @@ export function TerraIntegration() {
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
+  const [showWidget, setShowWidget] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -111,8 +113,9 @@ export function TerraIntegration() {
 
       console.log('✅ Terra widget URL received:', data.url);
 
-      // Открыть Terra Widget в той же вкладке (надежнее чем popup)
-      window.location.href = data.url;
+      // Показываем виджет прямо на странице
+      setWidgetUrl(data.url);
+      setShowWidget(true);
 
     } catch (error: any) {
       console.error('❌ Error connecting Terra:', error);
@@ -121,6 +124,7 @@ export function TerraIntegration() {
         description: error.message || 'Не удалось загрузить виджет Terra',
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -360,6 +364,31 @@ export function TerraIntegration() {
       toast({ title: 'Ошибка симуляции', description: e.message, variant: 'destructive' });
     }
   };
+  // Если показываем виджет
+  if (showWidget && widgetUrl) {
+    return (
+      <Card className="h-[700px] relative">
+        <Button
+          onClick={() => {
+            setShowWidget(false);
+            setWidgetUrl(null);
+            checkConnectionStatus();
+          }}
+          variant="outline"
+          className="absolute top-4 right-4 z-10"
+        >
+          ✕ Закрыть
+        </Button>
+        <iframe
+          src={widgetUrl}
+          className="w-full h-full rounded-lg"
+          title="Terra Widget"
+          allow="clipboard-read; clipboard-write"
+        />
+      </Card>
+    );
+  }
+
   if (loading) {
     return (
       <Card>
