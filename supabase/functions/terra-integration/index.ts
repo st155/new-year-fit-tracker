@@ -38,11 +38,8 @@ serve(async (req) => {
 
     console.log(`Terra Integration - Action: ${action}, Method: ${req.method}`);
 
-    // Для webhook не требуется авторизация
-    if (action === 'webhook') {
-      // Webhook обработка ниже
-    } else {
-      // Для всех остальных действий требуется авторизация
+    // Получить URL для авторизации
+    if (action === 'get-auth-url') {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
         throw new Error('No authorization header');
@@ -58,21 +55,18 @@ serve(async (req) => {
 
       console.log(`User: ${user.id}`);
 
-      // Получить URL для авторизации
-      if (action === 'get-auth-url') {
-        const widgetUrl = `https://widget.tryterra.co/session?${new URLSearchParams({
-          reference_id: user.id,
-          providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
-          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
-          auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
-          language: 'en',
-        })}`;
+      const widgetUrl = `https://widget.tryterra.co/session?${new URLSearchParams({
+        reference_id: user.id,
+        providers: 'ULTRAHUMAN,WHOOP,GARMIN,FITBIT,OURA,APPLE_HEALTH,WITHINGS',
+        auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+        auth_failure_redirect_url: `${req.headers.get('origin')}/integrations`,
+        language: 'en',
+      })}`;
 
-        return new Response(
-          JSON.stringify({ url: widgetUrl }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      return new Response(
+        JSON.stringify({ url: widgetUrl }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Проверить статус подключения
