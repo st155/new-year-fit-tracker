@@ -3,7 +3,7 @@ async function testTerraWebhook() {
   try {
     console.log('🔗 Проверка доступности Terra webhook endpoint...');
     
-    const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook?provider=terra';
+    const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra';
     
     // Тестовые данные вебхука Terra
     const testWebhookData = {
@@ -75,7 +75,7 @@ async function testTerraWebhook() {
 
 // Функция для генерации curl команды для тестирования
 function generateCurlCommand() {
-  const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook?provider=terra';
+  const webhookUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra';
   const testData = {
     type: "auth",
     status: "success",

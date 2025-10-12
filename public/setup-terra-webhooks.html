@@ -61,7 +61,7 @@
 
   <div class="webhook-url">
     <strong>Webhook URL:</strong><br>
-    https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook?provider=terra
+    https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra
   </div>
 
   <div class="important">
@@ -118,8 +118,8 @@
   
   <div class="webhook-url">
     <strong>Check logs at:</strong><br>
-    <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/webhook/logs" target="_blank">
-      Webhook Logs
+    <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/webhook-terra/logs" target="_blank">
+      Terra Webhook Logs
     </a>
   </div>
 
@@ -172,7 +172,7 @@
     <p>Test the webhook directly with curl:</p>
     <div class="webhook-url">
       <code style="white-space: pre-wrap; word-break: break-all;">
-curl -X POST 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook?provider=terra' \
+curl -X POST 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook-terra' \
   -H 'Content-Type: application/json' \
   -d '{"type":"auth","status":"success","user":{"user_id":"test-123","provider":"GARMIN"}}'
       </code>
@@ -195,8 +195,8 @@ curl -X POST 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/webhook?prov
     <strong>Method 4: Check Edge Function Logs</strong>
     <p>Monitor real-time webhook events:</p>
     <div class="webhook-url">
-      <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/webhook/logs" target="_blank">
-        View Webhook Logs
+      <a href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/webhook-terra/logs" target="_blank">
+        View Terra Webhook Logs
       </a>
     </div>
     <p>Look for:</p>
