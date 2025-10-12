@@ -964,6 +964,57 @@ export type Database = {
         }
         Relationships: []
       }
+      terra_data_payloads: {
+        Row: {
+          created_at: string
+          data_type: string
+          end_time: string | null
+          payload_id: string
+          start_time: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          data_type: string
+          end_time?: string | null
+          payload_id: string
+          start_time?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_type?: string
+          end_time?: string | null
+          payload_id?: string
+          start_time?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      terra_misc_payloads: {
+        Row: {
+          created_at: string
+          data_type: string | null
+          payload_id: string
+          payload_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          data_type?: string | null
+          payload_id: string
+          payload_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_type?: string | null
+          payload_id?: string
+          payload_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       terra_tokens: {
         Row: {
           created_at: string
@@ -996,6 +1047,33 @@ export type Database = {
           provider?: string | null
           terra_user_id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      terra_users: {
+        Row: {
+          created_at: string
+          granted_scopes: string | null
+          provider: string
+          reference_id: string | null
+          state: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          granted_scopes?: string | null
+          provider: string
+          reference_id?: string | null
+          state?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_scopes?: string | null
+          provider?: string
+          reference_id?: string | null
+          state?: string | null
           user_id?: string
         }
         Relationships: []
