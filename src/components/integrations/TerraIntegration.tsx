@@ -50,8 +50,6 @@ export function TerraIntegration() {
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
-  const [showWidget, setShowWidget] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -113,9 +111,41 @@ export function TerraIntegration() {
 
       console.log('✅ Terra widget URL received:', data.url);
 
-      // Показываем виджет прямо на странице
-      setWidgetUrl(data.url);
-      setShowWidget(true);
+      // Открываем Terra Widget в новом окне
+      const widgetWindow = window.open(
+        data.url,
+        'terra-widget',
+        'width=500,height=700,scrollbars=yes,resizable=yes'
+      );
+
+      if (!widgetWindow) {
+        toast({
+          title: "Заблокировано браузером",
+          description: "Пожалуйста, разрешите всплывающие окна и попробуйте снова",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Слушаем сообщения от окна авторизации
+      const messageHandler = (event: MessageEvent) => {
+        if (event.data === 'terra-success') {
+          console.log('✅ Terra auth success message received');
+          window.removeEventListener('message', messageHandler);
+          checkConnectionStatus();
+          toast({
+            title: "Успешно подключено!",
+            description: "Данные начнут синхронизироваться автоматически",
+          });
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      // Убираем слушатель через 5 минут
+      setTimeout(() => {
+        window.removeEventListener('message', messageHandler);
+      }, 5 * 60 * 1000);
 
     } catch (error: any) {
       console.error('❌ Error connecting Terra:', error);
@@ -364,31 +394,6 @@ export function TerraIntegration() {
       toast({ title: 'Ошибка симуляции', description: e.message, variant: 'destructive' });
     }
   };
-  // Если показываем виджет
-  if (showWidget && widgetUrl) {
-    return (
-      <Card className="h-[700px] relative">
-        <Button
-          onClick={() => {
-            setShowWidget(false);
-            setWidgetUrl(null);
-            checkConnectionStatus();
-          }}
-          variant="outline"
-          className="absolute top-4 right-4 z-10"
-        >
-          ✕ Закрыть
-        </Button>
-        <iframe
-          src={widgetUrl}
-          className="w-full h-full rounded-lg"
-          title="Terra Widget"
-          allow="clipboard-read; clipboard-write"
-        />
-      </Card>
-    );
-  }
-
   if (loading) {
     return (
       <Card>
