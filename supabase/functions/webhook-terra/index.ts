@@ -204,63 +204,121 @@ function bufferToHex(buffer: ArrayBuffer): string {
 }
 
 async function processTerraData(supabase: any, payload: any) {
-  const { user, data } = payload;
-  
-  const { data: tokenData } = await supabase
-    .from('terra_tokens')
-    .select('user_id, provider')
-    .eq('terra_user_id', user.user_id)
-    .eq('is_active', true)
-    .single();
+  try {
+    console.log('🔍 Processing Terra data:', { 
+      type: payload.type, 
+      provider: payload.user?.provider,
+      hasData: !!payload.data,
+      dataLength: payload.data?.length 
+    });
 
-  if (!tokenData) {
-    console.error('User not found for Terra user_id:', user.user_id);
-    return;
-  }
+    const { user, data } = payload;
+    
+    if (!user?.user_id) {
+      console.error('❌ Missing user.user_id in payload');
+      return;
+    }
 
-  const userId = tokenData.user_id;
-  const provider = tokenData.provider;
+    if (!data || data.length === 0) {
+      console.log('⚠️ Empty data array, skipping processing');
+      return;
+    }
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('terra_tokens')
+      .select('user_id, provider')
+      .eq('terra_user_id', user.user_id)
+      .eq('is_active', true)
+      .single();
 
-  if (payload.type === 'activity') {
-    for (const activity of data) {
-      if (activity.active_durations?.length > 0) {
-        for (const workout of activity.active_durations) {
-          await supabase.from('workouts').upsert({
-            user_id: userId,
-            workout_type: workout.activity_type || 'Activity',
-            start_time: workout.start_time,
-            end_time: workout.end_time,
-            duration_minutes: Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000),
-            calories_burned: activity.calories_data?.total_burned_calories,
-            heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
-            heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
-            source: provider.toLowerCase(),
-            external_id: `terra_${provider}_${workout.start_time}`,
-          }, {
-            onConflict: 'external_id',
-            ignoreDuplicates: true,
-          });
+    if (tokenError) {
+      console.error('❌ Error fetching terra_tokens:', tokenError);
+      return;
+    }
+
+    if (!tokenData) {
+      console.error('❌ User not found for Terra user_id:', user.user_id);
+      return;
+    }
+
+    const userId = tokenData.user_id;
+    const provider = tokenData.provider;
+    
+    console.log('✅ Found user:', { userId, provider });
+
+    if (payload.type === 'activity') {
+      console.log('📊 Processing activity data');
+      for (const activity of data) {
+        console.log('Activity item:', { 
+          hasActiveDurations: !!activity.active_durations,
+          durationsCount: activity.active_durations?.length 
+        });
+        
+        if (activity.active_durations?.length > 0) {
+          for (const workout of activity.active_durations) {
+            const { error: workoutError } = await supabase.from('workouts').upsert({
+              user_id: userId,
+              workout_type: workout.activity_type || 'Activity',
+              start_time: workout.start_time,
+              end_time: workout.end_time,
+              duration_minutes: Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000),
+              calories_burned: activity.calories_data?.total_burned_calories,
+              heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
+              heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
+              source: provider.toLowerCase(),
+              external_id: `terra_${provider}_${workout.start_time}`,
+            }, {
+              onConflict: 'external_id',
+              ignoreDuplicates: true,
+            });
+            
+            if (workoutError) {
+              console.error('❌ Error upserting workout:', workoutError);
+            }
+          }
         }
       }
     }
-  }
 
-  if (payload.type === 'body') {
-    for (const bodyData of data) {
-      if (bodyData.body_fat_percentage || bodyData.weight_kg) {
-        await supabase.from('body_composition').upsert({
-          user_id: userId,
-          measurement_date: bodyData.timestamp?.split('T')[0],
-          weight: bodyData.weight_kg,
-          body_fat_percentage: bodyData.body_fat_percentage,
-          muscle_mass: bodyData.muscle_mass_kg,
-          measurement_method: provider.toLowerCase(),
-        }, {
-          onConflict: 'user_id,measurement_date',
+    if (payload.type === 'body') {
+      console.log('📊 Processing body data');
+      for (const bodyData of data) {
+        console.log('Body item:', { 
+          hasWeight: !!bodyData.weight_kg,
+          hasFat: !!bodyData.body_fat_percentage,
+          timestamp: bodyData.timestamp
         });
+        
+        if (bodyData.body_fat_percentage || bodyData.weight_kg) {
+          const { error: bodyError } = await supabase.from('body_composition').upsert({
+            user_id: userId,
+            measurement_date: bodyData.timestamp?.split('T')[0],
+            weight: bodyData.weight_kg,
+            body_fat_percentage: bodyData.body_fat_percentage,
+            muscle_mass: bodyData.muscle_mass_kg,
+            measurement_method: provider.toLowerCase(),
+          }, {
+            onConflict: 'user_id,measurement_date',
+          });
+          
+          if (bodyError) {
+            console.error('❌ Error upserting body composition:', bodyError);
+          }
+        }
       }
     }
-  }
+    
+    if (payload.type === 'sleep') {
+      console.log('📊 Processing sleep data - currently not implemented');
+    }
+    
+    if (payload.type === 'daily') {
+      console.log('📊 Processing daily data - currently not implemented');
+    }
 
-  console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
+    console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
+  } catch (error) {
+    console.error('❌ Error in processTerraData:', error);
+    throw error;
+  }
 }
