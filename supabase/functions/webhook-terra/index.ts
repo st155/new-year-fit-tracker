@@ -33,10 +33,12 @@ serve(async (req) => {
     }
 
     const rawBody = await req.text();
+    console.log('📦 Raw body received:', rawBody);
+    
     const isValidSignature = await verifyTerraSignature(rawBody, signature, terraSigningSecret);
     
     if (!isValidSignature) {
-      console.error('Invalid signature');
+      console.error('❌ Invalid signature - responding with 400');
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -49,6 +51,15 @@ serve(async (req) => {
       user: payload.user,
       reference_id: payload.reference_id
     });
+
+    // Обработка healthcheck от Terra
+    if (payload.type === 'healthcheck') {
+      console.log('💚 Healthcheck received from Terra - responding OK');
+      return new Response(
+        JSON.stringify({ success: true, message: 'Webhook is healthy' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (payload.type === 'auth') {
       const { reference_id, user: terraUser } = payload;
@@ -127,8 +138,12 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
       return false;
     }
     
-    // Terra использует формат: timestamp + rawBody (БЕЗ точки!)
-    const payload = timestamp + rawBody;
+    // Попробуем оба формата Terra: с точкой и без
+    const formats = [
+      `${timestamp}.${rawBody}`,  // Стандартный формат Stripe-style
+      `${timestamp}${rawBody}`,   // Альтернативный формат
+    ];
+    
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
@@ -136,22 +151,26 @@ async function verifyTerraSignature(rawBody: string, signature: string, secret: 
       false,
       ['sign']
     );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
-    const computed = bufferToHex(signatureBuffer);
-    const isValid = computed === sig;
-    
-    if (!isValid) {
-      console.error('❌ Signature mismatch', { 
-        expected: sig, 
-        computed, 
-        timestamp,
-        bodyLength: rawBody.length 
-      });
-    } else {
-      console.log('✅ Signature verified successfully');
+
+    for (const payload of formats) {
+      const signatureBuffer = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+      const computed = bufferToHex(signatureBuffer);
+      
+      if (computed === sig) {
+        console.log('✅ Signature verified successfully with format:', payload.includes('.') ? 'timestamp.body' : 'timestamp+body');
+        return true;
+      }
     }
     
-    return isValid;
+    // Если ни один формат не подошел
+    console.error('❌ Signature mismatch with both formats', { 
+      expected: sig,
+      timestamp,
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 100)
+    });
+    
+    return false;
   } catch (error) {
     console.error('❌ Error verifying signature:', error);
     return false;
