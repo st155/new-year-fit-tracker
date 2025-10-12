@@ -313,6 +313,32 @@ async function handleCallback(req: Request, code?: string | null, state?: string
 
     console.log('Proceeding with token exchange for user:', targetUserId);
 
+    // Проверяем, есть ли уже токены у этого пользователя (чтобы избежать повторного использования кода)
+    const { data: existingToken } = await supabase
+      .from('whoop_tokens')
+      .select('access_token, expires_at')
+      .eq('user_id', targetUserId)
+      .single();
+
+    if (existingToken && new Date(existingToken.expires_at) > new Date()) {
+      console.log('User already has valid Whoop tokens, skipping code exchange');
+      
+      // Чистим state
+      if (state) {
+        await supabase.from('whoop_oauth_states').delete().eq('state', state);
+      }
+      
+      // Redirect to success without re-exchanging code
+      if (!isJson) {
+        const redirectUrl = `https://elite10.club/whoop-callback?connected=true`;
+        return new Response(null, { status: 302, headers: { Location: redirectUrl, ...corsHeaders } });
+      }
+      
+      return new Response(JSON.stringify({ success: true, message: 'Already connected' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Обмениваем код на токены и сохраняем к пользователю
     const tokens = await exchangeCodeForTokens(code);
     console.log('Token exchange successful, saving to database...');
