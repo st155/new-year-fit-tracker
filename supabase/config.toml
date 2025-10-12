@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.webhook-terra]
 verify_jwt = false
+
+[functions.terra-webhook-test]
+verify_jwt = true

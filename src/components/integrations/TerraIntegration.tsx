@@ -304,6 +304,24 @@ export function TerraIntegration() {
         variant: hasIssues ? "destructive" : "default",
       });
 
+      // Предложить симуляцию auth, если токенов нет
+      if (result.checks.terraTokens.count === 0) {
+        const proceed = confirm('Смоделировать событие Terra auth для проверки интеграции?');
+        if (proceed) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const sim = await supabase.functions.invoke('terra-webhook-test', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${session.access_token}` },
+              body: { type: 'auth', provider: 'WHOOP' }
+            });
+            console.log('🧪 Симуляция Terra auth:', sim);
+            // Перечитать статус сразу после симуляции
+            await checkConnectionStatus();
+          }
+        }
+      }
+
     } catch (error: any) {
       console.error('Error testing webhook:', error);
       toast({
@@ -401,12 +419,13 @@ export function TerraIntegration() {
               onClick={testWebhook}
               disabled={testingWebhook}
               variant="outline"
-              size="icon"
             >
               {testingWebhook ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Проверка
+                </>
               ) : (
-                "🧪"
+                '🧪 Диагностика'
               )}
             </Button>
           </div>
