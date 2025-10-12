@@ -80,39 +80,28 @@ export function TerraIntegration() {
     }
   };
 
-  const connectTerra = async () => {
+  const connectTerra = async (specificProvider?: string) => {
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      console.log('🔌 Requesting Terra widget URL...');
+      console.log('🔌 Requesting Terra widget URL...', specificProvider || 'all providers');
 
-      const tryRequest = async (providers?: string) => {
-        return await supabase.functions.invoke('terra-integration', {
-          method: 'POST',
-          body: { 
-            action: 'get-auth-url',
-            baseUrl: window.location.origin,
-            ...(providers ? { providers } : {})
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-      };
-
-      // 1) пробуем сразу с точным списком провайдеров как в Terra Dashboard
-      let { data, error } = await tryRequest('WHOOP,GARMIN,OURA,WITHINGS,ULTRAHUMAN');
-
-      // 2) если ошибка — fallback на одного провайдера (WITHINGS)
-      if (error) {
-        console.warn('Terra providers failed, retrying WITHINGS only...', error);
-        ({ data, error } = await tryRequest('WITHINGS'));
-      }
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        method: 'POST',
+        body: { 
+          action: 'get-auth-url',
+          baseUrl: window.location.origin,
+          ...(specificProvider ? { providers: specificProvider } : {})
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) {
-        console.error('❌ Terra integration error (after fallback):', error);
+        console.error('❌ Terra integration error:', error);
         throw new Error(error.message || 'Terra вернула ошибку при генерации сессии');
       }
 
@@ -438,25 +427,32 @@ export function TerraIntegration() {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={connectTerra}
-              disabled={loading}
-              className="flex-1"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Подключение...
-                </>
-              ) : (
-                <>
-                  <Zap className="mr-2 h-4 w-4" />
-                  Подключить устройство
-                </>
-              )}
-            </Button>
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Выберите устройство:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {['ULTRAHUMAN', 'WHOOP', 'GARMIN', 'OURA', 'WITHINGS'].map((provider) => {
+                const Icon = providerIcons[provider];
+                return (
+                  <Button
+                    key={provider}
+                    onClick={() => connectTerra(provider)}
+                    disabled={loading}
+                    variant="outline"
+                    className="justify-start"
+                  >
+                    {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Icon className="mr-2 h-4 w-4" />
+                    )}
+                    {providerNames[provider]}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
 
+          <div className="flex gap-2 pt-2">
             <Button
               onClick={testWebhook}
               disabled={testingWebhook}
@@ -694,14 +690,34 @@ export function TerraIntegration() {
             )}
           </Button>
 
-          <Button
-            onClick={connectTerra}
-            disabled={loading}
-            variant="outline"
-            size="sm"
-          >
-            <Zap className="h-4 w-4" />
-          </Button>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Добавить еще устройство:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {['ULTRAHUMAN', 'WHOOP', 'GARMIN', 'OURA', 'WITHINGS'].map((provider) => {
+                const Icon = providerIcons[provider];
+                const isConnected = status.providers.some(p => p.provider === provider);
+                return (
+                  <Button
+                    key={provider}
+                    onClick={() => connectTerra(provider)}
+                    disabled={loading || isConnected}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start"
+                  >
+                    {isConnected ? (
+                      <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                    ) : loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Icon className="mr-2 h-4 w-4" />
+                    )}
+                    {providerNames[provider]}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="pt-4 border-t">
