@@ -103,8 +103,8 @@ serve(async (req) => {
       const tokenData = await tokenResponse.json();
       console.log('Whoop token received');
 
-      // Получаем информацию о пользователе Whoop
-      const userResponse = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', {
+      // Получаем информацию о пользователе Whoop (v2 API)
+      const userResponse = await fetch('https://api.prod.whoop.com/developer/v2/user/profile/basic', {
         headers: {
           'Authorization': `Bearer ${tokenData.access_token}`,
           'Accept': 'application/json'
@@ -216,9 +216,9 @@ serve(async (req) => {
 
       console.log('Syncing Whoop data from', start, 'to', end);
 
-      // Получаем циклы (cycles) - основной источник данных
+      // Получаем циклы (cycles) - основной источник данных (v2 API)
       const cyclesResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+        `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -239,6 +239,9 @@ if (cyclesResponse.ok) {
       // Сохраняем данные в metric_values
       if (cyclesData.records && cyclesData.records.length > 0) {
         for (const cycle of cyclesData.records) {
+          // В v2 нет поля days, используем start для даты
+          const cycleDate = new Date(cycle.start).toISOString().split('T')[0];
+          
           // Recovery score
           if (cycle.score?.recovery_score !== undefined) {
             const metricId = await getOrCreateMetric(
@@ -254,10 +257,10 @@ if (cyclesResponse.ok) {
               user_id: user.id,
               metric_id: metricId,
               value: cycle.score.recovery_score,
-              measurement_date: cycle.days[0],
+              measurement_date: cycleDate,
               external_id: `whoop_recovery_${cycle.id}`,
               source_data: { cycle_id: cycle.id, raw: cycle.score },
-            });
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
           }
 
           // Strain
@@ -266,7 +269,7 @@ if (cyclesResponse.ok) {
               supabase,
               user.id,
               'Day Strain',
-              'workout',
+              'activity',
               'score',
               'whoop'
             );
@@ -275,17 +278,17 @@ if (cyclesResponse.ok) {
               user_id: user.id,
               metric_id: metricId,
               value: cycle.score.strain,
-              measurement_date: cycle.days[0],
+              measurement_date: cycleDate,
               external_id: `whoop_strain_${cycle.id}`,
               source_data: { cycle_id: cycle.id, raw: cycle.score },
-            });
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
           }
         }
       }
 
-      // Получаем workouts
+      // Получаем workouts (v2 API)
       const workoutsResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+        `https://api.prod.whoop.com/developer/v2/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -303,20 +306,20 @@ if (cyclesResponse.ok) {
               user_id: user.id,
               external_id: `whoop_${workout.id}`,
               source: 'whoop',
-              workout_type: workout.sport_id?.toString() || 'unknown',
+              workout_type: workout.sport_name || workout.sport_id?.toString() || 'unknown',
               start_time: workout.start,
               end_time: workout.end,
               duration_minutes: Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60000),
               calories_burned: workout.score?.kilojoule ? Math.round(workout.score.kilojoule * 0.239) : null,
               metadata: { raw: workout },
-            });
+            }, { onConflict: 'user_id,external_id' });
           }
         }
       }
 
-      // Получаем sleep
+      // Получаем sleep (v2 API)
       const sleepResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+        `https://api.prod.whoop.com/developer/v2/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -330,6 +333,8 @@ if (cyclesResponse.ok) {
 
         if (sleepData.records && sleepData.records.length > 0) {
           for (const sleep of sleepData.records) {
+            const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
+            
             if (sleep.score?.sleep_performance_percentage !== undefined) {
               const metricId = await getOrCreateMetric(
                 supabase,
@@ -340,20 +345,39 @@ if (cyclesResponse.ok) {
                 'whoop'
               );
 
-              const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
-
               await supabase.from('metric_values').upsert({
                 user_id: user.id,
                 metric_id: metricId,
                 value: sleep.score.sleep_performance_percentage,
                 measurement_date: sleepDate,
-                external_id: `whoop_sleep_${sleep.id}`,
+                external_id: `whoop_sleep_perf_${sleep.id}`,
                 source_data: { sleep_id: sleep.id, raw: sleep },
-              });
+              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+            }
+
+            // Sleep Efficiency
+            if (sleep.score?.sleep_efficiency_percentage !== undefined) {
+              const metricId = await getOrCreateMetric(
+                supabase,
+                user.id,
+                'Sleep Efficiency',
+                'sleep',
+                '%',
+                'whoop'
+              );
+
+              await supabase.from('metric_values').upsert({
+                user_id: user.id,
+                metric_id: metricId,
+                value: sleep.score.sleep_efficiency_percentage,
+                measurement_date: sleepDate,
+                external_id: `whoop_sleep_eff_${sleep.id}`,
+                source_data: { sleep_id: sleep.id, raw: sleep },
+              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
             }
 
             // Sleep duration
-            if (sleep.score?.total_sleep_time_milli) {
+            if (sleep.score?.stage_summary?.total_in_bed_time_milli) {
               const metricId = await getOrCreateMetric(
                 supabase,
                 user.id,
@@ -363,17 +387,16 @@ if (cyclesResponse.ok) {
                 'whoop'
               );
 
-              const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
-              const hours = sleep.score.total_sleep_time_milli / (1000 * 60 * 60);
+              const hours = sleep.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60);
 
               await supabase.from('metric_values').upsert({
                 user_id: user.id,
                 metric_id: metricId,
                 value: hours,
                 measurement_date: sleepDate,
-                external_id: `whoop_sleep_duration_${sleep.id}`,
+                external_id: `whoop_sleep_dur_${sleep.id}`,
                 source_data: { sleep_id: sleep.id, raw: sleep },
-              });
+              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
             }
           }
         }
