@@ -19,22 +19,60 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Получаем текущего пользователя
+    const body = await req.json();
+    const { action, code, user_id } = body;
+
+    // Для cron jobs или sync-all-users не требуется авторизация
+    let user: any = null;
+    
+    if (action === 'sync-all-users') {
+      console.log('Starting sync for all Whoop users');
+      
+      const { data: tokens } = await supabase
+        .from('whoop_tokens')
+        .select('user_id')
+        .eq('is_active', true)
+        .gt('expires_at', new Date().toISOString());
+
+      if (!tokens || tokens.length === 0) {
+        return new Response(
+          JSON.stringify({ success: true, message: 'No active tokens found' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const results = [];
+      for (const token of tokens) {
+        try {
+          await syncWhoopData(supabase, token.user_id, whoopClientId, whoopClientSecret);
+          results.push({ user_id: token.user_id, success: true });
+        } catch (error: any) {
+          console.error(`Failed to sync user ${token.user_id}:`, error);
+          results.push({ user_id: token.user_id, success: false, error: error.message });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, results }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Для остальных действий требуется авторизация
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
-    if (authError || !user) {
+    if (authError || !authUser) {
       throw new Error('Unauthorized');
     }
 
-    const body = await req.json();
-    const { action, code } = body;
+    user = authUser;
     console.log('Whoop integration action:', { action, userId: user.id });
 
     // Получить URL авторизации Whoop
@@ -152,262 +190,21 @@ serve(async (req) => {
     }
 
     // Синхронизировать данные
-    if (action === 'sync-data') {
-      const { data: token } = await supabase
-        .from('whoop_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+    if (action === 'sync' || action === 'sync-data') {
+      await syncWhoopData(supabase, user.id, whoopClientId, whoopClientSecret);
 
-      if (!token) {
-        throw new Error('No active Whoop connection found');
-      }
-
-      // Проверяем, не истек ли токен
-      const now = new Date();
-      const expiresAt = new Date(token.expires_at);
-
-      let accessToken = token.access_token;
-
-      if (now >= expiresAt) {
-        // Обновляем токен
-        console.log('Refreshing Whoop token');
-        const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: token.refresh_token,
-            client_id: whoopClientId,
-            client_secret: whoopClientSecret,
-          }),
-        });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Failed to refresh token');
-        }
-
-        const refreshData = await refreshResponse.json();
-        accessToken = refreshData.access_token;
-
-        const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
-
-        await supabase
-          .from('whoop_tokens')
-          .update({
-            access_token: refreshData.access_token,
-            refresh_token: refreshData.refresh_token,
-            expires_at: newExpiresAt.toISOString(),
-          })
-          .eq('user_id', user.id);
-      }
-
-      // Получаем данные за последние 7 дней
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
-
-      // Формат: ISO 8601 timestamp (YYYY-MM-DDTHH:mm:ss.sssZ)
-      const start = startDate.toISOString();
-      const end = endDate.toISOString();
-
-      console.log('Syncing Whoop data from', start, 'to', end);
-
-      // Получаем циклы (cycles) - основной источник данных (v2 API)
-      const cyclesResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
 
-let cyclesData: any = { records: [] };
-if (cyclesResponse.ok) {
-  cyclesData = await cyclesResponse.json();
-  console.log('Whoop cycles received:', cyclesData.records?.length || 0);
-} else {
-  const errText = await cyclesResponse.text();
-  console.error('Failed to get Whoop cycles:', errText);
-}
-
-
-      // Сохраняем данные в metric_values
-      if (cyclesData.records && cyclesData.records.length > 0) {
-        for (const cycle of cyclesData.records) {
-          // В v2 нет поля days, используем start для даты
-          const cycleDate = new Date(cycle.start).toISOString().split('T')[0];
-          
-          // Recovery score
-          if (cycle.score?.recovery_score !== undefined) {
-            const metricId = await getOrCreateMetric(
-              supabase,
-              user.id,
-              'Recovery Score',
-              'recovery',
-              '%',
-              'whoop'
-            );
-
-            await supabase.from('metric_values').upsert({
-              user_id: user.id,
-              metric_id: metricId,
-              value: cycle.score.recovery_score,
-              measurement_date: cycleDate,
-              external_id: `whoop_recovery_${cycle.id}`,
-              source_data: { cycle_id: cycle.id, raw: cycle.score },
-            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-          }
-
-          // Strain
-          if (cycle.score?.strain !== undefined) {
-            const metricId = await getOrCreateMetric(
-              supabase,
-              user.id,
-              'Day Strain',
-              'activity',
-              'score',
-              'whoop'
-            );
-
-            await supabase.from('metric_values').upsert({
-              user_id: user.id,
-              metric_id: metricId,
-              value: cycle.score.strain,
-              measurement_date: cycleDate,
-              external_id: `whoop_strain_${cycle.id}`,
-              source_data: { cycle_id: cycle.id, raw: cycle.score },
-            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-          }
-        }
-      }
-
-      // Получаем workouts (v2 API)
-      const workoutsResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v2/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (workoutsResponse.ok) {
-        const workoutsData = await workoutsResponse.json();
-        console.log('Whoop workouts received:', workoutsData.records?.length || 0);
-
-        if (workoutsData.records && workoutsData.records.length > 0) {
-          for (const workout of workoutsData.records) {
-            await supabase.from('workouts').upsert({
-              user_id: user.id,
-              external_id: `whoop_${workout.id}`,
-              source: 'whoop',
-              workout_type: workout.sport_name || workout.sport_id?.toString() || 'unknown',
-              start_time: workout.start,
-              end_time: workout.end,
-              duration_minutes: Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60000),
-              calories_burned: workout.score?.kilojoule ? Math.round(workout.score.kilojoule * 0.239) : null,
-              metadata: { raw: workout },
-            }, { onConflict: 'user_id,external_id' });
-          }
-        }
-      }
-
-      // Получаем sleep (v2 API)
-      const sleepResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v2/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (sleepResponse.ok) {
-        const sleepData = await sleepResponse.json();
-        console.log('Whoop sleep received:', sleepData.records?.length || 0);
-
-        if (sleepData.records && sleepData.records.length > 0) {
-          for (const sleep of sleepData.records) {
-            const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
-            
-            if (sleep.score?.sleep_performance_percentage !== undefined) {
-              const metricId = await getOrCreateMetric(
-                supabase,
-                user.id,
-                'Sleep Performance',
-                'sleep',
-                '%',
-                'whoop'
-              );
-
-              await supabase.from('metric_values').upsert({
-                user_id: user.id,
-                metric_id: metricId,
-                value: sleep.score.sleep_performance_percentage,
-                measurement_date: sleepDate,
-                external_id: `whoop_sleep_perf_${sleep.id}`,
-                source_data: { sleep_id: sleep.id, raw: sleep },
-              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-            }
-
-            // Sleep Efficiency
-            if (sleep.score?.sleep_efficiency_percentage !== undefined) {
-              const metricId = await getOrCreateMetric(
-                supabase,
-                user.id,
-                'Sleep Efficiency',
-                'sleep',
-                '%',
-                'whoop'
-              );
-
-              await supabase.from('metric_values').upsert({
-                user_id: user.id,
-                metric_id: metricId,
-                value: sleep.score.sleep_efficiency_percentage,
-                measurement_date: sleepDate,
-                external_id: `whoop_sleep_eff_${sleep.id}`,
-                source_data: { sleep_id: sleep.id, raw: sleep },
-              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-            }
-
-            // Sleep duration
-            if (sleep.score?.stage_summary?.total_in_bed_time_milli) {
-              const metricId = await getOrCreateMetric(
-                supabase,
-                user.id,
-                'Sleep Duration',
-                'sleep',
-                'hours',
-                'whoop'
-              );
-
-              const hours = sleep.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60);
-
-              await supabase.from('metric_values').upsert({
-                user_id: user.id,
-                metric_id: metricId,
-                value: hours,
-                measurement_date: sleepDate,
-                external_id: `whoop_sleep_dur_${sleep.id}`,
-                source_data: { sleep_id: sleep.id, raw: sleep },
-              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-            }
-          }
-        }
-      }
-
-      // Update last_sync_date
+    // Отключить Whoop
+    if (action === 'disconnect') {
       await supabase
         .from('whoop_tokens')
-        .update({ last_sync_date: new Date().toISOString() })
+        .update({ is_active: false })
         .eq('user_id', user.id);
-
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -459,4 +256,287 @@ async function getOrCreateMetric(
     .single();
 
   return newMetric.id;
+}
+
+// Функция синхронизации данных Whoop для пользователя
+async function syncWhoopData(
+  supabase: any,
+  userId: string,
+  whoopClientId: string,
+  whoopClientSecret: string
+) {
+  console.log('Syncing Whoop data for user:', userId);
+
+  // Получаем токен пользователя
+  const { data: token } = await supabase
+    .from('whoop_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (!token) {
+    throw new Error('No active Whoop connection found');
+  }
+
+  // Проверяем токен и обновляем при необходимости
+  const now = new Date();
+  const expiresAt = new Date(token.expires_at);
+  let accessToken = token.access_token;
+
+  if (now >= expiresAt) {
+    console.log('Refreshing Whoop token');
+    const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: token.refresh_token,
+        client_id: whoopClientId,
+        client_secret: whoopClientSecret,
+      }),
+    });
+
+    if (!refreshResponse.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const refreshData = await refreshResponse.json();
+    accessToken = refreshData.access_token;
+    const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+
+    await supabase
+      .from('whoop_tokens')
+      .update({
+        access_token: refreshData.access_token,
+        refresh_token: refreshData.refresh_token,
+        expires_at: newExpiresAt.toISOString(),
+      })
+      .eq('user_id', userId);
+  }
+
+  // Получаем данные за последние 7 дней
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 7);
+
+  const start = startDate.toISOString();
+  const end = endDate.toISOString();
+
+  console.log('Syncing Whoop data from', start, 'to', end);
+
+  // Синхронизация циклов
+  const cyclesResponse = await fetch(
+    `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (cyclesResponse.ok) {
+    const cyclesData = await cyclesResponse.json();
+    console.log('Whoop cycles received:', cyclesData.records?.length || 0);
+
+    if (cyclesData.records && cyclesData.records.length > 0) {
+      for (const cycle of cyclesData.records) {
+        const cycleDate = new Date(cycle.start).toISOString().split('T')[0];
+        
+        // Recovery score
+        if (cycle.score?.recovery_score !== undefined) {
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Recovery Score',
+            'recovery',
+            '%',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: cycle.score.recovery_score,
+            measurement_date: cycleDate,
+            external_id: `whoop_recovery_${cycle.id}`,
+            source_data: { cycle_id: cycle.id, raw: cycle.score },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+
+        // Strain
+        if (cycle.score?.strain !== undefined) {
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Day Strain',
+            'activity',
+            'score',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: cycle.score.strain,
+            measurement_date: cycleDate,
+            external_id: `whoop_strain_${cycle.id}`,
+            source_data: { cycle_id: cycle.id, raw: cycle.score },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+      }
+    }
+  }
+
+  // Синхронизация workouts
+  const workoutsResponse = await fetch(
+    `https://api.prod.whoop.com/developer/v2/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (workoutsResponse.ok) {
+    const workoutsData = await workoutsResponse.json();
+    console.log('Whoop workouts received:', workoutsData.records?.length || 0);
+
+    if (workoutsData.records && workoutsData.records.length > 0) {
+      for (const workout of workoutsData.records) {
+        // Сохраняем в таблицу workouts
+        await supabase.from('workouts').upsert({
+          user_id: userId,
+          external_id: `whoop_${workout.id}`,
+          source: 'whoop',
+          workout_type: workout.sport_name || workout.sport_id?.toString() || 'unknown',
+          start_time: workout.start,
+          end_time: workout.end,
+          duration_minutes: Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60000),
+          calories_burned: workout.score?.kilojoule ? Math.round(workout.score.kilojoule * 0.239) : null,
+          heart_rate_avg: workout.score?.average_heart_rate || null,
+          heart_rate_max: workout.score?.max_heart_rate || null,
+          metadata: { raw: workout },
+        }, { onConflict: 'user_id,external_id' });
+
+        // Также сохраняем Workout Strain в метрики
+        if (workout.score?.strain !== undefined) {
+          const workoutDate = new Date(workout.start).toISOString().split('T')[0];
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Workout Strain',
+            'workout',
+            'score',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: workout.score.strain,
+            measurement_date: workoutDate,
+            external_id: `whoop_workout_strain_${workout.id}`,
+            source_data: { workout_id: workout.id, raw: workout.score },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+      }
+    }
+  }
+
+  // Синхронизация sleep
+  const sleepResponse = await fetch(
+    `https://api.prod.whoop.com/developer/v2/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (sleepResponse.ok) {
+    const sleepData = await sleepResponse.json();
+    console.log('Whoop sleep received:', sleepData.records?.length || 0);
+
+    if (sleepData.records && sleepData.records.length > 0) {
+      for (const sleep of sleepData.records) {
+        const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
+        
+        // Sleep Performance
+        if (sleep.score?.sleep_performance_percentage !== undefined) {
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Sleep Performance',
+            'sleep',
+            '%',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: sleep.score.sleep_performance_percentage,
+            measurement_date: sleepDate,
+            external_id: `whoop_sleep_perf_${sleep.id}`,
+            source_data: { sleep_id: sleep.id, raw: sleep },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+
+        // Sleep Efficiency
+        if (sleep.score?.sleep_efficiency_percentage !== undefined) {
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Sleep Efficiency',
+            'sleep',
+            '%',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: sleep.score.sleep_efficiency_percentage,
+            measurement_date: sleepDate,
+            external_id: `whoop_sleep_eff_${sleep.id}`,
+            source_data: { sleep_id: sleep.id, raw: sleep },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+
+        // Sleep Duration
+        if (sleep.score?.stage_summary?.total_in_bed_time_milli) {
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Sleep Duration',
+            'sleep',
+            'hours',
+            'whoop'
+          );
+
+          const hours = sleep.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60);
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: hours,
+            measurement_date: sleepDate,
+            external_id: `whoop_sleep_dur_${sleep.id}`,
+            source_data: { sleep_id: sleep.id, raw: sleep },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
+      }
+    }
+  }
+
+  // Обновляем last_sync_date
+  await supabase
+    .from('whoop_tokens')
+    .update({ last_sync_date: new Date().toISOString() })
+    .eq('user_id', userId);
+
+  console.log('Whoop sync completed for user:', userId);
 }

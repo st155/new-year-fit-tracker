@@ -1512,6 +1512,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      sync_all_whoop_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "user" | "trainer" | "admin"

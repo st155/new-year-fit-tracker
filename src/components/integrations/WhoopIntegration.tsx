@@ -170,6 +170,13 @@ export function WhoopIntegration() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                Автоматическая синхронизация происходит каждые 6 часов. Вы также можете запустить синхронизацию вручную.
+              </AlertDescription>
+            </Alert>
+
             <Button onClick={syncData} disabled={syncing} className="w-full">
               {syncing ? (
                 <>
