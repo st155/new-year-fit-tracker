@@ -77,8 +77,26 @@ serve(async (req) => {
       });
 
       if (!tokenResponse.ok) {
-        const error = await tokenResponse.text();
-        console.error('Whoop token exchange error:', error);
+        const errorText = await tokenResponse.text();
+        console.error('Whoop token exchange error:', errorText);
+
+        // If code already used or invalid_grant, consider it idempotent: check if token already saved
+        if (errorText.includes('authorization code has already been used') || errorText.includes('invalid_grant')) {
+          const { data: existingToken } = await supabase
+            .from('whoop_tokens')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (existingToken) {
+            return new Response(
+              JSON.stringify({ success: true, alreadyLinked: true }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+
         throw new Error(`Failed to exchange code: ${tokenResponse.status}`);
       }
 
