@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Heart, Flame, Moon, Wind, Footprints, Scale, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Activity, Heart, Flame, Moon, Wind, Footprints, Scale, Zap, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,6 +33,18 @@ export function IntegrationsDataDisplay() {
     if (user) {
       fetchIntegrationsData();
     }
+  }, [user]);
+
+  // Реал-тайм обновление при появлении новых метрик/синхронизации
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('integrations-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'metric_values', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'terra_tokens', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'whoop_tokens', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const fetchIntegrationsData = async () => {
@@ -89,6 +102,8 @@ export function IntegrationsDataDisplay() {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     // Получаем последние метрики для провайдера
     const { data: metricsData } = await supabase
@@ -96,6 +111,7 @@ export function IntegrationsDataDisplay() {
       .select(`
         value,
         measurement_date,
+        created_at,
         user_metrics!inner(
           metric_name,
           unit,
@@ -105,9 +121,11 @@ export function IntegrationsDataDisplay() {
       `)
       .eq('user_id', user!.id)
       .eq('user_metrics.source', provider.toLowerCase())
-      .gte('measurement_date', yesterday.toISOString().split('T')[0])
+      .gte('measurement_date', yesterdayStr)
+      .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
-      .limit(20);
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (!metricsData || metricsData.length === 0) return [];
 
@@ -210,11 +228,16 @@ export function IntegrationsDataDisplay() {
                   Подключено
                 </Badge>
               </div>
-              {provider.lastSync && (
-                <span className="text-sm text-muted-foreground">
-                  Последняя синхронизация: {new Date(provider.lastSync).toLocaleString('ru-RU')}
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                {provider.lastSync && (
+                  <span className="text-sm text-muted-foreground">
+                    Последняя синхронизация: {new Date(provider.lastSync).toLocaleString('ru-RU')}
+                  </span>
+                )}
+                <Button variant="outline" size="sm" onClick={fetchIntegrationsData}>
+                  <RefreshCw className="h-4 w-4 mr-1" /> Обновить
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
