@@ -407,19 +407,23 @@ async function syncWhoopData(
     if (workoutsData.records && workoutsData.records.length > 0) {
       for (const workout of workoutsData.records) {
         // Сохраняем в таблицу workouts
-        await supabase.from('workouts').upsert({
+        const { error: workoutError } = await supabase.from('workouts').upsert({
           user_id: userId,
           external_id: `whoop_${workout.id}`,
           source: 'whoop',
-          workout_type: workout.sport_name || workout.sport_id?.toString() || 'unknown',
+          workout_type: workout.sport_id?.toString() || 'unknown',
           start_time: workout.start,
           end_time: workout.end,
           duration_minutes: Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60000),
           calories_burned: workout.score?.kilojoule ? Math.round(workout.score.kilojoule * 0.239) : null,
           heart_rate_avg: workout.score?.average_heart_rate || null,
           heart_rate_max: workout.score?.max_heart_rate || null,
-          metadata: { raw: workout },
+          source_data: workout,
         }, { onConflict: 'user_id,external_id' });
+
+        if (workoutError) {
+          console.error('Failed to save workout:', workoutError);
+        }
 
         // Также сохраняем Workout Strain в метрики
         if (workout.score?.strain !== undefined) {
