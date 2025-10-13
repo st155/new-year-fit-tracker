@@ -418,7 +418,7 @@ async function processTerraData(supabase: any, payload: any) {
                 // Average Heart Rate
                 const avgHr = activity.heart_rate_data?.avg_hr_bpm;
                 if (typeof avgHr === 'number') {
-                  const avgHrMetricId = await supabase.rpc('create_or_get_metric', {
+                  const { data: avgHrMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Average Heart Rate',
                     p_metric_category: 'cardio',
@@ -439,7 +439,7 @@ async function processTerraData(supabase: any, payload: any) {
                 // Max Heart Rate
                 const maxHr = activity.heart_rate_data?.max_hr_bpm;
                 if (typeof maxHr === 'number') {
-                  const maxHrMetricId = await supabase.rpc('create_or_get_metric', {
+                  const { data: maxHrMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Max Heart Rate',
                     p_metric_category: 'cardio',
@@ -460,7 +460,7 @@ async function processTerraData(supabase: any, payload: any) {
                 // Workout Calories
                 const calories = activity.calories_data?.total_burned_calories;
                 if (typeof calories === 'number') {
-                  const caloriesMetricId = await supabase.rpc('create_or_get_metric', {
+                  const { data: caloriesMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Workout Calories',
                     p_metric_category: 'workout',
@@ -553,7 +553,7 @@ async function processTerraData(supabase: any, payload: any) {
                 
                 // Save Weight
                 if (measurement.weight_kg) {
-                  const weightMetricId = await supabase.rpc('create_or_get_metric', {
+                  const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Weight',
                     p_metric_category: 'body',
@@ -575,7 +575,7 @@ async function processTerraData(supabase: any, payload: any) {
                 
                 // Save Body Fat Percentage
                 if (measurement.bodyfat_percentage) {
-                  const fatMetricId = await supabase.rpc('create_or_get_metric', {
+                  const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Body Fat Percentage',
                     p_metric_category: 'body',
@@ -621,7 +621,7 @@ async function processTerraData(supabase: any, payload: any) {
               const measurementDate = bodyData.timestamp?.split('T')[0];
               
               if (bodyData.weight_kg && measurementDate) {
-                const weightMetricId = await supabase.rpc('create_or_get_metric', {
+                const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
                   p_user_id: userId,
                   p_metric_name: 'Weight',
                   p_metric_category: 'body',
@@ -642,7 +642,7 @@ async function processTerraData(supabase: any, payload: any) {
               }
               
               if (bodyData.body_fat_percentage && measurementDate) {
-                const fatMetricId = await supabase.rpc('create_or_get_metric', {
+                const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
                   p_user_id: userId,
                   p_metric_name: 'Body Fat Percentage',
                   p_metric_category: 'body',
@@ -682,7 +682,7 @@ async function processTerraData(supabase: any, payload: any) {
           if (durationSeconds) {
             const hours = Math.round((durationSeconds / 3600) * 10) / 10;
             const measurementDate = (start || end || new Date().toISOString()).split('T')[0];
-            const sleepMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: sleepMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Sleep Duration',
               p_metric_category: 'sleep',
@@ -715,7 +715,7 @@ async function processTerraData(supabase: any, payload: any) {
           // Recovery Score (%)
           const recovery = daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
           if (typeof recovery === 'number') {
-            const recMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: recMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Recovery Score',
               p_metric_category: 'recovery',
@@ -736,7 +736,7 @@ async function processTerraData(supabase: any, payload: any) {
           // Sleep Efficiency / Performance / Need Fulfillment (%) if available
           const sleepEfficiency = daily.sleep_efficiency_percentage ?? daily.sleep?.efficiency_percentage;
           if (typeof sleepEfficiency === 'number') {
-            const effMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: effMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Sleep Efficiency',
               p_metric_category: 'sleep',
@@ -756,7 +756,7 @@ async function processTerraData(supabase: any, payload: any) {
 
           const sleepPerformance = daily.sleep_performance_percentage ?? daily.sleep?.performance_percentage;
           if (typeof sleepPerformance === 'number') {
-            const perfMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: perfMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Sleep Performance',
               p_metric_category: 'sleep',
@@ -776,7 +776,7 @@ async function processTerraData(supabase: any, payload: any) {
 
           const sleepNeed = daily.sleep_need_fulfillment_percentage ?? daily.sleep?.need_fulfillment_percentage;
           if (typeof sleepNeed === 'number') {
-            const needMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: needMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Sleep Need Fulfillment',
               p_metric_category: 'sleep',
@@ -797,7 +797,7 @@ async function processTerraData(supabase: any, payload: any) {
           // Resting Heart Rate (bpm)
           const rhr = daily.resting_hr_bpm ?? daily.resting_heart_rate_bpm ?? daily.resting_hr ?? daily.resting_heart_rate;
           if (typeof rhr === 'number') {
-            const rhrMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: rhrMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Resting Heart Rate',
               p_metric_category: 'cardio',
@@ -818,7 +818,7 @@ async function processTerraData(supabase: any, payload: any) {
           // HRV RMSSD (ms)
           const hrv = daily.hrv_rmssd_ms ?? daily.hrv?.rmssd_ms ?? daily.hrv?.rmssd_milli;
           if (typeof hrv === 'number') {
-            const hrvMetricId = await supabase.rpc('create_or_get_metric', {
+            const { data: hrvMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'HRV RMSSD',
               p_metric_category: 'recovery',
