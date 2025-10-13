@@ -66,7 +66,7 @@ export default function TerraCallback() {
         return;
       }
 
-      // Фоллбек: проверяем, появился ли активный terra_token для пользователя
+      // Фоллбек: проверяем, появился ли активный terra_token для пользователя с коротким поллингом (до 12с)
       try {
         setStatus('processing');
         setMessage('Проверяем подключение...');
@@ -75,24 +75,34 @@ export default function TerraCallback() {
         const userId = userRes.user?.id;
 
         if (userId) {
-          const { data: tokens, error } = await supabase
-            .from('terra_tokens')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .limit(1);
+          const pollForToken = async () => {
+            for (let i = 0; i < 12; i++) {
+              const { data: tokens, error } = await supabase
+                .from('terra_tokens')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('is_active', true)
+                .limit(1);
 
-          if (!error && tokens && tokens.length > 0) {
+              if (!error && tokens && tokens.length > 0) return true;
+              await new Promise((r) => setTimeout(r, 1000));
+            }
+            return false;
+          };
+
+          const tokensReady = await pollForToken();
+
+          if (tokensReady) {
             setStatus('success');
             setMessage('Устройство успешно подключено! Запускаем синхронизацию...');
-            
+
             // Автоматически запускаем синхронизацию
             try {
               setMessage('Синхронизируем данные...');
               const { data, error: syncError } = await supabase.functions.invoke('terra-integration', {
                 body: { action: 'sync-data' }
               });
-              
+
               if (syncError) {
                 console.error('Sync error:', syncError);
                 setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
@@ -104,7 +114,7 @@ export default function TerraCallback() {
               console.error('Sync error:', e);
               setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
             }
-            
+
             setTimeout(() => navigate('/integrations'), 3000);
             return;
           }
