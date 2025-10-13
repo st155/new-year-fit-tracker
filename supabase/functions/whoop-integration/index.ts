@@ -231,6 +231,7 @@ async function getOrCreateMetric(
   unit: string,
   source: string
 ): Promise<string> {
+  // Сначала пытаемся найти существующую метрику
   const { data: existing } = await supabase
     .from('user_metrics')
     .select('id')
@@ -243,7 +244,8 @@ async function getOrCreateMetric(
     return existing.id;
   }
 
-  const { data: newMetric } = await supabase
+  // Пытаемся создать новую метрику
+  const { data: newMetric, error } = await supabase
     .from('user_metrics')
     .insert({
       user_id: userId,
@@ -254,6 +256,29 @@ async function getOrCreateMetric(
     })
     .select('id')
     .single();
+
+  // Если произошла ошибка дублирования, пытаемся найти метрику снова
+  if (error) {
+    console.log(`Error creating metric ${metricName}, trying to find existing:`, error.message);
+    const { data: retryExisting } = await supabase
+      .from('user_metrics')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('metric_name', metricName)
+      .eq('unit', unit)
+      .eq('source', source)
+      .maybeSingle();
+    
+    if (retryExisting) {
+      return retryExisting.id;
+    }
+    
+    throw new Error(`Failed to get or create metric ${metricName}: ${error.message}`);
+  }
+
+  if (!newMetric) {
+    throw new Error(`Failed to create metric ${metricName}: no data returned`);
+  }
 
   return newMetric.id;
 }
