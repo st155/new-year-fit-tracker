@@ -73,6 +73,19 @@ export function TerraIntegration() {
 
   useEffect(() => {
     if (user) {
+      // Проверяем, не возвращаемся ли мы из Terra widget
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasSuccess = urlParams.has('success') || urlParams.has('reference_id');
+      
+      if (hasSuccess) {
+        // Очищаем URL параметры
+        window.history.replaceState({}, '', window.location.pathname);
+        toast({
+          title: 'Устройство подключено',
+          description: 'Ваше устройство успешно подключено. Данные начнут синхронизироваться автоматически.',
+        });
+      }
+      
       checkStatus();
     }
   }, [user]);

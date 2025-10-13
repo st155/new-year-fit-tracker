@@ -153,6 +153,50 @@ serve(async (req) => {
       );
     }
 
+    // Обработка user_reauth - когда пользователь переподключился и получил новый user_id
+    if (payload.type === 'user_reauth') {
+      const { old_user, new_user } = payload;
+      const provider = new_user.provider?.toUpperCase();
+      
+      console.log('🔄 User reauth:', { 
+        old_user_id: old_user.user_id, 
+        new_user_id: new_user.user_id,
+        provider,
+        reference_id: new_user.reference_id 
+      });
+
+      // Обновляем terra_user_id в terra_tokens
+      await supabase
+        .from('terra_tokens')
+        .update({ 
+          terra_user_id: new_user.user_id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', new_user.reference_id)
+        .eq('provider', provider);
+
+      // Обновляем terra_users
+      const terraUserData = {
+        user_id: new_user.user_id,
+        provider: provider,
+        reference_id: new_user.reference_id,
+        granted_scopes: new_user.scopes || null,
+        state: new_user.active ? 'active' : 'inactive',
+        created_at: new Date().toISOString(),
+      };
+
+      await supabase
+        .from('terra_users')
+        .upsert(terraUserData, { onConflict: 'user_id' });
+
+      console.log('✅ Updated tokens and users for reauth');
+      
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
       await processTerraData(supabase, payload);
       
