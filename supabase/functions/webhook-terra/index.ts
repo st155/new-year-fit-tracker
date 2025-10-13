@@ -118,6 +118,35 @@ serve(async (req) => {
         console.log('✅ Inserted new terra_tokens');
       }
 
+      // Создаем/обновляем запись в terra_users для корректной обработки данных
+      const { data: existingUser } = await supabase
+        .from('terra_users')
+        .select('user_id')
+        .eq('user_id', terraUser.user_id)
+        .maybeSingle();
+
+      const terraUserData = {
+        user_id: terraUser.user_id,
+        provider: provider,
+        reference_id: reference_id,
+        granted_scopes: terraUser.scopes || null,
+        state: terraUser.active ? 'active' : 'inactive',
+        created_at: terraUser.created_at || new Date().toISOString(),
+      };
+
+      if (existingUser) {
+        await supabase
+          .from('terra_users')
+          .update(terraUserData)
+          .eq('user_id', terraUser.user_id);
+        console.log('✅ Updated terra_users');
+      } else {
+        await supabase
+          .from('terra_users')
+          .insert(terraUserData);
+        console.log('✅ Inserted new terra_users');
+      }
+
       return new Response(
         JSON.stringify({ success: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
