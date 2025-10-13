@@ -237,7 +237,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         .eq('user_id', user.id)
         .eq('user_metrics.metric_name', 'Recovery Score')
         .eq('user_metrics.source', 'whoop')
-        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(2);
 
       // Получаем Steps за последние дни

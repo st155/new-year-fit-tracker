@@ -41,6 +41,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('7d');
   const [loading, setLoading] = useState(true);
   const [aggregatedLoading, setAggregatedLoading] = useState(true);
+  const [syncAttempted, setSyncAttempted] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -101,16 +102,18 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           )
         `)
         .eq('user_id', user.id)
-        .eq('measurement_date', dateStr)
         .eq('user_metrics.source', 'whoop')
-        .order('user_metrics.metric_category')
-        .order('user_metrics.metric_name')
+        .gte('measurement_date', format(subDays(selectedDate, 1), 'yyyy-MM-dd'))
+        .lte('measurement_date', dateStr)
+        .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false });
 
-      // Группируем по метрике и берем последнюю (самую свежую) запись
+      // Группируем по метрике и берем запись за выбранный день, 
+      // если её нет — берем самую свежую из окна (вчера+сегодня)
       const latestMetrics = data?.reduce((acc, item) => {
         const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
-        if (!acc[key]) {
+        const isToday = item.measurement_date === dateStr;
+        if (!acc[key] || (!acc[key].isToday && isToday)) {
           acc[key] = {
             metric_name: item.user_metrics.metric_name,
             metric_category: item.user_metrics.metric_category,
@@ -118,6 +121,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
             value: item.value,
             measurement_date: item.measurement_date,
             notes: item.notes,
+            isToday,
           };
         }
         return acc;
@@ -126,6 +130,21 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       const formattedMetrics = Object.values(latestMetrics) as WhoopMetric[];
       
       console.log('WhoopMetrics: Found metrics:', formattedMetrics.length, 'for date:', dateStr);
+
+      const hasTodayRecovery = formattedMetrics.some(
+        (m) => m.metric_name === 'Recovery Score' && m.measurement_date === dateStr
+      );
+
+      if (!hasTodayRecovery && !syncAttempted) {
+        try {
+          await supabase.functions.invoke('whoop-integration', { body: { action: 'sync' } });
+          setSyncAttempted(true);
+          // Дадим API немного времени и перечитаем
+          setTimeout(() => fetchWhoopMetrics(), 1500);
+        } catch (e) {
+          console.warn('Whoop sync failed or not available yet:', e);
+        }
+      }
 
       setMetrics(formattedMetrics);
     } catch (error) {
