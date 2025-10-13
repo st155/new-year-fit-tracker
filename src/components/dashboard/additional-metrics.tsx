@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -6,13 +7,15 @@ import { useNavigate } from "react-router-dom";
 import { Leaderboard } from "./leaderboard";
 import { WeeklyGoals } from "./weekly-goals";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MetricCardProps {
   icon: React.ReactNode;
   title: string;
   value: string;
   unit?: string;
-  change?: string;
+  change?: string | null;
   subtitle?: string;
   color: string;
   onClick?: () => void;
@@ -84,86 +87,268 @@ function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, 
 
 export function AdditionalMetrics() {
   const navigate = useNavigate();
-  
   const { t } = useTranslation();
+  const { user } = useAuth();
+  
+  const [metricsData, setMetricsData] = useState<Record<string, any>>({
+    sleep: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.avgPerNight') },
+    strain: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.today') },
+    activeMin: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') },
+    calories: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.dailyAvg') },
+    avgSteps: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') },
+    restHr: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.morningAvg') },
+    hydration: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.today') },
+    workouts: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') }
+  });
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (!user) return;
+
+      try {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const today = now.toISOString().split('T')[0];
+        const weekAgoDate = sevenDaysAgo.toISOString().split('T')[0];
+
+        // Fetch все метрики параллельно
+        const [sleepRes, strainRes, activeMinRes, caloriesRes, stepsRes, restHrRes, hydrationRes, workoutsRes] = await Promise.all([
+          // Sleep - среднее за последние 7 дней
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'Sleep Duration')
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false })
+            .limit(7),
+          
+          // Strain - сегодня
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Workout Strain', 'Day Strain'])
+            .eq('measurement_date', today)
+            .order('value', { ascending: false })
+            .limit(1),
+          
+          // Active minutes - сумма за неделю
+          supabase
+            .from('daily_health_summary')
+            .select('exercise_minutes')
+            .eq('user_id', user.id)
+            .gte('date', weekAgoDate)
+            .lte('date', today)
+            .not('exercise_minutes', 'is', null),
+          
+          // Calories - среднее за неделю
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Calories', 'Workout Calories', 'Active Energy Burned'])
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false }),
+          
+          // Steps - среднее за неделю
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name, source)')
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
+            .in('user_metrics.source', ['ultrahuman', 'garmin'])
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false }),
+          
+          // Resting HR - утреннее среднее за неделю
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .in('user_metrics.metric_name', ['Resting Heart Rate', 'HRV'])
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false })
+            .limit(7),
+          
+          // Hydration - сегодня
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'Hydration')
+            .eq('measurement_date', today)
+            .maybeSingle(),
+          
+          // Workouts - количество за неделю
+          supabase
+            .from('metric_values')
+            .select('measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'Workout Strain')
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+        ]);
+
+        const newMetrics = { ...metricsData };
+
+        // Sleep
+        if (sleepRes.data && sleepRes.data.length > 0) {
+          const avg = sleepRes.data.reduce((sum, r) => sum + Number(r.value), 0) / sleepRes.data.length;
+          newMetrics.sleep.value = avg.toFixed(1);
+        }
+
+        // Strain
+        if (strainRes.data && strainRes.data.length > 0) {
+          newMetrics.strain.value = Number(strainRes.data[0].value).toFixed(1);
+        }
+
+        // Active minutes
+        if (activeMinRes.data && activeMinRes.data.length > 0) {
+          const total = activeMinRes.data.reduce((sum, r) => sum + (Number(r.exercise_minutes) || 0), 0);
+          newMetrics.activeMin.value = Math.round(total).toLocaleString();
+        }
+
+        // Calories - среднее за день
+        if (caloriesRes.data && caloriesRes.data.length > 0) {
+          // Группируем по дням и суммируем
+          const dailyTotals = caloriesRes.data.reduce((acc: Record<string, number>, r) => {
+            const date = r.measurement_date;
+            acc[date] = (acc[date] || 0) + Number(r.value);
+            return acc;
+          }, {});
+          const days = Object.keys(dailyTotals).length;
+          if (days > 0) {
+            const totalCals = Object.values(dailyTotals).reduce((sum: number, v: number) => sum + v, 0);
+            const avg = totalCals / days;
+            newMetrics.calories.value = Math.round(avg).toLocaleString();
+          }
+        }
+
+        // Steps - среднее за неделю
+        if (stepsRes.data && stepsRes.data.length > 0) {
+          // Группируем по дням, берем максимум (если несколько источников)
+          const dailySteps = stepsRes.data.reduce((acc: Record<string, number>, r) => {
+            const date = r.measurement_date;
+            const val = Number(r.value);
+            acc[date] = Math.max(acc[date] || 0, val);
+            return acc;
+          }, {});
+          const days = Object.keys(dailySteps).length;
+          if (days > 0) {
+            const totalSteps = Object.values(dailySteps).reduce((sum: number, v: number) => sum + v, 0);
+            const avg = Math.round(totalSteps / days);
+            newMetrics.avgSteps.value = avg.toLocaleString();
+          }
+        }
+
+        // Resting HR
+        if (restHrRes.data && restHrRes.data.length > 0) {
+          const avg = restHrRes.data.reduce((sum, r) => sum + Number(r.value), 0) / restHrRes.data.length;
+          newMetrics.restHr.value = Math.round(avg).toString();
+        }
+
+        // Hydration
+        if (hydrationRes.data) {
+          newMetrics.hydration.value = Number(hydrationRes.data.value).toFixed(1);
+        }
+
+        // Workouts - количество тренировок
+        if (workoutsRes.data && workoutsRes.data.length > 0) {
+          newMetrics.workouts.value = workoutsRes.data.length.toString();
+        }
+
+        setMetricsData(newMetrics);
+      } catch (error) {
+        console.error('Error fetching additional metrics:', error);
+      }
+    };
+
+    fetchMetrics();
+  }, [user]);
+
   const allMetrics = [
     {
       icon: <Moon className="h-4 w-4 text-purple-500" />,
       title: t('extraMetrics.sleep'),
-      value: "8.2",
+      value: metricsData.sleep.value,
       unit: t('extraMetrics.units.hours'),
-      change: "+5%",
-      subtitle: t('extraMetrics.subtitles.avgPerNight'),
+      change: metricsData.sleep.change,
+      subtitle: metricsData.sleep.subtitle,
       color: "purple-500",
       route: "/metric/recovery"
     },
     {
       icon: <TrendingUp className="h-4 w-4 text-green-500" />,
       title: t('extraMetrics.strain'),
-      value: "14.8",
+      value: metricsData.strain.value,
       unit: "/21",
-      change: "+10%",
-      subtitle: t('extraMetrics.subtitles.today'),
+      change: metricsData.strain.change,
+      subtitle: metricsData.strain.subtitle,
       color: "green-500",
       route: "/metric/steps"
     },
     {
       icon: <Activity className="h-4 w-4 text-primary" />,
       title: t('extraMetrics.activeMin'),
-      value: "847",
+      value: metricsData.activeMin.value,
       unit: t('extraMetrics.units.min'),
-      change: "+15%",
-      subtitle: t('extraMetrics.subtitles.thisWeek'),
+      change: metricsData.activeMin.change,
+      subtitle: metricsData.activeMin.subtitle,
       color: "primary",
       route: "/metric/steps"
     },
     {
       icon: <Flame className="h-4 w-4 text-orange-500" />,
       title: t('extraMetrics.calories'),
-      value: "2,845",
+      value: metricsData.calories.value,
       unit: t('extraMetrics.units.kcal'),
-      change: "+8%",
-      subtitle: t('extraMetrics.subtitles.dailyAvg'),
+      change: metricsData.calories.change,
+      subtitle: metricsData.calories.subtitle,
       color: "orange-500",
       route: "/metric/steps"
     },
     {
       icon: <Footprints className="h-4 w-4 text-accent" />,
       title: t('extraMetrics.avgSteps'),
-      value: "11,234",
+      value: metricsData.avgSteps.value,
       unit: t('metrics.units.steps'),
-      change: "+12%",
-      subtitle: t('extraMetrics.subtitles.thisWeek'),
+      change: metricsData.avgSteps.change,
+      subtitle: metricsData.avgSteps.subtitle,
       color: "accent",
       route: "/metric/steps"
     },
     {
       icon: <Heart className="h-4 w-4 text-red-500" />,
       title: t('extraMetrics.restHr'),
-      value: "58",
+      value: metricsData.restHr.value,
       unit: t('extraMetrics.units.bpm'),
-      change: "-3%",
-      subtitle: t('extraMetrics.subtitles.morningAvg'),
+      change: metricsData.restHr.change,
+      subtitle: metricsData.restHr.subtitle,
       color: "red-500",
       route: "/metric/recovery"
     },
     {
       icon: <Droplets className="h-4 w-4 text-blue-500" />,
       title: t('extraMetrics.hydration'),
-      value: "2.4",
+      value: metricsData.hydration.value,
       unit: t('extraMetrics.units.liters'),
-      change: "-5%",
-      subtitle: t('extraMetrics.subtitles.today'),
+      change: metricsData.hydration.change,
+      subtitle: metricsData.hydration.subtitle,
       color: "blue-500",
       route: "/metric/steps"
     },
     {
       icon: <Dumbbell className="h-4 w-4 text-primary" />,
       title: t('extraMetrics.workouts'),
-      value: "5",
+      value: metricsData.workouts.value,
       unit: t('extraMetrics.units.times'),
-      change: "+2",
-      subtitle: t('extraMetrics.subtitles.thisWeek'),
+      change: metricsData.workouts.change,
+      subtitle: metricsData.workouts.subtitle,
       color: "primary",
       route: "/metric/steps"
     }
