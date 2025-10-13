@@ -27,9 +27,10 @@ Email для административных уведомлений от Whoop.
 ### 5. REDIRECT URLS (URL'ы для перенаправления после авторизации)
 **ОБЯЗАТЕЛЬНОЕ ПОЛЕ**
 
-Добавьте следующий URL:
+Добавьте следующие URL:
 ```
-https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/whoop-integration?action=callback
+https://elite10.club/integrations/whoop/callback
+https://ueykmmzmguzjppdudvef.lovableproject.com/integrations/whoop/callback
 ```
 
 ### 6. SCOPES (Разрешения для доступа к данным)

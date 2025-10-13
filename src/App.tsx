@@ -48,6 +48,7 @@ const Goals = lazy(() => import("./pages/Goals"));
 
 // Callbacks - load on demand
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
+const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
 
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -188,7 +189,9 @@ const App = () => {
                     
                     {/* Terra callback - handles all Terra providers */}
                     <Route path="/terra-callback" element={<TerraCallback />} />
-                    <Route path="/whoop-callback" element={<Navigate to="/terra-callback" replace />} />
+                    
+                    {/* Whoop callback - handles Whoop OAuth */}
+                    <Route path="/integrations/whoop/callback" element={<WhoopCallback />} />
                     <Route path="/feed" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
