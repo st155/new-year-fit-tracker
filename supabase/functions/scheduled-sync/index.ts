@@ -19,38 +19,16 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get all users with Whoop connections
-    const { data: whoopUsers, error: whoopError } = await supabase
-      .from('whoop_tokens')
+    // Whoop is now integrated via Terra. Direct Whoop sync is disabled.
+    const { data: terraWhoopUsers, error: terraWhoopError } = await supabase
+      .from('terra_tokens')
       .select('user_id')
-      .not('access_token', 'is', null)
+      .eq('provider', 'WHOOP');
 
-    if (whoopError) {
-      console.error('Error fetching Whoop users:', whoopError)
+    if (terraWhoopError) {
+      console.error('Error fetching Terra WHOOP users:', terraWhoopError);
     } else {
-      console.log(`Found ${whoopUsers?.length || 0} Whoop users to sync`)
-      
-      // Sync Whoop data for each user
-      for (const user of whoopUsers || []) {
-        try {
-          console.log(`Syncing Whoop data for user: ${user.user_id}`)
-          
-          const { data, error } = await supabase.functions.invoke('whoop-integration', {
-            body: {
-              action: 'sync',
-              userId: user.user_id
-            }
-          })
-          
-          if (error) {
-            console.error(`Error syncing Whoop for user ${user.user_id}:`, error)
-          } else {
-            console.log(`Successfully synced Whoop data for user ${user.user_id}`)
-          }
-        } catch (error) {
-          console.error(`Failed to sync Whoop for user ${user.user_id}:`, error)
-        }
-      }
+      console.log(`Terra WHOOP connections found: ${terraWhoopUsers?.length || 0}. Direct Whoop sync skipped.`);
     }
 
     // Get all users with Withings connections
@@ -87,14 +65,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    const totalUsers = (whoopUsers?.length || 0) + (withingsUsers?.length || 0)
+    const totalUsers = (terraWhoopUsers?.length || 0) + (withingsUsers?.length || 0)
     console.log(`Scheduled sync completed. Processed ${totalUsers} user connections.`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: `Sync completed for ${totalUsers} user connections`,
-        whoopUsers: whoopUsers?.length || 0,
+        whoopUsers: terraWhoopUsers?.length || 0,
         withingsUsers: withingsUsers?.length || 0,
         timestamp: new Date().toISOString()
       }),
