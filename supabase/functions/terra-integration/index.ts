@@ -126,19 +126,20 @@ serve(async (req) => {
       // Запускаем синхронизацию для всех провайдеров
       for (const token of tokens) {
         try {
+          const endDate = new Date().toISOString().split('T')[0];
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - 7);
+          const start = startDate.toISOString().split('T')[0];
+
           const syncResponse = await fetch(
-            `https://api.tryterra.co/v2/user/${token.terra_user_id}/data`,
+            `https://api.tryterra.co/v2/${token.provider}/body?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`,
             {
-              method: 'POST',
+              method: 'GET',
               headers: {
                 'Accept': 'application/json',
                 'dev-id': terraDevId,
                 'x-api-key': terraApiKey,
-                'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                types: ['body', 'activity', 'daily', 'sleep', 'nutrition'],
-              }),
             }
           );
 
