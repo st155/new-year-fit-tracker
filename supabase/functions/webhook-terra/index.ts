@@ -475,6 +475,53 @@ async function processTerraData(supabase: any, payload: any) {
               console.error('❌ Error upserting body composition:', bodyError);
             } else {
               console.log('✅ Saved body composition:', { weight: measurement.weight_kg, fat: measurement.bodyfat_percentage, date: measurementDate });
+              
+              // Also save to metric_values for dashboard display
+              const source = provider.toLowerCase();
+              
+              // Save Weight
+              if (measurement.weight_kg) {
+                const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+                  p_user_id: userId,
+                  p_metric_name: 'Weight',
+                  p_metric_category: 'body',
+                  p_unit: 'kg',
+                  p_source: source,
+                });
+                if (weightMetricId) {
+                  await supabase.from('metric_values').upsert({
+                    user_id: userId,
+                    metric_id: weightMetricId,
+                    value: measurement.weight_kg,
+                    measurement_date: measurementDate,
+                    external_id: `terra_${provider}_weight_${measurementDate}`,
+                  }, {
+                    onConflict: 'metric_id,measurement_date',
+                  });
+                }
+              }
+              
+              // Save Body Fat Percentage
+              if (measurement.bodyfat_percentage) {
+                const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+                  p_user_id: userId,
+                  p_metric_name: 'Body Fat Percentage',
+                  p_metric_category: 'body',
+                  p_unit: '%',
+                  p_source: source,
+                });
+                if (fatMetricId) {
+                  await supabase.from('metric_values').upsert({
+                    user_id: userId,
+                    metric_id: fatMetricId,
+                    value: measurement.bodyfat_percentage,
+                    measurement_date: measurementDate,
+                    external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+                  }, {
+                    onConflict: 'metric_id,measurement_date',
+                  });
+                }
+              }
             }
           }
         }
@@ -496,6 +543,52 @@ async function processTerraData(supabase: any, payload: any) {
             console.error('❌ Error upserting body composition (fallback):', bodyError);
           } else {
             console.log('✅ Saved body composition (fallback):', { weight: bodyData.weight_kg, fat: bodyData.body_fat_percentage });
+            
+            // Also save to metric_values for dashboard display (fallback)
+            const source = provider.toLowerCase();
+            const measurementDate = bodyData.timestamp?.split('T')[0];
+            
+            if (bodyData.weight_kg && measurementDate) {
+              const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Weight',
+                p_metric_category: 'body',
+                p_unit: 'kg',
+                p_source: source,
+              });
+              if (weightMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: weightMetricId,
+                  value: bodyData.weight_kg,
+                  measurement_date: measurementDate,
+                  external_id: `terra_${provider}_weight_${measurementDate}`,
+                }, {
+                  onConflict: 'metric_id,measurement_date',
+                });
+              }
+            }
+            
+            if (bodyData.body_fat_percentage && measurementDate) {
+              const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Body Fat Percentage',
+                p_metric_category: 'body',
+                p_unit: '%',
+                p_source: source,
+              });
+              if (fatMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: fatMetricId,
+                  value: bodyData.body_fat_percentage,
+                  measurement_date: measurementDate,
+                  external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+                }, {
+                  onConflict: 'metric_id,measurement_date',
+                });
+              }
+            }
           }
         }
       }
