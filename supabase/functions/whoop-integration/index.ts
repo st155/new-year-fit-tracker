@@ -133,6 +133,9 @@ serve(async (req) => {
           expires_at: expiresAt.toISOString(),
           scope: tokenData.scope,
           is_active: true,
+        }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
         });
 
       if (dbError) {
