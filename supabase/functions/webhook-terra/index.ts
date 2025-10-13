@@ -245,8 +245,61 @@ async function processTerraData(supabase: any, payload: any) {
     }
 
     if (!tokenData) {
-      console.error('❌ User not found for Terra user_id:', user.user_id);
-      return;
+      console.error('❌ User not found for Terra user_id:', user.user_id, '— trying reference_id fallback');
+      // Fallback: if webhook includes reference_id, bind token now
+      if (payload.reference_id && payload.user?.provider) {
+        const provider = String(payload.user.provider).toUpperCase();
+        try {
+          await supabase.from('terra_tokens').insert({
+            user_id: String(payload.reference_id),
+            terra_user_id: String(user.user_id),
+            provider,
+            is_active: true,
+            last_sync_date: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
+          console.log('✅ Bound terra_token via reference_id fallback');
+        } catch (e) {
+          console.error('⚠️ Failed to bind via reference_id fallback:', e);
+          // Persist minimal diagnostic payload for reconciliation
+          try {
+            await supabase.from('terra_data_payloads').insert({
+              user_id: String(user.user_id),
+              data_type: String(payload.type),
+              payload_id: crypto.randomUUID(),
+              created_at: new Date().toISOString(),
+              start_time: payload.data?.[0]?.metadata?.start_time || null,
+              end_time: payload.data?.[0]?.metadata?.end_time || null,
+            });
+          } catch (_) {}
+          return;
+        }
+      } else {
+        // No mapping possible; store diagnostic breadcrumb
+        try {
+          await supabase.from('terra_data_payloads').insert({
+            user_id: String(user.user_id),
+            data_type: String(payload.type),
+            payload_id: crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            start_time: payload.data?.[0]?.metadata?.start_time || null,
+            end_time: payload.data?.[0]?.metadata?.end_time || null,
+          });
+        } catch (_) {}
+        return;
+      }
+      // fetch mapping again after fallback
+      const { data: tokenDataRetry } = await supabase
+        .from('terra_tokens')
+        .select('user_id, provider')
+        .eq('terra_user_id', user.user_id)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (!tokenDataRetry) return;
+      const userId = tokenDataRetry.user_id;
+      const provider = tokenDataRetry.provider;
+      console.log('✅ Mapping established via fallback:', { userId, provider });
     }
 
     const userId = tokenData.user_id;
