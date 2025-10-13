@@ -121,6 +121,7 @@ export function TerraIntegration() {
       });
     } catch (error: any) {
       console.error('Status check error:', error);
+    } finally {
       setLoading(false);
     }
   };
