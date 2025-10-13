@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,8 +13,6 @@ import {
   RefreshCw,
   Unlink,
   Activity,
-  Maximize2,
-  Minimize2,
   Zap,
   Heart,
   Moon,
@@ -53,7 +51,18 @@ const PROVIDER_NAMES: Record<string, string> = {
   POLAR: 'Polar',
   SUUNTO: 'Suunto',
   PELOTON: 'Peloton',
+  ULTRAHUMAN: 'Ultrahuman',
 };
+
+const AVAILABLE_PROVIDERS = [
+  'GARMIN',
+  'FITBIT',
+  'OURA',
+  'WITHINGS',
+  'POLAR',
+  'SUUNTO',
+  'ULTRAHUMAN',
+];
 
 export function TerraIntegration() {
   const { user } = useAuth();
@@ -61,22 +70,21 @@ export function TerraIntegration() {
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
   const [widgetLoading, setWidgetLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
 
   useEffect(() => {
     if (user) {
       checkStatus();
-      loadWidget();
     }
   }, [user]);
 
-  const loadWidget = async () => {
+  const connectProvider = async (provider: string) => {
     if (!user) return;
     
+    setSelectedProvider(provider);
     setWidgetLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('terra-integration', {
@@ -97,11 +105,11 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('Widget load error:', error);
       toast({
-        title: 'Ошибка загрузки виджета',
-        description: error.message || 'Не удалось загрузить Terra Widget',
+        title: 'Ошибка подключения',
+        description: error.message || 'Не удалось подключить устройство',
         variant: 'destructive',
       });
-      setWidgetUrl(null);
+      setSelectedProvider(null);
     } finally {
       setWidgetLoading(false);
     }
@@ -271,34 +279,65 @@ export function TerraIntegration() {
         </Card>
       )}
 
-      {/* Terra Widget */}
+      {/* Available Providers */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Подключить устройство</CardTitle>
-              <CardDescription>
-                Выберите ваш фитнес-трекер для подключения
-              </CardDescription>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          </div>
+          <CardTitle>Подключить устройство</CardTitle>
+          <CardDescription>
+            Выберите ваш фитнес-трекер для подключения
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {AVAILABLE_PROVIDERS.map((provider) => {
+              const Icon = PROVIDER_ICONS[provider] || Activity;
+              const isConnected = status.providers.some(p => p.name === provider);
+              
+              return (
+                <Button
+                  key={provider}
+                  variant={isConnected ? "secondary" : "outline"}
+                  className="h-auto py-4 justify-start"
+                  onClick={() => !isConnected && connectProvider(provider)}
+                  disabled={isConnected || widgetLoading}
+                >
+                  <Icon className="h-5 w-5 mr-3" />
+                  <div className="flex-1 text-left">
+                    <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
+                    {isConnected && (
+                      <p className="text-xs text-muted-foreground">Подключено</p>
+                    )}
+                  </div>
+                  {isConnected && <CheckCircle className="h-4 w-4 text-success" />}
+                </Button>
+              );
+            })}
+          </div>
+
+          <Alert className="mt-4">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              После подключения данные будут автоматически синхронизироваться каждые 6 часов
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+
+      {/* Widget Modal */}
+      <Dialog open={selectedProvider !== null} onOpenChange={(open) => !open && setSelectedProvider(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              Подключение {selectedProvider && PROVIDER_NAMES[selectedProvider]}
+            </DialogTitle>
+          </DialogHeader>
           {widgetLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : widgetUrl ? (
-            <div className={`relative ${isExpanded ? 'h-[600px]' : 'h-[400px]'} w-full transition-all duration-300`}>
+            <div className="w-full h-[500px]">
               <iframe
-                ref={iframeRef}
                 src={widgetUrl}
                 className="w-full h-full rounded-lg border"
                 allow="camera; microphone"
@@ -313,15 +352,8 @@ export function TerraIntegration() {
               </AlertDescription>
             </Alert>
           )}
-
-          <Alert className="mt-4">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              После подключения данные будут автоматически синхронизироваться каждые 6 часов
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
