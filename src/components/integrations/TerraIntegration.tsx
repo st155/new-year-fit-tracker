@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,7 +16,8 @@ import {
   Heart,
   Moon,
   TrendingUp,
-  Watch
+  Watch,
+  ExternalLink
 } from 'lucide-react';
 
 interface TerraProvider {
@@ -70,9 +70,7 @@ export function TerraIntegration() {
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
-  const [widgetLoading, setWidgetLoading] = useState(false);
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -84,8 +82,7 @@ export function TerraIntegration() {
   const connectProvider = async (provider: string) => {
     if (!user) return;
     
-    setSelectedProvider(provider);
-    setWidgetLoading(true);
+    setConnectingProvider(provider);
     try {
       const { data, error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'generate-widget-session' },
@@ -100,8 +97,18 @@ export function TerraIntegration() {
         throw new Error('No widget URL received');
       }
 
-      console.log('Widget URL loaded:', data.url);
-      setWidgetUrl(data.url);
+      // Open widget in new window
+      window.open(data.url, '_blank', 'width=600,height=700');
+      
+      toast({
+        title: 'Окно подключения открыто',
+        description: 'Завершите подключение в открывшемся окне',
+      });
+
+      // Refresh status after a delay to check if connection succeeded
+      setTimeout(() => {
+        checkStatus();
+      }, 3000);
     } catch (error: any) {
       console.error('Widget load error:', error);
       toast({
@@ -109,9 +116,8 @@ export function TerraIntegration() {
         description: error.message || 'Не удалось подключить устройство',
         variant: 'destructive',
       });
-      setSelectedProvider(null);
     } finally {
-      setWidgetLoading(false);
+      setConnectingProvider(null);
     }
   };
 
@@ -292,6 +298,7 @@ export function TerraIntegration() {
             {AVAILABLE_PROVIDERS.map((provider) => {
               const Icon = PROVIDER_ICONS[provider] || Activity;
               const isConnected = status.providers.some(p => p.name === provider);
+              const isConnecting = connectingProvider === provider;
               
               return (
                 <Button
@@ -299,16 +306,26 @@ export function TerraIntegration() {
                   variant={isConnected ? "secondary" : "outline"}
                   className="h-auto py-4 justify-start"
                   onClick={() => !isConnected && connectProvider(provider)}
-                  disabled={isConnected || widgetLoading}
+                  disabled={isConnected || isConnecting}
                 >
-                  <Icon className="h-5 w-5 mr-3" />
+                  {isConnecting ? (
+                    <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                  ) : (
+                    <Icon className="h-5 w-5 mr-3" />
+                  )}
                   <div className="flex-1 text-left">
                     <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
-                    {isConnected && (
+                    {isConnected ? (
                       <p className="text-xs text-muted-foreground">Подключено</p>
-                    )}
+                    ) : isConnecting ? (
+                      <p className="text-xs text-muted-foreground">Открываем окно...</p>
+                    ) : null}
                   </div>
-                  {isConnected && <CheckCircle className="h-4 w-4 text-success" />}
+                  {isConnected ? (
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  ) : (
+                    <ExternalLink className="h-4 w-4 opacity-50" />
+                  )}
                 </Button>
               );
             })}
@@ -317,43 +334,11 @@ export function TerraIntegration() {
           <Alert className="mt-4">
             <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              После подключения данные будут автоматически синхронизироваться каждые 6 часов
+              При подключении откроется новое окно. После успешного подключения данные будут автоматически синхронизироваться каждые 6 часов
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
-
-      {/* Widget Modal */}
-      <Dialog open={selectedProvider !== null} onOpenChange={(open) => !open && setSelectedProvider(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>
-              Подключение {selectedProvider && PROVIDER_NAMES[selectedProvider]}
-            </DialogTitle>
-          </DialogHeader>
-          {widgetLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : widgetUrl ? (
-            <div className="w-full h-[500px]">
-              <iframe
-                src={widgetUrl}
-                className="w-full h-full rounded-lg border"
-                allow="camera; microphone"
-                title="Terra Widget"
-              />
-            </div>
-          ) : (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Не удалось загрузить виджет подключения
-              </AlertDescription>
-            </Alert>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
