@@ -97,18 +97,8 @@ export function TerraIntegration() {
         throw new Error('No widget URL received');
       }
 
-      // Open widget in new window
-      window.open(data.url, '_blank', 'width=600,height=700');
-      
-      toast({
-        title: 'Окно подключения открыто',
-        description: 'Завершите подключение в открывшемся окне',
-      });
-
-      // Refresh status after a delay to check if connection succeeded
-      setTimeout(() => {
-        checkStatus();
-      }, 3000);
+      // Redirect to widget page instead of opening new window
+      window.location.href = data.url;
     } catch (error: any) {
       console.error('Widget load error:', error);
       toast({
@@ -116,7 +106,6 @@ export function TerraIntegration() {
         description: error.message || 'Не удалось подключить устройство',
         variant: 'destructive',
       });
-    } finally {
       setConnectingProvider(null);
     }
   };
@@ -334,7 +323,7 @@ export function TerraIntegration() {
           <Alert className="mt-4">
             <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              При подключении откроется новое окно. После успешного подключения данные будут автоматически синхронизироваться каждые 6 часов
+              При подключении вы будете перенаправлены на страницу авторизации устройства. После успешного подключения данные будут автоматически синхронизироваться каждые 6 часов
             </AlertDescription>
           </Alert>
         </CardContent>
