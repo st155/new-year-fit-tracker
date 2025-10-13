@@ -107,11 +107,13 @@ serve(async (req) => {
       const userResponse = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', {
         headers: {
           'Authorization': `Bearer ${tokenData.access_token}`,
+          'Accept': 'application/json'
         },
       });
 
       if (!userResponse.ok) {
-        console.error('Failed to get Whoop user profile');
+        const text = await userResponse.text();
+        console.error('Failed to get Whoop user profile', text);
         throw new Error('Failed to get user profile');
       }
 

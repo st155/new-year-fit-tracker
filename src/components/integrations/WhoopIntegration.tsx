@@ -240,38 +240,7 @@ export function WhoopIntegration() {
         </Card>
       )}
 
-      {/* Other Integrations */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Другие устройства</CardTitle>
-          <CardDescription>
-            Скоро будут доступны другие фитнес-трекеры
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[
-              { name: 'Garmin', icon: Activity },
-              { name: 'Oura Ring', icon: Moon },
-              { name: 'Polar', icon: Heart },
-              { name: 'Fitbit', icon: Heart },
-            ].map(({ name, icon: Icon }) => (
-              <Button
-                key={name}
-                variant="outline"
-                className="h-auto p-4 justify-start"
-                disabled
-              >
-                <Icon className="h-5 w-5 mr-3" />
-                <span className="flex-1 text-left">{name}</span>
-                <Badge variant="secondary" className="ml-2">
-                  Скоро
-                </Badge>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+{/* Terra widget is now shown on the page itself */}
     </div>
   );
 }

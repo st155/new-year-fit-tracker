@@ -1,4 +1,5 @@
 import { WhoopIntegration } from '@/components/integrations/WhoopIntegration';
+import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -19,8 +20,9 @@ export default function IntegrationsPage() {
           <TabsTrigger value="data">Данные устройств</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="connections" className="mt-6">
+        <TabsContent value="connections" className="mt-6 space-y-6">
           <WhoopIntegration />
+          <TerraIntegration />
         </TabsContent>
         
         <TabsContent value="data" className="mt-6">
