@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Critical pages - load immediately
 const Landing = lazy(() => import("./pages/Landing"));
@@ -80,11 +81,13 @@ const App = () => {
   }, []);
 
   return (
-    <ErrorBoundary>
+    
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <BrowserRouter>
             <AuthProvider>
+              <ErrorBoundary>
+                <TooltipProvider delayDuration={200}>
               <Toaster />
               <Sonner />
               <InstallPrompt />
@@ -229,11 +232,12 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+            </TooltipProvider>
+              </ErrorBoundary>
             </AuthProvider>
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
   );
 };
 
