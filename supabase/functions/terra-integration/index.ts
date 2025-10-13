@@ -52,7 +52,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           reference_id: user.id,
-          providers: 'GARMIN,FITBIT,WITHINGS,OURA,POLAR,SUUNTO,PELOTON',
+          providers: 'ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR',
           language: 'en',
           auth_success_redirect_url: authSuccessUrl,
           auth_failure_redirect_url: authFailureUrl,
