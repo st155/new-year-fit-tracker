@@ -58,7 +58,8 @@ export function useFitnessDataCache(userId: string | undefined) {
     
     // Check cache first
     const cached = cache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+    const hasSourceField = Array.isArray(cached?.data) && cached!.data.length > 0 && cached!.data.every((m: any) => 'source' in m);
+    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION) && hasSourceField) {
       console.log('Using cached data for', cacheKey);
       return cached.data;
     }
@@ -72,6 +73,7 @@ export function useFitnessDataCache(userId: string | undefined) {
         metric_name,
         metric_category,
         unit,
+        source,
         metric_values!inner (
           value,
           measurement_date
