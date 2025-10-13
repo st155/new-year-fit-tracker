@@ -49,7 +49,7 @@ serve(async (req) => {
         body: JSON.stringify({
           reference_id: user.id,
           providers: provider,
-          language: 'ru',
+          language: 'en',
           auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
           auth_failure_redirect_url: `${req.headers.get('origin')}/terra-callback`,
         }),
