@@ -19,8 +19,69 @@ export default function TerraCallback() {
       const statusParam = searchParams.get('status');
       const errorParam = searchParams.get('error') || searchParams.get('message');
       const reference = searchParams.get('reference') || searchParams.get('reference_id');
+      const terraUserId = searchParams.get('user') || searchParams.get('user_id') || searchParams.get('terra_user_id');
+      const providerParam = (searchParams.get('provider') || searchParams.get('source') || 'WHOOP').toUpperCase();
 
-      console.log('Terra callback:', { success, statusParam, errorParam, reference });
+      console.log('Terra callback:', { success, statusParam, errorParam, reference, terraUserId, providerParam });
+
+      // Если Terra вернула terra_user_id прямо в редиректе, связываем пользователя без ожидания вебхука
+      if (terraUserId) {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: userRes } = await supabase.auth.getUser();
+          const uid = userRes.user?.id;
+          if (uid) {
+            setStatus('processing');
+            setMessage('Подтверждаем подключение...');
+
+            const { data: existing } = await supabase
+              .from('terra_tokens')
+              .select('id')
+              .eq('user_id', uid)
+              .eq('provider', providerParam)
+              .maybeSingle();
+
+            if (existing?.id) {
+              await supabase.from('terra_tokens').update({
+                terra_user_id: terraUserId,
+                is_active: true,
+                updated_at: new Date().toISOString(),
+              }).eq('id', existing.id);
+            } else {
+              await supabase.from('terra_tokens').insert({
+                user_id: uid,
+                terra_user_id: terraUserId,
+                provider: providerParam,
+                is_active: true,
+              });
+            }
+
+            // Запускаем синхронизацию
+            setStatus('success');
+            setMessage('Устройство подключено! Запускаем синхронизацию данных...');
+            try {
+              const { data, error } = await supabase.functions.invoke('terra-integration', {
+                body: { action: 'sync-data' }
+              });
+              if (error) {
+                console.error('Sync error:', error);
+                setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+              } else {
+                console.log('Sync initiated:', data);
+                setMessage('Устройство подключено и данные синхронизированы!');
+              }
+            } catch (e) {
+              console.error('Sync error:', e);
+              setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            }
+
+            setTimeout(() => navigate('/integrations'), 3000);
+            return;
+          }
+        } catch (e) {
+          console.error('Direct bind error:', e);
+        }
+      }
 
       // Явная ошибка от Terra/провайдера
       if (errorParam) {
