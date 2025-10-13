@@ -100,6 +100,7 @@ export function MetricsGrid() {
     steps: { value: "12,847", change: "+12%", subtitle: t('common.dailyAverage', { defaultValue: 'daily average' }) }
   });
   const [loading, setLoading] = useState(true);
+  const [syncAttempted, setSyncAttempted] = useState(false);
 
   const metricConfig: Record<string, MetricConfig> = {
     body_fat: { key: "body_fat", title: t('metrics.bodyFat'), unit: t('metrics.units.percent'), color: "body-fat", description: "Body fat percentage", category: "body" },
@@ -144,16 +145,15 @@ export function MetricsGrid() {
           bodyFatBCRes,
           vo2maxRes,
         ] = await Promise.all([
-          // Recovery
+          // Recovery (any source; we'll prefer today's local date)
           supabase
             .from('metric_values')
-            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
+            .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
             .eq('user_metrics.metric_name', 'Recovery Score')
-            .eq('user_metrics.source', 'whoop')
             .order('measurement_date', { ascending: false })
             .order('created_at', { ascending: false })
-            .limit(2),
+            .limit(4),
           // Steps from daily summary
           supabase
             .from('daily_health_summary')
