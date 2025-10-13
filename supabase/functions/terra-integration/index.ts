@@ -38,6 +38,20 @@ serve(async (req) => {
 
     // Получить URL авторизации Terra
     if (action === 'get-auth-url') {
+      // Для Whoop используем специальный redirect URL
+      const whoopDomain = Deno.env.get('WHOOP_DOMAIN');
+      const isWhoop = provider === 'WHOOP';
+      
+      let authSuccessUrl = `${req.headers.get('origin')}/terra-callback`;
+      let authFailureUrl = `${req.headers.get('origin')}/terra-callback`;
+      
+      // Если Whoop и домен настроен, используем custom redirect
+      if (isWhoop && whoopDomain) {
+        console.log('Using Whoop custom domain:', whoopDomain);
+        authSuccessUrl = `https://${whoopDomain}/auth/whoop/oauth2`;
+        authFailureUrl = `https://${whoopDomain}/auth/whoop/oauth2`;
+      }
+      
       const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
         method: 'POST',
         headers: {
@@ -50,8 +64,8 @@ serve(async (req) => {
           reference_id: user.id,
           providers: provider,
           language: 'en',
-          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
-          auth_failure_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+          auth_success_redirect_url: authSuccessUrl,
+          auth_failure_redirect_url: authFailureUrl,
         }),
       });
 
