@@ -155,8 +155,9 @@ export function TerraIntegration() {
 
       console.log('✅ Terra widget URL received:', data.url);
 
-      // Сохраняем текущий URL для возврата
+      // Сохраняем текущий URL для возврата и ожидаемого провайдера
       sessionStorage.setItem('terra_return_url', window.location.pathname);
+      sessionStorage.setItem('terra_expected_provider', specificProvider || 'ALL');
       
       // Открываем виджет в той же вкладке
       window.location.href = data.url;

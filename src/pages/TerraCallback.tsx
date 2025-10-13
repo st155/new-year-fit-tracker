@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type CallbackStatus = 'processing' | 'success' | 'error';
 
@@ -19,43 +20,78 @@ export default function TerraCallback() {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
     const reference = searchParams.get('reference');
+    const expected = (sessionStorage.getItem('terra_expected_provider') || 'ALL').toUpperCase();
 
-    console.log('Terra callback params:', { success, error, reference });
+    console.log('Terra callback params:', { success, error, reference, expected });
 
-    // Simulate connection progress
+    // Прогресс-анимация
     const progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 10, 90));
+      setProgress((prev) => Math.min(prev + 5, 95));
     }, 200);
 
-    const processCallback = setTimeout(() => {
-      clearInterval(progressInterval);
-      setProgress(100);
+    // Если Terra явно вернула ошибку
+    if (error) {
+      setStatus('error');
+      setMessage(`Ошибка подключения: ${error}`);
+      toast.error('Не удалось подключить устройство');
+    }
 
-      if (error) {
-        setStatus('error');
-        setMessage(`Ошибка подключения: ${error}`);
-        toast.error('Не удалось подключить устройство');
-      } else if (success === 'true') {
-        setStatus('success');
-        setMessage('Устройство успешно подключено! Terra API отправит данные через webhook.');
-        toast.success('Устройство подключено');
-      } else {
-        setStatus('success');
-        setMessage('Подключение завершено. Ожидайте поступления данных.');
+    // Поллинг статуса подключения через сервер (истина только если токен создан)
+    let attempts = 0;
+    const maxAttempts = 20; // ~30 сек
+    const poll = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const { data } = await supabase.functions.invoke('terra-integration', {
+          method: 'POST',
+          body: { action: 'check-status' },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+
+        const providers: Array<{ provider: string }> = data?.providers || [];
+        const ok = expected === 'ALL'
+          ? providers.length > 0
+          : providers.some((p) => (p.provider || '').toUpperCase() === expected);
+
+        if (ok || success === 'true') {
+          clearInterval(progressInterval);
+          setProgress(100);
+          setStatus('success');
+          setMessage('Устройство подключено. Ожидаем данные от Terra...');
+          // мягкая задержка и возврат на интеграции
+          setTimeout(() => {
+            const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
+            sessionStorage.removeItem('terra_return_url');
+            sessionStorage.removeItem('terra_expected_provider');
+            navigate(returnUrl);
+          }, 1200);
+          return; // остановить поллинг
+        }
+      } catch (e) {
+        // игнорируем, продолжаем попытки
       }
-    }, 2000);
 
-    // Redirect after delay
-    const redirectTimeout = setTimeout(() => {
-      const returnUrl = localStorage.getItem('terra_return_url') || '/integrations';
-      localStorage.removeItem('terra_return_url');
-      navigate(returnUrl);
-    }, 4000);
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        setTimeout(poll, 1500);
+      } else {
+        clearInterval(progressInterval);
+        setProgress(100);
+        setStatus('error');
+        setMessage(
+          expected === 'ALL'
+            ? 'Подключение не подтверждено Terra. Попробуйте снова из раздела интеграций.'
+            : `Terra не привязала ${expected}. Попробуйте переподключить.`
+        );
+      }
+    };
+
+    // Запускаем поллинг
+    poll();
 
     return () => {
       clearInterval(progressInterval);
-      clearTimeout(processCallback);
-      clearTimeout(redirectTimeout);
     };
   }, [searchParams, navigate]);
 
