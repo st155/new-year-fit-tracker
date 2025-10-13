@@ -520,10 +520,11 @@ async function processTerraData(supabase: any, payload: any) {
                   });
                 }
               }
-        }
-        
-        // Фоллбэк: если данные пришли напрямую (старый формат или другие провайдеры)
-        if ((bodyData.body_fat_percentage || bodyData.weight_kg) && bodyData.timestamp) {
+            }
+          }
+          
+          // Фоллбэк: если данные пришли напрямую (старый формат или другие провайдеры)
+          if ((bodyData.body_fat_percentage || bodyData.weight_kg) && bodyData.timestamp) {
           const { error: bodyError } = await supabase.from('body_composition').upsert({
             user_id: userId,
             measurement_date: bodyData.timestamp?.split('T')[0],
