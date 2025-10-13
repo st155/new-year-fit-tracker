@@ -226,7 +226,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         .limit(1)
         .maybeSingle();
 
-      // Получаем Recovery Score за последние дни (начиная с сегодня)
+      // Получаем Recovery Score за последние дни
       const { data: recoveryData } = await supabase
         .from('metric_values')
         .select(`
@@ -237,7 +237,6 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         .eq('user_id', user.id)
         .eq('user_metrics.metric_name', 'Recovery Score')
         .eq('user_metrics.source', 'whoop')
-        .lte('measurement_date', today)
         .order('measurement_date', { ascending: false })
         .limit(2);
 
