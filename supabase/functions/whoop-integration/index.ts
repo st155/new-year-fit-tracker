@@ -237,6 +237,7 @@ async function getOrCreateMetric(
     .select('id')
     .eq('user_id', userId)
     .eq('metric_name', metricName)
+    .eq('unit', unit)
     .eq('source', source)
     .maybeSingle();
 
