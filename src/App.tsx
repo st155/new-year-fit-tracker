@@ -45,9 +45,10 @@ const BodyComposition = lazy(() => import("./pages/BodyComposition"));
 const Habits = lazy(() => import("./pages/Habits"));
 const Goals = lazy(() => import("./pages/Goals"));
 
-// Callbacks - load on demand
-const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
-const TerraCallback = lazy(() => import("./pages/TerraCallback"));
+  // Callbacks - load on demand
+  const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
+  const TerraCallback = lazy(() => import("./pages/TerraCallback"));
+  const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
 
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -187,7 +188,7 @@ const App = () => {
               
               <Route path="/withings-callback" element={<WithingsCallback />} />
               <Route path="/terra-callback" element={<TerraCallback />} />
-              <Route path="/whoop-callback" element={<Navigate to="/integrations" replace />} />
+              <Route path="/whoop-callback" element={<WhoopCallback />} />
               <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
             <Route path="/feed" element={
               <ProtectedRoute>
