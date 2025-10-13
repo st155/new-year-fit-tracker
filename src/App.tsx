@@ -46,10 +46,9 @@ const BodyComposition = lazy(() => import("./pages/BodyComposition"));
 const Habits = lazy(() => import("./pages/Habits"));
 const Goals = lazy(() => import("./pages/Goals"));
 
-  // Callbacks - load on demand
-  const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
-  const TerraCallback = lazy(() => import("./pages/TerraCallback"));
-  const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
+// Callbacks - load on demand
+const WithingsCallback = lazy(() => import("./pages/WithingsCallback"));
+const TerraCallback = lazy(() => import("./pages/TerraCallback"));
 
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -81,163 +80,161 @@ const App = () => {
   }, []);
 
   return (
-    
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <BrowserRouter>
-            <AuthProvider>
-              <ErrorBoundary>
-                <TooltipProvider delayDuration={200}>
-              <Toaster />
-              <Sonner />
-              <InstallPrompt />
-              <UpdatePrompt />
-              <Suspense fallback={<PageLoader message="Loading..." />}>
-                <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/landing" element={<Landing />} />
-              <Route path="/" element={<Landing />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <ModernAppLayout>
-                    <Index />
-                  </ModernAppLayout>
-                </ProtectedRoute>
-              } />
-            <Route path="/challenges" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Challenges />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/challenges/:id" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <ChallengeDetail />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/challenges/create" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <CreateChallenge />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/progress" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Progress />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/leaderboard" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Leaderboard />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/metric/:metricType" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <MetricDetail />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Profile />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/goals/create" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <CreateGoal />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/goals/edit/:id" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <EditGoal />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/fitness-data" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <FitnessData />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/body-composition" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <BodyComposition />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/integrations" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Integrations />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-              
-              <Route path="/withings-callback" element={<WithingsCallback />} />
-              <Route path="/terra-callback" element={<TerraCallback />} />
-              <Route path="/whoop-callback" element={<WhoopCallback />} />
-              <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
-            <Route path="/feed" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Feed />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/trainer-dashboard" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <TrainerDashboard />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/notifications" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Notifications />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/habits" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Habits />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/goals" element={
-              <ProtectedRoute>
-                <ModernAppLayout>
-                  <Goals />
-                </ModernAppLayout>
-              </ProtectedRoute>
-            } />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </TooltipProvider>
-              </ErrorBoundary>
-            </AuthProvider>
-          </BrowserRouter>
-        </ThemeProvider>
-      </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <BrowserRouter>
+          <AuthProvider>
+            <ErrorBoundary>
+              <TooltipProvider delayDuration={200}>
+                <Toaster />
+                <Sonner />
+                <InstallPrompt />
+                <UpdatePrompt />
+                <Suspense fallback={<PageLoader message="Loading..." />}>
+                  <Routes>
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/landing" element={<Landing />} />
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Index />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Challenges />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges/:id" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <ChallengeDetail />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges/create" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <CreateChallenge />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/progress" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Progress />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/leaderboard" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Leaderboard />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/metric/:metricType" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <MetricDetail />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Profile />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/goals/create" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <CreateGoal />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/goals/edit/:id" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <EditGoal />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/fitness-data" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <FitnessData />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/body-composition" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <BodyComposition />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/integrations" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Integrations />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="/withings-callback" element={<WithingsCallback />} />
+                    <Route path="/terra-callback" element={<TerraCallback />} />
+                    <Route path="/functions/v1/withings-integration" element={<WithingsCallback />} />
+                    <Route path="/feed" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Feed />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/trainer-dashboard" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <TrainerDashboard />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/notifications" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Notifications />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/habits" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Habits />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/goals" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Goals />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </TooltipProvider>
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
