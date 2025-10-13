@@ -90,7 +90,7 @@ export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "row_2km"]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "steps"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
     body_fat: { value: "18.5", change: "-3%", subtitle: t('metrics.subtitles.fuller') },
     weight: { value: "72.0", change: "-2%", subtitle: t('metrics.subtitles.byLansey') },
@@ -116,10 +116,19 @@ export function MetricsGrid() {
       if (!user) return;
 
       try {
-        // Load user preferences
+        // Load user preferences (migrate legacy row_2km -> steps)
         const savedMetrics = localStorage.getItem(`user_metrics_${user.id}`);
         if (savedMetrics) {
-          setSelectedMetrics(JSON.parse(savedMetrics));
+          try {
+            const parsed = JSON.parse(savedMetrics);
+            const migrated = Array.isArray(parsed)
+              ? parsed.map((k: string) => (k === 'row_2km' ? 'steps' : k))
+              : parsed;
+            setSelectedMetrics(migrated);
+            if (JSON.stringify(migrated) !== savedMetrics) {
+              localStorage.setItem(`user_metrics_${user.id}`, JSON.stringify(migrated));
+            }
+          } catch {}
         }
 
         // Мгновенная отрисовка из кэша
