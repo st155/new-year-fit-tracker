@@ -226,13 +226,15 @@ serve(async (req) => {
         }
       );
 
-      if (!cyclesResponse.ok) {
-        console.error('Failed to get Whoop cycles:', await cyclesResponse.text());
-        throw new Error('Failed to get Whoop data');
-      }
+let cyclesData: any = { records: [] };
+if (cyclesResponse.ok) {
+  cyclesData = await cyclesResponse.json();
+  console.log('Whoop cycles received:', cyclesData.records?.length || 0);
+} else {
+  const errText = await cyclesResponse.text();
+  console.error('Failed to get Whoop cycles:', errText);
+}
 
-      const cyclesData = await cyclesResponse.json();
-      console.log('Whoop cycles received:', cyclesData.records?.length || 0);
 
       // Сохраняем данные в metric_values
       if (cyclesData.records && cyclesData.records.length > 0) {

@@ -132,14 +132,20 @@ serve(async (req) => {
           const start = startDate.toISOString().split('T')[0];
 
           const syncResponse = await fetch(
-            `https://api.tryterra.co/v2/${token.provider}/body?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`,
+            `https://api.tryterra.co/v2/user/${token.terra_user_id}/data`,
             {
-              method: 'GET',
+              method: 'POST',
               headers: {
                 'Accept': 'application/json',
                 'dev-id': terraDevId,
                 'x-api-key': terraApiKey,
+                'Content-Type': 'application/json',
               },
+              body: JSON.stringify({
+                types: ['body', 'activity', 'daily', 'sleep', 'nutrition'],
+                start_date: start,
+                end_date: endDate,
+              }),
             }
           );
 
