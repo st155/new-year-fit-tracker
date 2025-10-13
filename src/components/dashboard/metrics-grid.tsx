@@ -171,13 +171,12 @@ export function MetricsGrid() {
             .order('measurement_date', { ascending: false })
             .order('created_at', { ascending: false })
             .limit(2),
-          // Weight from Withings
+          // Weight from metric_values (any source)
           supabase
             .from('metric_values')
             .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
             .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Weight', 'Вес'])
-            .eq('user_metrics.source', 'withings')
+            .in('user_metrics.metric_name', ['Weight', 'Вес', 'Body Mass', 'Body Weight', 'Weight (kg)', 'HKQuantityTypeIdentifierBodyMass'])
             .order('measurement_date', { ascending: false })
             .order('created_at', { ascending: false })
             .limit(2),

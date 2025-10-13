@@ -472,11 +472,21 @@ export const EnhancedFitnessDashboard = () => {
               aggregated.heartRate.total += value;
               aggregated.heartRate.count++;
               break;
+            // Weight metrics (multi-language / sources)
             case 'Вес':
+            case 'Weight':
+            case 'Body Mass':
+            case 'Body Weight':
+            case 'Weight (kg)':
+            case 'HKQuantityTypeIdentifierBodyMass':
               aggregated.weight.values.push(value);
               aggregated.weight.latest = value;
               break;
+            // Body fat metrics (multi-language / sources)
             case 'Процент жира':
+            case 'Body Fat Percentage':
+            case 'Body Fat %':
+            case 'HKQuantityTypeIdentifierBodyFatPercentage':
               aggregated.bodyFat.values.push(value);
               aggregated.bodyFat.latest = value;
               break;
