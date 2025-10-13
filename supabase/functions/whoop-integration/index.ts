@@ -379,6 +379,13 @@ if (cyclesResponse.ok) {
         }
       }
 
+      // Update last_sync_date
+      await supabase
+        .from('whoop_tokens')
+        .update({ last_sync_date: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+
       return new Response(
         JSON.stringify({ success: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

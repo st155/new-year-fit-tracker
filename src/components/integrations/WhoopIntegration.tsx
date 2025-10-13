@@ -53,7 +53,7 @@ export function WhoopIntegration() {
         setConnection({
           connected: true,
           connectedAt: token.created_at,
-          lastSync: token.updated_at,
+          lastSync: token.last_sync_date || token.updated_at,
           whoopUserId: token.whoop_user_id,
         });
       } else {
@@ -192,6 +192,16 @@ export function WhoopIntegration() {
                   <p className="text-xs text-muted-foreground">
                     Подключен {new Date(connection.connectedAt!).toLocaleDateString('ru-RU')}
                   </p>
+                  {connection.lastSync && (
+                    <p className="text-xs text-muted-foreground">
+                      Последняя синхронизация: {new Date(connection.lastSync).toLocaleString('ru-RU', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  )}
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={disconnect}>

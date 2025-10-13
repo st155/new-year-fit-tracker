@@ -236,6 +236,16 @@ export function TerraIntegration() {
                         <p className="text-xs text-muted-foreground">
                           Подключен {new Date(provider.connectedAt).toLocaleDateString('ru-RU')}
                         </p>
+                        {provider.lastSync && (
+                          <p className="text-xs text-muted-foreground">
+                            Последняя синхронизация: {new Date(provider.lastSync).toLocaleString('ru-RU', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Button

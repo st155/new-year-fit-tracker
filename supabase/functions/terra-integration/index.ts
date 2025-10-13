@@ -151,6 +151,12 @@ serve(async (req) => {
 
           if (syncResponse.ok) {
             console.log(`Sync initiated for ${token.provider}`);
+            
+            // Update last_sync_date
+            await supabase
+              .from('terra_tokens')
+              .update({ last_sync_date: new Date().toISOString() })
+              .eq('id', token.id);
           } else {
             console.error(`Sync failed for ${token.provider}:`, await syncResponse.text());
           }
