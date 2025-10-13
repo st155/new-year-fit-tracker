@@ -3,7 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Activity, Clock, Flame, Heart, TrendingUp } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dumbbell, Activity, Clock, Flame, Heart, TrendingUp, Footprints } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TodayWorkout {
@@ -19,9 +20,16 @@ interface TodayWorkout {
   strain?: number;
 }
 
+interface DailySteps {
+  steps: number;
+  distance_km: number | null;
+  active_calories: number | null;
+}
+
 export function TodayActivity() {
   const { user } = useAuth();
   const [todayWorkouts, setTodayWorkouts] = useState<TodayWorkout[]>([]);
+  const [dailySteps, setDailySteps] = useState<DailySteps | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -156,6 +164,22 @@ export function TodayActivity() {
         ];
 
         setTodayWorkouts(allWorkouts);
+
+        // Загружаем шаги за сегодня из daily_health_summary (Terra/Ultrahuman/Garmin)
+        const { data: stepsData } = await supabase
+          .from('daily_health_summary')
+          .select('steps, distance_km, active_calories')
+          .eq('user_id', user.id)
+          .eq('date', today)
+          .maybeSingle();
+
+        if (stepsData) {
+          setDailySteps({
+            steps: stepsData.steps || 0,
+            distance_km: stepsData.distance_km,
+            active_calories: stepsData.active_calories
+          });
+        }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -206,50 +230,110 @@ export function TodayActivity() {
         </Badge>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="border-2 border-primary/20 bg-primary/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <Flame className="h-3 w-3 text-primary" />
-              </div>
-              <span className="text-xs text-muted-foreground">Calories</span>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {Math.round(totalCalories)}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Tabs для разных метрик */}
+      <Tabs defaultValue="calories" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="calories">
+            <Flame className="h-3 w-3 mr-1" />
+            Calories
+          </TabsTrigger>
+          <TabsTrigger value="duration">
+            <Clock className="h-3 w-3 mr-1" />
+            Duration
+          </TabsTrigger>
+          <TabsTrigger value="hr">
+            <Heart className="h-3 w-3 mr-1" />
+            Avg HR
+          </TabsTrigger>
+          <TabsTrigger value="steps">
+            <Footprints className="h-3 w-3 mr-1" />
+            Steps
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="border-2 border-accent/20 bg-accent/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 rounded-lg bg-accent/10">
-                <Clock className="h-3 w-3 text-accent" />
+        <TabsContent value="calories" className="mt-4">
+          <Card className="border-2 border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Flame className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-sm text-muted-foreground">Total Calories Burned</span>
               </div>
-              <span className="text-xs text-muted-foreground">Duration</span>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {Math.round(totalDuration)} min
-            </div>
-          </CardContent>
-        </Card>
+              <div className="text-3xl font-bold text-foreground">
+                {Math.round(totalCalories)}
+                <span className="text-sm text-muted-foreground ml-2">kcal</span>
+              </div>
+              {dailySteps?.active_calories && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Active: {Math.round(dailySteps.active_calories)} kcal
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        <Card className="border-2 border-red-500/20 bg-red-500/5">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 rounded-lg bg-red-500/10">
-                <Heart className="h-3 w-3 text-red-500" />
+        <TabsContent value="duration" className="mt-4">
+          <Card className="border-2 border-accent/20 bg-accent/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Clock className="h-5 w-5 text-accent" />
+                </div>
+                <span className="text-sm text-muted-foreground">Total Duration</span>
               </div>
-              <span className="text-xs text-muted-foreground">Avg HR</span>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {avgHeartRate > 0 ? Math.round(avgHeartRate) : '--'}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="text-3xl font-bold text-foreground">
+                {Math.round(totalDuration)}
+                <span className="text-sm text-muted-foreground ml-2">min</span>
+              </div>
+              {dailySteps?.distance_km && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Distance: {dailySteps.distance_km.toFixed(2)} km
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hr" className="mt-4">
+          <Card className="border-2 border-red-500/20 bg-red-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-red-500/10">
+                  <Heart className="h-5 w-5 text-red-500" />
+                </div>
+                <span className="text-sm text-muted-foreground">Average Heart Rate</span>
+              </div>
+              <div className="text-3xl font-bold text-foreground">
+                {avgHeartRate > 0 ? Math.round(avgHeartRate) : '--'}
+                <span className="text-sm text-muted-foreground ml-2">bpm</span>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="steps" className="mt-4">
+          <Card className="border-2 border-green-500/20 bg-green-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <Footprints className="h-5 w-5 text-green-500" />
+                </div>
+                <span className="text-sm text-muted-foreground">Daily Steps</span>
+              </div>
+              <div className="text-3xl font-bold text-foreground">
+                {dailySteps?.steps ? dailySteps.steps.toLocaleString() : '0'}
+                <span className="text-sm text-muted-foreground ml-2">steps</span>
+              </div>
+              {dailySteps?.distance_km && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {dailySteps.distance_km.toFixed(2)} km walked
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Workout Details */}
       <div className="space-y-2">
