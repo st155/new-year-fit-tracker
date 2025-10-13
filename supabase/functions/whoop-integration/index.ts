@@ -210,15 +210,15 @@ serve(async (req) => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7);
 
-      // Формат: YYYY-MM-DD
-      const start = startDate.toISOString().split('T')[0];
-      const end = endDate.toISOString().split('T')[0];
+      // Формат: ISO 8601 timestamp (YYYY-MM-DDTHH:mm:ss.sssZ)
+      const start = startDate.toISOString();
+      const end = endDate.toISOString();
 
       console.log('Syncing Whoop data from', start, 'to', end);
 
       // Получаем циклы (cycles) - основной источник данных
       const cyclesResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/cycle?start=${start}&end=${end}`,
+        `https://api.prod.whoop.com/developer/v1/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -285,7 +285,7 @@ if (cyclesResponse.ok) {
 
       // Получаем workouts
       const workoutsResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/activity/workout?start=${start}&end=${end}`,
+        `https://api.prod.whoop.com/developer/v1/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -316,7 +316,7 @@ if (cyclesResponse.ok) {
 
       // Получаем sleep
       const sleepResponse = await fetch(
-        `https://api.prod.whoop.com/developer/v1/activity/sleep?start=${start}&end=${end}`,
+        `https://api.prod.whoop.com/developer/v1/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
