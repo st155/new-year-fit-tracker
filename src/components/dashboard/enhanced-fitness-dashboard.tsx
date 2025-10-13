@@ -52,6 +52,7 @@ import { MetricsSettings, type MetricVisibility } from './metrics-settings';
 import { ExportDataDialog } from './ExportDataDialog';
 import { StreakCard } from './StreakCard';
 import { AchievementsCard } from './AchievementsCard';
+import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
 
 interface MetricValue {
   id: string;
@@ -876,13 +877,31 @@ export const EnhancedFitnessDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="devices" className="text-xs sm:text-sm">Devices</TabsTrigger>
             <TabsTrigger value="whoop" className="text-xs sm:text-sm">Whoop</TabsTrigger>
             <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
             <TabsTrigger value="composition" className="text-xs sm:text-sm">Body</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="devices" className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Device Data
+                </CardTitle>
+                <CardDescription>
+                  Latest metrics from all connected devices
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <IntegrationsDataDisplay />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-8">
             {/* This Month's Highlights */}
