@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, terra-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
@@ -16,426 +16,98 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const terraApiKey = Deno.env.get('TERRA_API_KEY')!;
     const terraDevId = Deno.env.get('TERRA_DEV_ID')!;
-    const terraSigningSecret = Deno.env.get('TERRA_SIGNING_SECRET')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const url = new URL(req.url);
-    
-    let action = url.searchParams.get('action');
-    let requestBody: any = {};
-    
-    if (req.method === 'POST') {
-      try {
-        requestBody = await req.json();
-        action = action || requestBody.action;
-      } catch (e) {
-        // Empty body or invalid JSON
-      }
+    // Получаем текущего пользователя
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
     }
 
-    console.log(`Terra Integration - Action: ${action}, Method: ${req.method}`);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
 
-    // Ручная синхронизация данных
-    if (action === 'sync-data') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError || !user) {
-        throw new Error('Unauthorized');
-      }
-
-      const userId = user.id;
-      console.log(`🔄 Manual sync requested for user: ${userId}`);
-
-      // Получаем все активные токены пользователя
-      const { data: tokens, error: tokensError } = await supabase
-        .from('terra_tokens')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true);
-
-      if (tokensError || !tokens || tokens.length === 0) {
-        return new Response(
-          JSON.stringify({ error: 'No active Terra connections found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log(`Found ${tokens.length} active providers:`, tokens.map(t => t.provider));
-
-      const results: any = {};
-
-      // Для каждого провайдера запрашиваем данные
-      for (const token of tokens) {
-        const provider = token.provider;
-        const terraUserId = token.terra_user_id;
-        
-        console.log(`📥 Fetching data for ${provider} (${terraUserId})`);
-        
-        const dataTypes = ['activity', 'body', 'daily', 'sleep', 'nutrition'];
-        const providerResults: any = {};
-
-        for (const dataType of dataTypes) {
-          try {
-            // Запрашиваем данные за последние 30 дней
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 30);
-
-            const response = await fetch(
-              `https://api.tryterra.co/v2/${dataType}?user_id=${terraUserId}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`,
-              {
-                method: 'GET',
-                headers: {
-                  'dev-id': terraDevId,
-                  'x-api-key': terraApiKey,
-                  'Accept': 'application/json',
-                },
-              }
-            );
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`✅ ${provider} ${dataType}:`, data.data?.length || 0, 'records');
-              
-              if (data.data && data.data.length > 0) {
-                // Обрабатываем данные используя ту же логику что и webhook
-                await processTerraData(supabase, {
-                  type: dataType,
-                  user: { user_id: terraUserId, provider },
-                  data: data.data
-                });
-                providerResults[dataType] = { success: true, count: data.data.length };
-              } else {
-                providerResults[dataType] = { success: true, count: 0 };
-              }
-            } else {
-              const errorText = await response.text();
-              console.error(`❌ Error fetching ${dataType} from ${provider}:`, errorText);
-              providerResults[dataType] = { success: false, error: errorText };
-            }
-          } catch (error: any) {
-            console.error(`❌ Exception fetching ${dataType} from ${provider}:`, error);
-            providerResults[dataType] = { success: false, error: error.message };
-          }
-        }
-
-        results[provider] = providerResults;
-
-        // Обновляем last_sync_date
-        await supabase
-          .from('terra_tokens')
-          .update({ last_sync_date: new Date().toISOString() })
-          .eq('id', token.id);
-      }
-
-      console.log('✅ Manual sync completed:', results);
-
-      return new Response(
-        JSON.stringify({ success: true, results }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (authError || !user) {
+      throw new Error('Unauthorized');
     }
 
-    // Получить URL для авторизации через Terra API
+    const { action, provider } = await req.json();
+    console.log('Terra integration action:', { action, provider, userId: user.id });
+
+    // Получить URL авторизации Terra
     if (action === 'get-auth-url') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError || !user) {
-        throw new Error('Unauthorized');
-      }
-
-      const userId = user.id;
-      console.log(`Generating widget session for user: ${userId}`);
-      const baseUrl = requestBody.baseUrl || 
-                     url.searchParams.get('baseUrl') ||
-                     req.headers.get('origin') || 
-                     'https://elite10.club';
-      
-      console.log('Auth redirect baseUrl:', baseUrl);
-      console.log('Reference ID (user.id):', userId);
-
-      // Используем официальный Terra API endpoint для генерации widget session
-      // Список провайдеров: https://docs.tryterra.co/reference#post-auth-generatewidgetsession
-      // Провайдеры должны совпадать с теми, что включены в Terra Dashboard
-      const requestedProviders = requestBody.providers || url.searchParams.get('providers');
-      const defaultProviders = 'WHOOP,GARMIN,OURA,WITHINGS,ULTRAHUMAN';
-      const providers = (typeof requestedProviders === 'string' && requestedProviders.trim().length > 0)
-        ? requestedProviders
-        : defaultProviders;
-      // Webhooks are configured in Terra Dashboard; not set per session
-
-      const widgetRequestBody = {
-        reference_id: userId,  // Используем Supabase user_id как reference_id
-        providers,
-        auth_success_redirect_url: `${baseUrl}/terra-callback`,
-        auth_failure_redirect_url: `${baseUrl}/terra-callback`,
-        language: 'en',
-      };
-      
-      console.log('📤 Terra Widget Session Request:', {
-        url: 'https://api.tryterra.co/v2/auth/generateWidgetSession',
-        devId: terraDevId,
-        body: widgetRequestBody
-      });
-      
-      const widgetResponse = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
+      const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'dev-id': terraDevId,
           'x-api-key': terraApiKey,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
-        body: JSON.stringify(widgetRequestBody),
+        body: JSON.stringify({
+          reference_id: user.id,
+          providers: provider,
+          language: 'ru',
+          auth_success_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+          auth_failure_redirect_url: `${req.headers.get('origin')}/terra-callback`,
+        }),
       });
 
-      if (!widgetResponse.ok) {
-        const errorText = await widgetResponse.text();
-        let terraDetails: any = null;
-        try { terraDetails = JSON.parse(errorText); } catch {}
-        console.error('Terra API error:', terraDetails || errorText);
-        return new Response(
-          JSON.stringify({
-            status: 'error',
-            message: 'Terra generateWidgetSession failed',
-            terra: terraDetails || errorText,
-          }),
-          { status: widgetResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Terra widget error:', error);
+        throw new Error(`Terra API error: ${response.status}`);
       }
 
-      const widgetData = await widgetResponse.json();
-      console.log('Widget session generated:', widgetData);
+      const data = await response.json();
+      console.log('Terra widget session created:', data);
 
       return new Response(
-        JSON.stringify({ url: widgetData.url }),
+        JSON.stringify({ authUrl: data.url }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Проверить статус подключения
-    if (action === 'check-status') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError || !user) {
-        throw new Error('Unauthorized');
-      }
-
-      // Read current active tokens
-      let { data: tokens } = await supabase
+    // Синхронизировать данные
+    if (action === 'sync-data') {
+      const { data: tokens } = await supabase
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Reconcile with Terra Users API (in case webhook 'auth' was not delivered)
-      try {
-        const usersResp = await fetch(`https://api.tryterra.co/v2/users?reference_id=${user.id}` , {
-          headers: { 'dev-id': terraDevId, 'x-api-key': terraApiKey }
-        });
-        if (usersResp.ok) {
-          const usersJson = await usersResp.json();
-          const terraUsers: Array<{ user_id: string; provider: string }>
-            = usersJson?.users || usersJson?.data || [];
+      if (!tokens || tokens.length === 0) {
+        throw new Error('No active connections found');
+      }
 
-          const existingByProvider = new Set((tokens || []).map(t => (t.provider || '').toUpperCase()));
-          const inserts: any[] = [];
-          for (const u of terraUsers) {
-            const provider = (u.provider || '').toUpperCase();
-            if (!provider) continue;
-            if (!existingByProvider.has(provider)) {
-              inserts.push({
-                user_id: user.id,
-                terra_user_id: u.user_id,
-                provider,
-                is_active: true,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              });
+      // Запускаем синхронизацию для всех провайдеров
+      for (const token of tokens) {
+        try {
+          const syncResponse = await fetch(
+            `https://api.tryterra.co/v2/user/${token.terra_user_id}/data`,
+            {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json',
+                'dev-id': terraDevId,
+                'x-api-key': terraApiKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                types: ['body', 'activity', 'daily', 'sleep', 'nutrition'],
+              }),
             }
+          );
+
+          if (syncResponse.ok) {
+            console.log(`Sync initiated for ${token.provider}`);
+          } else {
+            console.error(`Sync failed for ${token.provider}:`, await syncResponse.text());
           }
-          if (inserts.length > 0) {
-            console.log('Reconciling Terra users -> inserting tokens:', inserts.map(i => i.provider));
-            const { error: insertErr } = await supabase.from('terra_tokens').insert(inserts);
-            if (insertErr) console.error('Failed to reconcile tokens:', insertErr);
-            // Refresh tokens after reconciliation
-            const res = await supabase
-              .from('terra_tokens')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('is_active', true);
-            tokens = res.data || tokens;
-          }
-        } else {
-          const txt = await usersResp.text();
-          console.warn('Terra Users API failed:', usersResp.status, txt);
-        }
-      } catch (e) {
-        console.warn('Terra Users API check error:', e?.message || String(e));
-      }
-
-      // Build providers payload
-      const providers = (tokens || []).map(t => ({
-        provider: t.provider,
-        connectedAt: t.created_at,
-        lastSync: t.last_sync_date,
-        terraUserId: t.terra_user_id,
-      }));
-
-      console.log('check-status result', { 
-        hasTokens: (tokens?.length || 0) > 0, 
-        count: tokens?.length || 0, 
-        providers: providers.map(p=>p.provider)
-      });
-      
-      return new Response(
-        JSON.stringify({
-          connected: (tokens?.length || 0) > 0,
-          providers,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Обработать webhook от Terra
-    if (action === 'webhook') {
-      console.log('🔔 Terra webhook received:', {
-        method: req.method,
-        headers: Object.fromEntries(req.headers.entries()),
-      });
-      
-      // Проверить подпись для безопасности
-      const signature = req.headers.get('terra-signature');
-      if (!signature) {
-        console.error('❌ Missing terra-signature header');
-        return new Response(
-          JSON.stringify({ error: 'Missing signature' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Получить raw body для проверки подписи
-      const rawBody = await req.text();
-      const isValidSignature = await verifyTerraSignature(rawBody, signature, terraSigningSecret);
-      
-      if (!isValidSignature) {
-        console.error('Invalid signature');
-        return new Response(
-          JSON.stringify({ error: 'Invalid signature' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const payload = JSON.parse(rawBody);
-      console.log('✅ Valid Terra webhook received:', {
-        type: payload.type,
-        user: payload.user,
-        reference_id: payload.reference_id,
-        fullPayload: JSON.stringify(payload, null, 2)
-      });
-
-      // Terra отправляет различные типы событий
-      if (payload.type === 'auth') {
-        console.log('🔐 Processing auth event:', {
-          reference_id: payload.reference_id,
-          provider: payload.user?.provider,
-          terra_user_id: payload.user?.user_id
-        });
-        
-        // Пользователь подключил устройство
-        const { reference_id, user: terraUser } = payload;
-        
-        // Сохраняем/обновляем запись terra_tokens без требования уникального индекса
-        const provider = terraUser.provider?.toUpperCase();
-        const { data: existing, error: findError } = await supabase
-          .from('terra_tokens')
-          .select('id')
-          .eq('user_id', reference_id)
-          .eq('provider', provider)
-          .maybeSingle();
-
-        if (findError) {
-          console.error('Error finding existing Terra token:', findError);
-        }
-
-        const payloadToSave = {
-          user_id: reference_id,
-          terra_user_id: terraUser.user_id,
-          provider,
-          is_active: true,
-          last_sync_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        };
-
-        let tokenError = null as any;
-        if (existing?.id) {
-          const { error: updateError } = await supabase
-            .from('terra_tokens')
-            .update(payloadToSave)
-            .eq('id', existing.id);
-          tokenError = updateError;
-          console.log('✅ Updated existing terra_tokens record', { 
-            id: existing.id, 
-            provider,
-            terra_user_id: terraUser.user_id 
-          });
-        } else {
-          const { error: insertError } = await supabase
-            .from('terra_tokens')
-            .insert(payloadToSave);
-          tokenError = insertError;
-          console.log('✅ Inserted new terra_tokens record', {
-            provider,
-            terra_user_id: terraUser.user_id,
-            user_id: reference_id
-          });
-        }
-
-        if (tokenError) {
-          console.error('Error saving Terra token:', tokenError);
-        }
-
-        console.log(`User ${reference_id} connected ${terraUser.provider} via Terra`);
-
-        return new Response(
-          JSON.stringify({ success: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Данные от устройства (activity, body, daily, sleep, nutrition, etc.)
-      if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
-        await processTerraData(supabase, payload);
-        
-        // Обновить last_sync_date
-        if (payload.user?.user_id) {
-          await supabase
-            .from('terra_tokens')
-            .update({ last_sync_date: new Date().toISOString() })
-            .eq('terra_user_id', payload.user.user_id);
+        } catch (error) {
+          console.error(`Error syncing ${token.provider}:`, error);
         }
       }
 
@@ -445,106 +117,13 @@ serve(async (req) => {
       );
     }
 
-    // Синхронизировать данные вручную
-    if (action === 'sync-data') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError || !user) {
-        throw new Error('Unauthorized');
-      }
-
-      const { data: token } = await supabase
-        .from('terra_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!token) {
-        throw new Error('Terra not connected');
-      }
-
-      // Запросить исторические данные через Terra API
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7); // последние 7 дней
-
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-
-      console.log(`Requesting Terra data for user ${token.terra_user_id} from ${startDateStr} to ${endDateStr}`);
-
-      const response = await fetch(
-        `https://api.tryterra.co/v2/daily?user_id=${token.terra_user_id}&start_date=${startDateStr}&end_date=${endDateStr}`,
-        {
-          method: 'GET',
-          headers: {
-            'dev-id': terraDevId,
-            'x-api-key': terraApiKey,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Terra API error:', response.status, errorText);
-        throw new Error(`Terra API error: ${response.statusText} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Terra sync response:', JSON.stringify(data, null, 2));
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Данные синхронизируются через webhook' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Отключить конкретный провайдер или все подключения
+    // Отключить провайдера
     if (action === 'disconnect') {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError || !user) {
-        throw new Error('Unauthorized');
-      }
-
-      const provider = requestBody.provider || url.searchParams.get('provider');
-      
-      if (provider) {
-        // Отключить конкретный провайдер
-        const { error: updateError } = await supabase
-          .from('terra_tokens')
-          .update({ is_active: false })
-          .eq('user_id', user.id)
-          .eq('provider', provider);
-
-        if (updateError) {
-          throw new Error(updateError.message);
-        }
-      } else {
-        // Отключить все подключения
-        const { error: updateError } = await supabase
-          .from('terra_tokens')
-          .update({ is_active: false })
-          .eq('user_id', user.id);
-
-        if (updateError) {
-          throw new Error(updateError.message);
-        }
-      }
+      await supabase
+        .from('terra_tokens')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+        .eq('provider', provider);
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -552,9 +131,9 @@ serve(async (req) => {
       );
     }
 
-    throw new Error('Invalid action');
+    throw new Error('Unknown action');
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Terra integration error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),

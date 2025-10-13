@@ -1,169 +1,125 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
 
-type CallbackStatus = 'processing' | 'success' | 'error';
+type Status = 'processing' | 'success' | 'error';
 
 export default function TerraCallback() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<CallbackStatus>('processing');
-  const [message, setMessage] = useState('Подключение устройства...');
-  const [progress, setProgress] = useState(0);
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState<Status>('processing');
+  const [message, setMessage] = useState('Обработка подключения...');
 
   useEffect(() => {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
     const reference = searchParams.get('reference');
-    const expected = (sessionStorage.getItem('terra_expected_provider') || 'ALL').toUpperCase();
 
-    console.log('Terra callback params:', { success, error, reference, expected });
+    console.log('Terra callback:', { success, error, reference });
 
-    // Прогресс-анимация
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => Math.min(prev + 5, 95));
-    }, 200);
-
-    // Если Terra явно вернула ошибку
+    // Проверяем ошибки от Terra
     if (error) {
       setStatus('error');
-      setMessage(`Ошибка подключения: ${error}`);
-      toast.error('Не удалось подключить устройство');
+      setMessage(decodeURIComponent(error));
+      setTimeout(() => navigate('/integrations'), 5000);
+      return;
     }
 
-    // Поллинг статуса подключения через сервер (истина только если токен создан)
-    let attempts = 0;
-    const maxAttempts = 20; // ~30 сек
-    const poll = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-        const { data } = await supabase.functions.invoke('terra-integration', {
-          method: 'POST',
-          body: { action: 'check-status' },
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-
-        const providers: Array<{ provider: string }> = data?.providers || [];
-        const ok = expected === 'ALL'
-          ? providers.length > 0
-          : providers.some((p) => (p.provider || '').toUpperCase() === expected);
-
-        if (ok || success === 'true') {
-          clearInterval(progressInterval);
-          setProgress(100);
-          setStatus('success');
-          setMessage('Устройство подключено. Ожидаем данные от Terra...');
-          // мягкая задержка и возврат на интеграции
-          setTimeout(() => {
-            const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
-            sessionStorage.removeItem('terra_return_url');
-            sessionStorage.removeItem('terra_expected_provider');
-            navigate(returnUrl);
-          }, 1200);
-          return; // остановить поллинг
-        }
-      } catch (e) {
-        // игнорируем, продолжаем попытки
-      }
-
-      attempts += 1;
-      if (attempts < maxAttempts) {
-        setTimeout(poll, 1500);
-      } else {
-        clearInterval(progressInterval);
-        setProgress(100);
-        setStatus('error');
-        setMessage(
-          expected === 'ALL'
-            ? 'Подключение не подтверждено Terra. Попробуйте снова из раздела интеграций.'
-            : `Terra не привязала ${expected}. Попробуйте переподключить.`
-        );
-      }
-    };
-
-    // Запускаем поллинг
-    poll();
-
-    return () => {
-      clearInterval(progressInterval);
-    };
+    // Если success=true, Terra успешно подключил устройство
+    // Webhook auth уже должен был создать запись в terra_tokens
+    if (success === 'true') {
+      // Даем время webhook'у обработаться (обычно он срабатывает мгновенно)
+      setTimeout(() => {
+        setStatus('success');
+        setMessage('Устройство успешно подключено!');
+        
+        // Перенаправляем на страницу интеграций через 2 секунды
+        setTimeout(() => navigate('/integrations'), 2000);
+      }, 1500);
+    } else {
+      // Нет явной ошибки, но и не success
+      setStatus('error');
+      setMessage('Не удалось подтвердить подключение');
+      setTimeout(() => navigate('/integrations'), 5000);
+    }
   }, [searchParams, navigate]);
 
-  const getStatusIcon = () => {
+  const getIcon = () => {
     switch (status) {
       case 'processing':
-        return <Loader2 className="h-16 w-16 text-primary animate-spin" />;
+        return <Loader2 className="h-12 w-12 animate-spin text-blue-500" />;
       case 'success':
-        return <CheckCircle2 className="h-16 w-16 text-green-500" />;
+        return <CheckCircle2 className="h-12 w-12 text-green-500" />;
       case 'error':
-        return <XCircle className="h-16 w-16 text-destructive" />;
+        return <XCircle className="h-12 w-12 text-red-500" />;
     }
   };
 
-  const getStatusTitle = () => {
+  const getTitle = () => {
     switch (status) {
       case 'processing':
-        return 'Подключение устройства';
+        return 'Подключение устройства...';
       case 'success':
-        return 'Успешно подключено';
+        return 'Успешно подключено!';
       case 'error':
         return 'Ошибка подключения';
     }
   };
 
   return (
-    <div className="container max-w-2xl mx-auto px-4 py-12">
-      <Card>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            {getStatusIcon()}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex flex-col items-center space-y-4">
+            {getIcon()}
+            <CardTitle className="text-center">{getTitle()}</CardTitle>
+            <CardDescription className="text-center">{message}</CardDescription>
           </div>
-          <CardTitle className="text-2xl">{getStatusTitle()}</CardTitle>
-          <CardDescription className="text-base mt-2">
-            {message}
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground text-center">
-              {progress < 100 ? 'Обработка подключения...' : 'Готово'}
-            </p>
-          </div>
 
+        <CardContent className="space-y-4">
           {status === 'success' && (
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-medium">Что дальше?</p>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Terra API автоматически отправит ваши данные через webhook</li>
-                <li>Данные появятся на дашборде в течение нескольких минут</li>
-                <li>Вы можете синхронизировать данные вручную на странице интеграций</li>
-              </ul>
-            </div>
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                Ваше устройство подключено. Данные будут автоматически синхронизироваться каждые 6 часов.
+              </AlertDescription>
+            </Alert>
           )}
 
-          <div className="flex justify-center gap-3 pt-4">
+          {status === 'error' && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription>
+                {message}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex flex-col gap-2">
             {status === 'success' && (
-              <Button
-                onClick={() => navigate('/integrations')}
-                variant="default"
-              >
-                Вернуться к интеграциям
+              <Button onClick={() => navigate('/integrations')} className="w-full">
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Перейти к интеграциям
               </Button>
             )}
+
             {status === 'error' && (
-              <Button
-                onClick={() => navigate('/integrations')}
-                variant="outline"
-              >
-                Попробовать снова
-              </Button>
+              <>
+                <Button onClick={() => navigate('/integrations')} className="w-full">
+                  Попробовать снова
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full"
+                >
+                  Вернуться в дашборд
+                </Button>
+              </>
             )}
           </div>
         </CardContent>
