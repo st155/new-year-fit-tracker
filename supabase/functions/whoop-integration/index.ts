@@ -38,7 +38,7 @@ serve(async (req) => {
 
     // Получить URL авторизации Whoop
     if (action === 'get-auth-url') {
-      const redirectUri = `${req.headers.get('origin')}/integrations?whoop_callback=true`;
+      const redirectUri = `${req.headers.get('origin')}/integrations/whoop/callback`;
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
@@ -49,7 +49,7 @@ serve(async (req) => {
         `scope=${encodeURIComponent(scope)}&` +
         `state=${state}`;
 
-      console.log('Generated Whoop auth URL');
+      console.log('Generated Whoop auth URL:', { redirectUri });
 
       return new Response(
         JSON.stringify({ authUrl }),
@@ -60,7 +60,7 @@ serve(async (req) => {
     // Обменять код на токен
     if (action === 'exchange-code') {
       const { code } = await req.json();
-      const redirectUri = `${req.headers.get('origin')}/integrations?whoop_callback=true`;
+      const redirectUri = `${req.headers.get('origin')}/integrations/whoop/callback`;
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
         method: 'POST',
