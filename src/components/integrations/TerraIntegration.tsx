@@ -55,13 +55,11 @@ const PROVIDER_NAMES: Record<string, string> = {
 };
 
 const AVAILABLE_PROVIDERS = [
-  'GARMIN',
-  'FITBIT',
+  'ULTRAHUMAN',
   'OURA',
+  'GARMIN',
   'WITHINGS',
   'POLAR',
-  'SUUNTO',
-  'ULTRAHUMAN',
 ];
 
 export function TerraIntegration() {
