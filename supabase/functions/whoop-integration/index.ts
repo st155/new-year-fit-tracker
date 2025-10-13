@@ -379,25 +379,49 @@ async function syncWhoopData(
         // Recovery и Strain относятся к дате окончания цикла (утро после сна)
         const cycleDate = new Date(cycle.end).toISOString().split('T')[0];
         
-        // Recovery score
-        if (cycle.score?.recovery_score !== undefined) {
-          const metricId = await getOrCreateMetric(
-            supabase,
-            userId,
-            'Recovery Score',
-            'recovery',
-            '%',
-            'whoop'
+        // Получаем Recovery score для цикла (отдельный API endpoint)
+        try {
+          const recoveryResponse = await fetch(
+            `https://api.prod.whoop.com/developer/v2/cycle/${cycle.id}/recovery`,
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+              },
+            }
           );
 
-          await supabase.from('metric_values').upsert({
-            user_id: userId,
-            metric_id: metricId,
-            value: cycle.score.recovery_score,
-            measurement_date: cycleDate,
-            external_id: `whoop_recovery_${cycle.id}`,
-            source_data: { cycle_id: cycle.id, raw: cycle.score },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          if (recoveryResponse.ok) {
+            const recoveryData = await recoveryResponse.json();
+            
+            // Проверяем что recovery scored (не в калибровке)
+            if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined) {
+              const metricId = await getOrCreateMetric(
+                supabase,
+                userId,
+                'Recovery Score',
+                'recovery',
+                '%',
+                'whoop'
+              );
+
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: metricId,
+                value: recoveryData.score.recovery_score,
+                measurement_date: cycleDate,
+                external_id: `whoop_recovery_${cycle.id}`,
+                source_data: { 
+                  cycle_id: cycle.id, 
+                  raw: recoveryData.score,
+                  user_calibrating: recoveryData.user_calibrating 
+                },
+              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+            } else {
+              console.log(`Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
         }
 
         // Strain
