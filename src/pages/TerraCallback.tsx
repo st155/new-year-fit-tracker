@@ -14,37 +14,72 @@ export default function TerraCallback() {
   const [message, setMessage] = useState('Обработка подключения...');
 
   useEffect(() => {
-    const success = searchParams.get('success');
-    const error = searchParams.get('error');
-    const reference = searchParams.get('reference');
+    const run = async () => {
+      const success = searchParams.get('success');
+      const statusParam = searchParams.get('status');
+      const errorParam = searchParams.get('error') || searchParams.get('message');
+      const reference = searchParams.get('reference') || searchParams.get('reference_id');
 
-    console.log('Terra callback:', { success, error, reference });
+      console.log('Terra callback:', { success, statusParam, errorParam, reference });
 
-    // Проверяем ошибки от Terra
-    if (error) {
-      setStatus('error');
-      setMessage(decodeURIComponent(error));
-      setTimeout(() => navigate('/integrations'), 5000);
-      return;
-    }
+      // Явная ошибка от Terra/провайдера
+      if (errorParam) {
+        setStatus('error');
+        setMessage(decodeURIComponent(errorParam));
+        setTimeout(() => navigate('/integrations'), 5000);
+        return;
+      }
 
-    // Если success=true, Terra успешно подключил устройство
-    // Webhook auth уже должен был создать запись в terra_tokens
-    if (success === 'true') {
-      // Даем время webhook'у обработаться (обычно он срабатывает мгновенно)
-      setTimeout(() => {
+      // Частые варианты успешного ответа Terra Widget
+      const widgetSuccess =
+        success === 'true' ||
+        statusParam === 'success' ||
+        searchParams.get('connected') === 'true' ||
+        searchParams.get('widget_success') === 'true';
+
+      if (widgetSuccess) {
         setStatus('success');
         setMessage('Устройство успешно подключено!');
-        
-        // Перенаправляем на страницу интеграций через 2 секунды
         setTimeout(() => navigate('/integrations'), 2000);
-      }, 1500);
-    } else {
-      // Нет явной ошибки, но и не success
-      setStatus('error');
-      setMessage('Не удалось подтвердить подключение');
-      setTimeout(() => navigate('/integrations'), 5000);
-    }
+        return;
+      }
+
+      // Фоллбек: проверяем, появился ли активный terra_token для пользователя
+      try {
+        setStatus('processing');
+        setMessage('Проверяем подключение...');
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: userRes } = await supabase.auth.getUser();
+        const userId = userRes.user?.id;
+
+        if (userId) {
+          const { data: tokens, error } = await supabase
+            .from('terra_tokens')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .limit(1);
+
+          if (!error && tokens && tokens.length > 0) {
+            setStatus('success');
+            setMessage('Устройство успешно подключено!');
+            setTimeout(() => navigate('/integrations'), 1500);
+            return;
+          }
+        }
+
+        setStatus('error');
+        setMessage('Не удалось подтвердить подключение');
+        setTimeout(() => navigate('/integrations'), 5000);
+      } catch (e) {
+        console.error('Terra callback check error', e);
+        setStatus('error');
+        setMessage('Не удалось подтвердить подключение');
+        setTimeout(() => navigate('/integrations'), 5000);
+      }
+    };
+
+    run();
   }, [searchParams, navigate]);
 
   const getIcon = () => {
