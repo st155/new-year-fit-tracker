@@ -300,7 +300,15 @@ async function syncWhoopData(
     });
 
     if (!refreshResponse.ok) {
-      throw new Error('Failed to refresh token');
+      const errorText = await refreshResponse.text();
+      console.error('Token refresh failed:', {
+        status: refreshResponse.status,
+        statusText: refreshResponse.statusText,
+        error: errorText,
+        tokenExpiresAt: token.expires_at,
+        now: now.toISOString()
+      });
+      throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
     }
 
     const refreshData = await refreshResponse.json();
