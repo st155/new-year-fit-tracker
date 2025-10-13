@@ -108,8 +108,20 @@ export function TerraIntegration() {
         throw new Error('No widget URL received');
       }
 
-      // Redirect to widget page instead of opening new window
-      window.location.href = data.url;
+      // Открываем в новом окне для предотвращения релоада страницы
+      const authWindow = window.open(data.url, '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+      if (authWindow) {
+        const checkClosed = setInterval(() => {
+          if (authWindow.closed) {
+            clearInterval(checkClosed);
+            setConnectingProvider(null);
+            setTimeout(() => checkStatus(), 2000);
+          }
+        }, 1000);
+      } else {
+        // Fallback - если popup заблокирован
+        window.location.href = data.url;
+      }
     } catch (error: any) {
       console.error('Widget load error:', error);
       toast({
