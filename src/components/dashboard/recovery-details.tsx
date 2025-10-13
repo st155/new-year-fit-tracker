@@ -54,7 +54,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
         .eq('user_id', user.id)
         .gte('measurement_date', startDate)
         .lte('measurement_date', endDate)
-        .in('user_metrics.metric_name', ['Recovery Score', 'HRV', 'Resting Heart Rate', 'Sleep Performance', 'Sleep Efficiency'])
+        .in('user_metrics.metric_name', ['Recovery Score', 'HRV', 'HRV RMSSD', 'Resting Heart Rate', 'Sleep Performance', 'Sleep Efficiency'])
         .order('measurement_date', { ascending: false });
 
       // Группируем данные по датам
@@ -71,6 +71,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
             groupedData[date].recovery_score = item.value;
             break;
           case 'HRV':
+          case 'HRV RMSSD':
             groupedData[date].hrv = item.value;
             break;
           case 'Resting Heart Rate':
