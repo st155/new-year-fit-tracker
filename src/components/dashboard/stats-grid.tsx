@@ -240,13 +240,23 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         .order('created_at', { ascending: false })
         .limit(2);
 
-      // Получаем Steps за последние дни
+      // Получаем Steps за последние 24 часа из metric_values (Terra sources)
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayDate = yesterday.toISOString().split('T')[0];
+      const todayDate = now.toISOString().split('T')[0];
+      
       const { data: stepsData } = await supabase
-        .from('daily_health_summary')
-        .select('steps, date')
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          user_metrics!inner(metric_name, source)
+        `)
         .eq('user_id', user.id)
-        .not('steps', 'is', null)
-        .order('date', { ascending: false })
+        .eq('user_metrics.metric_name', 'Steps')
+        .in('measurement_date', [todayDate, yesterdayDate])
+        .order('measurement_date', { ascending: false })
         .limit(2);
 
       // Рассчитываем изменения для веса, процента жира, Recovery и Steps
@@ -302,12 +312,12 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         }
       }
 
-      // Обрабатываем данные Steps
+      // Обрабатываем данные Steps из metric_values
       if (stepsData && stepsData.length > 0) {
-        currentSteps = stepsData[0].steps;
+        currentSteps = stepsData[0].value;
         if (stepsData.length > 1) {
-          const current = stepsData[0].steps;
-          const previous = stepsData[1].steps;
+          const current = stepsData[0].value;
+          const previous = stepsData[1].value;
           stepsChange = Math.round(((current - previous) / previous) * 100);
         }
       }
