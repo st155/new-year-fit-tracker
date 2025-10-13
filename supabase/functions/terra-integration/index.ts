@@ -131,26 +131,33 @@ serve(async (req) => {
           startDate.setDate(startDate.getDate() - 7);
           const start = startDate.toISOString().split('T')[0];
 
+          // Правильный endpoint Terra API для запроса данных
           const syncResponse = await fetch(
-            `https://api.tryterra.co/v2/data/${token.terra_user_id}`,
+            `https://api.tryterra.co/v2/data/${token.terra_user_id}?start_date=${start}&end_date=${endDate}&types=body,activity,daily,sleep,nutrition`,
             {
               method: 'GET',
               headers: {
                 'Accept': 'application/json',
                 'dev-id': terraDevId,
                 'x-api-key': terraApiKey,
-                'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                types: ['body', 'activity', 'daily', 'sleep', 'nutrition'],
-                start_date: start,
-                end_date: endDate,
-              }),
             }
           );
 
           if (syncResponse.ok) {
-            console.log(`Sync initiated for ${token.provider}`);
+            const responseData = await syncResponse.json();
+            console.log(`Sync response for ${token.provider}:`, responseData);
+            
+            // Обрабатываем полученные данные напрямую
+            if (responseData.data) {
+              for (const dataItem of responseData.data) {
+                await processTerraData(supabase, {
+                  type: dataItem.type || 'daily',
+                  user: { user_id: token.terra_user_id, provider: token.provider },
+                  data: [dataItem]
+                });
+              }
+            }
             
             // Update last_sync_date
             await supabase
@@ -158,7 +165,8 @@ serve(async (req) => {
               .update({ last_sync_date: new Date().toISOString() })
               .eq('id', token.id);
           } else {
-            console.error(`Sync failed for ${token.provider}:`, await syncResponse.text());
+            const errorText = await syncResponse.text();
+            console.error(`Sync failed for ${token.provider}:`, errorText);
           }
         } catch (error) {
           console.error(`Error syncing ${token.provider}:`, error);
