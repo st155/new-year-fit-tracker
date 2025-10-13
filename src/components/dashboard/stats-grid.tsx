@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Target, Zap, Award, Heart, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Zap, Award, Heart, Activity, Footprints } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { WeightProgressDetail } from '@/components/detail/WeightProgressDetail';
@@ -498,27 +498,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
 
   // Рендер для участника
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <StatCard
-        title="Recovery Score"
-        value={stats.recovery?.current ? Math.round(stats.recovery.current) : "—"}
-        unit="%"
-        variant={stats.recovery?.current && stats.recovery.current >= 70 ? "success" : 
-                stats.recovery?.current && stats.recovery.current >= 50 ? "default" : "default"}
-        change={stats.recovery?.change}
-        icon={<Heart className="w-4 h-4" />}
-        compact
-      />
-      <StatCard
-        title="Шаги"
-        value={stats.steps?.current ? stats.steps.current.toLocaleString() : "—"}
-        unit=""
-        target={stats.steps?.target?.toLocaleString()}
-        variant={stats.steps?.current && stats.steps.current >= 10000 ? "success" : "default"}
-        change={stats.steps?.change}
-        icon={<Activity className="w-4 h-4" />}
-        compact
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
         title="Процент жира"
         value={stats.bodyFat?.current ? stats.bodyFat.current.toFixed(1) : "—"}
@@ -537,6 +517,27 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         change={stats.weight?.change}
         icon={<TrendingDown className="w-4 h-4" />}
         onClick={() => setActiveDetail('weight')}
+        compact
+      />
+      <StatCard
+        title="Recovery Score"
+        value={stats.recovery?.current ? Math.round(stats.recovery.current) : "—"}
+        unit="%"
+        variant={stats.recovery?.current && stats.recovery.current >= 70 ? "success" : 
+                stats.recovery?.current && stats.recovery.current >= 50 ? "default" : "default"}
+        change={stats.recovery?.change}
+        icon={<Heart className="w-4 h-4" />}
+        compact
+      />
+      <StatCard
+        title="Steps"
+        value={stats.steps?.current ? stats.steps.current.toLocaleString() : "—"}
+        unit=""
+        target={stats.steps?.target?.toLocaleString()}
+        variant={stats.steps?.current && stats.steps.current >= 10000 ? "success" : "default"}
+        change={stats.steps?.change}
+        icon={<Footprints className="w-4 h-4" />}
+        compact
       />
       <StatCard
         title="Подтягивания"
@@ -547,14 +548,6 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         change={stats.pullUps?.change}
         icon={<TrendingUp className="w-4 h-4" />}
         onClick={() => setActiveDetail('pullUps')}
-      />
-      <StatCard
-        title="Место в рейтинге"
-        value={stats.ranking}
-        unit="/8"
-        variant="default"
-        change={1}
-        icon={<Award className="w-4 h-4" />}
       />
     </div>
   );
