@@ -190,15 +190,15 @@ export default function FitnessData() {
 
     if (!metrics) return result;
 
-    // Фильтруем метрики по источнику ДО обработки
-    const filteredMetrics = selectedSource === 'all' 
-      ? metrics 
-      : metrics.filter(metric => metric.source?.toLowerCase() === selectedSource);
-
     const metricValues: { [key: string]: any } = {};
 
-    // Обрабатываем отфильтрованные метрики
-    filteredMetrics.forEach(metric => {
+    // Обрабатываем метрики и фильтруем по источнику
+    metrics.forEach(metric => {
+      // Фильтруем по источнику на уровне metric
+      if (selectedSource !== 'all' && metric.source?.toLowerCase() !== selectedSource) {
+        return; // Пропускаем эту метрику, если источник не совпадает
+      }
+
       const values = (metric as any).metric_values || [];
       if (values.length === 0) return;
       
