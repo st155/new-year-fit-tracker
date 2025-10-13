@@ -39,8 +39,30 @@ export default function TerraCallback() {
 
       if (widgetSuccess) {
         setStatus('success');
-        setMessage('Устройство успешно подключено!');
-        setTimeout(() => navigate('/integrations'), 2000);
+        setMessage('Устройство успешно подключено! Запускаем синхронизацию данных...');
+        
+        // Автоматически запускаем синхронизацию данных после подключения
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          setMessage('Синхронизируем данные...');
+          
+          const { data, error } = await supabase.functions.invoke('terra-integration', {
+            body: { action: 'sync-data' }
+          });
+          
+          if (error) {
+            console.error('Sync error:', error);
+            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+          } else {
+            console.log('Sync initiated:', data);
+            setMessage('Устройство подключено и данные синхронизированы!');
+          }
+        } catch (e) {
+          console.error('Sync error:', e);
+          setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+        }
+        
+        setTimeout(() => navigate('/integrations'), 3000);
         return;
       }
 
@@ -62,8 +84,28 @@ export default function TerraCallback() {
 
           if (!error && tokens && tokens.length > 0) {
             setStatus('success');
-            setMessage('Устройство успешно подключено!');
-            setTimeout(() => navigate('/integrations'), 1500);
+            setMessage('Устройство успешно подключено! Запускаем синхронизацию...');
+            
+            // Автоматически запускаем синхронизацию
+            try {
+              setMessage('Синхронизируем данные...');
+              const { data, error: syncError } = await supabase.functions.invoke('terra-integration', {
+                body: { action: 'sync-data' }
+              });
+              
+              if (syncError) {
+                console.error('Sync error:', syncError);
+                setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+              } else {
+                console.log('Sync initiated:', data);
+                setMessage('Устройство подключено и данные синхронизированы!');
+              }
+            } catch (e) {
+              console.error('Sync error:', e);
+              setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            }
+            
+            setTimeout(() => navigate('/integrations'), 3000);
             return;
           }
         }
