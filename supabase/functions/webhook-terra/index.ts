@@ -588,6 +588,7 @@ async function processTerraData(supabase: any, payload: any) {
             }
       }
     }
+    }
     
     if (payload.type === 'sleep') {
       console.log('📊 Processing sleep data');
