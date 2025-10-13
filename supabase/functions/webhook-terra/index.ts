@@ -264,6 +264,7 @@ async function processTerraData(supabase: any, payload: any) {
         
         if (activity.active_durations?.length > 0) {
           for (const workout of activity.active_durations) {
+            const externalId = `terra_${provider}_${workout.start_time}`;
             const { error: workoutError } = await supabase.from('workouts').upsert({
               user_id: userId,
               workout_type: workout.activity_type || 'Activity',
@@ -274,7 +275,7 @@ async function processTerraData(supabase: any, payload: any) {
               heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
               heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
               source: provider.toLowerCase(),
-              external_id: `terra_${provider}_${workout.start_time}`,
+              external_id,
             }, {
               onConflict: 'external_id',
               ignoreDuplicates: true,
@@ -282,6 +283,102 @@ async function processTerraData(supabase: any, payload: any) {
             
             if (workoutError) {
               console.error('❌ Error upserting workout:', workoutError);
+            } else {
+              // Additionally store key workout metrics in metric_values for Whoop dashboard
+              try {
+                const measurementDate = (workout.start_time || activity.start_time || activity.timestamp || new Date().toISOString()).split('T')[0];
+                const source = provider.toLowerCase();
+
+                // Average Heart Rate
+                const avgHr = activity.heart_rate_data?.avg_hr_bpm;
+                if (typeof avgHr === 'number') {
+                  const { data: avgHrMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Average Heart Rate',
+                    p_metric_category: 'workout',
+                    p_unit: 'bpm',
+                    p_source: source,
+                  });
+                  if (avgHrMetricId) {
+                    await supabase.from('metric_values').insert({
+                      user_id: userId,
+                      metric_id: avgHrMetricId,
+                      value: avgHr,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    });
+                  }
+                }
+
+                // Max Heart Rate
+                const maxHr = activity.heart_rate_data?.max_hr_bpm;
+                if (typeof maxHr === 'number') {
+                  const { data: maxHrMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Max Heart Rate',
+                    p_metric_category: 'workout',
+                    p_unit: 'bpm',
+                    p_source: source,
+                  });
+                  if (maxHrMetricId) {
+                    await supabase.from('metric_values').insert({
+                      user_id: userId,
+                      metric_id: maxHrMetricId,
+                      value: maxHr,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    });
+                  }
+                }
+
+                // Workout Calories
+                const calories = activity.calories_data?.total_burned_calories;
+                if (typeof calories === 'number') {
+                  const { data: caloriesMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Workout Calories',
+                    p_metric_category: 'workout',
+                    p_unit: 'kcal',
+                    p_source: source,
+                  });
+                  if (caloriesMetricId) {
+                    await supabase.from('metric_values').insert({
+                      user_id: userId,
+                      metric_id: caloriesMetricId,
+                      value: calories,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    });
+                  }
+                }
+
+                // Workout Strain (if provided by provider)
+                const strain = activity.score?.strain ?? activity.strain_score ?? workout.strain_score;
+                if (typeof strain === 'number') {
+                  const { data: strainMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Workout Strain',
+                    p_metric_category: 'workout',
+                    p_unit: '',
+                    p_source: source,
+                  });
+                  if (strainMetricId) {
+                    await supabase.from('metric_values').insert({
+                      user_id: userId,
+                      metric_id: strainMetricId,
+                      value: strain,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    });
+                  }
+                }
+              } catch (e) {
+                console.error('⚠️ Error storing workout metrics:', e);
+              }
             }
           }
         }
@@ -352,11 +449,175 @@ async function processTerraData(supabase: any, payload: any) {
     }
     
     if (payload.type === 'sleep') {
-      console.log('📊 Processing sleep data - currently not implemented');
+      console.log('📊 Processing sleep data');
+      for (const sleep of data) {
+        try {
+          const start = sleep.start_time || sleep.sleep_start_time || sleep.timestamp;
+          const end = sleep.end_time || sleep.sleep_end_time;
+          let durationSeconds = sleep.duration_seconds || sleep.duration_sec || sleep.duration || null;
+          if (!durationSeconds && start && end) {
+            durationSeconds = Math.max(0, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000));
+          }
+          if (durationSeconds) {
+            const hours = Math.round((durationSeconds / 3600) * 10) / 10;
+            const measurementDate = (start || end || new Date().toISOString()).split('T')[0];
+            const { data: sleepMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Duration',
+              p_metric_category: 'sleep',
+              p_unit: 'h',
+              p_source: provider.toLowerCase(),
+            });
+            if (sleepMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: sleepMetricId,
+                value: hours,
+                measurement_date: measurementDate,
+                source_data: sleep,
+              });
+            }
+          }
+        } catch (e) {
+          console.error('⚠️ Error processing sleep item:', e);
+        }
+      }
     }
     
     if (payload.type === 'daily') {
-      console.log('📊 Processing daily data - currently not implemented');
+      console.log('📊 Processing daily data');
+      for (const daily of data) {
+        try {
+          const dateStr = (daily.day_start || daily.start_time || daily.timestamp || daily.date || new Date().toISOString()).split('T')[0];
+          const source = provider.toLowerCase();
+
+          // Recovery Score (%)
+          const recovery = daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
+          if (typeof recovery === 'number') {
+            const { data: recMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Recovery Score',
+              p_metric_category: 'recovery',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (recMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: recMetricId,
+                value: recovery,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+
+          // Sleep Efficiency / Performance / Need Fulfillment (%) if available
+          const sleepEfficiency = daily.sleep_efficiency_percentage ?? daily.sleep?.efficiency_percentage;
+          if (typeof sleepEfficiency === 'number') {
+            const { data: effMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Efficiency',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (effMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: effMetricId,
+                value: sleepEfficiency,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+
+          const sleepPerformance = daily.sleep_performance_percentage ?? daily.sleep?.performance_percentage;
+          if (typeof sleepPerformance === 'number') {
+            const { data: perfMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Performance',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (perfMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: perfMetricId,
+                value: sleepPerformance,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+
+          const sleepNeed = daily.sleep_need_fulfillment_percentage ?? daily.sleep?.need_fulfillment_percentage;
+          if (typeof sleepNeed === 'number') {
+            const { data: needMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Need Fulfillment',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (needMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: needMetricId,
+                value: sleepNeed,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+
+          // Resting Heart Rate (bpm)
+          const rhr = daily.resting_hr_bpm ?? daily.resting_heart_rate_bpm ?? daily.resting_hr ?? daily.resting_heart_rate;
+          if (typeof rhr === 'number') {
+            const { data: rhrMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Resting Heart Rate',
+              p_metric_category: 'cardio',
+              p_unit: 'bpm',
+              p_source: source,
+            });
+            if (rhrMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: rhrMetricId,
+                value: rhr,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+
+          // HRV RMSSD (ms)
+          const hrv = daily.hrv_rmssd_ms ?? daily.hrv?.rmssd_ms ?? daily.hrv?.rmssd_milli;
+          if (typeof hrv === 'number') {
+            const { data: hrvMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'HRV RMSSD',
+              p_metric_category: 'recovery',
+              p_unit: 'ms',
+              p_source: source,
+            });
+            if (hrvMetricId) {
+              await supabase.from('metric_values').insert({
+                user_id: userId,
+                metric_id: hrvMetricId,
+                value: hrv,
+                measurement_date: dateStr,
+                source_data: daily,
+              });
+            }
+          }
+        } catch (e) {
+          console.error('⚠️ Error processing daily item:', e);
+        }
+      }
     }
 
     console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
