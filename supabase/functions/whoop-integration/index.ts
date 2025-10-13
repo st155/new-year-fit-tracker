@@ -33,7 +33,8 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { action } = await req.json();
+    const body = await req.json();
+    const { action, code } = body;
     console.log('Whoop integration action:', { action, userId: user.id });
 
     // Получить URL авторизации Whoop
@@ -59,7 +60,6 @@ serve(async (req) => {
 
     // Обменять код на токен
     if (action === 'exchange-code') {
-      const { code } = await req.json();
       const redirectUri = `${req.headers.get('origin')}/integrations/whoop/callback`;
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
