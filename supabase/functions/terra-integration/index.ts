@@ -243,13 +243,60 @@ serve(async (req) => {
         throw new Error('Unauthorized');
       }
 
-      const { data: tokens } = await supabase
+      // Read current active tokens
+      let { data: tokens } = await supabase
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Раньше мы исключали тестовые токены (terra_test_*), но для диагностики учитываем все
+      // Reconcile with Terra Users API (in case webhook 'auth' was not delivered)
+      try {
+        const usersResp = await fetch(`https://api.tryterra.co/v2/users?reference_id=${user.id}` , {
+          headers: { 'dev-id': terraDevId, 'x-api-key': terraApiKey }
+        });
+        if (usersResp.ok) {
+          const usersJson = await usersResp.json();
+          const terraUsers: Array<{ user_id: string; provider: string }>
+            = usersJson?.users || usersJson?.data || [];
+
+          const existingByProvider = new Set((tokens || []).map(t => (t.provider || '').toUpperCase()));
+          const inserts: any[] = [];
+          for (const u of terraUsers) {
+            const provider = (u.provider || '').toUpperCase();
+            if (!provider) continue;
+            if (!existingByProvider.has(provider)) {
+              inserts.push({
+                user_id: user.id,
+                terra_user_id: u.user_id,
+                provider,
+                is_active: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+            }
+          }
+          if (inserts.length > 0) {
+            console.log('Reconciling Terra users -> inserting tokens:', inserts.map(i => i.provider));
+            const { error: insertErr } = await supabase.from('terra_tokens').insert(inserts);
+            if (insertErr) console.error('Failed to reconcile tokens:', insertErr);
+            // Refresh tokens after reconciliation
+            const res = await supabase
+              .from('terra_tokens')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('is_active', true);
+            tokens = res.data || tokens;
+          }
+        } else {
+          const txt = await usersResp.text();
+          console.warn('Terra Users API failed:', usersResp.status, txt);
+        }
+      } catch (e) {
+        console.warn('Terra Users API check error:', e?.message || String(e));
+      }
+
+      // Build providers payload
       const providers = (tokens || []).map(t => ({
         provider: t.provider,
         connectedAt: t.created_at,
