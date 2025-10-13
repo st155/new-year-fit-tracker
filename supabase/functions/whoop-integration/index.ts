@@ -343,7 +343,8 @@ async function syncWhoopData(
 
     if (cyclesData.records && cyclesData.records.length > 0) {
       for (const cycle of cyclesData.records) {
-        const cycleDate = new Date(cycle.start).toISOString().split('T')[0];
+        // Recovery и Strain относятся к дате окончания цикла (утро после сна)
+        const cycleDate = new Date(cycle.end).toISOString().split('T')[0];
         
         // Recovery score
         if (cycle.score?.recovery_score !== undefined) {
