@@ -33,24 +33,51 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { action, provider } = await req.json();
+    const body = await req.json();
+    const { action, provider } = body;
     console.log('Terra integration action:', { action, provider, userId: user.id });
 
-    // Получить URL авторизации Terra
-    if (action === 'get-auth-url') {
-      // Для Whoop используем специальный redirect URL
-      const whoopDomain = Deno.env.get('WHOOP_DOMAIN');
-      const isWhoop = provider === 'WHOOP';
+    // Generate Widget Session (for iframe embedding)
+    if (action === 'generate-widget-session') {
+      const authSuccessUrl = `${req.headers.get('origin')}/integrations`;
+      const authFailureUrl = `${req.headers.get('origin')}/integrations`;
       
-      let authSuccessUrl = `${req.headers.get('origin')}/terra-callback`;
-      let authFailureUrl = `${req.headers.get('origin')}/terra-callback`;
-      
-      // Если Whoop и домен настроен, используем custom redirect
-      if (isWhoop && whoopDomain) {
-        console.log('Using Whoop custom domain:', whoopDomain);
-        authSuccessUrl = `https://${whoopDomain}/auth/whoop/oauth2`;
-        authFailureUrl = `https://${whoopDomain}/auth/whoop/oauth2`;
+      const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'dev-id': terraDevId,
+          'x-api-key': terraApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference_id: user.id,
+          providers: 'GARMIN,FITBIT,WITHINGS,OURA,POLAR,SUUNTO,PELOTON',
+          language: 'en',
+          auth_success_redirect_url: authSuccessUrl,
+          auth_failure_redirect_url: authFailureUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Terra widget error:', error);
+        throw new Error(`Terra API error: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('Terra widget session created:', data);
+
+      return new Response(
+        JSON.stringify({ url: data.url, sessionId: data.session_id }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Получить URL авторизации Terra (legacy, for specific provider)
+    if (action === 'get-auth-url') {
+      const authSuccessUrl = `${req.headers.get('origin')}/terra-callback`;
+      const authFailureUrl = `${req.headers.get('origin')}/terra-callback`;
       
       const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
         method: 'POST',

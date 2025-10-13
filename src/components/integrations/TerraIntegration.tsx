@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { WhoopSetupWizard } from './WhoopSetupWizard';
 import { 
   Loader2, 
   CheckCircle, 
@@ -15,12 +13,13 @@ import {
   RefreshCw,
   Unlink,
   Activity,
+  Maximize2,
+  Minimize2,
+  Zap,
   Heart,
   Moon,
-  Zap,
   TrendingUp,
-  Watch,
-  Info
+  Watch
 } from 'lucide-react';
 
 interface TerraProvider {
@@ -62,13 +61,43 @@ export function TerraIntegration() {
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [showWhoopSetup, setShowWhoopSetup] = useState(false);
+  const [widgetUrl, setWidgetUrl] = useState<string | null>(null);
+  const [widgetLoading, setWidgetLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
 
   useEffect(() => {
     if (user) {
       checkStatus();
+      loadWidget();
     }
   }, [user]);
+
+  const loadWidget = async () => {
+    if (!user) return;
+    
+    setWidgetLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'generate-widget-session' },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error('No widget URL received');
+
+      setWidgetUrl(data.url);
+    } catch (error: any) {
+      console.error('Widget load error:', error);
+      toast({
+        title: 'Ошибка загрузки',
+        description: 'Не удалось загрузить Terra Widget',
+        variant: 'destructive',
+      });
+    } finally {
+      setWidgetLoading(false);
+    }
+  };
 
   const checkStatus = async () => {
     if (!user) return;
@@ -92,37 +121,7 @@ export function TerraIntegration() {
       });
     } catch (error: any) {
       console.error('Status check error:', error);
-    } finally {
       setLoading(false);
-    }
-  };
-
-  const connectProvider = async (provider: string) => {
-    if (!user) return;
-
-    // Whoop требует специальной настройки
-    if (provider === 'WHOOP') {
-      setShowWhoopSetup(true);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'get-auth-url', provider },
-      });
-
-      if (error) throw error;
-      if (!data?.authUrl) throw new Error('No auth URL received');
-
-      // Открываем окно авторизации Terra
-      window.location.href = data.authUrl;
-    } catch (error: any) {
-      console.error('Connect error:', error);
-      toast({
-        title: 'Ошибка подключения',
-        description: error.message || 'Не удалось подключить устройство',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -142,10 +141,8 @@ export function TerraIntegration() {
         description: 'Данные обновляются в фоне',
       });
 
-      // Обновляем статус через 2 секунды
       setTimeout(checkStatus, 2000);
       
-      // Очищаем кэши
       localStorage.removeItem('fitness_metrics_cache');
       window.dispatchEvent(new CustomEvent('terra-data-updated'));
     } catch (error: any) {
@@ -196,19 +193,6 @@ export function TerraIntegration() {
     );
   }
 
-  if (showWhoopSetup) {
-    return (
-      <div className="space-y-4">
-        <Button variant="outline" onClick={() => setShowWhoopSetup(false)}>
-          ← Назад к интеграциям
-        </Button>
-        <WhoopSetupWizard onComplete={() => {
-          setShowWhoopSetup(false);
-          checkStatus();
-        }} />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -268,95 +252,51 @@ export function TerraIntegration() {
         </Card>
       )}
 
-      {/* Available Providers */}
+      {/* Terra Widget */}
       <Card>
         <CardHeader>
-          <CardTitle>Доступные устройства</CardTitle>
-          <CardDescription>
-            Подключите ваши фитнес-трекеры для автоматической синхронизации данных
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Подключить устройство</CardTitle>
+              <CardDescription>
+                Выберите ваш фитнес-трекер для подключения
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="ready" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="ready">Готовые к использованию</TabsTrigger>
-              <TabsTrigger value="whoop">Whoop (требует настройки)</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="ready" className="mt-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Object.entries(PROVIDER_NAMES)
-                  .filter(([key]) => key !== 'WHOOP')
-                  .map(([key, name]) => {
-                    const Icon = PROVIDER_ICONS[key];
-                    const isConnected = status.providers.some((p) => p.name === key);
-                    
-                    return (
-                      <Button
-                        key={key}
-                        variant={isConnected ? 'outline' : 'default'}
-                        className="h-auto p-4 justify-start"
-                        onClick={() => !isConnected && connectProvider(key)}
-                        disabled={isConnected}
-                      >
-                        <Icon className="h-5 w-5 mr-3" />
-                        <span className="flex-1 text-left">{name}</span>
-                        {isConnected && (
-                          <Badge variant="secondary" className="ml-2">
-                            Подключено
-                          </Badge>
-                        )}
-                      </Button>
-                    );
-                  })}
-              </div>
-
-              <Alert>
-                <CheckCircle className="h-4 w-4 text-success" />
-                <AlertDescription>
-                  Эти устройства подключаются в один клик через Terra Widget
-                </AlertDescription>
-              </Alert>
-            </TabsContent>
-
-            <TabsContent value="whoop" className="mt-4 space-y-3">
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Whoop требует специальной настройки:</strong> собственный домен с DNS, регистрация в Whoop Developer Portal, координация с Terra Support для SSL сертификата. Процесс занимает 3-14 дней.
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                className="w-full h-auto p-4 justify-start"
-                variant={status.providers.some((p) => p.name === 'WHOOP') ? 'outline' : 'default'}
-                onClick={() => connectProvider('WHOOP')}
-                disabled={status.providers.some((p) => p.name === 'WHOOP')}
-              >
-                <Zap className="h-5 w-5 mr-3" />
-                <span className="flex-1 text-left">Whoop</span>
-                {status.providers.some((p) => p.name === 'WHOOP') ? (
-                  <Badge variant="secondary" className="ml-2">Подключено</Badge>
-                ) : (
-                  <Badge variant="secondary" className="ml-2">Настроить</Badge>
-                )}
-              </Button>
-
-              <div className="p-4 glass-card space-y-2 text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">Что потребуется:</p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Собственный домен с доступом к DNS</li>
-                  <li>Регистрация в Whoop Developer Portal</li>
-                  <li>Координация с Terra Support (SSL сертификат)</li>
-                  <li>Настройка Terra Dashboard</li>
-                  <li>Production Approval от Whoop (1-2 недели)</li>
-                </ul>
-              </div>
-            </TabsContent>
-          </Tabs>
+          {widgetLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : widgetUrl ? (
+            <div className={`relative ${isExpanded ? 'h-[600px]' : 'h-[400px]'} w-full transition-all duration-300`}>
+              <iframe
+                ref={iframeRef}
+                src={widgetUrl}
+                className="w-full h-full rounded-lg border"
+                allow="camera; microphone"
+                title="Terra Widget"
+              />
+            </div>
+          ) : (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Не удалось загрузить виджет подключения
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Alert className="mt-4">
-            <AlertCircle className="h-4 w-4" />
+            <CheckCircle className="h-4 w-4" />
             <AlertDescription>
               После подключения данные будут автоматически синхронизироваться каждые 6 часов
             </AlertDescription>
