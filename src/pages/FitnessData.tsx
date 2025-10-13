@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp } from "lucide-react";
+import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, TrendingUp, Watch } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
 import { IntegrationsCard } from "@/components/dashboard/integrations-card";
 import { DateNavigator } from "@/components/dashboard/DateNavigator";
+import { Button } from "@/components/ui/button";
 
 interface MetricCard {
   name: string;
@@ -25,6 +26,7 @@ interface DashboardData {
 }
 
 type TimeFilter = 'today' | 'week' | 'month';
+type SourceFilter = 'all' | 'whoop' | 'garmin' | 'ultrahuman';
 
 export default function FitnessData() {
   const { user } = useAuth();
@@ -33,6 +35,7 @@ export default function FitnessData() {
   
   const [loading, setLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<TimeFilter>('today');
+  const [selectedSource, setSelectedSource] = useState<SourceFilter>('all');
   const [dateOffset, setDateOffset] = useState(0);
   const [challengeGoals, setChallengeGoals] = useState<string[]>([]);
   const [data, setData] = useState<DashboardData>({
@@ -50,7 +53,7 @@ export default function FitnessData() {
     if (user && challengeGoals.length >= 0) {
       fetchDashboardData();
     }
-  }, [user, challengeGoals, selectedFilter, dateOffset]);
+  }, [user, challengeGoals, selectedFilter, dateOffset, selectedSource]);
 
   const fetchChallengeGoals = async () => {
     try {
@@ -191,18 +194,43 @@ export default function FitnessData() {
       const values = (metric as any).metric_values || [];
       if (values.length === 0) return;
       
-      const sortedValues = [...values].sort((a, b) => 
+      // Фильтрация по источнику
+      const filteredValues = selectedSource === 'all' 
+        ? values 
+        : values.filter((v: any) => metric.source === selectedSource);
+      
+      if (filteredValues.length === 0) return;
+      
+      const sortedValues = [...filteredValues].sort((a, b) => 
         new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
       );
       
-      // Calculate average for the period
-      const sum = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
-      const avgValue = sum / sortedValues.length;
+      // Для "all" (United Data) вычисляем среднее значение по источникам
+      let avgValue: number;
+      if (selectedSource === 'all' && values.length > 0) {
+        // Группируем по источникам и берем среднее
+        const sourceGroups: { [source: string]: number[] } = {};
+        values.forEach((v: any) => {
+          const source = metric.source;
+          if (!sourceGroups[source]) sourceGroups[source] = [];
+          sourceGroups[source].push(v.value);
+        });
+        
+        // Среднее по всем источникам
+        const sourceAverages = Object.values(sourceGroups).map(vals => 
+          vals.reduce((a, b) => a + b, 0) / vals.length
+        );
+        avgValue = sourceAverages.reduce((a, b) => a + b, 0) / sourceAverages.length;
+      } else {
+        const sum = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
+        avgValue = sum / sortedValues.length;
+      }
+      
       const latestValue = sortedValues[0]?.value;
       const previousValue = sortedValues[1]?.value;
 
       const currentValue = (selectedFilter === 'today' && metric.metric_name === 'Workout Strain')
-        ? sum
+        ? (selectedSource === 'all' ? avgValue : sortedValues.reduce((acc, v) => acc + (v.value || 0), 0))
         : (selectedFilter === 'today' ? latestValue : avgValue);
 
       metricValues[metric.metric_name] = {
@@ -500,6 +528,14 @@ export default function FitnessData() {
 
   const readinessColor = getReadinessColor(data.readiness.score);
 
+  const sourceOptions = [
+    { value: 'all', label: 'United Data', icon: Activity },
+    { value: 'whoop', label: 'Whoop', icon: Watch },
+    { value: 'garmin', label: 'Garmin', icon: Watch },
+    { value: 'ultrahuman', label: 'Ultrahuman', icon: Watch },
+  ];
+
+
   if (loading) {
     return (
       <div className="min-h-screen pb-24 px-4 pt-6 flex items-center justify-center">
@@ -511,11 +547,34 @@ export default function FitnessData() {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground tracking-wider mb-4">
-          FITNESS TRACKER DATA
-        </h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground tracking-wider">
+            FITNESS TRACKER DATA
+          </h1>
+          <p className="text-muted-foreground mt-1">Просмотр данных с ваших фитнес-устройств</p>
+        </div>
         
+        <div className="flex flex-wrap gap-2">
+          {sourceOptions.map((source) => {
+            const Icon = source.icon;
+            return (
+              <Button
+                key={source.value}
+                variant={selectedSource === source.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedSource(source.value as SourceFilter)}
+                className="gap-2"
+              >
+                <Icon className="w-4 h-4" />
+                {source.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="mb-6">
         <DateNavigator
           selectedFilter={selectedFilter}
           dateOffset={dateOffset}
