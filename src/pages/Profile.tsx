@@ -232,6 +232,19 @@ const ProfilePage = () => {
                   </div>
                   
                   <div>
+                    <Label htmlFor="user-id">User ID</Label>
+                    <Input
+                      id="user-id"
+                      value={user?.id || ''}
+                      disabled
+                      className="bg-muted font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your unique user identifier
+                    </p>
+                  </div>
+
+                  <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
