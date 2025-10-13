@@ -90,7 +90,7 @@ export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "vo2max", "row_2km"]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "row_2km"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
     body_fat: { value: "18.5", change: "-3%", subtitle: t('metrics.subtitles.fuller') },
     weight: { value: "72.0", change: "-2%", subtitle: t('metrics.subtitles.byLansey') },
