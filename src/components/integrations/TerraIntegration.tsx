@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { WhoopSetupWizard } from './WhoopSetupWizard';
 import { 
   Loader2, 
   CheckCircle, 
@@ -17,7 +19,8 @@ import {
   Moon,
   Zap,
   TrendingUp,
-  Watch
+  Watch,
+  Info
 } from 'lucide-react';
 
 interface TerraProvider {
@@ -59,6 +62,7 @@ export function TerraIntegration() {
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [showWhoopSetup, setShowWhoopSetup] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -95,6 +99,12 @@ export function TerraIntegration() {
 
   const connectProvider = async (provider: string) => {
     if (!user) return;
+
+    // Whoop требует специальной настройки
+    if (provider === 'WHOOP') {
+      setShowWhoopSetup(true);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('terra-integration', {
@@ -186,6 +196,20 @@ export function TerraIntegration() {
     );
   }
 
+  if (showWhoopSetup) {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowWhoopSetup(false)}>
+          ← Назад к интеграциям
+        </Button>
+        <WhoopSetupWizard onComplete={() => {
+          setShowWhoopSetup(false);
+          checkStatus();
+        }} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Connected Providers */}
@@ -193,7 +217,7 @@ export function TerraIntegration() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-success" />
               Подключенные устройства
             </CardTitle>
           </CardHeader>
@@ -253,30 +277,83 @@ export function TerraIntegration() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {Object.entries(PROVIDER_NAMES).map(([key, name]) => {
-              const Icon = PROVIDER_ICONS[key];
-              const isConnected = status.providers.some((p) => p.name === key);
-              
-              return (
-                <Button
-                  key={key}
-                  variant={isConnected ? 'outline' : 'default'}
-                  className="h-auto p-4 justify-start"
-                  onClick={() => !isConnected && connectProvider(key)}
-                  disabled={isConnected}
-                >
-                  <Icon className="h-5 w-5 mr-3" />
-                  <span className="flex-1 text-left">{name}</span>
-                  {isConnected && (
-                    <Badge variant="secondary" className="ml-2">
-                      Подключено
-                    </Badge>
-                  )}
-                </Button>
-              );
-            })}
-          </div>
+          <Tabs defaultValue="ready" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="ready">Готовые к использованию</TabsTrigger>
+              <TabsTrigger value="whoop">Whoop (требует настройки)</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="ready" className="mt-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Object.entries(PROVIDER_NAMES)
+                  .filter(([key]) => key !== 'WHOOP')
+                  .map(([key, name]) => {
+                    const Icon = PROVIDER_ICONS[key];
+                    const isConnected = status.providers.some((p) => p.name === key);
+                    
+                    return (
+                      <Button
+                        key={key}
+                        variant={isConnected ? 'outline' : 'default'}
+                        className="h-auto p-4 justify-start"
+                        onClick={() => !isConnected && connectProvider(key)}
+                        disabled={isConnected}
+                      >
+                        <Icon className="h-5 w-5 mr-3" />
+                        <span className="flex-1 text-left">{name}</span>
+                        {isConnected && (
+                          <Badge variant="secondary" className="ml-2">
+                            Подключено
+                          </Badge>
+                        )}
+                      </Button>
+                    );
+                  })}
+              </div>
+
+              <Alert>
+                <CheckCircle className="h-4 w-4 text-success" />
+                <AlertDescription>
+                  Эти устройства подключаются в один клик через Terra Widget
+                </AlertDescription>
+              </Alert>
+            </TabsContent>
+
+            <TabsContent value="whoop" className="mt-4 space-y-3">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Whoop требует специальной настройки:</strong> собственный домен с DNS, регистрация в Whoop Developer Portal, координация с Terra Support для SSL сертификата. Процесс занимает 3-14 дней.
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                className="w-full h-auto p-4 justify-start"
+                variant={status.providers.some((p) => p.name === 'WHOOP') ? 'outline' : 'default'}
+                onClick={() => connectProvider('WHOOP')}
+                disabled={status.providers.some((p) => p.name === 'WHOOP')}
+              >
+                <Zap className="h-5 w-5 mr-3" />
+                <span className="flex-1 text-left">Whoop</span>
+                {status.providers.some((p) => p.name === 'WHOOP') ? (
+                  <Badge variant="secondary" className="ml-2">Подключено</Badge>
+                ) : (
+                  <Badge variant="secondary" className="ml-2">Настроить</Badge>
+                )}
+              </Button>
+
+              <div className="p-4 glass-card space-y-2 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Что потребуется:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Собственный домен с доступом к DNS</li>
+                  <li>Регистрация в Whoop Developer Portal</li>
+                  <li>Координация с Terra Support (SSL сертификат)</li>
+                  <li>Настройка Terra Dashboard</li>
+                  <li>Production Approval от Whoop (1-2 недели)</li>
+                </ul>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <Alert className="mt-4">
             <AlertCircle className="h-4 w-4" />
