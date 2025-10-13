@@ -38,17 +38,19 @@ export function TodayActivity() {
 
       try {
         const now = new Date();
-        const localStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        const localEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // Используем текущую дату в UTC, чтобы синхронизироваться с базой данных
+        const utcNow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        const utcToday = utcNow.toISOString().split('T')[0];
         
-        // Загружаем тренировки из таблицы workouts
+        // Загружаем тренировки за последние 24 часа
+        const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        
+        // Загружаем тренировки из таблицы workouts (за последние 24 часа)
         const { data: workoutsData, error: workoutsError } = await supabase
           .from('workouts')
           .select('*')
           .eq('user_id', user.id)
-          .gte('start_time', localStart.toISOString())
-          .lte('start_time', localEnd.toISOString())
+          .gte('start_time', last24Hours.toISOString())
           .order('start_time', { ascending: false });
 
         if (workoutsError) {
@@ -56,9 +58,9 @@ export function TodayActivity() {
         }
 
         // Загружаем тренировки из Whoop (metric_values)
-        const yesterdayDate = new Date(now);
-        yesterdayDate.setDate(now.getDate() - 1);
-        const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+        const yesterdayDate = new Date(utcNow);
+        yesterdayDate.setUTCDate(utcNow.getUTCDate() - 1);
+        const yesterday = yesterdayDate.toISOString().split('T')[0];
 
         let whoopMetricsFinal: any[] = [];
         const { data: whoopToday, error: whoopError } = await supabase
@@ -68,7 +70,7 @@ export function TodayActivity() {
             user_metrics!inner(metric_name, metric_category, source)
           `)
           .eq('user_id', user.id)
-          .eq('measurement_date', today)
+          .eq('measurement_date', utcToday)
           .eq('user_metrics.metric_category', 'workout')
           .eq('user_metrics.source', 'whoop')
           .eq('user_metrics.metric_name', 'Workout Strain');
@@ -108,7 +110,7 @@ export function TodayActivity() {
             whoopWorkoutsMap.set(workoutId, {
               id: workoutId,
               workout_type: metric.notes || 'Whoop Workout',
-              start_time: metric.created_at || `${today}T12:00:00`, // Approximate start time
+              start_time: metric.created_at || `${utcToday}T12:00:00`, // Approximate start time
               end_time: null,
               duration_minutes: null,
               calories_burned: null,
@@ -170,7 +172,7 @@ export function TodayActivity() {
           .from('daily_health_summary')
           .select('steps, distance_km, active_calories')
           .eq('user_id', user.id)
-          .eq('date', today)
+          .eq('date', utcToday)
           .maybeSingle();
 
         if (stepsData) {
