@@ -251,7 +251,7 @@ function bufferToHex(buffer: ArrayBuffer): string {
     .join('');
 }
 
-// Функция обработки данных Terra (копия из webhook-terra)
+// Функция обработки данных Terra (синхронизирована с webhook-terra)
 async function processTerraData(supabase: any, payload: any) {
   try {
     console.log('🔍 Processing Terra data:', { 
@@ -278,7 +278,7 @@ async function processTerraData(supabase: any, payload: any) {
       .select('user_id, provider')
       .eq('terra_user_id', user.user_id)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (tokenError) {
       console.error('❌ Error fetching terra_tokens:', tokenError);
@@ -305,6 +305,7 @@ async function processTerraData(supabase: any, payload: any) {
         
         if (activity.active_durations?.length > 0) {
           for (const workout of activity.active_durations) {
+            const externalId = `terra_${provider}_${workout.start_time}`;
             const { error: workoutError } = await supabase.from('workouts').upsert({
               user_id: userId,
               workout_type: workout.activity_type || 'Activity',
@@ -315,7 +316,7 @@ async function processTerraData(supabase: any, payload: any) {
               heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
               heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
               source: provider.toLowerCase(),
-              external_id: `terra_${provider}_${workout.start_time}`,
+              external_id: externalId,
             }, {
               onConflict: 'external_id',
               ignoreDuplicates: true,
@@ -323,6 +324,108 @@ async function processTerraData(supabase: any, payload: any) {
             
             if (workoutError) {
               console.error('❌ Error upserting workout:', workoutError);
+            } else {
+              // Store workout metrics in metric_values
+              try {
+                const measurementDate = (workout.start_time || activity.start_time || activity.timestamp || new Date().toISOString()).split('T')[0];
+                const source = provider.toLowerCase();
+
+                // Average Heart Rate
+                const avgHr = activity.heart_rate_data?.avg_hr_bpm;
+                if (typeof avgHr === 'number') {
+                  const { data: avgHrMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Average Heart Rate',
+                    p_metric_category: 'cardio',
+                    p_unit: 'bpm',
+                    p_source: source,
+                  });
+                  if (avgHrMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: avgHrMetricId,
+                      value: avgHr,
+                      measurement_date: measurementDate,
+                      external_id: `terra_${provider}_avghr_${workout.start_time}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+
+                // Max Heart Rate
+                const maxHr = activity.heart_rate_data?.max_hr_bpm;
+                if (typeof maxHr === 'number') {
+                  const { data: maxHrMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Max Heart Rate',
+                    p_metric_category: 'cardio',
+                    p_unit: 'bpm',
+                    p_source: source,
+                  });
+                  if (maxHrMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: maxHrMetricId,
+                      value: maxHr,
+                      measurement_date: measurementDate,
+                      external_id: `terra_${provider}_maxhr_${workout.start_time}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+
+                // Workout Calories
+                const calories = activity.calories_data?.total_burned_calories;
+                if (typeof calories === 'number') {
+                  const { data: caloriesMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Workout Calories',
+                    p_metric_category: 'workout',
+                    p_unit: 'kcal',
+                    p_source: source,
+                  });
+                  if (caloriesMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: caloriesMetricId,
+                      value: calories,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+
+                // Workout Strain
+                const strain = activity.score?.strain ?? activity.strain_score ?? workout.strain_score;
+                if (typeof strain === 'number') {
+                  const { data: strainMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Workout Strain',
+                    p_metric_category: 'workout',
+                    p_unit: '',
+                    p_source: source,
+                  });
+                  if (strainMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: strainMetricId,
+                      value: strain,
+                      measurement_date: measurementDate,
+                      external_id: externalId,
+                      source_data: activity,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+              } catch (e) {
+                console.error('⚠️ Error storing workout metrics:', e);
+              }
             }
           }
         }
@@ -332,83 +435,373 @@ async function processTerraData(supabase: any, payload: any) {
     if (payload.type === 'body') {
       console.log('📊 Processing body data');
       for (const bodyData of data) {
-        console.log('Body item:', { 
-          hasWeight: !!bodyData.weight_kg,
-          hasFat: !!bodyData.body_fat_percentage,
-          timestamp: bodyData.timestamp
-        });
-        
-        if (bodyData.body_fat_percentage || bodyData.weight_kg) {
-          const { error: bodyError } = await supabase.from('body_composition').upsert({
-            user_id: userId,
-            measurement_date: bodyData.timestamp?.split('T')[0],
-            weight: bodyData.weight_kg,
-            body_fat_percentage: bodyData.body_fat_percentage,
-            muscle_mass: bodyData.muscle_mass_kg,
-            measurement_method: provider.toLowerCase(),
-          }, {
-            onConflict: 'user_id,measurement_date',
+        try {
+          // Terra возвращает measurements_data.measurements[] для Withings и других провайдеров
+          const measurements = bodyData.measurements_data?.measurements || [];
+          
+          console.log('Body item:', { 
+            hasMeasurements: measurements.length > 0,
+            hasDirectWeight: !!bodyData.weight_kg,
+            hasDirectFat: !!bodyData.body_fat_percentage,
           });
           
-          if (bodyError) {
-            console.error('❌ Error upserting body composition:', bodyError);
+          // Обрабатываем каждое измерение отдельно
+          for (const measurement of measurements) {
+            if (measurement.weight_kg || measurement.bodyfat_percentage) {
+              const measurementDate = measurement.measurement_time?.split('T')[0];
+              
+              if (!measurementDate) {
+                console.warn('⚠️ Skipping measurement without date');
+                continue;
+              }
+              
+              const { error: bodyError } = await supabase.from('body_composition').upsert({
+                user_id: userId,
+                measurement_date: measurementDate,
+                weight: measurement.weight_kg,
+                body_fat_percentage: measurement.bodyfat_percentage,
+                muscle_mass: measurement.muscle_mass_g ? measurement.muscle_mass_g / 1000 : null,
+                measurement_method: provider.toLowerCase(),
+              }, {
+                onConflict: 'user_id,measurement_date',
+              });
+              
+              if (bodyError) {
+                console.error('❌ Error upserting body composition:', bodyError);
+              } else {
+                console.log('✅ Saved body composition:', { weight: measurement.weight_kg, fat: measurement.bodyfat_percentage, date: measurementDate });
+                
+                // Save to metric_values
+                const source = provider.toLowerCase();
+                
+                // Save Weight
+                if (measurement.weight_kg) {
+                  const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Weight',
+                    p_metric_category: 'body',
+                    p_unit: 'kg',
+                    p_source: source,
+                  });
+                  if (weightMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: weightMetricId,
+                      value: measurement.weight_kg,
+                      measurement_date: measurementDate,
+                      external_id: `terra_${provider}_weight_${measurementDate}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+                
+                // Save Body Fat
+                if (measurement.bodyfat_percentage) {
+                  const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+                    p_user_id: userId,
+                    p_metric_name: 'Body Fat Percentage',
+                    p_metric_category: 'body',
+                    p_unit: '%',
+                    p_source: source,
+                  });
+                  if (fatMetricId) {
+                    await supabase.from('metric_values').upsert({
+                      user_id: userId,
+                      metric_id: fatMetricId,
+                      value: measurement.bodyfat_percentage,
+                      measurement_date: measurementDate,
+                      external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
+                    });
+                  }
+                }
+              }
+            }
           }
+          
+          // Fallback: direct data format
+          if ((bodyData.body_fat_percentage || bodyData.weight_kg) && bodyData.timestamp) {
+            const measurementDate = bodyData.timestamp?.split('T')[0];
+            const { error: bodyError } = await supabase.from('body_composition').upsert({
+              user_id: userId,
+              measurement_date: measurementDate,
+              weight: bodyData.weight_kg,
+              body_fat_percentage: bodyData.body_fat_percentage,
+              muscle_mass: bodyData.muscle_mass_kg,
+              measurement_method: provider.toLowerCase(),
+            }, {
+              onConflict: 'user_id,measurement_date',
+            });
+            
+            if (!bodyError) {
+              const source = provider.toLowerCase();
+              
+              if (bodyData.weight_kg && measurementDate) {
+                const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+                  p_user_id: userId,
+                  p_metric_name: 'Weight',
+                  p_metric_category: 'body',
+                  p_unit: 'kg',
+                  p_source: source,
+                });
+                if (weightMetricId) {
+                  await supabase.from('metric_values').upsert({
+                    user_id: userId,
+                    metric_id: weightMetricId,
+                    value: bodyData.weight_kg,
+                    measurement_date: measurementDate,
+                    external_id: `terra_${provider}_weight_${measurementDate}`,
+                  }, {
+                    onConflict: 'user_id,metric_id,measurement_date,external_id',
+                  });
+                }
+              }
+              
+              if (bodyData.body_fat_percentage && measurementDate) {
+                const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+                  p_user_id: userId,
+                  p_metric_name: 'Body Fat Percentage',
+                  p_metric_category: 'body',
+                  p_unit: '%',
+                  p_source: source,
+                });
+                if (fatMetricId) {
+                  await supabase.from('metric_values').upsert({
+                    user_id: userId,
+                    metric_id: fatMetricId,
+                    value: bodyData.body_fat_percentage,
+                    measurement_date: measurementDate,
+                    external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+                  }, {
+                    onConflict: 'user_id,metric_id,measurement_date,external_id',
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('⚠️ Error processing body item:', e);
         }
       }
     }
     
     if (payload.type === 'sleep') {
       console.log('📊 Processing sleep data');
-      for (const sleepData of data) {
-        // Создаем или получаем метрику для Sleep Duration
-        const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-          p_user_id: userId,
-          p_metric_name: 'Sleep Duration',
-          p_metric_category: 'sleep',
-          p_unit: 'hours',
-          p_source: provider
-        });
-
-        if (metricId && sleepData.sleep_durations_data?.asleep?.duration_asleep_state_seconds) {
-          const sleepHours = sleepData.sleep_durations_data.asleep.duration_asleep_state_seconds / 3600;
-          
-          await supabase.from('metric_values').upsert({
-            user_id: userId,
-            metric_id: metricId,
-            value: sleepHours,
-            measurement_date: sleepData.day?.split('T')[0] || new Date().toISOString().split('T')[0],
-            external_id: `terra_${provider}_sleep_${sleepData.day}`,
-          }, {
-            onConflict: 'external_id',
-          });
+      for (const sleep of data) {
+        try {
+          const start = sleep.start_time || sleep.sleep_start_time || sleep.timestamp;
+          const end = sleep.end_time || sleep.sleep_end_time;
+          let durationSeconds = sleep.duration_seconds || sleep.duration_sec || sleep.duration || null;
+          if (!durationSeconds && start && end) {
+            durationSeconds = Math.max(0, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000));
+          }
+          if (durationSeconds) {
+            const hours = Math.round((durationSeconds / 3600) * 10) / 10;
+            const measurementDate = (start || end || new Date().toISOString()).split('T')[0];
+            const { data: sleepMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Duration',
+              p_metric_category: 'sleep',
+              p_unit: 'h',
+              p_source: provider.toLowerCase(),
+            });
+            if (sleepMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: sleepMetricId,
+                value: hours,
+                measurement_date: measurementDate,
+                source_data: sleep,
+                external_id: `terra_${provider}_sleep_${measurementDate}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+        } catch (e) {
+          console.error('⚠️ Error processing sleep item:', e);
         }
       }
     }
     
     if (payload.type === 'daily') {
       console.log('📊 Processing daily data');
-      for (const dailyData of data) {
-        // VO2Max
-        if (dailyData.oxygen_data?.vo2max_ml_per_min_per_kg) {
-          const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-            p_user_id: userId,
-            p_metric_name: 'VO2Max',
-            p_metric_category: 'cardio',
-            p_unit: 'ml/kg/min',
-            p_source: provider
-          });
+      for (const daily of data) {
+        try {
+          const dateStr = (daily.day_start || daily.start_time || daily.timestamp || daily.date || new Date().toISOString()).split('T')[0];
+          const source = provider.toLowerCase();
 
-          if (metricId) {
-            await supabase.from('metric_values').upsert({
-              user_id: userId,
-              metric_id: metricId,
-              value: dailyData.oxygen_data.vo2max_ml_per_min_per_kg,
-              measurement_date: dailyData.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0],
-              external_id: `terra_${provider}_vo2max_${dailyData.metadata?.start_time}`,
-            }, {
-              onConflict: 'external_id',
+          // Recovery Score
+          const recovery = daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
+          if (typeof recovery === 'number') {
+            const { data: recMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Recovery Score',
+              p_metric_category: 'recovery',
+              p_unit: '%',
+              p_source: source,
             });
+            if (recMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: recMetricId,
+                value: recovery,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_recovery_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
           }
+
+          // Sleep Efficiency
+          const sleepEfficiency = daily.sleep_efficiency_percentage ?? daily.sleep?.efficiency_percentage;
+          if (typeof sleepEfficiency === 'number') {
+            const { data: effMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Efficiency',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (effMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: effMetricId,
+                value: sleepEfficiency,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_sleepeff_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
+          // Sleep Performance
+          const sleepPerformance = daily.sleep_performance_percentage ?? daily.sleep?.performance_percentage;
+          if (typeof sleepPerformance === 'number') {
+            const { data: perfMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Performance',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (perfMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: perfMetricId,
+                value: sleepPerformance,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_sleepperf_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
+          // Sleep Need Fulfillment
+          const sleepNeed = daily.sleep_need_fulfillment_percentage ?? daily.sleep?.need_fulfillment_percentage;
+          if (typeof sleepNeed === 'number') {
+            const { data: needMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Need Fulfillment',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (needMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: needMetricId,
+                value: sleepNeed,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_sleepneed_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
+          // Resting Heart Rate
+          const rhr = daily.resting_hr_bpm ?? daily.resting_heart_rate_bpm ?? daily.resting_hr ?? daily.resting_heart_rate;
+          if (typeof rhr === 'number') {
+            const { data: rhrMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Resting Heart Rate',
+              p_metric_category: 'cardio',
+              p_unit: 'bpm',
+              p_source: source,
+            });
+            if (rhrMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: rhrMetricId,
+                value: rhr,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_rhr_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
+          // HRV RMSSD
+          const hrv = daily.hrv_rmssd_ms ?? daily.hrv?.rmssd_ms ?? daily.hrv?.rmssd_milli;
+          if (typeof hrv === 'number') {
+            const { data: hrvMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'HRV RMSSD',
+              p_metric_category: 'recovery',
+              p_unit: 'ms',
+              p_source: source,
+            });
+            if (hrvMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: hrvMetricId,
+                value: hrv,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_hrv_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
+          // VO2Max
+          const vo2max = daily.oxygen_data?.vo2max_ml_per_min_per_kg ?? daily.vo2max_ml_per_min_per_kg;
+          if (typeof vo2max === 'number') {
+            const { data: vo2MetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'VO2Max',
+              p_metric_category: 'cardio',
+              p_unit: 'ml/kg/min',
+              p_source: source,
+            });
+            if (vo2MetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: vo2MetricId,
+                value: vo2max,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_vo2max_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+        } catch (e) {
+          console.error('⚠️ Error processing daily item:', e);
         }
       }
     }
@@ -416,27 +809,33 @@ async function processTerraData(supabase: any, payload: any) {
     if (payload.type === 'nutrition') {
       console.log('📊 Processing nutrition data');
       for (const nutritionData of data) {
-        // Blood Glucose от Ultrahuman
-        if (nutritionData.blood_glucose_data_mg_per_dL) {
-          const { data: metricId } = await supabase.rpc('create_or_get_metric', {
-            p_user_id: userId,
-            p_metric_name: 'Blood Glucose',
-            p_metric_category: 'health',
-            p_unit: 'mg/dL',
-            p_source: provider
-          });
-
-          if (metricId) {
-            await supabase.from('metric_values').upsert({
-              user_id: userId,
-              metric_id: metricId,
-              value: nutritionData.blood_glucose_data_mg_per_dL,
-              measurement_date: nutritionData.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0],
-              external_id: `terra_${provider}_glucose_${nutritionData.metadata?.start_time}`,
-            }, {
-              onConflict: 'external_id',
+        try {
+          // Blood Glucose (Ultrahuman)
+          if (nutritionData.blood_glucose_data_mg_per_dL) {
+            const measurementDate = nutritionData.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
+            const { data: metricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Blood Glucose',
+              p_metric_category: 'health',
+              p_unit: 'mg/dL',
+              p_source: provider.toLowerCase(),
             });
+
+            if (metricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: metricId,
+                value: nutritionData.blood_glucose_data_mg_per_dL,
+                measurement_date: measurementDate,
+                external_id: `terra_${provider}_glucose_${measurementDate}`,
+                source_data: nutritionData,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
           }
+        } catch (e) {
+          console.error('⚠️ Error processing nutrition item:', e);
         }
       }
     }
