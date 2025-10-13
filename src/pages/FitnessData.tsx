@@ -148,17 +148,19 @@ export default function FitnessData() {
     const now = new Date();
     switch (selectedFilter) {
       case 'today':
-        // Используем UTC дату для корректного отображения
-        const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dateOffset));
-        if (dateOffset === 0) return 'Today';
-        if (dateOffset === -1) return 'Yesterday';
-        return utcDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+        const today = new Date(now);
+        today.setDate(today.getDate() + dateOffset);
+        return today.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
       case 'week':
-        if (dateOffset === 0) return 'Week';
-        return `${Math.abs(dateOffset)} week${Math.abs(dateOffset) > 1 ? 's' : ''} ago`;
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() + (dateOffset * 7));
+        return `Week of ${weekStart.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`;
       case 'month':
-        if (dateOffset === 0) return 'Month';
-        return `${Math.abs(dateOffset)} month${Math.abs(dateOffset) > 1 ? 's' : ''} ago`;
+        const monthDate = new Date(now);
+        monthDate.setMonth(monthDate.getMonth() + dateOffset);
+        return monthDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+      default:
+        return '';
     }
   };
 
@@ -188,57 +190,56 @@ export default function FitnessData() {
 
     if (!metrics) return result;
 
+    // Фильтруем метрики по источнику ДО обработки
+    const filteredMetrics = selectedSource === 'all' 
+      ? metrics 
+      : metrics.filter(metric => metric.source?.toLowerCase() === selectedSource);
+
     const metricValues: { [key: string]: any } = {};
 
-    metrics.forEach(metric => {
+    // Обрабатываем отфильтрованные метрики
+    filteredMetrics.forEach(metric => {
       const values = (metric as any).metric_values || [];
       if (values.length === 0) return;
       
-      // Фильтрация по источнику
-      const filteredValues = selectedSource === 'all' 
-        ? values 
-        : values.filter((v: any) => metric.source === selectedSource);
-      
-      if (filteredValues.length === 0) return;
-      
-      const sortedValues = [...filteredValues].sort((a, b) => 
+      const sortedValues = [...values].sort((a, b) => 
         new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
       );
-      
-      // Для "all" (United Data) вычисляем среднее значение по источникам
-      let avgValue: number;
-      if (selectedSource === 'all' && values.length > 0) {
-        // Группируем по источникам и берем среднее
-        const sourceGroups: { [source: string]: number[] } = {};
-        values.forEach((v: any) => {
-          const source = metric.source;
-          if (!sourceGroups[source]) sourceGroups[source] = [];
-          sourceGroups[source].push(v.value);
-        });
-        
-        // Среднее по всем источникам
-        const sourceAverages = Object.values(sourceGroups).map(vals => 
-          vals.reduce((a, b) => a + b, 0) / vals.length
-        );
-        avgValue = sourceAverages.reduce((a, b) => a + b, 0) / sourceAverages.length;
-      } else {
-        const sum = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
-        avgValue = sum / sortedValues.length;
-      }
       
       const latestValue = sortedValues[0]?.value;
       const previousValue = sortedValues[1]?.value;
 
-      const currentValue = (selectedFilter === 'today' && metric.metric_name === 'Workout Strain')
-        ? (selectedSource === 'all' ? avgValue : sortedValues.reduce((acc, v) => acc + (v.value || 0), 0))
-        : (selectedFilter === 'today' ? latestValue : avgValue);
+      let currentValue: number;
+      
+      if (selectedFilter === 'today' && metric.metric_name === 'Workout Strain') {
+        // Для Strain суммируем все значения за день
+        currentValue = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
+      } else if (selectedFilter === 'today') {
+        currentValue = latestValue;
+      } else {
+        // Для week/month берем среднее
+        const sum = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
+        currentValue = sum / sortedValues.length;
+      }
 
-      metricValues[metric.metric_name] = {
-        current: currentValue,
-        previous: previousValue,
-        category: metric.metric_category,
-        unit: metric.unit
-      };
+      const metricKey = metric.metric_name;
+      
+      // Для "all" (United Data) если есть несколько источников с одинаковым метриком - усредняем
+      if (metricValues[metricKey]) {
+        // Уже есть такой метрик от другого источника - усредним
+        metricValues[metricKey].current = (metricValues[metricKey].current + currentValue) / 2;
+        if (previousValue !== undefined && metricValues[metricKey].previous !== undefined) {
+          metricValues[metricKey].previous = (metricValues[metricKey].previous + previousValue) / 2;
+        }
+      } else {
+        metricValues[metricKey] = {
+          current: currentValue,
+          previous: previousValue,
+          category: metric.metric_category,
+          unit: metric.unit,
+          source: metric.source
+        };
+      }
     });
 
     // Readiness
@@ -392,7 +393,7 @@ export default function FitnessData() {
       const steps = metricValues['Steps'];
       cards.push({
         name: 'Steps',
-        value: Math.round(steps.current).toString(),
+        value: Math.round(steps.current).toLocaleString(),
         subtitle: 'per day',
         icon: Footprints,
         color: '#22C55E',
@@ -400,153 +401,60 @@ export default function FitnessData() {
       });
     }
 
-    if (metricValues['Workout Calories'] || metricValues['Active Calories']) {
-      const cals = metricValues['Workout Calories'] || metricValues['Active Calories'];
+    if (metricValues['Heart Rate'] || metricValues['Resting Heart Rate']) {
+      const hr = metricValues['Heart Rate'] || metricValues['Resting Heart Rate'];
       cards.push({
-        name: 'Calories',
-        value: Math.round(cals.current).toString(),
-        subtitle: 'kcal',
-        icon: Flame,
+        name: 'Heart Rate',
+        value: Math.round(hr.current) + '',
+        subtitle: 'bpm',
+        icon: Heart,
         color: '#EF4444',
         borderColor: '#EF4444'
       });
     }
 
-    if (metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate']) {
-      const hr = metricValues['Heart Rate Avg'] || metricValues['Average Heart Rate'];
+    if (metricValues['Calories'] || metricValues['Active Energy']) {
+      const cal = metricValues['Calories'] || metricValues['Active Energy'];
       cards.push({
-        name: 'Avg Heart Rate',
-        value: Math.round(hr.current).toString(),
-        subtitle: 'bpm',
-        icon: Heart,
-        color: '#F43F5E',
-        borderColor: '#F43F5E'
-      });
-    }
-
-    if (metricValues['Resting Heart Rate']) {
-      const rhr = metricValues['Resting Heart Rate'];
-      cards.push({
-        name: 'Resting HR',
-        value: Math.round(rhr.current).toString(),
-        subtitle: 'bpm',
-        icon: Heart,
-        color: '#EC4899',
-        borderColor: '#EC4899'
-      });
-    }
-
-    if (metricValues['Weight']) {
-      const w = metricValues['Weight'];
-      cards.push({
-        name: 'Weight',
-        value: (Math.round(w.current * 10) / 10).toString(),
-        subtitle: 'kg',
-        icon: Scale,
-        color: '#10B981',
-        borderColor: '#10B981'
-      });
-    }
-
-    if (metricValues['Distance']) {
-      const d = metricValues['Distance'];
-      cards.push({
-        name: 'Distance',
-        value: (Math.round(d.current * 10) / 10).toString(),
-        subtitle: 'km',
-        icon: Activity,
-        color: '#06B6D4',
-        borderColor: '#06B6D4'
-      });
-    }
-
-    if (metricValues['HRV'] || metricValues['Heart Rate Variability']) {
-      const hrv = metricValues['HRV'] || metricValues['Heart Rate Variability'];
-      cards.push({
-        name: 'HRV',
-        value: Math.round(hrv.current).toString(),
-        subtitle: 'ms',
-        icon: Heart,
-        color: '#8B5CF6',
-        borderColor: '#8B5CF6'
-      });
-    }
-
-    if (metricValues['Workout Count']) {
-      const wc = metricValues['Workout Count'];
-      cards.push({
-        name: 'Workouts',
-        value: Math.round(wc.current).toString(),
-        subtitle: 'total',
-        icon: Dumbbell,
-        color: '#F59E0B',
-        borderColor: '#F59E0B'
-      });
-    }
-
-    if (metricValues['Exercise Minutes']) {
-      const em = metricValues['Exercise Minutes'];
-      cards.push({
-        name: 'Activity',
-        value: Math.round(em.current).toString(),
-        subtitle: 'min',
-        icon: Zap,
+        name: 'Calories',
+        value: Math.round(cal.current) + '',
+        subtitle: 'kcal',
+        icon: Flame,
         color: '#FBBF24',
         borderColor: '#FBBF24'
       });
     }
 
-    // Add all remaining metrics that aren't already added
-    Object.keys(metricValues).forEach(metricName => {
-      const alreadyAdded = cards.some(c => 
-        c.name.toLowerCase().includes(metricName.toLowerCase()) ||
-        metricName.toLowerCase().includes(c.name.toLowerCase())
-      );
-      
-      if (!alreadyAdded) {
-        const metric = metricValues[metricName];
-        cards.push({
-          name: metricName,
-          value: (Math.round(metric.current * 10) / 10).toString(),
-          subtitle: metric.unit || '',
-          icon: Activity,
-          color: '#64748B',
-          borderColor: '#64748B'
-        });
-      }
-    });
-
     result.cards = cards;
     return result;
   };
 
-  const getReadinessColor = (score: number) => {
-    if (score > 70) return { color: '#10B981', label: 'Excellent' };
-    if (score > 40) return { color: '#F59E0B', label: 'Normal' };
-    return { color: '#EF4444', label: 'Low' };
-  };
-
-  const readinessColor = getReadinessColor(data.readiness.score);
-
   const sourceOptions = [
     { value: 'all', label: 'United Data', icon: Activity },
-    { value: 'whoop', label: 'Whoop', icon: Watch },
+    { value: 'whoop', label: 'Whoop', icon: Zap },
     { value: 'garmin', label: 'Garmin', icon: Watch },
-    { value: 'ultrahuman', label: 'Ultrahuman', icon: Watch },
+    { value: 'ultrahuman', label: 'Ultrahuman', icon: TrendingUp }
   ];
 
+  const getReadinessColor = () => {
+    const score = data.readiness.score;
+    if (score >= 70) return { color: '#10B981', shadow: '#10B98166' };
+    if (score >= 40) return { color: '#FBBF24', shadow: '#FBBF2466' };
+    return { color: '#EF4444', shadow: '#EF444466' };
+  };
+
+  const readinessColor = getReadinessColor();
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-24 px-4 pt-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6">
-      {/* Header */}
+    <div className="min-h-screen p-4 md:p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-wider">
