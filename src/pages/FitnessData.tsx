@@ -249,181 +249,215 @@ export default function FitnessData() {
       result.readiness.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
     }
 
-    // Build cards - only for challenge goals
+    // Build cards - показываем ВСЕ доступные метрики
     const cards: MetricCard[] = [];
 
-    // Strain (always show if available)
+    // Функция для определения иконки и цвета по категории
+    const getMetricIcon = (category: string, name: string) => {
+      if (name.toLowerCase().includes('strain')) return { icon: Flame, color: '#F97316' };
+      if (name.toLowerCase().includes('sleep')) return { icon: Moon, color: '#6366F1' };
+      if (name.toLowerCase().includes('vo2')) return { icon: Wind, color: '#06B6D4' };
+      if (name.toLowerCase().includes('fat')) return { icon: Scale, color: '#EF4444' };
+      if (name.toLowerCase().includes('heart') || name.toLowerCase().includes('hr')) return { icon: Heart, color: '#EC4899' };
+      if (name.toLowerCase().includes('step')) return { icon: Footprints, color: '#8B5CF6' };
+      if (name.toLowerCase().includes('calor')) return { icon: Flame, color: '#F59E0B' };
+      if (name.toLowerCase().includes('workout')) return { icon: Dumbbell, color: '#10B981' };
+      if (name.toLowerCase().includes('recovery')) return { icon: TrendingUp, color: '#14B8A6' };
+      
+      switch (category) {
+        case 'recovery': return { icon: TrendingUp, color: '#14B8A6' };
+        case 'sleep': return { icon: Moon, color: '#6366F1' };
+        case 'workout': return { icon: Dumbbell, color: '#10B981' };
+        case 'cardio': return { icon: Activity, color: '#06B6D4' };
+        case 'body': return { icon: Scale, color: '#EF4444' };
+        default: return { icon: Activity, color: '#8B5CF6' };
+      }
+    };
+
+    // Strain
     if ((metricValues['Day Strain'] || metricValues['Workout Strain'])) {
       const strain = metricValues['Day Strain'] || metricValues['Workout Strain'];
       const value = Math.round(strain.current * 10) / 10;
+      const meta = getMetricIcon('workout', 'strain');
       cards.push({
         name: 'Strain',
         value: value.toString(),
         subtitle: value > 15 ? 'Very High' : value > 10 ? 'High' : 'Moderate',
-        icon: Flame,
-        color: '#F97316',
-        borderColor: '#F97316'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
 
-    // Sleep (always show if available)
+    // Sleep Duration
     if (metricValues['Sleep Duration']) {
       const sleepDur = metricValues['Sleep Duration'];
       const hours = Math.floor(sleepDur.current);
       const minutes = Math.round((sleepDur.current - hours) * 60);
       const quality = metricValues['Sleep Quality'] || metricValues['Sleep Performance'];
+      const meta = getMetricIcon('sleep', 'sleep');
       cards.push({
         name: 'Sleep',
         value: `${hours}h ${minutes}m`,
         subtitle: quality ? `Quality: ${Math.round(quality.current)}%` : '',
-        icon: Moon,
-        color: '#6366F1',
-        borderColor: '#6366F1'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
 
-    // VO2 Max (challenge goal)
-    if (metricValues['VO2Max'] && isInChallengeGoals('vo2max')) {
+    // Recovery Score
+    if (metricValues['Recovery Score'] || metricValues['Recovery']) {
+      const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
+      const meta = getMetricIcon('recovery', 'recovery');
+      cards.push({
+        name: 'Recovery',
+        value: Math.round(recovery.current) + '%',
+        subtitle: recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // VO2 Max
+    if (metricValues['VO2Max']) {
       const vo2 = metricValues['VO2Max'];
+      const meta = getMetricIcon('cardio', 'vo2');
       cards.push({
         name: 'VO2 Max',
         value: Math.round(vo2.current * 10) / 10 + '',
         subtitle: 'ml/kg/min',
-        icon: Wind,
-        color: '#06B6D4',
-        borderColor: '#06B6D4'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
 
-    // Body Fat (challenge goal)
-    if (metricValues['Body Fat %'] && isInChallengeGoals('жир')) {
+    // Body Fat %
+    if (metricValues['Body Fat %']) {
       const fat = metricValues['Body Fat %'];
       const diff = fat.previous ? fat.current - fat.previous : 0;
       const trend = diff > 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`;
+      const meta = getMetricIcon('body', 'fat');
       cards.push({
         name: 'Body Fat %',
         value: `${Math.round(fat.current * 10) / 10}%`,
         subtitle: trend,
-        icon: Scale,
-        color: '#10B981',
-        borderColor: '#10B981'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
 
-    // Pull-ups (challenge goal)
-    if (metricValues['Pull-ups'] && isInChallengeGoals('подтягивания')) {
-      const pullups = metricValues['Pull-ups'];
+    // Heart Rate
+    if (metricValues['Heart Rate'] || metricValues['Resting Heart Rate'] || metricValues['Average Heart Rate']) {
+      const hr = metricValues['Heart Rate'] || metricValues['Resting Heart Rate'] || metricValues['Average Heart Rate'];
+      const meta = getMetricIcon('cardio', 'heart');
       cards.push({
-        name: 'Pull-ups',
-        value: Math.round(pullups.current) + '',
-        subtitle: 'reps',
-        icon: Dumbbell,
-        color: '#A855F7',
-        borderColor: '#A855F7'
-      });
-    }
-
-    // Bench Press (challenge goal)
-    if (metricValues['Bench Press'] && isInChallengeGoals('жим')) {
-      const bench = metricValues['Bench Press'];
-      cards.push({
-        name: 'Bench Press',
-        value: Math.round(bench.current) + '',
-        subtitle: 'kg',
-        icon: Dumbbell,
-        color: '#EF4444',
-        borderColor: '#EF4444'
-      });
-    }
-
-    // Push-ups (challenge goal)
-    if (metricValues['Push-ups'] && isInChallengeGoals('отжимания')) {
-      const pushups = metricValues['Push-ups'];
-      cards.push({
-        name: 'Push-ups',
-        value: Math.round(pushups.current) + '',
-        subtitle: 'reps',
-        icon: Dumbbell,
-        color: '#FBBF24',
-        borderColor: '#FBBF24'
-      });
-    }
-
-    // Plank (challenge goal)
-    if (metricValues['Plank'] && isInChallengeGoals('планка')) {
-      const plank = metricValues['Plank'];
-      cards.push({
-        name: 'Plank',
-        value: Math.round(plank.current) + '',
-        subtitle: 'min',
-        icon: Activity,
-        color: '#8B5CF6',
-        borderColor: '#8B5CF6'
-      });
-    }
-
-    // 1km Run (challenge goal)
-    if (metricValues['1km Run'] && isInChallengeGoals('бег')) {
-      const run = metricValues['1km Run'];
-      cards.push({
-        name: '1km Run',
-        value: Math.round(run.current * 10) / 10 + '',
-        subtitle: 'min',
-        icon: Footprints,
-        color: '#06B6D4',
-        borderColor: '#06B6D4'
-      });
-    }
-
-    // Lunges (challenge goal)
-    if (metricValues['Lunges'] && isInChallengeGoals('выпады')) {
-      const lunges = metricValues['Lunges'];
-      cards.push({
-        name: 'Lunges',
-        value: Math.round(lunges.current) + '',
-        subtitle: 'kg×8',
-        icon: Dumbbell,
-        color: '#84CC16',
-        borderColor: '#84CC16'
-      });
-    }
-
-    // General tracker metrics (always show if available)
-    if (metricValues['Steps']) {
-      const steps = metricValues['Steps'];
-      cards.push({
-        name: 'Steps',
-        value: Math.round(steps.current).toLocaleString(),
-        subtitle: 'per day',
-        icon: Footprints,
-        color: '#22C55E',
-        borderColor: '#22C55E'
-      });
-    }
-
-    if (metricValues['Heart Rate'] || metricValues['Resting Heart Rate']) {
-      const hr = metricValues['Heart Rate'] || metricValues['Resting Heart Rate'];
-      cards.push({
-        name: 'Heart Rate',
+        name: metricValues['Resting Heart Rate'] ? 'Resting HR' : 'Heart Rate',
         value: Math.round(hr.current) + '',
         subtitle: 'bpm',
-        icon: Heart,
-        color: '#EF4444',
-        borderColor: '#EF4444'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
 
-    if (metricValues['Calories'] || metricValues['Active Energy']) {
-      const cal = metricValues['Calories'] || metricValues['Active Energy'];
+    // Calories / Active Energy
+    if (metricValues['Calories'] || metricValues['Active Energy'] || metricValues['Active Calories']) {
+      const cal = metricValues['Calories'] || metricValues['Active Energy'] || metricValues['Active Calories'];
+      const meta = getMetricIcon('workout', 'calor');
       cards.push({
         name: 'Calories',
         value: Math.round(cal.current) + '',
         subtitle: 'kcal',
-        icon: Flame,
-        color: '#FBBF24',
-        borderColor: '#FBBF24'
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
       });
     }
+
+    // Steps
+    if (metricValues['Steps']) {
+      const steps = metricValues['Steps'];
+      const meta = getMetricIcon('cardio', 'step');
+      cards.push({
+        name: 'Steps',
+        value: Math.round(steps.current).toLocaleString(),
+        subtitle: 'per day',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Sleep Performance / Quality
+    if (metricValues['Sleep Performance'] && !metricValues['Sleep Duration']) {
+      const perf = metricValues['Sleep Performance'];
+      const meta = getMetricIcon('sleep', 'sleep');
+      cards.push({
+        name: 'Sleep Quality',
+        value: Math.round(perf.current) + '%',
+        subtitle: perf.current > 80 ? 'Excellent' : perf.current > 60 ? 'Good' : 'Poor',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // HRV (если есть)
+    if (metricValues['HRV'] || metricValues['Heart Rate Variability']) {
+      const hrv = metricValues['HRV'] || metricValues['Heart Rate Variability'];
+      const meta = getMetricIcon('recovery', 'hrv');
+      cards.push({
+        name: 'HRV',
+        value: Math.round(hrv.current) + '',
+        subtitle: 'ms',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Workout Count
+    if (metricValues['Workout Count']) {
+      const count = metricValues['Workout Count'];
+      const meta = getMetricIcon('workout', 'workout');
+      cards.push({
+        name: 'Workouts',
+        value: Math.round(count.current) + '',
+        subtitle: selectedFilter === 'today' ? 'today' : selectedFilter === 'week' ? 'this week' : 'this month',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Любые другие метрики, которые мы еще не отобразили
+    Object.keys(metricValues).forEach(metricKey => {
+      // Пропускаем уже отображенные
+      const displayedMetrics = [
+        'Day Strain', 'Workout Strain', 'Sleep Duration', 'Sleep Quality', 'Sleep Performance',
+        'Recovery Score', 'Recovery', 'VO2Max', 'Body Fat %', 'Heart Rate', 'Resting Heart Rate',
+        'Average Heart Rate', 'Calories', 'Active Energy', 'Active Calories', 'Steps',
+        'HRV', 'Heart Rate Variability', 'Workout Count'
+      ];
+      
+      if (displayedMetrics.includes(metricKey)) return;
+      
+      const metric = metricValues[metricKey];
+      const meta = getMetricIcon(metric.category, metricKey);
+      
+      cards.push({
+        name: metricKey,
+        value: Math.round(metric.current * 10) / 10 + '',
+        subtitle: metric.unit || '',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    });
 
     result.cards = cards;
     return result;
