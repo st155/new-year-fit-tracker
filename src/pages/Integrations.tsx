@@ -1,4 +1,6 @@
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
+import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function IntegrationsPage() {
   return (
@@ -10,7 +12,20 @@ export default function IntegrationsPage() {
         </p>
       </div>
 
-      <TerraIntegration />
+      <Tabs defaultValue="connections" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="connections">Подключения</TabsTrigger>
+          <TabsTrigger value="data">Данные устройств</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="connections" className="mt-6">
+          <TerraIntegration />
+        </TabsContent>
+        
+        <TabsContent value="data" className="mt-6">
+          <IntegrationsDataDisplay />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
