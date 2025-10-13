@@ -186,7 +186,9 @@ const App = () => {
                       </ProtectedRoute>
                     } />
                     
+                    {/* Terra callback - handles all Terra providers */}
                     <Route path="/terra-callback" element={<TerraCallback />} />
+                    <Route path="/whoop-callback" element={<Navigate to="/terra-callback" replace />} />
                     <Route path="/feed" element={
                       <ProtectedRoute>
                         <ModernAppLayout>

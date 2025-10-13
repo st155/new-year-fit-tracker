@@ -3,18 +3,6 @@ project_id = "ueykmmzmguzjppdudvef"
 [functions.backfill-activity-feed]
 verify_jwt = false
 
-[functions.whoop-integration]
-verify_jwt = false
-
-[functions.whoop-webhooks]
-verify_jwt = false
-
-[functions.withings-integration]
-verify_jwt = false
-
-[functions.withings-webhooks]
-verify_jwt = false
-
 [functions.apple-health-import]
 verify_jwt = true
 
@@ -30,13 +18,7 @@ verify_jwt = true
 [functions.scheduled-sync]
 verify_jwt = false
 
-[functions.whoop-token-refresh]
-verify_jwt = false
-
 [functions.terra-integration]
-verify_jwt = false
-
-[functions.terra-webhooks]
 verify_jwt = false
 
 [functions.webhook]
