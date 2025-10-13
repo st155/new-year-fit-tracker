@@ -83,17 +83,25 @@ export function TerraIntegration() {
         body: { action: 'generate-widget-session' },
       });
 
-      if (error) throw error;
-      if (!data?.url) throw new Error('No widget URL received');
+      if (error) {
+        console.error('Widget error:', error);
+        throw error;
+      }
+      if (!data?.url) {
+        console.error('No widget URL in response:', data);
+        throw new Error('No widget URL received');
+      }
 
+      console.log('Widget URL loaded:', data.url);
       setWidgetUrl(data.url);
     } catch (error: any) {
       console.error('Widget load error:', error);
       toast({
-        title: 'Ошибка загрузки',
-        description: 'Не удалось загрузить Terra Widget',
+        title: 'Ошибка загрузки виджета',
+        description: error.message || 'Не удалось загрузить Terra Widget',
         variant: 'destructive',
       });
+      setWidgetUrl(null);
     } finally {
       setWidgetLoading(false);
     }
