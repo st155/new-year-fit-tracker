@@ -132,9 +132,9 @@ serve(async (req) => {
           const start = startDate.toISOString().split('T')[0];
 
           const syncResponse = await fetch(
-            `https://api.tryterra.co/v2/user/${token.terra_user_id}/data`,
+            `https://api.tryterra.co/v2/data/${token.terra_user_id}`,
             {
-              method: 'POST',
+              method: 'GET',
               headers: {
                 'Accept': 'application/json',
                 'dev-id': terraDevId,
