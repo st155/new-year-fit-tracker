@@ -90,10 +90,11 @@ export default function FitnessData() {
       
       switch (selectedFilter) {
         case 'today':
-          const targetDay = new Date();
-          targetDay.setDate(targetDay.getDate() + dateOffset);
-          startDate = new Date(targetDay.setHours(0, 0, 0, 0));
-          endDate = new Date(targetDay.setHours(23, 59, 59, 999));
+          // Используем UTC дату для синхронизации с базой данных
+          const now = new Date();
+          const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dateOffset));
+          startDate = new Date(utcDate.setUTCHours(0, 0, 0, 0));
+          endDate = new Date(utcDate.setUTCHours(23, 59, 59, 999));
           break;
         case 'week':
           const weekStart = new Date();
@@ -144,11 +145,11 @@ export default function FitnessData() {
     const now = new Date();
     switch (selectedFilter) {
       case 'today':
-        const targetDay = new Date();
-        targetDay.setDate(targetDay.getDate() + dateOffset);
+        // Используем UTC дату для корректного отображения
+        const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dateOffset));
         if (dateOffset === 0) return 'Today';
         if (dateOffset === -1) return 'Yesterday';
-        return targetDay.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        return utcDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
       case 'week':
         if (dateOffset === 0) return 'Week';
         return `${Math.abs(dateOffset)} week${Math.abs(dateOffset) > 1 ? 's' : ''} ago`;
