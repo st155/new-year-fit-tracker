@@ -157,13 +157,27 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
       if (ingestError) {
         console.error('Ingest error:', ingestError);
-        if (ingestError.message?.includes('rate limit')) {
-          throw new Error('Превышен лимит запросов AI. Попробуйте позже.');
+        
+        // Обработка специфичных ошибок
+        const errorMsg = ingestError.message || '';
+        
+        if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
+          throw new Error('⏱️ Превышен лимит запросов AI. Попробуйте через минуту.');
         }
-        if (ingestError.message?.includes('credits')) {
-          throw new Error('Недостаточно кредитов AI. Пополните баланс в настройках.');
+        
+        if (errorMsg.includes('credits') || errorMsg.includes('402')) {
+          throw new Error('💳 Недостаточно кредитов AI. Пополните баланс в настройках Lovable.');
         }
-        throw new Error(ingestError.message || 'Не удалось обработать PDF');
+        
+        if (errorMsg.includes('Memory limit') || errorMsg.includes('memory')) {
+          throw new Error('📊 Файл слишком большой. Попробуйте загрузить PDF меньшего размера.');
+        }
+        
+        if (errorMsg.includes('extract images') || errorMsg.includes('400')) {
+          throw new Error('🖼️ Не удалось извлечь изображения из PDF. Убедитесь, что PDF содержит сканы InBody.');
+        }
+        
+        throw new Error(`❌ Ошибка обработки: ${errorMsg}`);
       }
 
       const analysis = result.analysis;
