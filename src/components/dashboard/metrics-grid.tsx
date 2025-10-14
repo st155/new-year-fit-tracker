@@ -154,15 +154,16 @@ export function MetricsGrid() {
           bodyFatBCRes,
           vo2maxRes,
         ] = await Promise.all([
-          // Recovery (any source; we'll prefer today's local date)
+          // Recovery - ищем последний за 7 дней
           supabase
             .from('metric_values')
             .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'Recovery Score')
+            .eq('user_metrics.metric_name', 'Recovery')
+            .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
             .order('measurement_date', { ascending: false })
             .order('created_at', { ascending: false })
-            .limit(4),
+            .limit(1),
           // Steps from daily summary
           supabase
             .from('daily_health_summary')
@@ -247,12 +248,13 @@ export function MetricsGrid() {
         // Recovery
         if (recoveryData.length > 0) {
           const current = Math.round(recoveryData[0].value);
+          const measurementDate = new Date(recoveryData[0].measurement_date);
           newMetrics.recovery.value = current.toString();
+          newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${measurementDate.toLocaleDateString()})`;
           if (recoveryData.length > 1) {
             const change = Math.round(recoveryData[0].value - recoveryData[1].value);
             newMetrics.recovery.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.recovery.subtitle = current >= 67 ? t('metrics.subtitles.excellent') : current >= 34 ? t('metrics.subtitles.good') : t('metrics.subtitles.low');
         }
 
         // Steps
