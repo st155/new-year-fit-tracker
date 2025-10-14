@@ -510,7 +510,12 @@ async function processTerraData(supabase: any, payload: any) {
     }
 
     if (payload.type === 'body') {
-      console.log('📊 Processing body data');
+      console.log('📊 Processing body data', { 
+        dataLength: data.length,
+        provider,
+        userId,
+        firstItem: data[0] ? JSON.stringify(data[0]).substring(0, 500) : 'no data'
+      });
       for (const bodyData of data) {
         try {
           // Terra возвращает measurements_data.measurements[] для Withings и других провайдеров
@@ -518,8 +523,10 @@ async function processTerraData(supabase: any, payload: any) {
           
           console.log('Body item:', { 
             hasMeasurements: measurements.length > 0,
+            measurementsCount: measurements.length,
             hasDirectWeight: !!bodyData.weight_kg,
             hasDirectFat: !!bodyData.body_fat_percentage,
+            rawMeasurements: JSON.stringify(measurements).substring(0, 500)
           });
           
           // Обрабатываем каждое измерение отдельно
@@ -546,22 +553,32 @@ async function processTerraData(supabase: any, payload: any) {
               if (bodyError) {
                 console.error('❌ Error upserting body composition:', bodyError);
               } else {
-                console.log('✅ Saved body composition:', { weight: measurement.weight_kg, fat: measurement.bodyfat_percentage, date: measurementDate });
+                console.log('✅ Saved body composition:', { 
+                  weight: measurement.weight_kg, 
+                  fat: measurement.bodyfat_percentage, 
+                  date: measurementDate,
+                  userId,
+                  provider
+                });
                 
                 // Also save to metric_values for dashboard display
                 const source = provider.toLowerCase();
                 
                 // Save Weight
                 if (measurement.weight_kg) {
-                  const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+                  const { data: weightMetricId, error: metricError } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
                     p_metric_name: 'Weight',
                     p_metric_category: 'body',
                     p_unit: 'kg',
                     p_source: source,
                   });
-                  if (weightMetricId) {
-                    await supabase.from('metric_values').upsert({
+                  
+                  if (metricError) {
+                    console.error('❌ Error creating/getting Weight metric:', metricError);
+                  } else {
+                    console.log('✅ Weight metric ID:', weightMetricId);
+                    const { error: insertError } = await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: weightMetricId,
                       value: measurement.weight_kg,
@@ -570,6 +587,12 @@ async function processTerraData(supabase: any, payload: any) {
                     }, {
                       onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
+                    
+                    if (insertError) {
+                      console.error('❌ Error inserting weight metric value:', insertError);
+                    } else {
+                      console.log('✅ Weight metric value saved:', { value: measurement.weight_kg, date: measurementDate });
+                    }
                   }
                 }
                 
