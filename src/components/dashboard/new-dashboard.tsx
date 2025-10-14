@@ -9,6 +9,7 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { ChallengeReminder } from "@/components/challenges/ChallengeReminder";
+import { MetricsViewToggle } from "./MetricsViewToggle";
 import { 
   LazyMetricsGrid, 
   LazyGoalsProgress, 
@@ -127,6 +128,11 @@ export const NewDashboard = memo(function NewDashboard() {
             challengeProgress={challengeProgress}
             daysLeft={daysLeft}
           />
+          
+          {/* View Mode Toggle */}
+          <div className="px-6 animate-fade-in" style={{ animationDelay: '50ms' }}>
+            <MetricsViewToggle />
+          </div>
           
           {/* Main metrics grid */}
           <div className="px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
