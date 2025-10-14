@@ -24,9 +24,14 @@ interface MetricCardProps {
   change?: string;
   subtitle?: string;
   color: "body-fat" | "weight" | "vo2max" | "row" | "recovery" | "steps";
+  source?: string;
+  sources?: string[];
+  onSourceChange?: (source: string) => void;
 }
 
-function MetricCard({ title, value, unit, change, subtitle, color, onClick }: MetricCardProps & { onClick?: () => void }) {
+function MetricCard({ title, value, unit, change, subtitle, color, source, sources, onSourceChange, onClick }: MetricCardProps & { onClick?: () => void }) {
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
+  
   const cssVarMap: Record<MetricCardProps['color'], string> = {
     'body-fat': '--metric-body-fat',
     'weight': '--metric-weight',
@@ -41,6 +46,18 @@ function MetricCard({ title, value, unit, change, subtitle, color, onClick }: Me
     background: `linear-gradient(135deg, hsl(var(${varName}) / 0.5), hsl(var(${varName}) / 0.15) 35%, transparent)`,
     boxShadow: `0 0 24px hsl(var(${varName}) / 0.35)`,
   };
+
+  const handleSourceClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (sources && sources.length > 1 && onSourceChange) {
+      const nextIndex = (currentSourceIndex + 1) % sources.length;
+      setCurrentSourceIndex(nextIndex);
+      onSourceChange(sources[nextIndex]);
+    }
+  };
+
+  const displaySource = sources && sources.length > 0 ? sources[currentSourceIndex] : source;
+  const hasMultipleSources = sources && sources.length > 1;
 
   return (
     <div
@@ -66,11 +83,26 @@ function MetricCard({ title, value, unit, change, subtitle, color, onClick }: Me
             )}
           </div>
           <div className="flex items-center justify-between">
-            {subtitle && (
-              <span className="text-xs text-muted-foreground">
-                {subtitle}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {displaySource && (
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "text-xs capitalize cursor-pointer hover:bg-accent transition-colors",
+                    hasMultipleSources && "animate-pulse"
+                  )}
+                  onClick={handleSourceClick}
+                >
+                  {displaySource}
+                  {hasMultipleSources && ` (${currentSourceIndex + 1}/${sources.length})`}
+                </Badge>
+              )}
+              {subtitle && !displaySource && (
+                <span className="text-xs text-muted-foreground">
+                  {subtitle}
+                </span>
+              )}
+            </div>
             {change && (
               <Badge
                 variant={change.startsWith('-') ? 'destructive' : 'default'}
@@ -92,12 +124,12 @@ export function MetricsGrid() {
   const { t } = useTranslation();
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "steps"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
-    body_fat: { value: "18.5", change: "-3%", subtitle: t('metrics.subtitles.fuller') },
-    weight: { value: "72.0", change: "-2%", subtitle: t('metrics.subtitles.byLansey') },
-    vo2max: { value: "52.1", records: 71, subtitle: "71 " + t('common.records', { defaultValue: 'records' }) },
-    row_2km: { value: "7:25", change: "-2%", attempts: 34, subtitle: "34 " + t('common.attempts', { defaultValue: 'attempts' }) },
-    recovery: { value: "—", change: null, subtitle: '' },
-    steps: { value: "12,847", change: "+12%", subtitle: t('common.dailyAverage', { defaultValue: 'daily average' }) }
+    body_fat: { value: "18.5", change: "-3%", source: "withings", sources: [] },
+    weight: { value: "72.0", change: "-2%", source: "withings", sources: [] },
+    vo2max: { value: "52.1", records: 71, source: "garmin", sources: [] },
+    row_2km: { value: "7:25", change: "-2%", attempts: 34, source: "manual", sources: [] },
+    recovery: { value: "—", change: null, source: "whoop", sources: [] },
+    steps: { value: "12,847", change: "+12%", source: "terra", sources: [] }
   });
   const [loading, setLoading] = useState(true);
   const [syncAttempted, setSyncAttempted] = useState(false);
@@ -237,12 +269,12 @@ export function MetricsGrid() {
         const vo2maxData = vo2maxRes.data || [];
 
         const newMetrics: Record<string, any> = {
-          body_fat: { value: '—', change: null, subtitle: '' },
-          weight: { value: '—', change: null, subtitle: '' },
-          vo2max: { value: '—', records: 0, subtitle: '0 записей' },
-          row_2km: { value: '—', change: null, attempts: 0, subtitle: '0 попыток' },
-          recovery: { value: '—', change: null, subtitle: '' },
-          steps: { value: '—', change: null, subtitle: '' }
+          body_fat: { value: '—', change: null, source: null, sources: [] },
+          weight: { value: '—', change: null, source: null, sources: [] },
+          vo2max: { value: '—', records: 0, source: null, sources: [] },
+          row_2km: { value: '—', change: null, attempts: 0, source: null, sources: [] },
+          recovery: { value: '—', change: null, source: null, sources: [] },
+          steps: { value: '—', change: null, source: null, sources: [] }
         };
 
         // Recovery
@@ -251,9 +283,9 @@ export function MetricsGrid() {
             || recoveryData.find((r: any) => r.user_metrics?.metric_name === 'Sleep Performance');
           if (preferred) {
             const current = Math.round(Number(preferred.value));
-            const measurementDate = new Date(preferred.measurement_date);
             newMetrics.recovery.value = current.toString();
-            newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${measurementDate.toLocaleDateString()})`;
+            newMetrics.recovery.source = preferred.user_metrics?.source || 'whoop';
+            newMetrics.recovery.sources = ['whoop'];
           }
         }
 
@@ -264,7 +296,8 @@ export function MetricsGrid() {
             const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
             newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.steps.subtitle = t('common.dailyAverage');
+          newMetrics.steps.source = 'terra';
+          newMetrics.steps.sources = ['terra'];
         } else if (stepsMV.length > 0) {
           const curr = Number(stepsMV[0].value) || 0;
           newMetrics.steps.value = curr.toLocaleString();
@@ -275,7 +308,8 @@ export function MetricsGrid() {
               newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.steps.subtitle = t('metrics.subtitles.latestSteps');
+          newMetrics.steps.source = 'terra';
+          newMetrics.steps.sources = ['terra'];
         }
 
         // Weight
@@ -285,7 +319,10 @@ export function MetricsGrid() {
             const change = Math.round(((weightData[0].value - weightData[1].value) / weightData[1].value) * 100);
             newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.weight.subtitle = t('metrics.subtitles.byLansey');
+          newMetrics.weight.source = weightData[0].user_metrics?.source || 'withings';
+          // Собираем уникальные источники
+          const uniqueSources = [...new Set(weightData.map((w: any) => w.user_metrics?.source).filter(Boolean))];
+          newMetrics.weight.sources = uniqueSources.length > 0 ? uniqueSources : ['withings'];
         } else if (weightBC.length > 0) {
           const curr = Number(weightBC[0].weight);
           newMetrics.weight.value = curr.toFixed(1);
@@ -296,7 +333,8 @@ export function MetricsGrid() {
               newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.weight.subtitle = t('metrics.subtitles.byLansey');
+          newMetrics.weight.source = 'manual';
+          newMetrics.weight.sources = ['manual'];
         }
 
         // Body Fat
@@ -306,7 +344,9 @@ export function MetricsGrid() {
             const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
             newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
           }
-          newMetrics.body_fat.subtitle = t('metrics.subtitles.fuller');
+          newMetrics.body_fat.source = bodyFatData[0].user_metrics?.source || 'withings';
+          const uniqueSources = [...new Set(bodyFatData.map((b: any) => b.user_metrics?.source).filter(Boolean))];
+          newMetrics.body_fat.sources = uniqueSources.length > 0 ? uniqueSources : ['withings'];
         } else if (bodyFatBC.length > 0) {
           const curr = Number(bodyFatBC[0].body_fat_percentage);
           newMetrics.body_fat.value = curr.toFixed(1);
@@ -317,13 +357,15 @@ export function MetricsGrid() {
               newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
             }
           }
-          newMetrics.body_fat.subtitle = t('metrics.subtitles.fuller');
+          newMetrics.body_fat.source = 'manual';
+          newMetrics.body_fat.sources = ['manual'];
         }
 
         // VO2Max
         if (vo2maxData.length > 0) {
           newMetrics.vo2max.value = vo2maxData[0].value.toFixed(1);
-          newMetrics.vo2max.subtitle = '71 записей';
+          newMetrics.vo2max.source = 'garmin';
+          newMetrics.vo2max.sources = ['garmin'];
         }
 
         setMetrics(newMetrics);
@@ -374,9 +416,14 @@ export function MetricsGrid() {
               value={data.value}
               unit={config.unit}
               change={data.change}
-              subtitle={data.subtitle}
+              source={data.source}
+              sources={data.sources}
               color={config.color}
               onClick={() => navigate(`/metric/${routeMap[metricKey] || metricKey}`)}
+              onSourceChange={(newSource) => {
+                console.log(`Switched ${metricKey} to source: ${newSource}`);
+                // Здесь можно добавить логику для загрузки данных от другого источника
+              }}
             />
           );
         })}
