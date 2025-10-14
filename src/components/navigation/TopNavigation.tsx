@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 import {
   DropdownMenu,
   DropdownMenuContent,

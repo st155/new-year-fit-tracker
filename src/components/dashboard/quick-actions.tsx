@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 
 interface QuickActionsProps {
   userRole: "participant" | "trainer";

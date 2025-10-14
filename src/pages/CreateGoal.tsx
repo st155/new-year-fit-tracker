@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FitnessCard } from "@/components/ui/fitness-card";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";

@@ -45,7 +45,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalTicker } from "@/components/ui/global-ticker";
 import { supabase } from "@/integrations/supabase/client";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 
 interface NavigationItem {
   title: string;

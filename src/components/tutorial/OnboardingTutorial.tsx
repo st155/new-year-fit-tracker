@@ -17,7 +17,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 
 export function OnboardingTutorial() {
   const { user } = useAuth();
