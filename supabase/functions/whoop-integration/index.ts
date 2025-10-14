@@ -313,8 +313,15 @@ async function syncWhoopData(
 
   if (now >= expiresAt) {
     console.log('Refreshing Whoop token');
-    
-    // ВСЕГДА используем актуальный whoopClientId из secrets
+
+    // Используем тот client_id, с которым токен был изначально выдан
+    const clientIdForRefresh = token.client_id || whoopClientId;
+    console.log('Whoop token refresh using client_id:', {
+      storedClientId: token.client_id,
+      envClientId: whoopClientId,
+      effectiveClientId: clientIdForRefresh,
+    });
+
     const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
       method: 'POST',
       headers: {
@@ -323,7 +330,7 @@ async function syncWhoopData(
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: token.refresh_token,
-        client_id: whoopClientId,
+        client_id: clientIdForRefresh,
         client_secret: whoopClientSecret,
       }),
     });
@@ -335,7 +342,8 @@ async function syncWhoopData(
         statusText: refreshResponse.statusText,
         error: errorText,
         tokenExpiresAt: token.expires_at,
-        now: now.toISOString()
+        now: now.toISOString(),
+        triedClientId: clientIdForRefresh,
       });
       throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
     }
@@ -350,7 +358,8 @@ async function syncWhoopData(
         access_token: refreshData.access_token,
         refresh_token: refreshData.refresh_token,
         expires_at: newExpiresAt.toISOString(),
-        client_id: whoopClientId,
+        // Фиксируем корректный client_id, чтобы будущие рефреши использовали его же
+        client_id: clientIdForRefresh,
       })
       .eq('user_id', userId);
   }
