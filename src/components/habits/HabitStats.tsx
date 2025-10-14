@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, Trophy, TrendingUp, Calendar } from "lucide-react";
 
-export function HabitStats() {
+interface HabitStatsProps {
+  userId?: string;
+}
+
+export function HabitStats({ userId }: HabitStatsProps) {
   const { user } = useAuth();
   const [stats, setStats] = useState({
     totalHabits: 0,

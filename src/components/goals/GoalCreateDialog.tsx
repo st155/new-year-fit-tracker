@@ -39,11 +39,20 @@ const goalTypeLabels: Record<string, string> = {
 };
 
 interface GoalCreateDialogProps {
-  onGoalCreated: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onGoalCreated?: () => void;
 }
 
-export function GoalCreateDialog({ onGoalCreated }: GoalCreateDialogProps) {
-  const [open, setOpen] = useState(false);
+export function GoalCreateDialog({ 
+  open: controlledOpen, 
+  onOpenChange: controlledOnOpenChange,
+  onGoalCreated 
+}: GoalCreateDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();

@@ -20,7 +20,13 @@ const Auth = lazy(() => import("./pages/Auth"));
 
 // Primary pages
 const Index = lazy(() => import("./pages/Index"));
-const Progress = lazy(() => import("./pages/ModernProgress"));
+const Progress = lazy(() => import("./pages/Progress"));
+const Goals = lazy(() => import("./pages/Goals"));
+const Body = lazy(() => import("./pages/Body"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
+const Habits = lazy(() => import("./pages/Habits"));
+const Feed = lazy(() => import("./pages/Feed"));
 const FitnessData = lazy(() => import("./pages/FitnessData"));
 
 // Secondary pages
@@ -82,6 +88,48 @@ const App = () => {
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <Progress />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/goals" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Goals />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/body" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Body />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Challenges />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges/:id" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <ChallengeDetail />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/habits" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Habits />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/feed" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Feed />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />

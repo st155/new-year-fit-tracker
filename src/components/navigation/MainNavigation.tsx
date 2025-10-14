@@ -71,10 +71,22 @@ const navigationItems: NavigationItemExtended[] = [
     description: "descriptions.home",
   },
   {
-    title: "navigation.dashboard",
-    href: "/dashboard",
+    title: "navigation.progress",
+    href: "/progress",
     iconType: "stats",
-    description: "descriptions.dashboard",
+    description: "descriptions.progress",
+  },
+  {
+    title: "Goals",
+    href: "/goals",
+    iconType: "stats",
+    description: "Track your fitness goals",
+  },
+  {
+    title: "Body",
+    href: "/body",
+    iconType: "stats",
+    description: "Body composition tracking",
   },
   {
     title: "navigation.challenges",
@@ -83,10 +95,16 @@ const navigationItems: NavigationItemExtended[] = [
     description: "descriptions.challenges",
   },
   {
-    title: "navigation.progress",
-    href: "/progress",
-    iconType: "stats",
-    description: "descriptions.progress",
+    title: "Habits",
+    href: "/habits",
+    iconType: "activity",
+    description: "Daily habits tracking",
+  },
+  {
+    title: "navigation.feed",
+    href: "/feed",
+    iconType: "activity",
+    description: "descriptions.feed",
   },
   {
     title: "navigation.fitnessData",
@@ -99,12 +117,6 @@ const navigationItems: NavigationItemExtended[] = [
     href: "/integrations",
     iconType: "integrations",
     description: "descriptions.integrations",
-  },
-  {
-    title: "navigation.feed",
-    href: "/feed",
-    iconType: "activity",
-    description: "descriptions.feed",
   },
 ];
 
