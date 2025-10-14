@@ -125,18 +125,16 @@ export function AdditionalMetrics() {
             .order('measurement_date', { ascending: false })
             .limit(7),
           
-          // Recovery — берем ПОСЛЕДНЮЮ запись дня (самую позднюю по created_at)
+          // Recovery — ТОЛЬКО сегодня. Если нет Recovery Score/Recovery, используем Sleep Performance
           supabase
             .from('metric_values')
             .select('value, measurement_date, user_metrics!inner(metric_name, source)')
             .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
             .eq('user_metrics.source', 'whoop')
-            .gte('measurement_date', weekAgoDate)
-            .lte('measurement_date', today)
-            .order('measurement_date', { ascending: false })
+            .in('user_metrics.metric_name', ['Recovery Score', 'Recovery', 'Sleep Performance'])
+            .eq('measurement_date', today)
             .order('created_at', { ascending: false })
-            .limit(1),
+            .limit(3),
           
           // Strain - последний доступный
           supabase

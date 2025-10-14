@@ -154,17 +154,16 @@ export function MetricsGrid() {
           bodyFatBCRes,
           vo2maxRes,
         ] = await Promise.all([
-          // Recovery — берем ПОСЛЕДНЮЮ запись дня (самую позднюю по created_at)
+          // Recovery — берем значения ТОЛЬКО за сегодня. При отсутствии Recovery Score используем Sleep Performance
           supabase
             .from('metric_values')
             .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
             .eq('user_metrics.source', 'whoop')
-            .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-            .order('measurement_date', { ascending: false })
+            .in('user_metrics.metric_name', ['Recovery Score', 'Recovery', 'Sleep Performance'])
+            .eq('measurement_date', today)
             .order('created_at', { ascending: false })
-            .limit(1),
+            .limit(3),
           // Steps from daily summary
           supabase
             .from('daily_health_summary')
@@ -248,13 +247,13 @@ export function MetricsGrid() {
 
         // Recovery
         if (recoveryData.length > 0) {
-          const current = Math.round(recoveryData[0].value);
-          const measurementDate = new Date(recoveryData[0].measurement_date);
-          newMetrics.recovery.value = current.toString();
-          newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${measurementDate.toLocaleDateString()})`;
-          if (recoveryData.length > 1) {
-            const change = Math.round(recoveryData[0].value - recoveryData[1].value);
-            newMetrics.recovery.change = change >= 0 ? `+${change}%` : `${change}%`;
+          const preferred = recoveryData.find((r: any) => r.user_metrics?.metric_name === 'Recovery Score' || r.user_metrics?.metric_name === 'Recovery')
+            || recoveryData.find((r: any) => r.user_metrics?.metric_name === 'Sleep Performance');
+          if (preferred) {
+            const current = Math.round(Number(preferred.value));
+            const measurementDate = new Date(preferred.measurement_date);
+            newMetrics.recovery.value = current.toString();
+            newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${measurementDate.toLocaleDateString()})`;
           }
         }
 
