@@ -403,7 +403,24 @@ async function syncWhoopData(
     if (cyclesData.records && cyclesData.records.length > 0) {
       for (const cycle of cyclesData.records) {
         // Recovery и Strain относятся к дате окончания цикла (утро после сна)
-        const cycleDate = new Date(cycle.end).toISOString().split('T')[0];
+        // cycle.end это timestamp в миллисекундах или ISO строка
+        let cycleDate: string;
+        try {
+          const endDate = new Date(cycle.end);
+          // Проверяем что дата валидная (не 1970-01-01)
+          if (endDate.getFullYear() < 2020) {
+            // Если дата невалидная, используем start
+            cycleDate = new Date(cycle.start).toISOString().split('T')[0];
+            console.log(`⚠️ Invalid end date for cycle ${cycle.id}, using start date: ${cycleDate}`);
+          } else {
+            cycleDate = endDate.toISOString().split('T')[0];
+          }
+        } catch (error) {
+          console.error(`Failed to parse cycle date for ${cycle.id}:`, error);
+          cycleDate = new Date(cycle.start).toISOString().split('T')[0];
+        }
+        
+        console.log(`Processing cycle ${cycle.id} for date: ${cycleDate}`);
         
         // Получаем Recovery score для цикла (отдельный API endpoint)
         try {
