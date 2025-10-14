@@ -27,21 +27,8 @@ function BodySegment({
   rotation?: [number, number, number];
   color: string;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(color),
-        wireframe: true,
-        emissive: new THREE.Color(color),
-        emissiveIntensity: 0.5,
-      });
-    }
-  });
-
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation}>
+    <mesh position={position} rotation={rotation}>
       <capsuleGeometry args={args} />
       <meshStandardMaterial
         color={color}
