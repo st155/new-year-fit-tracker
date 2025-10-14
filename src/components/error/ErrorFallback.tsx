@@ -1,9 +1,8 @@
 import { ErrorInfo, Component } from 'react';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, Bug, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ErrorFallbackProps {
   error: Error | null;
@@ -61,34 +60,41 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
               </Alert>
             )}
 
-            {/* Collapsible error details for debugging */}
+            {/* Error details for debugging */}
             {(error || errorInfo) && process.env.NODE_ENV === 'development' && (
-              <Collapsible open={showDetails} onOpenChange={this.toggleDetails}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full">
-                    <Bug className="h-4 w-4 mr-2" />
-                    {showDetails ? 'Скрыть технические детали' : 'Показать технические детали'}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-4 space-y-4">
-                  {error?.stack && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Stack Trace:</h4>
-                      <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto max-h-60">
-                        {error.stack}
-                      </pre>
-                    </div>
-                  )}
-                  {errorInfo?.componentStack && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Component Stack:</h4>
-                      <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto max-h-40">
-                        {errorInfo.componentStack}
-                      </pre>
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
+              <div className="space-y-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={this.toggleDetails}
+                >
+                  <Bug className="h-4 w-4 mr-2" />
+                  <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showDetails ? 'rotate-180' : ''}`} />
+                  {showDetails ? 'Скрыть технические детали' : 'Показать технические детали'}
+                </Button>
+                
+                {showDetails && (
+                  <div className="mt-4 space-y-4 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+                    {error?.stack && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold">Stack Trace:</h4>
+                        <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto max-h-60">
+                          {error.stack}
+                        </pre>
+                      </div>
+                    )}
+                    {errorInfo?.componentStack && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold">Component Stack:</h4>
+                        <pre className="text-xs bg-muted p-4 rounded-lg overflow-x-auto max-h-40">
+                          {errorInfo.componentStack}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
 
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
