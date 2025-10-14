@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-
 interface TopNavigationProps {
   userName?: string;
   userRole?: string;
@@ -47,9 +46,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-      {/* First row - Logo and User info */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-        {/* Logo and Brand */}
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
             <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -59,10 +56,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
           </span>
         </div>
 
-        {/* Right side actions */}
         <div className="flex items-center gap-2">
-
-          {/* Settings */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -95,7 +89,6 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* User Avatar with initials */}
           <Button
             variant="ghost"
             size="sm"
@@ -112,7 +105,6 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
         </div>
       </div>
 
-      {/* Second row - Navigation Icons */}
       <div className="flex items-center justify-center px-4 py-3 border-b border-border/20">
         <nav className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
           {navItems.map((item) => (
