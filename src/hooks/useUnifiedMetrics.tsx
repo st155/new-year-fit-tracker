@@ -94,6 +94,8 @@ export function useLatestUnifiedMetrics() {
 
         if (error) throw error;
 
+        console.log('[useLatestUnifiedMetrics] Fetched user_metrics:', metricsData?.length || 0);
+
         const latestMetrics: Record<string, any> = {};
         
         // Для каждой метрики получаем последнее значение
@@ -128,6 +130,7 @@ export function useLatestUnifiedMetrics() {
           }
         }
 
+        console.log('[useLatestUnifiedMetrics] Latest metrics:', Object.keys(latestMetrics));
         setMetrics(latestMetrics);
       } catch (err) {
         console.error('Error fetching latest unified metrics:', err);
