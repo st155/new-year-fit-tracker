@@ -54,100 +54,125 @@ serve(async (req) => {
 
     const warnings: string[] = [];
     let modelUsed = 'google/gemini-2.5-flash';
-    
-    console.log('Calling Lovable AI with tool calling...');
-    
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+
+    let aiData: any = null;
+
+    // Helper: build AI request body
+    const buildAiBody = (contentPart: any) => ({
+      model: modelUsed,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert at extracting body composition data from InBody analysis PDFs. Extract all available metrics with high precision. The PDF may be in Russian or English. Convert all values to standard units: weight in kg, percentages as numbers (15.5 not "15.5%"), masses in kg, area in cm², BMI as number, BMR as integer calories. For dates, use ISO format (YYYY-MM-DDTHH:mm:ss). If a field is not found, omit it from the response.'
+        },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extract all InBody metrics from this PDF. Use the inbody_metrics tool to return structured data.' },
+            contentPart
+          ]
+        }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'inbody_metrics',
+            description: 'Extract InBody body composition metrics from the analysis PDF',
+            parameters: {
+              type: 'object',
+              properties: {
+                test_date: { type: 'string', description: 'Test date in ISO format (YYYY-MM-DDTHH:mm:ss)' },
+                weight: { type: 'number', description: 'Body weight in kg' },
+                skeletal_muscle_mass: { type: 'number', description: 'Skeletal muscle mass in kg' },
+                percent_body_fat: { type: 'number', description: 'Body fat percentage as number (e.g., 15.5)' },
+                body_fat_mass: { type: 'number', description: 'Body fat mass in kg' },
+                visceral_fat_area: { type: 'number', description: 'Visceral fat area in cm²' },
+                bmi: { type: 'number', description: 'Body Mass Index' },
+                bmr: { type: 'integer', description: 'Basal Metabolic Rate in kcal' },
+                total_body_water: { type: 'number', description: 'Total body water in L' },
+                protein: { type: 'number', description: 'Protein mass in kg' },
+                minerals: { type: 'number', description: 'Mineral mass in kg' },
+                right_arm_mass: { type: 'number', description: 'Right arm muscle mass in kg' },
+                right_arm_percent: { type: 'number', description: 'Right arm muscle percentage' },
+                left_arm_mass: { type: 'number', description: 'Left arm muscle mass in kg' },
+                left_arm_percent: { type: 'number', description: 'Left arm muscle percentage' },
+                trunk_mass: { type: 'number', description: 'Trunk muscle mass in kg' },
+                trunk_percent: { type: 'number', description: 'Trunk muscle percentage' },
+                right_leg_mass: { type: 'number', description: 'Right leg muscle mass in kg' },
+                right_leg_percent: { type: 'number', description: 'Right leg muscle percentage' },
+                left_leg_mass: { type: 'number', description: 'Left leg muscle mass in kg' },
+                left_leg_percent: { type: 'number', description: 'Left leg muscle percentage' }
+              },
+              required: ['test_date']
+            }
+          }
+        }
+      ],
+      tool_choice: { type: 'function', function: { name: 'inbody_metrics' } }
+    });
+
+    // Attempt 1: signed URL (fast path)
+    console.log('Calling Lovable AI with signed URL...');
+    let aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: modelUsed,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert at extracting body composition data from InBody analysis PDFs. Extract all available metrics with high precision. The PDF may be in Russian or English. Convert all values to standard units: weight in kg, percentages as numbers (15.5 not "15.5%"), masses in kg, area in cm², BMI as number, BMR as integer calories. For dates, use ISO format (YYYY-MM-DDTHH:mm:ss). If a field is not found, omit it from the response.'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extract all InBody metrics from this PDF. Use the inbody_metrics tool to return structured data.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: signedUrlData.signedUrl
-                }
-              }
-            ]
-          }
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'inbody_metrics',
-              description: 'Extract InBody body composition metrics from the analysis PDF',
-              parameters: {
-                type: 'object',
-                properties: {
-                  test_date: { type: 'string', description: 'Test date in ISO format (YYYY-MM-DDTHH:mm:ss)' },
-                  weight: { type: 'number', description: 'Body weight in kg' },
-                  skeletal_muscle_mass: { type: 'number', description: 'Skeletal muscle mass in kg' },
-                  percent_body_fat: { type: 'number', description: 'Body fat percentage as number (e.g., 15.5)' },
-                  body_fat_mass: { type: 'number', description: 'Body fat mass in kg' },
-                  visceral_fat_area: { type: 'number', description: 'Visceral fat area in cm²' },
-                  bmi: { type: 'number', description: 'Body Mass Index' },
-                  bmr: { type: 'integer', description: 'Basal Metabolic Rate in kcal' },
-                  total_body_water: { type: 'number', description: 'Total body water in L' },
-                  protein: { type: 'number', description: 'Protein mass in kg' },
-                  minerals: { type: 'number', description: 'Mineral mass in kg' },
-                  right_arm_mass: { type: 'number', description: 'Right arm muscle mass in kg' },
-                  right_arm_percent: { type: 'number', description: 'Right arm muscle percentage' },
-                  left_arm_mass: { type: 'number', description: 'Left arm muscle mass in kg' },
-                  left_arm_percent: { type: 'number', description: 'Left arm muscle percentage' },
-                  trunk_mass: { type: 'number', description: 'Trunk muscle mass in kg' },
-                  trunk_percent: { type: 'number', description: 'Trunk muscle percentage' },
-                  right_leg_mass: { type: 'number', description: 'Right leg muscle mass in kg' },
-                  right_leg_percent: { type: 'number', description: 'Right leg muscle percentage' },
-                  left_leg_mass: { type: 'number', description: 'Left leg muscle mass in kg' },
-                  left_leg_percent: { type: 'number', description: 'Left leg muscle percentage' }
-                },
-                required: ['test_date']
-              }
-            }
-          }
-        ],
-        tool_choice: { type: 'function', function: { name: 'inbody_metrics' } }
-      })
+      body: JSON.stringify(buildAiBody({
+        type: 'image_url',
+        image_url: { url: signedUrlData.signedUrl }
+      }))
     });
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
       const errorText = await aiResponse.text();
-      console.error('AI API error:', status, errorText);
-      
-      if (status === 429) {
-        throw new Error('AI rate limit exceeded. Please try again in a minute.');
-      }
-      if (status === 402) {
-        throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
-      }
-      if (status === 400) {
-        // Check if it's an image extraction error
-        if (errorText.includes('Failed to extract') || errorText.includes('image')) {
-          throw new Error('Cannot extract images from this PDF. The file may be protected, corrupted, or in an unsupported format. Try: 1) Re-exporting the PDF 2) Using a different InBody scan 3) Converting to images first');
+      console.error('AI API error (signed URL):', status, errorText);
+
+      // Handle rate/credits
+      if (status === 429) throw new Error('AI rate limit exceeded. Please try again in a minute.');
+      if (status === 402) throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
+
+      // Fallback on image extraction failures by sending base64 PDF
+      if (status === 400 && (errorText.includes('Failed to extract') || errorText.toLowerCase().includes('image'))) {
+        console.log('Falling back to base64 PDF upload...');
+        const { data: pdfBlob, error: downloadError } = await supabase.storage
+          .from('inbody-pdfs')
+          .download(pdfStoragePath);
+        if (downloadError || !pdfBlob) {
+          throw new Error('Cannot download PDF from storage for fallback parsing');
         }
-        throw new Error(`Invalid PDF format or content (${status}). Please try a different file.`);
+        const pdfBuffer = await pdfBlob.arrayBuffer();
+        const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+
+        aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(buildAiBody({
+            type: 'image_url',
+            image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
+          }))
+        });
+
+        if (!aiResponse.ok) {
+          const status2 = aiResponse.status;
+          const errText2 = await aiResponse.text();
+          console.error('AI API error (base64 fallback):', status2, errText2);
+          if (status2 === 429) throw new Error('AI rate limit exceeded. Please try again in a minute.');
+          if (status2 === 402) throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
+          throw new Error(`AI processing failed (${status2}). Please try a different PDF export.`);
+        }
+      } else {
+        throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
       }
-      throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
     }
 
-    const aiData = await aiResponse.json();
+    aiData = await aiResponse.json();
     console.log('AI response:', JSON.stringify(aiData, null, 2));
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
