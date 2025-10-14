@@ -118,6 +118,15 @@ export function UnifiedMetricsView() {
         metricsData = res.data ?? [];
       }
 
+      // Функция для определения приоритета источников
+      const getProviderPriority = (metricName: string, category: string): string[] => {
+        const name = metricName.toLowerCase();
+        if (category === 'recovery' || name.includes('recovery')) {
+          return ['whoop', 'oura', 'garmin', 'polar', 'fitbit', 'withings', 'suunto', 'ultrahuman'];
+        }
+        return ['garmin', 'whoop', 'oura', 'polar', 'fitbit', 'withings', 'suunto', 'ultrahuman'];
+      };
+
       // Группируем по названию метрики и берём самую свежую по каждому источнику
       const metricsMap = new Map<string, UnifiedMetric>();
       metricsData.forEach((item: any) => {
@@ -148,11 +157,22 @@ export function UnifiedMetricsView() {
       });
 
       const nextMetrics = Array.from(metricsMap.values());
+      
+      // Применяем приоритизацию источников
       const prioritizedMetrics = nextMetrics.map((m) => {
-        const priority = getProviderPriorityForMetric(m.name, m.category).map((p) => p.toLowerCase());
-        const preferredIdx = m.sources.findIndex((s) => priority.includes(s.source.toLowerCase()));
-        return preferredIdx >= 0 ? { ...m, activeSourceIndex: preferredIdx } : m;
+        if (m.sources.length <= 1) return m;
+        
+        const priority = getProviderPriority(m.name, m.category);
+        const preferredIdx = m.sources.findIndex((s) => 
+          priority.includes(s.source.toLowerCase())
+        );
+        
+        if (preferredIdx >= 0) {
+          return { ...m, activeSourceIndex: preferredIdx };
+        }
+        return m;
       });
+      
       setMetrics(prioritizedMetrics);
 
       // Кэшируем для мгновенной последующей загрузки
@@ -219,16 +239,6 @@ export function UnifiedMetricsView() {
     return nameMap[provider.toLowerCase()] || provider;
   };
 
-  // Определяем приоритет источников для конкретной метрики
-  const getProviderPriorityForMetric = (metricName: string, category: string): string[] => {
-    const name = metricName.toLowerCase();
-    // Для Recovery приоритет Whoop
-    if (category === 'recovery' || name.includes('recovery')) {
-      return ['Whoop', 'Oura', 'Garmin', 'Polar', 'Fitbit', 'Withings', 'Suunto', 'Ultrahuman'];
-    }
-    // Общий приоритет для остальных метрик
-    return ['Garmin', 'Whoop', 'Oura', 'Polar', 'Fitbit', 'Withings', 'Suunto', 'Ultrahuman'];
-  };
 
   const handleMetricClick = (metricIndex: number) => {
     setMetrics(prev => prev.map((metric, idx) => {
