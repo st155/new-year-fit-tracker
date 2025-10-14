@@ -41,16 +41,29 @@ serve(async (req) => {
       throw new Error('pdfStoragePath is required');
     }
 
-    console.log('Creating signed URL for:', pdfStoragePath);
+    console.log('Downloading PDF from storage:', pdfStoragePath);
     
-    const { data: signedUrlData, error: signedError } = await supabase.storage
+    // Download PDF directly from storage
+    const { data: pdfBlob, error: downloadError } = await supabase.storage
       .from('inbody-pdfs')
-      .createSignedUrl(pdfStoragePath, 900);
+      .download(pdfStoragePath);
 
-    if (signedError || !signedUrlData?.signedUrl) {
-      console.error('Failed to create signed URL:', signedError);
-      throw new Error('Failed to create signed URL for PDF');
+    if (downloadError || !pdfBlob) {
+      console.error('Failed to download PDF:', downloadError);
+      throw new Error('Failed to download PDF from storage');
     }
+
+    // Convert PDF to base64
+    const pdfBuffer = await pdfBlob.arrayBuffer();
+    const base64Pdf = btoa(
+      new Uint8Array(pdfBuffer).reduce(
+        (data, byte) => data + String.fromCharCode(byte),
+        ''
+      )
+    );
+    
+    const pdfDataUrl = `data:application/pdf;base64,${base64Pdf}`;
+    console.log('PDF size:', Math.round(pdfBuffer.byteLength / 1024), 'KB');
 
     const warnings: string[] = [];
     let modelUsed = 'google/gemini-2.5-flash';
@@ -80,7 +93,7 @@ serve(async (req) => {
               {
                 type: 'image_url',
                 image_url: {
-                  url: signedUrlData.signedUrl
+                  url: pdfDataUrl
                 }
               }
             ]
@@ -210,7 +223,7 @@ serve(async (req) => {
       left_leg_mass: normalizeNumber(metrics.left_leg_mass),
       left_leg_percent: normalizeNumber(metrics.left_leg_percent),
       raw_data: metrics,
-      pdf_url: signedUrlData.signedUrl.split('?')[0] // URL without signature
+      pdf_url: `${supabaseUrl}/storage/v1/object/public/inbody-pdfs/${pdfStoragePath}`
     };
 
     // Check critical fields
