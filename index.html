@@ -49,6 +49,17 @@
 
   <body>
     <div id="root"></div>
+    <!-- React Fast Refresh preamble (dev only) -->
+    <script type="module">
+      // Vite injects $RefreshReg$ in transformed files; ensure runtime is registered first
+      if (!window.__vite_plugin_react_preamble_installed__) {
+        import RefreshRuntime from '/@react-refresh';
+        RefreshRuntime.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => (type) => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
