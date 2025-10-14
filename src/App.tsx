@@ -20,7 +20,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 
 // Primary pages
 const Index = lazy(() => import("./pages/Index"));
-const Progress = lazy(() => import("./pages/Progress"));
+const ProgressNew = lazy(() => import("./pages/ProgressNew"));
 const Goals = lazy(() => import("./pages/Goals"));
 const Body = lazy(() => import("./pages/Body"));
 const Challenges = lazy(() => import("./pages/Challenges"));
@@ -87,7 +87,7 @@ const App = () => {
                     <Route path="/progress" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
-                          <Progress />
+                          <ProgressNew />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />

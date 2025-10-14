@@ -1,0 +1,57 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Target } from "lucide-react";
+
+interface Goal {
+  id: string;
+  goal_name: string;
+  target_value: number;
+  target_unit: string;
+  measurements?: Array<{ value: number }>;
+}
+
+interface GoalsProgressProps {
+  goals: Goal[];
+}
+
+export function GoalsProgress({ goals }: GoalsProgressProps) {
+  if (!goals || goals.length === 0) {
+    return (
+      <EmptyState
+        icon={<Target className="h-12 w-12" />}
+        title="No goals yet"
+        description="Create goals to track your progress"
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {goals.map((goal) => {
+        const currentValue = goal.measurements?.[0]?.value || 0;
+        const progress = Math.min((currentValue / goal.target_value) * 100, 100);
+
+        return (
+          <Card key={goal.id}>
+            <CardHeader>
+              <CardTitle className="text-lg">{goal.goal_name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-2xl font-bold">{currentValue.toFixed(1)}</div>
+                  <div className="text-sm text-muted-foreground">
+                    of {goal.target_value} {goal.target_unit}
+                  </div>
+                </div>
+                <div className="text-sm font-medium">{progress.toFixed(0)}%</div>
+              </div>
+              <Progress value={progress} />
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
