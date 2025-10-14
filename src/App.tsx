@@ -65,6 +65,7 @@ const queryClient = new QueryClient({
   },
 });
 
+// Main application component with authentication and routing
 const App = () => {
   useEffect(() => {
     registerServiceWorker();
