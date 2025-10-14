@@ -159,7 +159,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ pdfUrl: publicUrl }),
+          body: JSON.stringify({ pdfUrl: publicUrl, pdfStoragePath: fileName }),
         }
       );
 

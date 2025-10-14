@@ -33,22 +33,43 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Get request body with PDF URL
-    const { pdfUrl } = await req.json();
-    
-    if (!pdfUrl) {
-      throw new Error('PDF URL is required');
+    // Get request body: either storage path or public URL
+    const { pdfUrl, pdfStoragePath } = await req.json();
+
+    if (!pdfUrl && !pdfStoragePath) {
+      throw new Error('PDF reference is required');
     }
 
-    console.log('Fetching PDF from:', pdfUrl);
+    let pdfBuffer: ArrayBuffer | undefined;
 
-    // Download PDF from storage
-    const pdfResponse = await fetch(pdfUrl);
-    if (!pdfResponse.ok) {
-      throw new Error('Failed to fetch PDF');
+    if (pdfStoragePath) {
+      console.log('Downloading PDF from storage:', pdfStoragePath);
+      const { data: pdfBlob, error: downloadError } = await supabase.storage
+        .from('inbody-pdfs')
+        .download(pdfStoragePath);
+
+      if (downloadError) {
+        console.warn('Storage download failed, falling back to URL if provided:', downloadError.message);
+      } else if (pdfBlob) {
+        pdfBuffer = await pdfBlob.arrayBuffer();
+      }
     }
 
-    const pdfBuffer = await pdfResponse.arrayBuffer();
+    if (!pdfBuffer) {
+      if (!pdfUrl) throw new Error('Failed to download from storage and no pdfUrl provided');
+      console.log('Fetching PDF from URL:', pdfUrl);
+      const pdfResponse = await fetch(pdfUrl);
+      if (!pdfResponse.ok) {
+        const errText = await pdfResponse.text().catch(() => '');
+        throw new Error(`Failed to fetch PDF (status ${pdfResponse.status}) ${errText ? '- ' + errText : ''}`);
+      }
+      pdfBuffer = await pdfResponse.arrayBuffer();
+    }
+
+    if (!pdfBuffer) {
+      throw new Error('Unable to obtain PDF bytes');
+    }
+
     const base64Pdf = btoa(
       new Uint8Array(pdfBuffer).reduce(
         (data, byte) => data + String.fromCharCode(byte),
