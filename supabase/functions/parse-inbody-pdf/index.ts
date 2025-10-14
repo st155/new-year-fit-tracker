@@ -52,8 +52,8 @@ serve(async (req) => {
       if (downloadError) {
         console.warn('Storage download failed, falling back to URL if provided:', downloadError.message);
       } else if (pdfBlob) {
-        if (pdfBlob.size > 12_000_000) {
-          throw new Error('PDF is too large (>12MB). Please re-export a smaller file.');
+        if (pdfBlob.size > 15 * 1024 * 1024) {
+          throw new Error('PDF is too large (>15MB). Please re-export a smaller file.');
         }
         pdfBuffer = await pdfBlob.arrayBuffer();
       }

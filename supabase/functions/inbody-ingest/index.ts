@@ -146,8 +146,8 @@ serve(async (req) => {
           throw new Error('Cannot download PDF from storage for fallback parsing');
         }
         // Safety: reject very large PDFs to avoid worker limits
-        if (pdfBlob.size > 12_000_000) {
-          throw new Error('PDF is too large (>12MB). Please re-export a lighter file.');
+        if (pdfBlob.size > 15 * 1024 * 1024) {
+          throw new Error('PDF is too large (>15MB). Please re-export a lighter file.');
         }
         const pdfBuffer = await pdfBlob.arrayBuffer();
         const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
