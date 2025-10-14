@@ -92,6 +92,7 @@ export function AdditionalMetrics() {
   
   const [metricsData, setMetricsData] = useState<Record<string, any>>({
     sleep: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.avgPerNight') },
+    recovery: { value: "—", change: null, subtitle: t('dashboard.metrics.from_whoop') },
     strain: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.today') },
     activeMin: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') },
     calories: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.dailyAvg') },
@@ -112,7 +113,7 @@ export function AdditionalMetrics() {
         const weekAgoDate = sevenDaysAgo.toISOString().split('T')[0];
 
         // Fetch все метрики параллельно
-        const [sleepRes, strainRes, activeMinRes, caloriesRes, stepsRes, restHrRes, hydrationRes, workoutsRes] = await Promise.all([
+        const [sleepRes, recoveryRes, strainRes, activeMinRes, caloriesRes, stepsRes, restHrRes, hydrationRes, workoutsRes] = await Promise.all([
           // Sleep - среднее за последние 7 дней
           supabase
             .from('metric_values')
@@ -123,6 +124,17 @@ export function AdditionalMetrics() {
             .lte('measurement_date', today)
             .order('measurement_date', { ascending: false })
             .limit(7),
+          
+          // Recovery - последний доступный за 7 дней
+          supabase
+            .from('metric_values')
+            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .eq('user_id', user.id)
+            .eq('user_metrics.metric_name', 'Recovery')
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false })
+            .limit(1),
           
           // Strain - последний доступный
           supabase
@@ -202,6 +214,13 @@ export function AdditionalMetrics() {
         if (sleepRes.data && sleepRes.data.length > 0) {
           const avg = sleepRes.data.reduce((sum, r) => sum + Number(r.value), 0) / sleepRes.data.length;
           newMetrics.sleep.value = avg.toFixed(1);
+        }
+
+        // Recovery - показываем последний с датой
+        if (recoveryRes.data && recoveryRes.data.length > 0) {
+          const recoveryRecord = recoveryRes.data[0];
+          newMetrics.recovery.value = Math.round(Number(recoveryRecord.value)).toString();
+          newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${new Date(recoveryRecord.measurement_date).toLocaleDateString()})`;
         }
 
         // Strain - берем последний доступный и показываем дату
@@ -284,6 +303,16 @@ export function AdditionalMetrics() {
       change: metricsData.sleep.change,
       subtitle: metricsData.sleep.subtitle,
       color: "purple-500",
+      route: "/metric/recovery"
+    },
+    {
+      icon: <Heart className="h-4 w-4 text-green-500" />,
+      title: t('dashboard.metrics.recovery'),
+      value: metricsData.recovery.value,
+      unit: "%",
+      change: metricsData.recovery.change,
+      subtitle: metricsData.recovery.subtitle,
+      color: "green-500",
       route: "/metric/recovery"
     },
     {
