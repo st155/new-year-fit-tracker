@@ -154,12 +154,12 @@ export function MetricsGrid() {
           bodyFatBCRes,
           vo2maxRes,
         ] = await Promise.all([
-          // Recovery - ищем последний за 7 дней
+          // Recovery - ищем последний за 7 дней (поддержка 'Recovery' и 'Recovery Score')
           supabase
             .from('metric_values')
             .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
             .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'Recovery')
+            .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
             .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
             .order('measurement_date', { ascending: false })
             .order('created_at', { ascending: false })

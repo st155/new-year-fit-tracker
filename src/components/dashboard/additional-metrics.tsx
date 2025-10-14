@@ -125,12 +125,12 @@ export function AdditionalMetrics() {
             .order('measurement_date', { ascending: false })
             .limit(7),
           
-          // Recovery - последний доступный за 7 дней
+          // Recovery - последний доступный за 7 дней (поддержка 'Recovery' и 'Recovery Score')
           supabase
             .from('metric_values')
             .select('value, measurement_date, user_metrics!inner(metric_name)')
             .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'Recovery')
+            .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
             .gte('measurement_date', weekAgoDate)
             .lte('measurement_date', today)
             .order('measurement_date', { ascending: false })
