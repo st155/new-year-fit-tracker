@@ -163,14 +163,118 @@ async function handleWhoopWebhook(req: Request, supabase: any) {
 
 // Withings Webhook Handler
 async function handleWithingsWebhook(req: Request, supabase: any) {
-  const payload = await req.json();
-  console.log('✅ Withings webhook:', payload);
+  try {
+    const payload = await req.json();
+    console.log('✅ Withings webhook received:', JSON.stringify(payload));
 
-  // Implement Withings webhook logic here
-  return new Response(
-    JSON.stringify({ success: true }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
+    // Withings sends user_id and measurement data
+    if (!payload.user_id) {
+      console.error('❌ Missing user_id in Withings webhook');
+      return new Response(
+        JSON.stringify({ error: 'Missing user_id' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = payload.user_id;
+    console.log(`📊 Processing Withings data for user: ${userId}`);
+
+    // Process weight data
+    if (payload.weight) {
+      const measurementDate = payload.measurement_date || new Date().toISOString().split('T')[0];
+      console.log(`💪 Saving weight: ${payload.weight} kg on ${measurementDate}`);
+      
+      const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+        p_user_id: userId,
+        p_metric_name: 'Вес',
+        p_metric_category: 'body',
+        p_unit: 'кг',
+        p_source: 'withings',
+      });
+
+      if (weightMetricId) {
+        await supabase.from('metric_values').upsert({
+          user_id: userId,
+          metric_id: weightMetricId,
+          value: payload.weight,
+          measurement_date: measurementDate,
+          external_id: `withings_weight_${measurementDate}`,
+        }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        console.log('✅ Weight saved');
+      }
+
+      // Also save to body_composition table
+      await supabase.from('body_composition').upsert({
+        user_id: userId,
+        measurement_date: measurementDate,
+        weight: payload.weight,
+        body_fat_percentage: payload.body_fat_percentage,
+        muscle_mass: payload.muscle_mass,
+        measurement_method: 'withings',
+      }, { onConflict: 'user_id,measurement_date' });
+      console.log('✅ Body composition updated');
+    }
+
+    // Process body fat percentage
+    if (payload.body_fat_percentage) {
+      const measurementDate = payload.measurement_date || new Date().toISOString().split('T')[0];
+      
+      const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+        p_user_id: userId,
+        p_metric_name: 'Процент жира',
+        p_metric_category: 'body',
+        p_unit: '%',
+        p_source: 'withings',
+      });
+
+      if (fatMetricId) {
+        await supabase.from('metric_values').upsert({
+          user_id: userId,
+          metric_id: fatMetricId,
+          value: payload.body_fat_percentage,
+          measurement_date: measurementDate,
+          external_id: `withings_bodyfat_${measurementDate}`,
+        }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        console.log('✅ Body fat saved');
+      }
+    }
+
+    // Process muscle mass
+    if (payload.muscle_mass) {
+      const measurementDate = payload.measurement_date || new Date().toISOString().split('T')[0];
+      
+      const { data: muscleMetricId } = await supabase.rpc('create_or_get_metric', {
+        p_user_id: userId,
+        p_metric_name: 'Мышечная масса',
+        p_metric_category: 'body',
+        p_unit: 'кг',
+        p_source: 'withings',
+      });
+
+      if (muscleMetricId) {
+        await supabase.from('metric_values').upsert({
+          user_id: userId,
+          metric_id: muscleMetricId,
+          value: payload.muscle_mass,
+          measurement_date: measurementDate,
+          external_id: `withings_muscle_${measurementDate}`,
+        }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        console.log('✅ Muscle mass saved');
+      }
+    }
+
+    console.log('✅ Withings webhook processed successfully');
+    return new Response(
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('❌ Error processing Withings webhook:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 }
 
 // Terra signature verification
