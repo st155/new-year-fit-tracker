@@ -49,11 +49,6 @@
 
   <body>
     <div id="root"></div>
-    <script>
-      // Safe no-ops to avoid React Refresh runtime errors in static builds
-      window.$RefreshReg$ = () => {};
-      window.$RefreshSig$ = () => (type) => type;
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

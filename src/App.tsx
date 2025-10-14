@@ -18,35 +18,16 @@ import { registerServiceWorker } from "@/lib/pwa-utils";
 const Landing = lazy(() => import("./pages/Landing"));
 const Auth = lazy(() => import("./pages/Auth"));
 
-// Primary pages - with preload function
-const indexLoader = () => import("./pages/Index");
-const fitnessDataLoader = () => import("./pages/FitnessData");
-const progressLoader = () => import("./pages/ModernProgress");
-const feedLoader = () => import("./pages/Feed");
+// Primary pages
+const Index = lazy(() => import("./pages/Index"));
+const Progress = lazy(() => import("./pages/ModernProgress"));
+const FitnessData = lazy(() => import("./pages/FitnessData"));
 
-const Index = lazy(indexLoader);
-const FitnessData = lazy(fitnessDataLoader);
-const Progress = lazy(progressLoader);
-const Feed = lazy(feedLoader);
-
-// Secondary pages - load on demand
-const Challenges = lazy(() => import("./pages/Challenges"));
-const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
-const CreateChallenge = lazy(() => import("./pages/CreateChallenge"));
+// Secondary pages
 const Profile = lazy(() => import("./pages/Profile"));
-const CreateGoal = lazy(() => import("./pages/CreateGoal"));
-const EditGoal = lazy(() => import("./pages/EditGoal"));
 const Integrations = lazy(() => import("./pages/Integrations"));
-const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
-const MetricDetail = lazy(() => import("./pages/MetricDetail"));
-const Leaderboard = lazy(() => import("./pages/Leaderboard"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const Body = lazy(() => import("./pages/Body"));
-const BodyMeasurements = lazy(() => import("./pages/BodyMeasurements"));
-const Habits = lazy(() => import("./pages/Habits"));
-const Goals = lazy(() => import("./pages/Goals"));
 
-// Callbacks - load on demand
+// OAuth callbacks
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
 const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
 
@@ -67,16 +48,10 @@ const queryClient = new QueryClient({
 // Main application component with authentication and routing
 const App = () => {
   useEffect(() => {
-    registerServiceWorker();
-    
-    // Preload critical pages after initial render
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        indexLoader();
-        fitnessDataLoader();
-        progressLoader();
-        feedLoader();
-      });
+    try {
+      registerServiceWorker();
+    } catch (error) {
+      console.error('Service worker registration failed:', error);
     }
   }, []);
 
@@ -103,66 +78,10 @@ const App = () => {
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                    <Route path="/challenges" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Challenges />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges/create" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <CreateChallenge />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <ChallengeDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
                     <Route path="/progress" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <Progress />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/leaderboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Leaderboard />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/metric/:metricType" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <MetricDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Profile />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals/create" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <CreateGoal />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals/edit/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <EditGoal />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
@@ -173,18 +92,10 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
-                    <Route path="/body-composition" element={
+                    <Route path="/profile" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
-                          <Body />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/body" element={<Navigate to="/body-composition" replace />} />
-                    <Route path="/body-measurements" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <BodyMeasurements />
+                          <Profile />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
@@ -196,46 +107,11 @@ const App = () => {
                       </ProtectedRoute>
                     } />
                     
-                    {/* Terra callback - handles all Terra providers */}
+                    {/* OAuth callbacks */}
                     <Route path="/terra-callback" element={<TerraCallback />} />
-                    
-                    {/* Whoop callback - handles Whoop OAuth */}
                     <Route path="/integrations/whoop/callback" element={<WhoopCallback />} />
-                    <Route path="/feed" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Feed />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/trainer-dashboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <TrainerDashboard />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/notifications" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Notifications />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/habits" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Habits />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Goals />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
+                    
+                    {/* Static pages */}
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

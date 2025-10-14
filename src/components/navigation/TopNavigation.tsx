@@ -1,11 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, memo } from "react";
+import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
 import {
@@ -28,17 +27,11 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const location = useLocation();
   const { profile } = useProfile();
   const { t } = useTranslation();
-  const [notificationCount] = useState(1);
 
   const navItems = [
-    { type: 'home' as const, path: "/dashboard", label: t('navigation.dashboard') },
-    { type: 'stats' as const, path: "/progress", label: t('navigation.progress') },
-    { type: 'body' as const, path: "/body", label: t('navigation.body') },
-    { type: 'challenges' as const, path: "/challenges", label: t('navigation.challenges') },
-    { type: 'goals' as const, path: "/goals", label: t('navigation.goals') },
-    { type: 'feed' as const, path: "/feed", label: t('navigation.feed') },
-    { type: 'data' as const, path: "/fitness-data", label: t('navigation.fitnessData') },
-    { type: 'habits' as const, path: "/habits", label: t('navigation.habits') },
+    { type: 'home' as const, path: "/", label: 'Главная' },
+    { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
+    { type: 'data' as const, path: "/fitness-data", label: 'Данные' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -68,29 +61,6 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
         {/* Right side actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 w-10 p-0 relative hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
-            onClick={() => navigate('/notifications')}
-          >
-            <Bell 
-              className="h-5 w-5 transition-all duration-300 hover:animate-swing" 
-              style={{
-                color: '#f59e0b',
-                filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.5))'
-              }}
-            />
-            {notificationCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-heartbeat"
-              >
-                {notificationCount}
-              </Badge>
-            )}
-          </Button>
 
           {/* Settings */}
           <DropdownMenu>
