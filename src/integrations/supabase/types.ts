@@ -932,6 +932,56 @@ export type Database = {
         }
         Relationships: []
       }
+      inbody_uploads: {
+        Row: {
+          analysis_id: string | null
+          created_at: string | null
+          error_message: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          status: string | null
+          storage_path: string
+          updated_at: string | null
+          uploaded_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          status?: string | null
+          storage_path: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          status?: string | null
+          storage_path?: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbody_uploads_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "inbody_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       measurements: {
         Row: {
           apple_health_id: string | null

@@ -36,7 +36,7 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { pdfStoragePath } = await req.json();
+    const { pdfStoragePath, uploadId } = await req.json();
     
     if (!pdfStoragePath) {
       throw new Error('pdfStoragePath is required');
@@ -236,6 +236,23 @@ serve(async (req) => {
     }
 
     console.log('InBody analysis saved successfully:', analysis.id);
+
+    // Update inbody_uploads if uploadId provided
+    if (uploadId) {
+      console.log('Updating upload status for:', uploadId);
+      const { error: updateError } = await supabase
+        .from('inbody_uploads')
+        .update({ 
+          status: 'analyzed',
+          analysis_id: analysis.id
+        })
+        .eq('id', uploadId);
+      
+      if (updateError) {
+        console.error('Failed to update upload status:', updateError);
+        warnings.push('Failed to update upload status');
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

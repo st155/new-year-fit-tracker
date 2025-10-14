@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Trash2, Eye, TrendingUp, TrendingDown } from "lucide-react";
+import { FileText, Trash2, Eye, TrendingUp, TrendingDown, ScanLine, Loader2, RefreshCw, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -43,38 +44,107 @@ interface InBodyAnalysis {
   pdf_url?: string;
 }
 
+interface InBodyUpload {
+  id: string;
+  file_name: string;
+  storage_path: string;
+  file_size: number;
+  uploaded_at: string;
+  status: 'uploaded' | 'processing' | 'analyzed' | 'failed';
+  analysis_id: string | null;
+  error_message: string | null;
+}
+
 export const InBodyHistory = () => {
   const { user } = useAuth();
   const [analyses, setAnalyses] = useState<InBodyAnalysis[]>([]);
+  const [uploads, setUploads] = useState<InBodyUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnalysis, setSelectedAnalysis] = useState<InBodyAnalysis | null>(null);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
-  const fetchAnalyses = async () => {
+  const fetchData = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('inbody_analyses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('test_date', { ascending: false });
+      const [analysesRes, uploadsRes] = await Promise.all([
+        supabase
+          .from('inbody_analyses')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('test_date', { ascending: false }),
+        supabase
+          .from('inbody_uploads')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('status', ['uploaded', 'failed'])
+          .order('uploaded_at', { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setAnalyses(data || []);
+      if (analysesRes.error) throw analysesRes.error;
+      if (uploadsRes.error) throw uploadsRes.error;
+
+      setAnalyses(analysesRes.data || []);
+      setUploads((uploadsRes.data || []) as InBodyUpload[]);
     } catch (error) {
-      console.error('Error fetching InBody analyses:', error);
-      toast.error('Failed to load analysis history');
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load history');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAnalyses();
+    fetchData();
   }, [user]);
 
-  const handleDelete = async (id: string) => {
+  const handleAnalyze = async (uploadId: string, storagePath: string) => {
+    setProcessingIds(prev => new Set(prev).add(uploadId));
+    
+    try {
+      await supabase
+        .from('inbody_uploads')
+        .update({ status: 'processing' })
+        .eq('id', uploadId);
+
+      toast.info('Запуск анализа...');
+
+      const { data, error } = await supabase.functions.invoke('inbody-ingest', {
+        body: { 
+          pdfStoragePath: storagePath,
+          uploadId: uploadId
+        }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast.success('Анализ успешно завершен');
+      fetchData();
+    } catch (error: any) {
+      console.error('Error analyzing:', error);
+      toast.error(error.message || 'Ошибка анализа');
+      
+      await supabase
+        .from('inbody_uploads')
+        .update({ 
+          status: 'failed',
+          error_message: error.message 
+        })
+        .eq('id', uploadId);
+      
+      fetchData();
+    } finally {
+      setProcessingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(uploadId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteAnalysis = async (id: string) => {
     try {
       const { error } = await supabase
         .from('inbody_analyses')
@@ -82,12 +152,33 @@ export const InBodyHistory = () => {
         .eq('id', id);
 
       if (error) throw error;
-
       toast.success('Analysis deleted');
-      fetchAnalyses();
+      fetchData();
     } catch (error) {
       console.error('Error deleting analysis:', error);
       toast.error('Failed to delete analysis');
+    }
+  };
+
+  const handleDeleteUpload = async (id: string, storagePath: string) => {
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('inbody-pdfs')
+        .remove([storagePath]);
+
+      if (storageError) console.error('Storage delete error:', storageError);
+
+      const { error: dbError } = await supabase
+        .from('inbody_uploads')
+        .delete()
+        .eq('id', id);
+
+      if (dbError) throw dbError;
+      toast.success('PDF удален');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting upload:', error);
+      toast.error('Ошибка удаления');
     }
   };
 
@@ -110,13 +201,13 @@ export const InBodyHistory = () => {
     );
   }
 
-  if (analyses.length === 0) {
+  if (analyses.length === 0 && uploads.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FileText className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground text-center">
-            No InBody analyses uploaded yet
+            No InBody data yet. Upload a PDF to get started.
           </p>
         </CardContent>
       </Card>
@@ -125,135 +216,231 @@ export const InBodyHistory = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {analyses.map((analysis, index) => {
-          const previousAnalysis = analyses[index + 1];
-          const weightChange = getChange(analysis.weight, previousAnalysis?.weight ?? null);
-          const bfChange = getChange(analysis.percent_body_fat, previousAnalysis?.percent_body_fat ?? null);
-
-          return (
-            <div
-              key={analysis.id}
-              className="inbody-card p-4 cursor-pointer hover:scale-105 transition-transform stagger-item"
-              onClick={() => setSelectedAnalysis(analysis)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                    {format(new Date(analysis.test_date), 'MMM dd, yyyy')}
-                  </p>
-                  <p className="text-sm font-semibold text-primary mt-1">
-                    InBody Scan #{analyses.length - index}
-                  </p>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedAnalysis(analysis);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {analysis.pdf_url && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(analysis.pdf_url, '_blank');
-                      }}
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+      <div className="space-y-6">
+        {/* Pending uploads */}
+        {uploads.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Ожидают распознавания ({uploads.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {uploads.map((upload) => {
+                const isProcessing = processingIds.has(upload.id);
+                const isFailed = upload.status === 'failed';
+                
+                return (
+                  <Card key={upload.id} className={`${isFailed ? 'border-destructive/50' : 'border-amber-500/50'}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <Badge variant={isFailed ? 'destructive' : 'secondary'} className="mb-2">
+                            {isFailed ? '❌ Ошибка' : '📁 Не распознан'}
+                          </Badge>
+                          <CardTitle className="text-sm font-medium truncate">
+                            {upload.file_name}
+                          </CardTitle>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {(upload.file_size / (1024 * 1024)).toFixed(1)} MB • {format(new Date(upload.uploaded_at), 'dd.MM.yyyy')}
+                          </p>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Удалить PDF?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Файл будет удален без возможности восстановления
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Отмена</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteUpload(upload.id, upload.storage_path)}>
+                                Удалить
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {isFailed && upload.error_message && (
+                        <p className="text-xs text-destructive mb-3">{upload.error_message}</p>
+                      )}
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={() => handleAnalyze(upload.id, upload.storage_path)}
+                        disabled={isProcessing}
+                        className="w-full"
+                        variant={isFailed ? 'outline' : 'default'}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Анализируем...
+                          </>
+                        ) : isFailed ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Попробовать снова
+                          </>
+                        ) : (
+                          <>
+                            <ScanLine className="mr-2 h-4 w-4" />
+                            Распознать
+                          </>
+                        )}
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete analysis?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. The analysis will be permanently deleted.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(analysis.id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {analysis.weight && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Weight</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold metric-glow">
-                        {analysis.weight.toFixed(1)} kg
-                      </span>
-                      {weightChange && weightChange.trend !== 'stable' && (
-                        <span className={weightChange.trend === 'down' ? 'text-green-400' : 'text-red-400'}>
-                          {weightChange.trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {analysis.skeletal_muscle_mass && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Muscle</span>
-                    <span className="text-sm font-semibold">
-                      {analysis.skeletal_muscle_mass.toFixed(1)} kg
-                    </span>
-                  </div>
-                )}
-
-                {analysis.percent_body_fat && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Body Fat</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">
-                        {analysis.percent_body_fat.toFixed(1)}%
-                      </span>
-                      {bfChange && bfChange.trend !== 'stable' && (
-                        <span className={bfChange.trend === 'down' ? 'text-green-400' : 'text-red-400'}>
-                          {bfChange.trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {analysis.bmi && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">BMI</span>
-                    <span className="text-sm font-semibold">
-                      {analysis.bmi.toFixed(1)}
-                    </span>
-                  </div>
-                )}
-              </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        {/* Analyzed results */}
+        {analyses.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <ScanLine className="h-5 w-5" />
+              Распознанные анализы ({analyses.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {analyses.map((analysis, index) => {
+                const previousAnalysis = analyses[index + 1];
+                const weightChange = getChange(analysis.weight, previousAnalysis?.weight ?? null);
+                const bfChange = getChange(analysis.percent_body_fat, previousAnalysis?.percent_body_fat ?? null);
+
+                return (
+                  <div
+                    key={analysis.id}
+                    className="inbody-card p-4 cursor-pointer hover:scale-105 transition-transform stagger-item"
+                    onClick={() => setSelectedAnalysis(analysis)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          {format(new Date(analysis.test_date), 'MMM dd, yyyy')}
+                        </p>
+                        <p className="text-sm font-semibold text-primary mt-1">
+                          InBody Scan #{analyses.length - index}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAnalysis(analysis);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {analysis.pdf_url && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(analysis.pdf_url, '_blank');
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete analysis?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteAnalysis(analysis.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {analysis.weight && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Weight</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold metric-glow">
+                              {analysis.weight.toFixed(1)} kg
+                            </span>
+                            {weightChange && weightChange.trend !== 'stable' && (
+                              <span className={weightChange.trend === 'down' ? 'text-green-400' : 'text-red-400'}>
+                                {weightChange.trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {analysis.skeletal_muscle_mass && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Muscle</span>
+                          <span className="text-sm font-semibold">
+                            {analysis.skeletal_muscle_mass.toFixed(1)} kg
+                          </span>
+                        </div>
+                      )}
+
+                      {analysis.percent_body_fat && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Body Fat</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">
+                              {analysis.percent_body_fat.toFixed(1)}%
+                            </span>
+                            {bfChange && bfChange.trend !== 'stable' && (
+                              <span className={bfChange.trend === 'down' ? 'text-green-400' : 'text-red-400'}>
+                                {bfChange.trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {analysis.bmi && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">BMI</span>
+                          <span className="text-sm font-semibold">
+                            {analysis.bmi.toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={!!selectedAnalysis} onOpenChange={() => setSelectedAnalysis(null)}>

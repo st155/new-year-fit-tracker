@@ -14,7 +14,6 @@ interface InBodyUploadProps {
 
 export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [parsing, setParsing] = useState(false);
   const { toast } = useToast();
 
   const extractInBodyData = (text: string) => {
@@ -208,7 +207,6 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     setUploading(true);
 
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Пользователь не авторизован');
 
@@ -217,82 +215,29 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
       // Upload PDF to storage
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('inbody-pdfs')
         .upload(fileName, fileToUpload);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('inbody-pdfs')
-        .getPublicUrl(fileName);
+      // Create record in inbody_uploads instead of immediate recognition
+      const { error: dbError } = await supabase
+        .from('inbody_uploads')
+        .insert({
+          user_id: user.id,
+          file_name: file.name,
+          storage_path: fileName,
+          file_size: fileToUpload instanceof Blob ? fileToUpload.size : file.size,
+          status: 'uploaded'
+        });
 
-      setParsing(true);
-      setUploading(false);
-
-      // Call new inbody-ingest edge function
-      const { data: result, error: ingestError } = await supabase.functions.invoke(
-        'inbody-ingest',
-        {
-          body: { pdfStoragePath: fileName }
-        }
-      );
-
-      if (ingestError) {
-        console.error('Ingest error:', ingestError);
-        
-        // Обработка специфичных ошибок
-        const errorMsg = ingestError.message || '';
-        
-        if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
-          throw new Error('⏱️ Превышен лимит запросов AI. Попробуйте через минуту.');
-        }
-        
-        if (errorMsg.includes('credits') || errorMsg.includes('402')) {
-          throw new Error('💳 Недостаточно кредитов AI. Пополните баланс в настройках Lovable.');
-        }
-        
-        if (errorMsg.includes('Memory limit') || errorMsg.includes('memory')) {
-          throw new Error('📊 Файл слишком большой. Попробуйте загрузить PDF меньшего размера.');
-        }
-        
-        if (errorMsg.includes('extract images') || errorMsg.includes('400')) {
-          throw new Error('🖼️ Не удалось извлечь изображения из PDF. Убедитесь, что PDF содержит сканы InBody.');
-        }
-        
-        throw new Error(`❌ Ошибка обработки: ${errorMsg}`);
-      }
-
-      const analysis = result.analysis;
-      const warnings = result.warnings || [];
-      
-      if (warnings.length > 0) {
-        console.warn('Processing warnings:', warnings);
-      }
-      
-      // Build summary message
-      const summaryParts = [];
-      if (analysis.weight) summaryParts.push(`Вес ${analysis.weight} кг`);
-      if (analysis.percent_body_fat) summaryParts.push(`Жир ${analysis.percent_body_fat}%`);
-      if (analysis.skeletal_muscle_mass) summaryParts.push(`Мышцы ${analysis.skeletal_muscle_mass} кг`);
-      
-      const summaryMessage = summaryParts.length > 0 
-        ? `Анализ сохранён: ${summaryParts.join(', ')}`
-        : 'Анализ успешно сохранён';
+      if (dbError) throw dbError;
 
       toast({
-        title: "Успешно!",
-        description: summaryMessage,
+        title: "PDF успешно загружен",
+        description: "Перейдите в раздел 'История' для распознавания анализа",
       });
-      
-      if (warnings.length > 0) {
-        toast({
-          title: "Предупреждения",
-          description: warnings.join('; '),
-          variant: "default",
-        });
-      }
 
       if (onUploadSuccess) onUploadSuccess();
       if (onSuccess) onSuccess();
@@ -305,7 +250,6 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       });
     } finally {
       setUploading(false);
-      setParsing(false);
     }
   };
 
@@ -313,7 +257,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     <Card className="border-2 border-dashed border-primary/20 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all">
       <CardContent className="flex flex-col items-center justify-center py-12 px-6">
         <div className="mb-4">
-          {uploading || parsing ? (
+          {uploading ? (
             <div className="rounded-full bg-primary/10 p-6">
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
             </div>
@@ -328,24 +272,22 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
           {uploading
             ? "Загрузка файла..."
-            : parsing
-            ? "Обработка данных..."
-            : "Загрузите PDF файл вашего InBody анализа для автоматического распознавания данных"}
+            : "Загрузите PDF файл вашего InBody анализа. После загрузки вы сможете распознать его в разделе 'История'"}
         </p>
 
         <label htmlFor="inbody-upload">
           <Button
             variant="default"
             size="lg"
-            disabled={uploading || parsing}
+            disabled={uploading}
             className="cursor-pointer"
             asChild
           >
             <span>
-              {uploading || parsing ? (
+              {uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {uploading ? "Загрузка..." : "Обработка..."}
+                  Загрузка...
                 </>
               ) : (
                 <>
@@ -362,7 +304,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           accept=".pdf"
           onChange={handleFileUpload}
           className="hidden"
-          disabled={uploading || parsing}
+          disabled={uploading}
         />
 
         <p className="text-xs text-muted-foreground mt-4">
