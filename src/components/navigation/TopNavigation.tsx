@@ -30,6 +30,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const navItems = [
     { type: 'home' as const, path: "/", label: 'Главная' },
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
+    { type: 'goals' as const, path: "/goals", label: 'Цели' },
+    { type: 'habits' as const, path: "/habits", label: 'Привычки' },
+    { type: 'feed' as const, path: "/feed", label: 'Лента' },
     { type: 'data' as const, path: "/fitness-data", label: 'Данные' },
   ];
 
