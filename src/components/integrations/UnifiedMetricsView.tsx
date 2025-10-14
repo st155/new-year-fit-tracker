@@ -32,9 +32,27 @@ export function UnifiedMetricsView() {
 
   // Показываем skeleton только при первой загрузке
   useEffect(() => {
-    if (user && initialLoad) {
-      fetchUnifiedMetrics().then(() => setInitialLoad(false));
+    if (!user || !initialLoad) return;
+
+    const cacheKey = `unifiedMetricsCache:${user.id}`;
+    let hadCache = false;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.data) {
+          setMetrics(parsed.data);
+          setInitialLoad(false);
+          hadCache = true;
+        }
+      }
+    } catch (_e) {
+      // ignore cache errors
     }
+
+    fetchUnifiedMetrics(!hadCache).then(() => {
+      if (!hadCache) setInitialLoad(false);
+    });
   }, [user, initialLoad]);
 
   // Real-time updates (без skeleton при обновлении)
@@ -64,39 +82,47 @@ export function UnifiedMetricsView() {
       const todayStr = today.toISOString().split('T')[0];
       const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
 
-      // Получаем все метрики за последние 2 дня, фокусируясь на ключевых категориях
-      const { data: metricsData } = await supabase
+      const baseSelect = `
+        value,
+        measurement_date,
+        created_at,
+        user_metrics!inner(
+          metric_name,
+          unit,
+          source,
+          metric_category
+        )
+      `;
+
+      // Сначала пробуем получить данные только за сегодня (самые актуальные)
+      let { data: metricsData } = await supabase
         .from('metric_values')
-        .select(`
-          value,
-          measurement_date,
-          created_at,
-          user_metrics!inner(
-            metric_name,
-            unit,
-            source,
-            metric_category
-          )
-        `)
+        .select(baseSelect)
         .eq('user_id', user!.id)
         .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
-        .gte('measurement_date', twoDaysAgoStr)
-        .lte('measurement_date', todayStr)
-        .order('created_at', { ascending: false }); // Сортировка по created_at для актуальности
+        .eq('measurement_date', todayStr)
+        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false });
 
+      // Если за сегодня нет данных, берём последние 2 дня
       if (!metricsData || metricsData.length === 0) {
-        setMetrics([]);
-        if (showLoading) setLoading(false);
-        return;
+        const res = await supabase
+          .from('metric_values')
+          .select(baseSelect)
+          .eq('user_id', user!.id)
+          .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
+          .gte('measurement_date', twoDaysAgoStr)
+          .lte('measurement_date', todayStr)
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false });
+        metricsData = res.data ?? [];
       }
 
-      // Группируем по названию метрики
+      // Группируем по названию метрики и берём самую свежую по каждому источнику
       const metricsMap = new Map<string, UnifiedMetric>();
-
       metricsData.forEach((item: any) => {
         const metricName = item.user_metrics.metric_name;
         const source = item.user_metrics.source;
-        
         if (!metricsMap.has(metricName)) {
           metricsMap.set(metricName, {
             name: metricName,
@@ -106,14 +132,11 @@ export function UnifiedMetricsView() {
             activeSourceIndex: 0,
           });
         }
-
         const metric = metricsMap.get(metricName)!;
-        
-        // Проверяем, есть ли уже этот источник
-        const existingSourceIndex = metric.sources.findIndex(s => s.source === getProviderDisplayName(source));
-        
+        const existingSourceIndex = metric.sources.findIndex(
+          (s) => s.source === getProviderDisplayName(source)
+        );
         if (existingSourceIndex === -1) {
-          // Берем только самую свежую запись для каждого источника (первая в отсортированном списке)
           metric.sources.push({
             value: formatValue(item.value, metricName),
             unit: item.user_metrics.unit,
@@ -124,7 +147,19 @@ export function UnifiedMetricsView() {
         }
       });
 
-      setMetrics(Array.from(metricsMap.values()));
+      const nextMetrics = Array.from(metricsMap.values());
+      setMetrics(nextMetrics);
+
+      // Кэшируем для мгновенной последующей загрузки
+      try {
+        const cacheKey = `unifiedMetricsCache:${user!.id}`;
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ ts: Date.now(), data: nextMetrics })
+        );
+      } catch (_e) {
+        // ignore cache errors
+      }
     } catch (error) {
       console.error('Error fetching unified metrics:', error);
     } finally {
