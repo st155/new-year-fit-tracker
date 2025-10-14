@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,9 @@ serve(async (req) => {
       if (downloadError) {
         console.warn('Storage download failed, falling back to URL if provided:', downloadError.message);
       } else if (pdfBlob) {
+        if (pdfBlob.size > 12_000_000) {
+          throw new Error('PDF is too large (>12MB). Please re-export a smaller file.');
+        }
         pdfBuffer = await pdfBlob.arrayBuffer();
       }
     }
@@ -70,12 +74,7 @@ serve(async (req) => {
       throw new Error('Unable to obtain PDF bytes');
     }
 
-    const base64Pdf = btoa(
-      new Uint8Array(pdfBuffer).reduce(
-        (data, byte) => data + String.fromCharCode(byte),
-        ''
-      )
-    );
+    const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
 
     console.log('Calling AI to parse InBody PDF...');
 

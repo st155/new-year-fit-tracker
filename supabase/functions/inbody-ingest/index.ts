@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -144,8 +145,12 @@ serve(async (req) => {
         if (downloadError || !pdfBlob) {
           throw new Error('Cannot download PDF from storage for fallback parsing');
         }
+        // Safety: reject very large PDFs to avoid worker limits
+        if (pdfBlob.size > 12_000_000) {
+          throw new Error('PDF is too large (>12MB). Please re-export a lighter file.');
+        }
         const pdfBuffer = await pdfBlob.arrayBuffer();
-        const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+        const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
 
         aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
