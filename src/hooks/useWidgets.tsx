@@ -198,9 +198,9 @@ export const fetchWidgetData = async (
 ): Promise<WidgetMetricData | null> => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
 
-    // Fetch latest value
+    // Fetch latest value from last 7 days
     const { data, error } = await supabase
       .from('metric_values')
       .select(`
@@ -215,7 +215,7 @@ export const fetchWidgetData = async (
       .eq('user_id', userId)
       .eq('user_metrics.metric_name', metricName)
       .eq('user_metrics.source', source.toLowerCase())
-      .gte('measurement_date', yesterday)
+      .gte('measurement_date', sevenDaysAgo)
       .lte('measurement_date', today)
       .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
