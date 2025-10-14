@@ -284,10 +284,14 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       'Recovery Score': 'Очки восстановления',
       'Sleep Efficiency': 'Эффективность сна',
       'Sleep Performance': 'Качество сна', 
+      'Sleep Duration': 'Продолжительность сна',
       'Sleep Need Fulfillment': 'Выполнение потребности во сне',
+      'Day Strain': 'Дневная нагрузка',
       'Workout Strain': 'Нагрузка тренировки',
       'Average Heart Rate': 'Средний пульс',
       'Max Heart Rate': 'Максимальный пульс',
+      'Resting HR': 'Пульс покоя',
+      'HRV (rMSSD)': 'Вариабельность пульса',
       'Workout Calories': 'Калории тренировки',
     };
     return translations[metricName] || metricName;
