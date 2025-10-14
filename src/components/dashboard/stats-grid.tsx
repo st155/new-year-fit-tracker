@@ -235,7 +235,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
           user_metrics!inner(metric_name, metric_category, unit, source)
         `)
         .eq('user_id', user.id)
-        .eq('user_metrics.metric_name', 'Recovery Score')
+        .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
         .eq('user_metrics.source', 'whoop')
         .order('created_at', { ascending: false })
         .limit(2);
