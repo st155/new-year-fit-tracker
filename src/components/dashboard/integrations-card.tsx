@@ -57,7 +57,6 @@ export const IntegrationsCard = () => {
     try {
       setLoading(true);
 
-      // Проверяем Terra интеграцию
       // Проверяем Terra интеграцию - каждое устройство считаем отдельно
       const { data: terraTokens } = await supabase
         .from('terra_tokens')
@@ -65,12 +64,13 @@ export const IntegrationsCard = () => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Подсчитываем данные для всех Terra интеграций
-      const { count: terraDataCount } = await supabase
-        .from('metric_values')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
+      // Проверяем Whoop интеграцию
+      const { data: whoopTokens } = await supabase
+        .from('whoop_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
 
       // Проверяем Apple Health интеграцию
       const { data: appleHealthData } = await supabase
@@ -91,15 +91,32 @@ export const IntegrationsCard = () => {
       // Добавляем каждое Terra устройство как отдельную интеграцию
       if (terraTokens && terraTokens.length > 0) {
         terraTokens.forEach(token => {
+          const providerName = token.provider ? 
+            token.provider.charAt(0).toUpperCase() + token.provider.slice(1).toLowerCase() : 
+            'Terra Device';
+          
           integrationsList.push({
-            name: token.provider || 'Terra Device',
+            name: providerName,
             icon: <Zap className="w-6 h-6 text-purple-500" />,
             isConnected: true,
             lastSync: token.last_sync_date,
-            dataCount: 0, // Считается общий счетчик ниже
+            dataCount: 0,
             status: 'active',
             description: `Синхронизация через Terra API`
           });
+        });
+      }
+      
+      // Добавляем Whoop если подключен
+      if (whoopTokens) {
+        integrationsList.push({
+          name: 'Whoop',
+          icon: <Activity className="w-6 h-6 text-green-500" />,
+          isConnected: true,
+          lastSync: whoopTokens.updated_at,
+          dataCount: 0,
+          status: 'active',
+          description: 'Восстановление, сон, нагрузка'
         });
       }
       
