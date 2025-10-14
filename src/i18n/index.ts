@@ -49,7 +49,10 @@ const supported = new Set(['en', 'ru', 'bg']);
 i18n.on('languageChanged', (lng) => {
   const lang = (lng || 'en').split('-')[0];
   if (!supported.has(lang)) {
-    i18n.changeLanguage('en');
+    // Prevent infinite loop - only change if different
+    if (i18n.language !== 'en') {
+      i18n.changeLanguage('en');
+    }
     localStorage.setItem('i18nextLng', 'en');
     if (typeof document !== 'undefined') document.documentElement.lang = 'en';
     return;
