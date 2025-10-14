@@ -344,49 +344,20 @@ async function syncWhoopData(
         tokenExpiresAt: token.expires_at,
         now: now.toISOString(),
         triedClientId: clientIdForRefresh,
+        currentEnvClientId: whoopClientId,
       });
 
-      // Fallback attempt: some OAuth servers require HTTP Basic auth instead of body client_secret
-      try {
-        const basicAuth = 'Basic ' + btoa(`${clientIdForRefresh}:${whoopClientSecret}`);
-        const fallbackResp = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': basicAuth,
-          },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: token.refresh_token,
-          }),
-        });
-
-        if (!fallbackResp.ok) {
-          const fbText = await fallbackResp.text();
-          console.error('Token refresh fallback failed:', {
-            status: fallbackResp.status,
-            statusText: fallbackResp.statusText,
-            error: fbText,
-          });
-          throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
-        }
-
-        const fbData = await fallbackResp.json();
-        accessToken = fbData.access_token;
-        const fbExpiresAt = new Date(Date.now() + fbData.expires_in * 1000);
-
+      // Если client_id не совпадает, нужно переподключиться
+      if (errorText.includes('Client ID from this request does not match')) {
         await supabase
           .from('whoop_tokens')
-          .update({
-            access_token: fbData.access_token,
-            refresh_token: fbData.refresh_token,
-            expires_at: fbExpiresAt.toISOString(),
-            client_id: clientIdForRefresh,
-          })
+          .update({ is_active: false })
           .eq('user_id', userId);
-      } catch (fbErr) {
-        throw fbErr;
+        
+        throw new Error('Whoop credentials have changed. Please reconnect your Whoop account.');
       }
+
+      throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
     } else {
       const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
