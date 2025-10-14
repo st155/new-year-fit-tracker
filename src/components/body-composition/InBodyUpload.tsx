@@ -147,74 +147,54 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       setParsing(true);
       setUploading(false);
 
-      // Call edge function to parse PDF
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const parseResponse = await fetch(
-        'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/parse-inbody-pdf',
+      // Call new inbody-ingest edge function
+      const { data: result, error: ingestError } = await supabase.functions.invoke(
+        'inbody-ingest',
         {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ pdfUrl: publicUrl, pdfStoragePath: fileName }),
+          body: { pdfStoragePath: fileName }
         }
       );
 
-      if (!parseResponse.ok) {
-        const errorData = await parseResponse.json();
-        throw new Error(errorData.error || 'Не удалось распознать PDF');
+      if (ingestError) {
+        console.error('Ingest error:', ingestError);
+        if (ingestError.message?.includes('rate limit')) {
+          throw new Error('Превышен лимит запросов AI. Попробуйте позже.');
+        }
+        if (ingestError.message?.includes('credits')) {
+          throw new Error('Недостаточно кредитов AI. Пополните баланс в настройках.');
+        }
+        throw new Error(ingestError.message || 'Не удалось обработать PDF');
       }
 
-      const parsedData = await parseResponse.json();
-
-      // Validate we got at least basic data
-      if (!parsedData.weight && !parsedData.bmi) {
-        toast({
-          title: "Внимание",
-          description: "Распознано мало данных. Проверьте качество PDF.",
-          variant: "default",
-        });
+      const analysis = result.analysis;
+      const warnings = result.warnings || [];
+      
+      if (warnings.length > 0) {
+        console.warn('Processing warnings:', warnings);
       }
-
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('inbody_analyses')
-        .insert({
-          user_id: user.id,
-          test_date: parsedData.test_date || new Date().toISOString(),
-          weight: parsedData.weight,
-          skeletal_muscle_mass: parsedData.skeletal_muscle_mass,
-          percent_body_fat: parsedData.percent_body_fat,
-          body_fat_mass: parsedData.body_fat_mass,
-          visceral_fat_area: parsedData.visceral_fat_area,
-          bmi: parsedData.bmi,
-          bmr: parsedData.bmr,
-          total_body_water: parsedData.total_body_water,
-          protein: parsedData.protein,
-          minerals: parsedData.minerals,
-          right_arm_mass: parsedData.right_arm_mass,
-          right_arm_percent: parsedData.right_arm_percent,
-          left_arm_mass: parsedData.left_arm_mass,
-          left_arm_percent: parsedData.left_arm_percent,
-          trunk_mass: parsedData.trunk_mass,
-          trunk_percent: parsedData.trunk_percent,
-          right_leg_mass: parsedData.right_leg_mass,
-          right_leg_percent: parsedData.right_leg_percent,
-          left_leg_mass: parsedData.left_leg_mass,
-          left_leg_percent: parsedData.left_leg_percent,
-          pdf_url: publicUrl,
-          raw_data: parsedData,
-        });
-
-      if (dbError) throw dbError;
+      
+      // Build summary message
+      const summaryParts = [];
+      if (analysis.weight) summaryParts.push(`Вес ${analysis.weight} кг`);
+      if (analysis.percent_body_fat) summaryParts.push(`Жир ${analysis.percent_body_fat}%`);
+      if (analysis.skeletal_muscle_mass) summaryParts.push(`Мышцы ${analysis.skeletal_muscle_mass} кг`);
+      
+      const summaryMessage = summaryParts.length > 0 
+        ? `Анализ сохранён: ${summaryParts.join(', ')}`
+        : 'Анализ успешно сохранён';
 
       toast({
         title: "Успешно!",
-        description: `InBody анализ загружен. Распознано: вес ${parsedData.weight || '?'} кг, жир ${parsedData.percent_body_fat || '?'}%`,
+        description: summaryMessage,
       });
+      
+      if (warnings.length > 0) {
+        toast({
+          title: "Предупреждения",
+          description: warnings.join('; '),
+          variant: "default",
+        });
+      }
 
       if (onUploadSuccess) onUploadSuccess();
       if (onSuccess) onSuccess();

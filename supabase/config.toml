@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.whoop-webhook]
 verify_jwt = false
+
+[functions.inbody-ingest]
+verify_jwt = true
+
+[functions.parse-inbody-pdf]
+verify_jwt = true
