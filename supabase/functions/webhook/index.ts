@@ -645,4 +645,8 @@ async function processTerraData(supabase: any, payload: any) {
   }
 
   console.log(`✅ Processed Terra ${payload.type} data from ${provider} for user ${userId}`);
+  } catch (error) {
+    console.error('❌ Error in processTerraData:', error);
+    throw error;
+  }
 }
