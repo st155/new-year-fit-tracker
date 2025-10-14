@@ -242,8 +242,9 @@ export default function FitnessData() {
       }
     });
 
-    // Readiness
-    if (metricValues['Recovery Score'] || metricValues['Recovery']) {
+    // Readiness - показываем только если данные есть
+    if ((metricValues['Recovery Score'] || metricValues['Recovery']) && 
+        (metricValues['Recovery Score']?.current > 0 || metricValues['Recovery']?.current > 0)) {
       const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
       result.readiness.score = Math.round(recovery.current);
       result.readiness.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
@@ -306,8 +307,9 @@ export default function FitnessData() {
       });
     }
 
-    // Recovery Score
-    if (metricValues['Recovery Score'] || metricValues['Recovery']) {
+    // Recovery Score - показываем только если данные есть
+    if ((metricValues['Recovery Score'] || metricValues['Recovery']) && 
+        (metricValues['Recovery Score']?.current > 0 || metricValues['Recovery']?.current > 0)) {
       const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
       const meta = getMetricIcon('recovery', 'recovery');
       cards.push({
