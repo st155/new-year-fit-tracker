@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet } from 'lucide-react';
 import { fetchWidgetData } from '@/hooks/useWidgets';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -13,9 +13,14 @@ interface WidgetCardProps {
 const getMetricIcon = (metricName: string) => {
   const name = metricName.toLowerCase();
   if (name.includes('step')) return Footprints;
-  if (name.includes('strain')) return Zap;
-  if (name.includes('recovery')) return Activity;
+  if (name.includes('strain')) return Flame;
+  if (name.includes('recovery')) return Heart;
   if (name.includes('weight')) return Scale;
+  if (name.includes('sleep')) return Moon;
+  if (name.includes('hr') || name.includes('heart')) return Heart;
+  if (name.includes('hrv')) return Heart;
+  if (name.includes('calorie')) return Droplet;
+  if (name.includes('vo2')) return Zap;
   return Activity;
 };
 
@@ -25,6 +30,11 @@ const getMetricColor = (metricName: string) => {
   if (name.includes('strain')) return 'hsl(var(--chart-2))';
   if (name.includes('recovery')) return 'hsl(var(--chart-3))';
   if (name.includes('weight')) return 'hsl(var(--chart-4))';
+  if (name.includes('sleep')) return 'hsl(var(--chart-5))';
+  if (name.includes('hr') || name.includes('heart')) return 'hsl(var(--chart-3))';
+  if (name.includes('hrv')) return 'hsl(var(--chart-3))';
+  if (name.includes('calorie')) return 'hsl(var(--chart-4))';
+  if (name.includes('vo2')) return 'hsl(var(--chart-2))';
   return 'hsl(var(--primary))';
 };
 
@@ -134,15 +144,25 @@ export function WidgetCard({ metricName, source }: WidgetCardProps) {
           <Icon className="h-5 w-5 opacity-50" style={{ color }} />
         </div>
 
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-3xl font-bold" style={{ color }}>
-            {formatValue(data.value, metricName, data.unit)}
-          </span>
-          {data.unit && (
-            <span className="text-sm text-muted-foreground">
-              {data.unit}
+        <div className="flex items-center gap-3 mb-2">
+          <div 
+            className="p-2 rounded-lg"
+            style={{ 
+              backgroundColor: `${color}15`,
+            }}
+          >
+            <Icon className="h-5 w-5" style={{ color }} />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold" style={{ color }}>
+              {formatValue(data.value, metricName, data.unit)}
             </span>
-          )}
+            {data.unit && (
+              <span className="text-sm text-muted-foreground">
+                {data.unit}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between text-xs">
