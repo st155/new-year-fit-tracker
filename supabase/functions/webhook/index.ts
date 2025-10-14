@@ -60,7 +60,10 @@ async function handleTerraWebhook(req: Request, supabase: any) {
   const terraSigningSecret = Deno.env.get('TERRA_SIGNING_SECRET')!;
   const signature = req.headers.get('terra-signature');
 
+  console.log('🔔 Terra webhook received');
+
   if (!signature) {
+    console.error('❌ Missing terra-signature');
     return new Response(
       JSON.stringify({ error: 'Missing terra-signature' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -71,6 +74,7 @@ async function handleTerraWebhook(req: Request, supabase: any) {
   const isValid = await verifyTerraSignature(rawBody, signature, terraSigningSecret);
 
   if (!isValid) {
+    console.error('❌ Invalid signature');
     return new Response(
       JSON.stringify({ error: 'Invalid signature' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -78,43 +82,65 @@ async function handleTerraWebhook(req: Request, supabase: any) {
   }
 
   const payload = JSON.parse(rawBody);
-  console.log('✅ Terra webhook:', payload.type);
+  console.log('✅ Terra webhook:', { 
+    type: payload.type, 
+    provider: payload.user?.provider,
+    userId: payload.user?.user_id,
+    dataLength: payload.data?.length 
+  });
 
-  if (payload.type === 'auth') {
-    const { reference_id, user: terraUser } = payload;
-    const provider = terraUser.provider?.toUpperCase();
+  try {
+    if (payload.type === 'auth') {
+      const { reference_id, user: terraUser } = payload;
+      const provider = terraUser.provider?.toUpperCase();
 
-    const { data: existing } = await supabase
-      .from('terra_tokens')
-      .select('id')
-      .eq('user_id', reference_id)
-      .eq('provider', provider)
-      .maybeSingle();
+      console.log('🔐 Processing auth event:', { reference_id, provider });
 
-    const tokenData = {
-      user_id: reference_id,
-      terra_user_id: terraUser.user_id,
-      provider,
-      is_active: true,
-      last_sync_date: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-    };
-
-    if (existing?.id) {
-      await supabase.from('terra_tokens').update(tokenData).eq('id', existing.id);
-    } else {
-      await supabase.from('terra_tokens').insert(tokenData);
-    }
-  } else if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
-    await processTerraData(supabase, payload);
-    
-    if (payload.user?.user_id) {
-      await supabase
+      const { data: existing } = await supabase
         .from('terra_tokens')
-        .update({ last_sync_date: new Date().toISOString() })
-        .eq('terra_user_id', payload.user.user_id);
+        .select('id')
+        .eq('user_id', reference_id)
+        .eq('provider', provider)
+        .maybeSingle();
+
+      const tokenData = {
+        user_id: reference_id,
+        terra_user_id: terraUser.user_id,
+        provider,
+        is_active: true,
+        last_sync_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
+
+      if (existing?.id) {
+        await supabase.from('terra_tokens').update(tokenData).eq('id', existing.id);
+        console.log('✅ Updated existing token');
+      } else {
+        await supabase.from('terra_tokens').insert(tokenData);
+        console.log('✅ Created new token');
+      }
+    } else if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
+      console.log(`📊 Processing ${payload.type} data`);
+      await processTerraData(supabase, payload);
+      
+      if (payload.user?.user_id) {
+        await supabase
+          .from('terra_tokens')
+          .update({ last_sync_date: new Date().toISOString() })
+          .eq('terra_user_id', payload.user.user_id);
+        console.log('✅ Updated last_sync_date');
+      }
+    } else {
+      console.log(`⚠️ Unknown payload type: ${payload.type}`);
     }
+  } catch (error) {
+    console.error('❌ Error processing Terra webhook:', error);
+    // Return success anyway to avoid Terra retrying
+    return new Response(
+      JSON.stringify({ success: true, error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   return new Response(
@@ -187,25 +213,43 @@ function bufferToHex(buffer: ArrayBuffer): string {
 }
 
 async function processTerraData(supabase: any, payload: any) {
-  const { user, data } = payload;
-  
-  const { data: tokenData } = await supabase
-    .from('terra_tokens')
-    .select('user_id, provider')
-    .eq('terra_user_id', user.user_id)
-    .eq('is_active', true)
-    .single();
+  try {
+    const { user, data } = payload;
+    
+    if (!user?.user_id) {
+      console.error('❌ Missing user.user_id in payload');
+      return;
+    }
 
-  if (!tokenData) {
-    console.error('User not found for Terra user_id:', user.user_id);
-    return;
-  }
+    console.log('🔍 Looking up user for Terra user_id:', user.user_id);
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('terra_tokens')
+      .select('user_id, provider')
+      .eq('terra_user_id', user.user_id)
+      .eq('is_active', true)
+      .maybeSingle();
 
-  const userId = tokenData.user_id;
-  const provider = tokenData.provider;
-  const source = provider.toLowerCase();
+    if (tokenError) {
+      console.error('❌ Error fetching terra_tokens:', tokenError);
+      return;
+    }
 
-  console.log(`Processing Terra ${payload.type} data from ${provider} for user ${userId}`);
+    if (!tokenData) {
+      console.error('❌ User not found for Terra user_id:', user.user_id);
+      return;
+    }
+
+    const userId = tokenData.user_id;
+    const provider = tokenData.provider;
+    const source = provider.toLowerCase();
+
+    console.log(`✅ Found user: ${userId}, provider: ${provider}, processing ${payload.type} data (${data?.length || 0} items)`);
+
+    if (!data || data.length === 0) {
+      console.log('⚠️ Empty data array, skipping');
+      return;
+    }
 
   if (payload.type === 'activity') {
     for (const activity of data) {
