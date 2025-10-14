@@ -124,13 +124,15 @@ export function AdditionalMetrics() {
             .order('measurement_date', { ascending: false })
             .limit(7),
           
-          // Strain - сегодня
+          // Strain - последний доступный
           supabase
             .from('metric_values')
             .select('value, measurement_date, user_metrics!inner(metric_name)')
             .eq('user_id', user.id)
             .in('user_metrics.metric_name', ['Workout Strain', 'Day Strain'])
-            .eq('measurement_date', today)
+            .gte('measurement_date', weekAgoDate)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false })
             .order('value', { ascending: false })
             .limit(1),
           
@@ -202,9 +204,11 @@ export function AdditionalMetrics() {
           newMetrics.sleep.value = avg.toFixed(1);
         }
 
-        // Strain
+        // Strain - берем последний доступный и показываем дату
         if (strainRes.data && strainRes.data.length > 0) {
-          newMetrics.strain.value = Number(strainRes.data[0].value).toFixed(1);
+          const strainRecord = strainRes.data[0];
+          newMetrics.strain.value = Number(strainRecord.value).toFixed(1);
+          newMetrics.strain.subtitle = new Date(strainRecord.measurement_date).toLocaleDateString('ru-RU');
         }
 
         // Active minutes
