@@ -875,6 +875,45 @@ export type Database = {
           },
         ]
       }
+      metric_mappings: {
+        Row: {
+          aggregation_method: string
+          created_at: string
+          device_mappings: Json
+          id: string
+          is_active: boolean
+          priority_order: string[] | null
+          unified_metric_category: string
+          unified_metric_name: string
+          unified_unit: string
+          updated_at: string
+        }
+        Insert: {
+          aggregation_method?: string
+          created_at?: string
+          device_mappings?: Json
+          id?: string
+          is_active?: boolean
+          priority_order?: string[] | null
+          unified_metric_category: string
+          unified_metric_name: string
+          unified_unit: string
+          updated_at?: string
+        }
+        Update: {
+          aggregation_method?: string
+          created_at?: string
+          device_mappings?: Json
+          id?: string
+          is_active?: boolean
+          priority_order?: string[] | null
+          unified_metric_category?: string
+          unified_metric_name?: string
+          unified_unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       metric_values: {
         Row: {
           created_at: string
@@ -1499,6 +1538,24 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      get_unified_metrics: {
+        Args: {
+          p_end_date?: string
+          p_start_date?: string
+          p_unified_metric_name?: string
+          p_user_id: string
+        }
+        Returns: {
+          aggregated_value: number
+          measurement_date: string
+          source_count: number
+          source_values: Json
+          sources: string[]
+          unified_category: string
+          unified_metric_name: string
+          unified_unit: string
+        }[]
       }
       has_role: {
         Args: {
