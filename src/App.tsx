@@ -83,7 +83,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <BrowserRouter>
           <AuthProvider>
             <ErrorBoundary>
@@ -257,7 +257,7 @@ const App = () => {
             </ErrorBoundary>
           </AuthProvider>
         </BrowserRouter>
-      </>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

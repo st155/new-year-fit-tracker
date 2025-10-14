@@ -1,14 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { componentTagger } from "lovable-tagger";
 
-// Minimal, robust config to prevent duplicate React instances
-export default defineConfig({
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -18,7 +22,6 @@ export default defineConfig({
       "react/jsx-runtime": path.resolve(__dirname, "node_modules/react/jsx-runtime.js"),
       "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
     },
-    // Ensure a single React/ReactDOM instance everywhere (including linked deps)
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
     preserveSymlinks: false,
   },
@@ -32,4 +35,4 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
