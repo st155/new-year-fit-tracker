@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LanguageToggle } from "@/components/ui/language-toggle";
+
 
 interface TopNavigationProps {
   userName?: string;
@@ -91,9 +91,6 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               </Badge>
             )}
           </Button>
-
-          {/* Language/Region */}
-          <LanguageToggle />
 
           {/* Settings */}
           <DropdownMenu>

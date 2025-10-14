@@ -41,7 +41,7 @@ import {
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { LanguageToggle } from "@/components/ui/language-toggle";
+
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalTicker } from "@/components/ui/global-ticker";
 import { supabase } from "@/integrations/supabase/client";
@@ -235,9 +235,6 @@ export function MainNavigation() {
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
             {/* Notification Bell */}
             <NotificationBell />
-            
-            {/* Language Toggle */}
-            <LanguageToggle />
             
             {/* User Avatar Menu */}
             <DropdownMenu>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Users, Trophy, Target, Activity, Heart, TrendingUp, ArrowRight } from 'lucide-react';
-import { LanguageToggle } from '@/components/ui/language-toggle';
+
 
 const Landing = () => {
   const { user } = useAuth();
@@ -36,7 +36,6 @@ const Landing = () => {
           </div>
           
           <div className="flex items-center gap-4 pointer-events-auto relative isolate z-[60]">
-            <LanguageToggle />
             <Button 
               onClick={handleGetStarted}
               className="bg-gradient-primary text-primary-foreground hover:shadow-glow"
