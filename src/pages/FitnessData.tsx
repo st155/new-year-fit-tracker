@@ -184,7 +184,7 @@ export default function FitnessData() {
 
   const processMetrics = (metrics: any[]): DashboardData => {
     const result: DashboardData = {
-      readiness: { score: 85, status: 'Optimal' },
+      readiness: { score: 0, status: '' },
       cards: []
     };
 
