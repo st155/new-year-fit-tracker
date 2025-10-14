@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { PDFDocument } from "pdf-lib";
 
 interface InBodyUploadProps {
   onUploadSuccess?: () => void;
@@ -111,6 +112,49 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     return data;
   };
 
+  const compressPDF = async (file: File): Promise<Blob> => {
+    const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+    
+    // If file is already small enough, return as is
+    if (file.size <= MAX_SIZE) {
+      return file;
+    }
+
+    console.log(`PDF size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds limit. Compressing...`);
+    
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      
+      // Save with compression
+      const compressedBytes = await pdfDoc.save({
+        useObjectStreams: false,
+        addDefaultPage: false,
+        objectsPerTick: 50,
+      });
+      
+      const compressedBlob = new Blob([new Uint8Array(compressedBytes)], { type: 'application/pdf' });
+      const compressionRatio = ((1 - compressedBlob.size / file.size) * 100).toFixed(1);
+      
+      console.log(`PDF compressed from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(compressedBlob.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
+      
+      toast({
+        title: "PDF сжат",
+        description: `Размер уменьшен на ${compressionRatio}%`,
+      });
+      
+      return compressedBlob;
+    } catch (error) {
+      console.error('PDF compression failed:', error);
+      toast({
+        title: "Не удалось сжать PDF",
+        description: "Попробуем загрузить исходный файл",
+        variant: "default",
+      });
+      return file;
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -131,11 +175,14 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Пользователь не авторизован');
 
-      // Upload PDF to storage first
+      // Compress PDF if needed
+      const fileToUpload = await compressPDF(file);
+
+      // Upload PDF to storage
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('inbody-pdfs')
-        .upload(fileName, file);
+        .upload(fileName, fileToUpload);
 
       if (uploadError) throw uploadError;
 
