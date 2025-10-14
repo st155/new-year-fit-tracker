@@ -58,17 +58,18 @@ export const IntegrationsCard = () => {
       setLoading(true);
 
       // Проверяем Terra интеграцию
+      // Проверяем Terra интеграцию - каждое устройство считаем отдельно
       const { data: terraTokens } = await supabase
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      const { data: terraData } = await supabase
+      // Подсчитываем данные для всех Terra интеграций
+      const { count: terraDataCount } = await supabase
         .from('metric_values')
-        .select('id, user_metrics!inner(source)')
-        .eq('user_id', user.id)
-        .in('user_metrics.source', ['WHOOP', 'WITHINGS', 'GARMIN', 'ULTRAHUMAN']);
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
 
       // Проверяем Apple Health интеграцию
@@ -84,34 +85,36 @@ export const IntegrationsCard = () => {
         .select('id', { count: 'exact' })
         .eq('user_id', user.id);
 
-      const integrationsList: IntegrationStatus[] = [
-        {
-          name: 'Terra API',
-          icon: <Zap className="w-6 h-6 text-purple-500" />,
-          isConnected: !!terraTokens?.length,
-          lastSync: terraTokens?.[0]?.last_sync_date,
-          dataCount: terraData?.length || 0,
-          status: terraTokens?.length ? 'active' : 'pending',
-          description: `Подключено ${terraTokens?.length || 0} устройств: ${terraTokens?.map(t => t.provider).join(', ')}`
-        },
-        {
+      // Создаем список всех интеграций (каждое устройство Terra отдельно)
+      const integrationsList: IntegrationStatus[] = [];
+      
+      // Добавляем каждое Terra устройство как отдельную интеграцию
+      if (terraTokens && terraTokens.length > 0) {
+        terraTokens.forEach(token => {
+          integrationsList.push({
+            name: token.provider || 'Terra Device',
+            icon: <Zap className="w-6 h-6 text-purple-500" />,
+            isConnected: true,
+            lastSync: token.last_sync_date,
+            dataCount: 0, // Считается общий счетчик ниже
+            status: 'active',
+            description: `Синхронизация через Terra API`
+          });
+        });
+      }
+      
+      // Добавляем Apple Health если подключен
+      if (appleHealthData?.length) {
+        integrationsList.push({
           name: 'Apple Health',
           icon: <div className="w-6 h-6 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center text-white text-sm">🍎</div>,
-          isConnected: !!appleHealthData?.length,
-          lastSync: appleHealthData?.[0]?.created_at,
+          isConnected: true,
+          lastSync: appleHealthData[0].created_at,
           dataCount: appleHealthCount?.length || 0,
-          status: appleHealthData?.length ? 'active' : 'pending',
+          status: 'active',
           description: 'Импорт данных из приложения "Здоровье" на iPhone'
-        },
-        {
-          name: 'Garmin',
-          icon: <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">G</div>,
-          isConnected: false,
-          dataCount: 0,
-          status: 'pending',
-          description: 'Скоро: синхронизация с устройствами Garmin'
-        }
-      ];
+        });
+      }
 
       setIntegrations(integrationsList);
     } catch (error) {
@@ -159,7 +162,28 @@ export const IntegrationsCard = () => {
   };
 
   const connectedCount = integrations.filter(i => i.isConnected).length;
-  const totalDataPoints = integrations.reduce((sum, i) => sum + (i.dataCount || 0), 0);
+  // Подсчитываем все метрики + записи из health_records
+  const [totalDataPoints, setTotalDataPoints] = useState(0);
+  
+  useEffect(() => {
+    const calculateTotalData = async () => {
+      if (!user) return;
+      
+      const { count: metricsCount } = await supabase
+        .from('metric_values')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      const { count: healthCount } = await supabase
+        .from('health_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      setTotalDataPoints((metricsCount || 0) + (healthCount || 0));
+    };
+    
+    calculateTotalData();
+  }, [user, integrations]);
 
   if (loading) {
     return (
@@ -278,7 +302,7 @@ export const IntegrationsCard = () => {
               <span className="text-sm font-medium">Подключено</span>
             </div>
             <p className="text-2xl font-bold text-primary">
-              {connectedCount}/{integrations.length}
+              {connectedCount}/6
             </p>
           </div>
           
