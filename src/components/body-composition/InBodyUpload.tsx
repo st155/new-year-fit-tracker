@@ -131,7 +131,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Пользователь не авторизован');
 
-      // Upload PDF to storage
+      // Upload PDF to storage first
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('inbody-pdfs')
@@ -145,20 +145,98 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         .getPublicUrl(fileName);
 
       setParsing(true);
+      setUploading(false);
 
-      // Parse PDF using document parser
-      const formData = new FormData();
-      formData.append('file', file);
+      // Convert PDF to base64 for AI processing
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          ''
+        )
+      );
 
-      // Read file as text to parse (simplified approach)
-      const text = await file.text();
-      const parsedData = extractInBodyData(text);
+      // Call AI to parse InBody PDF using vision
+      const lovableApiKey = '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';
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-exp',
+          messages: [
+            {
+              role: 'system',
+              content: `Ты эксперт по парсингу InBody анализов. Извлеки все данные из PDF и верни их в JSON формате.
+              
+Важные поля для извлечения:
+- test_date: дата теста (формат: YYYY-MM-DDTHH:MM:SS)
+- weight: вес в кг
+- skeletal_muscle_mass: мышечная масса в кг (SMM)
+- percent_body_fat: процент жира (PBF %)
+- body_fat_mass: масса жира в кг
+- visceral_fat_area: висцеральный жир в см²
+- bmi: индекс массы тела (Body Mass Index)
+- bmr: базальный метаболизм в ккал (Basal Metabolic Rate)
+- total_body_water: общая вода в литрах
+- protein: белок в кг
+- minerals: минералы в кг
 
-      // If parsing failed, try alternative method
-      if (Object.keys(parsedData).length < 3) {
+Сегментарные данные (если есть):
+- right_arm_mass, right_arm_percent
+- left_arm_mass, left_arm_percent
+- trunk_mass, trunk_percent
+- right_leg_mass, right_leg_percent
+- left_leg_mass, left_leg_percent
+
+Верни ТОЛЬКО валидный JSON без дополнительного текста.`
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Распарси этот InBody PDF и извлеки все метрики:'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64}`
+                  }
+                }
+              ]
+            }
+          ],
+          temperature: 0.1,
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error(`AI parsing failed: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      const parsedText = aiData.choices?.[0]?.message?.content;
+      
+      if (!parsedText) {
+        throw new Error('Не удалось распознать данные');
+      }
+
+      // Extract JSON from response (AI might wrap it in markdown)
+      const jsonMatch = parsedText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Некорректный формат ответа от AI');
+      }
+
+      const parsedData = JSON.parse(jsonMatch[0]);
+
+      // Validate we got at least basic data
+      if (!parsedData.weight && !parsedData.bmi) {
         toast({
           title: "Внимание",
-          description: "Не удалось автоматически распознать все данные. Пожалуйста, проверьте результаты.",
+          description: "Распознано мало данных. Проверьте качество PDF.",
           variant: "default",
         });
       }
@@ -197,7 +275,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
       toast({
         title: "Успешно!",
-        description: "InBody анализ загружен и обработан",
+        description: `InBody анализ загружен. Распознано: вес ${parsedData.weight || '?'} кг, жир ${parsedData.percent_body_fat || '?'}%`,
       });
 
       if (onUploadSuccess) onUploadSuccess();
