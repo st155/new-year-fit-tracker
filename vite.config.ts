@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  clearScreen: false,
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
@@ -18,6 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: ["react", "react-dom"],
+  },
+  optimizeDeps: {
+    exclude: [],
   },
   build: {
     commonjsOptions: {
