@@ -1,0 +1,280 @@
+import { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Activity, Heart, Flame, Moon, Wind, Footprints, Scale, Zap } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+
+interface MetricSource {
+  value: string;
+  unit: string;
+  source: string;
+  lastUpdate: string;
+  color: string;
+}
+
+interface UnifiedMetric {
+  name: string;
+  sources: MetricSource[];
+  icon: any;
+  category: string;
+  activeSourceIndex: number;
+}
+
+export function UnifiedMetricsView() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<UnifiedMetric[]>([]);
+  const [viewMode, setViewMode] = useState<'unified' | 'all'>('unified');
+
+  useEffect(() => {
+    if (user) {
+      fetchUnifiedMetrics();
+    }
+  }, [user]);
+
+  // Real-time updates
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('unified-metrics-live')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'metric_values', 
+        filter: `user_id=eq.${user.id}` 
+      }, () => fetchUnifiedMetrics())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  const fetchUnifiedMetrics = async () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const todayStr = today.toISOString().split('T')[0];
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      // Получаем все метрики за сегодня/вчера
+      const { data: metricsData } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          created_at,
+          user_metrics!inner(
+            metric_name,
+            unit,
+            source,
+            metric_category
+          )
+        `)
+        .eq('user_id', user!.id)
+        .gte('measurement_date', yesterdayStr)
+        .lte('measurement_date', todayStr)
+        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (!metricsData || metricsData.length === 0) {
+        setMetrics([]);
+        setLoading(false);
+        return;
+      }
+
+      // Группируем по названию метрики
+      const metricsMap = new Map<string, UnifiedMetric>();
+
+      metricsData.forEach((item: any) => {
+        const metricName = item.user_metrics.metric_name;
+        const source = item.user_metrics.source;
+        
+        if (!metricsMap.has(metricName)) {
+          metricsMap.set(metricName, {
+            name: metricName,
+            sources: [],
+            icon: getMetricIcon(metricName, item.user_metrics.metric_category),
+            category: item.user_metrics.metric_category,
+            activeSourceIndex: 0,
+          });
+        }
+
+        const metric = metricsMap.get(metricName)!;
+        
+        // Проверяем, есть ли уже этот источник
+        const existingSourceIndex = metric.sources.findIndex(s => s.source === source);
+        
+        if (existingSourceIndex === -1) {
+          metric.sources.push({
+            value: formatValue(item.value, metricName),
+            unit: item.user_metrics.unit,
+            source: getProviderDisplayName(source),
+            lastUpdate: new Date(item.measurement_date).toLocaleDateString(),
+            color: getMetricColor(item.user_metrics.metric_category),
+          });
+        }
+      });
+
+      setMetrics(Array.from(metricsMap.values()));
+    } catch (error) {
+      console.error('Error fetching unified metrics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatValue = (value: number, metricName: string): string => {
+    if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
+      const hours = Math.floor(value);
+      const minutes = Math.round((value - hours) * 60);
+      return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    }
+    return value % 1 === 0 ? value.toString() : value.toFixed(1);
+  };
+
+  const getMetricIcon = (metricName: string, category: string) => {
+    const name = metricName.toLowerCase();
+    if (name.includes('heart') || name.includes('hrv')) return Heart;
+    if (name.includes('calor') || name.includes('strain')) return Flame;
+    if (name.includes('sleep')) return Moon;
+    if (name.includes('vo2') || name.includes('oxygen')) return Wind;
+    if (name.includes('step')) return Footprints;
+    if (name.includes('weight') || name.includes('fat')) return Scale;
+    if (name.includes('recovery')) return Zap;
+    return Activity;
+  };
+
+  const getMetricColor = (category: string): string => {
+    const colorMap: Record<string, string> = {
+      recovery: 'hsl(var(--success))',
+      sleep: 'hsl(var(--info))',
+      workout: 'hsl(var(--warning))',
+      cardio: 'hsl(var(--primary))',
+      body: 'hsl(var(--metric-weight))',
+    };
+    return colorMap[category] || 'hsl(var(--foreground))';
+  };
+
+  const getProviderDisplayName = (provider: string): string => {
+    const nameMap: Record<string, string> = {
+      garmin: 'Garmin',
+      whoop: 'Whoop',
+      fitbit: 'Fitbit',
+      withings: 'Withings',
+      oura: 'Oura',
+      polar: 'Polar',
+      suunto: 'Suunto',
+      ultrahuman: 'Ultrahuman',
+    };
+    return nameMap[provider.toLowerCase()] || provider;
+  };
+
+  const handleMetricClick = (metricIndex: number) => {
+    setMetrics(prev => prev.map((metric, idx) => {
+      if (idx === metricIndex && metric.sources.length > 1) {
+        return {
+          ...metric,
+          activeSourceIndex: (metric.activeSourceIndex + 1) % metric.sources.length,
+        };
+      }
+      return metric;
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Badge variant="outline" className="bg-primary/10">
+            <Activity className="h-3 w-3 mr-1" />
+            Показываются агрегированные данные со всех источников
+          </Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (metrics.length === 0) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground">
+        Нет данных за сегодня
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="bg-primary/10">
+          <Activity className="h-3 w-3 mr-1" />
+          Показываются агрегированные данные со всех источников
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((metric, metricIdx) => {
+          const activeSource = metric.sources[metric.activeSourceIndex];
+          const Icon = metric.icon;
+          const hasMultipleSources = metric.sources.length > 1;
+
+          return (
+            <div
+              key={metricIdx}
+              onClick={() => hasMultipleSources && handleMetricClick(metricIdx)}
+              className={cn(
+                "p-4 rounded-lg border transition-all",
+                hasMultipleSources && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+              )}
+              style={{
+                borderColor: `${activeSource.color}30`,
+                background: `linear-gradient(135deg, ${activeSource.color}08, transparent)`,
+              }}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    {metric.name}
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold" style={{ color: activeSource.color }}>
+                      {activeSource.value}
+                    </span>
+                    {activeSource.unit && (
+                      <span className="text-sm text-muted-foreground">
+                        {activeSource.unit}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Icon className="h-5 w-5 opacity-50" style={{ color: activeSource.color }} />
+              </div>
+              
+              <div className="flex items-center justify-between mt-2">
+                <Badge variant="outline" className="text-xs">
+                  {activeSource.source}
+                </Badge>
+                {hasMultipleSources && (
+                  <span className="text-xs text-muted-foreground">
+                    {metric.activeSourceIndex + 1}/{metric.sources.length}
+                  </span>
+                )}
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-1">
+                {activeSource.lastUpdate}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
