@@ -18,10 +18,12 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "react-dom/client", "scheduler"],
+    // Deduplicate React to avoid multiple copies in the bundle (fixes hooks dispatcher null)
+    dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    exclude: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom/client', 'scheduler'],
+    // Ensure a single prebundled instance of React
+    include: ["react", "react-dom"],
   },
   build: {
     commonjsOptions: {
