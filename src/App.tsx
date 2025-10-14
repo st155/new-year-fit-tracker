@@ -42,7 +42,7 @@ const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
 const MetricDetail = lazy(() => import("./pages/MetricDetail"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Notifications = lazy(() => import("./pages/Notifications"));
-const BodyComposition = lazy(() => import("./pages/BodyComposition"));
+const Body = lazy(() => import("./pages/Body"));
 const BodyMeasurements = lazy(() => import("./pages/BodyMeasurements"));
 const Habits = lazy(() => import("./pages/Habits"));
 const Goals = lazy(() => import("./pages/Goals"));
@@ -182,7 +182,14 @@ const App = () => {
                     <Route path="/body-composition" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
-                          <BodyComposition />
+                          <Body />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/body" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Body />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />

@@ -6,10 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InBodyUploadProps {
-  onUploadSuccess: () => void;
+  onUploadSuccess?: () => void;
+  onSuccess?: () => void;
 }
 
-export const InBodyUpload = ({ onUploadSuccess }: InBodyUploadProps) => {
+export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
   const { toast } = useToast();
@@ -199,7 +200,8 @@ export const InBodyUpload = ({ onUploadSuccess }: InBodyUploadProps) => {
         description: "InBody анализ загружен и обработан",
       });
 
-      onUploadSuccess();
+      if (onUploadSuccess) onUploadSuccess();
+      if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error('Error uploading InBody file:', error);
       toast({

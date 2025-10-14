@@ -33,7 +33,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const navItems = [
     { type: 'home' as const, path: "/dashboard", label: t('navigation.dashboard') },
     { type: 'stats' as const, path: "/progress", label: t('navigation.progress') },
-    { type: 'body' as const, path: "/body-composition", label: t('navigation.bodyComposition') },
+    { type: 'body' as const, path: "/body", label: t('navigation.body') },
     { type: 'challenges' as const, path: "/challenges", label: t('navigation.challenges') },
     { type: 'goals' as const, path: "/goals", label: t('navigation.goals') },
     { type: 'feed' as const, path: "/feed", label: t('navigation.feed') },
