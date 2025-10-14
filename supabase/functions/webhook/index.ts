@@ -232,18 +232,108 @@ async function processTerraData(supabase: any, payload: any) {
   }
 
   if (payload.type === 'body') {
+    console.log('📊 Processing body data');
     for (const bodyData of data) {
-      if (bodyData.body_fat_percentage || bodyData.weight_kg) {
-        await supabase.from('body_composition').upsert({
-          user_id: userId,
-          measurement_date: bodyData.timestamp?.split('T')[0],
-          weight: bodyData.weight_kg,
-          body_fat_percentage: bodyData.body_fat_percentage,
-          muscle_mass: bodyData.muscle_mass_kg,
-          measurement_method: source,
-        }, {
-          onConflict: 'user_id,measurement_date',
-        });
+      try {
+        const measurementDate = (bodyData.timestamp || bodyData.date || new Date().toISOString()).split('T')[0];
+        
+        // Save to body_composition table
+        if (bodyData.body_fat_percentage || bodyData.weight_kg) {
+          await supabase.from('body_composition').upsert({
+            user_id: userId,
+            measurement_date: measurementDate,
+            weight: bodyData.weight_kg,
+            body_fat_percentage: bodyData.body_fat_percentage,
+            muscle_mass: bodyData.muscle_mass_kg,
+            measurement_method: source,
+          }, {
+            onConflict: 'user_id,measurement_date',
+          });
+        }
+
+        // Save Weight to metric_values
+        if (bodyData.weight_kg) {
+          const { data: weightMetricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'Вес',
+            p_metric_category: 'body',
+            p_unit: 'кг',
+            p_source: source,
+          });
+          if (weightMetricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: weightMetricId,
+              value: bodyData.weight_kg,
+              measurement_date: measurementDate,
+              external_id: `terra_${provider}_weight_${measurementDate}`,
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          }
+        }
+
+        // Save Body Fat to metric_values
+        if (bodyData.body_fat_percentage) {
+          const { data: fatMetricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'Процент жира',
+            p_metric_category: 'body',
+            p_unit: '%',
+            p_source: source,
+          });
+          if (fatMetricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: fatMetricId,
+              value: bodyData.body_fat_percentage,
+              measurement_date: measurementDate,
+              external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          }
+        }
+
+        // Save Muscle Mass to metric_values
+        if (bodyData.muscle_mass_kg) {
+          const { data: muscleMetricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'Мышечная масса',
+            p_metric_category: 'body',
+            p_unit: 'кг',
+            p_source: source,
+          });
+          if (muscleMetricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: muscleMetricId,
+              value: bodyData.muscle_mass_kg,
+              measurement_date: measurementDate,
+              external_id: `terra_${provider}_muscle_${measurementDate}`,
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          }
+        }
+
+        // Save Muscle Percentage if available
+        if (bodyData.muscle_percentage || (bodyData.muscle_mass_kg && bodyData.weight_kg)) {
+          const musclePercent = bodyData.muscle_percentage || 
+            Math.round((bodyData.muscle_mass_kg / bodyData.weight_kg) * 100 * 100) / 100;
+          const { data: musclePctMetricId } = await supabase.rpc('create_or_get_metric', {
+            p_user_id: userId,
+            p_metric_name: 'Процент мышц',
+            p_metric_category: 'body',
+            p_unit: '%',
+            p_source: source,
+          });
+          if (musclePctMetricId) {
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: musclePctMetricId,
+              value: musclePercent,
+              measurement_date: measurementDate,
+              external_id: `terra_${provider}_muscle_pct_${measurementDate}`,
+            }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          }
+        }
+      } catch (e) {
+        console.error('⚠️ Error processing body item:', e);
       }
     }
   }
