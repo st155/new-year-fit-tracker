@@ -84,14 +84,13 @@ const App = () => {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <BrowserRouter>
           <AuthProvider>
-            <ErrorBoundary>
-              <TooltipProvider delayDuration={200}>
-                <Toaster />
-                <Sonner />
-                <InstallPrompt />
-                <UpdatePrompt />
-                <Suspense fallback={<PageLoader message="Loading..." />}>
-                  <Routes>
+            <TooltipProvider delayDuration={200}>
+              <Toaster />
+              <Sonner />
+              <InstallPrompt />
+              <UpdatePrompt />
+              <Suspense fallback={<PageLoader message="Loading..." />}>
+                <Routes>
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/landing" element={<Landing />} />
                     <Route path="/" element={
@@ -238,7 +237,6 @@ const App = () => {
                   </Routes>
                 </Suspense>
               </TooltipProvider>
-            </ErrorBoundary>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
