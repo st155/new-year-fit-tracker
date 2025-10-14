@@ -17,12 +17,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react": path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
-    // Deduplicate React to avoid multiple copies in the bundle (fixes hooks dispatcher null)
-    dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    // Ensure a single prebundled instance of React
     include: ["react", "react-dom"],
   },
   build: {
