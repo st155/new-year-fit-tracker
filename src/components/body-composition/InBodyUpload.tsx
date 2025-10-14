@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 
 interface InBodyUploadProps {
   onUploadSuccess?: () => void;
@@ -130,7 +129,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     
     try {
       // Configure pdfjs worker
-      pdfjsLib.GlobalWorkerOptions.workerSrc = (pdfWorker as unknown as string);
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
       
       const arrayBuffer = await file.arrayBuffer();
       setUploadProgress(15);
