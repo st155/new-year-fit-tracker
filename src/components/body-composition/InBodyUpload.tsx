@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PDFDocument } from "pdf-lib";
+import * as pdfjsLib from 'pdfjs-dist';
 
 interface InBodyUploadProps {
   onUploadSuccess?: () => void;
@@ -112,40 +113,76 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     return data;
   };
 
-  const compressPDF = async (file: File): Promise<Blob> => {
-    const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+  const aggressiveCompressPDF = async (file: File): Promise<Blob> => {
+    const TARGET_SIZE = 10 * 1024 * 1024; // 10MB target
     
-    // If file is already small enough, return as is
-    if (file.size <= MAX_SIZE) {
+    if (file.size <= TARGET_SIZE) {
       return file;
     }
 
-    console.log(`PDF size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds limit. Compressing...`);
+    console.log(`PDF ${(file.size / 1024 / 1024).toFixed(2)}MB. Applying aggressive compression...`);
     
     try {
+      // Configure pdfjs worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      
       const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const sourcePdf = await loadingTask.promise;
       
-      // Save with compression
-      const compressedBytes = await pdfDoc.save({
-        useObjectStreams: false,
-        addDefaultPage: false,
-        objectsPerTick: 50,
-      });
-      
-      const compressedBlob = new Blob([new Uint8Array(compressedBytes)], { type: 'application/pdf' });
-      const compressionRatio = ((1 - compressedBlob.size / file.size) * 100).toFixed(1);
-      
-      console.log(`PDF compressed from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(compressedBlob.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
+      // Create new PDF
+      const newPdfDoc = await PDFDocument.create();
+      const numPages = sourcePdf.numPages;
       
       toast({
-        title: "PDF сжат",
+        title: "Сжатие PDF",
+        description: `Обработка ${numPages} страниц...`,
+      });
+      
+      // Render each page as JPEG and add to new PDF
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await sourcePdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 }); // High quality render
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({ 
+          canvasContext: context, 
+          viewport,
+          canvas 
+        }).promise;
+        
+        // Convert to JPEG with 60% quality
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        const imageBytes = Uint8Array.from(atob(imageDataUrl.split(',')[1]), c => c.charCodeAt(0));
+        
+        const jpegImage = await newPdfDoc.embedJpg(imageBytes);
+        const pdfPage = newPdfDoc.addPage([viewport.width, viewport.height]);
+        pdfPage.drawImage(jpegImage, {
+          x: 0,
+          y: 0,
+          width: viewport.width,
+          height: viewport.height,
+        });
+      }
+      
+      const compressedBytes = await newPdfDoc.save();
+      const compressedBlob = new Blob([compressedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      const compressionRatio = ((1 - compressedBlob.size / file.size) * 100).toFixed(1);
+      
+      console.log(`Aggressive compression: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedBlob.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
+      
+      toast({
+        title: "PDF успешно сжат",
         description: `Размер уменьшен на ${compressionRatio}%`,
       });
       
       return compressedBlob;
     } catch (error) {
-      console.error('PDF compression failed:', error);
+      console.error('Aggressive compression failed:', error);
       toast({
         title: "Не удалось сжать PDF",
         description: "Попробуем загрузить исходный файл",
@@ -175,8 +212,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Пользователь не авторизован');
 
-      // Compress PDF if needed
-      const fileToUpload = await compressPDF(file);
+      // Apply aggressive compression if needed
+      const fileToUpload = await aggressiveCompressPDF(file);
 
       // Upload PDF to storage
       const fileName = `${user.id}/${Date.now()}_${file.name}`;

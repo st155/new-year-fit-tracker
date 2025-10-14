@@ -136,45 +136,12 @@ serve(async (req) => {
       if (status === 429) throw new Error('AI rate limit exceeded. Please try again in a minute.');
       if (status === 402) throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
 
-      // Fallback on image extraction failures by sending base64 PDF
-      if (status === 400 && (errorText.includes('Failed to extract') || errorText.toLowerCase().includes('image'))) {
-        console.log('Falling back to base64 PDF upload...');
-        const { data: pdfBlob, error: downloadError } = await supabase.storage
-          .from('inbody-pdfs')
-          .download(pdfStoragePath);
-        if (downloadError || !pdfBlob) {
-          throw new Error('Cannot download PDF from storage for fallback parsing');
-        }
-        // Safety: reject very large PDFs to avoid worker limits
-        if (pdfBlob.size > 15 * 1024 * 1024) {
-          throw new Error('PDF is too large (>15MB). Please re-export a lighter file.');
-        }
-        const pdfBuffer = await pdfBlob.arrayBuffer();
-        const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
-
-        aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(buildAiBody({
-            type: 'image_url',
-            image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
-          }))
-        });
-
-        if (!aiResponse.ok) {
-          const status2 = aiResponse.status;
-          const errText2 = await aiResponse.text();
-          console.error('AI API error (base64 fallback):', status2, errText2);
-          if (status2 === 429) throw new Error('AI rate limit exceeded. Please try again in a minute.');
-          if (status2 === 402) throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
-          throw new Error(`AI processing failed (${status2}). Please try a different PDF export.`);
-        }
-      } else {
-        throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
+      // For large files that fail image extraction, skip base64 fallback
+      if (status === 400 && errorText.includes('Failed to extract')) {
+        throw new Error('Не удалось извлечь данные из PDF. Файл слишком сложный. Попробуйте:\n1. Пересканировать InBody в более низком качестве\n2. Конвертировать PDF в изображения и загрузить отдельно\n3. Использовать другой формат экспорта InBody');
       }
+
+      throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
     }
 
     aiData = await aiResponse.json();
