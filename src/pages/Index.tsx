@@ -2,6 +2,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWidgets } from '@/hooks/useWidgets';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
+import { IntegrationsCard } from '@/components/dashboard/integrations-card';
+import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -83,6 +85,16 @@ const Index = () => {
             ))}
           </div>
         )}
+
+        {/* Integrations Section */}
+        <div className="mt-8">
+          <IntegrationsCard />
+        </div>
+
+        {/* Leaderboard Section */}
+        <div className="mt-8">
+          <Leaderboard />
+        </div>
       </div>
     </div>
   );
