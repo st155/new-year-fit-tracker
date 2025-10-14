@@ -54,12 +54,12 @@ export function UnifiedMetricsView() {
     setLoading(true);
     try {
       const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      const twoDaysAgo = new Date(today);
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
       const todayStr = today.toISOString().split('T')[0];
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
 
-      // Получаем все метрики за сегодня/вчера
+      // Получаем все метрики за последние 2 дня, фокусируясь на ключевых категориях
       const { data: metricsData } = await supabase
         .from('metric_values')
         .select(`
@@ -74,7 +74,8 @@ export function UnifiedMetricsView() {
           )
         `)
         .eq('user_id', user!.id)
-        .gte('measurement_date', yesterdayStr)
+        .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
+        .gte('measurement_date', twoDaysAgoStr)
         .lte('measurement_date', todayStr)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -105,14 +106,15 @@ export function UnifiedMetricsView() {
         const metric = metricsMap.get(metricName)!;
         
         // Проверяем, есть ли уже этот источник
-        const existingSourceIndex = metric.sources.findIndex(s => s.source === source);
+        const existingSourceIndex = metric.sources.findIndex(s => s.source === getProviderDisplayName(source));
         
         if (existingSourceIndex === -1) {
+          // Берем только самую свежую запись для каждого источника
           metric.sources.push({
             value: formatValue(item.value, metricName),
             unit: item.user_metrics.unit,
             source: getProviderDisplayName(source),
-            lastUpdate: new Date(item.measurement_date).toLocaleDateString(),
+            lastUpdate: item.measurement_date,
             color: getMetricColor(item.user_metrics.metric_category),
           });
         }
@@ -125,6 +127,7 @@ export function UnifiedMetricsView() {
       setLoading(false);
     }
   };
+
 
   const formatValue = (value: number, metricName: string): string => {
     if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
