@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Users, Trophy, Target, Activity, Heart, TrendingUp, ArrowRight } from 'lucide-react';
+import { useTranslation } from '@/lib/translations';
 
 
 const Landing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (user) {
@@ -40,7 +42,7 @@ const Landing = () => {
               onClick={handleGetStarted}
               className="bg-gradient-primary text-primary-foreground hover:shadow-glow"
             >
-              Get Started
+              {t('landing.getStarted')}
             </Button>
           </div>
         </div>
@@ -52,16 +54,16 @@ const Landing = () => {
           <div className="text-center space-y-8 mb-16">
             <div className="space-y-4">
               <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary px-4 py-2">
-                🏆 New Challenge Starting Soon
+                {t('landing.newChallengeSoon')}
               </Badge>
               <h1 className="text-4xl lg:text-6xl font-bold text-foreground max-w-4xl mx-auto leading-tight">
-                Transform Your Fitness Journey with
+                {t('landing.heroTitle1')}
                 <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent block">
-                  Smart Tracking
+                  {t('landing.heroTitle2')}
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of fitness enthusiasts tracking their progress, competing in challenges, and achieving their goals with our comprehensive fitness platform.
+                {t('landing.heroSubtitle')}
               </p>
             </div>
 
@@ -71,7 +73,7 @@ const Landing = () => {
                 size="lg"
                 className="bg-gradient-primary text-primary-foreground hover:shadow-glow px-8 py-3 text-lg"
               >
-                Start Free Trial
+                {t('landing.startFreeTrial')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
@@ -79,7 +81,7 @@ const Landing = () => {
                 size="lg"
                 className="px-8 py-3 text-lg"
               >
-                Watch Demo
+                {t('landing.watchDemo')}
               </Button>
             </div>
           </div>
@@ -188,10 +190,10 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Everything You Need to Succeed
+              {t('landing.featuresTitle')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Comprehensive tools and features designed to help you track, compete, and achieve your fitness goals.
+              {t('landing.featuresSubtitle')}
             </p>
           </div>
 
@@ -199,39 +201,39 @@ const Landing = () => {
             {[
               {
                 icon: Target,
-                title: "Smart Goal Tracking",
-                description: "Set personalized goals and track your progress with advanced analytics and insights.",
+                title: t('landing.smartGoalTracking'),
+                description: t('landing.smartGoalTrackingDesc'),
                 color: "text-primary"
               },
                {
                 icon: Trophy,
-                title: "Team Leaderboard",
-                description: "Track team progress and compete for the top spot.",
+                title: t('landing.teamLeaderboard'),
+                description: t('landing.teamLeaderboardDesc'),
                 color: "text-accent",
                 link: "/leaderboard"
               },
               {
                 icon: Activity,
-                title: "Real-time Metrics",
-                description: "Monitor body composition, VO₂ max, workout performance, and more.",
+                title: t('landing.realTimeMetrics'),
+                description: t('landing.realTimeMetricsDesc'),
                 color: "text-success"
               },
               {
                 icon: Users,
-                title: "Team Collaboration",
-                description: "Work with trainers, share progress, and get personalized coaching.",
+                title: t('landing.teamCollaboration'),
+                description: t('landing.teamCollaborationDesc'),
                 color: "text-primary"
               },
               {
                 icon: Heart,
-                title: "Health Integration",
-                description: "Connect with Whoop, Apple Health, Garmin, and other fitness devices.",
+                title: t('landing.healthIntegration'),
+                description: t('landing.healthIntegrationDesc'),
                 color: "text-accent"
               },
               {
                 icon: TrendingUp,
-                title: "Progress Analytics",
-                description: "Detailed charts and trends to understand your fitness journey.",
+                title: t('landing.progressAnalytics'),
+                description: t('landing.progressAnalyticsDesc'),
                 color: "text-success"
               }
             ].map((feature, index) => (
@@ -267,11 +269,10 @@ const Landing = () => {
           <div className="bg-gradient-card rounded-2xl p-12 border border-border/50 shadow-card">
             <div className="space-y-6">
               <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-                Ready to Transform Your Fitness?
+                {t('landing.ctaTitle')}
               </h2>
               <p className="text-lg text-muted-foreground">
-                Join our community of fitness enthusiasts and start tracking your progress today. 
-                No credit card required.
+                {t('landing.ctaSubtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button 
@@ -279,11 +280,11 @@ const Landing = () => {
                   size="lg"
                   className="bg-gradient-primary text-primary-foreground hover:shadow-glow px-8 py-3 text-lg"
                 >
-                  Get Started for Free
+                  {t('landing.getStartedForFree')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Free trial • No setup fees • Cancel anytime
+                  {t('landing.freeTrialNote')}
                 </p>
               </div>
             </div>
@@ -302,7 +303,7 @@ const Landing = () => {
               <span className="font-semibold text-foreground">Elite10</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Elite10. Transform your fitness journey.
+              {t('landing.footerCopyright')}
             </p>
           </div>
         </div>
