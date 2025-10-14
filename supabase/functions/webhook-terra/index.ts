@@ -307,14 +307,70 @@ async function processTerraData(supabase: any, payload: any) {
     
     const { data: tokenData, error: tokenError } = await supabase
       .from('terra_tokens')
-      .select('user_id, provider')
+      .select('user_id, provider, terra_user_id')
       .eq('terra_user_id', user.user_id)
       .eq('is_active', true)
       .single();
 
     if (tokenError) {
       console.error('❌ Error fetching terra_tokens:', tokenError);
-      return;
+      
+      // Fallback: check if user reconnected device (new terra_user_id)
+      if (user.reference_id && user.provider) {
+        const { data: existingToken } = await supabase
+          .from('terra_tokens')
+          .select('*')
+          .eq('user_id', user.reference_id)
+          .eq('provider', user.provider.toUpperCase())
+          .single();
+        
+        if (existingToken && existingToken.terra_user_id !== user.user_id) {
+          console.log('🔄 Updating terra_user_id for reconnected device:', {
+            old: existingToken.terra_user_id,
+            new: user.user_id,
+            provider: user.provider
+          });
+          
+          const { error: updateError } = await supabase
+            .from('terra_tokens')
+            .update({ 
+              terra_user_id: user.user_id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.reference_id)
+            .eq('provider', user.provider.toUpperCase());
+          
+          if (updateError) {
+            console.error('❌ Error updating terra_user_id:', updateError);
+            return;
+          }
+          
+          // Refetch the updated token
+          const { data: updatedToken, error: refetchError } = await supabase
+            .from('terra_tokens')
+            .select('user_id, provider, terra_user_id')
+            .eq('terra_user_id', user.user_id)
+            .eq('is_active', true)
+            .single();
+          
+          if (refetchError || !updatedToken) {
+            console.error('❌ Error refetching updated token:', refetchError);
+            return;
+          }
+          
+          // Continue processing with the updated token - fall through to main logic
+          const userId = updatedToken.user_id;
+          const provider = updatedToken.provider;
+          console.log('✅ Found user after update:', { userId, provider });
+          
+          // Replace tokenError/tokenData to continue normally
+          Object.assign(tokenData || {}, updatedToken);
+        }
+      }
+      
+      if (!tokenData) {
+        return;
+      }
     }
 
     if (!tokenData) {
