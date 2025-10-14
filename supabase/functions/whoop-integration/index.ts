@@ -352,6 +352,7 @@ async function syncWhoopData(
         access_token: refreshData.access_token,
         refresh_token: refreshData.refresh_token,
         expires_at: newExpiresAt.toISOString(),
+        client_id: tokenClientId,
       })
       .eq('user_id', userId);
   }
