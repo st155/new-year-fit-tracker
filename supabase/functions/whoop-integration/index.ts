@@ -477,6 +477,7 @@ async function syncWhoopData(
 
         // Strain
         if (cycle.score?.strain !== undefined) {
+          console.log(`Saving Day Strain ${cycle.score.strain} for ${cycleDate}`);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -494,6 +495,9 @@ async function syncWhoopData(
             external_id: `whoop_strain_${cycle.id}`,
             source_data: { cycle_id: cycle.id, raw: cycle.score },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
+        } else {
+          console.log(`❌ No strain data for cycle ${cycle.id} (${cycleDate}), cycle.score:`, cycle.score);
         }
       }
     }
