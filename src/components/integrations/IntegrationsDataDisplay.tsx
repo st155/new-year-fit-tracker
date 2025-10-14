@@ -129,9 +129,6 @@ export function IntegrationsDataDisplay() {
 
     if (!metricsData || metricsData.length === 0) return [];
 
-    // Группируем по метрикам и берем последнее значение
-    const metricsMap = new Map<string, MetricData>();
-
     // Приоритетные метрики для отображения
     const priorityMetrics = [
       'Recovery Score',
@@ -140,21 +137,44 @@ export function IntegrationsDataDisplay() {
       'Sleep Performance',
       'Sleep Efficiency',
       'Sleep Duration',
-      'Calories',
+      'HRV (rMSSD)',
+      'Workout Calories',
+      'Average Heart Rate',
+      'Max Heart Rate',
+      'Resting HR',
       'Weight',
       'VO2Max',
       'Steps',
-      'Heart Rate',
-      'HRV'
+      'Heart Rate'
     ];
+
+    // Нормализуем единицы измерения для избежания дубликатов
+    const normalizeUnit = (metricName: string, unit: string): string => {
+      if (metricName === 'Day Strain' || metricName === 'Workout Strain') return 'strain';
+      if (metricName === 'Recovery Score') return '%';
+      if (metricName === 'HRV (rMSSD)') return 'ms';
+      if (metricName === 'Workout Calories') return 'kcal';
+      return unit;
+    };
+
+    // Группируем по метрикам и берем последнее значение (с правильной единицей измерения)
+    const metricsMap = new Map<string, MetricData>();
 
     metricsData.forEach((item: any) => {
       const metricName = item.user_metrics.metric_name;
+      const normalizedUnit = normalizeUnit(metricName, item.user_metrics.unit);
+      
+      // Берем только правильную единицу измерения
+      if (item.user_metrics.unit !== normalizedUnit) {
+        return; // Пропускаем дубликаты с неправильными единицами
+      }
+      
+      // Уникальный ключ = название метрики
       if (!metricsMap.has(metricName)) {
         metricsMap.set(metricName, {
           name: metricName,
           value: formatValue(item.value, metricName),
-          unit: item.user_metrics.unit,
+          unit: normalizedUnit,
           source: provider,
           icon: getMetricIcon(metricName, item.user_metrics.metric_category),
           color: getMetricColor(item.user_metrics.metric_category),
