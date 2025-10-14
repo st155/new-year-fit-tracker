@@ -96,7 +96,7 @@ export function MetricsGrid() {
     weight: { value: "72.0", change: "-2%", subtitle: t('metrics.subtitles.byLansey') },
     vo2max: { value: "52.1", records: 71, subtitle: "71 " + t('common.records', { defaultValue: 'records' }) },
     row_2km: { value: "7:25", change: "-2%", attempts: 34, subtitle: "34 " + t('common.attempts', { defaultValue: 'attempts' }) },
-    recovery: { value: "85", change: "+5%", subtitle: t('metrics.subtitles.excellent') },
+    recovery: { value: "—", change: null, subtitle: '' },
     steps: { value: "12,847", change: "+12%", subtitle: t('common.dailyAverage', { defaultValue: 'daily average' }) }
   });
   const [loading, setLoading] = useState(true);
