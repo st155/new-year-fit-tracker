@@ -154,7 +154,7 @@ export function MetricsGrid() {
           bodyFatBCRes,
           vo2maxRes,
         ] = await Promise.all([
-          // Recovery - берем ПЕРВУЮ запись дня (самую раннюю по created_at), не последнюю
+          // Recovery — берем ПОСЛЕДНЮЮ запись дня (самую позднюю по created_at)
           supabase
             .from('metric_values')
             .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
@@ -163,7 +163,7 @@ export function MetricsGrid() {
             .eq('user_metrics.source', 'whoop')
             .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
             .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: true })
+            .order('created_at', { ascending: false })
             .limit(1),
           // Steps from daily summary
           supabase
