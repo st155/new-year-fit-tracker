@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => ({
   },
   clearScreen: false,
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+    }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
@@ -30,7 +32,6 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom/client'],
     exclude: [],
-    force: true,
   },
   build: {
     commonjsOptions: {
