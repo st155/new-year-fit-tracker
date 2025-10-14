@@ -125,7 +125,7 @@ export function AdditionalMetrics() {
             .order('measurement_date', { ascending: false })
             .limit(7),
           
-          // Recovery - последний доступный за 7 дней (поддержка 'Recovery' и 'Recovery Score', строго из Whoop)
+          // Recovery - берем ПЕРВУЮ запись дня (самую раннюю по created_at), не последнюю
           supabase
             .from('metric_values')
             .select('value, measurement_date, user_metrics!inner(metric_name, source)')
@@ -135,6 +135,7 @@ export function AdditionalMetrics() {
             .gte('measurement_date', weekAgoDate)
             .lte('measurement_date', today)
             .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: true })
             .limit(1),
           
           // Strain - последний доступный
