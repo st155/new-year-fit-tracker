@@ -85,7 +85,21 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
       });
 
       const formattedData = Object.values(groupedData) as RecoveryData[];
-      setRecoveryData(formattedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      const sortedData = formattedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      // Если Recovery Score за сегодня нет, берём последнее значение за 24 часа
+      const todayStr = format(selectedDate, 'yyyy-MM-dd');
+      const todayData = sortedData.find(d => d.date === todayStr);
+      
+      if (todayData && !todayData.recovery_score && sortedData.length > 0) {
+        // Ищем последний Recovery Score за последние записи
+        const lastRecovery = sortedData.find(d => d.recovery_score !== null && d.recovery_score !== undefined);
+        if (lastRecovery) {
+          todayData.recovery_score = lastRecovery.recovery_score;
+        }
+      }
+      
+      setRecoveryData(sortedData);
     } catch (error) {
       console.error('Error fetching recovery data:', error);
     } finally {
