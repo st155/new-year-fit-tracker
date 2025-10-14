@@ -148,14 +148,19 @@ export function UnifiedMetricsView() {
       });
 
       const nextMetrics = Array.from(metricsMap.values());
-      setMetrics(nextMetrics);
+      const prioritizedMetrics = nextMetrics.map((m) => {
+        const priority = getProviderPriorityForMetric(m.name, m.category).map((p) => p.toLowerCase());
+        const preferredIdx = m.sources.findIndex((s) => priority.includes(s.source.toLowerCase()));
+        return preferredIdx >= 0 ? { ...m, activeSourceIndex: preferredIdx } : m;
+      });
+      setMetrics(prioritizedMetrics);
 
       // Кэшируем для мгновенной последующей загрузки
       try {
         const cacheKey = `unifiedMetricsCache:${user!.id}`;
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), data: nextMetrics })
+          JSON.stringify({ ts: Date.now(), data: prioritizedMetrics })
         );
       } catch (_e) {
         // ignore cache errors
@@ -212,6 +217,17 @@ export function UnifiedMetricsView() {
       ultrahuman: 'Ultrahuman',
     };
     return nameMap[provider.toLowerCase()] || provider;
+  };
+
+  // Определяем приоритет источников для конкретной метрики
+  const getProviderPriorityForMetric = (metricName: string, category: string): string[] => {
+    const name = metricName.toLowerCase();
+    // Для Recovery приоритет Whoop
+    if (category === 'recovery' || name.includes('recovery')) {
+      return ['Whoop', 'Oura', 'Garmin', 'Polar', 'Fitbit', 'Withings', 'Suunto', 'Ultrahuman'];
+    }
+    // Общий приоритет для остальных метрик
+    return ['Garmin', 'Whoop', 'Oura', 'Polar', 'Fitbit', 'Withings', 'Suunto', 'Ultrahuman'];
   };
 
   const handleMetricClick = (metricIndex: number) => {
