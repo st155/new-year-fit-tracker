@@ -100,12 +100,12 @@ export function IntegrationsDataDisplay() {
 
   const fetchProviderMetrics = async (provider: string): Promise<MetricData[]> => {
     const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    // Получаем последние метрики для провайдера
+    // Получаем последние метрики для провайдера за последние 7 дней
     const { data: metricsData } = await supabase
       .from('metric_values')
       .select(`
@@ -121,16 +121,32 @@ export function IntegrationsDataDisplay() {
       `)
       .eq('user_id', user!.id)
       .eq('user_metrics.source', provider.toLowerCase())
-      .gte('measurement_date', yesterdayStr)
+      .gte('measurement_date', sevenDaysAgoStr)
       .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (!metricsData || metricsData.length === 0) return [];
 
     // Группируем по метрикам и берем последнее значение
     const metricsMap = new Map<string, MetricData>();
+
+    // Приоритетные метрики для отображения
+    const priorityMetrics = [
+      'Recovery Score',
+      'Day Strain', 
+      'Workout Strain',
+      'Sleep Performance',
+      'Sleep Efficiency',
+      'Sleep Duration',
+      'Calories',
+      'Weight',
+      'VO2Max',
+      'Steps',
+      'Heart Rate',
+      'HRV'
+    ];
 
     metricsData.forEach((item: any) => {
       const metricName = item.user_metrics.metric_name;
@@ -142,12 +158,22 @@ export function IntegrationsDataDisplay() {
           source: provider,
           icon: getMetricIcon(metricName, item.user_metrics.metric_category),
           color: getMetricColor(item.user_metrics.metric_category),
-          lastUpdate: new Date(item.measurement_date).toLocaleDateString(),
+          lastUpdate: new Date(item.measurement_date).toLocaleDateString('ru-RU'),
         });
       }
     });
 
-    return Array.from(metricsMap.values());
+    // Сортируем метрики: сначала приоритетные, потом остальные
+    const allMetrics = Array.from(metricsMap.values());
+    return allMetrics.sort((a, b) => {
+      const aIndex = priorityMetrics.indexOf(a.name);
+      const bIndex = priorityMetrics.indexOf(b.name);
+      
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.name.localeCompare(b.name);
+    });
   };
 
   const formatValue = (value: number, metricName: string): string => {

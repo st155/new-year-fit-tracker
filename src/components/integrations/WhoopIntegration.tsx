@@ -266,7 +266,17 @@ export function WhoopIntegration() {
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Данные Whoop:</strong> Тренировки, восстановление, сон, нагрузка, пульс
+                <strong>Какие данные синхронизирует Whoop:</strong>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li><strong>Recovery Score</strong> (% восстановления) - ежедневная оценка готовности организма</li>
+                  <li><strong>Day Strain</strong> - общая нагрузка за день</li>
+                  <li><strong>Workout Strain</strong> - нагрузка каждой тренировки</li>
+                  <li><strong>Sleep Performance</strong> (%) - качество сна</li>
+                  <li><strong>Sleep Efficiency</strong> (%) - эффективность сна</li>
+                  <li><strong>Sleep Duration</strong> (часы) - продолжительность сна</li>
+                  <li><strong>Calories</strong> - калории тренировок</li>
+                  <li><strong>Heart Rate</strong> - пульс во время активностей</li>
+                </ul>
               </AlertDescription>
             </Alert>
           </CardContent>
