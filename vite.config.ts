@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   clearScreen: false,
   plugins: [
-    react(),
+    react({ fastRefresh: false }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
