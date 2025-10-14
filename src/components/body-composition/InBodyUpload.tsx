@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 
 interface InBodyUploadProps {
   onUploadSuccess?: () => void;
@@ -129,7 +130,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     
     try {
       // Configure pdfjs worker
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = (pdfWorker as unknown as string);
       
       const arrayBuffer = await file.arrayBuffer();
       setUploadProgress(15);
@@ -142,6 +143,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       // Create new PDF
       const newPdfDoc = await PDFDocument.create();
       const numPages = sourcePdf.numPages;
+      const start = Date.now();
+      const MAX_MS = 15000;
       
       // Render each page as JPEG and add to new PDF
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -172,6 +175,10 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           height: viewport.height,
         });
         
+        if (Date.now() - start > MAX_MS) {
+          throw new Error('Compression timeout');
+        }
+        
         // Update progress: 10% to 70% during compression
         const compressionProgress = 10 + Math.floor((pageNum / numPages) * 60);
         setUploadProgress(compressionProgress);
@@ -189,6 +196,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       return compressedBlob;
     } catch (error) {
       console.error('Aggressive compression failed:', error);
+      setUploadStage("Сжатие прервано — загружаем оригинал");
+      setUploadProgress(70);
       toast({
         title: "Не удалось сжать PDF",
         description: "Попробуем загрузить исходный файл",
