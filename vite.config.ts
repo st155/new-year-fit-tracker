@@ -16,10 +16,6 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
-  optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
-    force: true, // Force dependency pre-bundling
-  },
   build: {
     commonjsOptions: {
       include: [/node_modules/],
