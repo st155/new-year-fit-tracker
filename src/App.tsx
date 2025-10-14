@@ -103,13 +103,7 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Index />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/challenges" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
@@ -117,17 +111,17 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
-                    <Route path="/challenges/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <ChallengeDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
                     <Route path="/challenges/create" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <CreateChallenge />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/challenges/:id" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <ChallengeDetail />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
@@ -187,13 +181,7 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
-                    <Route path="/body" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Body />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/body" element={<Navigate to="/body-composition" replace />} />
                     <Route path="/body-measurements" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
