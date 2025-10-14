@@ -211,7 +211,8 @@ export function MetricsGrid() {
       }
     } else if (viewMode === 'by_device' && deviceFilter !== 'all') {
       // Device mode - используем данные конкретного девайса
-      if (!deviceLoading && Object.keys(deviceMetrics).length > 0) {
+      if (!deviceLoading) {
+        // Подготовим пустые значения
         const newMetrics: Record<string, any> = {
           body_fat: { value: '—', change: null, source: null, sources: [] },
           weight: { value: '—', change: null, source: null, sources: [] },
@@ -221,58 +222,74 @@ export function MetricsGrid() {
           steps: { value: '—', change: null, source: null, sources: [] }
         };
 
-        // Маппим device метрики
-        Object.entries(deviceMetrics).forEach(([metricName, data]: [string, any]) => {
-          // Recovery
-          if (metricName.includes('Recovery') || metricName === 'Sleep Performance') {
+        if (Object.keys(deviceMetrics).length > 0) {
+          // Приоритеты по названиям метрик для каждой карточки
+          const pickMetric = (names: string[]): any | null => {
+            // Найдём первую из указанных метрик; значения deviceMetrics уже самые свежие по имени
+            for (const n of names) {
+              const found = Object.entries(deviceMetrics).find(([metricName]) => metricName === n);
+              if (found) return found[1];
+            }
+            return null;
+          };
+
+          // Recovery: приоритетно Recovery Score -> Sleep Performance -> Sleep Efficiency
+          const recoveryMetric = pickMetric(['Recovery Score', 'Sleep Performance', 'Sleep Efficiency']);
+          if (recoveryMetric && typeof recoveryMetric.value === 'number') {
             newMetrics.recovery = {
-              value: Math.round(data.value).toString(),
+              value: Math.round(recoveryMetric.value).toString(),
               source: deviceFilter,
               sources: [deviceFilter],
               change: null,
             };
           }
-          // Weight
-          if (metricName.includes('Weight') || metricName.includes('Body Mass')) {
+
+          // Weight: Weight | Body Mass
+          const weightMetric = pickMetric(['Weight', 'Body Mass', 'Body Weight', 'Weight (kg)', 'HKQuantityTypeIdentifierBodyMass']);
+          if (weightMetric && typeof weightMetric.value === 'number') {
             newMetrics.weight = {
-              value: Number(data.value).toFixed(1),
+              value: Number(weightMetric.value).toFixed(1),
               source: deviceFilter,
               sources: [deviceFilter],
               change: null,
             };
           }
-          // Body Fat
-          if (metricName.includes('Body Fat') || metricName.includes('Fat Mass')) {
+
+          // Body Fat: Body Fat Percentage | Body Fat % | Fat Mass
+          const bodyFatMetric = pickMetric(['Body Fat Percentage', 'Body Fat %', 'Fat Mass', 'HKQuantityTypeIdentifierBodyFatPercentage']);
+          if (bodyFatMetric && typeof bodyFatMetric.value === 'number') {
             newMetrics.body_fat = {
-              value: Number(data.value).toFixed(1),
+              value: Number(bodyFatMetric.value).toFixed(1),
               source: deviceFilter,
               sources: [deviceFilter],
               change: null,
             };
           }
+
           // VO2Max
-          if (metricName.includes('VO2Max')) {
+          const vo2Metric = pickMetric(['VO2Max', 'VO2 Max']);
+          if (vo2Metric && typeof vo2Metric.value === 'number') {
             newMetrics.vo2max = {
-              value: Number(data.value).toFixed(1),
+              value: Number(vo2Metric.value).toFixed(1),
               source: deviceFilter,
               sources: [deviceFilter],
               records: 0,
             };
           }
+
           // Steps
-          if (metricName.includes('Steps') || metricName.includes('Step Count')) {
+          const stepsMetric = pickMetric(['Steps', 'Step Count', 'HKQuantityTypeIdentifierStepCount']);
+          if (stepsMetric && typeof stepsMetric.value === 'number') {
             newMetrics.steps = {
-              value: Math.round(data.value).toLocaleString(),
+              value: Math.round(stepsMetric.value).toLocaleString(),
               source: deviceFilter,
               sources: [deviceFilter],
               change: null,
             };
           }
-        });
+        }
 
         setMetrics(newMetrics);
-        setLoading(false);
-      } else if (!deviceLoading) {
         setLoading(false);
       }
     }
