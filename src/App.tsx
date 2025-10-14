@@ -1,252 +1,45 @@
-import React, { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/hooks/useAuth";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
-import { PageLoader } from "@/components/ui/page-loader";
-import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import { InstallPrompt } from "@/components/pwa/InstallPrompt";
-import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
-import { registerServiceWorker } from "@/lib/pwa-utils";
+import React from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-
-// Critical pages - load immediately
-const Landing = lazy(() => import("./pages/Landing"));
-const Auth = lazy(() => import("./pages/Auth"));
-
-// Primary pages - with preload function
-const indexLoader = () => import("./pages/Index");
-const fitnessDataLoader = () => import("./pages/FitnessData");
-const progressLoader = () => import("./pages/ModernProgress");
-const feedLoader = () => import("./pages/Feed");
-
-const Index = lazy(indexLoader);
-const FitnessData = lazy(fitnessDataLoader);
-const Progress = lazy(progressLoader);
-const Feed = lazy(feedLoader);
-
-// Secondary pages - load on demand
-const Challenges = lazy(() => import("./pages/Challenges"));
-const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
-const CreateChallenge = lazy(() => import("./pages/CreateChallenge"));
-const Profile = lazy(() => import("./pages/Profile"));
-const CreateGoal = lazy(() => import("./pages/CreateGoal"));
-const EditGoal = lazy(() => import("./pages/EditGoal"));
-const Integrations = lazy(() => import("./pages/Integrations"));
-const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
-const MetricDetail = lazy(() => import("./pages/MetricDetail"));
-const Leaderboard = lazy(() => import("./pages/Leaderboard"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const Body = lazy(() => import("./pages/Body"));
-const BodyMeasurements = lazy(() => import("./pages/BodyMeasurements"));
-const Habits = lazy(() => import("./pages/Habits"));
-const Goals = lazy(() => import("./pages/Goals"));
-
-// Callbacks - load on demand
-const TerraCallback = lazy(() => import("./pages/TerraCallback"));
-const WhoopCallback = lazy(() => import("./pages/WhoopCallback"));
-
-// Static pages
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Main application component with authentication and routing
-const App = () => {
+// Минимальное приложение с табами для изоляции проблемы React hooks
+export default function App() {
   React.useEffect(() => {
-    registerServiceWorker();
-    
-    // Preload critical pages after initial render
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        indexLoader();
-        fitnessDataLoader();
-        progressLoader();
-        feedLoader();
-      });
-    }
+    // Проверка монтирования (для отладки хука)
+    // console.log("App mounted");
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <BrowserRouter>
-          <AuthProvider>
-            <ErrorBoundary>
-              <>
-                <Toaster />
-                <Sonner />
-                <InstallPrompt />
-                <UpdatePrompt />
-                <Suspense fallback={<PageLoader message="Loading..." />}>
-                  <Routes>
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/landing" element={<Landing />} />
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Index />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                    <Route path="/challenges" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Challenges />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges/create" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <CreateChallenge />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <ChallengeDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/progress" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Progress />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/leaderboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Leaderboard />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/metric/:metricType" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <MetricDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Profile />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals/create" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <CreateGoal />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals/edit/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <EditGoal />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/fitness-data" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <FitnessData />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/body-composition" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Body />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/body" element={<Navigate to="/body-composition" replace />} />
-                    <Route path="/body-measurements" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <BodyMeasurements />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/integrations" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Integrations />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Terra callback - handles all Terra providers */}
-                    <Route path="/terra-callback" element={<TerraCallback />} />
-                    
-                    {/* Whoop callback - handles Whoop OAuth */}
-                    <Route path="/integrations/whoop/callback" element={<WhoopCallback />} />
-                    <Route path="/feed" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Feed />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/trainer-dashboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <TrainerDashboard />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/notifications" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Notifications />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/habits" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Habits />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Goals />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </>
-            </ErrorBoundary>
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
-};
+    <main className="mx-auto max-w-2xl p-6">
+      <header className="mb-4">
+        <h1 className="text-2xl font-semibold">Мои табы</h1>
+        <p className="text-muted-foreground">Проверьте, что переключение работает без ошибок.</p>
+      </header>
 
-export default App;
+      <Tabs defaultValue="tab1" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="tab1">Сегодня</TabsTrigger>
+          <TabsTrigger value="tab2">Неделя</TabsTrigger>
+          <TabsTrigger value="tab3">Месяц</TabsTrigger>
+        </TabsList>
+        <TabsContent value="tab1">
+          <section className="mt-4">
+            <h2 className="text-lg font-medium">Сегодня</h2>
+            <p className="text-muted-foreground">Краткий обзор за день.</p>
+          </section>
+        </TabsContent>
+        <TabsContent value="tab2">
+          <section className="mt-4">
+            <h2 className="text-lg font-medium">Неделя</h2>
+            <p className="text-muted-foreground">Тренды за неделю.</p>
+          </section>
+        </TabsContent>
+        <TabsContent value="tab3">
+          <section className="mt-4">
+            <h2 className="text-lg font-medium">Месяц</h2>
+            <p className="text-muted-foreground">Динамика за месяц.</p>
+          </section>
+        </TabsContent>
+      </Tabs>
+    </main>
+  );
+}

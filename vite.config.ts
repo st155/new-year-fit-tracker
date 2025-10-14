@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
       "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react-dom/client", "scheduler"],
+    preserveSymlinks: true,
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client'],
