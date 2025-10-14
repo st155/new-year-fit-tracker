@@ -217,6 +217,19 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Whoop integration error:', error);
+    
+    // Если учетные данные изменились, возвращаем 401 для переподключения
+    if (error.message?.includes('credentials have changed') || 
+        error.message?.includes('reconnect your Whoop account')) {
+      return new Response(
+        JSON.stringify({ 
+          error: error.message,
+          needsReconnect: true 
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

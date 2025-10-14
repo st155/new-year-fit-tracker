@@ -102,6 +102,19 @@ export function WhoopIntegration() {
 
       if (error) {
         const serverMsg = (error as any)?.context?.error || (data as any)?.error;
+        const needsReconnect = (data as any)?.needsReconnect;
+        
+        // Если требуется переподключение, сбрасываем соединение
+        if (needsReconnect || serverMsg?.includes('reconnect') || serverMsg?.includes('credentials have changed')) {
+          setConnection({ connected: false });
+          toast({
+            title: 'Требуется переподключение',
+            description: 'Учетные данные Whoop изменились. Пожалуйста, подключите аккаунт заново.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
         throw new Error(serverMsg || error.message || 'Edge Function error');
       }
 
