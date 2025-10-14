@@ -1,4 +1,5 @@
-import { Info, Target, Scale, Activity, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Info, Target, Scale, Activity, Zap, Upload, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,23 +10,68 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { InBodyUpload } from "@/components/body-composition/InBodyUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BodyMeasurements = () => {
-  // InBody данные из PDF
-  const bodyData = {
-    weight: { value: 75.1, range: "57.9-78.3", unit: "kg" },
-    smm: { value: 36.4, range: "29.2-35.6", unit: "kg", status: "above" },
-    pbf: { value: 15.5, range: "10.0-20.0", unit: "%" },
-    bodyFatMass: { value: 11.6, range: "8.2-16.4", unit: "kg" },
-    visceralFat: { value: 46.1, threshold: 100, unit: "cm²" },
-    segmental: {
-      rightArm: { value: 3.68, percent: 110.5 },
-      leftArm: { value: 3.70, percent: 110.9 },
-      trunk: { value: 28.4, percent: 107.0 },
-      rightLeg: { value: 9.38, percent: 101.3 },
-      leftLeg: { value: 9.40, percent: 101.5 },
-    },
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [showUpload, setShowUpload] = useState(false);
+  const [bodyData, setBodyData] = useState<any>(null);
+
+  const fetchLatestAnalysis = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('inbody_analyses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('test_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setBodyData({
+          weight: { value: data.weight, range: "57.9-78.3", unit: "kg" },
+          smm: { 
+            value: data.skeletal_muscle_mass, 
+            range: "29.2-35.6", 
+            unit: "kg", 
+            status: data.skeletal_muscle_mass && data.skeletal_muscle_mass > 35.6 ? "above" : "normal" 
+          },
+          pbf: { value: data.percent_body_fat, range: "10.0-20.0", unit: "%" },
+          bodyFatMass: { value: data.body_fat_mass, range: "8.2-16.4", unit: "kg" },
+          visceralFat: { value: data.visceral_fat_area, threshold: 100, unit: "cm²" },
+          testDate: data.test_date,
+          segmental: {
+            rightArm: { value: data.right_arm_mass, percent: data.right_arm_percent },
+            leftArm: { value: data.left_arm_mass, percent: data.left_arm_percent },
+            trunk: { value: data.trunk_mass, percent: data.trunk_percent },
+            rightLeg: { value: data.right_leg_mass, percent: data.right_leg_percent },
+            leftLeg: { value: data.left_leg_mass, percent: data.left_leg_percent },
+          },
+        });
+        setShowUpload(false);
+      } else {
+        setShowUpload(true);
+      }
+    } catch (error) {
+      console.error('Error fetching analysis:', error);
+      setShowUpload(true);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchLatestAnalysis();
+  }, [user]);
 
   const getBalanceColor = (percent: number) => {
     if (percent >= 100 && percent <= 110) return "bg-green-500/20 border-green-500";
@@ -39,6 +85,39 @@ const BodyMeasurements = () => {
     return "Требует внимания";
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <Skeleton className="h-12 w-64 mx-auto" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showUpload || !bodyData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+              Состав Тела
+            </h1>
+            <p className="text-muted-foreground">
+              Загрузите ваш InBody анализ для отслеживания прогресса
+            </p>
+          </div>
+          <InBodyUpload onUploadSuccess={fetchLatestAnalysis} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -47,9 +126,20 @@ const BodyMeasurements = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
             Состав Тела
           </h1>
-          <p className="text-muted-foreground">
-            InBody Анализ от 14.10.2025
-          </p>
+          <div className="flex items-center justify-center gap-4">
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              InBody Анализ от {new Date(bodyData.testDate).toLocaleDateString('ru-RU')}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowUpload(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Загрузить новый
+            </Button>
+          </div>
         </div>
 
         {/* SECTION 1: Core Vitals */}
