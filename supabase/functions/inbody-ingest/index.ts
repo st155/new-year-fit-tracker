@@ -128,15 +128,23 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const status = aiResponse.status;
-      if (status === 429) {
-        throw new Error('AI rate limit exceeded. Please try again later.');
-      }
-      if (status === 402) {
-        throw new Error('AI credits exhausted. Please add credits to your workspace.');
-      }
       const errorText = await aiResponse.text();
       console.error('AI API error:', status, errorText);
-      throw new Error(`AI processing failed (${status})`);
+      
+      if (status === 429) {
+        throw new Error('AI rate limit exceeded. Please try again in a minute.');
+      }
+      if (status === 402) {
+        throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
+      }
+      if (status === 400) {
+        // Check if it's an image extraction error
+        if (errorText.includes('Failed to extract') || errorText.includes('image')) {
+          throw new Error('Cannot extract images from this PDF. The file may be protected, corrupted, or in an unsupported format. Try: 1) Re-exporting the PDF 2) Using a different InBody scan 3) Converting to images first');
+        }
+        throw new Error(`Invalid PDF format or content (${status}). Please try a different file.`);
+      }
+      throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
     }
 
     const aiData = await aiResponse.json();
