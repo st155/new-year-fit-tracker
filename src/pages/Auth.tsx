@@ -10,6 +10,8 @@ import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { OnboardingTutorial } from '@/components/tutorial/OnboardingTutorial';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -26,6 +28,9 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -62,6 +67,25 @@ const Auth = () => {
     setIsGoogleLoading(true);
     await signInWithGoogle();
     setIsGoogleLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResetting(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast.error('Ошибка отправки письма: ' + error.message);
+    } else {
+      toast.success('Письмо для сброса пароля отправлено на ' + resetEmail);
+      setShowForgotPassword(false);
+      setResetEmail('');
+    }
+
+    setIsResetting(false);
   };
 
   return (
@@ -162,37 +186,77 @@ const Auth = () => {
               </TabsList>
               
               <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">{t('auth.email')}</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder={t('auth.enterEmail')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">{t('auth.password')}</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder={t('auth.enterPassword')}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? t('auth.signingIn') : t('auth.signIn')}
-                  </Button>
-                </form>
+                {showForgotPassword ? (
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="Введите ваш email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isResetting}
+                    >
+                      {isResetting ? 'Отправка...' : 'Отправить письмо для сброса'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowForgotPassword(false)}
+                    >
+                      Назад к входу
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email">{t('auth.email')}</Label>
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder={t('auth.enterEmail')}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="signin-password">{t('auth.password')}</Label>
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Забыл пароль?
+                        </button>
+                      </div>
+                      <Input
+                        id="signin-password"
+                        type="password"
+                        placeholder={t('auth.enterPassword')}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? t('auth.signingIn') : t('auth.signIn')}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
               
               <TabsContent value="signup">

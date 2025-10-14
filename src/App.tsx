@@ -94,7 +94,13 @@ const App = () => {
                   <Routes>
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/landing" element={<Landing />} />
-                    <Route path="/" element={<Landing />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Index />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
                     <Route path="/dashboard" element={
                       <ProtectedRoute>
                         <ModernAppLayout>
