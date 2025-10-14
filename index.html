@@ -49,6 +49,17 @@
 
   <body>
     <div id="root"></div>
+    <!-- React Refresh preamble only in development to avoid runtime errors -->
+    <script type="module">
+      if (import.meta.env && import.meta.env.DEV) {
+        import('/@react-refresh').then((RefreshRuntime) => {
+          RefreshRuntime.injectIntoGlobalHook(window);
+          window.$RefreshReg$ = () => {};
+          window.$RefreshSig$ = () => (type) => type;
+          window.__vite_plugin_react_preamble_installed__ = true;
+        }).catch(() => {});
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
