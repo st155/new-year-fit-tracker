@@ -26,16 +26,18 @@ interface UnifiedMetric {
 export function UnifiedMetricsView() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [metrics, setMetrics] = useState<UnifiedMetric[]>([]);
   const [viewMode, setViewMode] = useState<'unified' | 'all'>('unified');
 
+  // Показываем skeleton только при первой загрузке
   useEffect(() => {
-    if (user) {
-      fetchUnifiedMetrics();
+    if (user && initialLoad) {
+      fetchUnifiedMetrics().then(() => setInitialLoad(false));
     }
-  }, [user]);
+  }, [user, initialLoad]);
 
-  // Real-time updates
+  // Real-time updates (без skeleton при обновлении)
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -45,13 +47,16 @@ export function UnifiedMetricsView() {
         schema: 'public', 
         table: 'metric_values', 
         filter: `user_id=eq.${user.id}` 
-      }, () => fetchUnifiedMetrics())
+      }, () => {
+        // Обновляем данные в фоне без показа loading
+        fetchUnifiedMetrics(false);
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const fetchUnifiedMetrics = async () => {
-    setLoading(true);
+  const fetchUnifiedMetrics = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const today = new Date();
       const twoDaysAgo = new Date(today);
@@ -77,12 +82,11 @@ export function UnifiedMetricsView() {
         .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
         .gte('measurement_date', twoDaysAgoStr)
         .lte('measurement_date', todayStr)
-        .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }); // Сортировка по created_at для актуальности
 
       if (!metricsData || metricsData.length === 0) {
         setMetrics([]);
-        setLoading(false);
+        if (showLoading) setLoading(false);
         return;
       }
 
@@ -109,7 +113,7 @@ export function UnifiedMetricsView() {
         const existingSourceIndex = metric.sources.findIndex(s => s.source === getProviderDisplayName(source));
         
         if (existingSourceIndex === -1) {
-          // Берем только самую свежую запись для каждого источника
+          // Берем только самую свежую запись для каждого источника (первая в отсортированном списке)
           metric.sources.push({
             value: formatValue(item.value, metricName),
             unit: item.user_metrics.unit,
@@ -124,7 +128,7 @@ export function UnifiedMetricsView() {
     } catch (error) {
       console.error('Error fetching unified metrics:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -187,14 +191,12 @@ export function UnifiedMetricsView() {
     }));
   };
 
-  if (loading) {
+  // Показываем skeleton только при первой загрузке
+  if (initialLoad && loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
-          <Badge variant="outline" className="bg-primary/10">
-            <Activity className="h-3 w-3 mr-1" />
-            Показываются агрегированные данные со всех источников
-          </Badge>
+          <Skeleton className="h-6 w-96" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
