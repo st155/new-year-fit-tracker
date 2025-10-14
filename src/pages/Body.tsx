@@ -4,6 +4,7 @@ import { CurrentMetrics } from "@/components/body/CurrentMetrics";
 import { BodyHistory } from "@/components/body/BodyHistory";
 import { ComparisonView } from "@/components/body/ComparisonView";
 import { InBodyUpload } from "@/components/body-composition/InBodyUpload";
+import { InBodyHistory } from "@/components/body-composition/InBodyHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, History, GitCompare, FileText } from "lucide-react";
 
@@ -50,8 +51,9 @@ export default function Body() {
           <ComparisonView history={history} isLoading={isLoading} />
         </TabsContent>
 
-        <TabsContent value="inbody">
+        <TabsContent value="inbody" className="space-y-6">
           <InBodyUpload />
+          <InBodyHistory />
         </TabsContent>
       </Tabs>
     </div>
