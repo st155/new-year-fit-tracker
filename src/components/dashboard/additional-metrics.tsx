@@ -125,12 +125,13 @@ export function AdditionalMetrics() {
             .order('measurement_date', { ascending: false })
             .limit(7),
           
-          // Recovery - последний доступный за 7 дней (поддержка 'Recovery' и 'Recovery Score')
+          // Recovery - последний доступный за 7 дней (поддержка 'Recovery' и 'Recovery Score', строго из Whoop)
           supabase
             .from('metric_values')
-            .select('value, measurement_date, user_metrics!inner(metric_name)')
+            .select('value, measurement_date, user_metrics!inner(metric_name, source)')
             .eq('user_id', user.id)
             .in('user_metrics.metric_name', ['Recovery', 'Recovery Score'])
+            .eq('user_metrics.source', 'whoop')
             .gte('measurement_date', weekAgoDate)
             .lte('measurement_date', today)
             .order('measurement_date', { ascending: false })
