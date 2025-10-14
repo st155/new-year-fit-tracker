@@ -345,23 +345,64 @@ async function syncWhoopData(
         now: now.toISOString(),
         triedClientId: clientIdForRefresh,
       });
-      throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
+
+      // Fallback attempt: some OAuth servers require HTTP Basic auth instead of body client_secret
+      try {
+        const basicAuth = 'Basic ' + btoa(`${clientIdForRefresh}:${whoopClientSecret}`);
+        const fallbackResp = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': basicAuth,
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: token.refresh_token,
+          }),
+        });
+
+        if (!fallbackResp.ok) {
+          const fbText = await fallbackResp.text();
+          console.error('Token refresh fallback failed:', {
+            status: fallbackResp.status,
+            statusText: fallbackResp.statusText,
+            error: fbText,
+          });
+          throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
+        }
+
+        const fbData = await fallbackResp.json();
+        accessToken = fbData.access_token;
+        const fbExpiresAt = new Date(Date.now() + fbData.expires_in * 1000);
+
+        await supabase
+          .from('whoop_tokens')
+          .update({
+            access_token: fbData.access_token,
+            refresh_token: fbData.refresh_token,
+            expires_at: fbExpiresAt.toISOString(),
+            client_id: clientIdForRefresh,
+          })
+          .eq('user_id', userId);
+      } catch (fbErr) {
+        throw fbErr;
+      }
+    } else {
+      const refreshData = await refreshResponse.json();
+      accessToken = refreshData.access_token;
+      const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+
+      await supabase
+        .from('whoop_tokens')
+        .update({
+          access_token: refreshData.access_token,
+          refresh_token: refreshData.refresh_token,
+          expires_at: newExpiresAt.toISOString(),
+          // Фиксируем корректный client_id, чтобы будущие рефреши использовали его же
+          client_id: clientIdForRefresh,
+        })
+        .eq('user_id', userId);
     }
-
-    const refreshData = await refreshResponse.json();
-    accessToken = refreshData.access_token;
-    const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
-
-    await supabase
-      .from('whoop_tokens')
-      .update({
-        access_token: refreshData.access_token,
-        refresh_token: refreshData.refresh_token,
-        expires_at: newExpiresAt.toISOString(),
-        // Фиксируем корректный client_id, чтобы будущие рефреши использовали его же
-        client_id: clientIdForRefresh,
-      })
-      .eq('user_id', userId);
   }
 
   // Получаем данные за последние 7 дней
