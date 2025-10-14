@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Upload, FileText, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PDFDocument } from "pdf-lib";
@@ -14,6 +15,8 @@ interface InBodyUploadProps {
 
 export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<string>("");
   const { toast } = useToast();
 
   const extractInBodyData = (text: string) => {
@@ -120,11 +123,13 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     }
 
     console.log(`PDF ${(file.size / 1024 / 1024).toFixed(2)}MB. Applying aggressive compression...`);
+    setUploadStage("Сжатие PDF...");
     
     try {
       // Configure pdfjs worker
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
       
+      setUploadProgress(10);
       const arrayBuffer = await file.arrayBuffer();
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const sourcePdf = await loadingTask.promise;
@@ -132,11 +137,6 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       // Create new PDF
       const newPdfDoc = await PDFDocument.create();
       const numPages = sourcePdf.numPages;
-      
-      toast({
-        title: "Сжатие PDF",
-        description: `Обработка ${numPages} страниц...`,
-      });
       
       // Render each page as JPEG and add to new PDF
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -166,18 +166,20 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           width: viewport.width,
           height: viewport.height,
         });
+        
+        // Update progress: 10% to 70% during compression
+        const compressionProgress = 10 + Math.floor((pageNum / numPages) * 60);
+        setUploadProgress(compressionProgress);
+        setUploadStage(`Сжатие PDF... (${pageNum}/${numPages} страниц)`);
       }
       
+      setUploadProgress(70);
+      setUploadStage("Финализация сжатия...");
       const compressedBytes = await newPdfDoc.save();
       const compressedBlob = new Blob([compressedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
       const compressionRatio = ((1 - compressedBlob.size / file.size) * 100).toFixed(1);
       
       console.log(`Aggressive compression: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedBlob.size / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
-      
-      toast({
-        title: "PDF успешно сжат",
-        description: `Размер уменьшен на ${compressionRatio}%`,
-      });
       
       return compressedBlob;
     } catch (error) {
@@ -205,15 +207,22 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     }
 
     setUploading(true);
+    setUploadProgress(0);
+    setUploadStage("Подготовка файла...");
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Пользователь не авторизован');
 
+      setUploadProgress(5);
+      
       // Apply aggressive compression if needed
       const fileToUpload = await aggressiveCompressPDF(file);
 
       // Upload PDF to storage
+      setUploadProgress(75);
+      setUploadStage("Загрузка в облако...");
+      
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('inbody-pdfs')
@@ -221,6 +230,9 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
       if (uploadError) throw uploadError;
 
+      setUploadProgress(90);
+      setUploadStage("Сохранение информации...");
+      
       // Create record in inbody_uploads instead of immediate recognition
       const { error: dbError } = await supabase
         .from('inbody_uploads')
@@ -234,6 +246,9 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
       if (dbError) throw dbError;
 
+      setUploadProgress(100);
+      setUploadStage("Готово!");
+      
       toast({
         title: "PDF успешно загружен",
         description: "Перейдите в раздел 'История' для распознавания анализа",
@@ -250,6 +265,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       });
     } finally {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
     }
   };
 
@@ -271,9 +288,18 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         <h3 className="text-xl font-semibold mb-2">Загрузите InBody Анализ</h3>
         <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
           {uploading
-            ? "Загрузка файла..."
+            ? uploadStage
             : "Загрузите PDF файл вашего InBody анализа. После загрузки вы сможете распознать его в разделе 'История'"}
         </p>
+
+        {uploading && (
+          <div className="w-full max-w-md mb-6 space-y-2">
+            <Progress value={uploadProgress} className="h-2" />
+            <p className="text-sm text-center text-muted-foreground">
+              {uploadProgress}%
+            </p>
+          </div>
+        )}
 
         <label htmlFor="inbody-upload">
           <Button
