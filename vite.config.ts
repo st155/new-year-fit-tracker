@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client'],
     exclude: [],
-    force: true,
   },
   build: {
     commonjsOptions: {
