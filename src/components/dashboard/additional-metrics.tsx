@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -294,7 +294,7 @@ export function AdditionalMetrics() {
     fetchMetrics();
   }, [user]);
 
-  const allMetrics = [
+  const allMetrics = useMemo(() => [
     {
       icon: <Moon className="h-4 w-4 text-purple-500" />,
       title: t('extraMetrics.sleep'),
@@ -385,7 +385,7 @@ export function AdditionalMetrics() {
       color: "primary",
       route: "/metric/steps"
     }
-  ];
+  ], [metricsData, t]);
 
 
   return (
