@@ -18,7 +18,7 @@ interface MetricCard {
 }
 
 interface DashboardData {
-  readiness: {
+  recovery: {
     score: number;
     status: string;
   };
@@ -39,7 +39,7 @@ export default function FitnessData() {
   const [dateOffset, setDateOffset] = useState(0);
   const [challengeGoals, setChallengeGoals] = useState<string[]>([]);
   const [data, setData] = useState<DashboardData>({
-    readiness: { score: 0, status: '' },
+    recovery: { score: 0, status: '' },
     cards: []
   });
 
@@ -184,7 +184,7 @@ export default function FitnessData() {
 
   const processMetrics = (metrics: any[]): DashboardData => {
     const result: DashboardData = {
-      readiness: { score: 0, status: '' },
+      recovery: { score: 0, status: '' },
       cards: []
     };
 
@@ -211,9 +211,10 @@ export default function FitnessData() {
 
       let currentValue: number;
       
-      if (selectedFilter === 'today' && metric.metric_name === 'Workout Strain') {
-        // Для Strain суммируем все значения за день
-        currentValue = sortedValues.reduce((acc, v) => acc + (v.value || 0), 0);
+      // Для Day Strain берем максимальное значение за день (не сумму!)
+      // Whoop рассчитывает Day Strain по формуле, а не суммирует тренировки
+      if (selectedFilter === 'today' && (metric.metric_name === 'Day Strain' || metric.metric_name === 'Workout Strain')) {
+        currentValue = Math.max(...sortedValues.map(v => v.value || 0));
       } else if (selectedFilter === 'today') {
         currentValue = latestValue;
       } else {
@@ -242,12 +243,12 @@ export default function FitnessData() {
       }
     });
 
-    // Readiness - показываем только если данные есть
+    // Recovery - показываем только если данные есть
     if ((metricValues['Recovery Score'] || metricValues['Recovery']) && 
         (metricValues['Recovery Score']?.current > 0 || metricValues['Recovery']?.current > 0)) {
       const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
-      result.readiness.score = Math.round(recovery.current);
-      result.readiness.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
+      result.recovery.score = Math.round(recovery.current);
+      result.recovery.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
     }
 
     // Build cards - показываем ВСЕ доступные метрики
@@ -472,14 +473,14 @@ export default function FitnessData() {
     { value: 'ultrahuman', label: 'Ultrahuman', icon: TrendingUp }
   ];
 
-  const getReadinessColor = () => {
-    const score = data.readiness.score;
+  const getRecoveryColor = () => {
+    const score = data.recovery.score;
     if (score >= 70) return { color: '#10B981', shadow: '#10B98166' };
     if (score >= 40) return { color: '#FBBF24', shadow: '#FBBF2466' };
     return { color: '#EF4444', shadow: '#EF444466' };
   };
 
-  const readinessColor = getReadinessColor();
+  const recoveryColor = getRecoveryColor();
 
   if (loading) {
     return (
@@ -528,7 +529,7 @@ export default function FitnessData() {
         />
       </div>
 
-      {/* Hero Card: Readiness - More Compact */}
+      {/* Hero Card: Recovery */}
       <div
         className="relative rounded-3xl p-6 mb-4 transition-all duration-300"
         style={{
@@ -536,11 +537,11 @@ export default function FitnessData() {
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           border: '2px solid',
-          borderColor: readinessColor.color,
-          boxShadow: `0 0 30px ${readinessColor.color}66`
+          borderColor: recoveryColor.color,
+          boxShadow: `0 0 30px ${recoveryColor.color}66`
         }}
       >
-        <h2 className="text-xl font-bold text-white mb-4">Readiness</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Recovery</h2>
         
         <div className="flex items-center justify-center">
           {/* Donut Chart - Smaller */}
@@ -559,19 +560,19 @@ export default function FitnessData() {
                 cy="64"
                 r="52"
                 fill="none"
-                stroke={readinessColor.color}
+                stroke={recoveryColor.color}
                 strokeWidth="12"
-                strokeDasharray={`${2 * Math.PI * 52 * (data.readiness.score / 100)} ${2 * Math.PI * 52}`}
+                strokeDasharray={`${2 * Math.PI * 52 * (data.recovery.score / 100)} ${2 * Math.PI * 52}`}
                 strokeLinecap="round"
                 style={{
-                  filter: `drop-shadow(0 0 6px ${readinessColor.color})`
+                  filter: `drop-shadow(0 0 6px ${recoveryColor.color})`
                 }}
               />
             </svg>
             
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-3xl font-bold text-white">{data.readiness.score}%</div>
-              <div className="text-xs text-white/80">{data.readiness.status}</div>
+              <div className="text-3xl font-bold text-white">{data.recovery.score}%</div>
+              <div className="text-xs text-white/80">{data.recovery.status}</div>
             </div>
           </div>
         </div>
