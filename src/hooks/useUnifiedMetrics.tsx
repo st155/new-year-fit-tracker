@@ -79,28 +79,54 @@ export function useLatestUnifiedMetrics() {
       try {
         setLoading(true);
         
-        // Получаем данные за последние 7 дней
-        const endDate = new Date().toISOString().split('T')[0];
-        const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        // Получаем самое последнее значение для каждой метрики напрямую из metric_values
+        const { data: metricsData, error } = await supabase
+          .from('user_metrics')
+          .select(`
+            id,
+            metric_name,
+            source,
+            unit,
+            metric_category
+          `)
+          .eq('user_id', user.id)
+          .eq('is_active', true);
+
+        if (error) throw error;
+
+        const latestMetrics: Record<string, any> = {};
         
-        const { data, error: rpcError } = await supabase.rpc('get_unified_metrics', {
-          p_user_id: user.id,
-          p_start_date: startDate,
-          p_end_date: endDate,
-          p_unified_metric_name: null,
-        });
+        // Для каждой метрики получаем последнее значение
+        for (const metric of metricsData || []) {
+          const { data: valueData } = await supabase
+            .from('metric_values')
+            .select('value, measurement_date, created_at')
+            .eq('metric_id', metric.id)
+            .eq('user_id', user.id)
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
 
-        if (rpcError) throw rpcError;
-
-        // Группируем по метрике и берем последнее значение
-        const latestMetrics: Record<string, UnifiedMetric> = {};
-        (data || []).forEach((metric: UnifiedMetric) => {
-          const key = metric.unified_metric_name;
-          if (!latestMetrics[key] || 
-              new Date(metric.measurement_date) > new Date(latestMetrics[key].measurement_date)) {
-            latestMetrics[key] = metric;
+          if (valueData) {
+            const key = metric.metric_name;
+            // Сохраняем только если это более свежее значение или метрики еще нет
+            if (!latestMetrics[key] || 
+                new Date(valueData.measurement_date) > new Date(latestMetrics[key].measurement_date) ||
+                (new Date(valueData.measurement_date).getTime() === new Date(latestMetrics[key].measurement_date).getTime() &&
+                 new Date(valueData.created_at) > new Date(latestMetrics[key].created_at))) {
+              latestMetrics[key] = {
+                metric_name: metric.metric_name,
+                value: valueData.value,
+                unit: metric.unit,
+                source: metric.source,
+                category: metric.metric_category,
+                measurement_date: valueData.measurement_date,
+                created_at: valueData.created_at,
+              };
+            }
           }
-        });
+        }
 
         setMetrics(latestMetrics);
       } catch (err) {
