@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useMetricsView } from "@/contexts/MetricsViewContext";
+import { useLatestUnifiedMetrics, useDeviceMetrics } from "@/hooks/useUnifiedMetrics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MetricsGridSkeleton } from "@/components/ui/dashboard-skeleton";
@@ -122,6 +124,14 @@ export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { viewMode, deviceFilter } = useMetricsView();
+  
+  // Unified metrics
+  const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestUnifiedMetrics();
+  
+  // Device-specific metrics
+  const { metrics: deviceMetrics, loading: deviceLoading } = useDeviceMetrics(deviceFilter);
+  
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "steps"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
     body_fat: { value: "18.5", change: "-3%", source: "withings", sources: [] },
@@ -143,131 +153,65 @@ export function MetricsGrid() {
     steps: { key: "steps", title: t('metrics.steps'), unit: t('metrics.units.steps'), color: "steps", description: "Step count", category: "health" }
   };
 
+  // Маппинг unified метрик к нашим ключам
+  const unifiedToLocalMapping: Record<string, string> = {
+    'Recovery Score': 'recovery',
+    'Weight': 'weight',
+    'Body Fat Percentage': 'body_fat',
+    'VO2Max': 'vo2max',
+    'Steps': 'steps',
+  };
+
   useEffect(() => {
-    const fetchMetrics = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    // Load user preferences
+    const savedMetrics = localStorage.getItem(`user_metrics_${user.id}`);
+    if (savedMetrics) {
       try {
-        // Load user preferences (migrate legacy row_2km -> steps)
-        const savedMetrics = localStorage.getItem(`user_metrics_${user.id}`);
-        if (savedMetrics) {
-          try {
-            const parsed = JSON.parse(savedMetrics);
-            const migrated = Array.isArray(parsed)
-              ? parsed.map((k: string) => (k === 'row_2km' ? 'steps' : k))
-              : parsed;
-            setSelectedMetrics(migrated);
-            if (JSON.stringify(migrated) !== savedMetrics) {
-              localStorage.setItem(`user_metrics_${user.id}`, JSON.stringify(migrated));
-            }
-          } catch {}
-        }
+        const parsed = JSON.parse(savedMetrics);
+        const migrated = Array.isArray(parsed)
+          ? parsed.map((k: string) => (k === 'row_2km' ? 'steps' : k))
+          : parsed;
+        setSelectedMetrics(migrated);
+      } catch {}
+    }
+  }, [user]);
 
-        // Мгновенная отрисовка из кэша
-        const cached = localStorage.getItem(`metrics_grid_${user.id}`);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed?.metrics) {
-            setMetrics(parsed.metrics);
-            setLoading(false);
+  // Обновляем метрики в зависимости от режима просмотра
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (viewMode === 'unified') {
+      // Unified mode - используем агрегированные данные
+      if (!unifiedLoading && Object.keys(unifiedMetrics).length > 0) {
+        const newMetrics: Record<string, any> = { ...metrics };
+
+        Object.entries(unifiedMetrics).forEach(([unifiedName, data]) => {
+          const localKey = unifiedToLocalMapping[unifiedName];
+          if (localKey && data) {
+            newMetrics[localKey] = {
+              value: data.aggregated_value?.toFixed(localKey === 'steps' ? 0 : 1) || '—',
+              source: data.sources?.[0] || 'unified',
+              sources: data.sources || [],
+              source_count: data.source_count || 0,
+              source_values: data.source_values || {},
+              change: null, // Можно добавить расчет change позже
+            };
           }
-        }
+        });
 
-        // Fetch real data from database (параллельно)
-        const today = new Date().toISOString().split('T')[0];
-
-        const [
-          recoveryRes,
-          stepsRes,
-          stepsMVRes,
-          weightRes,
-          weightBCRes,
-          bodyFatRes,
-          bodyFatBCRes,
-          vo2maxRes,
-        ] = await Promise.all([
-          // Recovery — берем значения ТОЛЬКО за сегодня. При отсутствии Recovery Score используем Sleep Performance
-          supabase
-            .from('metric_values')
-            .select(`value, measurement_date, created_at, user_metrics!inner(metric_name, source)`)
-            .eq('user_id', user.id)
-            .eq('user_metrics.source', 'whoop')
-            .in('user_metrics.metric_name', ['Recovery Score', 'Recovery', 'Sleep Performance'])
-            .eq('measurement_date', today)
-            .order('created_at', { ascending: false })
-            .limit(3),
-          // Steps from daily summary
-          supabase
-            .from('daily_health_summary')
-            .select('steps, date')
-            .eq('user_id', user.id)
-            .not('steps', 'is', null)
-            .order('date', { ascending: false })
-            .limit(2),
-          // Fallback steps from metric_values
-          supabase
-            .from('metric_values')
-            .select(`value, measurement_date, user_metrics!inner(metric_name)`) 
-            .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Steps', 'Количество шагов'])
-            .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(2),
-          // Weight from metric_values (any source)
-          supabase
-            .from('metric_values')
-            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
-            .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Weight', 'Вес', 'Body Mass', 'Body Weight', 'Weight (kg)', 'HKQuantityTypeIdentifierBodyMass'])
-            .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(2),
-          // Weight fallback body composition
-          supabase
-            .from('body_composition')
-            .select('weight, measurement_date')
-            .eq('user_id', user.id)
-            .not('weight', 'is', null)
-            .order('measurement_date', { ascending: false })
-            .limit(2),
-          // Body Fat from Withings
-          supabase
-            .from('metric_values')
-            .select(`value, measurement_date, user_metrics!inner(metric_name, source)`) 
-            .eq('user_id', user.id)
-            .in('user_metrics.metric_name', ['Body Fat Percentage', 'Процент жира'])
-            .eq('user_metrics.source', 'withings')
-            .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(2),
-          // Body Fat fallback body composition
-          supabase
-            .from('body_composition')
-            .select('body_fat_percentage, measurement_date')
-            .eq('user_id', user.id)
-            .not('body_fat_percentage', 'is', null)
-            .order('measurement_date', { ascending: false })
-            .limit(2),
-          // VO2Max
-          supabase
-            .from('metric_values')
-            .select(`value, measurement_date, user_metrics!inner(metric_name)`) 
-            .eq('user_id', user.id)
-            .eq('user_metrics.metric_name', 'VO2Max')
-            .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1),
-        ]);
-
-        const recoveryData = recoveryRes.data || [];
-        const stepsData = stepsRes.data || [];
-        const stepsMV = stepsMVRes.data || [];
-        const weightData = weightRes.data || [];
-        const weightBC = weightBCRes.data || [];
-        const bodyFatData = bodyFatRes.data || [];
-        const bodyFatBC = bodyFatBCRes.data || [];
-        const vo2maxData = vo2maxRes.data || [];
-
+        setMetrics(newMetrics);
+        setLoading(false);
+      } else if (!unifiedLoading) {
+        setLoading(false);
+      }
+    } else if (viewMode === 'by_device' && deviceFilter !== 'all') {
+      // Device mode - используем данные конкретного девайса
+      if (!deviceLoading && Object.keys(deviceMetrics).length > 0) {
         const newMetrics: Record<string, any> = {
           body_fat: { value: '—', change: null, source: null, sources: [] },
           weight: { value: '—', change: null, source: null, sources: [] },
@@ -277,116 +221,68 @@ export function MetricsGrid() {
           steps: { value: '—', change: null, source: null, sources: [] }
         };
 
-        // Recovery
-        if (recoveryData.length > 0) {
-          const preferred = recoveryData.find((r: any) => r.user_metrics?.metric_name === 'Recovery Score' || r.user_metrics?.metric_name === 'Recovery')
-            || recoveryData.find((r: any) => r.user_metrics?.metric_name === 'Sleep Performance');
-          if (preferred) {
-            const current = Math.round(Number(preferred.value));
-            newMetrics.recovery.value = current.toString();
-            newMetrics.recovery.source = preferred.user_metrics?.source || 'whoop';
-            newMetrics.recovery.sources = ['whoop'];
+        // Маппим device метрики
+        Object.entries(deviceMetrics).forEach(([metricName, data]: [string, any]) => {
+          // Recovery
+          if (metricName.includes('Recovery') || metricName === 'Sleep Performance') {
+            newMetrics.recovery = {
+              value: Math.round(data.value).toString(),
+              source: deviceFilter,
+              sources: [deviceFilter],
+              change: null,
+            };
           }
-        }
-
-        // Steps
-        if (stepsData.length > 0) {
-          newMetrics.steps.value = stepsData[0].steps.toLocaleString();
-          if (stepsData.length > 1 && stepsData[1].steps) {
-            const change = Math.round(((stepsData[0].steps - stepsData[1].steps) / stepsData[1].steps) * 100);
-            newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
+          // Weight
+          if (metricName.includes('Weight') || metricName.includes('Body Mass')) {
+            newMetrics.weight = {
+              value: Number(data.value).toFixed(1),
+              source: deviceFilter,
+              sources: [deviceFilter],
+              change: null,
+            };
           }
-          newMetrics.steps.source = 'terra';
-          newMetrics.steps.sources = ['terra'];
-        } else if (stepsMV.length > 0) {
-          const curr = Number(stepsMV[0].value) || 0;
-          newMetrics.steps.value = curr.toLocaleString();
-          if (stepsMV.length > 1 && stepsMV[1].value) {
-            const prev = Number(stepsMV[1].value) || 0;
-            if (prev > 0) {
-              const change = Math.round(((curr - prev) / prev) * 100);
-              newMetrics.steps.change = change >= 0 ? `+${change}%` : `${change}%`;
-            }
+          // Body Fat
+          if (metricName.includes('Body Fat') || metricName.includes('Fat Mass')) {
+            newMetrics.body_fat = {
+              value: Number(data.value).toFixed(1),
+              source: deviceFilter,
+              sources: [deviceFilter],
+              change: null,
+            };
           }
-          newMetrics.steps.source = 'terra';
-          newMetrics.steps.sources = ['terra'];
-        }
-
-        // Weight
-        if (weightData.length > 0) {
-          newMetrics.weight.value = weightData[0].value.toFixed(1);
-          if (weightData.length > 1) {
-            const change = Math.round(((weightData[0].value - weightData[1].value) / weightData[1].value) * 100);
-            newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
+          // VO2Max
+          if (metricName.includes('VO2Max')) {
+            newMetrics.vo2max = {
+              value: Number(data.value).toFixed(1),
+              source: deviceFilter,
+              sources: [deviceFilter],
+              records: 0,
+            };
           }
-          newMetrics.weight.source = weightData[0].user_metrics?.source || 'withings';
-          // Собираем уникальные источники
-          const uniqueSources = [...new Set(weightData.map((w: any) => w.user_metrics?.source).filter(Boolean))];
-          newMetrics.weight.sources = uniqueSources.length > 0 ? uniqueSources : ['withings'];
-        } else if (weightBC.length > 0) {
-          const curr = Number(weightBC[0].weight);
-          newMetrics.weight.value = curr.toFixed(1);
-          if (weightBC.length > 1 && weightBC[1].weight) {
-            const prev = Number(weightBC[1].weight);
-            if (prev > 0) {
-              const change = Math.round(((curr - prev) / prev) * 100);
-              newMetrics.weight.change = change >= 0 ? `+${change}%` : `${change}%`;
-            }
+          // Steps
+          if (metricName.includes('Steps') || metricName.includes('Step Count')) {
+            newMetrics.steps = {
+              value: Math.round(data.value).toLocaleString(),
+              source: deviceFilter,
+              sources: [deviceFilter],
+              change: null,
+            };
           }
-          newMetrics.weight.source = 'manual';
-          newMetrics.weight.sources = ['manual'];
-        }
-
-        // Body Fat
-        if (bodyFatData.length > 0) {
-          newMetrics.body_fat.value = bodyFatData[0].value.toFixed(1);
-          if (bodyFatData.length > 1) {
-            const change = Math.round(((bodyFatData[1].value - bodyFatData[0].value) / bodyFatData[0].value) * 100);
-            newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
-          }
-          newMetrics.body_fat.source = bodyFatData[0].user_metrics?.source || 'withings';
-          const uniqueSources = [...new Set(bodyFatData.map((b: any) => b.user_metrics?.source).filter(Boolean))];
-          newMetrics.body_fat.sources = uniqueSources.length > 0 ? uniqueSources : ['withings'];
-        } else if (bodyFatBC.length > 0) {
-          const curr = Number(bodyFatBC[0].body_fat_percentage);
-          newMetrics.body_fat.value = curr.toFixed(1);
-          if (bodyFatBC.length > 1 && bodyFatBC[1].body_fat_percentage) {
-            const prev = Number(bodyFatBC[1].body_fat_percentage);
-            if (curr !== 0) {
-              const change = Math.round(((prev - curr) / curr) * 100);
-              newMetrics.body_fat.change = change >= 0 ? `+${change}%` : `${change}%`;
-            }
-          }
-          newMetrics.body_fat.source = 'manual';
-          newMetrics.body_fat.sources = ['manual'];
-        }
-
-        // VO2Max
-        if (vo2maxData.length > 0) {
-          newMetrics.vo2max.value = vo2maxData[0].value.toFixed(1);
-          newMetrics.vo2max.source = 'garmin';
-          newMetrics.vo2max.sources = ['garmin'];
-        }
+        });
 
         setMetrics(newMetrics);
-        try {
-          localStorage.setItem(`metrics_grid_${user.id}` , JSON.stringify({ metrics: newMetrics, ts: Date.now() }));
-        } catch {}
-      } catch (error) {
-        console.error('Error fetching metrics:', error);
-      } finally {
+        setLoading(false);
+      } else if (!deviceLoading) {
         setLoading(false);
       }
-    };
-
-    fetchMetrics();
-  }, [user]);
+    }
+  }, [user, viewMode, deviceFilter, unifiedMetrics, deviceMetrics, unifiedLoading, deviceLoading]);
 
   const handleMetricsChange = (newMetrics: string[]) => {
     setSelectedMetrics(newMetrics);
   };
 
-  if (loading) {
+  if (loading || unifiedLoading || deviceLoading) {
     return <MetricsGridSkeleton />;
   }
 
@@ -422,20 +318,21 @@ export function MetricsGrid() {
               onClick={() => navigate(`/metric/${routeMap[metricKey] || metricKey}`)}
               onSourceChange={(newSource) => {
                 console.log(`Switched ${metricKey} to source: ${newSource}`);
-                // Здесь можно добавить логику для загрузки данных от другого источника
               }}
             />
           );
         })}
 
-        {/* Team Rank Circle - only show on mobile/tablet */}
-        <div className="lg:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="bg-card border-2 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-glow">
-            <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.title')}</div>
-            <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.rank')}</div>
-            <div className="text-lg font-bold text-primary">#3</div>
+        {/* Team Rank Circle - only show on mobile/tablet in unified mode */}
+        {viewMode === 'unified' && (
+          <div className="lg:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+            <div className="bg-card border-2 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-glow">
+              <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.title')}</div>
+              <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.rank')}</div>
+              <div className="text-lg font-bold text-primary">#3</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
