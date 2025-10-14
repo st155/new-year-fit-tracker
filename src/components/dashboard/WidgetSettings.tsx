@@ -73,7 +73,7 @@ export function WidgetSettings({
           Настроить виджеты
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-background/95 backdrop-blur-xl border-border/50">
         <DialogHeader>
           <DialogTitle>Настройка виджетов</DialogTitle>
           <DialogDescription>
