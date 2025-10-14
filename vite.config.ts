@@ -12,9 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   clearScreen: false,
   plugins: [
-    react({
-      jsxRuntime: 'automatic',
-    }),
+    react(),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
