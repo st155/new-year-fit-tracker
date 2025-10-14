@@ -119,20 +119,25 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     const TARGET_SIZE = 10 * 1024 * 1024; // 10MB target
     
     if (file.size <= TARGET_SIZE) {
+      console.log(`PDF ${(file.size / 1024 / 1024).toFixed(2)}MB - no compression needed`);
       return file;
     }
 
     console.log(`PDF ${(file.size / 1024 / 1024).toFixed(2)}MB. Applying aggressive compression...`);
     setUploadStage("Сжатие PDF...");
+    setUploadProgress(10);
     
     try {
       // Configure pdfjs worker
       pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
       
-      setUploadProgress(10);
       const arrayBuffer = await file.arrayBuffer();
+      setUploadProgress(15);
+      
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const sourcePdf = await loadingTask.promise;
+      
+      setUploadProgress(20);
       
       // Create new PDF
       const newPdfDoc = await PDFDocument.create();
@@ -215,8 +220,9 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       if (!user) throw new Error('Пользователь не авторизован');
 
       setUploadProgress(5);
+      setUploadStage("Проверка размера файла...");
       
-      // Apply aggressive compression if needed
+      // Apply aggressive compression if needed (only if file > 10MB)
       const fileToUpload = await aggressiveCompressPDF(file);
 
       // Upload PDF to storage
