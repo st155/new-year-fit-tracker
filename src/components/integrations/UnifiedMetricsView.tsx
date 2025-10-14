@@ -288,7 +288,9 @@ export function UnifiedMetricsView() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric, metricIdx) => {
           const activeSource = metric.sources[metric.activeSourceIndex];
+          if (!activeSource) return null;
           const Icon = metric.icon;
+          const isIconValid = typeof Icon === 'function';
           const hasMultipleSources = metric.sources.length > 1;
 
           return (
@@ -300,32 +302,34 @@ export function UnifiedMetricsView() {
                 hasMultipleSources && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
               )}
               style={{
-                borderColor: `${activeSource.color}30`,
-                background: `linear-gradient(135deg, ${activeSource.color}08, transparent)`,
+                borderColor: `${String(activeSource.color)}30`,
+                background: `linear-gradient(135deg, ${String(activeSource.color)}08, transparent)`,
               }}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {metric.name}
+                    {String(metric.name)}
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold" style={{ color: activeSource.color }}>
-                      {activeSource.value}
+                    <span className="text-2xl font-bold" style={{ color: String(activeSource.color) }}>
+                      {String(activeSource.value)}
                     </span>
                     {activeSource.unit && (
                       <span className="text-sm text-muted-foreground">
-                        {activeSource.unit}
+                        {String(activeSource.unit)}
                       </span>
                     )}
                   </div>
                 </div>
-                <Icon className="h-5 w-5 opacity-50" style={{ color: activeSource.color }} />
+                {isIconValid ? (
+                  <Icon className="h-5 w-5 opacity-50" style={{ color: String(activeSource.color) }} />
+                ) : null}
               </div>
               
               <div className="flex items-center justify-between mt-2">
                 <Badge variant="outline" className="text-xs">
-                  {activeSource.source}
+                  {String(activeSource.source)}
                 </Badge>
                 {hasMultipleSources && (
                   <span className="text-xs text-muted-foreground">
@@ -335,7 +339,7 @@ export function UnifiedMetricsView() {
               </div>
               
               <p className="text-xs text-muted-foreground mt-1">
-                {activeSource.lastUpdate}
+                {String(activeSource.lastUpdate)}
               </p>
             </div>
           );

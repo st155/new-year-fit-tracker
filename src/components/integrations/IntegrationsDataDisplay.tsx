@@ -250,35 +250,38 @@ export function IntegrationsDataDisplay() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {provider.metrics.map((metric, idx) => {
                   const Icon = metric.icon;
+                  const isIconValid = typeof Icon === 'function';
                   return (
                     <div
                       key={idx}
                       className="p-4 rounded-lg border bg-card hover:shadow-md transition-all"
                       style={{
-                        borderColor: `${metric.color}30`,
-                        background: `linear-gradient(135deg, ${metric.color}08, transparent)`,
+                        borderColor: `${String(metric.color)}30`,
+                        background: `linear-gradient(135deg, ${String(metric.color)}08, transparent)`,
                       }}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-muted-foreground mb-1">
-                            {metric.name}
+                            {String(metric.name)}
                           </p>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-bold" style={{ color: metric.color }}>
-                              {metric.value}
+                            <span className="text-2xl font-bold" style={{ color: String(metric.color) }}>
+                              {String(metric.value)}
                             </span>
                             {metric.unit && (
                               <span className="text-sm text-muted-foreground">
-                                {metric.unit}
+                                {String(metric.unit)}
                               </span>
                             )}
                           </div>
                         </div>
-                        <Icon className="h-5 w-5 opacity-50" style={{ color: metric.color }} />
+                        {isIconValid ? (
+                          <Icon className="h-5 w-5 opacity-50" style={{ color: String(metric.color) }} />
+                        ) : null}
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {metric.lastUpdate}
+                        {String(metric.lastUpdate)}
                       </p>
                     </div>
                   );
