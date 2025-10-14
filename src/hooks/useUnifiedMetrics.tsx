@@ -137,18 +137,19 @@ export function useDeviceMetrics(device: DeviceFilter) {
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
         // Получаем метрики только для выбранного источника
-        const { data, error } = await supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(metric_name, source, unit, metric_category)
-          `)
-          .eq('user_id', user.id)
-          .eq('user_metrics.source', device)
-          .gte('measurement_date', weekAgo)
-          .lte('measurement_date', today)
-          .order('measurement_date', { ascending: false });
+          const { data, error } = await supabase
+            .from('metric_values')
+            .select(`
+              value,
+              measurement_date,
+              user_metrics!inner(metric_name, source, unit, metric_category)
+            `)
+            .eq('user_id', user.id)
+            .eq('user_metrics.source', device)
+            .gte('measurement_date', weekAgo)
+            .lte('measurement_date', today)
+            .order('measurement_date', { ascending: false })
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
