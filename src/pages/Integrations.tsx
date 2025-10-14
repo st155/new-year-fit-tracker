@@ -17,7 +17,7 @@ export default function IntegrationsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="unified" className="w-full">
+      <Tabs defaultValue="connections" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="unified">Обзор</TabsTrigger>
           <TabsTrigger value="connections">Подключения</TabsTrigger>
