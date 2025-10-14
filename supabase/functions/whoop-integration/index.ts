@@ -399,6 +399,11 @@ async function syncWhoopData(
 
           if (recoveryResponse.ok) {
             const recoveryData = await recoveryResponse.json();
+            console.log(`Recovery for cycle ${cycle.id} (${cycleDate}):`, {
+              state: recoveryData.score_state,
+              score: recoveryData.score?.recovery_score,
+              calibrating: recoveryData.user_calibrating
+            });
             
             // Проверяем что recovery scored (не в калибровке)
             if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined) {
@@ -423,9 +428,12 @@ async function syncWhoopData(
                   user_calibrating: recoveryData.user_calibrating 
                 },
               }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+              console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${cycleDate}`);
             } else {
-              console.log(`Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
+              console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
             }
+          } else {
+            console.error(`Failed to fetch recovery for cycle ${cycle.id}: ${recoveryResponse.status}`);
           }
         } catch (error) {
           console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
