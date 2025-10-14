@@ -1,7 +1,91 @@
-import { NewDashboard } from "@/components/dashboard/new-dashboard";
+import { useAuth } from '@/hooks/useAuth';
+import { useWidgets } from '@/hooks/useWidgets';
+import { WidgetCard } from '@/components/dashboard/WidgetCard';
+import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const Index = () => {
-  return <NewDashboard />;
+  const { user } = useAuth();
+  const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Мои метрики</h1>
+            <p className="text-muted-foreground mt-1">
+              Настройте виджеты для отображения важных показателей
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refetch}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Обновить
+            </Button>
+            <WidgetSettings
+              widgets={widgets}
+              onAdd={addWidget}
+              onRemove={removeWidget}
+              onReorder={reorderWidgets}
+            />
+          </div>
+        </div>
+
+        {/* Widgets Grid */}
+        {widgets.length === 0 ? (
+          <div className="text-center py-12 border rounded-lg">
+            <p className="text-muted-foreground mb-4">
+              Нет виджетов. Добавьте их через настройки.
+            </p>
+            <WidgetSettings
+              widgets={widgets}
+              onAdd={addWidget}
+              onRemove={removeWidget}
+              onReorder={reorderWidgets}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {widgets.map((widget) => (
+              <WidgetCard
+                key={widget.id}
+                metricName={widget.metric_name}
+                source={widget.source}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default Index;
