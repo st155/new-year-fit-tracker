@@ -5,17 +5,24 @@ export function useChallenges(userId?: string) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["challenges", userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: challenges, error: challengesError } = await supabase
         .from("challenges")
-        .select(`
-          *,
-          challenge_participants!inner(user_id)
-        `)
+        .select("*")
         .eq("is_active", true)
         .order("start_date", { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (challengesError) throw challengesError;
+      if (!challenges) return [];
+
+      // Get participant counts
+      const { data: participants } = await supabase
+        .from("challenge_participants")
+        .select("challenge_id");
+
+      return challenges.map(challenge => ({
+        ...challenge,
+        challenge_participants: participants?.filter(p => p.challenge_id === challenge.id) || []
+      }));
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,

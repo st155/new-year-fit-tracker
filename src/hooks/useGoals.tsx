@@ -7,19 +7,29 @@ export function useGoals(userId?: string) {
     queryFn: async () => {
       if (!userId) return { personal: [], challenge: [] };
 
-      const { data, error } = await supabase
+      const { data: goals, error: goalsError } = await supabase
         .from("goals")
-        .select(`
-          *,
-          measurements(id, value, measurement_date)
-        `)
+        .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (goalsError) throw goalsError;
 
-      const personal = data.filter(g => g.is_personal);
-      const challenge = data.filter(g => !g.is_personal);
+      // Fetch measurements separately
+      const { data: measurements } = await supabase
+        .from("measurements")
+        .select("goal_id, value, measurement_date")
+        .eq("user_id", userId)
+        .order("measurement_date", { ascending: false });
+
+      // Attach measurements to goals
+      const goalsWithMeasurements = goals.map(goal => ({
+        ...goal,
+        measurements: measurements?.filter(m => m.goal_id === goal.id) || []
+      }));
+
+      const personal = goalsWithMeasurements.filter(g => g.is_personal);
+      const challenge = goalsWithMeasurements.filter(g => !g.is_personal);
 
       return { personal, challenge };
     },

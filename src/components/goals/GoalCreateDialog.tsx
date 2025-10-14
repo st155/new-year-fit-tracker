@@ -138,7 +138,9 @@ export function GoalCreateDialog({
       setOpen(false);
       setSelectedTemplate("");
       reset();
-      onGoalCreated();
+      if (onGoalCreated) {
+        onGoalCreated();
+      }
     } catch (error: any) {
       console.error('Error creating goal:', error);
       toast({

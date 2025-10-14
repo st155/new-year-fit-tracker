@@ -12,23 +12,42 @@ export function useActivityFeed(userId?: string, filter?: string | null) {
     queryFn: async () => {
       if (!userId) return [];
 
-      let query = supabase
+      const { data: activities, error: activitiesError } = await supabase
         .from("activity_feed")
-        .select(`
-          *,
-          profiles:user_id(username, full_name, avatar_url)
-        `)
+        .select("*")
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
+      if (activitiesError) throw activitiesError;
+      if (!activities) return [];
+
       if (filter) {
-        query = query.eq("source_table", filter);
+        const filtered = activities.filter(a => a.source_table === filter);
+        
+        // Fetch profiles for filtered activities
+        const userIds = [...new Set(filtered.map(a => a.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, username, full_name, avatar_url")
+          .in("user_id", userIds);
+
+        return filtered.map(activity => ({
+          ...activity,
+          profiles: profiles?.find(p => p.user_id === activity.user_id) || null
+        }));
       }
 
-      const { data, error } = await query;
+      // Fetch profiles for all activities
+      const userIds = [...new Set(activities.map(a => a.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name, avatar_url")
+        .in("user_id", userIds);
 
-      if (error) throw error;
-      return data;
+      return activities.map(activity => ({
+        ...activity,
+        profiles: profiles?.find(p => p.user_id === activity.user_id) || null
+      }));
     },
     enabled: !!userId,
     staleTime: 60 * 1000,
