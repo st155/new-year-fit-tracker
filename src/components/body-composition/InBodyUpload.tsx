@@ -135,7 +135,10 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       setUploadProgress(15);
       
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-      const sourcePdf = await loadingTask.promise;
+      const sourcePdf: any = await Promise.race([
+        loadingTask.promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('PDF parse timeout')), 8000))
+      ]);
       
       setUploadProgress(20);
       
