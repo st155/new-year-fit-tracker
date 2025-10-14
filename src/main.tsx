@@ -3,8 +3,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Force rebuild to clear Vite cache
-
 const root = document.getElementById("root");
 
 if (!root) {
