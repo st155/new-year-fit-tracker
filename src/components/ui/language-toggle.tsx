@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Globe, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 export function LanguageToggle() {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation();
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -33,12 +34,13 @@ export function LanguageToggle() {
       setCurrentLang(lng);
     };
 
+    // Subscribe to language change events
     i18n.on('languageChanged', handleLanguageChanged);
     
     return () => {
       i18n.off('languageChanged', handleLanguageChanged);
     };
-  }, [i18n]);
+  }, []);
 
   useEffect(() => {
     const btn = btnRef.current;
