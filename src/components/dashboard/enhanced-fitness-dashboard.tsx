@@ -534,12 +534,12 @@ export const EnhancedFitnessDashboard = () => {
 
       // Формируем статистику для отображения
       const stats: DashboardStats = {
-        recovery: viewPeriod === 'day' ? (aggregated.recovery.values[0] || null) : (aggregated.recovery.avg || null),
-        sleep: viewPeriod === 'day' ? (aggregated.sleep.values[0] || null) : (aggregated.sleep.avg || null),
-        strain: viewPeriod === 'day' ? (aggregated.strain.values[0] || null) : (aggregated.strain.avg || null),
-        calories: viewPeriod === 'day' ? (aggregated.calories.values[0] || null) : (aggregated.calories.total || null),
-        steps: viewPeriod === 'day' ? (aggregated.steps.values[0] || null) : (aggregated.steps.total || null),
-        heartRate: viewPeriod === 'day' ? (aggregated.heartRate.values[0] || null) : (aggregated.heartRate.avg || null),
+        recovery: viewPeriod === 'day' ? ((aggregated.recovery.values.length ? aggregated.recovery.values[aggregated.recovery.values.length - 1] : null)) : (aggregated.recovery.avg || null),
+        sleep: viewPeriod === 'day' ? ((aggregated.sleep.values.length ? aggregated.sleep.values[aggregated.sleep.values.length - 1] : null)) : (aggregated.sleep.avg || null),
+        strain: viewPeriod === 'day' ? ((aggregated.strain.values.length ? aggregated.strain.values[aggregated.strain.values.length - 1] : null)) : (aggregated.strain.avg || null),
+        calories: viewPeriod === 'day' ? ((aggregated.calories.values.length ? aggregated.calories.values[aggregated.calories.values.length - 1] : null)) : (aggregated.calories.total || null),
+        steps: viewPeriod === 'day' ? ((aggregated.steps.values.length ? aggregated.steps.values[aggregated.steps.values.length - 1] : null)) : (aggregated.steps.total || null),
+        heartRate: viewPeriod === 'day' ? ((aggregated.heartRate.values.length ? aggregated.heartRate.values[aggregated.heartRate.values.length - 1] : null)) : (aggregated.heartRate.avg || null),
         weight: aggregated.weight.latest || bodyComposition?.[0]?.weight || null,
         bodyFat: aggregated.bodyFat.latest || bodyComposition?.[0]?.body_fat_percentage || null
       };

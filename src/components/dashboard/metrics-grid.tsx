@@ -134,12 +134,12 @@ export function MetricsGrid() {
   
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "steps"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
-    body_fat: { value: "18.5", change: "-3%", source: "withings", sources: [] },
-    weight: { value: "72.0", change: "-2%", source: "withings", sources: [] },
-    vo2max: { value: "52.1", records: 71, source: "garmin", sources: [] },
-    row_2km: { value: "7:25", change: "-2%", attempts: 34, source: "manual", sources: [] },
-    recovery: { value: "—", change: null, source: "whoop", sources: [] },
-    steps: { value: "12,847", change: "+12%", source: "terra", sources: [] }
+    body_fat: { value: "—", change: null, source: null, sources: [] },
+    weight: { value: "—", change: null, source: null, sources: [] },
+    vo2max: { value: "—", records: 0, source: null, sources: [] },
+    row_2km: { value: "—", change: null, attempts: 0, source: null, sources: [] },
+    recovery: { value: "—", change: null, source: null, sources: [] },
+    steps: { value: "—", change: null, source: null, sources: [] }
   });
   const [loading, setLoading] = useState(true);
   const [syncAttempted, setSyncAttempted] = useState(false);
@@ -190,16 +190,23 @@ export function MetricsGrid() {
       if (!unifiedLoading && Object.keys(unifiedMetrics).length > 0) {
         const newMetrics: Record<string, any> = { ...metrics };
 
-        Object.entries(unifiedMetrics).forEach(([unifiedName, data]) => {
+        Object.entries(unifiedMetrics).forEach(([unifiedName, data]: any) => {
           const localKey = unifiedToLocalMapping[unifiedName];
           if (localKey && data) {
+            const rawValue = (data.aggregated_value ?? data.value);
+            const displayValue = rawValue != null
+              ? (localKey === 'steps' ? Math.round(Number(rawValue)).toString() : Number(rawValue).toFixed(1))
+              : '—';
+
+            const srcs = data.sources || (data.source ? [data.source] : []);
+
             newMetrics[localKey] = {
-              value: data.aggregated_value?.toFixed(localKey === 'steps' ? 0 : 1) || '—',
-              source: data.sources?.[0] || 'unified',
-              sources: data.sources || [],
-              source_count: data.source_count || 0,
+              value: displayValue,
+              source: srcs[0] || 'unified',
+              sources: srcs,
+              source_count: data.source_count || (srcs.length || 0),
               source_values: data.source_values || {},
-              change: null, // Можно добавить расчет change позже
+              change: null,
             };
           }
         });
