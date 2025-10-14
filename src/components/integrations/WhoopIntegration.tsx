@@ -96,11 +96,14 @@ export function WhoopIntegration() {
 
     setSyncing(true);
     try {
-      const { error } = await supabase.functions.invoke('whoop-integration', {
+      const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: { action: 'sync-data' },
       });
 
-      if (error) throw error;
+      if (error) {
+        const serverMsg = (error as any)?.context?.error || (data as any)?.error;
+        throw new Error(serverMsg || error.message || 'Edge Function error');
+      }
 
       toast({
         title: 'Синхронизация запущена',
