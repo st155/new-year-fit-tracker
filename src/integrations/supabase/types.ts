@@ -1307,6 +1307,7 @@ export type Database = {
       whoop_tokens: {
         Row: {
           access_token: string
+          client_id: string | null
           created_at: string
           expires_at: string | null
           id: string
@@ -1320,6 +1321,7 @@ export type Database = {
         }
         Insert: {
           access_token: string
+          client_id?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -1333,6 +1335,7 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          client_id?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string

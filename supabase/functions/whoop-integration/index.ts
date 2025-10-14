@@ -170,6 +170,7 @@ serve(async (req) => {
           refresh_token: tokenData.refresh_token,
           expires_at: expiresAt.toISOString(),
           scope: tokenData.scope,
+          client_id: whoopClientId,
           is_active: true,
         }, {
           onConflict: 'user_id',
@@ -312,6 +313,10 @@ async function syncWhoopData(
 
   if (now >= expiresAt) {
     console.log('Refreshing Whoop token');
+    
+    // Используем тот же client_id, который использовался при создании токена
+    const tokenClientId = token.client_id || whoopClientId;
+    
     const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
       method: 'POST',
       headers: {
@@ -320,7 +325,7 @@ async function syncWhoopData(
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: token.refresh_token,
-        client_id: whoopClientId,
+        client_id: tokenClientId,
         client_secret: whoopClientSecret,
       }),
     });
