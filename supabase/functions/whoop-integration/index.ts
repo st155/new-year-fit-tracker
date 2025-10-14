@@ -314,9 +314,7 @@ async function syncWhoopData(
   if (now >= expiresAt) {
     console.log('Refreshing Whoop token');
     
-    // Используем тот же client_id, который использовался при создании токена
-    const tokenClientId = token.client_id || whoopClientId;
-    
+    // ВСЕГДА используем актуальный whoopClientId из secrets
     const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
       method: 'POST',
       headers: {
@@ -325,7 +323,7 @@ async function syncWhoopData(
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: token.refresh_token,
-        client_id: tokenClientId,
+        client_id: whoopClientId,
         client_secret: whoopClientSecret,
       }),
     });
@@ -352,7 +350,7 @@ async function syncWhoopData(
         access_token: refreshData.access_token,
         refresh_token: refreshData.refresh_token,
         expires_at: newExpiresAt.toISOString(),
-        client_id: tokenClientId,
+        client_id: whoopClientId,
       })
       .eq('user_id', userId);
   }
