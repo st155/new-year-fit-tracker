@@ -6,9 +6,9 @@ import { Activity, Heart, Flame, Footprints, Moon, TrendingUp, Droplets, Dumbbel
 import { useNavigate } from "react-router-dom";
 import { Leaderboard } from "./leaderboard";
 import { WeeklyGoals } from "./weekly-goals";
-import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/lib/translations";
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -87,8 +87,8 @@ function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, 
 
 export function AdditionalMetrics() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const [metricsData, setMetricsData] = useState<Record<string, any>>({
     sleep: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.avgPerNight') },

@@ -3,11 +3,9 @@ import { useMetricsView } from '@/contexts/MetricsViewContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useTranslation } from 'react-i18next';
 
 export const MetricsViewToggle = memo(function MetricsViewToggle() {
   const { viewMode, setViewMode, deviceFilter, setDeviceFilter } = useMetricsView();
-  const { t } = useTranslation();
 
   const devices = [
     { id: 'all' as const, label: 'All Devices', icon: '🔗', color: 'from-primary to-accent' },

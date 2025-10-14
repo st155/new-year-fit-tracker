@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 import {
   Dialog,
   DialogContent,

@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/translations";
 
 interface NewDashboardHeaderProps {
   userName: string;
@@ -50,7 +50,7 @@ export function NewDashboardHeader({
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-primary whitespace-nowrap">
-              {t('dashboard.daysLeft', { count: daysLeft })}
+              {daysLeft} days left
             </span>
             <span className="text-xs text-muted-foreground">
               {Math.round(challengeProgress)}%
