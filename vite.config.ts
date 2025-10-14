@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
       "react": path.resolve(__dirname, "./node_modules/react"),
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
+    dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
     include: ["react", "react-dom"],
