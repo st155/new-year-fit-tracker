@@ -1,7 +1,7 @@
 {
-  "name": "Fitness Tracker Pro",
-  "short_name": "Fitness Pro",
-  "description": "Профессиональный трекер фитнеса с интеграциями Apple Health, Whoop и Withings",
+  "name": "Elite10 - Профессиональный Фитнес Трекер",
+  "short_name": "Elite10",
+  "description": "Профессиональный трекер фитнеса с интеграциями Whoop, Garmin, Withings, Ultrahuman и Apple Health",
   "theme_color": "#00ffff",
   "background_color": "#10121A",
   "display": "standalone",
