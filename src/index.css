@@ -121,6 +121,11 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 100% / 0.1;
     --sidebar-ring: 180 100% 50%;
+    
+    /* InBody Futuristic Styles */
+    --neon-glow: 262 83% 68%;
+    --neon-purple: 262 83% 58%;
+    --neon-cyan: 189 100% 50%;
   }
 }
 
