@@ -73,6 +73,53 @@ export function UnifiedMetricsView() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  // Вспомогательные функции (определяем до использования)
+  const formatValue = (value: number, metricName: string): string => {
+    if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
+      const hours = Math.floor(value);
+      const minutes = Math.round((value - hours) * 60);
+      return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    }
+    return value % 1 === 0 ? value.toString() : value.toFixed(1);
+  };
+
+  const getMetricIcon = (metricName: string, category: string) => {
+    const name = metricName.toLowerCase();
+    if (name.includes('heart') || name.includes('hrv')) return Heart;
+    if (name.includes('calor') || name.includes('strain')) return Flame;
+    if (name.includes('sleep')) return Moon;
+    if (name.includes('vo2') || name.includes('oxygen')) return Wind;
+    if (name.includes('step')) return Footprints;
+    if (name.includes('weight') || name.includes('fat')) return Scale;
+    if (name.includes('recovery')) return Zap;
+    return Activity;
+  };
+
+  const getMetricColor = (category: string): string => {
+    const colorMap: Record<string, string> = {
+      recovery: 'hsl(var(--success))',
+      sleep: 'hsl(var(--info))',
+      workout: 'hsl(var(--warning))',
+      cardio: 'hsl(var(--primary))',
+      body: 'hsl(var(--metric-weight))',
+    };
+    return colorMap[category] || 'hsl(var(--foreground))';
+  };
+
+  const getProviderDisplayName = (provider: string): string => {
+    const nameMap: Record<string, string> = {
+      garmin: 'Garmin',
+      whoop: 'Whoop',
+      fitbit: 'Fitbit',
+      withings: 'Withings',
+      oura: 'Oura',
+      polar: 'Polar',
+      suunto: 'Suunto',
+      ultrahuman: 'Ultrahuman',
+    };
+    return nameMap[provider.toLowerCase()] || provider;
+  };
+
   const fetchUnifiedMetrics = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
@@ -190,53 +237,6 @@ export function UnifiedMetricsView() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
-
-
-  const formatValue = (value: number, metricName: string): string => {
-    if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
-      const hours = Math.floor(value);
-      const minutes = Math.round((value - hours) * 60);
-      return `${hours}:${minutes.toString().padStart(2, '0')}`;
-    }
-    return value % 1 === 0 ? value.toString() : value.toFixed(1);
-  };
-
-  const getMetricIcon = (metricName: string, category: string) => {
-    const name = metricName.toLowerCase();
-    if (name.includes('heart') || name.includes('hrv')) return Heart;
-    if (name.includes('calor') || name.includes('strain')) return Flame;
-    if (name.includes('sleep')) return Moon;
-    if (name.includes('vo2') || name.includes('oxygen')) return Wind;
-    if (name.includes('step')) return Footprints;
-    if (name.includes('weight') || name.includes('fat')) return Scale;
-    if (name.includes('recovery')) return Zap;
-    return Activity;
-  };
-
-  const getMetricColor = (category: string): string => {
-    const colorMap: Record<string, string> = {
-      recovery: 'hsl(var(--success))',
-      sleep: 'hsl(var(--info))',
-      workout: 'hsl(var(--warning))',
-      cardio: 'hsl(var(--primary))',
-      body: 'hsl(var(--metric-weight))',
-    };
-    return colorMap[category] || 'hsl(var(--foreground))';
-  };
-
-  const getProviderDisplayName = (provider: string): string => {
-    const nameMap: Record<string, string> = {
-      garmin: 'Garmin',
-      whoop: 'Whoop',
-      fitbit: 'Fitbit',
-      withings: 'Withings',
-      oura: 'Oura',
-      polar: 'Polar',
-      suunto: 'Suunto',
-      ultrahuman: 'Ultrahuman',
-    };
-    return nameMap[provider.toLowerCase()] || provider;
   };
 
 
