@@ -77,7 +77,8 @@ serve(async (req) => {
 
     // Получить URL авторизации Whoop
     if (action === 'get-auth-url') {
-      const redirectUri = `${req.headers.get('origin')}/integrations/whoop/callback`;
+      // Используем фиксированный redirect URL, который должен быть зарегистрирован в Whoop Developer Portal
+      const redirectUri = 'https://elite10.club/whoop/callback';
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
