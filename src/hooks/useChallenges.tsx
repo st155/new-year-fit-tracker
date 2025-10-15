@@ -14,14 +14,15 @@ export function useChallenges(userId?: string) {
       if (challengesError) throw challengesError;
       if (!challenges) return [];
 
-      // Get participant counts
+      // Get all participants
       const { data: participants } = await supabase
         .from("challenge_participants")
-        .select("challenge_id");
+        .select("challenge_id, user_id");
 
       return challenges.map(challenge => ({
         ...challenge,
-        challenge_participants: participants?.filter(p => p.challenge_id === challenge.id) || []
+        challenge_participants: participants?.filter(p => p.challenge_id === challenge.id) || [],
+        isParticipant: participants?.some(p => p.challenge_id === challenge.id && p.user_id === userId) || false
       }));
     },
     enabled: !!userId,

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Users, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Trophy, Users, Calendar, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Challenge {
@@ -10,6 +11,7 @@ interface Challenge {
   start_date: string;
   end_date: string;
   challenge_participants: any[];
+  isParticipant?: boolean;
 }
 
 interface ChallengeCardProps {
@@ -25,6 +27,12 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5" />
           {challenge.title}
+          {challenge.isParticipant && (
+            <Badge variant="default" className="ml-auto">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Participating
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -41,9 +49,9 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             {new Date(challenge.end_date).toLocaleDateString()}
           </div>
         </div>
-        <Button asChild className="w-full">
+        <Button asChild className="w-full" variant={challenge.isParticipant ? "outline" : "default"}>
           <Link to={`/challenges/${challenge.id}`}>
-            View Challenge
+            {challenge.isParticipant ? "View Progress" : "View Challenge"}
           </Link>
         </Button>
       </CardContent>
