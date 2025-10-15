@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ErrorLogger } from '@/lib/error-logger';
 import { ErrorFallback } from './ErrorFallback';
 
 interface Props {
@@ -34,12 +33,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to our error logging system
-    ErrorLogger.logUIError(
-      error.message,
-      errorInfo.componentStack?.split('\n')[1]?.trim(),
-    );
-
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
 
@@ -48,10 +41,8 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo);
-    }
+    // Log to console
+    console.error('Error Boundary caught an error:', error, errorInfo);
   }
 
   componentDidUpdate(prevProps: Props) {

@@ -161,6 +161,12 @@ export class ErrorLogger {
   static initGlobalErrorHandler(): void {
     // Обработка необработанных ошибок JavaScript
     window.addEventListener('error', (event) => {
+      // Skip React errors to avoid conflicts with hooks
+      if (event.message?.includes('dispatcher') || event.message?.includes('useState')) {
+        console.error('React error detected:', event.message);
+        return;
+      }
+      
       this.logError({
         errorType: 'javascript_error',
         errorMessage: event.message,
