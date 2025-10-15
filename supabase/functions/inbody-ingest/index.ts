@@ -59,17 +59,33 @@ serve(async (req) => {
       throw new Error('PDF has no pages');
     }
 
-    // Extract text from all pages
-    let fullText = '';
-    for (const page of pages) {
-      const { width, height } = page.getSize();
-      console.log(`Page size: ${width}x${height}`);
-      // Note: pdf-lib doesn't have built-in text extraction, but we can get form fields and metadata
+    // Call parse-inbody-pdf function to extract metrics using AI
+    console.log('Calling parse-inbody-pdf function...');
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('inbody-pdfs')
+      .createSignedUrl(pdfStoragePath, 3600); // 1 hour
+
+    if (signedUrlError || !signedUrlData) {
+      console.error('Failed to create signed URL:', signedUrlError);
+      throw new Error('Failed to create signed URL for PDF');
     }
 
-    // Since pdf-lib doesn't extract text, we'll need to rely on the PDF being well-structured
-    // For now, return a helpful error message directing to manual upload
-    throw new Error('Автоматический парсинг PDF временно недоступен. Пожалуйста, используйте форму ручного ввода данных в разделе Body Composition.');
+    const { data: parseData, error: parseError } = await supabase.functions.invoke('parse-inbody-pdf', {
+      body: { pdfUrl: signedUrlData.signedUrl }
+    });
+
+    if (parseError) {
+      console.error('Failed to parse PDF:', parseError);
+      throw new Error(`Failed to parse PDF: ${parseError.message}`);
+    }
+
+    if (!parseData || !parseData.metrics) {
+      throw new Error('No metrics extracted from PDF');
+    }
+
+    const metrics = parseData.metrics;
+    const warnings: string[] = parseData.warnings || [];
+    const modelUsed = parseData.model_used;
 
     // Normalize values
     const normalizeNumber = (val: any): number | null => {
