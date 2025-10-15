@@ -32,17 +32,18 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    return !!savedEmail;
+  });
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Загрузка сохраненного email при монтировании
     const savedEmail = localStorage.getItem('rememberedEmail');
     if (savedEmail) {
       setEmail(savedEmail);
-      setRememberMe(true);
     }
   }, []);
 
@@ -262,18 +263,28 @@ const Auth = () => {
                         required
                       />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="remember-me"
-                        checked={rememberMe}
-                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                      />
-                      <Label 
-                        htmlFor="remember-me" 
-                        className="text-sm font-normal cursor-pointer"
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="remember-me"
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(!!checked)}
+                        />
+                        <Label 
+                          htmlFor="remember-me" 
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          Запомнить меня
+                        </Label>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="px-0 text-sm"
+                        onClick={() => setShowForgotPassword(true)}
                       >
-                        Запомнить меня
-                      </Label>
+                        Забыли пароль?
+                      </Button>
                     </div>
                     <Button
                       type="submit" 
