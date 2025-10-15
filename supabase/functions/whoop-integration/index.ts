@@ -489,15 +489,15 @@ async function syncWhoopData(
           console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
         }
 
-        // Strain
+        // Day Strain (общая дневная нагрузка)
         if (cycle.score?.strain !== undefined) {
           console.log(`Saving Day Strain ${cycle.score.strain} for ${cycleDate}`);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
             'Day Strain',
-            'activity',
-            'score',
+            'recovery',
+            'strain',
             'whoop'
           );
 
