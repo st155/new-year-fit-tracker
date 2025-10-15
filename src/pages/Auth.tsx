@@ -244,16 +244,7 @@ const Auth = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="signin-password">{t('auth.password')}</Label>
-                        <button
-                          type="button"
-                          onClick={() => setShowForgotPassword(true)}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Забыл пароль?
-                        </button>
-                      </div>
+                      <Label htmlFor="signin-password">{t('auth.password')}</Label>
                       <Input
                         id="signin-password"
                         type="password"

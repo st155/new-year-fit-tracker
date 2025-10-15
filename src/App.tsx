@@ -13,9 +13,10 @@ import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
 
+import Auth from "./pages/Auth";
+
 // Critical pages - load immediately
 const Landing = lazy(() => import("./pages/Landing"));
-const Auth = lazy(() => import("./pages/Auth"));
 
 // Primary pages
 const Index = lazy(() => import("./pages/Index"));
