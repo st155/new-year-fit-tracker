@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-import { PDFDocument } from 'https://esm.sh/pdf-lib@1.17.1';
+// PDF parsing removed to reduce memory usage
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,26 +37,9 @@ serve(async (req) => {
       throw new Error('pdfStoragePath is required');
     }
 
-    console.log('Downloading PDF from storage:', pdfStoragePath);
-    
-    const { data: pdfData, error: downloadError } = await supabase.storage
-      .from('inbody-pdfs')
-      .download(pdfStoragePath);
+    console.log('Creating signed URL for PDF:', pdfStoragePath);
 
-    if (downloadError || !pdfData) {
-      console.error('Failed to download PDF:', downloadError);
-      throw new Error('Failed to download PDF from storage');
-    }
-
-    console.log('Converting PDF to image for AI analysis...');
-    
-    // Load PDF and convert first page to image
-    const pdfDoc = await PDFDocument.load(await pdfData.arrayBuffer());
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
-    
-    // Get page dimensions
-    const { width, height } = firstPage.getSize();
+    console.log('Using signed URL for AI analysis (no PDF download to save memory)...');
     
     // Since we can't render PDF to canvas in Deno, we'll use a different approach:
     // Create a signed URL and let Gemini with vision handle it directly
@@ -112,9 +95,7 @@ Expected JSON structure:
   "left_leg_percent": number as percentage
 }`;
 
-    // Download PDF to pass as base64 (Gemini accepts PDFs directly)
-    const pdfArrayBuffer = await pdfData.arrayBuffer();
-    const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)));
+    // Using signed URL; no base64 conversion to avoid memory issues
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -134,8 +115,8 @@ Expected JSON structure:
               },
               {
                 type: 'image_url',
-                image_url: { 
-                  url: `data:application/pdf;base64,${pdfBase64}`
+                image_url: {
+                  url: signedUrlData.signedUrl
                 }
               }
             ]
