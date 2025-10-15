@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -41,10 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem(`new_user_${session.user.id}`, 'true');
           }
           
-          toast({
-            title: "Welcome!",
-            description: `Signed in as ${session.user.email}`,
-          });
+          toast.success(`Signed in as ${session.user.email}`);
         }
       }
     );
@@ -77,29 +74,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       if (error.message.includes('already registered')) {
-        toast({
-          title: "User already registered",
-          description: "Try signing in instead of signing up",
-          variant: "destructive"
-        });
+        toast.error("User already registered. Try signing in instead of signing up.");
       } else if (error.message.includes('Invalid email')) {
-        toast({
-          title: "Invalid email",
-          description: "Please check your email address",
-          variant: "destructive"
-        });
+        toast.error("Invalid email. Please check your email address");
       } else if (error.message.includes('Password')) {
-        toast({
-          title: "Password too simple",
-          description: "Password must be at least 6 characters",
-          variant: "destructive"
-        });
+        toast.error("Password too simple. Password must be at least 6 characters");
       } else {
-        toast({
-          title: "Registration error",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast.error(`Registration error: ${error.message}`);
       }
     } else {
       // Mark this user as a new user for onboarding
@@ -107,10 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(`new_user_${data.user.id}`, 'true');
       }
       
-      toast({
-        title: "Check your email",
-        description: "We sent you a confirmation link. If you don't see it, check your spam folder."
-      });
+      toast("Check your email. We sent you a confirmation link. If you don't see it, check your spam folder.");
     }
 
     return { error };
@@ -123,11 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      toast({
-        title: "Sign in error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error(`Sign in error: ${error.message}`);
     }
 
     return { error };
@@ -161,23 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.message.includes('requested path is invalid') || 
             error.message.includes('signature is invalid') ||
             error.message.includes('Invalid token')) {
-          toast({
-            title: "OAuth Configuration Error",
-            description: "Need to configure Site URL and Redirect URLs in Supabase panel. Contact administrator.",
-            variant: "destructive"
-          });
+          toast.error("OAuth Configuration Error. Need to configure Site URL and Redirect URLs in Supabase panel. Contact administrator.");
         } else if (error.message.includes('Network')) {
-          toast({
-            title: "Network error",
-            description: "Check your internet connection and try again",
-            variant: "destructive"
-          });
+          toast.error("Network error. Check your internet connection and try again");
         } else {
-          toast({
-            title: "Google sign in error",
-            description: error.message,
-            variant: "destructive"
-          });
+          toast.error(`Google sign in error: ${error.message}`);
         }
       } else {
         console.log('Google OAuth initiated successfully');
@@ -186,11 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { data, error };
     } catch (err: any) {
       console.error('Google auth catch error:', err);
-      toast({
-        title: "Google sign in error", 
-        description: "Try again later or use email sign in",
-        variant: "destructive"
-      });
+      toast.error("Google sign in error. Try again later or use email sign in");
       return { error: err };
     }
   };
@@ -199,16 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      toast({
-        title: "Sign out error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error(`Sign out error: ${error.message}`);
     } else {
-      toast({
-        title: "Goodbye!",
-        description: "You have successfully signed out"
-      });
+      toast.success("You have successfully signed out");
     }
 
     return { error };
