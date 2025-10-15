@@ -48,8 +48,6 @@ serve(async (req) => {
       throw new Error('Failed to download PDF from storage');
     }
 
-    const warnings: string[] = [];
-
     console.log('Parsing PDF...');
     const arrayBuffer = await pdfData.arrayBuffer();
     const pdfDoc = await PDFDocument.load(arrayBuffer);
