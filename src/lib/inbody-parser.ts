@@ -118,13 +118,16 @@ export class InBodyParser {
   }
 
   private extractBasicInfo(text: string) {
+    const id = this.extractValue(text, /ID[^\d]*(\d+)/);
+    const testDateMatch = this.extractValue(text, /Test Date.*?(\d+\.\d+\.\d+)/) || 
+                          this.extractValue(text, /(\d{2}\.\d{2}\.\d{4})/);
+    
     return {
-      id: this.extractValue(text, /ID[^\d]*(\d+)/),
+      id: id !== null ? id.toString() : null,
       height: this.extractValue(text, /Height[^\d]*([\d.]+)cm/),
       age: this.extractValue(text, /Age[^\d]*(\d+)/),
       gender: text.includes('Male') && !text.includes('Female') ? 'Male' : 'Female',
-      testDate: this.extractValue(text, /Test Date.*?(\d+\.\d+\.\d+)/) || 
-               this.extractValue(text, /(\d{2}\.\d{2}\.\d{4})/)
+      testDate: testDateMatch !== null ? testDateMatch.toString() : null
     };
   }
 

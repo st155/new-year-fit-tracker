@@ -846,88 +846,145 @@ export type Database = {
         Row: {
           bmi: number | null
           bmr: number | null
+          body_cell_mass: number | null
           body_fat_mass: number | null
           created_at: string | null
+          ecw_ratio: number | null
+          extracellular_water: number | null
+          fat_free_mass: number | null
           id: string
+          intracellular_water: number | null
+          left_arm_ecw_ratio: number | null
+          left_arm_lean_mass: number | null
           left_arm_mass: number | null
           left_arm_percent: number | null
+          left_leg_ecw_ratio: number | null
+          left_leg_lean_mass: number | null
           left_leg_mass: number | null
           left_leg_percent: number | null
           minerals: number | null
+          parsed_data: Json | null
           pdf_url: string | null
           percent_body_fat: number | null
           protein: number | null
           raw_data: Json | null
+          right_arm_ecw_ratio: number | null
+          right_arm_lean_mass: number | null
           right_arm_mass: number | null
           right_arm_percent: number | null
+          right_leg_ecw_ratio: number | null
+          right_leg_lean_mass: number | null
           right_leg_mass: number | null
           right_leg_percent: number | null
           skeletal_muscle_mass: number | null
+          smi: number | null
+          soft_lean_mass: number | null
           test_date: string
           total_body_water: number | null
+          trunk_ecw_ratio: number | null
+          trunk_lean_mass: number | null
           trunk_mass: number | null
           trunk_percent: number | null
           updated_at: string | null
           user_id: string
           visceral_fat_area: number | null
+          waist_hip_ratio: number | null
           weight: number | null
         }
         Insert: {
           bmi?: number | null
           bmr?: number | null
+          body_cell_mass?: number | null
           body_fat_mass?: number | null
           created_at?: string | null
+          ecw_ratio?: number | null
+          extracellular_water?: number | null
+          fat_free_mass?: number | null
           id?: string
+          intracellular_water?: number | null
+          left_arm_ecw_ratio?: number | null
+          left_arm_lean_mass?: number | null
           left_arm_mass?: number | null
           left_arm_percent?: number | null
+          left_leg_ecw_ratio?: number | null
+          left_leg_lean_mass?: number | null
           left_leg_mass?: number | null
           left_leg_percent?: number | null
           minerals?: number | null
+          parsed_data?: Json | null
           pdf_url?: string | null
           percent_body_fat?: number | null
           protein?: number | null
           raw_data?: Json | null
+          right_arm_ecw_ratio?: number | null
+          right_arm_lean_mass?: number | null
           right_arm_mass?: number | null
           right_arm_percent?: number | null
+          right_leg_ecw_ratio?: number | null
+          right_leg_lean_mass?: number | null
           right_leg_mass?: number | null
           right_leg_percent?: number | null
           skeletal_muscle_mass?: number | null
+          smi?: number | null
+          soft_lean_mass?: number | null
           test_date: string
           total_body_water?: number | null
+          trunk_ecw_ratio?: number | null
+          trunk_lean_mass?: number | null
           trunk_mass?: number | null
           trunk_percent?: number | null
           updated_at?: string | null
           user_id: string
           visceral_fat_area?: number | null
+          waist_hip_ratio?: number | null
           weight?: number | null
         }
         Update: {
           bmi?: number | null
           bmr?: number | null
+          body_cell_mass?: number | null
           body_fat_mass?: number | null
           created_at?: string | null
+          ecw_ratio?: number | null
+          extracellular_water?: number | null
+          fat_free_mass?: number | null
           id?: string
+          intracellular_water?: number | null
+          left_arm_ecw_ratio?: number | null
+          left_arm_lean_mass?: number | null
           left_arm_mass?: number | null
           left_arm_percent?: number | null
+          left_leg_ecw_ratio?: number | null
+          left_leg_lean_mass?: number | null
           left_leg_mass?: number | null
           left_leg_percent?: number | null
           minerals?: number | null
+          parsed_data?: Json | null
           pdf_url?: string | null
           percent_body_fat?: number | null
           protein?: number | null
           raw_data?: Json | null
+          right_arm_ecw_ratio?: number | null
+          right_arm_lean_mass?: number | null
           right_arm_mass?: number | null
           right_arm_percent?: number | null
+          right_leg_ecw_ratio?: number | null
+          right_leg_lean_mass?: number | null
           right_leg_mass?: number | null
           right_leg_percent?: number | null
           skeletal_muscle_mass?: number | null
+          smi?: number | null
+          soft_lean_mass?: number | null
           test_date?: string
           total_body_water?: number | null
+          trunk_ecw_ratio?: number | null
+          trunk_lean_mass?: number | null
           trunk_mass?: number | null
           trunk_percent?: number | null
           updated_at?: string | null
           user_id?: string
           visceral_fat_area?: number | null
+          waist_hip_ratio?: number | null
           weight?: number | null
         }
         Relationships: []
