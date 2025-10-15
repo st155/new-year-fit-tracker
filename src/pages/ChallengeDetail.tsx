@@ -5,7 +5,7 @@ import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Trophy, Target, LogOut } from "lucide-react";
+import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -117,21 +117,63 @@ export default function ChallengeDetail() {
         )}
       </div>
 
-      <Tabs defaultValue="feed" className="space-y-4">
+      <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="details">
+            <Info className="h-4 w-4 mr-2" />
+            О челлендже
+          </TabsTrigger>
           <TabsTrigger value="feed">
             <Target className="h-4 w-4 mr-2" />
-            Feed
+            Лента
           </TabsTrigger>
           <TabsTrigger value="chat">
             <MessageSquare className="h-4 w-4 mr-2" />
-            Chat
+            Чат
           </TabsTrigger>
           <TabsTrigger value="leaderboard">
             <Trophy className="h-4 w-4 mr-2" />
-            Leaderboard
+            Лидерборд
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="details">
+          <Card>
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Calendar className="h-4 w-4" />
+                    Даты проведения
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <div>Начало: {new Date(challenge.start_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    <div>Окончание: {new Date(challenge.end_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Users className="h-4 w-4" />
+                    Участники
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {isParticipant ? 'Вы участвуете в челлендже' : 'Вы не участвуете в челлендже'}
+                  </div>
+                </div>
+              </div>
+
+              {challenge.description && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Описание</div>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {challenge.description}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="feed">
           <ChallengeFeed challengeId={id!} />
