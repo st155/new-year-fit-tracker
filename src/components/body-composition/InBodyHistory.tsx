@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { InBodyDetailView } from "./InBodyDetailView";
+import { convertPdfToImage } from "@/lib/pdf-to-image";
 import "../../index-inbody-styles.css";
 
 interface InBodyAnalysis {
@@ -98,43 +99,6 @@ export const InBodyHistory = () => {
   useEffect(() => {
     fetchData();
   }, [user]);
-
-  const convertPdfToImage = async (pdfBlob: Blob): Promise<Blob> => {
-    // Lazy load PDF.js to avoid React initialization conflicts
-    const pdfjs = await import('pdfjs-dist');
-    
-    // Configure worker on first use
-    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-      pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-    }
-    
-    const arrayBuffer = await pdfBlob.arrayBuffer();
-    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-    const page = await pdf.getPage(1);
-
-    const scale = 2.0; // High quality
-    const viewport = page.getViewport({ scale });
-
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Canvas context unavailable');
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-
-    // @ts-ignore - PDF.js types can be inconsistent
-    await page.render({
-      canvasContext: context,
-      viewport: viewport
-    }).promise;
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Failed to create image blob'));
-      }, 'image/jpeg', 0.85);
-    });
-  };
 
   const handleAnalyze = async (uploadId: string, storagePath: string) => {
     setProcessingIds(prev => new Set(prev).add(uploadId));
