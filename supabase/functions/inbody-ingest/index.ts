@@ -1,8 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-// PDF parsing removed to reduce memory usage
-import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,36 +30,30 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { pdfStoragePath, uploadId } = await req.json();
+    const { imagePath, uploadId } = await req.json();
     
-    if (!pdfStoragePath) {
-      throw new Error('pdfStoragePath is required');
+    if (!imagePath) {
+      throw new Error('imagePath is required');
     }
 
-    console.log('Creating signed URL for PDF:', pdfStoragePath);
-
-    console.log('Fetching PDF via signed URL for base64 encoding...');
+    console.log('Creating signed URL for image:', imagePath);
     
-    // Since we can't render PDF to canvas in Deno, we'll use a different approach:
-    // Create a signed URL and let Gemini with vision handle it directly
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from('inbody-pdfs')
-      .createSignedUrl(pdfStoragePath, 3600);
+      .from('inbody-images')
+      .createSignedUrl(imagePath, 60);
 
     if (signedUrlError || !signedUrlData) {
       console.error('Failed to create signed URL:', signedUrlError);
-      throw new Error('Failed to create signed URL for PDF');
+      throw new Error('Failed to create signed URL for image');
     }
 
-    console.log('Analyzing PDF with Gemini Vision...');
+    console.log('Analyzing image with Gemini Vision...');
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Use Gemini 2.5 Flash with vision capabilities
-    // Pass the signed URL - Gemini can fetch and process it
     const systemPrompt = `You are an expert at extracting data from InBody body composition analysis reports.
 Analyze the document carefully and extract ALL the following metrics. Return them as a valid JSON object.
 
@@ -96,18 +88,6 @@ Expected JSON structure:
   "left_leg_percent": number as percentage
 }`;
 
-    // Fetch PDF bytes via signed URL and convert to base64 (no heavy PDF parsing)
-    const pdfFetchResp = await fetch(signedUrlData.signedUrl);
-    if (!pdfFetchResp.ok) {
-      const t = await pdfFetchResp.text().catch(() => '');
-      throw new Error(`Failed to fetch signed PDF: ${pdfFetchResp.status} ${t}`);
-    }
-    const pdfArrayBuffer = await pdfFetchResp.arrayBuffer();
-    if (pdfArrayBuffer.byteLength > 15 * 1024 * 1024) {
-      throw new Error('PDF is too large (>15MB). Please upload a smaller export.');
-    }
-    const pdfBase64 = b64encode(new Uint8Array(pdfArrayBuffer));
-
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -127,7 +107,7 @@ Expected JSON structure:
               {
                 type: 'image_url',
                 image_url: { 
-                  url: `data:application/pdf;base64,${pdfBase64}`
+                  url: signedUrlData.signedUrl
                 }
               }
             ]
@@ -222,8 +202,7 @@ Expected JSON structure:
       right_leg_percent: normalizeNumber(metrics.right_leg_percent),
       left_leg_mass: normalizeNumber(metrics.left_leg_mass),
       left_leg_percent: normalizeNumber(metrics.left_leg_percent),
-      raw_data: metrics,
-      pdf_url: signedUrlData.signedUrl.split('?')[0] // URL without signature
+      raw_data: metrics
     };
 
     // Check critical fields

@@ -21,7 +21,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { InBodyDetailView } from "./InBodyDetailView";
+import * as pdfjs from 'pdfjs-dist';
 import "../../index-inbody-styles.css";
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface InBodyAnalysis {
   id: string;
@@ -99,6 +103,35 @@ export const InBodyHistory = () => {
     fetchData();
   }, [user]);
 
+  const convertPdfToImage = async (pdfBlob: Blob): Promise<Blob> => {
+    const arrayBuffer = await pdfBlob.arrayBuffer();
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+
+    const scale = 2.0; // High quality
+    const viewport = page.getViewport({ scale });
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas context unavailable');
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    // @ts-ignore - PDF.js types can be inconsistent
+    await page.render({
+      canvasContext: context,
+      viewport: viewport
+    }).promise;
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Failed to create image blob'));
+      }, 'image/jpeg', 0.85);
+    });
+  };
+
   const handleAnalyze = async (uploadId: string, storagePath: string) => {
     setProcessingIds(prev => new Set(prev).add(uploadId));
     
@@ -108,11 +141,42 @@ export const InBodyHistory = () => {
         .update({ status: 'processing' })
         .eq('id', uploadId);
 
-      toast.info('Запуск анализа...');
+      toast.info('Конвертация PDF в изображение...');
 
+      // Download PDF from storage
+      const { data: pdfData, error: downloadError } = await supabase.storage
+        .from('inbody-pdfs')
+        .download(storagePath);
+
+      if (downloadError) throw downloadError;
+      if (!pdfData) throw new Error('PDF not found');
+
+      // Convert PDF to image
+      const imageBlob = await convertPdfToImage(pdfData);
+
+      // Upload image to storage
+      const imagePath = `${user!.id}/${Date.now()}_inbody.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('inbody-images')
+        .upload(imagePath, imageBlob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Update upload record with image path
+      await supabase
+        .from('inbody_uploads')
+        .update({ image_path: imagePath })
+        .eq('id', uploadId);
+
+      toast.info('Анализ изображения с помощью AI...');
+
+      // Call edge function with image path
       const { data, error } = await supabase.functions.invoke('inbody-ingest', {
         body: { 
-          pdfStoragePath: storagePath,
+          imagePath: imagePath,
           uploadId: uploadId
         }
       });
