@@ -48,51 +48,73 @@ serve(async (req) => {
       throw new Error('Failed to download PDF from storage');
     }
 
-    console.log('Analyzing PDF with AI...');
+    console.log('Converting PDF to image for AI analysis...');
     
-    // Get signed URL for the PDF instead of loading it into memory
+    // Load PDF and convert first page to image
+    const pdfDoc = await PDFDocument.load(await pdfData.arrayBuffer());
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    
+    // Get page dimensions
+    const { width, height } = firstPage.getSize();
+    
+    // Since we can't render PDF to canvas in Deno, we'll use a different approach:
+    // Create a signed URL and let Gemini with vision handle it directly
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from('inbody-pdfs')
-      .createSignedUrl(pdfStoragePath, 3600); // 1 hour expiry
+      .createSignedUrl(pdfStoragePath, 3600);
 
     if (signedUrlError || !signedUrlData) {
       console.error('Failed to create signed URL:', signedUrlError);
       throw new Error('Failed to create signed URL for PDF');
     }
 
+    console.log('Analyzing PDF with Gemini Vision...');
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert at extracting data from InBody body composition analysis PDFs.
-Extract the following metrics from the PDF and return them as a JSON object:
+    // Use Gemini 2.5 Flash with vision capabilities
+    // Pass the signed URL - Gemini can fetch and process it
+    const systemPrompt = `You are an expert at extracting data from InBody body composition analysis reports.
+Analyze the document carefully and extract ALL the following metrics. Return them as a valid JSON object.
 
+IMPORTANT: 
+- Return ONLY valid JSON, no markdown, no code blocks, no additional text
+- All numbers should be extracted as numbers, not strings
+- Date should be in YYYY-MM-DD format
+- If a value cannot be found, use null
+
+Expected JSON structure:
 {
-  "test_date": "YYYY-MM-DD format",
-  "weight": "number in kg",
-  "skeletal_muscle_mass": "number in kg",
-  "percent_body_fat": "number as percentage",
-  "body_fat_mass": "number in kg",
-  "visceral_fat_area": "number in cm²",
-  "bmi": "number",
-  "bmr": "number in kcal",
-  "total_body_water": "number in liters",
-  "protein": "number in kg",
-  "minerals": "number in kg",
-  "right_arm_mass": "number in kg",
-  "right_arm_percent": "number as percentage",
-  "left_arm_mass": "number in kg",
-  "left_arm_percent": "number as percentage",
-  "trunk_mass": "number in kg",
-  "trunk_percent": "number as percentage",
-  "right_leg_mass": "number in kg",
-  "right_leg_percent": "number as percentage",
-  "left_leg_mass": "number in kg",
-  "left_leg_percent": "number as percentage"
-}
+  "test_date": "YYYY-MM-DD",
+  "weight": number in kg,
+  "skeletal_muscle_mass": number in kg,
+  "percent_body_fat": number as percentage,
+  "body_fat_mass": number in kg,
+  "visceral_fat_area": number in cm²,
+  "bmi": number,
+  "bmr": number in kcal,
+  "total_body_water": number in liters,
+  "protein": number in kg,
+  "minerals": number in kg,
+  "right_arm_mass": number in kg,
+  "right_arm_percent": number as percentage,
+  "left_arm_mass": number in kg,
+  "left_arm_percent": number as percentage,
+  "trunk_mass": number in kg,
+  "trunk_percent": number as percentage,
+  "right_leg_mass": number in kg,
+  "right_leg_percent": number as percentage,
+  "left_leg_mass": number in kg,
+  "left_leg_percent": number as percentage
+}`;
 
-Return ONLY the JSON object, no additional text. If a value is not found, use null.`;
+    // Download PDF to pass as base64 (Gemini accepts PDFs directly)
+    const pdfArrayBuffer = await pdfData.arrayBuffer();
+    const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)));
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -103,18 +125,24 @@ Return ONLY the JSON object, no additional text. If a value is not found, use nu
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Please extract the InBody metrics from this PDF.' },
+              { 
+                type: 'text', 
+                text: systemPrompt + '\n\nExtract the metrics from this InBody report and return ONLY the JSON object.' 
+              },
               {
                 type: 'image_url',
-                image_url: { url: signedUrlData.signedUrl }
+                image_url: { 
+                  url: `data:application/pdf;base64,${pdfBase64}`
+                }
               }
             ]
           }
-        ]
+        ],
+        temperature: 0.1,
+        max_tokens: 2000
       })
     });
 
