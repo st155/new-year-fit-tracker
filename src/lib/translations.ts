@@ -136,10 +136,18 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'landing.footerCopyright': '© 2024 Elite10. Трансформируй свой путь к фитнесу.',
     
     // Onboarding
-    'onboarding.steps.goals': 'Создать цели',
-    'onboarding.steps.challenge': 'Присоединиться к челленджу',
-    'onboarding.steps.devices': 'Подключить устройства',
-    'onboarding.steps.habits': 'Создать привычки',
+    'onboarding.title': 'Начало работы',
+    'onboarding.of': 'из',
+    'onboarding.completed': 'завершено',
+    'onboarding.allDone': '🎉 Всё готово!',
+    'onboarding.steps.createGoals.title': 'Создать цели',
+    'onboarding.steps.createGoals.description': 'Установите свои фитнес цели',
+    'onboarding.steps.joinChallenge.title': 'Присоединиться к челленджу',
+    'onboarding.steps.joinChallenge.description': 'Участвуйте в командных соревнованиях',
+    'onboarding.steps.connectDevices.title': 'Подключить устройства',
+    'onboarding.steps.connectDevices.description': 'Синхронизируйте фитнес трекеры',
+    'onboarding.steps.createHabits.title': 'Создать привычки',
+    'onboarding.steps.createHabits.description': 'Отслеживайте ежедневные привычки',
     
     // Create Goal
     'createGoalPage.tabs.custom': 'Своя цель',
