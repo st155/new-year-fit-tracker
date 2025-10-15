@@ -48,42 +48,92 @@ serve(async (req) => {
       throw new Error('Failed to download PDF from storage');
     }
 
-    console.log('Parsing PDF...');
+    console.log('Analyzing PDF with AI...');
     const arrayBuffer = await pdfData.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const pages = pdfDoc.getPages();
-    
-    if (pages.length === 0) {
-      throw new Error('PDF has no pages');
+    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Call parse-inbody-pdf function to extract metrics using AI
-    console.log('Calling parse-inbody-pdf function...');
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from('inbody-pdfs')
-      .createSignedUrl(pdfStoragePath, 3600); // 1 hour
+    const systemPrompt = `You are an expert at extracting data from InBody body composition analysis PDFs.
+Extract the following metrics from the PDF and return them as a JSON object:
 
-    if (signedUrlError || !signedUrlData) {
-      console.error('Failed to create signed URL:', signedUrlError);
-      throw new Error('Failed to create signed URL for PDF');
-    }
+{
+  "test_date": "YYYY-MM-DD format",
+  "weight": "number in kg",
+  "skeletal_muscle_mass": "number in kg",
+  "percent_body_fat": "number as percentage",
+  "body_fat_mass": "number in kg",
+  "visceral_fat_area": "number in cm²",
+  "bmi": "number",
+  "bmr": "number in kcal",
+  "total_body_water": "number in liters",
+  "protein": "number in kg",
+  "minerals": "number in kg",
+  "right_arm_mass": "number in kg",
+  "right_arm_percent": "number as percentage",
+  "left_arm_mass": "number in kg",
+  "left_arm_percent": "number as percentage",
+  "trunk_mass": "number in kg",
+  "trunk_percent": "number as percentage",
+  "right_leg_mass": "number in kg",
+  "right_leg_percent": "number as percentage",
+  "left_leg_mass": "number in kg",
+  "left_leg_percent": "number as percentage"
+}
 
-    const { data: parseData, error: parseError } = await supabase.functions.invoke('parse-inbody-pdf', {
-      body: { pdfUrl: signedUrlData.signedUrl }
+Return ONLY the JSON object, no additional text. If a value is not found, use null.`;
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Please extract the InBody metrics from this PDF.' },
+              {
+                type: 'image_url',
+                image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
+              }
+            ]
+          }
+        ]
+      })
     });
 
-    if (parseError) {
-      console.error('Failed to parse PDF:', parseError);
-      throw new Error(`Failed to parse PDF: ${parseError.message}`);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API error:', aiResponse.status, errorText);
+      throw new Error(`AI analysis failed: ${aiResponse.statusText}`);
     }
 
-    if (!parseData || !parseData.metrics) {
-      throw new Error('No metrics extracted from PDF');
+    const aiData = await aiResponse.json();
+    const aiContent = aiData.choices?.[0]?.message?.content;
+    
+    if (!aiContent) {
+      throw new Error('No response from AI');
     }
 
-    const metrics = parseData.metrics;
-    const warnings: string[] = parseData.warnings || [];
-    const modelUsed = parseData.model_used;
+    console.log('AI response:', aiContent);
+
+    // Parse JSON from AI response
+    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Could not extract JSON from AI response');
+    }
+
+    const metrics = JSON.parse(jsonMatch[0]);
+    const warnings: string[] = [];
+    const modelUsed = 'google/gemini-2.5-flash';
 
     // Normalize values
     const normalizeNumber = (val: any): number | null => {
