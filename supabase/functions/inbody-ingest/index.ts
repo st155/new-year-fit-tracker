@@ -49,8 +49,16 @@ serve(async (req) => {
     }
 
     console.log('Analyzing PDF with AI...');
-    const arrayBuffer = await pdfData.arrayBuffer();
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    // Get signed URL for the PDF instead of loading it into memory
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('inbody-pdfs')
+      .createSignedUrl(pdfStoragePath, 3600); // 1 hour expiry
+
+    if (signedUrlError || !signedUrlData) {
+      console.error('Failed to create signed URL:', signedUrlError);
+      throw new Error('Failed to create signed URL for PDF');
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -102,7 +110,7 @@ Return ONLY the JSON object, no additional text. If a value is not found, use nu
               { type: 'text', text: 'Please extract the InBody metrics from this PDF.' },
               {
                 type: 'image_url',
-                image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
+                image_url: { url: signedUrlData.signedUrl }
               }
             ]
           }
