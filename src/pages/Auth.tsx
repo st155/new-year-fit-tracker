@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
 import { useTranslation } from '@/lib/translations';
 
@@ -31,9 +32,19 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    // Загрузка сохраненного email при монтировании
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -48,6 +59,12 @@ const Auth = () => {
     const { error } = await signIn(email, password);
     
     if (!error) {
+      // Сохранение или удаление email в зависимости от галочки
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
       navigate('/dashboard');
     }
     
@@ -245,7 +262,20 @@ const Auth = () => {
                         required
                       />
                     </div>
-                    <Button 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="remember-me"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      />
+                      <Label 
+                        htmlFor="remember-me" 
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        Запомнить меня
+                      </Label>
+                    </div>
+                    <Button
                       type="submit" 
                       className="w-full" 
                       disabled={isLoading}
