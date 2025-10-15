@@ -5,7 +5,7 @@ import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users } from "lucide-react";
+import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,31 @@ export default function ChallengeDetail() {
           setIsParticipant(!!data);
         });
     }
+  });
+
+  const joinMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !id) throw new Error("Missing user or challenge ID");
+      
+      const { error } = await supabase
+        .from("challenge_participants")
+        .insert({
+          challenge_id: id,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Вы присоединились к челленджу!");
+      queryClient.invalidateQueries({ queryKey: ["challenges"] });
+      queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
+      setIsParticipant(true);
+    },
+    onError: (error) => {
+      toast.error("Не удалось присоединиться к челленджу");
+      console.error(error);
+    },
   });
 
   const leaveMutation = useMutation({
@@ -91,7 +116,7 @@ export default function ChallengeDetail() {
           <h1 className="text-3xl font-bold">{challenge.title}</h1>
           <p className="text-muted-foreground">{challenge.description}</p>
         </div>
-        {isParticipant && (
+        {isParticipant ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -114,6 +139,11 @@ export default function ChallengeDetail() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        ) : (
+          <Button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
+          </Button>
         )}
       </div>
 
