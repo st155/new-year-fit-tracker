@@ -34,7 +34,7 @@ export function OnboardingTutorial() {
       title: t("onboarding.steps.createGoals.title"),
       description: t("onboarding.steps.createGoals.description"),
       icon: Target,
-      path: "/goals/create",
+      path: "/goals",
       color: "text-blue-500",
     },
     {
