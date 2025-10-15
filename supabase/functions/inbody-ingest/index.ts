@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 // PDF parsing removed to reduce memory usage
+import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,7 +40,7 @@ serve(async (req) => {
 
     console.log('Creating signed URL for PDF:', pdfStoragePath);
 
-    console.log('Using signed URL for AI analysis (no PDF download to save memory)...');
+    console.log('Fetching PDF via signed URL for base64 encoding...');
     
     // Since we can't render PDF to canvas in Deno, we'll use a different approach:
     // Create a signed URL and let Gemini with vision handle it directly
@@ -95,7 +96,17 @@ Expected JSON structure:
   "left_leg_percent": number as percentage
 }`;
 
-    // Using signed URL; no base64 conversion to avoid memory issues
+    // Fetch PDF bytes via signed URL and convert to base64 (no heavy PDF parsing)
+    const pdfFetchResp = await fetch(signedUrlData.signedUrl);
+    if (!pdfFetchResp.ok) {
+      const t = await pdfFetchResp.text().catch(() => '');
+      throw new Error(`Failed to fetch signed PDF: ${pdfFetchResp.status} ${t}`);
+    }
+    const pdfArrayBuffer = await pdfFetchResp.arrayBuffer();
+    if (pdfArrayBuffer.byteLength > 15 * 1024 * 1024) {
+      throw new Error('PDF is too large (>15MB). Please upload a smaller export.');
+    }
+    const pdfBase64 = b64encode(new Uint8Array(pdfArrayBuffer));
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -115,8 +126,8 @@ Expected JSON structure:
               },
               {
                 type: 'image_url',
-                image_url: {
-                  url: signedUrlData.signedUrl
+                image_url: { 
+                  url: `data:application/pdf;base64,${pdfBase64}`
                 }
               }
             ]
