@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { PDFDocument } from 'https://esm.sh/pdf-lib@1.17.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,11 +21,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
@@ -42,118 +37,39 @@ serve(async (req) => {
       throw new Error('pdfStoragePath is required');
     }
 
-    console.log('Creating signed URL for:', pdfStoragePath);
+    console.log('Downloading PDF from storage:', pdfStoragePath);
     
-    const { data: signedUrlData, error: signedError } = await supabase.storage
+    const { data: pdfData, error: downloadError } = await supabase.storage
       .from('inbody-pdfs')
-      .createSignedUrl(pdfStoragePath, 900);
+      .download(pdfStoragePath);
 
-    if (signedError || !signedUrlData?.signedUrl) {
-      console.error('Failed to create signed URL:', signedError);
-      throw new Error('Failed to create signed URL for PDF');
+    if (downloadError || !pdfData) {
+      console.error('Failed to download PDF:', downloadError);
+      throw new Error('Failed to download PDF from storage');
     }
 
     const warnings: string[] = [];
-    let modelUsed = 'google/gemini-2.5-flash';
 
-    let aiData: any = null;
-
-    // Helper: build AI request body
-    const buildAiBody = (contentPart: any) => ({
-      model: modelUsed,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert at extracting body composition data from InBody analysis PDFs. Extract all available metrics with high precision. The PDF may be in Russian or English. Convert all values to standard units: weight in kg, percentages as numbers (15.5 not "15.5%"), masses in kg, area in cm², BMI as number, BMR as integer calories. For dates, use ISO format (YYYY-MM-DDTHH:mm:ss). If a field is not found, omit it from the response.'
-        },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Extract all InBody metrics from this PDF. Use the inbody_metrics tool to return structured data.' },
-            contentPart
-          ]
-        }
-      ],
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: 'inbody_metrics',
-            description: 'Extract InBody body composition metrics from the analysis PDF',
-            parameters: {
-              type: 'object',
-              properties: {
-                test_date: { type: 'string', description: 'Test date in ISO format (YYYY-MM-DDTHH:mm:ss)' },
-                weight: { type: 'number', description: 'Body weight in kg' },
-                skeletal_muscle_mass: { type: 'number', description: 'Skeletal muscle mass in kg' },
-                percent_body_fat: { type: 'number', description: 'Body fat percentage as number (e.g., 15.5)' },
-                body_fat_mass: { type: 'number', description: 'Body fat mass in kg' },
-                visceral_fat_area: { type: 'number', description: 'Visceral fat area in cm²' },
-                bmi: { type: 'number', description: 'Body Mass Index' },
-                bmr: { type: 'integer', description: 'Basal Metabolic Rate in kcal' },
-                total_body_water: { type: 'number', description: 'Total body water in L' },
-                protein: { type: 'number', description: 'Protein mass in kg' },
-                minerals: { type: 'number', description: 'Mineral mass in kg' },
-                right_arm_mass: { type: 'number', description: 'Right arm muscle mass in kg' },
-                right_arm_percent: { type: 'number', description: 'Right arm muscle percentage' },
-                left_arm_mass: { type: 'number', description: 'Left arm muscle mass in kg' },
-                left_arm_percent: { type: 'number', description: 'Left arm muscle percentage' },
-                trunk_mass: { type: 'number', description: 'Trunk muscle mass in kg' },
-                trunk_percent: { type: 'number', description: 'Trunk muscle percentage' },
-                right_leg_mass: { type: 'number', description: 'Right leg muscle mass in kg' },
-                right_leg_percent: { type: 'number', description: 'Right leg muscle percentage' },
-                left_leg_mass: { type: 'number', description: 'Left leg muscle mass in kg' },
-                left_leg_percent: { type: 'number', description: 'Left leg muscle percentage' }
-              },
-              required: ['test_date']
-            }
-          }
-        }
-      ],
-      tool_choice: { type: 'function', function: { name: 'inbody_metrics' } }
-    });
-
-    // Attempt 1: signed URL (fast path)
-    console.log('Calling Lovable AI with signed URL...');
-    let aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(buildAiBody({
-        type: 'image_url',
-        image_url: { url: signedUrlData.signedUrl }
-      }))
-    });
-
-    if (!aiResponse.ok) {
-      const status = aiResponse.status;
-      const errorText = await aiResponse.text();
-      console.error('AI API error (signed URL):', status, errorText);
-
-      // Handle rate/credits
-      if (status === 429) throw new Error('AI rate limit exceeded. Please try again in a minute.');
-      if (status === 402) throw new Error('AI credits exhausted. Please add credits to your Lovable workspace.');
-
-      // For large files that fail image extraction, skip base64 fallback
-      if (status === 400 && errorText.includes('Failed to extract')) {
-        throw new Error('Не удалось извлечь данные из PDF. Файл слишком сложный. Попробуйте:\n1. Пересканировать InBody в более низком качестве\n2. Конвертировать PDF в изображения и загрузить отдельно\n3. Использовать другой формат экспорта InBody');
-      }
-
-      throw new Error(`AI processing failed (${status}). Please try again or contact support.`);
+    console.log('Parsing PDF...');
+    const arrayBuffer = await pdfData.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const pages = pdfDoc.getPages();
+    
+    if (pages.length === 0) {
+      throw new Error('PDF has no pages');
     }
 
-    aiData = await aiResponse.json();
-    console.log('AI response:', JSON.stringify(aiData, null, 2));
-
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      throw new Error('AI did not return structured data. Please try again or use a different PDF.');
+    // Extract text from all pages
+    let fullText = '';
+    for (const page of pages) {
+      const { width, height } = page.getSize();
+      console.log(`Page size: ${width}x${height}`);
+      // Note: pdf-lib doesn't have built-in text extraction, but we can get form fields and metadata
     }
 
-    let metrics = JSON.parse(toolCall.function.arguments);
-    console.log('Extracted metrics:', metrics);
+    // Since pdf-lib doesn't extract text, we'll need to rely on the PDF being well-structured
+    // For now, return a helpful error message directing to manual upload
+    throw new Error('Автоматический парсинг PDF временно недоступен. Пожалуйста, используйте форму ручного ввода данных в разделе Body Composition.');
 
     // Normalize values
     const normalizeNumber = (val: any): number | null => {
