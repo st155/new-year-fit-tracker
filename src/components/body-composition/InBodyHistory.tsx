@@ -21,11 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { InBodyDetailView } from "./InBodyDetailView";
-import * as pdfjs from 'pdfjs-dist';
 import "../../index-inbody-styles.css";
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface InBodyAnalysis {
   id: string;
@@ -104,6 +100,14 @@ export const InBodyHistory = () => {
   }, [user]);
 
   const convertPdfToImage = async (pdfBlob: Blob): Promise<Blob> => {
+    // Lazy load PDF.js to avoid React initialization conflicts
+    const pdfjs = await import('pdfjs-dist');
+    
+    // Configure worker on first use
+    if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+      pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    }
+    
     const arrayBuffer = await pdfBlob.arrayBuffer();
     const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);
