@@ -101,11 +101,11 @@ export function WhoopIntegration() {
       });
 
       if (error) {
-        const serverMsg = (error as any)?.context?.error || (data as any)?.error;
-        const needsReconnect = (data as any)?.needsReconnect;
+        const errorMsg = (error as any)?.message || error;
+        const statusCode = (error as any)?.status;
         
-        // Если требуется переподключение, сбрасываем соединение
-        if (needsReconnect || serverMsg?.includes('reconnect') || serverMsg?.includes('credentials have changed')) {
+        // Если 401 - требуется переподключение
+        if (statusCode === 401 || errorMsg?.includes('reconnect') || errorMsg?.includes('credentials have changed')) {
           setConnection({ connected: false });
           toast({
             title: 'Требуется переподключение',
@@ -115,7 +115,7 @@ export function WhoopIntegration() {
           return;
         }
         
-        throw new Error(serverMsg || error.message || 'Edge Function error');
+        throw new Error(errorMsg || 'Ошибка синхронизации');
       }
 
       toast({
