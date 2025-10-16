@@ -1114,6 +1114,72 @@ export type Database = {
           },
         ]
       }
+      medical_documents: {
+        Row: {
+          ai_extracted_data: Json | null
+          ai_processed: boolean
+          ai_summary: string | null
+          compared_with: string[] | null
+          comparison_results: Json | null
+          created_at: string
+          document_date: string | null
+          document_type: string
+          file_name: string
+          file_size: number | null
+          hidden_from_trainer: boolean
+          id: string
+          mime_type: string | null
+          notes: string | null
+          storage_path: string
+          tags: string[] | null
+          updated_at: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_extracted_data?: Json | null
+          ai_processed?: boolean
+          ai_summary?: string | null
+          compared_with?: string[] | null
+          comparison_results?: Json | null
+          created_at?: string
+          document_date?: string | null
+          document_type: string
+          file_name: string
+          file_size?: number | null
+          hidden_from_trainer?: boolean
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          storage_path: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_extracted_data?: Json | null
+          ai_processed?: boolean
+          ai_summary?: string | null
+          compared_with?: string[] | null
+          comparison_results?: Json | null
+          created_at?: string
+          document_date?: string | null
+          document_type?: string
+          file_name?: string
+          file_size?: number | null
+          hidden_from_trainer?: boolean
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          storage_path?: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       metric_mappings: {
         Row: {
           aggregation_method: string
