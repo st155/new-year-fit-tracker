@@ -131,23 +131,43 @@ serve(async (req) => {
           startDate.setDate(startDate.getDate() - 7);
           const start = startDate.toISOString().split('T')[0];
 
-          // Правильный endpoint Terra API для запроса данных
-          const syncResponse = await fetch(
-            `https://api.tryterra.co/v2/data/${token.terra_user_id}?start_date=${start}&end_date=${endDate}&types=body,activity,daily,sleep,nutrition`,
-            {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'dev-id': terraDevId,
-                'x-api-key': terraApiKey,
-              },
-            }
-          );
+          // Правильный endpoint Terra API v2 для запроса данных
+          const types = ['body', 'activity', 'daily', 'sleep', 'nutrition'];
+          let allData: any = { body: [], activity: [], daily: [], sleep: [], nutrition: [] };
+          
+          // Запрашиваем каждый тип данных отдельно
+          for (const type of types) {
+            const syncResponse = await fetch(
+              `https://api.tryterra.co/v2/${type}?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                  'dev-id': terraDevId,
+                  'x-api-key': terraApiKey,
+                },
+              }
+            );
 
-          if (syncResponse.ok) {
-            const responseData = await syncResponse.json();
-            console.log(`Sync response for ${token.provider}:`, responseData);
-            
+            if (syncResponse.ok) {
+              const typeData = await syncResponse.json();
+              if (typeData.data && Array.isArray(typeData.data)) {
+                allData[type] = typeData.data;
+              }
+            } else {
+              const errorText = await syncResponse.text();
+              console.error(`Sync failed for ${token.provider} (${type}):`, errorText);
+            }
+          }
+
+          // Обрабатываем полученные данные
+          console.log(`Sync data for ${token.provider}:`, {
+            body: allData.body?.length || 0,
+            activity: allData.activity?.length || 0,
+            daily: allData.daily?.length || 0,
+            sleep: allData.sleep?.length || 0,
+            nutrition: allData.nutrition?.length || 0
+          });
             // Обрабатываем полученные данные напрямую
             if (responseData.data) {
               for (const dataItem of responseData.data) {
