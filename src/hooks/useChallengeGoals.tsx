@@ -40,12 +40,21 @@ export function useChallengeGoals(userId?: string) {
       const challengeIds = participations?.map(p => p.challenge_id) || [];
 
       // 2. Get only user's goals from challenges + personal goals
-      const { data: goals, error: goalsError } = await supabase
+      let goalsQuery = supabase
         .from("goals")
         .select("*")
-        .eq("user_id", userId) // CRITICAL: Only get current user's goals
-        .or(`challenge_id.in.(${challengeIds.join(',')}),is_personal.eq.true`)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
+
+      // Filter by challenges OR personal goals
+      if (challengeIds.length > 0) {
+        goalsQuery = goalsQuery.or(`challenge_id.in.(${challengeIds.join(',')}),is_personal.eq.true`);
+      } else {
+        // Only personal goals if no challenges
+        goalsQuery = goalsQuery.eq("is_personal", true);
+      }
+
+      const { data: goals, error: goalsError } = await goalsQuery;
 
       if (goalsError) throw goalsError;
       if (!goals) return [];
