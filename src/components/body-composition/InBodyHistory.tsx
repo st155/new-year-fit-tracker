@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { InBodyDetailView } from "./InBodyDetailView";
-import { convertPdfToImage } from "@/lib/pdf-to-image";
+import { convertPdfToImage, convertPdfToImages } from "@/lib/pdf-to-image";
 import "../../index-inbody-styles.css";
 
 interface InBodyAnalysis {
@@ -121,21 +121,32 @@ export const InBodyHistory = () => {
         .update({ status: 'processing' })
         .eq('id', uploadId);
 
-      toast.info('Отправляем PDF на AI-анализ... до 2 минут');
+      toast.info('Конвертируем PDF в изображения...');
 
-      // Call edge function to parse PDF directly and save results
-      const edgeFunctionPromise = supabase.functions.invoke('parse-inbody-pdf', {
+      // Get public URL for the PDF
+      const { data: urlData } = supabase.storage
+        .from('inbody-pdfs')
+        .getPublicUrl(storagePath);
+      
+      const pdfUrl = urlData.publicUrl;
+
+      // Convert PDF to images on client-side
+      const images = await convertPdfToImages(pdfUrl);
+      
+      if (!images || images.length === 0) {
+        throw new Error('Не удалось конвертировать PDF в изображения');
+      }
+
+      console.log(`Converted ${images.length} pages, sending to AI...`);
+      toast.info('Анализируем с помощью AI...');
+
+      // Send images to edge function
+      const { data, error } = await supabase.functions.invoke('parse-inbody-pdf', {
         body: {
-          pdfStoragePath: storagePath,
+          images: images.slice(0, 2), // Only first 2 pages
           uploadId: uploadId,
         },
       });
-
-      const edgeTimeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout: AI анализ занял слишком много времени')), 120000)
-      );
-
-      const { data, error } = await Promise.race([edgeFunctionPromise, edgeTimeoutPromise]);
 
       if (error) {
         console.error('Edge function error:', error);
@@ -143,7 +154,7 @@ export const InBodyHistory = () => {
       }
       if (data?.error) throw new Error(data.error);
 
-      console.log('Analysis complete via PDF:', data);
+      console.log('Analysis complete:', data);
       toast.success('Анализ успешно завершен!');
       fetchData();
     } catch (error: any) {

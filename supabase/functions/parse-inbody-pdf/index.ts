@@ -34,51 +34,24 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Get request body: either storage path or public URL
-    const { pdfUrl, pdfStoragePath, uploadId } = await req.json();
+    // Get request body: images from client
+    const { images, uploadId } = await req.json();
 
-    if (!pdfUrl && !pdfStoragePath) {
-      throw new Error('PDF reference is required');
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      throw new Error('Images are required');
     }
 
-    let pdfBuffer: ArrayBuffer | undefined;
+    console.log(`Processing ${images.length} image(s)...`);
 
-    if (pdfStoragePath) {
-      console.log('Downloading PDF from storage:', pdfStoragePath);
-      const { data: pdfBlob, error: downloadError } = await supabase.storage
-        .from('inbody-pdfs')
-        .download(pdfStoragePath);
+    console.log('Calling AI to parse InBody images...');
 
-      if (downloadError) {
-        console.warn('Storage download failed, falling back to URL if provided:', downloadError.message);
-      } else if (pdfBlob) {
-        if (pdfBlob.size > 15 * 1024 * 1024) {
-          throw new Error('PDF is too large (>15MB). Please re-export a smaller file.');
-        }
-        pdfBuffer = await pdfBlob.arrayBuffer();
-      }
-    }
+    // Build content with all images
+    const imageContents = images.map((img: string) => ({
+      type: 'image_url',
+      image_url: { url: img }
+    }));
 
-    if (!pdfBuffer) {
-      if (!pdfUrl) throw new Error('Failed to download from storage and no pdfUrl provided');
-      console.log('Fetching PDF from URL:', pdfUrl);
-      const pdfResponse = await fetch(pdfUrl);
-      if (!pdfResponse.ok) {
-        const errText = await pdfResponse.text().catch(() => '');
-        throw new Error(`Failed to fetch PDF (status ${pdfResponse.status}) ${errText ? '- ' + errText : ''}`);
-      }
-      pdfBuffer = await pdfResponse.arrayBuffer();
-    }
-
-    if (!pdfBuffer) {
-      throw new Error('Unable to obtain PDF bytes');
-    }
-
-    const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
-
-    console.log('Calling AI to parse InBody PDF...');
-
-    // Call AI to parse the PDF
+    // Call AI to parse the images
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -90,7 +63,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ты эксперт по парсингу InBody анализов. Извлеки все данные из PDF и верни их в JSON формате.
+            content: `Ты эксперт по парсингу InBody анализов. Извлеки все данные из изображений и верни их в JSON формате.
             
 Важные поля для извлечения:
 - test_date: дата и время теста (формат: YYYY-MM-DDTHH:MM:SS)
@@ -112,14 +85,9 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Распарси этот InBody PDF и извлеки все метрики:'
+                text: 'Распарси эти InBody изображения и извлеки все метрики:'
               },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64Pdf}`
-                }
-              }
+              ...imageContents
             ]
           }
         ],
