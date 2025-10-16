@@ -40,7 +40,7 @@ export function useChallengeGoals(userId?: string) {
 
       const challengeIds = participations?.map(p => p.challenge_id) || [];
 
-      // 2. Get only user's goals from challenges + personal goals
+      // 2. Get ALL user's goals from challenges + personal goals
       let goalsQuery = supabase
         .from("goals")
         .select("*")
@@ -118,7 +118,12 @@ export function useChallengeGoals(userId?: string) {
         // Calculate progress ONLY if target_value is set
         let progress = 0;
         if (goal.target_value && currentValue) {
-          progress = Math.min((currentValue / goal.target_value) * 100, 100);
+          const isLowerBetter = goalNameLower.includes('жир') || goalNameLower.includes('бег');
+          if (isLowerBetter) {
+            progress = Math.max(0, Math.min(100, ((goal.target_value - currentValue) / goal.target_value) * 100));
+          } else {
+            progress = Math.min(100, (currentValue / goal.target_value) * 100);
+          }
         }
 
         // Calculate trend

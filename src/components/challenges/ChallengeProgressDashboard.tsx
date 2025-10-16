@@ -3,8 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ChallengeGoalCard } from "@/components/progress/ChallengeGoalCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Target, TrendingUp, Calendar } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Trophy, Target, TrendingUp, Calendar, Edit } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -19,11 +18,11 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const navigate = useNavigate();
 
-  // Filter goals for this specific challenge AND current user WITH target_value set
+  // Filter goals for this specific challenge AND current user AND with target_value set
   const challengeGoals = goals?.filter(g => 
     g.challenge_id === challengeId && 
     !g.is_personal && 
-    g.has_target
+    g.target_value !== null
   ) || [];
   
   // Calculate overall progress
@@ -47,31 +46,6 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
-      </div>
-    );
-  }
-
-  if (challengeGoals.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Ваш прогресс по дисциплинам</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Установите цели для челленджа, чтобы отслеживать прогресс.
-            </p>
-          </div>
-        </div>
-
-        <EmptyState
-          icon={<Target className="h-12 w-12" />}
-          title="Цели не установлены"
-          description="Перейдите в раздел Goals и установите персональные цели для каждой дисциплины челленджа"
-          action={{
-            label: "Установить цели",
-            onClick: () => navigate('/goals?tab=challenges')
-          }}
-        />
       </div>
     );
   }
@@ -146,15 +120,28 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
           <Target className="h-5 w-5 text-primary" />
           Challenge Goals
         </h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {challengeGoals.map((goal) => (
-            <ChallengeGoalCard
-              key={goal.id}
-              goal={goal}
-              onMeasurementAdded={handleMeasurementAdded}
-            />
-          ))}
-        </div>
+        {challengeGoals.length === 0 ? (
+          <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed">
+            <Target className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Цели не установлены</h3>
+            <p className="text-muted-foreground mb-6">
+              Перейдите в раздел Goals и установите персональные цели для челленджа
+            </p>
+            <Button onClick={() => navigate('/goals?tab=challenges')}>
+              Установить цели
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {challengeGoals.map((goal) => (
+              <ChallengeGoalCard
+                key={goal.id}
+                goal={goal}
+                onMeasurementAdded={handleMeasurementAdded}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

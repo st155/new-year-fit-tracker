@@ -59,7 +59,7 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
   const [measurementOpen, setMeasurementOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   
-  const hasTarget = goal.has_target;
+  const hasTarget = goal.target_value !== null;
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
@@ -125,18 +125,14 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
           </div>
 
           {/* Values */}
-          {!hasTarget ? (
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">
-                Цель не установлена
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Нажмите на иконку редактирования, чтобы установить цель
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="mb-4">
+          <div className="mb-4">
+            {!hasTarget ? (
+              <div className="text-muted-foreground">
+                <p className="text-sm mb-1">Цель не установлена</p>
+                <p className="text-xs">Нажмите на карандаш, чтобы установить цель</p>
+              </div>
+            ) : (
+              <>
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-3xl font-bold" style={{ color: theme.color }}>
                     {goal.current_value.toFixed(1)}
@@ -147,50 +143,52 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
                 <div className="text-sm text-muted-foreground">
                   {goal.progress_percentage.toFixed(0)}% выполнено
                 </div>
+              </>
+            )}
+          </div>
+
+          {/* Progress Bar */}
+          {hasTarget && <Progress value={goal.progress_percentage} className="mb-4" />}
+
+          {/* Sparkline & Trend */}
+          {hasTarget && (
+            <div className="flex items-center justify-between">
+              {/* Mini sparkline */}
+              <div className="flex items-end gap-[2px] h-8">
+                {goal.measurements.slice(0, 7).reverse().map((m, i) => {
+                  const max = Math.max(...goal.measurements.slice(0, 7).map(d => d.value));
+                  const min = Math.min(...goal.measurements.slice(0, 7).map(d => d.value));
+                  const range = max - min || 1;
+                  const height = ((m.value - min) / range) * 100;
+                  
+                  return (
+                    <div
+                      key={i}
+                      className="w-1 rounded-full opacity-60"
+                      style={{
+                        height: `${Math.max(height, 10)}%`,
+                        backgroundColor: theme.color,
+                      }}
+                    />
+                  );
+                })}
               </div>
 
-              {/* Progress Bar */}
-              <Progress value={goal.progress_percentage} className="mb-4" />
-
-              {/* Sparkline & Trend */}
-              <div className="flex items-center justify-between">
-                {/* Mini sparkline */}
-                <div className="flex items-end gap-[2px] h-8">
-                  {goal.measurements.slice(0, 7).reverse().map((m, i) => {
-                    const max = Math.max(...goal.measurements.slice(0, 7).map(d => d.value));
-                    const min = Math.min(...goal.measurements.slice(0, 7).map(d => d.value));
-                    const range = max - min || 1;
-                    const height = ((m.value - min) / range) * 100;
-                    
-                    return (
-                      <div
-                        key={i}
-                        className="w-1 rounded-full opacity-60"
-                        style={{
-                          height: `${Math.max(height, 10)}%`,
-                          backgroundColor: theme.color,
-                        }}
-                      />
-                    );
-                  })}
+              {/* Trend */}
+              {goal.trend !== 'stable' && (
+                <div 
+                  className="flex items-center gap-1 text-xs font-medium"
+                  style={{ color: getTrendColor() }}
+                >
+                  {goal.trend === 'up' ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
                 </div>
-
-                {/* Trend */}
-                {goal.trend !== 'stable' && (
-                  <div 
-                    className="flex items-center gap-1 text-xs font-medium"
-                    style={{ color: getTrendColor() }}
-                  >
-                    {goal.trend === 'up' ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3" />
-                    )}
-                    <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
-                  </div>
-                )}
-              </div>
-            </>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
