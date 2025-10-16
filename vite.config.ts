@@ -21,15 +21,13 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: [
-      "react", 
-      "react-dom",
-      "react/jsx-runtime",
       "@radix-ui/react-tabs",
       "@radix-ui/react-dialog",
       "@radix-ui/react-avatar",
       "@radix-ui/react-select",
       "sonner"
     ],
+    exclude: ["react", "react-dom", "react/jsx-runtime"],
     esbuildOptions: {
       jsx: 'automatic',
     },
