@@ -22,9 +22,23 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
       if (!activities) return [];
 
       if (filterType) {
-        const filtered = filterType === 'habit' 
-          ? activities.filter(a => a.activity_subtype?.includes('habit'))
-          : activities.filter(a => a.activity_subtype === filterType);
+        const filtered = activities.filter(a => {
+          if (filterType === 'habit') {
+            return a.activity_subtype?.includes('habit') || a.action_type === 'habit';
+          }
+          if (filterType === 'sleep_recovery') {
+            return a.action_text?.toLowerCase().includes('sleep') || 
+                   a.action_text?.toLowerCase().includes('recover');
+          }
+          if (filterType === 'workout') {
+            return a.action_type === 'workouts' || 
+                   a.action_text?.toLowerCase().includes('workout');
+          }
+          if (filterType === 'daily_steps') {
+            return a.action_text?.toLowerCase().includes('steps');
+          }
+          return a.activity_subtype === filterType;
+        });
         
         // Fetch profiles for filtered activities
         const userIds = [...new Set(filtered.map(a => a.user_id))];
