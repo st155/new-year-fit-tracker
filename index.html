@@ -49,6 +49,25 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Pre-boot SW/cache purge for dev/preview to avoid stale SW causing white screen
+      (function () {
+        const isDevHost = location.hostname === 'localhost' || location.hostname.endsWith('.lovableproject.com');
+        if (isDevHost) {
+          try {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+            }
+            if ('caches' in window) {
+              caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+            }
+            console.log('[Boot] Pre-boot purge done');
+          } catch (e) {
+            console.warn('[Boot] Pre-boot purge failed', e);
+          }
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
