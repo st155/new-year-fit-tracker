@@ -145,7 +145,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           'parse-inbody-pdf',
           {
             body: {
-              imageUrls: images,
+              images: images,
               uploadId: uploadRecord.id
             },
             headers: {
