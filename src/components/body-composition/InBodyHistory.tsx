@@ -69,6 +69,18 @@ export const InBodyHistory = () => {
 
     setLoading(true);
     try {
+      // First, reset stuck processing records (older than 5 minutes)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      await supabase
+        .from('inbody_uploads')
+        .update({ 
+          status: 'failed', 
+          error_message: 'Обработка прервана - попробуйте снова' 
+        })
+        .eq('user_id', user.id)
+        .eq('status', 'processing')
+        .lt('updated_at', fiveMinutesAgo);
+
       const [analysesRes, uploadsRes] = await Promise.all([
         supabase
           .from('inbody_analyses')
@@ -90,7 +102,7 @@ export const InBodyHistory = () => {
       setUploads((uploadsRes.data || []) as InBodyUpload[]);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load history');
+      toast.error('Ошибка загрузки истории');
     } finally {
       setLoading(false);
     }
@@ -109,18 +121,29 @@ export const InBodyHistory = () => {
         .update({ status: 'processing' })
         .eq('id', uploadId);
 
-      toast.info('Конвертация PDF в изображение...');
+      toast.info('Конвертация PDF в изображение... Это может занять 30-60 секунд');
 
       // Download PDF from storage
       const { data: pdfData, error: downloadError } = await supabase.storage
         .from('inbody-pdfs')
         .download(storagePath);
 
-      if (downloadError) throw downloadError;
-      if (!pdfData) throw new Error('PDF not found');
+      if (downloadError) {
+        console.error('Download error:', downloadError);
+        throw new Error(`Ошибка загрузки PDF: ${downloadError.message}`);
+      }
+      if (!pdfData) throw new Error('PDF не найден в хранилище');
 
-      // Convert PDF to image
-      const imageBlob = await convertPdfToImage(pdfData);
+      console.log('PDF downloaded, converting to image...');
+      
+      // Convert PDF to image with timeout
+      const conversionPromise = convertPdfToImage(pdfData);
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: конвертация PDF заняла слишком много времени')), 60000)
+      );
+      
+      const imageBlob = await Promise.race([conversionPromise, timeoutPromise]);
+      console.log('Image converted, uploading to storage...');
 
       // Upload image to storage
       const imagePath = `${user!.id}/${Date.now()}_inbody.jpg`;
@@ -131,28 +154,48 @@ export const InBodyHistory = () => {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Image upload error:', uploadError);
+        throw new Error(`Ошибка загрузки изображения: ${uploadError.message}`);
+      }
 
+      console.log('Image uploaded, updating database...');
+      
       // Update upload record with image path
-      await supabase
+      const { error: updateError } = await supabase
         .from('inbody_uploads')
         .update({ image_path: imagePath })
         .eq('id', uploadId);
 
-      toast.info('Анализ изображения с помощью AI...');
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error(`Ошибка обновления БД: ${updateError.message}`);
+      }
 
-      // Call edge function with image path
-      const { data, error } = await supabase.functions.invoke('inbody-ingest', {
+      toast.info('Анализ изображения с помощью AI... Это займет еще 20-30 секунд');
+
+      // Call edge function with image path with timeout
+      const edgeFunctionPromise = supabase.functions.invoke('inbody-ingest', {
         body: { 
           imagePath: imagePath,
           uploadId: uploadId
         }
       });
+      
+      const edgeTimeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: AI анализ занял слишком много времени')), 90000)
+      );
+      
+      const { data, error } = await Promise.race([edgeFunctionPromise, edgeTimeoutPromise]);
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Ошибка AI анализа: ${error.message}`);
+      }
+      if (data?.error) throw new Error(data.error);
 
-      toast.success('Анализ успешно завершен');
+      console.log('Analysis complete:', data);
+      toast.success('Анализ успешно завершен!');
       fetchData();
     } catch (error: any) {
       console.error('Error analyzing:', error);
