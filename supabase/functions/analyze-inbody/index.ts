@@ -122,7 +122,6 @@ serve(async (req) => {
             content: `Данные InBody измерений:\n\n${JSON.stringify(analysisData, null, 2)}` 
           },
         ],
-        temperature: 0.7,
       }),
     });
 

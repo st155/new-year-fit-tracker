@@ -4,6 +4,9 @@ import { MetricCard } from "./MetricCard";
 import { CircularProgress } from "./CircularProgress";
 import { WaveChart } from "./WaveChart";
 import { HumanBodyModel } from "./HumanBodyModel";
+import { InBodyAIChat } from "./InBodyAIChat";
+import { InBodyProgressChart } from "./InBodyProgressChart";
+import { InBodyInsights } from "./InBodyInsights";
 import { Button } from "@/components/ui/button";
 import {
   calculateMetricChange,
@@ -13,6 +16,8 @@ import {
   getSegmentStatus
 } from "@/lib/inbody-utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useInBodyAnalyses } from "@/hooks/useInBodyAnalyses";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InBodyAnalysis {
   id: string;
@@ -43,6 +48,9 @@ interface InBodyDetailViewProps {
 }
 
 export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBodyDetailViewProps) {
+  const { user } = useAuth();
+  const { data: allAnalyses = [] } = useInBodyAnalyses(user?.id);
+  
   const weightChange = calculateMetricChange(analysis.weight, previousAnalysis?.weight ?? null);
   const smmChange = calculateMetricChange(analysis.skeletal_muscle_mass, previousAnalysis?.skeletal_muscle_mass ?? null);
   const bfmChange = calculateMetricChange(analysis.body_fat_mass, previousAnalysis?.body_fat_mass ?? null);
@@ -208,6 +216,30 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           value={analysis.bmr ?? 0}
           unit="kcal"
         />
+      </div>
+
+      {/* Insights Section */}
+      <div className="inbody-card p-6 neon-border">
+        <InBodyInsights
+          bmi={analysis.bmi}
+          bodyFatPercent={analysis.percent_body_fat}
+          visceralFat={analysis.visceral_fat_area}
+          bmr={analysis.bmr}
+          rightArmPercent={analysis.right_arm_percent}
+          leftArmPercent={analysis.left_arm_percent}
+        />
+      </div>
+
+      {/* Progress Charts - only show if multiple analyses */}
+      {allAnalyses.length > 1 && (
+        <div className="inbody-card p-6 neon-border">
+          <InBodyProgressChart analyses={allAnalyses} />
+        </div>
+      )}
+
+      {/* AI Chat Section */}
+      <div className="inbody-card p-6 neon-border">
+        <InBodyAIChat analysisId={analysis.id} />
       </div>
     </div>
   );
