@@ -63,20 +63,47 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ты эксперт по парсингу InBody анализов. Извлеки все данные из изображений и верни их в JSON формате.
-            
-Важные поля для извлечения:
+            content: `Ты эксперт по анализу InBody сканирований. Извлеки все данные из изображений и создай подробный summary.
+
+Извлеки следующие поля:
 - test_date: дата и время теста (формат: YYYY-MM-DDTHH:MM:SS)
 - weight: вес в кг
 - skeletal_muscle_mass: мышечная масса в кг (SMM)
 - percent_body_fat: процент жира (PBF %)
 - body_fat_mass: масса жира в кг
 - visceral_fat_area: висцеральный жир в см²
-- bmi: индекс массы тела (Body Mass Index)
-- bmr: базальный метаболизм в ккал (Basal Metabolic Rate)
+- bmi: индекс массы тела
+- bmr: базальный метаболизм в ккал
 - total_body_water: общая вода в литрах
 - protein: белок в кг
 - minerals: минералы в кг
+- right_arm_mass: масса правой руки в кг
+- right_arm_percent: процент мышц правой руки
+- left_arm_mass: масса левой руки в кг
+- left_arm_percent: процент мышц левой руки
+- trunk_mass: масса туловища в кг
+- trunk_percent: процент мышц туловища
+- right_leg_mass: масса правой ноги в кг
+- right_leg_percent: процент мышц правой ноги
+- left_leg_mass: масса левой ноги в кг
+- left_leg_percent: процент мышц левой ноги
+
+Также создай поле "summary" - краткий текстовый анализ (3-5 предложений) основных показателей тела:
+- Общее состояние композиции тела
+- Сильные стороны (что в норме или отлично)
+- Области для улучшения (что требует внимания)
+- Ключевые рекомендации
+
+Верни результат в формате:
+{
+  "metrics": { ... все метрики ... },
+  "summary": "текстовый summary",
+  "key_insights": [
+    "Инсайт 1",
+    "Инсайт 2",
+    "Инсайт 3"
+  ]
+}
 
 Верни ТОЛЬКО валидный JSON без дополнительного текста.`
           },
@@ -85,7 +112,7 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Распарси эти InBody изображения и извлеки все метрики:'
+                text: 'Проанализируй InBody сканирование, извлеки все метрики и создай подробный summary с ключевыми выводами:'
               },
               ...imageContents
             ]
@@ -116,7 +143,10 @@ serve(async (req) => {
       throw new Error('Некорректный формат ответа от AI');
     }
 
-    const metrics = JSON.parse(jsonMatch[0]);
+    const aiResult = JSON.parse(jsonMatch[0]);
+    const metrics = aiResult.metrics || aiResult; // Support both new and old format
+    const summary = aiResult.summary || null;
+    const keyInsights = aiResult.key_insights || [];
     const warnings: string[] = [];
 
     // Helpers
@@ -177,6 +207,8 @@ serve(async (req) => {
       right_leg_percent: normalizeNumber(metrics.right_leg_percent),
       left_leg_mass: normalizeNumber(metrics.left_leg_mass),
       left_leg_percent: normalizeNumber(metrics.left_leg_percent),
+      ai_summary: summary,
+      ai_insights: keyInsights,
       raw_data: metrics
     };
 
@@ -206,7 +238,13 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ analysis, warnings, model_used: 'google/gemini-2.0-flash-exp' }),
+      JSON.stringify({ 
+        analysis, 
+        summary,
+        key_insights: keyInsights,
+        warnings, 
+        model_used: 'google/gemini-2.0-flash-exp' 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
