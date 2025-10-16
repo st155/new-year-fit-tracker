@@ -42,6 +42,8 @@ interface InBodyAnalysis {
   trunk_percent: number | null;
   right_leg_percent: number | null;
   left_leg_percent: number | null;
+  ai_summary: string | null;
+  ai_insights: string[] | null;
   pdf_url?: string;
 }
 

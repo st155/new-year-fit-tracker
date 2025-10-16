@@ -32,6 +32,8 @@ interface InBodyAnalysis {
   trunk_percent: number | null;
   right_leg_percent: number | null;
   left_leg_percent: number | null;
+  ai_summary: string | null;
+  ai_insights: string[] | null;
 }
 
 interface InBodyDetailViewProps {
@@ -78,6 +80,35 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           </Button>
         </div>
       </div>
+
+      {/* AI Summary Section */}
+      {analysis.ai_summary && (
+        <div className="inbody-card p-6 neon-border">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-white" />
+            </div>
+            <h2 className="text-lg font-semibold metric-glow">AI АНАЛИЗ</h2>
+          </div>
+          <p className="text-muted-foreground leading-relaxed">
+            {analysis.ai_summary}
+          </p>
+          
+          {analysis.ai_insights && analysis.ai_insights.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h3 className="text-sm font-semibold text-primary">Ключевые выводы:</h3>
+              <ul className="space-y-2">
+                {analysis.ai_insights.map((insight, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span className="text-sm text-muted-foreground">{insight}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Body Composition Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

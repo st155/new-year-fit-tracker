@@ -844,6 +844,8 @@ export type Database = {
       }
       inbody_analyses: {
         Row: {
+          ai_insights: string[] | null
+          ai_summary: string | null
           bmi: number | null
           bmr: number | null
           body_cell_mass: number | null
@@ -892,6 +894,8 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          ai_insights?: string[] | null
+          ai_summary?: string | null
           bmi?: number | null
           bmr?: number | null
           body_cell_mass?: number | null
@@ -940,6 +944,8 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          ai_insights?: string[] | null
+          ai_summary?: string | null
           bmi?: number | null
           bmr?: number | null
           body_cell_mass?: number | null
