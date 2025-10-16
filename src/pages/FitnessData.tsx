@@ -98,6 +98,12 @@ export default function FitnessData() {
           const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dateOffset));
           startDate = new Date(utcDate.setUTCHours(0, 0, 0, 0));
           endDate = new Date(utcDate.setUTCHours(23, 59, 59, 999));
+          
+          // For Whoop, extend range to include yesterday for Recovery Score
+          // (Whoop provides Recovery Score in the morning for the previous day)
+          if (selectedSource === 'whoop') {
+            startDate.setDate(startDate.getDate() - 1);
+          }
           break;
         case 'week':
           const weekStart = new Date();
@@ -242,6 +248,11 @@ export default function FitnessData() {
       if (selectedFilter === 'today' && (metric.metric_name === 'Day Strain' || metric.metric_name === 'Workout Strain')) {
         currentValue = Math.max(...sortedValues.map(v => v.value || 0));
       } else if (selectedFilter === 'today') {
+        // For recovery metrics from Whoop, if no data today, take the latest available
+        if (metric.metric_category === 'recovery' && selectedSource === 'whoop' && latestValue === undefined) {
+          // Recovery Score is typically available from yesterday, not same day
+          return; // Will be handled separately
+        }
         currentValue = latestValue;
       } else {
         // Для week/month берем среднее
