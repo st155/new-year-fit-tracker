@@ -114,9 +114,9 @@ export default function ProgressNew() {
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-10 w-32" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-32" />
+              <Skeleton key={i} className="h-48" />
             ))}
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function ProgressNew() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {visibleWidgets.map((widget) => (
               <ProgressWidgetCard
                 key={widget.id}
