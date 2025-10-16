@@ -65,6 +65,7 @@ export type Database = {
           created_at: string
           id: string
           is_milestone: boolean | null
+          measurement_date: string | null
           metadata: Json | null
           milestone_type: string | null
           source_id: string
@@ -80,6 +81,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_milestone?: boolean | null
+          measurement_date?: string | null
           metadata?: Json | null
           milestone_type?: string | null
           source_id: string
@@ -95,6 +97,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_milestone?: boolean | null
+          measurement_date?: string | null
           metadata?: Json | null
           milestone_type?: string | null
           source_id?: string

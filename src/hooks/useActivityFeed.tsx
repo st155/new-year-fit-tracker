@@ -22,23 +22,45 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
       if (!activities) return [];
 
       if (filterType) {
-        const filtered = activities.filter(a => {
+        // Step 1: filter by type with fallbacks when subtype is missing
+        let filtered = activities.filter(a => {
           if (filterType === 'habit') {
             return a.activity_subtype?.includes('habit') || a.action_type === 'habit';
           }
           if (filterType === 'sleep_recovery') {
-            return a.action_text?.toLowerCase().includes('sleep') || 
+            return a.activity_subtype === 'sleep_recovery' ||
+                   a.action_text?.toLowerCase().includes('sleep') || 
                    a.action_text?.toLowerCase().includes('recover');
           }
           if (filterType === 'workout') {
-            return a.action_type === 'workouts' || 
+            return a.activity_subtype === 'workout' ||
+                   a.action_type === 'workout' || 
                    a.action_text?.toLowerCase().includes('workout');
           }
           if (filterType === 'daily_steps') {
-            return a.action_text?.toLowerCase().includes('steps');
+            return a.activity_subtype === 'daily_steps' ||
+                   a.action_text?.toLowerCase().includes('steps');
           }
           return a.activity_subtype === filterType;
         });
+        
+        // Step 2: de-duplicate aggregated daily entries (sleep, steps)
+        if (filterType === 'sleep_recovery' || filterType === 'daily_steps') {
+          const map = new Map<string, any>();
+          for (const a of filtered) {
+            const dateKey =
+              a.measurement_date ??
+              (a.created_at ? new Date(a.created_at).toISOString().slice(0, 10) : '');
+            const key = `${a.user_id}|${dateKey}|${filterType}`;
+            const prev = map.get(key);
+            if (!prev || new Date(a.created_at) > new Date(prev.created_at)) {
+              map.set(key, a);
+            }
+          }
+          filtered = Array.from(map.values()).sort(
+            (x, y) => new Date(y.created_at).getTime() - new Date(x.created_at).getTime()
+          );
+        }
         
         // Fetch profiles for filtered activities
         const userIds = [...new Set(filtered.map(a => a.user_id))];
