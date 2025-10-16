@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
+import { toast } from '@/hooks/use-toast';
 
 const documentTypes: { value: DocumentType; label: string }[] = [
   { value: 'inbody', label: 'InBody анализ' },
@@ -29,7 +30,20 @@ export const DocumentUpload = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      const maxSize = 150 * 1024 * 1024; // 150MB
+      
+      if (selectedFile.size > maxSize) {
+        toast({
+          title: 'Файл слишком большой',
+          description: 'Максимальный размер файла — 150 МБ',
+          variant: 'destructive',
+        });
+        e.target.value = '';
+        return;
+      }
+      
+      setFile(selectedFile);
     }
   };
 

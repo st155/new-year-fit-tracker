@@ -31,6 +31,7 @@ const FitnessData = lazy(() => import("./pages/FitnessData"));
 // Secondary pages
 const Profile = lazy(() => import("./pages/Profile"));
 const Integrations = lazy(() => import("./pages/Integrations"));
+const MedicalDocuments = lazy(() => import("./pages/MedicalDocuments"));
 
 // OAuth callbacks
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
@@ -146,6 +147,13 @@ const App = () => {
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <Integrations />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/medical-documents" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <MedicalDocuments />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
