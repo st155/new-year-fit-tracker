@@ -77,8 +77,9 @@ serve(async (req) => {
 
     // Получить URL авторизации Whoop
     if (action === 'get-auth-url') {
-      // Используем кастомный домен для redirect URL
-      const redirectUri = 'https://elite10.club/whoop/callback';
+      // Определяем redirect URL на основе origin запроса
+      const origin = req.headers.get('origin') || 'https://elite10.club';
+      const redirectUri = `${origin}/whoop/callback`;
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
@@ -89,7 +90,7 @@ serve(async (req) => {
         `scope=${encodeURIComponent(scope)}&` +
         `state=${state}`;
 
-      console.log('Generated Whoop auth URL:', { redirectUri });
+      console.log('Generated Whoop auth URL:', { redirectUri, origin });
 
       return new Response(
         JSON.stringify({ authUrl }),
@@ -99,7 +100,8 @@ serve(async (req) => {
 
     // Обменять код на токен
     if (action === 'exchange-code') {
-      const redirectUri = 'https://elite10.club/whoop/callback';
+      const origin = req.headers.get('origin') || 'https://elite10.club';
+      const redirectUri = `${origin}/whoop/callback`;
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
         method: 'POST',
