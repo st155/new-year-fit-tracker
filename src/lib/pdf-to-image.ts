@@ -49,14 +49,24 @@ export async function convertPdfToImage(pdfBlob: Blob): Promise<Blob> {
   });
 }
 
-export async function convertPdfToImages(pdfUrl: string): Promise<string[]> {
+export async function convertPdfToImages(
+  pdfUrl: string,
+  options?: {
+    fetchTimeoutMs?: number;
+    scale?: number;
+    onProgress?: (current: number, total: number) => void;
+  }
+): Promise<string[]> {
   const pdfjs = await loadPdfJs();
   
+  const fetchTimeoutMs = options?.fetchTimeoutMs ?? 90000; // default 90s
+  const renderScale = options?.scale ?? 2.0;
+
   console.log('Fetching PDF from:', pdfUrl.substring(0, 100) + '...');
   
   // Fetch PDF with timeout
   const controller = new AbortController();
-  const fetchTimeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  const fetchTimeout = setTimeout(() => controller.abort(), fetchTimeoutMs);
   
   let pdf: any;
   
@@ -79,7 +89,7 @@ export async function convertPdfToImages(pdfUrl: string): Promise<string[]> {
   } catch (error) {
     clearTimeout(fetchTimeout);
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Превышено время загрузки PDF (30 секунд)');
+      throw new Error(`Превышено время загрузки PDF (${Math.round(fetchTimeoutMs/1000)} секунд)`);
     }
     throw error;
   }
@@ -90,8 +100,7 @@ export async function convertPdfToImages(pdfUrl: string): Promise<string[]> {
   for (let i = 1; i <= numPages; i++) {
     console.log(`Rendering page ${i}/${numPages}...`);
     const page = await pdf.getPage(i);
-    const scale = 2.0;
-    const viewport = page.getViewport({ scale });
+    const viewport = page.getViewport({ scale: renderScale });
 
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -111,6 +120,10 @@ export async function convertPdfToImages(pdfUrl: string): Promise<string[]> {
     // Convert to base64
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     images.push(dataUrl);
+
+    // Progress callback and yield to UI
+    options?.onProgress?.(i, numPages);
+    await new Promise((r) => setTimeout(r, 0));
   }
 
   return images;

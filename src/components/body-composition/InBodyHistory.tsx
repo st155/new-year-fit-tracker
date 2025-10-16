@@ -134,13 +134,11 @@ export const InBodyHistory = () => {
       
       console.log('Starting PDF conversion for:', storagePath);
 
-      // Convert PDF to images on client-side with timeout
-      const conversionTimeout = setTimeout(() => {
-        throw new Error('Превышено время ожидания конвертации (60 секунд)');
-      }, 60000);
-
-      const images = await convertPdfToImages(signedUrlData.signedUrl);
-      clearTimeout(conversionTimeout);
+      // Convert PDF to images on client-side with extended timeout
+      const images = await convertPdfToImages(signedUrlData.signedUrl, {
+        fetchTimeoutMs: 120000, // 2 minutes for slow networks
+        onProgress: (current, total) => console.log(`PDF conversion progress: ${current}/${total}`),
+      });
       
       if (!images || images.length === 0) {
         throw new Error('Не удалось конвертировать PDF в изображения');
