@@ -115,8 +115,34 @@ export default function FitnessData() {
           break;
       }
       
-      // Use cached metrics with prefetching
-      const metrics = await getMetrics(startDate, endDate, selectedFilter);
+      let metrics: any[];
+
+      // For "all" source, use unified metrics
+      if (selectedSource === 'all') {
+        const { data: unifiedMetrics, error } = await supabase
+          .rpc('get_unified_metrics', {
+            p_user_id: user?.id,
+            p_start_date: startDate.toISOString().split('T')[0],
+            p_end_date: endDate.toISOString().split('T')[0]
+          });
+
+        if (error) throw error;
+
+        // Convert unified metrics to the same format as regular metrics
+        metrics = (unifiedMetrics || []).map((um: any) => ({
+          metric_name: um.unified_metric_name,
+          metric_category: um.unified_category,
+          unit: um.unified_unit,
+          source: 'unified',
+          metric_values: [{
+            value: um.aggregated_value,
+            measurement_date: um.measurement_date
+          }]
+        }));
+      } else {
+        // Use cached metrics with prefetching for specific sources
+        metrics = await getMetrics(startDate, endDate, selectedFilter);
+      }
 
       // Process metrics to populate dashboard
       const processed = processMetrics(metrics);
@@ -244,11 +270,15 @@ export default function FitnessData() {
     });
 
     // Recovery - показываем только если данные есть
-    if ((metricValues['Recovery Score'] || metricValues['Recovery']) && 
-        (metricValues['Recovery Score']?.current > 0 || metricValues['Recovery']?.current > 0)) {
-      const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
-      result.recovery.score = Math.round(recovery.current);
-      result.recovery.status = recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low';
+    const recoveryMetric = metricValues['Recovery Score'] || metricValues['Recovery'] || metricValues['HRV RMSSD'];
+    if (recoveryMetric && recoveryMetric.current > 0) {
+      // For HRV RMSSD, normalize to percentage (50-100 HRV = 30-100%)
+      let recoveryValue = recoveryMetric.current;
+      if (metricValues['HRV RMSSD'] && !metricValues['Recovery Score'] && !metricValues['Recovery']) {
+        recoveryValue = Math.min(100, Math.max(0, (recoveryValue - 30) * 1.4));
+      }
+      result.recovery.score = Math.round(recoveryValue);
+      result.recovery.status = recoveryValue > 70 ? 'Optimal' : recoveryValue > 40 ? 'Normal' : 'Low';
     }
 
     // Build cards - показываем ВСЕ доступные метрики
@@ -309,14 +339,18 @@ export default function FitnessData() {
     }
 
     // Recovery Score - показываем только если данные есть
-    if ((metricValues['Recovery Score'] || metricValues['Recovery']) && 
-        (metricValues['Recovery Score']?.current > 0 || metricValues['Recovery']?.current > 0)) {
-      const recovery = metricValues['Recovery Score'] || metricValues['Recovery'];
+    const recoveryForCard = metricValues['Recovery Score'] || metricValues['Recovery'] || metricValues['HRV RMSSD'];
+    if (recoveryForCard && recoveryForCard.current > 0) {
+      // For HRV RMSSD, normalize to percentage (50-100 HRV = 30-100%)
+      let recoveryValue = recoveryForCard.current;
+      if (metricValues['HRV RMSSD'] && !metricValues['Recovery Score'] && !metricValues['Recovery']) {
+        recoveryValue = Math.min(100, Math.max(0, (recoveryValue - 30) * 1.4));
+      }
       const meta = getMetricIcon('recovery', 'recovery');
       cards.push({
         name: 'Recovery',
-        value: Math.round(recovery.current) + '%',
-        subtitle: recovery.current > 70 ? 'Optimal' : recovery.current > 40 ? 'Normal' : 'Low',
+        value: Math.round(recoveryValue) + '%',
+        subtitle: recoveryValue > 70 ? 'Optimal' : recoveryValue > 40 ? 'Normal' : 'Low',
         icon: meta.icon,
         color: meta.color,
         borderColor: meta.color
