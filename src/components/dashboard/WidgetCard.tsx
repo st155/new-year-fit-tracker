@@ -26,16 +26,34 @@ const getMetricIcon = (metricName: string) => {
 
 const getMetricColor = (metricName: string) => {
   const name = metricName.toLowerCase();
-  if (name.includes('step')) return 'hsl(var(--chart-1))';
-  if (name.includes('strain')) return 'hsl(var(--chart-2))';
-  if (name.includes('recovery')) return 'hsl(var(--chart-3))';
-  if (name.includes('weight')) return 'hsl(var(--chart-4))';
-  if (name.includes('sleep')) return 'hsl(var(--chart-5))';
-  if (name.includes('hr') || name.includes('heart')) return 'hsl(var(--chart-3))';
-  if (name.includes('hrv')) return 'hsl(var(--chart-3))';
-  if (name.includes('calorie')) return 'hsl(var(--chart-4))';
-  if (name.includes('vo2')) return 'hsl(var(--chart-2))';
-  return 'hsl(var(--primary))';
+  if (name.includes('step')) return '#3b82f6'; // blue
+  if (name.includes('strain') || name.includes('workout')) return '#f97316'; // orange
+  if (name.includes('recovery')) return '#10b981'; // green
+  if (name.includes('weight')) return '#8b5cf6'; // purple
+  if (name.includes('sleep')) return '#6366f1'; // indigo
+  if (name.includes('hr') || name.includes('heart')) return '#ef4444'; // red
+  if (name.includes('hrv')) return '#06b6d4'; // cyan
+  if (name.includes('calorie')) return '#f59e0b'; // amber
+  if (name.includes('vo2')) return '#14b8a6'; // teal
+  if (name.includes('fat')) return '#ec4899'; // pink
+  return '#3b82f6'; // default blue
+};
+
+// Метрики где снижение = улучшение
+const isLowerBetter = (metricName: string) => {
+  const name = metricName.toLowerCase();
+  return name.includes('fat') || 
+         name.includes('weight') || 
+         name.includes('resting hr') ||
+         name.includes('stress');
+};
+
+const getTrendColor = (trend: number, metricName: string) => {
+  const lowerIsBetter = isLowerBetter(metricName);
+  const isImproving = lowerIsBetter ? trend < 0 : trend > 0;
+  
+  if (Math.abs(trend) < 0.5) return '#6b7280'; // gray для нейтрального
+  return isImproving ? '#10b981' : '#ef4444'; // green для улучшения, red для ухудшения
 };
 
 const formatValue = (value: number | string, metricName: string, unit: string): string => {
@@ -122,47 +140,41 @@ export function WidgetCard({ metricName, source }: WidgetCardProps) {
   }
 
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
+  const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
 
   return (
     <Card 
-      className="overflow-hidden border-border/40 hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
+      className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
       style={{
         background: `linear-gradient(135deg, ${color}08, transparent)`,
-        borderColor: `${color}30`,
+        borderWidth: '2px',
+        borderStyle: 'solid',
+        borderColor: trendColor || `${color}30`,
       }}
     >
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground mb-1">
+            <p className="text-sm font-medium text-foreground mb-1">
               {metricName}
             </p>
             <p className="text-xs text-muted-foreground/60">
               {getSourceDisplayName(source)}
             </p>
           </div>
-          <Icon className="h-5 w-5 opacity-50" style={{ color }} />
+          <Icon className="h-5 w-5" style={{ color }} />
         </div>
 
-        <div className="flex items-center gap-3 mb-2">
-          <div 
-            className="p-2 rounded-lg"
-            style={{ 
-              backgroundColor: `${color}15`,
-            }}
-          >
-            <Icon className="h-5 w-5" style={{ color }} />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold" style={{ color }}>
-              {formatValue(data.value, metricName, data.unit)}
+        <div className="flex items-baseline gap-2 mb-3">
+          <Icon className="h-6 w-6" style={{ color }} />
+          <span className="text-3xl font-bold" style={{ color }}>
+            {formatValue(data.value, metricName, data.unit)}
+          </span>
+          {data.unit && (
+            <span className="text-sm text-muted-foreground">
+              {data.unit}
             </span>
-            {data.unit && (
-              <span className="text-sm text-muted-foreground">
-                {data.unit}
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between text-xs">
@@ -171,9 +183,10 @@ export function WidgetCard({ metricName, source }: WidgetCardProps) {
           </span>
           
           {hasTrend && (
-            <div className={`flex items-center gap-1 ${
-              data.trend! > 0 ? 'text-success' : data.trend! < 0 ? 'text-destructive' : 'text-muted-foreground'
-            }`}>
+            <div 
+              className="flex items-center gap-1 font-medium"
+              style={{ color: trendColor }}
+            >
               {data.trend! > 0 ? (
                 <TrendingUp className="h-3 w-3" />
               ) : data.trend! < 0 ? (
