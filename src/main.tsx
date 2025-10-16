@@ -10,6 +10,15 @@ if (!root) {
   throw new Error("Root element not found");
 }
 
+// Global error logging to diagnose white screen
+window.addEventListener('error', (e) => {
+  console.error('Global error:', (e as ErrorEvent).error || (e as ErrorEvent).message, e);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled promise rejection:', (e as PromiseRejectionEvent).reason, e);
+});
+console.log('[Boot] main.tsx starting');
+
 createRoot(root).render(
   <StrictMode>
     <App />

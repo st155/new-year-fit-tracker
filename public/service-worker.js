@@ -170,17 +170,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Dev-защита: не кешируем dev/HMR ресурсы
-  const isDevHost = self.location.hostname === 'localhost' || 
-                    self.location.hostname.endsWith('.lovableproject.com');
-  if (isDevHost) {
-    const skipPaths = url.pathname.startsWith('/@vite') ||
-                     url.pathname.startsWith('/@react-refresh') ||
-                     url.pathname.startsWith('/src/') ||
-                     url.pathname.includes('__vite');
-    if (skipPaths) {
-      return;
-    }
+  // Skip Vite dev/HMR requests
+  if (url.pathname.startsWith('/@vite') ||
+      url.pathname.startsWith('/@react-refresh') ||
+      url.pathname.startsWith('/src/') ||
+      url.pathname.includes('__vite')) {
+    return;
   }
 
   // Supabase API - Network First с коротким таймаутом
