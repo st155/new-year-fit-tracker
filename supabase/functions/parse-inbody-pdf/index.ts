@@ -59,7 +59,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -118,7 +118,7 @@ serve(async (req) => {
             ]
           }
         ],
-        temperature: 0.1,
+        
       }),
     });
 
@@ -243,7 +243,7 @@ serve(async (req) => {
         summary,
         key_insights: keyInsights,
         warnings, 
-        model_used: 'google/gemini-2.0-flash-exp' 
+        model_used: 'google/gemini-2.5-flash' 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
