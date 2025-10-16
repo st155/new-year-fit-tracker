@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.compare-medical-documents]
 verify_jwt = true
 
+[functions.generate-health-recommendations]
+verify_jwt = true
+
 [functions.backfill-activity-feed]
 verify_jwt = false
 

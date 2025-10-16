@@ -3,7 +3,8 @@ import { DocumentUpload } from '@/components/medical-documents/DocumentUpload';
 import { DocumentsList } from '@/components/medical-documents/DocumentsList';
 import { MigrationStatus } from '@/components/medical-documents/MigrationStatus';
 import { DocumentTrends } from '@/components/medical-documents/DocumentTrends';
-import { FileText, Upload, Database, TrendingUp } from 'lucide-react';
+import { HealthRecommendations } from '@/components/medical-documents/HealthRecommendations';
+import { FileText, Upload, Database, TrendingUp, Lightbulb } from 'lucide-react';
 
 const MedicalDocuments = () => {
   return (
@@ -16,7 +17,7 @@ const MedicalDocuments = () => {
       </div>
 
       <Tabs defaultValue="documents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="documents" className="gap-2">
             <FileText className="h-4 w-4" />
             Документы
@@ -24,6 +25,10 @@ const MedicalDocuments = () => {
           <TabsTrigger value="trends" className="gap-2">
             <TrendingUp className="h-4 w-4" />
             Тренды
+          </TabsTrigger>
+          <TabsTrigger value="recommendations" className="gap-2">
+            <Lightbulb className="h-4 w-4" />
+            Советы
           </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2">
             <Upload className="h-4 w-4" />
@@ -41,6 +46,10 @@ const MedicalDocuments = () => {
 
         <TabsContent value="trends">
           <DocumentTrends />
+        </TabsContent>
+
+        <TabsContent value="recommendations">
+          <HealthRecommendations />
         </TabsContent>
 
         <TabsContent value="upload">
