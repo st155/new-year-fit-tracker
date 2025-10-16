@@ -49,6 +49,16 @@
 
   <body>
     <div id="root"></div>
+    <!-- React Refresh preamble for Vite dev (guards for prod) -->
+    <script type="module">
+      if (import.meta.env && import.meta.env.DEV && !window.__vite_plugin_react_preamble_installed__) {
+        const mod = await import('/@react-refresh');
+        mod.default.injectIntoGlobalHook(window);
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => (type) => type;
+        window.__vite_plugin_react_preamble_installed__ = true;
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
