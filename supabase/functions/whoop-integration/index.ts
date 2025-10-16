@@ -77,8 +77,8 @@ serve(async (req) => {
 
     // Получить URL авторизации Whoop
     if (action === 'get-auth-url') {
-      // Используем правильный redirect URL для текущего домена
-      const redirectUri = 'https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop/callback';
+      // Используем кастомный домен для redirect URL
+      const redirectUri = 'https://elite10.club/whoop/callback';
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
@@ -99,7 +99,7 @@ serve(async (req) => {
 
     // Обменять код на токен
     if (action === 'exchange-code') {
-      const redirectUri = 'https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com/whoop/callback';
+      const redirectUri = 'https://elite10.club/whoop/callback';
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
         method: 'POST',
