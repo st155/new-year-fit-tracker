@@ -15,8 +15,8 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
 
-  // Filter goals for this specific challenge
-  const challengeGoals = goals?.filter(g => g.challenge_id === challengeId) || [];
+  // Filter goals for this specific challenge AND current user
+  const challengeGoals = goals?.filter(g => g.challenge_id === challengeId && !g.is_personal) || [];
   
   // Calculate overall progress
   const overallProgress = challengeGoals.length > 0
