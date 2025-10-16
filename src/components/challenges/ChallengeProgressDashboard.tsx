@@ -3,8 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { ChallengeGoalCard } from "@/components/progress/ChallengeGoalCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Target, TrendingUp, Calendar } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, Edit } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface ChallengeProgressDashboardProps {
   challengeId: string;
@@ -14,6 +16,7 @@ interface ChallengeProgressDashboardProps {
 export function ChallengeProgressDashboard({ challengeId, onRefresh }: ChallengeProgressDashboardProps) {
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
+  const navigate = useNavigate();
 
   // Filter goals for this specific challenge AND current user
   const challengeGoals = goals?.filter(g => g.challenge_id === challengeId && !g.is_personal) || [];
@@ -53,9 +56,18 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
             <div className="p-3 bg-gradient-primary rounded-xl">
               <Trophy className="h-6 w-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">Your Challenge Progress</h2>
-              <p className="text-sm text-muted-foreground">Track your journey to excellence</p>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold">Ваш прогресс по дисциплинам</h2>
+              <p className="text-sm text-muted-foreground">
+                Отслеживайте текущие результаты по целям. 
+                <Button 
+                  variant="link" 
+                  className="h-auto p-0 ml-1 text-sm"
+                  onClick={() => navigate('/goals')}
+                >
+                  Изменить цели →
+                </Button>
+              </p>
             </div>
           </CardTitle>
         </CardHeader>

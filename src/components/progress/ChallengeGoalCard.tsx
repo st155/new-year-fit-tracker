@@ -2,12 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Minus, Plus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Plus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
-import { GoalEditDialog } from "@/components/goals/GoalEditDialog";
 
 interface ChallengeGoalCardProps {
   goal: ChallengeGoal;
@@ -59,7 +58,6 @@ const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
 export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCardProps) {
   const navigate = useNavigate();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
   
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
@@ -72,11 +70,6 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowQuickAdd(true);
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowEdit(true);
   };
 
   const isLowerBetter = goal.goal_name.toLowerCase().includes('жир') || 
@@ -120,24 +113,14 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
               </div>
             </div>
 
-            <div className="flex gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={handleEditClick}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={handleAddClick}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={handleAddClick}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Values */}
@@ -210,24 +193,6 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
         onOpenChange={setShowQuickAdd}
         onMeasurementAdded={() => {
           setShowQuickAdd(false);
-          onMeasurementAdded();
-        }}
-      />
-
-      <GoalEditDialog
-        goal={{
-          id: goal.id,
-          goal_name: goal.goal_name,
-          goal_type: goal.goal_type,
-          target_value: goal.target_value,
-          target_unit: goal.target_unit,
-          is_personal: goal.is_personal,
-          challenge_id: goal.challenge_id,
-        }}
-        open={showEdit}
-        onOpenChange={setShowEdit}
-        onSave={() => {
-          setShowEdit(false);
           onMeasurementAdded();
         }}
       />

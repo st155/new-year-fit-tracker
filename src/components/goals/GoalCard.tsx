@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil } from "lucide-react";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "./QuickMeasurementDialog";
+import { GoalEditDialog } from "./GoalEditDialog";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 
 const goalTypeIcons: Record<string, any> = {
@@ -56,6 +57,7 @@ interface GoalCardProps {
 
 export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
   const [measurementOpen, setMeasurementOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
@@ -99,14 +101,24 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
               </div>
             </div>
 
-            <Button
-              size="icon"
-              variant="ghost"
-              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => setMeasurementOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => setMeasurementOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Values */}
@@ -179,6 +191,24 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
         onOpenChange={setMeasurementOpen}
         onMeasurementAdded={() => {
           setMeasurementOpen(false);
+          onMeasurementAdded();
+        }}
+      />
+
+      <GoalEditDialog
+        goal={{
+          id: goal.id,
+          goal_name: goal.goal_name,
+          goal_type: goal.goal_type,
+          target_value: goal.target_value,
+          target_unit: goal.target_unit,
+          is_personal: goal.is_personal,
+          challenge_id: goal.challenge_id,
+        }}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={() => {
+          setEditOpen(false);
           onMeasurementAdded();
         }}
       />
