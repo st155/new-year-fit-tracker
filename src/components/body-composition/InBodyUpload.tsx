@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { convertPdfToImages } from "@/lib/pdf-to-image";
 
 interface InBodyUploadProps {
   onUploadSuccess?: () => void;
@@ -110,9 +111,65 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       console.log('Upload complete:', uploadRecord);
 
       toast({
-        title: "PDF uploaded successfully",
-        description: "Click 'Analyze' in history to extract metrics"
+        title: "PDF загружен",
+        description: "Начинаю автоматический анализ..."
       });
+
+      // Автоматический запуск анализа
+      try {
+        console.log('Starting automatic analysis for upload:', uploadRecord.id);
+        
+        const { data: { signedUrl }, error: signedUrlError } = await supabase.storage
+          .from('inbody-pdfs')
+          .createSignedUrl(uploadData.path, 300);
+
+        if (signedUrlError) throw signedUrlError;
+        if (!signedUrl) throw new Error('Failed to get signed URL');
+
+        console.log('Converting PDF to images...');
+        const images = await convertPdfToImages(signedUrl, {
+          fetchTimeoutMs: 120000,
+          onProgress: (current, total) => console.log(`PDF conversion: ${current}/${total}`),
+        });
+
+        if (!images || images.length === 0) {
+          throw new Error('Не удалось конвертировать PDF');
+        }
+
+        console.log(`Converted ${images.length} pages, sending to AI...`);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('No session');
+
+        const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
+          'parse-inbody-pdf',
+          {
+            body: {
+              imageUrls: images,
+              uploadId: uploadRecord.id
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          }
+        );
+
+        if (analysisError) throw analysisError;
+
+        console.log('Analysis completed:', analysisData);
+
+        toast({
+          title: "Анализ завершен!",
+          description: "InBody данные успешно извлечены"
+        });
+      } catch (analysisError) {
+        console.error('Auto-analysis error:', analysisError);
+        toast({
+          title: "Не удалось автоматически проанализировать",
+          description: "Попробуйте нажать 'Анализ' в истории",
+          variant: "destructive"
+        });
+      }
 
       if (onUploadSuccess) {
         onUploadSuccess();
