@@ -79,7 +79,7 @@ serve(async (req) => {
     if (action === 'get-auth-url') {
       // Определяем redirect URL на основе origin запроса
       const origin = req.headers.get('origin') || 'https://elite10.club';
-      const redirectUri = `${origin}/whoop/callback`;
+      const redirectUri = `${origin}/integrations/whoop/callback`;
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
@@ -101,7 +101,7 @@ serve(async (req) => {
     // Обменять код на токен
     if (action === 'exchange-code') {
       const origin = req.headers.get('origin') || 'https://elite10.club';
-      const redirectUri = `${origin}/whoop/callback`;
+      const redirectUri = `${origin}/integrations/whoop/callback`;
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
         method: 'POST',
