@@ -1,13 +1,13 @@
 import { useState } from "react";
+import { Target, Trophy, Plus, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
-import { GoalCard } from "@/components/goals/GoalCard";
-import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Trophy, Plus, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { GoalCard } from "@/components/goals/GoalCard";
+import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 
 export default function Goals() {
   const { user } = useAuth();
