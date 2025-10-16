@@ -17,6 +17,7 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'navigation.settings': 'Settings',
     'navigation.logout': 'Logout',
     'navigation.leaderboard': 'Leaderboard',
+    'navigation.medicalDocuments': 'Medical Documents',
     
     // Dashboard
     'dashboard.daysLeft': `${params?.count || 0} days left`,

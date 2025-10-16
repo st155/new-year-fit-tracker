@@ -90,6 +90,7 @@ export function AppSidebar() {
     { title: "navigation.profile", url: "/profile", iconType: "settings" as const },
     { title: "navigation.integrations", url: "/integrations", iconType: "integrations" as const },
     { title: "navigation.fitnessData", url: "/fitness-data", iconType: "connections" as const },
+    { title: "navigation.medicalDocuments", url: "/medical-documents", iconType: "settings" as const },
   ];
 
   const isActive = (path: string) => currentPath === path;
