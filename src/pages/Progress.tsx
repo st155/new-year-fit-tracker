@@ -1,16 +1,18 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useWidgets } from '@/hooks/useWidgets';
-import { WidgetCard } from '@/components/dashboard/WidgetCard';
-import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
+import { useChallengeGoals } from '@/hooks/useChallengeGoals';
+import { ChallengeGoalCard } from '@/components/progress/ChallengeGoalCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Trophy } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useNavigate } from 'react-router-dom';
 
 export default function Progress() {
   const { user } = useAuth();
-  const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
+  const navigate = useNavigate();
+  const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -19,8 +21,8 @@ export default function Progress() {
             <Skeleton className="h-10 w-32" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-48" />
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Skeleton key={i} className="h-64" />
             ))}
           </div>
         </div>
@@ -36,49 +38,43 @@ export default function Progress() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Прогресс</h1>
             <p className="text-muted-foreground mt-1">
-              Настройте виджеты для отслеживания прогресса
+              Ваши цели из челленджей
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refetch}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Обновить
-            </Button>
-            <WidgetSettings
-              widgets={widgets}
-              onAdd={addWidget}
-              onRemove={removeWidget}
-              onReorder={reorderWidgets}
-            />
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Обновить
+          </Button>
         </div>
 
-        {/* Widgets Grid */}
-        {widgets.length === 0 ? (
-          <div className="text-center py-12 border rounded-lg">
-            <p className="text-muted-foreground mb-4">
-              Нет виджетов. Добавьте их через настройки.
-            </p>
-            <WidgetSettings
-              widgets={widgets}
-              onAdd={addWidget}
-              onRemove={removeWidget}
-              onReorder={reorderWidgets}
+        {/* Goals Grid */}
+        {!goals || goals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <EmptyState
+              icon={<Trophy className="h-12 w-12" />}
+              title="Вы пока не участвуете в челленджах"
+              description="Присоединитесь к челленджу, чтобы отслеживать свой прогресс"
             />
+            <Button 
+              onClick={() => navigate('/challenges')}
+              className="mt-6"
+            >
+              Присоединиться к челленджу
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {widgets.map((widget) => (
-              <WidgetCard
-                key={widget.id}
-                metricName={widget.metric_name}
-                source={widget.source}
+            {goals.map((goal) => (
+              <ChallengeGoalCard
+                key={goal.id}
+                goal={goal}
+                onMeasurementAdded={() => refetch()}
               />
             ))}
           </div>
