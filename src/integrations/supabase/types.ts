@@ -697,6 +697,47 @@ export type Database = {
           },
         ]
       }
+      habit_attempts: {
+        Row: {
+          created_at: string | null
+          days_lasted: number | null
+          end_date: string | null
+          habit_id: string
+          id: string
+          reset_reason: string | null
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          days_lasted?: number | null
+          end_date?: string | null
+          habit_id: string
+          id?: string
+          reset_reason?: string | null
+          start_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          days_lasted?: number | null
+          end_date?: string | null
+          habit_id?: string
+          id?: string
+          reset_reason?: string | null
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_attempts_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -726,6 +767,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      habit_measurements: {
+        Row: {
+          created_at: string | null
+          habit_id: string
+          id: string
+          measurement_date: string
+          notes: string | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          measurement_date?: string
+          notes?: string | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          measurement_date?: string
+          notes?: string | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_measurements_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_stats: {
         Row: {
@@ -771,14 +850,19 @@ export type Database = {
           category: string
           color: string | null
           created_at: string
+          custom_settings: Json | null
           description: string | null
           frequency: string
+          habit_type: string | null
           icon: string | null
           id: string
           is_active: boolean
+          measurement_unit: string | null
           name: string
           reminder_time: string | null
+          start_date: string | null
           target_count: number
+          target_value: number | null
           updated_at: string
           user_id: string
         }
@@ -786,14 +870,19 @@ export type Database = {
           category?: string
           color?: string | null
           created_at?: string
+          custom_settings?: Json | null
           description?: string | null
           frequency?: string
+          habit_type?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
+          measurement_unit?: string | null
           name: string
           reminder_time?: string | null
+          start_date?: string | null
           target_count?: number
+          target_value?: number | null
           updated_at?: string
           user_id: string
         }
@@ -801,14 +890,19 @@ export type Database = {
           category?: string
           color?: string | null
           created_at?: string
+          custom_settings?: Json | null
           description?: string | null
           frequency?: string
+          habit_type?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
+          measurement_unit?: string | null
           name?: string
           reminder_time?: string | null
+          start_date?: string | null
           target_count?: number
+          target_value?: number | null
           updated_at?: string
           user_id?: string
         }

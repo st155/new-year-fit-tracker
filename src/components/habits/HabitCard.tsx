@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Check, Flame, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { DurationCounter } from "./DurationCounter";
+import { NumericCounter } from "./NumericCounter";
+import { DailyMeasurement } from "./DailyMeasurement";
 
 interface HabitCardProps {
   habit: {
@@ -15,6 +18,12 @@ interface HabitCardProps {
     description: string | null;
     category: string;
     color: string | null;
+    habit_type?: string;
+    icon?: string;
+    start_date?: string;
+    target_value?: number;
+    measurement_unit?: string;
+    custom_settings?: any;
     stats?: {
       current_streak: number;
       total_completions: number;
@@ -27,6 +36,21 @@ interface HabitCardProps {
 
 export function HabitCard({ habit, onCompleted }: HabitCardProps) {
   const { user } = useAuth();
+
+  // Route to custom habit cards based on type
+  if (habit.habit_type === "duration_counter") {
+    return <DurationCounter habit={habit} userId={user?.id} />;
+  }
+
+  if (habit.habit_type === "numeric_counter") {
+    return <NumericCounter habit={habit} userId={user?.id} />;
+  }
+
+  if (habit.habit_type === "daily_measurement") {
+    return <DailyMeasurement habit={habit} userId={user?.id} />;
+  }
+
+  // Default: daily_check habit card
   const [isCompleting, setIsCompleting] = useState(false);
 
   const handleComplete = async () => {
