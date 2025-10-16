@@ -46,8 +46,8 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
   return (
     <div className="space-y-6 stagger-fade-in">
       {/* Hero Section - Overall Progress */}
-      <Card className="glass-card border-primary/20 hover-lift overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-primary opacity-5" />
+      <Card className="glass-card border-primary/20 hover-lift overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-primary opacity-5 pointer-events-none" />
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="p-3 bg-gradient-primary rounded-xl">
