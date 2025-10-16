@@ -1,5 +1,8 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.migrate-to-medical-documents]
+verify_jwt = true
+
 [functions.backfill-activity-feed]
 verify_jwt = false
 

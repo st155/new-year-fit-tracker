@@ -136,6 +136,8 @@ export type Database = {
           id: string
           measurement_date: string
           measurement_method: string | null
+          migrated_photo_after_id: string | null
+          migrated_photo_before_id: string | null
           muscle_mass: number | null
           photo_after_url: string | null
           photo_before_url: string | null
@@ -148,6 +150,8 @@ export type Database = {
           id?: string
           measurement_date?: string
           measurement_method?: string | null
+          migrated_photo_after_id?: string | null
+          migrated_photo_before_id?: string | null
           muscle_mass?: number | null
           photo_after_url?: string | null
           photo_before_url?: string | null
@@ -160,6 +164,8 @@ export type Database = {
           id?: string
           measurement_date?: string
           measurement_method?: string | null
+          migrated_photo_after_id?: string | null
+          migrated_photo_before_id?: string | null
           muscle_mass?: number | null
           photo_after_url?: string | null
           photo_before_url?: string | null
@@ -167,6 +173,20 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "body_composition_migrated_photo_after_id_fkey"
+            columns: ["migrated_photo_after_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "body_composition_migrated_photo_before_id_fkey"
+            columns: ["migrated_photo_before_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "body_composition_user_id_fkey"
             columns: ["user_id"]
@@ -864,6 +884,7 @@ export type Database = {
           left_leg_lean_mass: number | null
           left_leg_mass: number | null
           left_leg_percent: number | null
+          migrated_to_document_id: string | null
           minerals: number | null
           parsed_data: Json | null
           pdf_url: string | null
@@ -914,6 +935,7 @@ export type Database = {
           left_leg_lean_mass?: number | null
           left_leg_mass?: number | null
           left_leg_percent?: number | null
+          migrated_to_document_id?: string | null
           minerals?: number | null
           parsed_data?: Json | null
           pdf_url?: string | null
@@ -964,6 +986,7 @@ export type Database = {
           left_leg_lean_mass?: number | null
           left_leg_mass?: number | null
           left_leg_percent?: number | null
+          migrated_to_document_id?: string | null
           minerals?: number | null
           parsed_data?: Json | null
           pdf_url?: string | null
@@ -993,7 +1016,15 @@ export type Database = {
           waist_hip_ratio?: number | null
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inbody_analyses_migrated_to_document_id_fkey"
+            columns: ["migrated_to_document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inbody_uploads: {
         Row: {
@@ -1004,6 +1035,7 @@ export type Database = {
           file_size: number | null
           id: string
           image_path: string | null
+          migrated_to_document_id: string | null
           status: string | null
           storage_path: string
           updated_at: string | null
@@ -1018,6 +1050,7 @@ export type Database = {
           file_size?: number | null
           id?: string
           image_path?: string | null
+          migrated_to_document_id?: string | null
           status?: string | null
           storage_path: string
           updated_at?: string | null
@@ -1032,6 +1065,7 @@ export type Database = {
           file_size?: number | null
           id?: string
           image_path?: string | null
+          migrated_to_document_id?: string | null
           status?: string | null
           storage_path?: string
           updated_at?: string | null
@@ -1044,6 +1078,13 @@ export type Database = {
             columns: ["analysis_id"]
             isOneToOne: false
             referencedRelation: "inbody_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbody_uploads_migrated_to_document_id_fkey"
+            columns: ["migrated_to_document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
             referencedColumns: ["id"]
           },
         ]
