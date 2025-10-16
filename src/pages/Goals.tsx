@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useGoals } from "@/hooks/useGoals";
+import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Trophy, Plus } from "lucide-react";
+import { Target, Trophy, Plus, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Goals() {
   const { user } = useAuth();
-  const { personalGoals, challengeGoals, isLoading } = useGoals(user?.id);
+  const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  
+  const personalGoals = goals?.filter(g => g.is_personal) || [];
+  const challengeGoals = goals?.filter(g => !g.is_personal) || [];
 
   if (isLoading) {
     return (
@@ -37,10 +40,15 @@ export default function Goals() {
           <h1 className="text-3xl font-bold">Goals</h1>
           <p className="text-muted-foreground">Track your personal and challenge goals</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Goal
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Goal
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="personal" className="space-y-4">
@@ -69,7 +77,7 @@ export default function Goals() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {personalGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} />
+                <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
               ))}
             </div>
           )}
@@ -85,7 +93,7 @@ export default function Goals() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {challengeGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} />
+                <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
               ))}
             </div>
           )}
@@ -95,6 +103,7 @@ export default function Goals() {
       <GoalCreateDialog 
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onGoalCreated={() => refetch()}
       />
     </div>
   );

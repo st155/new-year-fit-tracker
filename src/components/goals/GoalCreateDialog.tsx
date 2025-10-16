@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { FormValidation, validationRules, useFormValidation } from "@/components/ui/form-validation";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface GoalTemplate {
   name: string;
@@ -55,8 +56,34 @@ export function GoalCreateDialog({
   const setOpen = controlledOnOpenChange || setInternalOpen;
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [goalScope, setGoalScope] = useState<'personal' | 'challenge'>('personal');
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string>("");
+  const [challenges, setChallenges] = useState<Array<{ id: string; title: string }>>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Fetch user's active challenges
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id, challenges(id, title)')
+        .eq('user_id', user.id);
+      
+      if (data) {
+        setChallenges(data.map(p => ({
+          id: p.challenge_id,
+          title: p.challenges?.title || ''
+        })));
+      }
+    };
+    
+    if (open) {
+      fetchChallenges();
+    }
+  }, [open, user]);
 
   const {
     values: customGoal,
@@ -121,7 +148,8 @@ export function GoalCreateDialog({
           goal_type: customGoal.type,
           target_value: customGoal.value,
           target_unit: customGoal.unit,
-          is_personal: true
+          is_personal: goalScope === 'personal',
+          challenge_id: goalScope === 'challenge' ? selectedChallengeId : null
         });
 
       if (error) {
@@ -137,6 +165,8 @@ export function GoalCreateDialog({
       });
       setOpen(false);
       setSelectedTemplate("");
+      setGoalScope('personal');
+      setSelectedChallengeId("");
       reset();
       if (onGoalCreated) {
         onGoalCreated();
@@ -166,6 +196,38 @@ export function GoalCreateDialog({
           <DialogTitle>Создать цель</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div>
+            <Label>Тип цели</Label>
+            <RadioGroup value={goalScope} onValueChange={(v) => setGoalScope(v as 'personal' | 'challenge')}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="personal" id="personal" />
+                <Label htmlFor="personal" className="font-normal">Личная цель</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="challenge" id="challenge" />
+                <Label htmlFor="challenge" className="font-normal">Цель челленджа</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {goalScope === 'challenge' && (
+            <div>
+              <Label>Выберите челлендж</Label>
+              <Select value={selectedChallengeId} onValueChange={setSelectedChallengeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите челлендж" />
+                </SelectTrigger>
+                <SelectContent>
+                  {challenges.map((challenge) => (
+                    <SelectItem key={challenge.id} value={challenge.id}>
+                      {challenge.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <Label>Выберите шаблон или создайте свою цель</Label>
             <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
