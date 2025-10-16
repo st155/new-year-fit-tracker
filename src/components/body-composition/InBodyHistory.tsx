@@ -121,71 +121,20 @@ export const InBodyHistory = () => {
         .update({ status: 'processing' })
         .eq('id', uploadId);
 
-      toast.info('Конвертация PDF в изображение... Это может занять 30-60 секунд');
+      toast.info('Отправляем PDF на AI-анализ... до 2 минут');
 
-      // Download PDF from storage
-      const { data: pdfData, error: downloadError } = await supabase.storage
-        .from('inbody-pdfs')
-        .download(storagePath);
-
-      if (downloadError) {
-        console.error('Download error:', downloadError);
-        throw new Error(`Ошибка загрузки PDF: ${downloadError.message}`);
-      }
-      if (!pdfData) throw new Error('PDF не найден в хранилище');
-
-      console.log('PDF downloaded, converting to image...');
-      
-      // Convert PDF to image with timeout
-      const conversionPromise = convertPdfToImage(pdfData);
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout: конвертация PDF заняла слишком много времени')), 60000)
-      );
-      
-      const imageBlob = await Promise.race([conversionPromise, timeoutPromise]);
-      console.log('Image converted, uploading to storage...');
-
-      // Upload image to storage
-      const imagePath = `${user!.id}/${Date.now()}_inbody.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from('inbody-images')
-        .upload(imagePath, imageBlob, {
-          contentType: 'image/jpeg',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Image upload error:', uploadError);
-        throw new Error(`Ошибка загрузки изображения: ${uploadError.message}`);
-      }
-
-      console.log('Image uploaded, updating database...');
-      
-      // Update upload record with image path
-      const { error: updateError } = await supabase
-        .from('inbody_uploads')
-        .update({ image_path: imagePath })
-        .eq('id', uploadId);
-
-      if (updateError) {
-        console.error('Database update error:', updateError);
-        throw new Error(`Ошибка обновления БД: ${updateError.message}`);
-      }
-
-      toast.info('Анализ изображения с помощью AI... Это займет еще 20-30 секунд');
-
-      // Call edge function with image path with timeout
-      const edgeFunctionPromise = supabase.functions.invoke('inbody-ingest', {
-        body: { 
-          imagePath: imagePath,
-          uploadId: uploadId
-        }
+      // Call edge function to parse PDF directly and save results
+      const edgeFunctionPromise = supabase.functions.invoke('parse-inbody-pdf', {
+        body: {
+          pdfStoragePath: storagePath,
+          uploadId: uploadId,
+        },
       });
-      
-      const edgeTimeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout: AI анализ занял слишком много времени')), 90000)
+
+      const edgeTimeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout: AI анализ занял слишком много времени')), 120000)
       );
-      
+
       const { data, error } = await Promise.race([edgeFunctionPromise, edgeTimeoutPromise]);
 
       if (error) {
@@ -194,7 +143,7 @@ export const InBodyHistory = () => {
       }
       if (data?.error) throw new Error(data.error);
 
-      console.log('Analysis complete:', data);
+      console.log('Analysis complete via PDF:', data);
       toast.success('Анализ успешно завершен!');
       fetchData();
     } catch (error: any) {

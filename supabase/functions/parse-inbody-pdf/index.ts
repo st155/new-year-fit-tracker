@@ -35,7 +35,7 @@ serve(async (req) => {
     }
 
     // Get request body: either storage path or public URL
-    const { pdfUrl, pdfStoragePath } = await req.json();
+    const { pdfUrl, pdfStoragePath, uploadId } = await req.json();
 
     if (!pdfUrl && !pdfStoragePath) {
       throw new Error('PDF reference is required');
@@ -148,15 +148,98 @@ serve(async (req) => {
       throw new Error('Некорректный формат ответа от AI');
     }
 
-    const parsedData = JSON.parse(jsonMatch[0]);
+    const metrics = JSON.parse(jsonMatch[0]);
+    const warnings: string[] = [];
 
-    console.log('Parsed data:', parsedData);
+    // Helpers
+    const normalizeNumber = (val: any): number | null => {
+      if (val === null || val === undefined) return null;
+      const str = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+      const num = parseFloat(str);
+      return isNaN(num) ? null : Math.round(num * 10) / 10;
+    };
+
+    const normalizeInteger = (val: any): number | null => {
+      if (val === null || val === undefined) return null;
+      const str = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+      const num = parseInt(str);
+      return isNaN(num) ? null : num;
+    };
+
+    // Parse date
+    let testDate: string;
+    if (metrics.test_date) {
+      try {
+        const parsed = new Date(metrics.test_date);
+        if (isNaN(parsed.getTime())) {
+          warnings.push('Invalid test_date format, using current time');
+          testDate = new Date().toISOString();
+        } else {
+          testDate = parsed.toISOString();
+        }
+      } catch {
+        warnings.push('Failed to parse test_date, using current time');
+        testDate = new Date().toISOString();
+      }
+    } else {
+      warnings.push('No test_date provided, using current time');
+      testDate = new Date().toISOString();
+    }
+
+    const normalizedData: any = {
+      user_id: user.id,
+      test_date: testDate,
+      weight: normalizeNumber(metrics.weight),
+      skeletal_muscle_mass: normalizeNumber(metrics.skeletal_muscle_mass),
+      percent_body_fat: normalizeNumber(metrics.percent_body_fat),
+      body_fat_mass: normalizeNumber(metrics.body_fat_mass),
+      visceral_fat_area: normalizeNumber(metrics.visceral_fat_area),
+      bmi: normalizeNumber(metrics.bmi),
+      bmr: normalizeInteger(metrics.bmr),
+      total_body_water: normalizeNumber(metrics.total_body_water),
+      protein: normalizeNumber(metrics.protein),
+      minerals: normalizeNumber(metrics.minerals),
+      right_arm_mass: normalizeNumber(metrics.right_arm_mass),
+      right_arm_percent: normalizeNumber(metrics.right_arm_percent),
+      left_arm_mass: normalizeNumber(metrics.left_arm_mass),
+      left_arm_percent: normalizeNumber(metrics.left_arm_percent),
+      trunk_mass: normalizeNumber(metrics.trunk_mass),
+      trunk_percent: normalizeNumber(metrics.trunk_percent),
+      right_leg_mass: normalizeNumber(metrics.right_leg_mass),
+      right_leg_percent: normalizeNumber(metrics.right_leg_percent),
+      left_leg_mass: normalizeNumber(metrics.left_leg_mass),
+      left_leg_percent: normalizeNumber(metrics.left_leg_percent),
+      raw_data: metrics
+    };
+
+    console.log('Saving analysis to DB...');
+    const { data: analysis, error: insertError } = await supabase
+      .from('inbody_analyses')
+      .insert(normalizedData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Database insert error:', insertError);
+      throw new Error(`Failed to save analysis: ${insertError.message}`);
+    }
+
+    // Update upload status if provided
+    if (uploadId) {
+      console.log('Updating upload status for:', uploadId);
+      const { error: updateError } = await supabase
+        .from('inbody_uploads')
+        .update({ status: 'analyzed', analysis_id: analysis.id })
+        .eq('id', uploadId);
+      if (updateError) {
+        console.error('Failed to update upload status:', updateError);
+        warnings.push('Failed to update upload status');
+      }
+    }
 
     return new Response(
-      JSON.stringify(parsedData),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ analysis, warnings, model_used: 'google/gemini-2.0-flash-exp' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
