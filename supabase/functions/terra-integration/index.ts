@@ -131,37 +131,44 @@ serve(async (req) => {
           startDate.setDate(startDate.getDate() - 7);
           const start = startDate.toISOString().split('T')[0];
 
-          // Правильный endpoint Terra API v2 для запроса данных
-          const types = ['body', 'activity', 'daily', 'sleep', 'nutrition'];
+          // Terra API v2 endpoints - используем правильный формат
+          const endpoints = [
+            { type: 'body', url: `https://api.tryterra.co/v2/body` },
+            { type: 'activity', url: `https://api.tryterra.co/v2/activity` },
+            { type: 'daily', url: `https://api.tryterra.co/v2/daily` },
+            { type: 'sleep', url: `https://api.tryterra.co/v2/sleep` },
+            { type: 'nutrition', url: `https://api.tryterra.co/v2/nutrition` }
+          ];
+          
           let allData: any = { body: [], activity: [], daily: [], sleep: [], nutrition: [] };
           
           // Запрашиваем каждый тип данных отдельно
-          for (const type of types) {
-            const syncResponse = await fetch(
-              `https://api.tryterra.co/v2/${type}?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`,
-              {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json',
-                  'dev-id': terraDevId,
-                  'x-api-key': terraApiKey,
-                },
-              }
-            );
+          for (const endpoint of endpoints) {
+            const url = `${endpoint.url}?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`;
+            
+            const syncResponse = await fetch(url, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'dev-id': terraDevId,
+                'x-api-key': terraApiKey,
+              },
+            });
 
             if (syncResponse.ok) {
               const typeData = await syncResponse.json();
               if (typeData.data && Array.isArray(typeData.data)) {
-                allData[type] = typeData.data;
+                allData[endpoint.type] = typeData.data;
+                console.log(`${token.provider} ${endpoint.type}: ${typeData.data.length} records`);
               }
             } else {
               const errorText = await syncResponse.text();
-              console.error(`Sync failed for ${token.provider} (${type}):`, errorText);
+              console.error(`Sync failed for ${token.provider} (${endpoint.type}):`, syncResponse.status, errorText.substring(0, 200));
             }
           }
 
           // Обрабатываем полученные данные
-          console.log(`Sync data for ${token.provider}:`, {
+          console.log(`Sync summary for ${token.provider}:`, {
             body: allData.body?.length || 0,
             activity: allData.activity?.length || 0,
             daily: allData.daily?.length || 0,
@@ -170,12 +177,12 @@ serve(async (req) => {
           });
 
           // Обрабатываем каждый тип данных
-          for (const type of types) {
-            if (allData[type] && allData[type].length > 0) {
+          for (const endpoint of endpoints) {
+            if (allData[endpoint.type] && allData[endpoint.type].length > 0) {
               await processTerraData(supabase, {
-                type: type,
+                type: endpoint.type,
                 user: { user_id: token.terra_user_id, provider: token.provider },
-                data: allData[type]
+                data: allData[endpoint.type]
               });
             }
           }
