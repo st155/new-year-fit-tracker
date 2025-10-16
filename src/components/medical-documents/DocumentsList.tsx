@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag } from 'lucide-react';
+import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const documentTypeLabels: Record<DocumentType, string> = {
   inbody: 'InBody',
@@ -17,6 +19,7 @@ const documentTypeLabels: Record<DocumentType, string> = {
 
 export const DocumentsList = () => {
   const [filterType, setFilterType] = useState<DocumentType | 'all'>('all');
+  const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
     filterType !== 'all' ? { documentType: filterType } : undefined
   );
@@ -42,6 +45,34 @@ export const DocumentsList = () => {
     link.href = url;
     link.download = fileName;
     link.click();
+  };
+
+  const handleAnalyze = async (documentId: string) => {
+    setAnalyzingDoc(documentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-medical-document', {
+        body: { documentId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Анализ завершён',
+        description: 'AI обработал документ и добавил insights',
+      });
+
+      // Refresh documents list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      toast({
+        title: 'Ошибка анализа',
+        description: error.message || 'Не удалось проанализировать документ',
+        variant: 'destructive',
+      });
+    } finally {
+      setAnalyzingDoc(null);
+    }
   };
 
   if (isLoading) {
@@ -143,7 +174,19 @@ export const DocumentsList = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
+                    {!doc.ai_processed && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAnalyze(doc.id)}
+                        disabled={analyzingDoc === doc.id}
+                      >
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        {analyzingDoc === doc.id ? 'Анализ...' : 'AI'}
+                      </Button>
+                    )}
+                    
                     <Button
                       variant="ghost"
                       size="icon"
