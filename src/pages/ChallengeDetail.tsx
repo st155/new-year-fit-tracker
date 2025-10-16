@@ -4,16 +4,21 @@ import { useChallengeDetail } from "@/hooks/useChallengeDetail";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
+import { ChallengeProgressDashboard } from "@/components/challenges/ChallengeProgressDashboard";
+import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOverview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus } from "lucide-react";
+import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { enUS } from "date-fns/locale";
 
 export default function ChallengeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +96,7 @@ export default function ChallengeDetail() {
   if (isLoading) {
     return (
       <div className="container py-6 space-y-6">
+        <Skeleton className="h-48" />
         <Skeleton className="h-32" />
         <Skeleton className="h-96" />
       </div>
@@ -109,111 +115,172 @@ export default function ChallengeDetail() {
     );
   }
 
+  const daysLeft = Math.ceil((new Date(challenge.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
   return (
     <div className="container py-6 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{challenge.title}</h1>
-          <p className="text-muted-foreground">{challenge.description}</p>
+      {/* Enhanced Header */}
+      <div className="space-y-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/challenges")}
+          className="mb-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Назад к челленджам
+        </Button>
+
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-8 md:p-12">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-4xl md:text-5xl font-bold text-white">{challenge.title}</h1>
+                  {isParticipant && (
+                    <Badge className="bg-success/20 text-success border-success/50">
+                      ✓ Участвую
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-white/90 text-lg max-w-2xl">{challenge.description}</p>
+              </div>
+
+              {!isParticipant ? (
+                <Button
+                  onClick={() => joinMutation.mutate()}
+                  disabled={joinMutation.isPending}
+                  size="lg"
+                  className="bg-white text-primary hover:bg-white/90 shrink-0"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
+                </Button>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-white/10 text-white border-white/20 hover:bg-white/20 shrink-0"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Выйти
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Выйти из челленджа?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Вы уверены, что хотите выйти из челленджа? Ваш прогресс и очки будут сохранены, но вы больше не будете участвовать в соревновании.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => leaveMutation.mutate()}>
+                        Выйти
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Начало
+                </div>
+                <p className="text-sm font-bold text-white">
+                  {formatDistanceToNow(new Date(challenge.start_date), { addSuffix: true, locale: enUS })}
+                </p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+                  <Trophy className="h-3.5 w-3.5" />
+                  Осталось
+                </div>
+                <p className="text-sm font-bold text-white">
+                  {daysLeft > 0 ? `${daysLeft} дней` : "Завершен"}
+                </p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+                  <Target className="h-3.5 w-3.5" />
+                  Целей
+                </div>
+                <p className="text-2xl font-bold text-white">9</p>
+              </div>
+            </div>
+          </div>
         </div>
-        {isParticipant ? (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <LogOut className="h-4 w-4 mr-2" />
-                Выйти из челленджа
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Выйти из челленджа?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Вы уверены, что хотите выйти из челленджа? Ваш прогресс и очки будут сохранены, но вы больше не будете участвовать в соревновании.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Отмена</AlertDialogCancel>
-                <AlertDialogAction onClick={() => leaveMutation.mutate()}>
-                  Выйти
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        ) : (
-          <Button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
-          </Button>
-        )}
       </div>
 
-      <Tabs defaultValue="details" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="details">
-            <Info className="h-4 w-4 mr-2" />
-            О челлендже
+      {/* Stats Overview */}
+      <ChallengeStatsOverview challengeId={id!} />
+
+      {/* Tabs */}
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="dashboard" className="gap-2">
+            <Info className="h-4 w-4" />
+            <span className="hidden sm:inline">О челлендже</span>
           </TabsTrigger>
-          <TabsTrigger value="feed">
-            <Target className="h-4 w-4 mr-2" />
-            Лента
+          <TabsTrigger value="feed" className="gap-2">
+            <List className="h-4 w-4" />
+            <span className="hidden sm:inline">Лента</span>
           </TabsTrigger>
-          <TabsTrigger value="chat">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Чат
+          <TabsTrigger value="chat" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Чат</span>
           </TabsTrigger>
-          <TabsTrigger value="leaderboard">
-            <Trophy className="h-4 w-4 mr-2" />
-            Лидерборд
+          <TabsTrigger value="leaderboard" className="gap-2">
+            <Trophy className="h-4 w-4" />
+            <span className="hidden sm:inline">Лидерборд</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details">
-          <Card>
-            <CardContent className="pt-6 space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Calendar className="h-4 w-4" />
-                    Даты проведения
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    <div>Начало: {new Date(challenge.start_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                    <div>Окончание: {new Date(challenge.end_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Users className="h-4 w-4" />
-                    Участники
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {isParticipant ? 'Вы участвуете в челлендже' : 'Вы не участвуете в челлендже'}
-                  </div>
-                </div>
-              </div>
-
-              {challenge.description && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Описание</div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {challenge.description}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="dashboard" className="mt-6">
+          {isParticipant ? (
+            <ChallengeProgressDashboard 
+              challengeId={id!} 
+              onRefresh={() => queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] })}
+            />
+          ) : (
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle>Присоединяйтесь к челленджу</CardTitle>
+                <CardDescription>
+                  Присоединитесь к челленджу, чтобы отслеживать свой прогресс и соревноваться с другими
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => joinMutation.mutate()}
+                  disabled={joinMutation.isPending}
+                  size="lg"
+                  className="bg-gradient-primary"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="feed">
+        <TabsContent value="feed" className="mt-6">
           <ChallengeFeed challengeId={id!} />
         </TabsContent>
 
-        <TabsContent value="chat">
+        <TabsContent value="chat" className="mt-6">
           <ChallengeChat challengeId={id!} />
         </TabsContent>
 
-        <TabsContent value="leaderboard">
+        <TabsContent value="leaderboard" className="mt-6">
           <ChallengeLeaderboard challengeId={id!} />
         </TabsContent>
       </Tabs>
