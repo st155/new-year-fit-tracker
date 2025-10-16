@@ -168,8 +168,10 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
     const subtype = activity.activity_subtype;
     const actionText = activity.action_text?.toLowerCase() || '';
     
-    // Sleep & Recovery - consolidated view
-    if (subtype === 'sleep_recovery') {
+    // Sleep & Recovery - consolidated view (with fallback for old records)
+    if (subtype === 'sleep_recovery' || 
+        actionText.includes('slept') || 
+        actionText.includes('recover')) {
       return { icon: Moon, color: '#6366F1' }; // Indigo
     }
     
@@ -219,9 +221,13 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const getFormattedActivityText = () => {
     const aggregated = activity.aggregated_data || {};
     const subtype = activity.activity_subtype;
+    const actionText = activity.action_text?.toLowerCase() || '';
     
-    // Sleep & Recovery - consolidated display
-    if (subtype === 'sleep_recovery') {
+    // Sleep & Recovery - consolidated display (with fallback)
+    if (subtype === 'sleep_recovery' || 
+        actionText.includes('slept') || 
+        actionText.includes('recover')) {
+      
       const sleepHours = aggregated.sleep_hours;
       const recovery = aggregated.recovery_percentage;
       
