@@ -7,10 +7,12 @@ import { InBodyUpload } from "@/components/body-composition/InBodyUpload";
 import { InBodyHistory } from "@/components/body-composition/InBodyHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, History, GitCompare, FileText } from "lucide-react";
+import { useRef } from "react";
 
 export default function Body() {
   const { user } = useAuth();
   const { current, history, isLoading } = useBodyComposition(user?.id);
+  const inbodyHistoryRef = useRef<{ refresh: () => void }>(null);
 
   return (
     <div className="container py-6 space-y-6">
@@ -52,8 +54,8 @@ export default function Body() {
         </TabsContent>
 
         <TabsContent value="inbody" className="space-y-6">
-          <InBodyUpload />
-          <InBodyHistory />
+          <InBodyUpload onUploadSuccess={() => inbodyHistoryRef.current?.refresh()} />
+          <InBodyHistory ref={inbodyHistoryRef} />
         </TabsContent>
       </Tabs>
     </div>

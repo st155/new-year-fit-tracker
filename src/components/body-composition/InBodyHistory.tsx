@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,13 +58,17 @@ interface InBodyUpload {
   error_message: string | null;
 }
 
-export const InBodyHistory = () => {
+export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) => {
   const { user } = useAuth();
   const [analyses, setAnalyses] = useState<InBodyAnalysis[]>([]);
   const [uploads, setUploads] = useState<InBodyUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnalysis, setSelectedAnalysis] = useState<InBodyAnalysis | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  useImperativeHandle(ref, () => ({
+    refresh: fetchData
+  }));
 
   const fetchData = async () => {
     if (!user) return;
@@ -500,4 +504,4 @@ export const InBodyHistory = () => {
       </Dialog>
     </>
   );
-};
+});
