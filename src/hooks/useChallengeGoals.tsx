@@ -6,7 +6,7 @@ export interface ChallengeGoal {
   id: string;
   goal_name: string;
   goal_type: string;
-  target_value: number;
+  target_value: number | null;
   target_unit: string;
   current_value: number;
   progress_percentage: number;
@@ -21,6 +21,7 @@ export interface ChallengeGoal {
     measurement_date: string;
   }>;
   source?: 'inbody' | 'withings' | 'manual';
+  has_target: boolean;
 }
 
 export function useChallengeGoals(userId?: string) {
@@ -114,8 +115,11 @@ export function useChallengeGoals(userId?: string) {
           source = 'manual';
         }
 
-        // Calculate progress
-        const progress = goal.target_value ? Math.min((currentValue / goal.target_value) * 100, 100) : 0;
+        // Calculate progress ONLY if target_value is set
+        let progress = 0;
+        if (goal.target_value && currentValue) {
+          progress = Math.min((currentValue / goal.target_value) * 100, 100);
+        }
 
         // Calculate trend
         let trend: 'up' | 'down' | 'stable' = 'stable';
@@ -150,7 +154,8 @@ export function useChallengeGoals(userId?: string) {
           challenge_id: goal.challenge_id,
           challenge_title: challengeTitle,
           measurements: sparklineData,
-          source
+          source,
+          has_target: goal.target_value !== null
         };
       });
 

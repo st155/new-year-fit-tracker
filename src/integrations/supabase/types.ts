@@ -296,6 +296,47 @@ export type Database = {
           },
         ]
       }
+      challenge_disciplines: {
+        Row: {
+          benchmark_value: number | null
+          challenge_id: string
+          created_at: string | null
+          discipline_name: string
+          discipline_type: string
+          id: string
+          position: number
+          unit: string
+        }
+        Insert: {
+          benchmark_value?: number | null
+          challenge_id: string
+          created_at?: string | null
+          discipline_name: string
+          discipline_type: string
+          id?: string
+          position?: number
+          unit: string
+        }
+        Update: {
+          benchmark_value?: number | null
+          challenge_id?: string
+          created_at?: string | null
+          discipline_name?: string
+          discipline_type?: string
+          id?: string
+          position?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_disciplines_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string

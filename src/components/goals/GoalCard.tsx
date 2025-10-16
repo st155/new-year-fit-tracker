@@ -59,6 +59,7 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
   const [measurementOpen, setMeasurementOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   
+  const hasTarget = goal.has_target;
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
@@ -110,90 +111,107 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => setMeasurementOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              {hasTarget && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setMeasurementOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 
           {/* Values */}
-          <div className="mb-4">
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-3xl font-bold" style={{ color: theme.color }}>
-                {goal.current_value.toFixed(1)}
-              </span>
-              <span className="text-muted-foreground">/ {goal.target_value}</span>
-              <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
+          {!hasTarget ? (
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                Цель не установлена
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Нажмите на иконку редактирования, чтобы установить цель
+              </p>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {goal.progress_percentage.toFixed(0)}% выполнено
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <Progress value={goal.progress_percentage} className="mb-4" />
-
-          {/* Sparkline & Trend */}
-          <div className="flex items-center justify-between">
-            {/* Mini sparkline */}
-            <div className="flex items-end gap-[2px] h-8">
-              {goal.measurements.slice(0, 7).reverse().map((m, i) => {
-                const max = Math.max(...goal.measurements.slice(0, 7).map(d => d.value));
-                const min = Math.min(...goal.measurements.slice(0, 7).map(d => d.value));
-                const range = max - min || 1;
-                const height = ((m.value - min) / range) * 100;
-                
-                return (
-                  <div
-                    key={i}
-                    className="w-1 rounded-full opacity-60"
-                    style={{
-                      height: `${Math.max(height, 10)}%`,
-                      backgroundColor: theme.color,
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Trend */}
-            {goal.trend !== 'stable' && (
-              <div 
-                className="flex items-center gap-1 text-xs font-medium"
-                style={{ color: getTrendColor() }}
-              >
-                {goal.trend === 'up' ? (
-                  <TrendingUp className="h-3 w-3" />
-                ) : (
-                  <TrendingDown className="h-3 w-3" />
-                )}
-                <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
+          ) : (
+            <>
+              <div className="mb-4">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-3xl font-bold" style={{ color: theme.color }}>
+                    {goal.current_value.toFixed(1)}
+                  </span>
+                  <span className="text-muted-foreground">/ {goal.target_value}</span>
+                  <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {goal.progress_percentage.toFixed(0)}% выполнено
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* Progress Bar */}
+              <Progress value={goal.progress_percentage} className="mb-4" />
+
+              {/* Sparkline & Trend */}
+              <div className="flex items-center justify-between">
+                {/* Mini sparkline */}
+                <div className="flex items-end gap-[2px] h-8">
+                  {goal.measurements.slice(0, 7).reverse().map((m, i) => {
+                    const max = Math.max(...goal.measurements.slice(0, 7).map(d => d.value));
+                    const min = Math.min(...goal.measurements.slice(0, 7).map(d => d.value));
+                    const range = max - min || 1;
+                    const height = ((m.value - min) / range) * 100;
+                    
+                    return (
+                      <div
+                        key={i}
+                        className="w-1 rounded-full opacity-60"
+                        style={{
+                          height: `${Math.max(height, 10)}%`,
+                          backgroundColor: theme.color,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Trend */}
+                {goal.trend !== 'stable' && (
+                  <div 
+                    className="flex items-center gap-1 text-xs font-medium"
+                    style={{ color: getTrendColor() }}
+                  >
+                    {goal.trend === 'up' ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3" />
+                    )}
+                    <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
-      <QuickMeasurementDialog
-        goal={{
-          id: goal.id,
-          goal_name: goal.goal_name,
-          goal_type: goal.goal_type,
-          target_value: goal.target_value,
-          target_unit: goal.target_unit,
-        }}
-        isOpen={measurementOpen}
-        onOpenChange={setMeasurementOpen}
-        onMeasurementAdded={() => {
-          setMeasurementOpen(false);
-          onMeasurementAdded();
-        }}
-      />
+      {hasTarget && (
+        <QuickMeasurementDialog
+          goal={{
+            id: goal.id,
+            goal_name: goal.goal_name,
+            goal_type: goal.goal_type,
+            target_value: goal.target_value!,
+            target_unit: goal.target_unit,
+          }}
+          isOpen={measurementOpen}
+          onOpenChange={setMeasurementOpen}
+          onMeasurementAdded={() => {
+            setMeasurementOpen(false);
+            onMeasurementAdded();
+          }}
+        />
+      )}
 
       <GoalEditDialog
         goal={{

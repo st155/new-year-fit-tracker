@@ -102,26 +102,25 @@ export default function Goals() {
         </TabsContent>
 
         <TabsContent value="challenges" className="space-y-4">
+          <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
+            <p className="text-sm text-muted-foreground">
+              <strong>Установите персональные цели</strong> для каждой дисциплины челленджа. 
+              Если цель не установлена, она не будет отображаться в прогрессе.
+            </p>
+          </div>
+          
           {!challengeGoals || challengeGoals.length === 0 ? (
             <EmptyState
               icon={<Trophy className="h-12 w-12" />}
-              title="No challenge goals"
-              description="Join a challenge to get challenge-specific goals"
+              title="Нет целей челленджа"
+              description="Присоединитесь к челленджу, чтобы получить цели автоматически"
             />
           ) : (
-            <>
-              <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
-                <p className="text-sm text-muted-foreground">
-                  💡 <strong>Совет:</strong> Здесь вы можете изменить свои персональные цели по каждой дисциплине челленджа. 
-                  Нажмите на карандаш, чтобы установить новую целевую планку.
-                </p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {challengeGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
-                ))}
-              </div>
-            </>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {challengeGoals.map((goal) => (
+                <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
+              ))}
+            </div>
           )}
         </TabsContent>
       </Tabs>
