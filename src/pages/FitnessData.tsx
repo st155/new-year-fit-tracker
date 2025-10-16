@@ -350,13 +350,27 @@ export default function FitnessData() {
     }
 
     // Recovery Score - показываем только если данные есть
-    const recoveryForCard = metricValues['Recovery Score'] || metricValues['Recovery'] || metricValues['HRV RMSSD'];
+    // Приоритет: Recovery Score (Whoop) > Training Readiness (Garmin) > Sleep Efficiency (Garmin) > HRV
+    const recoveryForCard = 
+      metricValues['Recovery Score'] || 
+      metricValues['Recovery'] || 
+      metricValues['Training Readiness'] ||
+      metricValues['Sleep Efficiency'] ||
+      metricValues['Sleep HRV RMSSD'] ||
+      metricValues['HRV RMSSD'];
+    
     if (recoveryForCard && recoveryForCard.current > 0) {
-      // For HRV RMSSD, normalize to percentage (50-100 HRV = 30-100%)
       let recoveryValue = recoveryForCard.current;
-      if (metricValues['HRV RMSSD'] && !metricValues['Recovery Score'] && !metricValues['Recovery']) {
+      
+      // Normalize only for HRV metrics (50-100 HRV = 30-100%)
+      if ((metricValues['Sleep HRV RMSSD'] || metricValues['HRV RMSSD']) && 
+          !metricValues['Recovery Score'] && 
+          !metricValues['Recovery'] &&
+          !metricValues['Training Readiness'] &&
+          !metricValues['Sleep Efficiency']) {
         recoveryValue = Math.min(100, Math.max(0, (recoveryValue - 30) * 1.4));
       }
+      
       const meta = getMetricIcon('recovery', 'recovery');
       cards.push({
         name: 'Recovery',

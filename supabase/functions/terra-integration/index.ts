@@ -681,6 +681,30 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
+          // Training Readiness (Garmin)
+          const trainingReadiness = daily.training_readiness ?? daily.readiness_score ?? daily.training_readiness_score;
+          if (typeof trainingReadiness === 'number') {
+            const { data: readinessMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Training Readiness',
+              p_metric_category: 'recovery',
+              p_unit: '%',
+              p_source: source,
+            });
+            if (readinessMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: readinessMetricId,
+                value: trainingReadiness,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_readiness_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+            }
+          }
+
           // Sleep Efficiency
           const sleepEfficiency = daily.sleep_efficiency_percentage ?? daily.sleep?.efficiency_percentage;
           if (typeof sleepEfficiency === 'number') {
