@@ -1,40 +1,52 @@
-import { useEffect, useState } from "react";
-import { Target, Trophy, Plus, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { useSearchParams } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+type FilterType = 'all' | 'personal' | 'challenges';
 
 export default function Goals() {
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
+  
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = (searchParams.get('tab') === 'challenges') ? 'challenges' : 'personal';
-  const [activeTab, setActiveTab] = useState<'personal' | 'challenges'>(initialTab as any);
+  const initialFilter = (searchParams.get('filter') as FilterType) || 'all';
+  const [filter, setFilter] = useState<FilterType>(initialFilter);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const personalGoals = goals?.filter(g => g.is_personal) || [];
   const challengeGoals = goals?.filter(g => !g.is_personal) || [];
+  const allGoals = [...personalGoals, ...challengeGoals];
 
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'challenges' || tab === 'personal') {
-      setActiveTab(tab as any);
-    }
-  }, [searchParams]);
+  // Apply filters
+  let filteredGoals = allGoals;
+  
+  if (filter === 'personal') {
+    filteredGoals = personalGoals;
+  } else if (filter === 'challenges') {
+    filteredGoals = challengeGoals;
+  }
+  
+  // Apply search
+  if (searchQuery.trim()) {
+    filteredGoals = filteredGoals.filter(goal =>
+      goal.goal_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
 
-  useEffect(() => {
-    if (activeTab === 'personal' && personalGoals.length === 0 && challengeGoals.length > 0) {
-      setActiveTab('challenges');
-      setSearchParams({ tab: 'challenges' });
-    }
-  }, [activeTab, personalGoals.length, challengeGoals.length, setSearchParams]);
+  const handleFilterChange = (newFilter: FilterType) => {
+    setFilter(newFilter);
+    setSearchParams({ filter: newFilter });
+  };
   if (isLoading) {
     return (
       <div className="container py-6 space-y-6">
@@ -69,66 +81,102 @@ export default function Goals() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSearchParams({ tab: v }); }} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="personal">
+      {/* Filters and Search */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            variant={filter === 'all' ? 'default' : 'outline'}
+            onClick={() => handleFilterChange('all')}
+            className={cn(filter === 'all' && "bg-gradient-primary")}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Все ({allGoals.length})
+          </Button>
+          <Button 
+            variant={filter === 'personal' ? 'default' : 'outline'}
+            onClick={() => handleFilterChange('personal')}
+            className={cn(filter === 'personal' && "bg-gradient-primary")}
+          >
             <Target className="h-4 w-4 mr-2" />
-            Personal ({personalGoals?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="challenges">
+            Личные ({personalGoals.length})
+          </Button>
+          <Button 
+            variant={filter === 'challenges' ? 'default' : 'outline'}
+            onClick={() => handleFilterChange('challenges')}
+            className={cn(
+              filter === 'challenges' && "bg-gradient-to-r from-muted-foreground/30 to-muted-foreground/20 border-muted-foreground/40"
+            )}
+          >
             <Trophy className="h-4 w-4 mr-2" />
-            Challenges ({challengeGoals?.length || 0})
-          </TabsTrigger>
-        </TabsList>
+            Челленджи ({challengeGoals.length})
+          </Button>
+        </div>
+        
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск целей..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
 
-        <TabsContent value="personal" className="space-y-4">
-          {!personalGoals || personalGoals.length === 0 ? (
-            <EmptyState
-              icon={<Target className="h-12 w-12" />}
-              title="No personal goals yet"
-              description="Create your first goal to start tracking your progress"
-              action={{
-                label: "Create Goal",
-                onClick: () => setCreateDialogOpen(true)
-              }}
-            />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {personalGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+      {/* Info banner for challenge goals */}
+      {(filter === 'challenges' || filter === 'all') && challengeGoals.length > 0 && (
+        <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">
+            <Trophy className="h-4 w-4 inline mr-2" />
+            Дисциплины челленджа определяются тренером и залочены для редактирования. 
+            Отслеживайте прогресс по каждой дисциплине в разделе <strong>Challenge Progress</strong>.
+          </p>
+        </div>
+      )}
 
-        <TabsContent value="challenges" className="space-y-4">
-          <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
-            <p className="text-sm text-muted-foreground">
-              Дисциплины челленджа определяются тренером. 
-              Отслеживайте прогресс по каждой дисциплине в разделе <strong>Challenge Progress</strong>.
-            </p>
-          </div>
-          
-          {!challengeGoals || challengeGoals.length === 0 ? (
-            <EmptyState
-              icon={<Trophy className="h-12 w-12" />}
-              title="Нет целей челленджа"
-              description="Присоединитесь к челленджу, чтобы получить цели автоматически"
+      {/* Goals Grid */}
+      {filteredGoals.length === 0 ? (
+        <EmptyState
+          icon={filter === 'personal' ? <Target className="h-12 w-12" /> : <Trophy className="h-12 w-12" />}
+          title={
+            searchQuery.trim() 
+              ? "Ничего не найдено" 
+              : filter === 'personal' 
+                ? "No personal goals yet" 
+                : filter === 'challenges'
+                  ? "Нет целей челленджа"
+                  : "No goals yet"
+          }
+          description={
+            searchQuery.trim()
+              ? "Попробуйте изменить поисковый запрос"
+              : filter === 'personal'
+                ? "Create your first goal to start tracking your progress"
+                : filter === 'challenges'
+                  ? "Присоединитесь к челленджу, чтобы получить цели автоматически"
+                  : "Create your first goal or join a challenge"
+          }
+          action={
+            !searchQuery.trim() && filter !== 'challenges'
+              ? {
+                  label: "Create Goal",
+                  onClick: () => setCreateDialogOpen(true)
+                }
+              : undefined
+          }
+        />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredGoals.map((goal) => (
+            <GoalCard 
+              key={goal.id} 
+              goal={goal} 
+              onMeasurementAdded={() => refetch()}
+              readonly={!goal.is_personal}
             />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {challengeGoals.map((goal) => (
-                <GoalCard 
-                  key={goal.id} 
-                  goal={goal} 
-                  onMeasurementAdded={() => refetch()}
-                  readonly={true}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+      )}
 
       <GoalCreateDialog 
         open={createDialogOpen}

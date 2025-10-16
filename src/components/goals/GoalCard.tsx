@@ -2,11 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil, Lock } from "lucide-react";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "./QuickMeasurementDialog";
 import { GoalEditDialog } from "./GoalEditDialog";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const goalTypeIcons: Record<string, any> = {
   strength: Dumbbell,
@@ -78,8 +80,14 @@ export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCar
 
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] group">
-        <div className={`h-1 bg-gradient-to-r ${theme.gradient}`} />
+      <Card className={cn(
+        "overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] group relative",
+        readonly && "bg-muted/20 border-muted-foreground/20"
+      )}>
+        <div className={cn(
+          "h-1 bg-gradient-to-r",
+          readonly ? "from-muted-foreground/30 to-muted-foreground/10" : theme.gradient
+        )} />
         
         <CardContent className="p-6">
           {/* Header */}
@@ -93,7 +101,19 @@ export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCar
                 {goal.is_personal ? (
                   <Badge variant="outline" className="text-xs">Личная</Badge>
                 ) : (
-                  <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="secondary" className="text-xs gap-1 bg-muted-foreground/20 border-muted-foreground/30">
+                          <Lock className="h-3 w-3" />
+                          {goal.challenge_title}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Цель челленджа - редактируется только тренером</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 {sourceBadge && (
                   <Badge variant={sourceBadge.variant} className="text-xs">
