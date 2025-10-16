@@ -104,8 +104,8 @@ export default function Goals() {
         <TabsContent value="challenges" className="space-y-4">
           <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
             <p className="text-sm text-muted-foreground">
-              <strong>Установите персональные цели</strong> для каждой дисциплины челленджа. 
-              Если цель не установлена, она не будет отображаться в прогрессе.
+              Дисциплины челленджа определяются тренером. 
+              Отслеживайте прогресс по каждой дисциплине в разделе <strong>Challenge Progress</strong>.
             </p>
           </div>
           
@@ -118,7 +118,12 @@ export default function Goals() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {challengeGoals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} onMeasurementAdded={() => refetch()} />
+                <GoalCard 
+                  key={goal.id} 
+                  goal={goal} 
+                  onMeasurementAdded={() => refetch()}
+                  readonly={true}
+                />
               ))}
             </div>
           )}

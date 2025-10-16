@@ -53,9 +53,10 @@ const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
 interface GoalCardProps {
   goal: ChallengeGoal;
   onMeasurementAdded: () => void;
+  readonly?: boolean;
 }
 
-export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
+export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCardProps) {
   const [measurementOpen, setMeasurementOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   
@@ -102,26 +103,28 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
               </div>
             </div>
 
-            <div className="flex gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => setEditOpen(true)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              {hasTarget && (
+            {!readonly && (
+              <div className="flex gap-1">
                 <Button
                   size="icon"
                   variant="ghost"
                   className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => setMeasurementOpen(true)}
+                  onClick={() => setEditOpen(true)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
+                {hasTarget && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setMeasurementOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Values */}
@@ -193,41 +196,45 @@ export function GoalCard({ goal, onMeasurementAdded }: GoalCardProps) {
         </CardContent>
       </Card>
 
-      {hasTarget && (
-        <QuickMeasurementDialog
-          goal={{
-            id: goal.id,
-            goal_name: goal.goal_name,
-            goal_type: goal.goal_type,
-            target_value: goal.target_value!,
-            target_unit: goal.target_unit,
-          }}
-          isOpen={measurementOpen}
-          onOpenChange={setMeasurementOpen}
-          onMeasurementAdded={() => {
-            setMeasurementOpen(false);
-            onMeasurementAdded();
-          }}
-        />
-      )}
+      {!readonly && (
+        <>
+          {hasTarget && (
+            <QuickMeasurementDialog
+              goal={{
+                id: goal.id,
+                goal_name: goal.goal_name,
+                goal_type: goal.goal_type,
+                target_value: goal.target_value!,
+                target_unit: goal.target_unit,
+              }}
+              isOpen={measurementOpen}
+              onOpenChange={setMeasurementOpen}
+              onMeasurementAdded={() => {
+                setMeasurementOpen(false);
+                onMeasurementAdded();
+              }}
+            />
+          )}
 
-      <GoalEditDialog
-        goal={{
-          id: goal.id,
-          goal_name: goal.goal_name,
-          goal_type: goal.goal_type,
-          target_value: goal.target_value,
-          target_unit: goal.target_unit,
-          is_personal: goal.is_personal,
-          challenge_id: goal.challenge_id,
-        }}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSave={() => {
-          setEditOpen(false);
-          onMeasurementAdded();
-        }}
-      />
+          <GoalEditDialog
+            goal={{
+              id: goal.id,
+              goal_name: goal.goal_name,
+              goal_type: goal.goal_type,
+              target_value: goal.target_value,
+              target_unit: goal.target_unit,
+              is_personal: goal.is_personal,
+              challenge_id: goal.challenge_id,
+            }}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSave={() => {
+              setEditOpen(false);
+              onMeasurementAdded();
+            }}
+          />
+        </>
+      )}
     </>
   );
 }
