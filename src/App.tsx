@@ -55,10 +55,22 @@ const queryClient = new QueryClient({
 // Main application component with authentication and routing
 const App = () => {
   useEffect(() => {
-    try {
-      registerServiceWorker();
-    } catch (error) {
-      console.error('Service worker registration failed:', error);
+    if (import.meta.env.PROD) {
+      try {
+        registerServiceWorker();
+      } catch (error) {
+        console.error('Service worker registration failed:', error);
+      }
+    } else {
+      // Dev-защита: отключаем любые SW и чистим кеши
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => r.unregister());
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      }
     }
   }, []);
 
