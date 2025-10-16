@@ -123,15 +123,24 @@ export const InBodyHistory = () => {
 
       toast.info('Конвертируем PDF в изображения...');
 
-      // Get public URL for the PDF
-      const { data: urlData } = supabase.storage
+      // Get signed URL for the PDF (valid for 1 hour)
+      const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('inbody-pdfs')
-        .getPublicUrl(storagePath);
+        .createSignedUrl(storagePath, 3600);
       
-      const pdfUrl = urlData.publicUrl;
+      if (urlError || !signedUrlData?.signedUrl) {
+        throw new Error('Не удалось получить доступ к PDF файлу');
+      }
+      
+      console.log('Starting PDF conversion for:', storagePath);
 
-      // Convert PDF to images on client-side
-      const images = await convertPdfToImages(pdfUrl);
+      // Convert PDF to images on client-side with timeout
+      const conversionTimeout = setTimeout(() => {
+        throw new Error('Превышено время ожидания конвертации (60 секунд)');
+      }, 60000);
+
+      const images = await convertPdfToImages(signedUrlData.signedUrl);
+      clearTimeout(conversionTimeout);
       
       if (!images || images.length === 0) {
         throw new Error('Не удалось конвертировать PDF в изображения');
