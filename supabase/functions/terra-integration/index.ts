@@ -168,26 +168,23 @@ serve(async (req) => {
             sleep: allData.sleep?.length || 0,
             nutrition: allData.nutrition?.length || 0
           });
-            // Обрабатываем полученные данные напрямую
-            if (responseData.data) {
-              for (const dataItem of responseData.data) {
-                await processTerraData(supabase, {
-                  type: dataItem.type || 'daily',
-                  user: { user_id: token.terra_user_id, provider: token.provider },
-                  data: [dataItem]
-                });
-              }
+
+          // Обрабатываем каждый тип данных
+          for (const type of types) {
+            if (allData[type] && allData[type].length > 0) {
+              await processTerraData(supabase, {
+                type: type,
+                user: { user_id: token.terra_user_id, provider: token.provider },
+                data: allData[type]
+              });
             }
-            
-            // Update last_sync_date
-            await supabase
-              .from('terra_tokens')
-              .update({ last_sync_date: new Date().toISOString() })
-              .eq('id', token.id);
-          } else {
-            const errorText = await syncResponse.text();
-            console.error(`Sync failed for ${token.provider}:`, errorText);
           }
+          
+          // Update last_sync_date
+          await supabase
+            .from('terra_tokens')
+            .update({ last_sync_date: new Date().toISOString() })
+            .eq('id', token.id);
         } catch (error) {
           console.error(`Error syncing ${token.provider}:`, error);
         }
