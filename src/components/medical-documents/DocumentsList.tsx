@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { DocumentComparison } from './DocumentComparison';
 
 const documentTypeLabels: Record<DocumentType, string> = {
   inbody: 'InBody',
@@ -95,19 +96,24 @@ export const DocumentsList = () => {
               {documents?.length || 0} документов
             </CardDescription>
           </div>
-          <Select value={filterType} onValueChange={(value) => setFilterType(value as DocumentType | 'all')}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Все типы" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Все типы</SelectItem>
-              <SelectItem value="inbody">InBody анализы</SelectItem>
-              <SelectItem value="blood_test">Анализы крови</SelectItem>
-              <SelectItem value="medical_report">Мед. заключения</SelectItem>
-              <SelectItem value="progress_photo">Фото прогресса</SelectItem>
-              <SelectItem value="other">Другое</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            {documents && documents.length > 1 && (
+              <DocumentComparison documents={documents} />
+            )}
+            <Select value={filterType} onValueChange={(value) => setFilterType(value as DocumentType | 'all')}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Все типы" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все типы</SelectItem>
+                <SelectItem value="inbody">InBody анализы</SelectItem>
+                <SelectItem value="blood_test">Анализы крови</SelectItem>
+                <SelectItem value="medical_report">Мед. заключения</SelectItem>
+                <SelectItem value="progress_photo">Фото прогресса</SelectItem>
+                <SelectItem value="other">Другое</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
