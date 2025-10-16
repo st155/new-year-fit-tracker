@@ -4,11 +4,11 @@ import { useState } from "react";
 
 const PAGE_SIZE = 20;
 
-export function useActivityFeed(userId?: string, filter?: string | null) {
+export function useActivityFeed(userId?: string, filterType?: string | null) {
   const [page, setPage] = useState(0);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["activity-feed", userId, filter, page],
+    queryKey: ["activity-feed", userId, filterType, page],
     queryFn: async () => {
       if (!userId) return [];
 
@@ -21,8 +21,10 @@ export function useActivityFeed(userId?: string, filter?: string | null) {
       if (activitiesError) throw activitiesError;
       if (!activities) return [];
 
-      if (filter) {
-        const filtered = activities.filter(a => a.source_table === filter);
+      if (filterType) {
+        const filtered = filterType === 'habit' 
+          ? activities.filter(a => a.activity_subtype?.includes('habit'))
+          : activities.filter(a => a.activity_subtype === filterType);
         
         // Fetch profiles for filtered activities
         const userIds = [...new Set(filtered.map(a => a.user_id))];

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon } from "lucide-react";
+import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon, CheckCircle, BookOpen, Cigarette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CommentDialog } from "./CommentDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Progress } from "@/components/ui/progress";
 
 interface ActivityCardProps {
   activity: {
@@ -17,6 +18,10 @@ interface ActivityCardProps {
     action_text: string;
     created_at: string;
     metadata?: any;
+    activity_subtype?: string;
+    aggregated_data?: any;
+    is_milestone?: boolean;
+    milestone_type?: string;
     profiles: {
       username: string;
       full_name: string | null;
@@ -58,7 +63,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
   const fetchLikesAndComments = async () => {
     try {
-      // Get like count
       const { count: likes } = await supabase
         .from('activity_likes')
         .select('*', { count: 'exact', head: true })
@@ -66,7 +70,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
       setLikeCount(likes || 0);
 
-      // Get comment count
       const { count: comments } = await supabase
         .from('activity_comments')
         .select('*', { count: 'exact', head: true })
@@ -74,7 +77,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
       setCommentCount(comments || 0);
 
-      // Check if current user liked
       if (user) {
         const { data: liked } = await supabase
           .from('activity_likes')
@@ -93,7 +95,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   };
 
   const handleLike = async () => {
-    if (loading) return; // Защита от двойных кликов
+    if (loading) return;
     
     try {
       if (!user) {
@@ -105,7 +107,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
         return;
       }
 
-      // Оптимистичное обновление UI (мгновенно)
       const previousLiked = userLiked;
       const previousCount = likeCount;
       
@@ -114,9 +115,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       setIsAnimating(true);
       setLoading(true);
 
-      // Запрос в фоне
       if (previousLiked) {
-        // Unlike
         const { error } = await supabase
           .from('activity_likes')
           .delete()
@@ -124,13 +123,11 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           .eq('user_id', user.id);
 
         if (error) {
-          // Откатываем при ошибке
           setUserLiked(previousLiked);
           setLikeCount(previousCount);
           throw error;
         }
       } else {
-        // Like
         const { error } = await supabase
           .from('activity_likes')
           .insert({
@@ -139,7 +136,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           });
 
         if (error) {
-          // Откатываем при ошибке (кроме дубля)
           setUserLiked(previousLiked);
           setLikeCount(previousCount);
           if (!error.message?.includes('duplicate key')) {
@@ -148,7 +144,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
         }
       }
       
-      // Сброс анимации
       setTimeout(() => setIsAnimating(false), 250);
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -168,101 +163,107 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
     onActivityUpdate();
   };
   
-  // Get activity icon and color based on action type or text
+  // Get activity icon and color based on activity subtype or text
   const getActivityIconAndColor = () => {
+    const subtype = activity.activity_subtype;
     const actionText = activity.action_text?.toLowerCase() || '';
-    const actionType = activity.action_type?.toLowerCase() || '';
     
-    // Recovery/Восстановление - Electric Blue
-    if (actionText.includes('recover') || actionText.includes('восстан') || actionType.includes('recovery')) {
-      return { icon: Zap, color: '#3B82F6' }; // Bright Blue
-    }
-    
-    // Workouts/Тренировки - Lime Green
-    if (actionText.includes('тренир') || actionText.includes('workout') || actionText.includes('completed')) {
-      return { icon: Dumbbell, color: '#84CC16' }; // Lime
-    }
-    
-    // Sleep/Сон - Indigo
-    if (actionText.includes('slept') || actionText.includes('спал')) {
+    // Sleep & Recovery - consolidated view
+    if (subtype === 'sleep_recovery') {
       return { icon: Moon, color: '#6366F1' }; // Indigo
     }
     
-    // Strain/Нагрузка - Orange
-    if (actionText.includes('strain')) {
-      return { icon: Flame, color: '#F97316' }; // Orange
-    }
-    
-    // VO2 Max - Cyan
-    if (actionText.includes('vo2') || actionText.includes('кардио') || actionText.includes('выносл')) {
-      return { icon: Wind, color: '#06B6D4' }; // Cyan
-    }
-    
-    // Steps/Шаги - Yellow
-    if (actionText.includes('шаг') || actionText.includes('steps') || actionType.includes('steps')) {
+    // Steps
+    if (subtype === 'daily_steps') {
       return { icon: Footprints, color: '#FBBF24' }; // Yellow
     }
     
+    // Workout
+    if (subtype === 'workout' || actionText.includes('workout') || actionText.includes('тренир')) {
+      return { icon: Dumbbell, color: '#84CC16' }; // Lime
+    }
     
-    // Default - Electric Purple
+    // Habits
+    if (subtype?.includes('habit')) {
+      if (actionText.includes('🚭') || actionText.includes('smoking')) {
+        return { icon: Cigarette, color: '#EF4444' }; // Red
+      }
+      if (actionText.includes('📚') || actionText.includes('book')) {
+        return { icon: BookOpen, color: '#8B5CF6' }; // Purple
+      }
+      return { icon: CheckCircle, color: '#10B981' }; // Green
+    }
+    
+    // Recovery (standalone)
+    if (actionText.includes('recover') || actionText.includes('восстан')) {
+      return { icon: Zap, color: '#3B82F6' }; // Blue
+    }
+    
+    // VO2 Max
+    if (actionText.includes('vo2')) {
+      return { icon: Wind, color: '#06B6D4' }; // Cyan
+    }
+    
+    // Goal/Target
+    if (actionText.includes('goal') || actionText.includes('цел')) {
+      return { icon: Target, color: '#F59E0B' }; // Amber
+    }
+    
+    // Default
     return { icon: Activity, color: '#8B5CF6' };
   };
   
   const { icon: ActivityIcon, color: iconColor } = getActivityIconAndColor();
 
-  // Format activity text to be simple and readable
+  // Enhanced formatter for new activity types
   const getFormattedActivityText = () => {
-    const actionText = activity.action_text || '';
+    const aggregated = activity.aggregated_data || {};
+    const subtype = activity.activity_subtype;
     
-    // Recovery
-    if (actionText.includes('recovered') || actionText.includes('восстановился')) {
-      const match = actionText.match(/(\d+)%/);
-      if (match) return `Recovery ${match[1]}%`;
-    }
-    
-    // Workouts
-    if (actionText.includes('завершил тренировку') || actionText.includes('completed a workout')) {
-      const strainMatch = actionText.match(/Strain[:\s]+(\d+\.?\d*)/i);
-      const caloriesMatch = actionText.match(/(\d+)\s*ккал|(\d+)\s*kcal/i);
+    // Sleep & Recovery - consolidated display
+    if (subtype === 'sleep_recovery') {
+      const sleepHours = aggregated.sleep_hours;
+      const recovery = aggregated.recovery_percentage;
       
-      if (strainMatch) {
-        return `Workout • Strain ${strainMatch[1]}`;
-      } else if (caloriesMatch) {
-        const calories = caloriesMatch[1] || caloriesMatch[2];
-        return `Workout • ${calories} kcal`;
+      let text = '';
+      if (sleepHours) {
+        const hours = Math.floor(sleepHours);
+        const minutes = Math.round((sleepHours - hours) * 60);
+        text = `Sleep ${hours}h ${minutes}m`;
       }
-      return 'Workout';
-    }
-    
-    // Sleep
-    if (actionText.includes('slept')) {
-      const match = actionText.match(/(\d+:\d+)/);
-      if (match) return `Sleep ${match[1]}`;
-    }
-    
-    // Strain (standalone)
-    if (actionText.includes('strain') && !actionText.includes('workout')) {
-      const match = actionText.match(/(\d+\.?\d*)/);
-      if (match) return `Strain ${match[1]}`;
-    }
-    
-    // VO2 Max
-    if (actionText.includes('VO2Max') || actionText.includes('vo2max')) {
-      const match = actionText.match(/(\d+\.?\d*)/);
-      if (match) return `VO2 Max ${match[1]}`;
-    }
-    
-    // Steps
-    if (actionText.includes('steps') || actionText.includes('шаг')) {
-      const match = actionText.match(/(\d+[\d,]*)/);
-      if (match) {
-        const steps = match[1].replace(/,/g, '');
-        return `Steps ${parseInt(steps).toLocaleString()}`;
+      
+      if (recovery) {
+        text += text ? `, ${Math.round(recovery)}% Recovery` : `${Math.round(recovery)}% Recovery`;
       }
+      
+      return text || activity.action_text;
     }
     
-    // Default - clean up
-    return actionText
+    // Steps - show with progress to 10k goal
+    if (subtype === 'daily_steps') {
+      const steps = aggregated.steps || 0;
+      return `${steps.toLocaleString()} steps`;
+    }
+    
+    // Workout - show strain and calories
+    if (subtype === 'workout') {
+      const strain = aggregated.strain;
+      const calories = aggregated.calories;
+      
+      let text = 'Workout';
+      if (strain) text += ` • ${strain} strain`;
+      if (calories) text += ` • ${Math.round(calories)} kcal`;
+      
+      return text;
+    }
+    
+    // Habit completion
+    if (subtype === 'habit_completion' || subtype === 'habit_measurement' || subtype === 'habit_start') {
+      return activity.action_text.replace(/^[^]+completed:|updated:|started:/, '').trim();
+    }
+    
+    // Default - clean up text
+    return activity.action_text
       .replace(/st_\d+\.\d+\s*/gi, '')
       .replace(/\[Whoop\]/gi, '')
       .trim();
@@ -270,7 +271,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
 
   const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
   
-  // Format time - use measurement_date from metadata if available
   const getFormattedDate = () => {
     try {
       const dateStr = activity.metadata?.measurement_date || activity.created_at;
@@ -281,26 +281,52 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       measurementDate.setHours(0, 0, 0, 0);
       
       if (measurementDate.getTime() === today.getTime()) {
-        return 'Сегодня';
+        return 'Today';
       }
       
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       
       if (measurementDate.getTime() === yesterday.getTime()) {
-        return 'Вчера';
+        return 'Yesterday';
       }
       
-      // For older dates, show the date
       return format(date, 'd MMM', { locale: ru });
     } catch {
       return '';
     }
   };
   
+  // Render enhanced card with stats for certain types
+  const renderEnhancedContent = () => {
+    const subtype = activity.activity_subtype;
+    const aggregated = activity.aggregated_data || {};
+    
+    // Steps with progress bar
+    if (subtype === 'daily_steps') {
+      const steps = aggregated.steps || 0;
+      const progress = Math.min((steps / 10000) * 100, 100);
+      
+      return (
+        <div className="mt-2 space-y-1">
+          <Progress value={progress} className="h-1" />
+          <div className="flex justify-between text-[10px] text-white/60">
+            <span>Goal: 10,000</span>
+            <span>{progress.toFixed(0)}%</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+  
   return (
     <div
-      className="relative rounded-full px-4 py-2.5 transition-all duration-300 animate-fade-in border-[3px]"
+      className={cn(
+        "relative rounded-full px-4 py-2.5 transition-all duration-300 animate-fade-in border-[3px]",
+        activity.is_milestone && "ring-2 ring-yellow-400/50"
+      )}
       style={{
         background: "rgba(0, 0, 0, 0.3)",
         backdropFilter: "blur(10px)",
@@ -309,8 +335,13 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
         boxShadow: `0 0 20px ${borderStyle.shadow}`,
       }}
     >
+      {activity.is_milestone && (
+        <div className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+          🏆
+        </div>
+      )}
+      
       <div className="flex items-center gap-3">
-        {/* Avatar with Icon */}
         <div
           className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center"
           style={{
@@ -321,7 +352,6 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           <ActivityIcon className="h-5 w-5" style={{ color: iconColor }} />
         </div>
         
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold text-white leading-tight">
             {displayName}
@@ -332,9 +362,9 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
           <p className="text-[10px] text-gray-500 mt-0.5">
             {getFormattedDate()}
           </p>
+          {renderEnhancedContent()}
         </div>
 
-        {/* Likes & Comments */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={handleLike}

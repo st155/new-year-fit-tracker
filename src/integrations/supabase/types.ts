@@ -60,9 +60,13 @@ export type Database = {
         Row: {
           action_text: string
           action_type: string
+          activity_subtype: string | null
+          aggregated_data: Json | null
           created_at: string
           id: string
+          is_milestone: boolean | null
           metadata: Json | null
+          milestone_type: string | null
           source_id: string
           source_table: string
           updated_at: string
@@ -71,9 +75,13 @@ export type Database = {
         Insert: {
           action_text: string
           action_type: string
+          activity_subtype?: string | null
+          aggregated_data?: Json | null
           created_at?: string
           id?: string
+          is_milestone?: boolean | null
           metadata?: Json | null
+          milestone_type?: string | null
           source_id: string
           source_table: string
           updated_at?: string
@@ -82,9 +90,13 @@ export type Database = {
         Update: {
           action_text?: string
           action_type?: string
+          activity_subtype?: string | null
+          aggregated_data?: Json | null
           created_at?: string
           id?: string
+          is_milestone?: boolean | null
           metadata?: Json | null
+          milestone_type?: string | null
           source_id?: string
           source_table?: string
           updated_at?: string
