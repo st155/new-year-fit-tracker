@@ -428,35 +428,33 @@ export default function ModernProgress() {
       </div>
 
       {/* Period Filter */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm text-muted-foreground">Period:</span>
-          {["1M", "3M", "6M", "1Y"].map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={cn(
-                "px-6 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
-                selectedPeriod === period
-                  ? "text-white"
-                  : "text-muted-foreground hover:text-foreground border border-border/30"
-              )}
-              style={
-                selectedPeriod === period
-                  ? {
-                      background: "linear-gradient(135deg, #FF6B2C, #FF4B2B)",
-                      boxShadow: "0 0 20px rgba(255, 107, 44, 0.5)",
-                    }
-                  : {
-                      background: "rgba(255, 255, 255, 0.05)",
-                      backdropFilter: "blur(10px)",
-                    }
-              }
-            >
-              {period}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Period:</span>
+        {["1M", "3M", "6M", "1Y"].map((period) => (
+          <button
+            key={period}
+            onClick={() => setSelectedPeriod(period)}
+            className={cn(
+              "px-6 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
+              selectedPeriod === period
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground border border-border/30"
+            )}
+            style={
+              selectedPeriod === period
+                ? {
+                    background: "linear-gradient(135deg, #FF6B2C, #FF4B2B)",
+                    boxShadow: "0 0 20px rgba(255, 107, 44, 0.5)",
+                  }
+                : {
+                    background: "rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(10px)",
+                  }
+            }
+          >
+            {period}
+          </button>
+        ))}
       </div>
 
       {/* Metrics Grid - 2 columns on all screens */}
