@@ -115,61 +115,75 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         description: "Начинаю автоматический анализ..."
       });
 
-      // Автоматический запуск анализа
-      try {
-        console.log('Starting automatic analysis for upload:', uploadRecord.id);
-        
-        const { data: { signedUrl }, error: signedUrlError } = await supabase.storage
-          .from('inbody-pdfs')
-          .createSignedUrl(uploadData.path, 300);
+      // Автоматический запуск анализа в фоновом режиме
+      setTimeout(async () => {
+        try {
+          console.log('Starting automatic analysis for upload:', uploadRecord.id);
+          
+          const { data: { signedUrl }, error: signedUrlError } = await supabase.storage
+            .from('inbody-pdfs')
+            .createSignedUrl(uploadData.path, 300);
 
-        if (signedUrlError) throw signedUrlError;
-        if (!signedUrl) throw new Error('Failed to get signed URL');
+          if (signedUrlError) throw signedUrlError;
+          if (!signedUrl) throw new Error('Failed to get signed URL');
 
-        console.log('Converting PDF to images...');
-        const images = await convertPdfToImages(signedUrl, {
-          fetchTimeoutMs: 120000,
-          onProgress: (current, total) => console.log(`PDF conversion: ${current}/${total}`),
-        });
-
-        if (!images || images.length === 0) {
-          throw new Error('Не удалось конвертировать PDF');
-        }
-
-        console.log(`Converted ${images.length} pages, sending to AI...`);
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('No session');
-
-        const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
-          'parse-inbody-pdf',
-          {
-            body: {
-              images: images,
-              uploadId: uploadRecord.id
+          console.log('Converting PDF to images...');
+          
+          // Увеличиваем таймаут до 3 минут для больших файлов
+          const images = await convertPdfToImages(signedUrl, {
+            fetchTimeoutMs: 180000,
+            scale: 1.5,
+            onProgress: (current, total) => {
+              console.log(`PDF conversion progress: ${current}/${total} pages`);
             },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
-            }
+          });
+
+          if (!images || images.length === 0) {
+            throw new Error('Не удалось конвертировать PDF');
           }
-        );
 
-        if (analysisError) throw analysisError;
+          console.log(`Converted ${images.length} pages, sending to AI for analysis...`);
 
-        console.log('Analysis completed:', analysisData);
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error('No session');
 
-        toast({
-          title: "Анализ завершен!",
-          description: "InBody данные успешно извлечены"
-        });
-      } catch (analysisError) {
-        console.error('Auto-analysis error:', analysisError);
-        toast({
-          title: "Не удалось автоматически проанализировать",
-          description: "Попробуйте нажать 'Анализ' в истории",
-          variant: "destructive"
-        });
-      }
+          const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
+            'parse-inbody-pdf',
+            {
+              body: {
+                images: images,
+                uploadId: uploadRecord.id
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            }
+          );
+
+          if (analysisError) {
+            console.error('Analysis error:', analysisError);
+            throw analysisError;
+          }
+
+          console.log('Analysis completed successfully:', analysisData);
+
+          toast({
+            title: "Анализ завершен!",
+            description: "InBody данные успешно извлечены"
+          });
+          
+          // Обновляем данные после успешного анализа
+          if (onUploadSuccess) onUploadSuccess();
+          if (onSuccess) onSuccess();
+        } catch (analysisError) {
+          console.error('Auto-analysis error:', analysisError);
+          toast({
+            title: "Не удалось автоматически проанализировать",
+            description: "Попробуйте нажать 'Анализ' в истории загрузок",
+            variant: "destructive"
+          });
+        }
+      }, 100);
 
       if (onUploadSuccess) {
         onUploadSuccess();
