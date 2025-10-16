@@ -63,7 +63,7 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
                 <Button 
                   variant="link" 
                   className="h-auto p-0 ml-1 text-sm"
-                  onClick={() => navigate('/goals')}
+                  onClick={() => navigate('/goals?tab=challenges')}
                 >
                   Изменить цели →
                 </Button>

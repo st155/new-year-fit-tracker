@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Target, Trophy, Plus, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
@@ -8,15 +8,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
+import { useSearchParams } from "react-router-dom";
 
 export default function Goals() {
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') === 'challenges') ? 'challenges' : 'personal';
+  const [activeTab, setActiveTab] = useState<'personal' | 'challenges'>(initialTab as any);
   
   const personalGoals = goals?.filter(g => g.is_personal) || [];
   const challengeGoals = goals?.filter(g => !g.is_personal) || [];
 
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'challenges' || tab === 'personal') {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (activeTab === 'personal' && personalGoals.length === 0 && challengeGoals.length > 0) {
+      setActiveTab('challenges');
+      setSearchParams({ tab: 'challenges' });
+    }
+  }, [activeTab, personalGoals.length, challengeGoals.length, setSearchParams]);
   if (isLoading) {
     return (
       <div className="container py-6 space-y-6">
@@ -51,7 +69,7 @@ export default function Goals() {
         </div>
       </div>
 
-      <Tabs defaultValue="personal" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSearchParams({ tab: v }); }} className="space-y-4">
         <TabsList>
           <TabsTrigger value="personal">
             <Target className="h-4 w-4 mr-2" />
