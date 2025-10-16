@@ -9,33 +9,16 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  clearScreen: false,
   plugins: [
     react(),
-  ],
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    include: [
-      "@radix-ui/react-tabs",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-avatar",
-      "@radix-ui/react-select",
-      "sonner"
-    ],
-    exclude: ["react", "react-dom", "react/jsx-runtime"],
-    esbuildOptions: {
-      jsx: 'automatic',
-    },
-  },
-  build: {
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true,
-    },
+    exclude: ['lucide-react'],
   },
 }));
