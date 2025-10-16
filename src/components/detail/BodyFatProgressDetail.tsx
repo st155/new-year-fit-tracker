@@ -81,7 +81,18 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         }
       }
 
-      // Сначала получаем данные из Withings (metric_values)
+      // Приоритет: InBody > Withings > body_composition
+      
+      // 1. InBody данные (самые точные)
+      const { data: inbodyData } = await supabase
+        .from('inbody_analyses')
+        .select('test_date, percent_body_fat')
+        .eq('user_id', user.id)
+        .gte('test_date', startDate.toISOString())
+        .lte('test_date', endDate.toISOString())
+        .order('test_date', { ascending: true });
+
+      // 2. Withings данные
       const { data: withingsBodyFat } = await supabase
         .from('metric_values')
         .select(`
@@ -96,7 +107,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .lte('measurement_date', endDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
-      // Fallback к данным из body_composition если нет Withings данных
+      // 3. Fallback к данным из body_composition
       const { data: bodyData } = await supabase
         .from('body_composition')
         .select('measurement_date, body_fat_percentage')
@@ -105,10 +116,35 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .lte('measurement_date', endDate.toISOString().split('T')[0])
         .order('measurement_date', { ascending: true });
 
-      // Используем данные Withings если есть, иначе body_composition
+      // Объединяем данные с приоритетом InBody
       let formattedData: BodyFatData[] = [];
       
-      if (withingsBodyFat && withingsBodyFat.length > 0) {
+      if (inbodyData && inbodyData.length > 0) {
+        // Используем InBody как основной источник
+        formattedData = inbodyData
+          .filter(item => item.percent_body_fat)
+          .map((item, index, arr) => ({
+            date: new Date(item.test_date).toISOString().split('T')[0],
+            bodyFat: Number(item.percent_body_fat),
+            change: index > 0 ? Number(item.percent_body_fat) - Number(arr[index - 1].percent_body_fat!) : 0
+          }));
+        
+        // Дополняем Withings данными для дат без InBody
+        if (withingsBodyFat && withingsBodyFat.length > 0) {
+          const inbodyDates = new Set(formattedData.map(d => d.date));
+          const additionalWithings = withingsBodyFat
+            .filter(item => !inbodyDates.has(item.measurement_date))
+            .map(item => ({
+              date: item.measurement_date,
+              bodyFat: Number(item.value),
+              change: 0
+            }));
+          formattedData = [...formattedData, ...additionalWithings].sort((a, b) => 
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+        }
+      } else if (withingsBodyFat && withingsBodyFat.length > 0) {
+        // Если нет InBody, используем Withings
         formattedData = withingsBodyFat
           .map((item, index, arr) => ({
             date: item.measurement_date,
@@ -116,6 +152,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             change: index > 0 ? Number(item.value) - Number(arr[index - 1].value) : 0
           }));
       } else if (bodyData) {
+        // Последний fallback - body_composition
         formattedData = bodyData
           .filter(item => item.body_fat_percentage)
           .map((item, index, arr) => ({
@@ -124,6 +161,12 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             change: index > 0 ? Number(item.body_fat_percentage) - Number(arr[index - 1].body_fat_percentage) : 0
           }));
       }
+      
+      // Пересчитываем change для объединенных данных
+      formattedData = formattedData.map((item, index, arr) => ({
+        ...item,
+        change: index > 0 ? item.bodyFat - arr[index - 1].bodyFat : 0
+      }));
 
       setBodyFatData(formattedData);
       
