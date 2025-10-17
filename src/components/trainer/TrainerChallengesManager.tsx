@@ -6,13 +6,51 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChallengeParticipantsList } from "./ChallengeParticipantsList";
-import { Trophy, Users, Target, Calendar, Plus } from "lucide-react";
+import { CreateChallengeDialog } from "./CreateChallengeDialog";
+import { EditChallengeDialog } from "./EditChallengeDialog";
+import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function TrainerChallengesManager() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { challenges, isLoading, refetch } = useTrainerChallenges(user?.id);
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [challengeToEdit, setChallengeToEdit] = useState<any>(null);
+
+  const handleCompleteChallenge = async (challengeId: string) => {
+    try {
+      const { error } = await supabase
+        .from("challenges")
+        .update({ is_active: false })
+        .eq("id", challengeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Успех",
+        description: "Челлендж завершен",
+      });
+
+      refetch();
+    } catch (error: any) {
+      console.error("Error completing challenge:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось завершить челлендж",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditChallenge = (challenge: any) => {
+    setChallengeToEdit(challenge);
+    setEditDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -26,8 +64,6 @@ export function TrainerChallengesManager() {
   const activeChallenges = challenges.filter((c) => c.is_active);
   const completedChallenges = challenges.filter((c) => !c.is_active);
 
-  const selectedChallengeData = challenges.find((c) => c.id === selectedChallenge);
-
   return (
     <div className="space-y-6">
       {/* Заголовок */}
@@ -38,7 +74,7 @@ export function TrainerChallengesManager() {
             Управляйте челленджами и участниками
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Создать челлендж
         </Button>
@@ -105,7 +141,6 @@ export function TrainerChallengesManager() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle>{challenge.title}</CardTitle>
-                        <Badge variant="default">{challenge.role}</Badge>
                         <Badge variant="outline">
                           {challenge.is_active ? "Активен" : "Завершен"}
                         </Badge>
@@ -113,6 +148,22 @@ export function TrainerChallengesManager() {
                       <CardDescription className="mt-2">
                         {challenge.description}
                       </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditChallenge(challenge)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCompleteChallenge(challenge.id)}
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
@@ -176,7 +227,7 @@ export function TrainerChallengesManager() {
                     <div>
                       <div className="flex items-center gap-2">
                         <CardTitle>{challenge.title}</CardTitle>
-                        <Badge variant="secondary">{challenge.role}</Badge>
+                        <Badge variant="secondary">Завершен</Badge>
                       </div>
                       <CardDescription className="mt-2">
                         {challenge.description}
@@ -195,6 +246,19 @@ export function TrainerChallengesManager() {
           )}
         </TabsContent>
       </Tabs>
+
+      <CreateChallengeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={refetch}
+      />
+
+      <EditChallengeDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        challenge={challengeToEdit}
+        onSuccess={refetch}
+      />
     </div>
   );
 }

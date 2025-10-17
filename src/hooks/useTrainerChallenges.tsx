@@ -7,41 +7,20 @@ export function useTrainerChallenges(trainerId?: string) {
     queryFn: async () => {
       if (!trainerId) return [];
 
-      // Получаем челленджи где пользователь является тренером
-      const { data: trainerChallenges, error: challengesError } = await supabase
-        .from("challenge_trainers")
-        .select(`
-          challenge_id,
-          role,
-          challenges (
-            id,
-            title,
-            description,
-            start_date,
-            end_date,
-            is_active,
-            created_at
-          )
-        `)
-        .eq("trainer_id", trainerId);
-
-      if (challengesError) throw challengesError;
-
-      // Получаем челленджи созданные пользователем
-      const { data: ownedChallenges, error: ownedError } = await supabase
+      // Получаем все челленджи где пользователь тренер или создатель
+      const { data: allChallenges, error: challengesError } = await supabase
         .from("challenges")
         .select("*")
-        .eq("created_by", trainerId);
+        .or(`created_by.eq.${trainerId},id.in.(${
+          await supabase
+            .from("challenge_trainers")
+            .select("challenge_id")
+            .eq("trainer_id", trainerId)
+            .then(({ data }) => data?.map(ct => ct.challenge_id).join(",") || "")
+        })`);
 
-      if (ownedError) throw ownedError;
-
-      // Объединяем результаты
-      const allChallenges = [
-        ...trainerChallenges.map(tc => ({ ...tc.challenges, role: tc.role })),
-        ...ownedChallenges.filter(
-          oc => !trainerChallenges.some(tc => tc.challenge_id === oc.id)
-        ).map(oc => ({ ...oc, role: 'owner' }))
-      ];
+      if (challengesError) throw challengesError;
+      if (!allChallenges) return [];
 
       // Для каждого челленджа получаем участников
       const challengesWithParticipants = await Promise.all(
