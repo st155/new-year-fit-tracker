@@ -70,33 +70,78 @@ serve(async (req) => {
     let contextData = '';
     
     if (mentionedClients.length > 0) {
+      console.log('Loading context for mentioned clients:', mentionedClients);
+      
       for (const clientId of mentionedClients) {
-        // Get client info
+        // Get client profile with details
         const { data: clientProfile } = await supabaseClient
           .from('profiles')
-          .select('username, full_name')
+          .select('user_id, username, full_name')
           .eq('user_id', clientId)
           .single();
 
-        // Get client goals
+        if (!clientProfile) {
+          console.warn(`Client ${clientId} not found`);
+          continue;
+        }
+
+        contextData += `\n\n=== Client: ${clientProfile.full_name} (@${clientProfile.username}) ===\n`;
+        contextData += `User ID: ${clientProfile.user_id}\n`;
+        
+        // Get all client goals with recent measurements
         const { data: clientGoals } = await supabaseClient
           .from('goals')
-          .select('*, measurements(value, measurement_date)')
+          .select(`
+            id,
+            goal_name,
+            goal_type,
+            target_value,
+            target_unit,
+            is_personal,
+            created_at,
+            measurements (
+              value,
+              unit,
+              measurement_date
+            )
+          `)
           .eq('user_id', clientId)
           .order('created_at', { ascending: false });
 
-        // Get recent metrics
+        contextData += `\nCurrent Goals:\n`;
+        if (clientGoals && clientGoals.length > 0) {
+          for (const goal of clientGoals) {
+            const measurements = (goal as any).measurements || [];
+            const latestMeasurement = measurements.sort((a: any, b: any) => 
+              new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
+            )[0];
+            
+            contextData += `- ${goal.goal_name} (${goal.goal_type}): Target ${goal.target_value} ${goal.target_unit}`;
+            if (latestMeasurement) {
+              contextData += ` | Current: ${latestMeasurement.value} ${latestMeasurement.unit} (${latestMeasurement.measurement_date})`;
+            } else {
+              contextData += ` | Current: No measurements yet`;
+            }
+            contextData += `\n`;
+          }
+        } else {
+          contextData += `No goals set yet.\n`;
+        }
+        
+        // Get recent unified metrics for this client
         const { data: recentMetrics } = await supabaseClient
-          .from('metric_values')
-          .select('*, user_metrics(metric_name, unit)')
+          .from('client_unified_metrics')
+          .select('*')
           .eq('user_id', clientId)
-          .gte('measurement_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
           .order('measurement_date', { ascending: false })
-          .limit(50);
-
-        contextData += `\n\n=== Client: ${clientProfile?.username || clientProfile?.full_name} ===\n`;
-        contextData += `Goals: ${JSON.stringify(clientGoals, null, 2)}\n`;
-        contextData += `Recent Metrics (last 7 days): ${JSON.stringify(recentMetrics, null, 2)}\n`;
+          .limit(20);
+        
+        if (recentMetrics && recentMetrics.length > 0) {
+          contextData += `\nRecent Metrics (last 20):\n`;
+          recentMetrics.forEach(metric => {
+            contextData += `- ${metric.metric_name}: ${metric.value} ${metric.unit} (${metric.measurement_date}, source: ${metric.source})\n`;
+          });
+        }
       }
     }
 

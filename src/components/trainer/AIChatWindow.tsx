@@ -9,6 +9,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useClientContext } from '@/contexts/ClientContext';
+import { supabase } from '@/integrations/supabase/client';
+import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
@@ -30,7 +32,13 @@ export const AIChatWindow = ({
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const [input, setInput] = useState('');
+  const [clients, setClients] = useState<ClientSuggestion[]>([]);
+  const [mentions, setMentions] = useState<Map<string, string>>(new Map());
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,22 +46,104 @@ export const AIChatWindow = ({
     }
   }, [messages]);
 
+  useEffect(() => {
+    loadTrainerClients();
+  }, []);
+
+  const loadTrainerClients = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('trainer_clients')
+      .select(`
+        client_id,
+        profiles!trainer_clients_client_id_fkey (
+          user_id,
+          username,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('trainer_id', user.id)
+      .eq('active', true);
+    
+    if (data) {
+      const clientsList = data
+        .map(tc => tc.profiles)
+        .filter(Boolean) as ClientSuggestion[];
+      setClients(clientsList);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setInput(text);
+    
+    // Check for @ mentions
+    const lastAtIndex = text.lastIndexOf('@');
+    const cursorIsAfterAt = lastAtIndex !== -1 && lastAtIndex < text.length;
+    
+    if (cursorIsAfterAt) {
+      const afterAt = text.slice(lastAtIndex + 1);
+      const queryMatch = afterAt.match(/^(\S*)/);
+      
+      if (queryMatch) {
+        const query = queryMatch[1];
+        setMentionQuery(query);
+        setShowMentionSuggestions(true);
+        
+        // Calculate position for dropdown
+        if (textareaRef.current) {
+          const textarea = textareaRef.current;
+          const rect = textarea.getBoundingClientRect();
+          setMentionPosition({
+            top: rect.bottom + 5,
+            left: rect.left
+          });
+        }
+      }
+    } else {
+      setShowMentionSuggestions(false);
+    }
+  };
+
+  const selectClient = (client: ClientSuggestion) => {
+    const lastAtIndex = input.lastIndexOf('@');
+    const beforeAt = input.slice(0, lastAtIndex);
+    const afterQuery = input.slice(lastAtIndex + 1).replace(/^\S*/, '');
+    
+    const newInput = `${beforeAt}@${client.username}${afterQuery}`;
+    setInput(newInput);
+    
+    // Save username -> user_id mapping
+    setMentions(prev => new Map(prev).set(client.username, client.user_id));
+    setShowMentionSuggestions(false);
+    
+    // Focus back on textarea
+    textareaRef.current?.focus();
+  };
+
   const handleSend = async () => {
     if (!input.trim() || sending) return;
 
     const messageText = input.trim();
     setInput('');
 
-    // Extract @mentions (simplified version)
-    const mentionPattern = /@(\w+)/g;
-    const mentions = messageText.match(mentionPattern) || [];
-    const mentionedClients: string[] = []; // Would need to resolve usernames to IDs
+    // Extract @mentions and resolve to user_ids
+    const mentionPattern = /@(\S+)/g;
+    const mentionMatches = [...messageText.matchAll(mentionPattern)];
+    const mentionedClientIds = mentionMatches
+      .map(match => mentions.get(match[1]))
+      .filter(Boolean) as string[];
 
-    await onSendMessage(messageText, contextMode, mentionedClients);
+    await onSendMessage(messageText, contextMode, mentionedClientIds);
+    setMentions(new Map()); // Clear mentions after sending
+    setShowMentionSuggestions(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !showMentionSuggestions) {
       e.preventDefault();
       handleSend();
     }
@@ -72,7 +162,6 @@ export const AIChatWindow = ({
     const cleanUsername = username.replace('@', '');
     
     // Find client by username
-    // This is a simplified version - in production, you'd query the database
     navigate(`/trainer-dashboard?tab=clients&search=${cleanUsername}`);
   };
 
@@ -202,16 +291,26 @@ export const AIChatWindow = ({
         )}
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t relative">
         <div className="flex gap-2">
           <Textarea
+            ref={textareaRef}
             placeholder="Напишите сообщение... (@username для упоминания клиента)"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className="min-h-[60px] resize-none"
             disabled={sending}
           />
+          {showMentionSuggestions && (
+            <MentionAutocomplete
+              clients={clients}
+              query={mentionQuery}
+              onSelect={selectClient}
+              onClose={() => setShowMentionSuggestions(false)}
+              position={mentionPosition}
+            />
+          )}
           <Button
             size="icon"
             onClick={handleSend}
