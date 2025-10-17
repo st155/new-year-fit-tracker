@@ -200,21 +200,24 @@ export const fetchWidgetData = async (
     const today = new Date().toISOString().split('T')[0];
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
+    // Сначала получаем metric_id для конкретной метрики и источника
+    const { data: metricData } = await supabase
+      .from('user_metrics')
+      .select('id, unit')
+      .eq('user_id', userId)
+      .eq('metric_name', metricName)
+      .eq('source', source.toLowerCase())
+      .limit(1)
+      .single();
+
+    if (!metricData) return null;
+
     // Fetch latest value from last 30 days
     const { data, error } = await supabase
       .from('metric_values')
-      .select(`
-        value,
-        measurement_date,
-        user_metrics!inner(
-          metric_name,
-          unit,
-          source
-        )
-      `)
+      .select('value, measurement_date, created_at')
       .eq('user_id', userId)
-      .eq('user_metrics.metric_name', metricName)
-      .eq('user_metrics.source', source.toLowerCase())
+      .eq('metric_id', metricData.id)
       .gte('measurement_date', thirtyDaysAgo)
       .lte('measurement_date', today)
       .order('measurement_date', { ascending: false })
@@ -234,7 +237,7 @@ export const fetchWidgetData = async (
 
     return {
       value: latest.value,
-      unit: latest.user_metrics.unit,
+      unit: metricData.unit,
       date: latest.measurement_date,
       trend,
     };
