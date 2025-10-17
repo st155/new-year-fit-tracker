@@ -16,6 +16,7 @@ interface AIChatWindowProps {
   contextMode: string;
   sending: boolean;
   onSendMessage: (message: string, contextMode: string, mentionedClients: string[]) => Promise<any>;
+  onSwitchToActionsTab?: () => void;
 }
 
 export const AIChatWindow = ({
@@ -23,7 +24,8 @@ export const AIChatWindow = ({
   currentConversation,
   contextMode,
   sending,
-  onSendMessage
+  onSendMessage,
+  onSwitchToActionsTab
 }: AIChatWindowProps) => {
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
@@ -72,6 +74,23 @@ export const AIChatWindow = ({
     // Find client by username
     // This is a simplified version - in production, you'd query the database
     navigate(`/trainer-dashboard?tab=clients&search=${cleanUsername}`);
+  };
+
+  // Handle plan approval
+  const handleApprovePlan = async () => {
+    if (sending) return;
+    
+    const approvalMessage = "Да, выполнить план";
+    setInput('');
+    
+    await onSendMessage(approvalMessage, contextMode, []);
+    
+    // Switch to actions tab to review
+    if (onSwitchToActionsTab) {
+      setTimeout(() => {
+        onSwitchToActionsTab();
+      }, 1000);
+    }
   };
 
   return (
@@ -127,6 +146,28 @@ export const AIChatWindow = ({
                           {mention}
                         </Button>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Show plan approval button */}
+                  {message.role === 'assistant' && message.metadata?.isPlan && (
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        onClick={handleApprovePlan}
+                        disabled={sending}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        ✅ Да, выполнить план
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setInput("Нужно подумать")}
+                        disabled={sending}
+                      >
+                        Нужно подумать
+                      </Button>
                     </div>
                   )}
                   

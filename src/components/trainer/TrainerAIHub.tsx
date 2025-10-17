@@ -101,6 +101,7 @@ export const TrainerAIHub = () => {
                   contextMode={contextMode}
                   sending={sending}
                   onSendMessage={sendMessage}
+                  onSwitchToActionsTab={() => setActiveTab('actions')}
                 />
               </div>
             </Card>

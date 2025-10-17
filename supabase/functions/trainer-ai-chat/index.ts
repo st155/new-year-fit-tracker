@@ -58,13 +58,13 @@ serve(async (req) => {
       conversation = data;
     }
 
-    // Get conversation history
+    // Get conversation history (increased limit for better context)
     const { data: messages } = await supabaseClient
       .from('ai_messages')
       .select('role, content')
       .eq('conversation_id', conversation.id)
       .order('created_at', { ascending: true })
-      .limit(20);
+      .limit(50);
 
     // Build context based on mode and mentioned clients
     let contextData = '';
@@ -143,6 +143,8 @@ IMPORTANT INSTRUCTIONS:
       { role: 'user', content: message }
     ];
 
+    console.log(`Sending ${aiMessages.length} messages to AI (history: ${messages?.length || 0})`);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -166,7 +168,52 @@ IMPORTANT INSTRUCTIONS:
 
     console.log('AI response generated');
 
-    // Save messages to database
+    // Check if this is a plan that needs actions
+    const isPlan = assistantMessage.toLowerCase().includes('ready to implement') ||
+                   assistantMessage.toLowerCase().includes('do you want to implement') ||
+                   assistantMessage.toLowerCase().includes('готов реализовать') ||
+                   assistantMessage.toLowerCase().includes('хотите реализовать') ||
+                   assistantMessage.toLowerCase().includes('план действий');
+
+    // Parse potential actions and create pending action if it's a plan
+    let suggestedActions = null;
+    let pendingActionId = null;
+
+    if (isPlan) {
+      console.log('Detected plan response, creating pending action...');
+      
+      // Create pending action in database
+      const { data: pendingAction, error: actionError } = await supabaseClient
+        .from('ai_pending_actions')
+        .insert({
+          conversation_id: conversation.id,
+          trainer_id: user.id,
+          action_type: 'plan_execution',
+          action_plan: assistantMessage,
+          action_data: {
+            plan: assistantMessage,
+            context_mode: contextMode,
+            mentioned_clients: mentionedClients,
+            original_message: message
+          },
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (!actionError && pendingAction) {
+        pendingActionId = pendingAction.id;
+        suggestedActions = [{
+          type: 'execute_plan',
+          id: pendingAction.id
+        }];
+        console.log('Created pending action:', pendingActionId);
+      } else if (actionError) {
+        console.error('Error creating pending action:', actionError);
+      }
+    }
+
+    // Save messages to database with metadata
     await supabaseClient.from('ai_messages').insert([
       {
         conversation_id: conversation.id,
@@ -177,31 +224,14 @@ IMPORTANT INSTRUCTIONS:
       {
         conversation_id: conversation.id,
         role: 'assistant',
-        content: assistantMessage
+        content: assistantMessage,
+        metadata: {
+          isPlan,
+          pendingActionId,
+          suggestedActions
+        }
       }
     ]);
-
-    // Check if this is a plan that needs actions
-    const isPlan = assistantMessage.toLowerCase().includes('ready to implement') ||
-                   assistantMessage.toLowerCase().includes('план действий') ||
-                   assistantMessage.toLowerCase().includes('action plan');
-
-    // Parse potential actions from the plan
-    let suggestedActions = [];
-    if (isPlan) {
-      // Extract structured actions from the response
-      // This is a simplified version - you might want more sophisticated parsing
-      const actionPattern = /- (добавить|обновить|создать|изменить)[^-]*/gi;
-      const matches = assistantMessage.match(actionPattern);
-      
-      if (matches) {
-        suggestedActions = matches.map((action, index) => ({
-          action_type: 'suggested',
-          description: action.trim(),
-          order: index
-        }));
-      }
-    }
 
     // Update conversation title if it's the first message
     if (!conversationId && messages?.length === 0) {
@@ -234,6 +264,7 @@ IMPORTANT INSTRUCTIONS:
         conversationId: conversation.id,
         message: assistantMessage,
         isPlan,
+        pendingActionId,
         suggestedActions
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

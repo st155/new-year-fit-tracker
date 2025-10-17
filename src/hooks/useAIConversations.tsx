@@ -115,13 +115,13 @@ export const useAIConversations = (userId: string | undefined) => {
       // Reload conversations and messages
       await loadConversations();
       if (data.conversationId) {
-        await loadMessages(data.conversationId);
+        // Set the current conversation first
+        const conv = conversations.find(c => c.id === data.conversationId) || 
+                     { id: data.conversationId, trainer_id: userId, context_mode: contextMode } as AIConversation;
+        setCurrentConversation(conv);
         
-        // Update current conversation
-        const updatedConversation = conversations.find(c => c.id === data.conversationId);
-        if (updatedConversation) {
-          setCurrentConversation(updatedConversation);
-        }
+        // Then load messages
+        await loadMessages(data.conversationId);
       }
 
       return data;
