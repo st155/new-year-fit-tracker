@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFallbackMetrics, convertMetricValue } from '@/lib/metric-mappings';
 
 export interface Widget {
   id: string;
@@ -22,6 +23,8 @@ const DEFAULT_WIDGETS = [
   { metric_name: 'Steps', source: 'garmin' },
   { metric_name: 'Day Strain', source: 'whoop' },
   { metric_name: 'Recovery Score', source: 'whoop' },
+  { metric_name: 'Recovery Score', source: 'ultrahuman' }, // С fallback на HRV
+  { metric_name: 'Training Readiness', source: 'garmin' }, // С fallback на Body Battery
   { metric_name: 'Resting Heart Rate', source: 'whoop' },
   { metric_name: 'Weight', source: 'withings' },
 ];
@@ -206,14 +209,40 @@ export const fetchWidgetData = async (
     const thirtyDaysAgoStr = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
     // Получаем metric_id для конкретной метрики и источника
-    const { data: metricData } = await supabase
+    let { data: metricData } = await supabase
       .from('user_metrics')
-      .select('id, unit')
+      .select('id, unit, metric_name')
       .eq('user_id', userId)
       .eq('metric_name', metricName)
       .eq('source', source.toLowerCase())
       .limit(1)
       .maybeSingle();
+
+    let actualMetricName = metricName;
+    let needsConversion = false;
+
+    // Если метрика не найдена, пробуем fallback метрики
+    if (!metricData) {
+      const fallbackMetrics = getFallbackMetrics(metricName, source);
+      
+      for (const fallback of fallbackMetrics) {
+        const { data: fallbackData } = await supabase
+          .from('user_metrics')
+          .select('id, unit, metric_name')
+          .eq('user_id', userId)
+          .eq('metric_name', fallback)
+          .eq('source', source.toLowerCase())
+          .limit(1)
+          .maybeSingle();
+        
+        if (fallbackData) {
+          metricData = fallbackData;
+          actualMetricName = fallback;
+          needsConversion = true;
+          break;
+        }
+      }
+    }
 
     if (!metricData) return null;
 
@@ -266,9 +295,14 @@ export const fetchWidgetData = async (
         trend = ((latest.value - previous.value) / previous.value) * 100;
       }
 
+      // Применяем конверсию если используется fallback метрика
+      const finalValue = needsConversion 
+        ? convertMetricValue(latest.value, actualMetricName, metricName, source)
+        : latest.value;
+
       return {
-        value: latest.value,
-        unit: metricData.unit,
+        value: finalValue,
+        unit: needsConversion ? '%' : metricData.unit,
         date: latest.measurement_date,
         trend,
       };
@@ -324,9 +358,14 @@ export const fetchWidgetData = async (
       trend = ((latest.value - previous.value) / previous.value) * 100;
     }
 
+    // Применяем конверсию если используется fallback метрика
+    const finalValue = needsConversion 
+      ? convertMetricValue(latest.value, actualMetricName, metricName, source)
+      : latest.value;
+
     return {
-      value: latest.value,
-      unit: metricData.unit,
+      value: finalValue,
+      unit: needsConversion ? '%' : metricData.unit,
       date: latest.measurement_date,
       trend,
     };

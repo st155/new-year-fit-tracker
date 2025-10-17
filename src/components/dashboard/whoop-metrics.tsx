@@ -119,17 +119,23 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
         `)
         .eq('user_id', user.id)
         .in('metric_id', whoopMetricIds)
-        .gte('measurement_date', format(subDays(selectedDate, 1), 'yyyy-MM-dd'))
+        .gte('measurement_date', format(subDays(selectedDate, 7), 'yyyy-MM-dd'))
         .lte('measurement_date', dateStr)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false });
 
       // Группируем по метрике и берем запись за выбранный день, 
-      // если её нет — берем самую свежую из окна (вчера+сегодня)
+      // если её нет — берем самую свежую из последних 7 дней
       const latestMetrics = data?.reduce((acc, item) => {
         const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
         const isToday = item.measurement_date === dateStr;
-        if (!acc[key] || (!acc[key].isToday && isToday)) {
+        const currentDate = new Date(item.measurement_date);
+        const existingDate = acc[key] ? new Date(acc[key].measurement_date) : null;
+        
+        // Приоритизация: 1) сегодняшние данные всегда важнее, 2) если оба не сегодня - берем свежее
+        if (!acc[key] || 
+            (!acc[key].isToday && isToday) || 
+            (acc[key].isToday === isToday && existingDate && currentDate > existingDate)) {
           acc[key] = {
             metric_name: item.user_metrics.metric_name,
             metric_category: item.user_metrics.metric_category,

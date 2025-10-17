@@ -179,12 +179,42 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
-            {data.date === new Date().toISOString().split('T')[0] 
-              ? 'Сегодня'
-              : new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-            }
-          </span>
+          <div className="flex items-center gap-2">
+            {(() => {
+              const isToday = data.date === new Date().toISOString().split('T')[0];
+              const daysDiff = Math.floor(
+                (new Date().getTime() - new Date(data.date).getTime()) / (1000 * 60 * 60 * 24)
+              );
+              const isWorkoutMetric = metricName.toLowerCase().includes('workout') || 
+                                     metricName.toLowerCase().includes('strain');
+              
+              if (isToday) {
+                return <span className="text-muted-foreground">Сегодня</span>;
+              } else if (isWorkoutMetric && daysDiff > 1) {
+                return (
+                  <>
+                    <span className="text-muted-foreground">Последняя:</span>
+                    <span className="text-muted-foreground">
+                      {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </>
+                );
+              } else {
+                return (
+                  <>
+                    <span className="text-muted-foreground">
+                      {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                    </span>
+                    {daysDiff > 1 && (
+                      <span className="text-xs text-yellow-600 font-medium">
+                        ({daysDiff} дн. назад)
+                      </span>
+                    )}
+                  </>
+                );
+              }
+            })()}
+          </div>
           
           {hasTrend && (
             <div 
