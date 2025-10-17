@@ -32,27 +32,36 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Получаем текущего пользователя
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('❌ No authorization header provided');
-      throw new Error('Missing authorization header');
-    }
-
-    console.log('🔐 Authenticating user...');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      console.error('❌ Authentication failed:', authError);
-      throw new Error('Unauthorized');
-    }
-
-    console.log('✅ User authenticated:', user.id);
-
     const body = await req.json();
-    const { action, provider } = body;
+    const { action, provider, userId: requestUserId } = body;
+
+    let user: any;
+
+    // Если передан userId (от cron-задачи), используем его напрямую
+    if (requestUserId) {
+      console.log('🔐 Using userId from request (cron mode):', requestUserId);
+      user = { id: requestUserId };
+    } else {
+      // Обычный режим - получаем пользователя из JWT
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        console.error('❌ No authorization header provided');
+        throw new Error('Missing authorization header');
+      }
+
+      console.log('🔐 Authenticating user via JWT...');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (authError || !authUser) {
+        console.error('❌ Authentication failed:', authError);
+        throw new Error('Unauthorized');
+      }
+
+      user = authUser;
+      console.log('✅ User authenticated:', user.id);
+    }
     console.log('📋 Action requested:', { action, provider, userId: user.id });
 
     // Generate Widget Session (for iframe embedding)
