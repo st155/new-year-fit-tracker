@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, MessageSquare } from "lucide-react";
+import { Users, Target, BarChart3, MessageSquare, Sparkles } from "lucide-react";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
 import { TrainerAIAssistant } from "@/components/trainer/TrainerAIAssistant";
+import { TrainerAIHub } from "@/components/trainer/TrainerAIHub";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
 import { TrainerChat } from "@/components/trainer/TrainerChat";
@@ -107,7 +108,7 @@ export default function TrainerDashboard() {
           />
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8 bg-muted/50 p-1">
+            <TabsList className="grid w-full grid-cols-9 bg-muted/50 p-1">
               <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="clients">Клиенты</TabsTrigger>
               <TabsTrigger value="challenges">Челленджи</TabsTrigger>
@@ -116,6 +117,10 @@ export default function TrainerDashboard() {
               <TabsTrigger value="chat">Чат</TabsTrigger>
               <TabsTrigger value="goals">Цели</TabsTrigger>
               <TabsTrigger value="analytics">Аналитика</TabsTrigger>
+              <TabsTrigger value="ai-hub" className="gap-1">
+                <Sparkles className="h-4 w-4" />
+                AI Hub
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
@@ -190,6 +195,10 @@ export default function TrainerDashboard() {
 
             <TabsContent value="analytics">
               <TrainerAnalytics />
+            </TabsContent>
+
+            <TabsContent value="ai-hub">
+              <TrainerAIHub />
             </TabsContent>
           </Tabs>
         )}

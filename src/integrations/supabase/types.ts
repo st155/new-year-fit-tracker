@@ -149,9 +149,11 @@ export type Database = {
           action_details: Json
           action_type: string
           client_id: string | null
+          conversation_id: string | null
           created_at: string | null
           error_message: string | null
           id: string
+          pending_action_id: string | null
           success: boolean
           trainer_id: string
         }
@@ -159,9 +161,11 @@ export type Database = {
           action_details: Json
           action_type: string
           client_id?: string | null
+          conversation_id?: string | null
           created_at?: string | null
           error_message?: string | null
           id?: string
+          pending_action_id?: string | null
           success: boolean
           trainer_id: string
         }
@@ -169,13 +173,142 @@ export type Database = {
           action_details?: Json
           action_type?: string
           client_id?: string | null
+          conversation_id?: string | null
           created_at?: string | null
           error_message?: string | null
           id?: string
+          pending_action_id?: string | null
           success?: boolean
           trainer_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "ai_action_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_action_logs_pending_action_id_fkey"
+            columns: ["pending_action_id"]
+            isOneToOne: false
+            referencedRelation: "ai_pending_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_conversations: {
+        Row: {
+          context_mode: string
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          metadata: Json | null
+          title: string | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          context_mode?: string
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          metadata?: Json | null
+          title?: string | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          context_mode?: string
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          metadata?: Json | null
+          title?: string | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
         Relationships: []
+      }
+      ai_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_pending_actions: {
+        Row: {
+          action_data: Json
+          action_plan: string
+          action_type: string
+          conversation_id: string
+          created_at: string | null
+          executed_at: string | null
+          id: string
+          status: string
+          trainer_id: string
+        }
+        Insert: {
+          action_data: Json
+          action_plan: string
+          action_type: string
+          conversation_id: string
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          status?: string
+          trainer_id: string
+        }
+        Update: {
+          action_data?: Json
+          action_plan?: string
+          action_type?: string
+          conversation_id?: string
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          status?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_pending_actions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       assigned_training_plans: {
         Row: {
