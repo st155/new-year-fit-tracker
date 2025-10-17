@@ -33,6 +33,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const MedicalDocuments = lazy(() => import("./pages/MedicalDocuments"));
 const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
+const TrainerTestPage = lazy(() => import("./pages/TrainerTestPage"));
 
 // OAuth callbacks
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
@@ -177,6 +178,7 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
+                    <Route path="/trainer-test" element={<TrainerTestPage />} />
                     
                     {/* OAuth callbacks */}
                     <Route path="/terra-callback" element={<TerraCallback />} />
