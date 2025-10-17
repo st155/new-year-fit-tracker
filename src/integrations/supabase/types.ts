@@ -144,6 +144,80 @@ export type Database = {
           },
         ]
       }
+      ai_action_logs: {
+        Row: {
+          action_details: Json
+          action_type: string
+          client_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          success: boolean
+          trainer_id: string
+        }
+        Insert: {
+          action_details: Json
+          action_type: string
+          client_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          success: boolean
+          trainer_id: string
+        }
+        Update: {
+          action_details?: Json
+          action_type?: string
+          client_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          success?: boolean
+          trainer_id?: string
+        }
+        Relationships: []
+      }
+      assigned_training_plans: {
+        Row: {
+          assigned_by: string
+          client_id: string
+          created_at: string | null
+          end_date: string | null
+          id: string
+          plan_id: string | null
+          start_date: string
+          status: string | null
+        }
+        Insert: {
+          assigned_by: string
+          client_id: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          plan_id?: string | null
+          start_date: string
+          status?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          client_id?: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          plan_id?: string | null
+          start_date?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assigned_training_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_composition: {
         Row: {
           body_fat_percentage: number | null
@@ -564,6 +638,51 @@ export type Database = {
           start_date?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      client_tasks: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          priority: string | null
+          status: string | null
+          task_type: string | null
+          title: string
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          status?: string | null
+          task_type?: string | null
+          title: string
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          status?: string | null
+          task_type?: string | null
+          title?: string
+          trainer_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1655,6 +1774,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_client_messages: {
+        Row: {
+          attachment_url: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message_text: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message_text: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message_text?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       trainer_clients: {
         Row: {
           active: boolean | null
@@ -1686,6 +1835,33 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      trainer_notes: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          is_private: boolean | null
+          note_text: string
+          trainer_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          note_text: string
+          trainer_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          note_text?: string
+          trainer_id?: string
+        }
+        Relationships: []
       }
       trainer_posts: {
         Row: {
@@ -1745,6 +1921,83 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      training_plan_workouts: {
+        Row: {
+          created_at: string | null
+          day_of_week: number | null
+          duration_minutes: number | null
+          exercises: Json | null
+          id: string
+          instructions: string | null
+          plan_id: string | null
+          week_number: number | null
+          workout_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week?: number | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          id?: string
+          instructions?: string | null
+          plan_id?: string | null
+          week_number?: number | null
+          workout_name: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          id?: string
+          instructions?: string | null
+          plan_id?: string | null
+          week_number?: number | null
+          workout_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_plan_workouts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_weeks: number | null
+          id: string
+          is_template: boolean | null
+          name: string
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_template?: boolean | null
+          name: string
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_template?: boolean | null
+          name?: string
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       user_metrics: {
         Row: {
