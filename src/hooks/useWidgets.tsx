@@ -22,6 +22,7 @@ const DEFAULT_WIDGETS = [
   { metric_name: 'Steps', source: 'garmin' },
   { metric_name: 'Day Strain', source: 'whoop' },
   { metric_name: 'Recovery Score', source: 'whoop' },
+  { metric_name: 'Resting Heart Rate', source: 'whoop' },
   { metric_name: 'Weight', source: 'withings' },
 ];
 
@@ -273,23 +274,50 @@ export const fetchWidgetData = async (
       };
     }
 
-    // По умолчанию — берем последнее значение по дате и времени создания
-    const { data, error } = await supabase
+    // Для обычных метрик: сначала пытаемся получить данные за сегодня
+    const { data: todayData } = await supabase
       .from('metric_values')
       .select('value, measurement_date, created_at')
       .eq('user_id', userId)
       .eq('metric_id', metricData.id)
-      .gte('measurement_date', thirtyDaysAgoStr)
-      .lte('measurement_date', todayStr)
-      .order('measurement_date', { ascending: false })
+      .eq('measurement_date', todayStr)
       .order('created_at', { ascending: false })
-      .limit(2);
+      .limit(1);
 
-    if (error) throw error;
-    if (!data || data.length === 0) return null;
+    let latest = todayData && todayData.length > 0 ? todayData[0] : null;
 
-    const latest = data[0];
-    const previous = data[1];
+    // Если нет данных за сегодня - берем последнее доступное значение
+    if (!latest) {
+      const { data: latestData } = await supabase
+        .from('metric_values')
+        .select('value, measurement_date, created_at')
+        .eq('user_id', userId)
+        .eq('metric_id', metricData.id)
+        .lte('measurement_date', todayStr)
+        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      latest = latestData && latestData.length > 0 ? latestData[0] : null;
+    }
+
+    if (!latest) return null;
+
+    // Для тренда - берем значение за вчера или последнее перед latest.measurement_date
+    const trendDate = latest.measurement_date === todayStr 
+      ? yesterdayStr 
+      : new Date(new Date(latest.measurement_date).getTime() - 86400000).toISOString().split('T')[0];
+
+    const { data: previousData } = await supabase
+      .from('metric_values')
+      .select('value, measurement_date')
+      .eq('user_id', userId)
+      .eq('metric_id', metricData.id)
+      .eq('measurement_date', trendDate)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const previous = previousData && previousData.length > 0 ? previousData[0] : null;
 
     let trend: number | undefined;
     if (previous && previous.value > 0) {

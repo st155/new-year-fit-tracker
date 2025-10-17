@@ -180,7 +180,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">
-            {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+            {data.date === new Date().toISOString().split('T')[0] 
+              ? 'Сегодня'
+              : new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+            }
           </span>
           
           {hasTrend && (
