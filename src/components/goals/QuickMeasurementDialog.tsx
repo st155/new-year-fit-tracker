@@ -80,7 +80,16 @@ export function QuickMeasurementDialog({
     try {
       const parsedValue = parseTimeValue(form.value);
       
-      const { error } = await supabase
+      console.log('Adding measurement:', {
+        goal_id: goal.id,
+        goal_name: goal.goal_name,
+        value: parsedValue,
+        unit: goal.target_unit,
+        measurement_date: form.measurement_date,
+        user_id: user!.id
+      });
+      
+      const { data, error } = await supabase
         .from('measurements')
         .insert({
           user_id: user!.id,
@@ -90,9 +99,16 @@ export function QuickMeasurementDialog({
           measurement_date: form.measurement_date,
           notes: form.notes.trim() || null,
           photo_url: form.photo_url || null
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Measurement added successfully:', data);
 
       toast({
         title: "Успешно!",
@@ -107,13 +123,14 @@ export function QuickMeasurementDialog({
         photo_url: ''
       });
       
-      onOpenChange(false);
+      // Обновляем данные и закрываем диалог
       onMeasurementAdded();
-    } catch (error) {
+      onOpenChange(false);
+    } catch (error: any) {
       console.error('Error adding measurement:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось добавить измерение",
+        title: "Ошибка при добавлении",
+        description: error?.message || "Не удалось добавить измерение. Попробуйте еще раз.",
         variant: "destructive",
       });
     } finally {
