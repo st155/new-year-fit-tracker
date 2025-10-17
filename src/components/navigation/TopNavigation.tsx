@@ -42,6 +42,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   const trainerNavItems = [
     { type: 'home' as const, path: "/trainer-dashboard", label: 'Тренерский кабинет' },
+    { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
     { type: 'stats' as const, path: "/progress", label: 'Мой прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Мои цели' },
   ];

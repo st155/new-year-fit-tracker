@@ -9,6 +9,7 @@ import { TrainerAIAssistant } from "@/components/trainer/TrainerAIAssistant";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
 import { TrainerChat } from "@/components/trainer/TrainerChat";
+import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,9 +107,10 @@ export default function TrainerDashboard() {
           />
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 bg-muted/50 p-1">
+            <TabsList className="grid w-full grid-cols-8 bg-muted/50 p-1">
               <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="clients">Клиенты</TabsTrigger>
+              <TabsTrigger value="challenges">Челленджи</TabsTrigger>
               <TabsTrigger value="plans">Планы</TabsTrigger>
               <TabsTrigger value="tasks">Задачи</TabsTrigger>
               <TabsTrigger value="chat">Чат</TabsTrigger>
@@ -160,6 +162,10 @@ export default function TrainerDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="challenges">
+              <TrainerChallengesManager />
             </TabsContent>
 
             <TabsContent value="plans">

@@ -605,6 +605,38 @@ export type Database = {
           },
         ]
       }
+      challenge_trainers: {
+        Row: {
+          added_at: string | null
+          challenge_id: string
+          id: string
+          role: string | null
+          trainer_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          challenge_id: string
+          id?: string
+          role?: string | null
+          trainer_id: string
+        }
+        Update: {
+          added_at?: string | null
+          challenge_id?: string
+          id?: string
+          role?: string | null
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_trainers_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
@@ -2314,6 +2346,10 @@ export type Database = {
         Returns: boolean
       }
       is_challenge_participant: {
+        Args: { _challenge_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_challenge_trainer: {
         Args: { _challenge_id: string; _user_id: string }
         Returns: boolean
       }
