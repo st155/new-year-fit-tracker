@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
   CheckCircle, 
@@ -27,6 +28,7 @@ interface WhoopConnection {
 export function WhoopIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [connection, setConnection] = useState<WhoopConnection>({ connected: false });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -133,9 +135,17 @@ export function WhoopIntegration() {
       // Обновляем статус подключения
       await checkConnection();
       
-      // Очищаем кеши
+      // Инвалидируем все React Query кэши
+      queryClient.invalidateQueries();
+      
+      // Очищаем localStorage кеши
       localStorage.removeItem('fitness_metrics_cache');
       localStorage.removeItem('fitness_data_cache_whoop');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('progress_cache_')) {
+          localStorage.removeItem(key);
+        }
+      });
       
       // Уведомляем другие компоненты об обновлении
       window.dispatchEvent(new CustomEvent('whoop-data-updated'));
