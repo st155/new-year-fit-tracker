@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWidgets } from '@/hooks/useWidgets';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
@@ -11,6 +12,12 @@ import { RefreshCw } from 'lucide-react';
 const Index = () => {
   const { user } = useAuth();
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    refetch();
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (loading) {
     return (
@@ -46,7 +53,7 @@ const Index = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={refetch}
+              onClick={handleRefresh}
               className="gap-2"
             >
               <RefreshCw className="h-4 w-4" />
@@ -81,6 +88,7 @@ const Index = () => {
                 key={widget.id}
                 metricName={widget.metric_name}
                 source={widget.source}
+                refreshKey={refreshKey}
               />
             ))}
           </div>

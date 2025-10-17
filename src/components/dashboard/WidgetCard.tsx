@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface WidgetCardProps {
   metricName: string;
   source: string;
+  refreshKey?: number;
 }
 
 const getMetricIcon = (metricName: string) => {
@@ -82,7 +83,7 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
-export function WidgetCard({ metricName, source }: WidgetCardProps) {
+export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
@@ -94,7 +95,7 @@ export function WidgetCard({ metricName, source }: WidgetCardProps) {
 
   useEffect(() => {
     loadData();
-  }, [metricName, source, user]);
+  }, [metricName, source, user, refreshKey]);
 
   const loadData = async () => {
     if (!user) return;
