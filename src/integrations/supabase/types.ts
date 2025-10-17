@@ -2436,7 +2436,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      client_unified_metrics: {
+        Row: {
+          measurement_date: string | null
+          metric_name: string | null
+          priority: number | null
+          source: string | null
+          unit: string | null
+          user_id: string | null
+          value: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       aggregate_daily_health_data: {
