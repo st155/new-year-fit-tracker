@@ -55,6 +55,20 @@ export default function FitnessData() {
     }
   }, [user, challengeGoals, selectedFilter, dateOffset, selectedSource]);
 
+  // Слушаем события обновления Whoop данных
+  useEffect(() => {
+    const handleWhoopUpdate = () => {
+      console.log('Whoop data updated, refreshing...');
+      fetchDashboardData();
+    };
+    
+    window.addEventListener('whoop-data-updated', handleWhoopUpdate);
+    
+    return () => {
+      window.removeEventListener('whoop-data-updated', handleWhoopUpdate);
+    };
+  }, [selectedSource, dateOffset]);
+
   const fetchChallengeGoals = async () => {
     try {
       // Get user's active challenges

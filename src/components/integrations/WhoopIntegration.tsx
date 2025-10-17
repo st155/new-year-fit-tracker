@@ -104,12 +104,18 @@ export function WhoopIntegration() {
         const errorMsg = (error as any)?.message || error;
         const statusCode = (error as any)?.status;
         
-        // Если 401 - требуется переподключение
-        if (statusCode === 401 || errorMsg?.includes('reconnect') || errorMsg?.includes('credentials have changed')) {
-          setConnection({ connected: false });
+        // Если 401 или ошибка токена - переподключение
+        if (statusCode === 401 || 
+            errorMsg?.includes('reconnect') || 
+            errorMsg?.includes('credentials have changed') ||
+            errorMsg?.includes('No active Whoop connection')) {
+          
+          // Немедленно перепроверяем статус
+          await checkConnection();
+          
           toast({
             title: 'Требуется переподключение',
-            description: 'Учетные данные Whoop изменились. Пожалуйста, подключите аккаунт заново.',
+            description: 'Токен Whoop истёк или был отозван. Пожалуйста, подключите аккаунт заново.',
             variant: 'destructive',
           });
           return;
@@ -118,15 +124,22 @@ export function WhoopIntegration() {
         throw new Error(errorMsg || 'Ошибка синхронизации');
       }
 
+      // Успешная синхронизация
       toast({
-        title: 'Синхронизация запущена',
-        description: 'Данные обновляются в фоне',
+        title: 'Данные синхронизированы',
+        description: 'Whoop данные успешно обновлены',
       });
 
-      setTimeout(checkConnection, 2000);
+      // Обновляем статус подключения
+      await checkConnection();
       
+      // Очищаем кеши
       localStorage.removeItem('fitness_metrics_cache');
+      localStorage.removeItem('fitness_data_cache_whoop');
+      
+      // Уведомляем другие компоненты об обновлении
       window.dispatchEvent(new CustomEvent('whoop-data-updated'));
+      
     } catch (error: any) {
       console.error('Sync error:', error);
       toast({
@@ -134,6 +147,9 @@ export function WhoopIntegration() {
         description: error.message,
         variant: 'destructive',
       });
+      
+      // Перепроверяем подключение при любой ошибке
+      await checkConnection();
     } finally {
       setSyncing(false);
     }

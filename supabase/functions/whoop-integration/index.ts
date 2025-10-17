@@ -16,6 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const whoopClientId = Deno.env.get('WHOOP_CLIENT_ID')!;
     const whoopClientSecret = Deno.env.get('WHOOP_CLIENT_SECRET')!;
+    const whoopRedirectBaseUrl = Deno.env.get('WHOOP_REDIRECT_BASE_URL') || 'https://elite10.club';
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -77,9 +78,8 @@ serve(async (req) => {
 
     // Получить URL авторизации Whoop
     if (action === 'get-auth-url') {
-      // Определяем redirect URL на основе origin запроса
-      const origin = req.headers.get('origin') || 'https://elite10.club';
-      const redirectUri = `${origin}/integrations/whoop/callback`;
+      // Используем фиксированный redirect URL из секрета
+      const redirectUri = `${whoopRedirectBaseUrl}/integrations/whoop/callback`;
       const scope = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
       const state = user.id; // Используем user ID как state для безопасности
 
@@ -90,7 +90,7 @@ serve(async (req) => {
         `scope=${encodeURIComponent(scope)}&` +
         `state=${state}`;
 
-      console.log('Generated Whoop auth URL:', { redirectUri, origin });
+      console.log('Generated Whoop auth URL:', { redirectUri, baseUrl: whoopRedirectBaseUrl });
 
       return new Response(
         JSON.stringify({ authUrl }),
@@ -100,8 +100,8 @@ serve(async (req) => {
 
     // Обменять код на токен
     if (action === 'exchange-code') {
-      const origin = req.headers.get('origin') || 'https://elite10.club';
-      const redirectUri = `${origin}/integrations/whoop/callback`;
+      // Используем тот же фиксированный redirect URL
+      const redirectUri = `${whoopRedirectBaseUrl}/integrations/whoop/callback`;
 
       const tokenResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
         method: 'POST',
@@ -319,15 +319,26 @@ async function syncWhoopData(
     .maybeSingle();
 
   if (!token) {
-    throw new Error('No active Whoop connection found');
+    throw new Error('No active Whoop connection found. Please reconnect your Whoop account.');
   }
 
-  // Проверяем токен и обновляем при необходимости
+  // Проверяем валидность токена
+  if (!token.access_token || !token.refresh_token) {
+    await supabase
+      .from('whoop_tokens')
+      .update({ is_active: false })
+      .eq('user_id', userId);
+    
+    throw new Error('Invalid Whoop token. Please reconnect your Whoop account.');
+  }
+
+  // Проверяем токен и обновляем при необходимости (с запасом 5 минут)
   const now = new Date();
   const expiresAt = new Date(token.expires_at);
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
   let accessToken = token.access_token;
 
-  if (now >= expiresAt) {
+  if (fiveMinutesFromNow >= expiresAt) {
     console.log('Refreshing Whoop token');
 
     // Используем тот client_id, с которым токен был изначально выдан
@@ -385,10 +396,13 @@ async function syncWhoopData(
           access_token: refreshData.access_token,
           refresh_token: refreshData.refresh_token,
           expires_at: newExpiresAt.toISOString(),
+          last_sync_date: new Date().toISOString(),
           // Фиксируем корректный client_id, чтобы будущие рефреши использовали его же
           client_id: clientIdForRefresh,
         })
         .eq('user_id', userId);
+      
+      console.log('✅ Token refreshed successfully for user:', userId);
     }
   }
 
