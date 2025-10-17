@@ -87,6 +87,22 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       
       console.log('WhoopMetrics: Fetching data for date:', dateStr, 'user:', user.id);
       
+      // Получаем metric_id для whoop метрик
+      const { data: whoopMetrics } = await supabase
+        .from('user_metrics')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('source', 'whoop');
+
+      const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
+      
+      if (whoopMetricIds.length === 0) {
+        console.log('WhoopMetrics: No Whoop metrics found for user');
+        setMetrics([]);
+        setLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from('metric_values')
         .select(`
@@ -102,7 +118,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           )
         `)
         .eq('user_id', user.id)
-        .eq('user_metrics.source', 'whoop')
+        .in('metric_id', whoopMetricIds)
         .gte('measurement_date', format(subDays(selectedDate, 1), 'yyyy-MM-dd'))
         .lte('measurement_date', dateStr)
         .order('measurement_date', { ascending: false })
@@ -177,6 +193,21 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           startDate = subDays(endDate, 7);
       }
 
+      // Получаем metric_id для whoop метрик
+      const { data: whoopMetrics } = await supabase
+        .from('user_metrics')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('source', 'whoop');
+
+      const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
+      
+      if (whoopMetricIds.length === 0) {
+        setAggregatedMetrics([]);
+        setAggregatedLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from('metric_values')
         .select(`
@@ -190,7 +221,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           )
         `)
         .eq('user_id', user.id)
-        .eq('user_metrics.source', 'whoop')
+        .in('metric_id', whoopMetricIds)
         .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
         .lte('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date');
