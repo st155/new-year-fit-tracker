@@ -144,23 +144,26 @@ export function IntegrationsDataDisplay() {
 
     // Приоритетные метрики для отображения
     const priorityMetrics = [
+      // Whoop metrics
       'Recovery Score',
       'Day Strain', 
       'Workout Strain',
       'Sleep Performance',
       'Sleep Efficiency',
       'Sleep Duration',
-      'HRV (rMSSD)',
       'Workout Calories',
       'Average Heart Rate',
       'Max Heart Rate',
-      'Resting HR',
+      
+      // Withings metrics
       'Weight',
       'Body Fat Percentage',
       'Muscle Mass',
       'Muscle Percentage',
       'Pulse Pressure',
       'Height',
+      
+      // Other metrics
       'VO2Max',
       'Steps',
       'Heart Rate'
@@ -182,6 +185,11 @@ export function IntegrationsDataDisplay() {
       const rawMetricName = item.user_metrics.metric_name;
       const metricName = normalizeMetricName(rawMetricName); // Нормализуем название
       const normalizedUnit = normalizeUnit(metricName, item.user_metrics.unit);
+      
+      // Пропускаем метрики, которые ошибочно помечены как whoop (Weight и Height от Withings)
+      if (provider === 'WHOOP' && (metricName === 'Weight' || metricName === 'Height' || metricName === 'Вес' || metricName === 'Рост')) {
+        return;
+      }
       
       // Берем только правильную единицу измерения
       if (item.user_metrics.unit !== normalizedUnit) {
