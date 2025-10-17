@@ -118,6 +118,29 @@ serve(async (req) => {
         console.log('✅ Inserted new terra_tokens');
       }
 
+      // 🆕 АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ: Запускаем первую синхронизацию после подключения
+      console.log('🔄 Triggering initial sync for newly connected device...');
+      try {
+        const { data: syncResult, error: syncError } = await supabase.functions.invoke('terra-integration', {
+          body: {
+            action: 'sync-data',
+            userId: reference_id,
+            provider: provider
+          },
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`
+          }
+        });
+        
+        if (syncError) {
+          console.error('❌ Initial sync failed:', syncError);
+        } else {
+          console.log('✅ Initial sync triggered successfully');
+        }
+      } catch (e) {
+        console.error('❌ Error triggering initial sync:', e);
+      }
+
       // Создаем/обновляем запись в terra_users для корректной обработки данных
       const { data: existingUser } = await supabase
         .from('terra_users')
@@ -198,13 +221,27 @@ serve(async (req) => {
     }
 
     if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
-      await processTerraData(supabase, payload);
+      console.log(`🔄 Processing ${payload.type} webhook for user: ${payload.user?.user_id}`);
       
+      try {
+        await processTerraData(supabase, payload);
+        console.log(`✅ ${payload.type} data processed successfully`);
+      } catch (error) {
+        console.error(`❌ Error processing ${payload.type} data:`, error);
+      }
+      
+      // Обновляем last_sync_date
       if (payload.user?.user_id) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('terra_tokens')
           .update({ last_sync_date: new Date().toISOString() })
           .eq('terra_user_id', payload.user.user_id);
+        
+        if (updateError) {
+          console.error('❌ Error updating last_sync_date:', updateError);
+        } else {
+          console.log(`✅ Updated last_sync_date for user: ${payload.user.user_id}`);
+        }
       }
     }
 
