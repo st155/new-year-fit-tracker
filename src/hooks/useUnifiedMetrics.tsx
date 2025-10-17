@@ -79,52 +79,63 @@ export function useLatestUnifiedMetrics() {
       try {
         setLoading(true);
         
-        // Получаем самое последнее значение для каждой метрики напрямую из metric_values
+        // Оптимизированный запрос - получаем все данные одним запросом
         const { data: metricsData, error } = await supabase
-          .from('user_metrics')
+          .from('metric_values')
           .select(`
-            id,
-            metric_name,
-            source,
-            unit,
-            metric_category
+            value,
+            measurement_date,
+            created_at,
+            user_metrics!inner(
+              metric_name,
+              source,
+              unit,
+              metric_category
+            )
           `)
           .eq('user_id', user.id)
-          .eq('is_active', true);
+          .gte('measurement_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        console.log('[useLatestUnifiedMetrics] Fetched user_metrics:', metricsData?.length || 0);
+        console.log('[useLatestUnifiedMetrics] Fetched metric_values:', metricsData?.length || 0);
 
         const latestMetrics: Record<string, any> = {};
         
-        // Для каждой метрики получаем последнее значение
-        for (const metric of metricsData || []) {
-          const { data: valueData } = await supabase
-            .from('metric_values')
-            .select('value, measurement_date, created_at')
-            .eq('metric_id', metric.id)
-            .eq('user_id', user.id)
-            .order('measurement_date', { ascending: false })
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (valueData) {
-            const key = metric.metric_name;
-            // Сохраняем только если это более свежее значение или метрики еще нет
-            if (!latestMetrics[key] || 
-                new Date(valueData.measurement_date) > new Date(latestMetrics[key].measurement_date) ||
-                (new Date(valueData.measurement_date).getTime() === new Date(latestMetrics[key].measurement_date).getTime() &&
-                 new Date(valueData.created_at) > new Date(latestMetrics[key].created_at))) {
-              latestMetrics[key] = {
-                metric_name: metric.metric_name,
-                value: valueData.value,
-                unit: metric.unit,
-                source: metric.source,
-                category: metric.metric_category,
-                measurement_date: valueData.measurement_date,
-                created_at: valueData.created_at,
+        // Проходим по всем метрикам и берем самое свежее значение для каждого metric_name
+        for (const item of metricsData || []) {
+          const metricName = (item.user_metrics as any).metric_name;
+          const currentDate = new Date(item.measurement_date);
+          const currentCreated = new Date(item.created_at);
+          
+          // Сохраняем только если это более свежее значение или метрики еще нет
+          if (!latestMetrics[metricName]) {
+            latestMetrics[metricName] = {
+              metric_name: metricName,
+              value: item.value,
+              unit: (item.user_metrics as any).unit,
+              source: (item.user_metrics as any).source,
+              category: (item.user_metrics as any).metric_category,
+              measurement_date: item.measurement_date,
+              created_at: item.created_at,
+            };
+          } else {
+            const existingDate = new Date(latestMetrics[metricName].measurement_date);
+            const existingCreated = new Date(latestMetrics[metricName].created_at);
+            
+            // Обновляем если дата новее или при равной дате - время создания новее
+            if (currentDate > existingDate || 
+                (currentDate.getTime() === existingDate.getTime() && currentCreated > existingCreated)) {
+              latestMetrics[metricName] = {
+                metric_name: metricName,
+                value: item.value,
+                unit: (item.user_metrics as any).unit,
+                source: (item.user_metrics as any).source,
+                category: (item.user_metrics as any).metric_category,
+                measurement_date: item.measurement_date,
+                created_at: item.created_at,
               };
             }
           }
