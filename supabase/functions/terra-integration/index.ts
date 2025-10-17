@@ -228,25 +228,54 @@ serve(async (req) => {
           });
 
           // Обрабатываем каждый тип данных
+          const totalStats = {
+            insertedCounts: { body: 0, activity: 0, sleep: 0, daily: 0, nutrition: 0 },
+            errors: [] as string[],
+            hadAnyData: false,
+          };
+
           for (const endpoint of endpoints) {
             if (allData[endpoint.type] && allData[endpoint.type].length > 0) {
               console.log(`🔄 Processing ${endpoint.type} data for ${token.provider}...`);
-              await processTerraData(supabase, {
+              const stats = await processTerraData(supabase, {
                 type: endpoint.type,
                 user: { user_id: token.terra_user_id, provider: token.provider },
                 data: allData[endpoint.type]
               });
-              console.log(`✅ ${endpoint.type} data processed successfully`);
+              
+              if (stats) {
+                // Merge stats
+                Object.keys(stats.insertedCounts).forEach(key => {
+                  totalStats.insertedCounts[key] += stats.insertedCounts[key];
+                });
+                totalStats.errors.push(...stats.errors);
+                totalStats.hadAnyData = totalStats.hadAnyData || stats.hadData;
+                
+                console.log(`✅ ${endpoint.type} processed:`, stats.insertedCounts[endpoint.type], 'records saved');
+                if (stats.sampleRecords?.length > 0) {
+                  console.log(`📋 Sample records:`, stats.sampleRecords);
+                }
+              }
             }
           }
           
-          // Update last_sync_date
-          await supabase
-            .from('terra_tokens')
-            .update({ last_sync_date: new Date().toISOString() })
-            .eq('id', token.id);
+          // Update last_sync_date только если были успешно сохранены данные
+          const totalSaved = Object.values(totalStats.insertedCounts).reduce((a, b) => a + b, 0);
+          if (totalSaved > 0 || totalStats.hadAnyData) {
+            await supabase
+              .from('terra_tokens')
+              .update({ last_sync_date: new Date().toISOString() })
+              .eq('id', token.id);
+            console.log(`✅ Updated last_sync_date for ${token.provider}, saved ${totalSaved} records`);
+          } else {
+            console.log(`⚠️ No records saved for ${token.provider}, not updating last_sync_date`);
+          }
           
-          console.log(`✅ Completed sync for ${token.provider}`);
+          if (totalStats.errors.length > 0) {
+            console.warn(`⚠️ Errors during sync for ${token.provider}:`, totalStats.errors.slice(0, 5));
+          }
+          
+          console.log(`✅ Completed sync for ${token.provider}:`, totalStats.insertedCounts);
         } catch (error) {
           console.error(`❌ Error syncing ${token.provider}:`, error);
           console.error('Stack trace:', error.stack);
@@ -256,7 +285,10 @@ serve(async (req) => {
       console.log('✅ All Terra syncs completed');
 
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({ 
+          success: true,
+          message: 'Sync completed',
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -339,6 +371,13 @@ function bufferToHex(buffer: ArrayBuffer): string {
 
 // Функция обработки данных Terra (синхронизирована с webhook-terra)
 async function processTerraData(supabase: any, payload: any) {
+  const stats = {
+    insertedCounts: { body: 0, activity: 0, sleep: 0, daily: 0, nutrition: 0 },
+    errors: [] as string[],
+    hadData: false,
+    sampleRecords: [] as any[],
+  };
+
   try {
     console.log('🔍 Processing Terra data:', { 
       type: payload.type, 
@@ -351,13 +390,16 @@ async function processTerraData(supabase: any, payload: any) {
     
     if (!user?.user_id) {
       console.error('❌ Missing user.user_id in payload');
-      return;
+      stats.errors.push('Missing user.user_id in payload');
+      return stats;
     }
 
     if (!data || data.length === 0) {
       console.log('⚠️ Empty data array, skipping processing');
-      return;
+      return stats;
     }
+
+    stats.hadData = true;
     
     const { data: tokenData, error: tokenError } = await supabase
       .from('terra_tokens')
@@ -368,12 +410,14 @@ async function processTerraData(supabase: any, payload: any) {
 
     if (tokenError) {
       console.error('❌ Error fetching terra_tokens:', tokenError);
-      return;
+      stats.errors.push(`Error fetching terra_tokens: ${tokenError.message}`);
+      return stats;
     }
 
     if (!tokenData) {
       console.error('❌ User not found for Terra user_id:', user.user_id);
-      return;
+      stats.errors.push(`User not found for Terra user_id: ${user.user_id}`);
+      return stats;
     }
 
     const userId = tokenData.user_id;
@@ -405,12 +449,17 @@ async function processTerraData(supabase: any, payload: any) {
               external_id: externalId,
             }, {
               onConflict: 'external_id',
-              ignoreDuplicates: true,
+              ignoreDuplicates: false,
             });
             
             if (workoutError) {
               console.error('❌ Error upserting workout:', workoutError);
+              stats.errors.push(`Workout upsert failed: ${workoutError.message}`);
             } else {
+              stats.insertedCounts.activity++;
+              if (stats.sampleRecords.length < 3) {
+                stats.sampleRecords.push({ type: 'activity', date: workout.start_time?.split('T')[0], external_id: externalId });
+              }
               // Store workout metrics in metric_values
               try {
                 const measurementDate = (workout.start_time || activity.start_time || activity.timestamp || new Date().toISOString()).split('T')[0];
@@ -427,7 +476,7 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (avgHrMetricId) {
-                    await supabase.from('metric_values').upsert({
+                    const { error: metricError } = await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: avgHrMetricId,
                       value: avgHr,
@@ -436,6 +485,10 @@ async function processTerraData(supabase: any, payload: any) {
                     }, {
                       onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
+                    if (metricError) {
+                      console.error('❌ Error upserting avg HR metric:', metricError);
+                      stats.errors.push(`Avg HR metric upsert: ${metricError.message}`);
+                    }
                   }
                 }
 
@@ -554,8 +607,13 @@ async function processTerraData(supabase: any, payload: any) {
               
               if (bodyError) {
                 console.error('❌ Error upserting body composition:', bodyError);
+                stats.errors.push(`Body composition upsert: ${bodyError.message}`);
               } else {
+                stats.insertedCounts.body++;
                 console.log('✅ Saved body composition:', { weight: measurement.weight_kg, fat: measurement.bodyfat_percentage, date: measurementDate });
+                if (stats.sampleRecords.length < 3) {
+                  stats.sampleRecords.push({ type: 'body', date: measurementDate, weight: measurement.weight_kg });
+                }
                 
                 // Save to metric_values
                 const source = provider.toLowerCase();
@@ -570,7 +628,7 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (weightMetricId) {
-                    await supabase.from('metric_values').upsert({
+                    const { error: weightError } = await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: weightMetricId,
                       value: measurement.weight_kg,
@@ -579,6 +637,10 @@ async function processTerraData(supabase: any, payload: any) {
                     }, {
                       onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
+                    if (weightError && !weightError.message?.includes('duplicate')) {
+                      console.error('❌ Weight metric upsert error:', weightError);
+                      stats.errors.push(`Weight metric: ${weightError.message}`);
+                    }
                   }
                 }
                 
@@ -694,7 +756,7 @@ async function processTerraData(supabase: any, payload: any) {
               p_source: provider.toLowerCase(),
             });
             if (sleepMetricId) {
-              await supabase.from('metric_values').upsert({
+              const { error: sleepError } = await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: sleepMetricId,
                 value: hours,
@@ -704,12 +766,22 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              if (sleepError) {
+                stats.errors.push(`Sleep metric: ${sleepError.message}`);
+              } else {
+                stats.insertedCounts.sleep++;
+                if (stats.sampleRecords.length < 3) {
+                  stats.sampleRecords.push({ type: 'sleep', date: measurementDate, hours });
+                }
+              }
             }
           }
         } catch (e) {
           console.error('⚠️ Error processing sleep item:', e);
+          stats.errors.push(`Sleep processing error: ${e.message}`);
         }
       }
+      console.log(`✅ sleep data processed successfully`);
     }
     
     if (payload.type === 'daily') {
@@ -730,7 +802,7 @@ async function processTerraData(supabase: any, payload: any) {
               p_source: source,
             });
             if (recMetricId) {
-              await supabase.from('metric_values').upsert({
+              const { error: recError } = await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: recMetricId,
                 value: recovery,
@@ -740,6 +812,14 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              if (!recError) {
+                stats.insertedCounts.daily++;
+                if (stats.sampleRecords.length < 3) {
+                  stats.sampleRecords.push({ type: 'daily_recovery', date: dateStr, value: recovery });
+                }
+              } else {
+                stats.errors.push(`Recovery metric: ${recError.message}`);
+              }
             }
           }
 

@@ -165,15 +165,17 @@ export function TerraIntegration() {
 
     setSyncing(true);
     try {
-      const { error } = await supabase.functions.invoke('terra-integration', {
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'sync-data' },
       });
 
       if (error) throw error;
 
+      console.log('✅ Sync result:', data);
+
       toast({
-        title: 'Синхронизация запущена',
-        description: 'Данные обновляются в фоне',
+        title: 'Синхронизация завершена',
+        description: data?.message || 'Данные успешно обновлены',
       });
 
       setTimeout(checkStatus, 2000);
