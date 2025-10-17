@@ -98,6 +98,19 @@ export function IntegrationsDataDisplay() {
     }
   };
 
+  // Нормализация названий метрик (русский → английский)
+  const normalizeMetricName = (name: string): string => {
+    const mapping: Record<string, string> = {
+      'Вес': 'Weight',
+      'Процент жира': 'Body Fat Percentage',
+      'Мышечная масса': 'Muscle Mass',
+      'Процент мышц': 'Muscle Percentage',
+      'Пульсовое давление': 'Pulse Pressure',
+      'Рост': 'Height'
+    };
+    return mapping[name] || name;
+  };
+
   const fetchProviderMetrics = async (provider: string): Promise<MetricData[]> => {
     const today = new Date();
     const sevenDaysAgo = new Date(today);
@@ -143,6 +156,11 @@ export function IntegrationsDataDisplay() {
       'Max Heart Rate',
       'Resting HR',
       'Weight',
+      'Body Fat Percentage',
+      'Muscle Mass',
+      'Muscle Percentage',
+      'Pulse Pressure',
+      'Height',
       'VO2Max',
       'Steps',
       'Heart Rate'
@@ -161,7 +179,8 @@ export function IntegrationsDataDisplay() {
     const metricsMap = new Map<string, MetricData>();
 
     metricsData.forEach((item: any) => {
-      const metricName = item.user_metrics.metric_name;
+      const rawMetricName = item.user_metrics.metric_name;
+      const metricName = normalizeMetricName(rawMetricName); // Нормализуем название
       const normalizedUnit = normalizeUnit(metricName, item.user_metrics.unit);
       
       // Берем только правильную единицу измерения
@@ -169,7 +188,7 @@ export function IntegrationsDataDisplay() {
         return; // Пропускаем дубликаты с неправильными единицами
       }
       
-      // Уникальный ключ = название метрики
+      // Уникальный ключ = нормализованное название метрики (избегаем дубликатов русский/английский)
       if (!metricsMap.has(metricName)) {
         metricsMap.set(metricName, {
           name: metricName,
