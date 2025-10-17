@@ -30,6 +30,7 @@ const ProfilePage = () => {
     avatar_url: '',
     trainer_role: false
   });
+  const [initialTrainerRole, setInitialTrainerRole] = useState(false);
 
   const [preferences, setPreferences] = useState({
     notifications: true,
@@ -54,12 +55,14 @@ const ProfilePage = () => {
       if (error) throw error;
 
       if (data) {
+        const trainerRole = data.trainer_role || false;
         setProfile({
           username: data.username || '',
           full_name: data.full_name || '',
           avatar_url: data.avatar_url || '',
-          trainer_role: data.trainer_role || false
+          trainer_role: trainerRole
         });
+        setInitialTrainerRole(trainerRole);
         // Load preferences from profile columns (with fallbacks)
         setPreferences({
           notifications: (data as any).notifications_enabled ?? true,
@@ -77,6 +80,7 @@ const ProfilePage = () => {
 
     try {
       setLoading(true);
+      const roleChanged = profile.trainer_role !== initialTrainerRole;
       
       const { error } = await supabase
         .from('profiles')
@@ -90,10 +94,21 @@ const ProfilePage = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Profile updated",
-        description: "Your data has been successfully saved",
-      });
+      if (roleChanged) {
+        toast({
+          title: "Роль обновлена",
+          description: "Страница будет перезагружена для применения изменений...",
+        });
+        
+        setTimeout(() => {
+          window.location.href = profile.trainer_role ? '/trainer-dashboard' : '/';
+        }, 1500);
+      } else {
+        toast({
+          title: "Profile updated",
+          description: "Your data has been successfully saved",
+        });
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
