@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User } from 'lucide-react';
+import { Send, Loader2, Bot, User, ExternalLink } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { useClientContext } from '@/contexts/ClientContext';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
@@ -23,6 +25,8 @@ export const AIChatWindow = ({
   sending,
   onSendMessage
 }: AIChatWindowProps) => {
+  const navigate = useNavigate();
+  const { setSelectedClient } = useClientContext();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +55,23 @@ export const AIChatWindow = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  // Extract client mentions from message
+  const extractClientMentions = (content: string) => {
+    const mentionPattern = /@(\w+)/g;
+    const matches = content.match(mentionPattern);
+    return matches || [];
+  };
+
+  // Handle client navigation from message
+  const handleNavigateToClient = async (username: string) => {
+    // Remove @ symbol
+    const cleanUsername = username.replace('@', '');
+    
+    // Find client by username
+    // This is a simplified version - in production, you'd query the database
+    navigate(`/trainer-dashboard?tab=clients&search=${cleanUsername}`);
   };
 
   return (
@@ -87,7 +108,28 @@ export const AIChatWindow = ({
                       : 'bg-muted'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                  <div className="whitespace-pre-wrap text-sm">
+                    {message.content}
+                  </div>
+                  
+                  {/* Show client mention buttons for AI messages */}
+                  {message.role === 'assistant' && extractClientMentions(message.content).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {extractClientMentions(message.content).map((mention, idx) => (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => handleNavigateToClient(mention)}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          {mention}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  
                   <div className="text-xs opacity-70 mt-1">
                     {formatDistanceToNow(new Date(message.created_at), {
                       addSuffix: true,

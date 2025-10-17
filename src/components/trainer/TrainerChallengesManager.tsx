@@ -196,6 +196,7 @@ export function TrainerChallengesManager() {
                       </div>
                       <ChallengeParticipantsList
                         challengeId={challenge.id}
+                        challengeName={challenge.title}
                         participants={challenge.participants}
                         onRefresh={refetch}
                       />
