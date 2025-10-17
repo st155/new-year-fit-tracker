@@ -6,6 +6,9 @@ import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
 import { TrainerAIAssistant } from "@/components/trainer/TrainerAIAssistant";
+import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
+import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
+import { TrainerChat } from "@/components/trainer/TrainerChat";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -103,23 +106,14 @@ export default function TrainerDashboard() {
           />
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1">
-              <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                <BarChart3 className="h-4 w-4" />
-                Обзор
-              </TabsTrigger>
-              <TabsTrigger value="clients" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                <Users className="h-4 w-4" />
-                Клиенты
-              </TabsTrigger>
-              <TabsTrigger value="goals" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                <Target className="h-4 w-4" />
-                Цели
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                <MessageSquare className="h-4 w-4" />
-                Аналитика
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-7 bg-muted/50 p-1">
+              <TabsTrigger value="overview">Обзор</TabsTrigger>
+              <TabsTrigger value="clients">Клиенты</TabsTrigger>
+              <TabsTrigger value="plans">Планы</TabsTrigger>
+              <TabsTrigger value="tasks">Задачи</TabsTrigger>
+              <TabsTrigger value="chat">Чат</TabsTrigger>
+              <TabsTrigger value="goals">Цели</TabsTrigger>
+              <TabsTrigger value="analytics">Аналитика</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
@@ -166,6 +160,18 @@ export default function TrainerDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="plans">
+              <TrainingPlansList />
+            </TabsContent>
+
+            <TabsContent value="tasks">
+              <ClientTasksManager />
+            </TabsContent>
+
+            <TabsContent value="chat">
+              <TrainerChat />
             </TabsContent>
 
             <TabsContent value="goals">
