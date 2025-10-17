@@ -25,6 +25,8 @@ import { useClientContext } from "@/contexts/ClientContext";
 import { useNavigate } from "react-router-dom";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
+import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
+import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -83,6 +85,17 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   useEffect(() => {
     loadClientData();
   }, [client.user_id]);
+
+  // Real-time updates for goals and measurements
+  useGoalsRealtime(client.user_id, () => {
+    toast.info("Цели обновлены");
+    loadClientData();
+  });
+
+  useMeasurementsRealtime(client.user_id, () => {
+    toast.info("Добавлено новое измерение");
+    loadClientData();
+  });
 
   const loadClientData = async () => {
     try {

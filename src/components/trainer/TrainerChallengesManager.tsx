@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrainerChallenges } from "@/hooks/useTrainerChallenges";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,8 @@ import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle } from "lucide
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChallengeParticipantsRealtime } from "@/hooks/useRealtime";
+import { toast } from "sonner";
 
 export function TrainerChallengesManager() {
   const { user } = useAuth();
@@ -21,6 +23,17 @@ export function TrainerChallengesManager() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [challengeToEdit, setChallengeToEdit] = useState<any>(null);
+
+  // Real-time updates for all challenges
+  useEffect(() => {
+    if (!selectedChallenge) return;
+    
+    // Subscribe to participant changes for selected challenge
+    useChallengeParticipantsRealtime(selectedChallenge, () => {
+      console.log("Challenge participants updated");
+      refetch();
+    });
+  }, [selectedChallenge]);
 
   const handleCompleteChallenge = async (challengeId: string) => {
     try {
