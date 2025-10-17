@@ -17,6 +17,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { TrainerAIAssistant } from "./TrainerAIAssistant";
 
 interface Client {
   id: string;
@@ -315,6 +316,8 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
           </div>
         </CardContent>
       </Card>
+      
+      <TrainerAIAssistant />
     </div>
   );
 }

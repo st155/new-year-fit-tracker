@@ -18,6 +18,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { TrainerAIAssistant } from "./TrainerAIAssistant";
 
 interface Client {
   id: string;
@@ -396,6 +397,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           </div>
         </TabsContent>
       </Tabs>
+      
+      <TrainerAIAssistant />
     </div>
   );
 }

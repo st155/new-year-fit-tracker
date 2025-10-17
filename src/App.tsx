@@ -32,6 +32,7 @@ const FitnessData = lazy(() => import("./pages/FitnessData"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const MedicalDocuments = lazy(() => import("./pages/MedicalDocuments"));
+const TrainerDashboard = lazy(() => import("./pages/TrainerDashboard"));
 
 // OAuth callbacks
 const TerraCallback = lazy(() => import("./pages/TerraCallback"));
@@ -166,6 +167,13 @@ const App = () => {
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <MedicalDocuments />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/trainer-dashboard" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <TrainerDashboard />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
