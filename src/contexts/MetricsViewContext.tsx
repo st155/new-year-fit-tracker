@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ViewMode, DeviceFilter } from '@/hooks/useUnifiedMetrics';
+
+type ViewMode = 'unified' | 'by_device';
+type DeviceFilter = 'all' | 'whoop' | 'withings' | 'terra' | 'manual' | 'apple_health' | 'garmin' | 'ultrahuman';
 
 interface MetricsViewContextType {
   viewMode: ViewMode;

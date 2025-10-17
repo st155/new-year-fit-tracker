@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type ViewMode = 'unified' | 'by_device';
+export type DeviceFilter = 'all' | 'whoop' | 'withings' | 'terra' | 'manual' | 'apple_health' | 'garmin' | 'ultrahuman';
+
 interface UnifiedMetric {
   user_id: string;
   metric_name: string;

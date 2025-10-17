@@ -13,29 +13,29 @@ export function MetricsComparison() {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 30);
   
-  const { metrics, loading } = useUnifiedMetrics({
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    metricName: selectedMetric || undefined,
-  });
+  const { metrics, loading } = useUnifiedMetrics(
+    undefined, 
+    selectedMetric || undefined,
+    startDate,
+    new Date()
+  );
 
   // Получаем уникальные метрики
-  const uniqueMetrics = Array.from(new Set(metrics.map(m => m.unified_metric_name)));
+  const uniqueMetrics = Array.from(new Set(metrics.map(m => m.metric_name)));
 
   // Группируем данные по дате для графика
   const chartData = metrics.reduce((acc, metric) => {
     const dateKey = metric.measurement_date;
     if (!acc[dateKey]) {
-      acc[dateKey] = { date: dateKey };
+      acc[dateKey] = { date: dateKey, [metric.metric_name]: {} };
     }
     
-    // Добавляем значения от каждого источника
-    metric.sources.forEach((source, index) => {
-      const sourceValues = metric.source_values as Record<string, number>;
-      acc[dateKey][source] = sourceValues[source];
-    });
+    // Добавляем значение от этого источника
+    if (!acc[dateKey][metric.metric_name]) {
+      acc[dateKey][metric.metric_name] = {};
+    }
+    acc[dateKey][metric.metric_name][metric.source] = metric.value;
     
-    acc[dateKey]['unified'] = metric.aggregated_value;
     return acc;
   }, {} as Record<string, any>);
 
@@ -143,30 +143,23 @@ export function MetricsComparison() {
               <div key={index} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-semibold">{metric.unified_metric_name}</h4>
+                    <h4 className="font-semibold">{metric.metric_name}</h4>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(metric.measurement_date), 'dd MMMM yyyy', { locale: ru })}
                     </p>
                   </div>
                   <Badge variant="secondary">
-                    {metric.aggregated_value} {metric.unified_unit}
+                    {metric.value} {metric.unit}
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {metric.sources.map(source => {
-                    const sourceValues = metric.source_values as Record<string, number>;
-                    return (
-                      <div key={source} className="bg-muted/50 rounded-md p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium uppercase">{source}</span>
-                          <span className="text-sm">
-                            {sourceValues[source]} {metric.unified_unit}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="bg-muted/50 rounded-md p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium uppercase">{metric.source}</span>
+                    <span className="text-sm">
+                      {metric.value} {metric.unit}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
