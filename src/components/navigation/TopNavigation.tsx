@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +27,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const location = useLocation();
   const { profile } = useProfile();
   const { t } = useTranslation();
+  const { isTrainer } = useUserRole();
 
-  const navItems = [
+  const userNavItems = [
     { type: 'home' as const, path: "/", label: 'Главная' },
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
@@ -37,6 +39,14 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'feed' as const, path: "/feed", label: 'Лента' },
     { type: 'data' as const, path: "/fitness-data", label: 'Данные' },
   ];
+
+  const trainerNavItems = [
+    { type: 'home' as const, path: "/trainer-dashboard", label: 'Тренерский кабинет' },
+    { type: 'stats' as const, path: "/progress", label: 'Мой прогресс' },
+    { type: 'goals' as const, path: "/goals", label: 'Мои цели' },
+  ];
+
+  const navItems = isTrainer ? trainerNavItems : userNavItems;
 
   const isActive = (path: string) => location.pathname === path;
 

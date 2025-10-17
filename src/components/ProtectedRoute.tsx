@@ -1,7 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthLoadingSkeleton } from '@/components/ui/auth-skeleton';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,7 +10,9 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+  const { role, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -17,7 +20,14 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  useEffect(() => {
+    // Redirect trainer to trainer dashboard if on root path
+    if (!roleLoading && role === 'trainer' && location.pathname === '/') {
+      navigate('/trainer-dashboard', { replace: true });
+    }
+  }, [role, roleLoading, location.pathname, navigate]);
+
+  if (loading || roleLoading) {
     return <AuthLoadingSkeleton />;
   }
 

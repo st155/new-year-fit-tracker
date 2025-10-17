@@ -13,6 +13,7 @@ import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
 
 import Auth from "./pages/Auth";
+import { RoleBasedRoute } from "@/components/RoleBasedRoute";
 
 // Critical pages - load immediately
 const Landing = lazy(() => import("./pages/Landing"));
@@ -88,9 +89,11 @@ const App = () => {
                     <Route path="/landing" element={<Landing />} />
                     <Route path="/" element={
                       <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Index />
-                        </ModernAppLayout>
+                        <RoleBasedRoute>
+                          <ModernAppLayout>
+                            <Index />
+                          </ModernAppLayout>
+                        </RoleBasedRoute>
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
