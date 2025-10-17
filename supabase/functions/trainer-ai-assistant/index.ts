@@ -114,6 +114,21 @@ const tools = [
         required: ["client_name", "title"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "parse_client_goals_and_progress",
+      description: "Автоматически распознать и добавить цели и прогресс клиента из произвольного текста. Использовать когда тренер присылает неструктурированный текст с целями участника.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_name: { type: "string", description: "ФИО клиента (извлечь из текста)" },
+          raw_text: { type: "string", description: "Полный текст с целями и результатами" }
+        },
+        required: ["client_name", "raw_text"]
+      }
+    }
   }
 ];
 
@@ -399,6 +414,214 @@ async function addClientTask(supabase: any, trainerId: string, params: any) {
   };
 }
 
+const exerciseTypeMapping: Record<string, string> = {
+  'подтягивания': 'strength',
+  'отжимания': 'strength',
+  'жим': 'strength',
+  'выпады': 'strength',
+  'присед': 'strength',
+  'становая': 'strength',
+  'тяга': 'strength',
+  'планка': 'endurance',
+  'бег': 'cardio',
+  'гребля': 'cardio',
+  'плавание': 'cardio',
+  'велосипед': 'cardio',
+  'vo2max': 'cardio',
+  'vo₂max': 'cardio',
+  'жир': 'body',
+  'вес': 'body',
+  'масса': 'body'
+};
+
+function detectExerciseType(exerciseName: string): string {
+  const nameLower = exerciseName.toLowerCase();
+  for (const [keyword, type] of Object.entries(exerciseTypeMapping)) {
+    if (nameLower.includes(keyword)) {
+      return type;
+    }
+  }
+  return 'custom';
+}
+
+function parseTimeToSeconds(timeStr: string): number | null {
+  const timeMatch = timeStr.match(/(\d+):(\d+)/);
+  if (timeMatch) {
+    const minutes = parseInt(timeMatch[1]);
+    const seconds = parseInt(timeMatch[2]);
+    return minutes * 60 + seconds;
+  }
+  return null;
+}
+
+function formatSecondsToTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+async function parseClientGoalsAndProgress(supabase: any, trainerId: string, params: any) {
+  const clientId = await findClientByName(supabase, trainerId, params.client_name);
+  if (!clientId) {
+    return { success: false, error: `Клиент "${params.client_name}" не найден` };
+  }
+
+  const structuringPrompt = `Проанализируй текст с целями и прогрессом клиента. Извлеки структурированную информацию.
+
+Текст:
+${params.raw_text}
+
+Для каждого упражнения/показателя определи:
+1. Название (как написано в тексте)
+2. Целевое значение (target)
+3. Текущее значение (current)
+4. Единицу измерения (кг, раз, секунды, минуты, %, ml/kg/min и т.д.)
+
+Верни JSON массив объектов в формате:
+[
+  {
+    "name": "название упражнения",
+    "target": числовое_значение_цели,
+    "current": числовое_значение_текущего,
+    "unit": "единица измерения"
+  }
+]
+
+Правила:
+- Время в формате MM:SS конвертируй в секунды (например, "7:30" = 450)
+- Проценты оставляй как число (например, "12.5%" = 12.5)
+- Вес в кг без изменений
+- Если единица не указана, подразумевай "раз"
+- Если указаны повторения (например, "×8 раз"), игнорируй их при определении единицы
+
+Верни только JSON массив, без дополнительного текста.`;
+
+  const structuringResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: 'Ты помощник для извлечения структурированных данных. Отвечай только валидным JSON.' },
+        { role: 'user', content: structuringPrompt }
+      ],
+      temperature: 0.1
+    }),
+  });
+
+  if (!structuringResponse.ok) {
+    return { success: false, error: 'Не удалось распознать структуру данных' };
+  }
+
+  const structuringData = await structuringResponse.json();
+  const responseText = structuringData.choices[0].message.content;
+  
+  let parsedGoals;
+  try {
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    parsedGoals = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+  } catch (e) {
+    console.error('Failed to parse AI response:', responseText);
+    return { success: false, error: 'Не удалось распознать данные из текста' };
+  }
+
+  const results = {
+    created: [] as string[],
+    updated: [] as string[],
+    measurements: [] as string[]
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  for (const item of parsedGoals) {
+    const { data: existingGoals } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', clientId)
+      .ilike('goal_name', `%${item.name}%`);
+
+    const goalType = detectExerciseType(item.name);
+
+    if (!existingGoals || existingGoals.length === 0) {
+      const { error: createError } = await supabase
+        .from('goals')
+        .insert({
+          user_id: clientId,
+          goal_name: item.name,
+          goal_type: goalType,
+          target_value: item.target,
+          target_unit: item.unit,
+          is_personal: true
+        });
+
+      if (!createError) {
+        results.created.push(`${item.name}: цель ${item.target} ${item.unit}`);
+      }
+    } else {
+      const goal = existingGoals[0];
+      if (goal.target_value !== item.target) {
+        await supabase
+          .from('goals')
+          .update({ target_value: item.target, target_unit: item.unit })
+          .eq('id', goal.id);
+        
+        results.updated.push(`${item.name}: цель обновлена до ${item.target} ${item.unit}`);
+      }
+    }
+
+    const { data: goalForMeasurement } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('user_id', clientId)
+      .ilike('goal_name', `%${item.name}%`)
+      .single();
+
+    if (goalForMeasurement && item.current) {
+      await supabase
+        .from('measurements')
+        .insert({
+          user_id: clientId,
+          goal_id: goalForMeasurement.id,
+          value: item.current,
+          unit: item.unit,
+          measurement_date: today,
+          source: 'trainer'
+        });
+
+      const diff = item.target - item.current;
+      const diffText = diff > 0 ? `осталось ${diff.toFixed(1)}` : `превышено на ${Math.abs(diff).toFixed(1)}`;
+      results.measurements.push(`${item.name}: ${item.current} ${item.unit} (${diffText})`);
+    }
+  }
+
+  await supabase.from('ai_action_logs').insert({
+    trainer_id: trainerId,
+    action_type: 'parse_goals',
+    action_details: { ...params, parsed_count: parsedGoals.length },
+    client_id: clientId,
+    success: true
+  });
+
+  let message = `✅ Обработано для ${params.client_name}:\n\n`;
+  
+  if (results.created.length > 0) {
+    message += `📋 Создано целей (${results.created.length}):\n${results.created.map(r => `• ${r}`).join('\n')}\n\n`;
+  }
+  
+  if (results.updated.length > 0) {
+    message += `🔄 Обновлено целей (${results.updated.length}):\n${results.updated.map(r => `• ${r}`).join('\n')}\n\n`;
+  }
+  
+  if (results.measurements.length > 0) {
+    message += `📊 Добавлено измерений на ${today} (${results.measurements.length}):\n${results.measurements.map(r => `• ${r}`).join('\n')}`;
+  }
+
+  return { success: true, message };
+}
+
 async function executeTool(supabase: any, trainerId: string, toolName: string, params: any) {
   switch (toolName) {
     case 'update_client_goal':
@@ -413,6 +636,8 @@ async function executeTool(supabase: any, trainerId: string, toolName: string, p
       return await listClientsNeedingAttention(supabase, trainerId, params);
     case 'add_client_task':
       return await addClientTask(supabase, trainerId, params);
+    case 'parse_client_goals_and_progress':
+      return await parseClientGoalsAndProgress(supabase, trainerId, params);
     default:
       return { success: false, error: `Unknown tool: ${toolName}` };
   }
@@ -460,6 +685,13 @@ serve(async (req) => {
 - Анализировать прогресс
 - Показывать клиентов, требующих внимания
 - Добавлять задачи
+- **АВТОМАТИЧЕСКИ ПАРСИТЬ цели и прогресс из произвольного текста** (когда тренер присылает текст типа "Паша Радаев. Гребля 2 км — 7:30 сейчас 7:55...")
+
+Когда тренер присылает неструктурированный текст с целями участника:
+1. Автоматически используй инструмент parse_client_goals_and_progress
+2. Извлеки имя участника из текста
+3. Распознай все упражнения/показатели, целевые и текущие значения
+4. Создай/обнови цели и добавь текущие измерения
 
 Отвечай кратко и по делу. Используй эмодзи для наглядности. Если нужно выполнить действие - используй доступные инструменты.`;
 
