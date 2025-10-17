@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, BarChart3, MessageSquare, Sparkles } from "lucide-react";
+import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
@@ -30,15 +32,34 @@ interface TrainerClient {
   goals_count?: number;
 }
 
-export default function TrainerDashboard() {
+function TrainerDashboardContent() {
   const { user } = useAuth();
-  const [selectedClient, setSelectedClient] = useState<TrainerClient | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
 
   useEffect(() => {
     loadClients();
   }, [user]);
+
+  // Handle URL parameters for client selection
+  useEffect(() => {
+    const clientId = searchParams.get('client');
+    const tab = searchParams.get('tab');
+    
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    if (clientId && clients.length > 0) {
+      const client = clients.find(c => c.user_id === clientId);
+      if (client) {
+        setSelectedClient(client, { type: 'clients' });
+      }
+    }
+  }, [searchParams, clients]);
 
   const loadClients = async () => {
     if (!user) return;
@@ -83,8 +104,15 @@ export default function TrainerDashboard() {
     }
   };
 
-  const handleClientSelect = (client: any) => {
-    setSelectedClient(client as TrainerClient);
+  const handleClientSelect = (client: any, source?: { type: string; challengeId?: string; challengeName?: string }) => {
+    setSelectedClient(client as TrainerClient, source as any);
+    setSearchParams({ tab: 'clients', client: client.user_id });
+  };
+
+  const handleBackToList = () => {
+    setSelectedClient(null);
+    const currentTab = searchParams.get('tab') || 'overview';
+    setSearchParams({ tab: currentTab });
   };
 
   return (
@@ -104,10 +132,10 @@ export default function TrainerDashboard() {
         {selectedClient ? (
           <ClientDetailView 
             client={selectedClient} 
-            onBack={() => setSelectedClient(null)} 
+            onBack={handleBackToList} 
           />
         ) : (
-          <Tabs defaultValue="overview" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-9 bg-muted/50 p-1">
               <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="clients">Клиенты</TabsTrigger>
@@ -188,8 +216,8 @@ export default function TrainerDashboard() {
             <TabsContent value="goals">
               <ClientGoalsManager 
                 clients={clients}
-                selectedClient={selectedClient}
-                onSelectClient={setSelectedClient}
+                selectedClient={selectedClient as any}
+                onSelectClient={(client) => setSelectedClient(client, { type: 'goals' })}
               />
             </TabsContent>
 
@@ -206,5 +234,13 @@ export default function TrainerDashboard() {
 
       <TrainerAIAssistant />
     </div>
+  );
+}
+
+export default function TrainerDashboard() {
+  return (
+    <ClientContextProvider>
+      <TrainerDashboardContent />
+    </ClientContextProvider>
   );
 }

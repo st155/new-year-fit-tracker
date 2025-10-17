@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft,
   Target,
@@ -13,8 +14,14 @@ import {
   Activity,
   Heart,
   Zap,
-  Weight
+  Weight,
+  Plus,
+  Sparkles,
+  Info
 } from "lucide-react";
+import { useClientContext } from "@/contexts/ClientContext";
+import { useNavigate } from "react-router-dom";
+import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -61,10 +68,14 @@ interface ClientDetailViewProps {
 }
 
 export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
+  const { navigationSource } = useClientContext();
+  const navigate = useNavigate();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [healthData, setHealthData] = useState<HealthData[]>([]);
+  const [aiHistory, setAiHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showGoalDialog, setShowGoalDialog] = useState(false);
 
   useEffect(() => {
     loadClientData();
@@ -131,6 +142,17 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
 
       if (healthError) throw healthError;
 
+      // Load AI history for this client
+      const { data: aiLogs, error: aiError } = await supabase
+        .from('ai_action_logs')
+        .select('*')
+        .eq('client_id', client.user_id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (aiError) throw aiError;
+      setAiHistory(aiLogs || []);
+
       setGoals(goalsWithProgress);
       setMeasurements(
         (measurementsData || []).map(m => ({
@@ -193,15 +215,52 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     );
   }
 
+  const handleOpenAIHub = () => {
+    navigate(`/trainer-dashboard?tab=ai-hub&client=${client.user_id}`);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Шапка с информацией о клиенте */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад к списку
-        </Button>
+      {/* Header with Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад к списку
+          </Button>
+        </div>
+        
+        {/* Actions Bar */}
+        <div className="flex gap-2">
+          <Button onClick={() => setShowGoalDialog(true)} variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Добавить цель
+          </Button>
+          <Button onClick={handleOpenAIHub} variant="outline" size="sm">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Спросить AI
+          </Button>
+        </div>
       </div>
+
+      {/* Challenge Context Alert */}
+      {navigationSource?.type === 'challenges' && navigationSource.challengeId && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              Клиент участвует в челлендже: <strong>{navigationSource.challengeName}</strong>
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate(`/trainer-dashboard?tab=challenges&challenge=${navigationSource.challengeId}`)}
+            >
+              Вернуться к челленджу
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -225,10 +284,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       </Card>
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="goals">Цели и прогресс</TabsTrigger>
           <TabsTrigger value="measurements">Измерения</TabsTrigger>
           <TabsTrigger value="health">Данные здоровья</TabsTrigger>
+          <TabsTrigger value="ai-history">AI История ({aiHistory.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
@@ -396,7 +456,66 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             </Card>
           </div>
         </TabsContent>
+
+        {/* AI History Tab */}
+        <TabsContent value="ai-history" className="space-y-4">
+          {aiHistory.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Нет истории AI действий для этого клиента</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {aiHistory.map((log) => (
+                <Card key={log.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={log.success ? "default" : "destructive"}>
+                          {log.action_type}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(log.created_at).toLocaleDateString('ru-RU')}
+                        </span>
+                      </div>
+                      {log.success ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          Выполнено
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700">
+                          Ошибка
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <pre className="text-sm bg-muted p-3 rounded overflow-auto">
+                        {JSON.stringify(log.action_details, null, 2)}
+                      </pre>
+                      {log.error_message && (
+                        <p className="text-sm text-destructive">{log.error_message}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* Goal Creation Dialog */}
+      <GoalCreateDialog
+        open={showGoalDialog}
+        onOpenChange={setShowGoalDialog}
+        onGoalCreated={() => {
+          loadClientData();
+        }}
+      />
       
       <TrainerAIAssistant />
     </div>

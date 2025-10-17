@@ -5,6 +5,9 @@ import { CheckCircle, XCircle, Loader2, Sparkles } from 'lucide-react';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useClientContext } from '@/contexts/ClientContext';
 
 interface AIPendingActionsPanelProps {
   pendingActions: AIPendingAction[];
@@ -19,13 +22,31 @@ export const AIPendingActionsPanel = ({
   onExecute,
   onReject
 }: AIPendingActionsPanelProps) => {
+  const navigate = useNavigate();
+  const { setSelectedClient } = useClientContext();
+
   const handleExecute = async (action: AIPendingAction) => {
     // Parse action_data into executable actions
     const actions = Array.isArray(action.action_data) 
       ? action.action_data 
       : [action.action_data];
 
-    await onExecute(action.id, action.conversation_id, actions);
+    const result = await onExecute(action.id, action.conversation_id, actions);
+    
+    // Show success toast with navigation option
+    if (result?.client_id) {
+      toast.success("Действие выполнено", {
+        action: {
+          label: "Открыть клиента",
+          onClick: () => {
+            // Navigate to client
+            navigate(`/trainer-dashboard?tab=clients&client=${result.client_id}`);
+          }
+        }
+      });
+    } else {
+      toast.success("Действие выполнено");
+    }
   };
 
   if (pendingActions.length === 0) {

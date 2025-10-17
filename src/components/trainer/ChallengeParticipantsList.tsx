@@ -7,6 +7,7 @@ import { UserMinus, Target, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useClientContext } from "@/contexts/ClientContext";
 import { AddParticipantDialog } from "./AddParticipantDialog";
 
 interface Participant {
@@ -23,14 +24,17 @@ interface ChallengeParticipantsListProps {
   challengeId: string;
   participants: Participant[];
   onRefresh: () => void;
+  challengeName?: string;
 }
 
 export function ChallengeParticipantsList({
   challengeId,
   participants,
   onRefresh,
+  challengeName
 }: ChallengeParticipantsListProps) {
   const navigate = useNavigate();
+  const { setSelectedClient } = useClientContext();
   const [removing, setRemoving] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
@@ -55,8 +59,22 @@ export function ChallengeParticipantsList({
     }
   };
 
-  const handleViewClientGoals = (userId: string) => {
-    navigate(`/trainer-dashboard?tab=clients&client=${userId}`);
+  const handleViewClientGoals = (participant: Participant) => {
+    const clientData = {
+      id: participant.user_id,
+      user_id: participant.user_id,
+      username: participant.profiles.username || '',
+      full_name: participant.profiles.full_name || participant.profiles.username || '',
+      avatar_url: participant.profiles.avatar_url
+    };
+    
+    setSelectedClient(clientData, {
+      type: 'challenges',
+      challengeId,
+      challengeName: challengeName || 'Челлендж'
+    });
+    
+    navigate(`/trainer-dashboard?tab=clients&client=${participant.user_id}`);
   };
 
   return (
@@ -97,10 +115,10 @@ export function ChallengeParticipantsList({
 
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleViewClientGoals(participant.user_id)}
-                >
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewClientGoals(participant)}
+                  >
                   <Target className="h-4 w-4 mr-2" />
                   Цели
                 </Button>

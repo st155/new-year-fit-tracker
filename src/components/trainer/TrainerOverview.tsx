@@ -14,7 +14,7 @@ import {
   Clock,
   Trophy
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useClientContext } from "@/contexts/ClientContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TrainerAIAssistant } from "./TrainerAIAssistant";
@@ -43,6 +43,7 @@ interface TrainerOverviewProps {
 
 export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
   const { user } = useAuth();
+  const { setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<TrainerStats>({
     activeClients: 0,
@@ -273,12 +274,15 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
               Общий прогресс команды
             </CardTitle>
           </div>
-          <Link to="/trainer-dashboard">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              Посмотреть всех
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={() => {/* Already on dashboard */}}
+          >
+            Посмотреть всех
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -286,7 +290,10 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
               <div 
                 key={client.id} 
                 className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
-                onClick={() => onClientSelect?.(client)}
+                onClick={() => {
+                  setSelectedClient(client, { type: 'overview' });
+                  onClientSelect?.(client);
+                }}
               >
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
