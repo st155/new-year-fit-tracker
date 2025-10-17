@@ -7,6 +7,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('🌐 Terra integration request:', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,31 +23,45 @@ serve(async (req) => {
     const terraApiKey = Deno.env.get('TERRA_API_KEY')!;
     const terraDevId = Deno.env.get('TERRA_DEV_ID')!;
 
+    console.log('🔑 Environment check:', {
+      supabaseUrl: supabaseUrl ? '✅' : '❌',
+      supabaseKey: supabaseKey ? '✅' : '❌',
+      terraApiKey: terraApiKey ? `✅ (${terraApiKey.substring(0, 8)}...)` : '❌',
+      terraDevId: terraDevId ? `✅ (${terraDevId})` : '❌'
+    });
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Получаем текущего пользователя
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('❌ No authorization header provided');
       throw new Error('Missing authorization header');
     }
 
+    console.log('🔐 Authenticating user...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
     if (authError || !user) {
+      console.error('❌ Authentication failed:', authError);
       throw new Error('Unauthorized');
     }
 
+    console.log('✅ User authenticated:', user.id);
+
     const body = await req.json();
     const { action, provider } = body;
-    console.log('Terra integration action:', { action, provider, userId: user.id });
+    console.log('📋 Action requested:', { action, provider, userId: user.id });
 
     // Generate Widget Session (for iframe embedding)
     if (action === 'generate-widget-session') {
+      console.log('🔗 Generating widget session...');
       const authSuccessUrl = `${req.headers.get('origin')}/integrations`;
       const authFailureUrl = `${req.headers.get('origin')}/integrations`;
       
+      console.log('🔄 Calling Terra Widget API...');
       const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
         method: 'POST',
         headers: {
@@ -59,14 +79,16 @@ serve(async (req) => {
         }),
       });
 
+      console.log('📡 Terra Widget API response status:', response.status);
+
       if (!response.ok) {
         const error = await response.text();
-        console.error('Terra widget error:', error);
+        console.error('❌ Terra widget error:', error);
         throw new Error(`Terra API error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Terra widget session created:', data);
+      console.log('✅ Terra widget session created:', JSON.stringify(data, null, 2));
 
       return new Response(
         JSON.stringify({ url: data.url, sessionId: data.session_id }),
@@ -113,23 +135,37 @@ serve(async (req) => {
 
     // Синхронизировать данные
     if (action === 'sync-data') {
-      const { data: tokens } = await supabase
+      console.log('🔄 Starting data sync for user:', user.id);
+      
+      const { data: tokens, error: tokensError } = await supabase
         .from('terra_tokens')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
+      console.log('📊 Terra tokens found:', tokens?.length || 0);
+
+      if (tokensError) {
+        console.error('❌ Error fetching Terra tokens:', tokensError);
+        throw new Error('Database error fetching tokens');
+      }
+
       if (!tokens || tokens.length === 0) {
+        console.log('⚠️ No active Terra connections found for user:', user.id);
         throw new Error('No active connections found');
       }
 
       // Запускаем синхронизацию для всех провайдеров
       for (const token of tokens) {
+        console.log(`🔄 Processing token for provider: ${token.provider}, terra_user_id: ${token.terra_user_id}`);
+        
         try {
           const endDate = new Date().toISOString().split('T')[0];
           const startDate = new Date();
           startDate.setDate(startDate.getDate() - 7);
           const start = startDate.toISOString().split('T')[0];
+
+          console.log(`📅 Date range: ${start} to ${endDate}`);
 
           // Terra API v2 endpoints - используем правильный формат
           const endpoints = [
@@ -146,6 +182,9 @@ serve(async (req) => {
           for (const endpoint of endpoints) {
             const url = `${endpoint.url}?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`;
             
+            console.log(`📡 Fetching ${endpoint.type} from Terra API...`);
+            console.log(`🔗 URL: ${url}`);
+            
             const syncResponse = await fetch(url, {
               method: 'GET',
               headers: {
@@ -155,20 +194,23 @@ serve(async (req) => {
               },
             });
 
+            console.log(`📊 ${endpoint.type} response status:`, syncResponse.status);
+
             if (syncResponse.ok) {
               const typeData = await syncResponse.json();
+              console.log(`📦 ${endpoint.type} data received:`, JSON.stringify(typeData, null, 2).substring(0, 500) + '...');
               if (typeData.data && Array.isArray(typeData.data)) {
                 allData[endpoint.type] = typeData.data;
-                console.log(`${token.provider} ${endpoint.type}: ${typeData.data.length} records`);
+                console.log(`✅ ${token.provider} ${endpoint.type}: ${typeData.data.length} records`);
               }
             } else {
               const errorText = await syncResponse.text();
-              console.error(`Sync failed for ${token.provider} (${endpoint.type}):`, syncResponse.status, errorText.substring(0, 200));
+              console.error(`❌ Sync failed for ${token.provider} (${endpoint.type}):`, syncResponse.status, errorText.substring(0, 200));
             }
           }
 
           // Обрабатываем полученные данные
-          console.log(`Sync summary for ${token.provider}:`, {
+          console.log(`📊 Sync summary for ${token.provider}:`, {
             body: allData.body?.length || 0,
             activity: allData.activity?.length || 0,
             daily: allData.daily?.length || 0,
@@ -179,11 +221,13 @@ serve(async (req) => {
           // Обрабатываем каждый тип данных
           for (const endpoint of endpoints) {
             if (allData[endpoint.type] && allData[endpoint.type].length > 0) {
+              console.log(`🔄 Processing ${endpoint.type} data for ${token.provider}...`);
               await processTerraData(supabase, {
                 type: endpoint.type,
                 user: { user_id: token.terra_user_id, provider: token.provider },
                 data: allData[endpoint.type]
               });
+              console.log(`✅ ${endpoint.type} data processed successfully`);
             }
           }
           
@@ -192,10 +236,15 @@ serve(async (req) => {
             .from('terra_tokens')
             .update({ last_sync_date: new Date().toISOString() })
             .eq('id', token.id);
+          
+          console.log(`✅ Completed sync for ${token.provider}`);
         } catch (error) {
-          console.error(`Error syncing ${token.provider}:`, error);
+          console.error(`❌ Error syncing ${token.provider}:`, error);
+          console.error('Stack trace:', error.stack);
         }
       }
+
+      console.log('✅ All Terra syncs completed');
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -220,9 +269,13 @@ serve(async (req) => {
     throw new Error('Unknown action');
 
   } catch (error: any) {
-    console.error('Terra integration error:', error);
+    console.error('❌ Terra integration error:', error);
+    console.error('Stack trace:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        stack: error.stack 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
