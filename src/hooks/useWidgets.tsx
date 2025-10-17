@@ -197,10 +197,14 @@ export const fetchWidgetData = async (
   source: string
 ): Promise<WidgetMetricData | null> => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const thirtyDaysAgoStr = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
-    // Сначала получаем metric_id для конкретной метрики и источника
+    // Получаем metric_id для конкретной метрики и источника
     const { data: metricData } = await supabase
       .from('user_metrics')
       .select('id, unit')
@@ -208,18 +212,75 @@ export const fetchWidgetData = async (
       .eq('metric_name', metricName)
       .eq('source', source.toLowerCase())
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!metricData) return null;
 
-    // Fetch latest value from last 30 days
+    const isSteps = metricName.toLowerCase().includes('step');
+
+    if (isSteps) {
+      // Для шагов берем максимум за сегодняшний день (инкрементальные события могут приходить не по порядку)
+      const { data: todayRows } = await supabase
+        .from('metric_values')
+        .select('value, measurement_date, created_at')
+        .eq('user_id', userId)
+        .eq('metric_id', metricData.id)
+        .eq('measurement_date', todayStr)
+        .order('value', { ascending: false })
+        .limit(1);
+
+      const latest = todayRows && todayRows.length > 0 ? todayRows[0] : null;
+
+      // Для тренда берем максимум за вчера (если нет — ближайший предыдущий день)
+      let previous: { value: number; measurement_date: string } | null = null;
+
+      const { data: yRows } = await supabase
+        .from('metric_values')
+        .select('value, measurement_date')
+        .eq('user_id', userId)
+        .eq('metric_id', metricData.id)
+        .eq('measurement_date', yesterdayStr)
+        .order('value', { ascending: false })
+        .limit(1);
+
+      if (yRows && yRows.length > 0) {
+        previous = yRows[0] as any;
+      } else {
+        const { data: prevAny } = await supabase
+          .from('metric_values')
+          .select('value, measurement_date')
+          .eq('user_id', userId)
+          .eq('metric_id', metricData.id)
+          .lt('measurement_date', todayStr)
+          .order('measurement_date', { ascending: false })
+          .order('value', { ascending: false })
+          .limit(1);
+        if (prevAny && prevAny.length > 0) previous = prevAny[0] as any;
+      }
+
+      if (!latest) return null;
+
+      let trend: number | undefined;
+      if (previous && previous.value > 0) {
+        trend = ((latest.value - previous.value) / previous.value) * 100;
+      }
+
+      return {
+        value: latest.value,
+        unit: metricData.unit,
+        date: latest.measurement_date,
+        trend,
+      };
+    }
+
+    // По умолчанию — берем последнее значение по дате и времени создания
     const { data, error } = await supabase
       .from('metric_values')
       .select('value, measurement_date, created_at')
       .eq('user_id', userId)
       .eq('metric_id', metricData.id)
-      .gte('measurement_date', thirtyDaysAgo)
-      .lte('measurement_date', today)
+      .gte('measurement_date', thirtyDaysAgoStr)
+      .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(2);
@@ -231,7 +292,7 @@ export const fetchWidgetData = async (
     const previous = data[1];
 
     let trend: number | undefined;
-    if (previous) {
+    if (previous && previous.value > 0) {
       trend = ((latest.value - previous.value) / previous.value) * 100;
     }
 

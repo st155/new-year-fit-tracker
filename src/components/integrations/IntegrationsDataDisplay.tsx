@@ -183,6 +183,45 @@ export function IntegrationsDataDisplay() {
       }
     });
 
+    // Специальная логика для Steps: показываем максимум за сегодня,
+    // так как события могут приходить не по порядку и перезаписывать более поздние значения
+    try {
+      const { data: stepsToday } = await supabase
+        .from('metric_values')
+        .select(`
+          value,
+          measurement_date,
+          created_at,
+          user_metrics!inner(
+            metric_name,
+            unit,
+            source,
+            metric_category
+          )
+        `)
+        .eq('user_id', user!.id)
+        .eq('user_metrics.source', provider.toLowerCase())
+        .eq('user_metrics.metric_name', 'Steps')
+        .eq('measurement_date', todayStr)
+        .order('value', { ascending: false })
+        .limit(1);
+
+      if (stepsToday && stepsToday.length > 0) {
+        const s: any = stepsToday[0];
+        metricsMap.set('Steps', {
+          name: 'Steps',
+          value: formatValue(s.value, 'Steps'),
+          unit: s.user_metrics.unit,
+          source: provider,
+          icon: getMetricIcon('Steps', s.user_metrics.metric_category),
+          color: getMetricColor(s.user_metrics.metric_category),
+          lastUpdate: new Date(s.measurement_date).toLocaleDateString('ru-RU'),
+        });
+      }
+    } catch (e) {
+      console.warn('Steps override failed', e);
+    }
+
     // Сортируем метрики: сначала приоритетные, потом остальные
     const allMetrics = Array.from(metricsMap.values());
     return allMetrics.sort((a, b) => {
