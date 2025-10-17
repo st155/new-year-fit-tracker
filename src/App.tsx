@@ -21,6 +21,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Index = lazy(() => import("./pages/Index"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Goals = lazy(() => import("./pages/Goals"));
+const GoalDetail = lazy(() => import("./pages/GoalDetail"));
 const Body = lazy(() => import("./pages/Body"));
 const Challenges = lazy(() => import("./pages/Challenges"));
 const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
@@ -104,6 +105,13 @@ const App = () => {
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <Goals />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/goals/:id" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <GoalDetail />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
