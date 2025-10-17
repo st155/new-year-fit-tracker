@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { PhotoUpload } from "@/components/ui/photo-upload";
-import { Camera, Plus } from "lucide-react";
+import { Camera, Calendar, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Goal {
   id: string;
@@ -42,6 +43,8 @@ export function QuickMeasurementDialog({
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Функция для преобразования MM.SS в десятичные минуты для временных целей
   const parseTimeValue = (value: string): number => {
@@ -139,7 +142,6 @@ export function QuickMeasurementDialog({
   };
 
   const getValuePlaceholder = () => {
-    // Проверяем, является ли цель временной
     const isTimeGoal = goal.target_unit.includes('мин') || 
                       goal.goal_name.toLowerCase().includes('время') ||
                       goal.goal_name.toLowerCase().includes('бег') ||
@@ -152,20 +154,54 @@ export function QuickMeasurementDialog({
     return `Введите значение в ${goal.target_unit}`;
   };
 
+  const isNumericGoal = () => {
+    return goal.target_unit.toLowerCase().includes('reps') || 
+           goal.target_unit.toLowerCase().includes('раз') ||
+           goal.target_unit.toLowerCase().includes('повтор');
+  };
+
+  const isWeightGoal = () => {
+    return goal.target_unit.toLowerCase().includes('kg') || 
+           goal.target_unit.toLowerCase().includes('кг') ||
+           goal.goal_name.toLowerCase().includes('вес');
+  };
+
+  const adjustValue = (increment: number) => {
+    const currentValue = parseFloat(form.value) || 0;
+    const newValue = Math.max(0, currentValue + increment);
+    setForm(prev => ({ ...prev, value: newValue.toString() }));
+  };
+
+  const formatDate = () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (form.measurement_date === today) {
+      return "Сегодня";
+    }
+    return new Date(form.measurement_date).toLocaleDateString('ru-RU', { 
+      day: 'numeric', 
+      month: 'short' 
+    });
+  };
+
   return (
     <ResponsiveDialog 
       open={isOpen} 
       onOpenChange={onOpenChange}
-      title="Добавить измерение"
-      description={`Быстрое добавление результата для цели: ${goal.goal_name}`}
-      snapPoints={[85, 95]}
+      title={goal.goal_name}
+      snapPoints={[55, 80]}
       className="max-w-[95vw] sm:max-w-md"
     >
         
-        <div className="space-y-4 pt-2 pb-4 overflow-y-auto max-h-[60vh]">
+        <div className="space-y-3 pt-1 pb-2 overflow-y-auto max-h-[65vh]">
+          {/* Goal Info */}
+          <div className="text-sm text-muted-foreground">
+            🎯 Цель: {goal.target_value} {goal.target_unit}
+          </div>
+
+          {/* Result Input */}
           <div>
-            <Label htmlFor="quick-value">
-              Результат ({goal.target_unit})
+            <Label htmlFor="quick-value" className="text-sm">
+              Результат
             </Label>
             <Input
               id="quick-value"
@@ -173,56 +209,154 @@ export function QuickMeasurementDialog({
               placeholder={getValuePlaceholder()}
               value={form.value}
               onChange={(e) => setForm(prev => ({ ...prev, value: e.target.value }))}
-              className="text-lg"
+              className="text-2xl h-14 font-semibold"
               autoFocus
             />
-            {(goal.target_unit.includes('мин') || goal.goal_name.toLowerCase().includes('время')) && (
-              <p className="text-xs text-muted-foreground mt-1">
-                💡 Для времени используйте формат ММ.СС (например: 4.40 = 4 мин 40 сек)
-              </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {goal.target_unit}
+              {(goal.target_unit.includes('мин') || goal.goal_name.toLowerCase().includes('время')) && 
+                " • Формат: ММ.СС (например: 4.40 = 4 мин 40 сек)"}
+            </p>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {isNumericGoal() && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(1)}
+                  className="h-8"
+                >
+                  +1
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(5)}
+                  className="h-8"
+                >
+                  +5
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(10)}
+                  className="h-8"
+                >
+                  +10
+                </Button>
+              </>
             )}
+            
+            {isWeightGoal() && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(-0.5)}
+                  className="h-8"
+                >
+                  -0.5
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(0.5)}
+                  className="h-8"
+                >
+                  +0.5
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustValue(1)}
+                  className="h-8"
+                >
+                  +1.0
+                </Button>
+              </>
+            )}
+
+            {/* Date Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="h-8 ml-auto"
+            >
+              <Calendar className="h-3 w-3 mr-1" />
+              {formatDate()}
+            </Button>
           </div>
 
-          <div>
-            <Label htmlFor="quick-date">Дата измерения</Label>
-            <Input
-              id="quick-date"
-              type="date"
-              value={form.measurement_date}
-              onChange={(e) => setForm(prev => ({ ...prev, measurement_date: e.target.value }))}
-            />
-          </div>
+          {/* Date Picker (conditional) */}
+          {showDatePicker && (
+            <div>
+              <Input
+                type="date"
+                value={form.measurement_date}
+                onChange={(e) => setForm(prev => ({ ...prev, measurement_date: e.target.value }))}
+                className="h-9"
+              />
+            </div>
+          )}
 
-          <div>
-            <Label htmlFor="quick-notes">Заметки (опционально)</Label>
-            <Textarea
-              id="quick-notes"
-              placeholder="Добавьте заметки о тренировке..."
-              value={form.notes}
-              onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
-              rows={2}
-            />
-          </div>
+          {/* Optional Fields - Collapsible */}
+          <Collapsible open={showOptional} onOpenChange={setShowOptional}>
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start text-sm h-9"
+              >
+                <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
+                {showOptional ? 'Скрыть' : 'Добавить'} заметку или фото
+              </Button>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent className="space-y-3 pt-2">
+              <div>
+                <Label htmlFor="quick-notes" className="text-sm">Заметки</Label>
+                <Textarea
+                  id="quick-notes"
+                  placeholder="Добавьте заметки о тренировке..."
+                  value={form.notes}
+                  onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={2}
+                  className="text-sm"
+                />
+              </div>
 
-          <div>
-            <Label className="flex items-center gap-2 mb-2">
-              <Camera className="h-4 w-4" />
-              Фото прогресса (опционально)
-            </Label>
-            <PhotoUpload
-              onPhotoUploaded={(url) => setForm(prev => ({ ...prev, photo_url: url }))}
-              existingPhotoUrl={form.photo_url}
-              label="Добавить фото"
-            />
-          </div>
+              <div>
+                <Label className="flex items-center gap-2 mb-2 text-sm">
+                  <Camera className="h-3 w-3" />
+                  Фото прогресса
+                </Label>
+                <PhotoUpload
+                  onPhotoUploaded={(url) => setForm(prev => ({ ...prev, photo_url: url }))}
+                  existingPhotoUrl={form.photo_url}
+                  label="Добавить фото"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         <div className="flex gap-2 pt-2 pb-2 border-t bg-background sticky bottom-0">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="flex-1"
             disabled={isSubmitting}
+            className="text-sm"
           >
             Отмена
           </Button>
