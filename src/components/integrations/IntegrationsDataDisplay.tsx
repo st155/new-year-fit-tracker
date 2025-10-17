@@ -163,6 +163,18 @@ export function IntegrationsDataDisplay() {
       'Pulse Pressure',
       'Height',
       
+      // Garmin metrics
+      'Active Calories',
+      'Resting Heart Rate',
+      'Deep Sleep Duration',
+      'Light Sleep Duration',
+      'REM Sleep Duration',
+      'Respiratory Rate',
+      'Sleep HRV RMSSD',
+      
+      // Ultrahuman metrics
+      'HRV RMSSD',
+      
       // Other metrics
       'VO2Max',
       'Steps',
