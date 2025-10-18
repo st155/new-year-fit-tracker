@@ -18,7 +18,8 @@ serve(async (req) => {
       contextMode = 'general',
       mentionedClients = [],
       mentionedNames = [], // Raw names mentioned (for fuzzy matching)
-      contextClientId // Client selected in UI context
+      contextClientId, // Client selected in UI context
+      autoExecute = true // Auto-execute simple actions by default
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -632,13 +633,60 @@ IMPORTANT INSTRUCTIONS:
       console.log(`✅ After normalization: all actions ready with client_id`);
     }
 
-    // Check if this is a plan that needs actions (text-based fallback)
-    const isPlan = structuredActions.length > 0 ||
-                   assistantMessage.toLowerCase().includes('ready to implement') ||
-                   assistantMessage.toLowerCase().includes('do you want to implement') ||
-                   assistantMessage.toLowerCase().includes('готов реализовать') ||
-                   assistantMessage.toLowerCase().includes('хотите реализовать') ||
-                   assistantMessage.toLowerCase().includes('план действий');
+    // Auto-execute simple actions if enabled
+    let autoExecuted = false;
+    if (autoExecute && structuredActions.length > 0 && structuredActions.length <= 3) {
+      console.log(`🚀 Auto-executing ${structuredActions.length} action(s)...`);
+      
+      try {
+        // Call trainer-ai-execute directly
+        const executeResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/trainer-ai-execute`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': req.headers.get('Authorization')!,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              conversationId: conversation.id,
+              actions: structuredActions,
+              autoExecuted: true
+            })
+          }
+        );
+        
+        if (executeResponse.ok) {
+          const executeResult = await executeResponse.json();
+          console.log('✅ Auto-execution completed:', executeResult);
+          autoExecuted = true;
+          
+          // Add system message about execution
+          const successCount = executeResult.results.filter((r: any) => r.success).length;
+          const failCount = executeResult.results.filter((r: any) => !r.success).length;
+          
+          await supabaseClient.from('ai_messages').insert({
+            conversation_id: conversation.id,
+            role: 'system',
+            content: `✅ Действия выполнены автоматически:\n${executeResult.results.map((r: any, i: number) => 
+              `${i+1}. ${r.success ? '✓' : '✗'} ${r.action || r.action_type || 'Unknown action'}`
+            ).join('\n')}\n\nУспешно: ${successCount}, Ошибок: ${failCount}`,
+            metadata: { 
+              autoExecuted: true, 
+              results: executeResult.results,
+              structuredActions
+            }
+          });
+        }
+      } catch (execError) {
+        console.error('❌ Auto-execution failed:', execError);
+        // Fall back to creating pending action
+        autoExecuted = false;
+      }
+    }
+
+    // Only check for plan if not auto-executed
+    const isPlan = !autoExecuted && structuredActions.length > 0;
 
     if (isPlan && structuredActions.length > 0) {
       console.log(`Creating pending action with ${structuredActions.length} structured actions...`);
@@ -665,38 +713,6 @@ IMPORTANT INSTRUCTIONS:
           ...action.data
         }));
         console.log('Created pending action:', pendingActionId, 'with', suggestedActions.length, 'actions');
-      } else if (actionError) {
-        console.error('Error creating pending action:', actionError);
-      }
-    } else if (isPlan) {
-      console.log('Detected plan response (text-based), creating pending action...');
-      
-      // Fallback for text-based plans
-      const { data: pendingAction, error: actionError } = await supabaseClient
-        .from('ai_pending_actions')
-        .insert({
-          conversation_id: conversation.id,
-          trainer_id: user.id,
-          action_type: 'plan_execution',
-          action_plan: assistantMessage,
-          action_data: {
-            plan: assistantMessage,
-            context_mode: contextMode,
-            mentioned_clients: mentionedClients,
-            original_message: message
-          },
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (!actionError && pendingAction) {
-        pendingActionId = pendingAction.id;
-        suggestedActions = [{
-          type: 'execute_plan',
-          id: pendingAction.id
-        }];
-        console.log('Created pending action:', pendingActionId);
       } else if (actionError) {
         console.error('Error creating pending action:', actionError);
       }

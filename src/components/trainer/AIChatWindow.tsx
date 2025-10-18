@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
+import { Zap, CheckCircle } from 'lucide-react';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
@@ -26,7 +28,7 @@ interface AIChatWindowProps {
     avatar_url?: string;
   } | null;
   sending: boolean;
-  onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[], contextClientId?: string) => Promise<any>;
+  onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[], contextClientId?: string, autoExecute?: boolean) => Promise<any>;
   onSwitchToActionsTab?: () => void;
 }
 
@@ -48,6 +50,10 @@ export const AIChatWindow = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [showDisambiguation, setShowDisambiguation] = useState(false);
+  const [autoExecute, setAutoExecute] = useState(() => {
+    const saved = localStorage.getItem('ai-auto-execute');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [disambiguations, setDisambiguations] = useState<any[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,6 +64,10 @@ export const AIChatWindow = ({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('ai-auto-execute', JSON.stringify(autoExecute));
+  }, [autoExecute]);
 
   useEffect(() => {
     loadTrainerClients();
@@ -178,7 +188,7 @@ export const AIChatWindow = ({
     }
 
     try {
-      const response = await onSendMessage(textToSend, contextMode, clientIds, names, selectedClient?.user_id);
+      const response = await onSendMessage(textToSend, contextMode, clientIds, names, selectedClient?.user_id, autoExecute);
       
       // Check if disambiguation is needed
       if (response?.needsDisambiguation) {
@@ -344,39 +354,53 @@ export const AIChatWindow = ({
     <div className="h-full flex flex-col">
       {/* Header with selected client context */}
       <div className="p-4 border-b bg-muted/30">
-        {selectedClient ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedClient.avatar_url} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(selectedClient.full_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{selectedClient.full_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Контекст AI: работа с этим клиентом
-                </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            {selectedClient ? (
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={selectedClient.avatar_url} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(selectedClient.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{selectedClient.full_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Контекст AI: работа с этим клиентом
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2">
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <MessageSquare className="h-5 w-5 mx-auto mb-2" />
+                <p className="text-sm font-medium">Общий чат с AI</p>
+                <p className="text-xs">Выберите клиента для работы с его данными</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {selectedClient && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => navigate(`/trainer-dashboard?tab=clients&client=${selectedClient.user_id}`)}
               >
-                Открыть профиль
+                Профиль
               </Button>
-            </div>
+            )}
+            
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <Switch
+                checked={autoExecute}
+                onCheckedChange={setAutoExecute}
+              />
+              <Zap className={`h-4 w-4 ${autoExecute ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="text-muted-foreground hidden sm:inline">Авто</span>
+            </label>
           </div>
-        ) : (
-          <div className="text-center text-muted-foreground">
-            <MessageSquare className="h-5 w-5 mx-auto mb-2" />
-            <p className="text-sm font-medium">Общий чат с AI</p>
-            <p className="text-xs">Выберите клиента для работы с его данными</p>
-          </div>
-        )}
+        </div>
       </div>
 
       <ScrollArea ref={scrollRef} className="flex-1 p-4">
@@ -392,99 +416,114 @@ export const AIChatWindow = ({
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {message.role === 'assistant' && (
-                  <Avatar className="h-8 w-8 bg-primary/10">
-                    <Bot className="h-4 w-4 text-primary" />
-                  </Avatar>
-                )}
-                
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : message.role === 'system'
-                      ? 'bg-muted/50 text-muted-foreground text-sm'
-                      : 'bg-muted'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap text-sm">
-                    {message.role === 'assistant' ? renderMessageContent(message.content) : message.content}
-                  </div>
-                  
-                  {/* Show client mention buttons for AI messages */}
-                  {message.role === 'assistant' && extractClientMentions(message.content).length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {extractClientMentions(message.content).map((mention, idx) => (
-                        <Button
-                          key={idx}
-                          variant="outline"
-                          size="sm"
-                          className="h-6 text-xs"
-                          onClick={() => handleNavigateToClient(mention)}
-                        >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          {mention}
-                        </Button>
-                      ))}
+              <div key={message.id}>
+                {message.role === 'system' ? (
+                  <div className="flex justify-center my-4">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 max-w-md">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                          Автоматически выполнено
+                        </span>
+                      </div>
+                      <div className="text-xs text-green-700 dark:text-green-300 whitespace-pre-line">
+                        {message.content}
+                      </div>
                     </div>
-                  )}
-
-                  {/* Show plan approval button */}
-                  {message.role === 'assistant' && message.metadata?.isPlan && (
-                    <div className="flex gap-2 mt-3">
-                      <Button
-                        size="sm"
-                        onClick={handleApprovePlan}
-                        disabled={sending}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        ✅ Да, выполнить план
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setInput("Нужно подумать")}
-                        disabled={sending}
-                      >
-                        Нужно подумать
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className="text-xs opacity-70 mt-1">
-                    {formatDistanceToNow(new Date(message.created_at), {
-                      addSuffix: true,
-                      locale: ru
-                    })}
                   </div>
-                </div>
+                ) : (
+                  <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {message.role === 'assistant' && (
+                      <Avatar className="h-8 w-8 bg-primary/10">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </Avatar>
+                    )}
+                    
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div
+                        className={`rounded-lg p-3 ${
+                          message.role === 'user'
+                            ? 'bg-primary text-primary-foreground ml-auto max-w-[80%]'
+                            : 'bg-muted max-w-[80%]'
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap text-sm">
+                          {message.role === 'assistant' ? renderMessageContent(message.content) : message.content}
+                        </div>
+                    
+                        {/* Show client mention buttons for AI messages */}
+                        {message.role === 'assistant' && extractClientMentions(message.content).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {extractClientMentions(message.content).map((mention, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => handleNavigateToClient(mention)}
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                {mention}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
 
-                {message.role === 'user' && (
-                  <Avatar className="h-8 w-8 bg-primary">
-                    <User className="h-4 w-4 text-primary-foreground" />
-                  </Avatar>
+                        {/* Show plan approval button */}
+                        {message.role === 'assistant' && message.metadata?.isPlan && (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              onClick={handleApprovePlan}
+                              disabled={sending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              ✅ Да, выполнить план
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setInput("Нужно подумать")}
+                              disabled={sending}
+                            >
+                              Нужно подумать
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="text-xs opacity-70">
+                        {formatDistanceToNow(new Date(message.created_at), {
+                          addSuffix: true,
+                          locale: ru
+                        })}
+                      </div>
+                    </div>
+
+                    {message.role === 'user' && (
+                      <Avatar className="h-8 w-8 bg-primary">
+                        <User className="h-4 w-4 text-primary-foreground" />
+                      </Avatar>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
 
-            {sending && (
-              <div className="flex gap-3 justify-start">
-                <Avatar className="h-8 w-8 bg-primary/10">
-                  <Bot className="h-4 w-4 text-primary" />
-                </Avatar>
-                <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">AI думает...</span>
+              {sending && (
+                <div className="flex gap-3 justify-start">
+                  <Avatar className="h-8 w-8 bg-primary/10">
+                    <Bot className="h-4 w-4 text-primary" />
+                  </Avatar>
+                  <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">AI думает...</span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </ScrollArea>
+              )}
+            </div>
+          )}
+        </ScrollArea>
 
       <div className="p-4 border-t relative">
         <div className="flex gap-2">

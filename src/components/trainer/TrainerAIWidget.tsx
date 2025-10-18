@@ -41,12 +41,15 @@ export const TrainerAIWidget = ({ selectedClient: initialClient, compact = false
   const handleSend = async () => {
     if (!input.trim() || sending) return;
     
+    const autoExecute = localStorage.getItem('ai-auto-execute') !== 'false';
+    
     await sendMessage(
       input,
       'general',
       selectedClient ? [selectedClient.user_id] : [],
       selectedClient ? [selectedClient.full_name] : [],
-      selectedClient?.user_id
+      selectedClient?.user_id,
+      autoExecute
     );
     
     setInput('');

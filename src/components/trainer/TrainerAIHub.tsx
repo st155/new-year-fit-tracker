@@ -45,6 +45,24 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
     deleteConversation
   } = useAIConversations(user?.id);
 
+  const handleSendMessage = async (
+    message: string,
+    mode: string,
+    mentionedClients: string[],
+    mentionedNames?: string[],
+    contextClientId?: string,
+    autoExecute: boolean = true
+  ) => {
+    return await sendMessage(
+      message,
+      mode,
+      mentionedClients,
+      mentionedNames || [],
+      contextClientId,
+      autoExecute
+    );
+  };
+
   const {
     pendingActions,
     loading: actionsLoading,
@@ -125,7 +143,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
                   contextMode={contextMode}
                   selectedClient={selectedClient}
                   sending={sending}
-                  onSendMessage={sendMessage}
+                  onSendMessage={handleSendMessage}
                   onSwitchToActionsTab={() => setActiveTab('actions')}
                 />
               </div>

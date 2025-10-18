@@ -97,7 +97,8 @@ export const useAIConversations = (userId: string | undefined) => {
     contextMode: string = 'general',
     mentionedClients: string[] = [],
     mentionedNames: string[] = [],
-    contextClientId?: string
+    contextClientId?: string,
+    autoExecute: boolean = true
   ) => {
     if (!userId) return null;
 
@@ -110,7 +111,8 @@ export const useAIConversations = (userId: string | undefined) => {
           contextMode,
           mentionedClients,
           mentionedNames,
-          contextClientId
+          contextClientId,
+          autoExecute
         }
       });
 

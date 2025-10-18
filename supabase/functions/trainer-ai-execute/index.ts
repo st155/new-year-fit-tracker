@@ -16,7 +16,8 @@ serve(async (req) => {
       pendingActionId,
       conversationId,
       actionPlan,
-      actions
+      actions,
+      autoExecuted = false
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -122,8 +123,8 @@ serve(async (req) => {
       }
     }
 
-    // Update pending action status if provided
-    if (pendingActionId) {
+    // Update pending action status if provided (skip for auto-executed)
+    if (pendingActionId && !autoExecuted) {
       await supabaseClient
         .from('ai_pending_actions')
         .update({
@@ -133,15 +134,16 @@ serve(async (req) => {
         .eq('id', pendingActionId);
     }
 
-    // Add completion message to conversation
-    if (conversationId) {
+    // Add completion message to conversation if not auto-executed
+    // (auto-executed actions add their own message in trainer-ai-chat)
+    if (conversationId && !autoExecuted) {
       const successCount = executionResults.filter(r => r.success).length;
       const failCount = executionResults.filter(r => !r.success).length;
       
       await supabaseClient.from('ai_messages').insert({
         conversation_id: conversationId,
         role: 'system',
-        content: `✅ Executed ${successCount} action(s) successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`
+        content: `✅ Выполнено ${successCount} действий${failCount > 0 ? `, ${failCount} с ошибками` : ''}.`
       });
     }
 
@@ -232,7 +234,7 @@ async function executeUpdateGoalByName(supabase: any, trainerId: string, data: a
       ...(target_unit && { target_unit }),
       updated_at: new Date().toISOString()
     })
-    .eq('id', existingGoal.id)
+    .eq('id', selectedGoal.id)
     .select()
     .single();
 
