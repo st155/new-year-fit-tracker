@@ -17,6 +17,7 @@ export function useHabits(userId?: string) {
         .order("created_at", { ascending: false });
 
       if (habitsError) throw habitsError;
+      if (!habits || habits.length === 0) return [];
 
       const { data: stats } = await supabase
         .from("habit_stats")
