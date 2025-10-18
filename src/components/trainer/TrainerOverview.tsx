@@ -12,7 +12,8 @@ import {
   ChevronRight,
   User,
   Clock,
-  Trophy
+  Trophy,
+  Sparkles
 } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -316,6 +317,16 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
                       {formatDate(client.last_measurement_date)}
                     </p>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.location.href = `/trainer-dashboard?tab=ai-hub&client=${client.user_id}`;
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}

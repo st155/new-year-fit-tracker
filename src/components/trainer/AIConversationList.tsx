@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, MessageSquare, Trash2 } from 'lucide-react';
 import { AIConversation } from '@/hooks/useAIConversations';
 import { formatDistanceToNow } from 'date-fns';
@@ -46,36 +47,53 @@ export const AIConversationList = ({
               Нет разговоров
             </div>
           ) : (
-            conversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className={`group relative rounded-lg p-3 cursor-pointer transition-all ${
-                  currentConversation?.id === conversation.id
-                    ? 'bg-primary/10 border-primary'
-                    : 'hover:bg-accent border-transparent'
-                } border`}
-                onClick={() => onSelectConversation(conversation.id)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">
-                      {conversation.title || 'Без названия'}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(conversation.last_message_at), {
-                        addSuffix: true,
-                        locale: ru
-                      })}
-                    </p>
-                    <div className="mt-1">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                        {conversation.context_mode === 'goals' && '🎯 Цели'}
-                        {conversation.context_mode === 'analysis' && '📊 Анализ'}
-                        {conversation.context_mode === 'challenge' && '🏆 Челлендж'}
-                        {conversation.context_mode === 'general' && '💬 Общий'}
-                      </span>
+            conversations.map((conversation) => {
+              const clientData = conversation.metadata as any;
+              
+              return (
+                <div
+                  key={conversation.id}
+                  className={`group relative rounded-lg p-3 cursor-pointer transition-all ${
+                    currentConversation?.id === conversation.id
+                      ? 'bg-primary/10 border-primary'
+                      : 'hover:bg-accent border-transparent'
+                  } border`}
+                  onClick={() => onSelectConversation(conversation.id)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      {clientData?.client_id && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={clientData.client_avatar_url} />
+                            <AvatarFallback className="text-xs">
+                              {clientData.client_full_name?.[0] || 'C'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-medium text-muted-foreground truncate">
+                            {clientData.client_full_name}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <h3 className="font-medium text-sm truncate">
+                        {conversation.title || 'Без названия'}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(conversation.last_message_at), {
+                          addSuffix: true,
+                          locale: ru
+                        })}
+                      </p>
+                      <div className="mt-1">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
+                          {conversation.context_mode === 'goals' && '🎯 Цели'}
+                          {conversation.context_mode === 'analysis' && '📊 Анализ'}
+                          {conversation.context_mode === 'challenge' && '🏆 Челлендж'}
+                          {conversation.context_mode === 'general' && '💬 Общий'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -108,7 +126,8 @@ export const AIConversationList = ({
                   </AlertDialog>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </ScrollArea>

@@ -350,8 +350,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             <Plus className="h-4 w-4 mr-2" />
             Добавить цель
           </Button>
-          <Button onClick={handleOpenAIHub} variant="outline" size="sm">
-            <Sparkles className="h-4 w-4 mr-2" />
+          <Button onClick={handleOpenAIHub} size="sm" className="gap-2">
+            <Sparkles className="h-4 w-4" />
             Спросить AI
           </Button>
         </div>

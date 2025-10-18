@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useWidgets } from '@/hooks/useWidgets';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
@@ -9,9 +10,11 @@ import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import TrainerIndexPage from './TrainerIndexPage';
 
 const Index = () => {
   const { user } = useAuth();
+  const { isTrainer, loading: roleLoading } = useUserRole();
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -20,7 +23,7 @@ const Index = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -36,6 +39,11 @@ const Index = () => {
         </div>
       </div>
     );
+  }
+
+  // If trainer - show AI-centric interface
+  if (isTrainer) {
+    return <TrainerIndexPage />;
   }
 
   return (

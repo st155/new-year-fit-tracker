@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User, ExternalLink } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
-import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -254,8 +254,97 @@ export const AIChatWindow = ({
     }
   };
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Render message content with clickable client names
+  const renderMessageContent = (content: string) => {
+    if (!content) return null;
+
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+
+    // Find mentions (@username or full names in content)
+    clients.forEach(client => {
+      const patterns = [
+        `@${client.username}`,
+        client.full_name,
+      ];
+
+      patterns.forEach(pattern => {
+        let searchIndex = content.indexOf(pattern, lastIndex);
+        while (searchIndex !== -1 && searchIndex >= lastIndex) {
+          // Add text before mention
+          if (searchIndex > lastIndex) {
+            parts.push(content.substring(lastIndex, searchIndex));
+          }
+
+          // Add clickable mention
+          parts.push(
+            <Button
+              key={`${client.user_id}-${searchIndex}`}
+              variant="link"
+              className="p-0 h-auto font-medium text-primary inline"
+              onClick={() => handleNavigateToClient(client.user_id)}
+            >
+              {pattern}
+            </Button>
+          );
+
+          lastIndex = searchIndex + pattern.length;
+          searchIndex = content.indexOf(pattern, lastIndex);
+        }
+      });
+    });
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : content;
+  };
+
   return (
     <div className="h-full flex flex-col">
+      {/* Header with selected client context */}
+      <div className="p-4 border-b bg-muted/30">
+        {selectedClient ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={selectedClient.avatar_url} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {getInitials(selectedClient.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{selectedClient.full_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Контекст AI: работа с этим клиентом
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/trainer-dashboard?tab=clients&client=${selectedClient.user_id}`)}
+              >
+                Открыть профиль
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground">
+            <MessageSquare className="h-5 w-5 mx-auto mb-2" />
+            <p className="text-sm font-medium">Общий чат с AI</p>
+            <p className="text-xs">Выберите клиента для работы с его данными</p>
+          </div>
+        )}
+      </div>
+
       <ScrollArea ref={scrollRef} className="flex-1 p-4">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
@@ -289,7 +378,7 @@ export const AIChatWindow = ({
                   }`}
                 >
                   <div className="whitespace-pre-wrap text-sm">
-                    {message.content}
+                    {message.role === 'assistant' ? renderMessageContent(message.content) : message.content}
                   </div>
                   
                   {/* Show client mention buttons for AI messages */}
