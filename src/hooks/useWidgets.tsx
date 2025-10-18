@@ -282,6 +282,30 @@ export const fetchWidgetData = async (
       needsConversion
     });
 
+    // Проверяем на дубликаты за одну дату
+    const { data: duplicatesCheck } = await supabase
+      .from('metric_values')
+      .select('id, value, created_at, user_metrics!inner(metric_name, source)')
+      .eq('user_id', userId)
+      .eq('user_metrics.source', source.toLowerCase())
+      .eq('user_metrics.metric_name', actualMetricName)
+      .eq('measurement_date', latest.measurement_date);
+    
+    if (duplicatesCheck && duplicatesCheck.length > 1) {
+      console.warn(`⚠️ Multiple ${metricName} values found for ${latest.measurement_date}:`, 
+        duplicatesCheck.map(d => ({ value: d.value, created_at: d.created_at }))
+      );
+    }
+
+    console.log(`📊 Fetched widget data for ${metricName}:`, {
+      date: latest.measurement_date,
+      value: latest.value,
+      unit: latest.user_metrics.unit,
+      actualMetricName: latest.user_metrics.metric_name,
+      wasConverted: needsConversion ? 'yes' : 'no',
+      duplicatesFound: duplicatesCheck?.length || 0
+    });
+
     // Для тренда - берем предыдущий день
     const latestDate = latest.measurement_date;
     const previousDate = new Date(new Date(latestDate).getTime() - 86400000).toISOString().split('T')[0];
