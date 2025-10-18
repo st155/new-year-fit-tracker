@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useClientContext } from '@/contexts/ClientContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
+import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { toast } from 'sonner';
 
 interface AIChatWindowProps {
@@ -18,7 +19,7 @@ interface AIChatWindowProps {
   currentConversation: AIConversation | null;
   contextMode: string;
   sending: boolean;
-  onSendMessage: (message: string, contextMode: string, mentionedClients: string[]) => Promise<any>;
+  onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[]) => Promise<any>;
   onSwitchToActionsTab?: () => void;
 }
 
@@ -38,6 +39,9 @@ export const AIChatWindow = ({
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+  const [showDisambiguation, setShowDisambiguation] = useState(false);
+  const [disambiguations, setDisambiguations] = useState<any[]>([]);
+  const [pendingMessage, setPendingMessage] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,21 +129,43 @@ export const AIChatWindow = ({
     textareaRef.current?.focus();
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || sending) return;
+  const handleSend = async (messageText?: string, mentionedClientIds?: string[], mentionedNames?: string[]) => {
+    const textToSend = messageText || input.trim();
+    if (!textToSend || sending) return;
 
-    const messageText = input.trim();
-    setInput('');
+    if (!messageText) {
+      setInput('');
+    }
 
-    // Extract @mentions and resolve to user_ids
-    const mentionPattern = /@(\S+)/g;
-    const mentionMatches = [...messageText.matchAll(mentionPattern)];
-    const mentionedClientIds = mentionMatches
-      .map(match => mentions.get(match[1]))
-      .filter(Boolean) as string[];
+    // Extract @mentions if not provided
+    let clientIds = mentionedClientIds;
+    let names = mentionedNames;
+    
+    if (!clientIds || !names) {
+      const mentionPattern = /@(\S+)/g;
+      const mentionMatches = [...textToSend.matchAll(mentionPattern)];
+      
+      clientIds = mentionMatches
+        .map(match => mentions.get(match[1]))
+        .filter(Boolean) as string[];
+      
+      // Extract raw names (those not resolved via autocomplete)
+      names = mentionMatches
+        .filter(match => !mentions.has(match[1]))
+        .map(match => match[1]);
+    }
 
     try {
-      await onSendMessage(messageText, contextMode, mentionedClientIds);
+      const response = await onSendMessage(textToSend, contextMode, clientIds, names);
+      
+      // Check if disambiguation is needed
+      if (response?.needsDisambiguation) {
+        setPendingMessage(textToSend);
+        setDisambiguations(response.disambiguations);
+        setShowDisambiguation(true);
+        return;
+      }
+      
       setMentions(new Map()); // Clear mentions after sending
       setShowMentionSuggestions(false);
     } catch (error: any) {
@@ -153,6 +179,17 @@ export const AIChatWindow = ({
       }
       console.error('Error sending message:', error);
     }
+  };
+
+  const handleDisambiguationResolve = async (resolvedClients: Map<string, string>) => {
+    setShowDisambiguation(false);
+    
+    // Resend message with resolved client IDs
+    const clientIds = Array.from(resolvedClients.values());
+    await handleSend(pendingMessage, clientIds, []);
+    
+    setPendingMessage('');
+    setDisambiguations([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -326,7 +363,7 @@ export const AIChatWindow = ({
           )}
           <Button
             size="icon"
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!input.trim() || sending}
             className="h-[60px] w-[60px]"
           >
@@ -338,6 +375,17 @@ export const AIChatWindow = ({
           </Button>
         </div>
       </div>
+
+      <ClientDisambiguationModal
+        open={showDisambiguation}
+        disambiguations={disambiguations}
+        onResolve={handleDisambiguationResolve}
+        onClose={() => {
+          setShowDisambiguation(false);
+          setPendingMessage('');
+          setDisambiguations([]);
+        }}
+      />
     </div>
   );
 };

@@ -806,6 +806,33 @@ export type Database = {
         }
         Relationships: []
       }
+      client_aliases: {
+        Row: {
+          alias_name: string
+          client_id: string
+          created_at: string | null
+          id: string
+          trainer_id: string
+          used_count: number | null
+        }
+        Insert: {
+          alias_name: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          trainer_id: string
+          used_count?: number | null
+        }
+        Update: {
+          alias_name?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          trainer_id?: string
+          used_count?: number | null
+        }
+        Relationships: []
+      }
       client_tasks: {
         Row: {
           client_id: string

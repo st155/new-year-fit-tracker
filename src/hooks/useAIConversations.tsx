@@ -95,7 +95,8 @@ export const useAIConversations = (userId: string | undefined) => {
   const sendMessage = async (
     message: string,
     contextMode: string = 'general',
-    mentionedClients: string[] = []
+    mentionedClients: string[] = [],
+    mentionedNames: string[] = []
   ) => {
     if (!userId) return null;
 
@@ -106,11 +107,18 @@ export const useAIConversations = (userId: string | undefined) => {
           conversationId: currentConversation?.id,
           message,
           contextMode,
-          mentionedClients
+          mentionedClients,
+          mentionedNames
         }
       });
 
       if (error) throw error;
+
+      // Check for disambiguation needed
+      if (data?.needsDisambiguation) {
+        setSending(false);
+        return data; // Return to UI for handling
+      }
 
       // Reload conversations and messages
       await loadConversations();

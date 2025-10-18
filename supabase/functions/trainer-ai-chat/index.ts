@@ -16,7 +16,8 @@ serve(async (req) => {
       conversationId, 
       message, 
       contextMode = 'general',
-      mentionedClients = []
+      mentionedClients = [],
+      mentionedNames = [] // Raw names mentioned (for fuzzy matching)
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -68,6 +69,104 @@ serve(async (req) => {
 
     // Build context based on mode and mentioned clients
     let contextData = '';
+    let disambiguationNeeded = [];
+    
+    // Handle fuzzy matching for mentioned names
+    if (mentionedNames.length > 0) {
+      console.log('Fuzzy matching for names:', mentionedNames);
+      
+      for (const mentionedName of mentionedNames) {
+        // Check for exact alias match first
+        const { data: aliasMatch } = await supabaseClient
+          .from('client_aliases')
+          .select('client_id, alias_name, profiles!client_aliases_client_id_fkey(user_id, username, full_name, avatar_url)')
+          .eq('trainer_id', user.id)
+          .ilike('alias_name', mentionedName)
+          .single();
+        
+        if (aliasMatch) {
+          // Found exact alias match - use it
+          console.log(`Alias match found for "${mentionedName}":`, aliasMatch);
+          mentionedClients.push(aliasMatch.client_id);
+          
+          // Increment usage count
+          await supabaseClient
+            .from('client_aliases')
+            .update({ used_count: supabaseClient.raw('used_count + 1') })
+            .eq('trainer_id', user.id)
+            .eq('client_id', aliasMatch.client_id)
+            .eq('alias_name', mentionedName);
+        } else {
+          // No exact match - perform fuzzy search
+          const { data: candidates } = await supabaseClient
+            .from('trainer_clients')
+            .select(`
+              client_id,
+              profiles!trainer_clients_client_id_fkey (
+                user_id,
+                username,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('trainer_id', user.id)
+            .eq('active', true);
+          
+          if (candidates && candidates.length > 0) {
+            // Simple fuzzy matching: check if mentioned name is contained in full_name or username
+            const nameToMatch = mentionedName.toLowerCase();
+            const matches = candidates
+              .filter(c => {
+                const profile = c.profiles as any;
+                if (!profile) return false;
+                const fullName = profile.full_name?.toLowerCase() || '';
+                const username = profile.username?.toLowerCase() || '';
+                return fullName.includes(nameToMatch) || 
+                       nameToMatch.includes(fullName) ||
+                       username.includes(nameToMatch) ||
+                       nameToMatch.includes(username);
+              })
+              .slice(0, 3); // Top 3 candidates
+            
+            if (matches.length === 1) {
+              // Single match - use it automatically
+              const profile = matches[0].profiles as any;
+              console.log(`Auto-matched "${mentionedName}" to ${profile.full_name}`);
+              mentionedClients.push(profile.user_id);
+            } else if (matches.length > 1) {
+              // Multiple matches - need disambiguation
+              console.log(`Multiple matches for "${mentionedName}":`, matches.length);
+              disambiguationNeeded.push({
+                mentionedName,
+                candidates: matches.map(m => {
+                  const p = m.profiles as any;
+                  return {
+                    user_id: p.user_id,
+                    username: p.username,
+                    full_name: p.full_name,
+                    avatar_url: p.avatar_url
+                  };
+                })
+              });
+            } else {
+              console.warn(`No matches found for "${mentionedName}"`);
+            }
+          }
+        }
+      }
+    }
+    
+    // Return early if disambiguation needed
+    if (disambiguationNeeded.length > 0) {
+      return new Response(
+        JSON.stringify({
+          needsDisambiguation: true,
+          disambiguations: disambiguationNeeded,
+          message: 'Пожалуйста, уточните, кого вы имели в виду'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (mentionedClients.length > 0) {
       console.log('Loading context for mentioned clients:', mentionedClients);
