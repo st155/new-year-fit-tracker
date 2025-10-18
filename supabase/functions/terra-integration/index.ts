@@ -823,9 +823,28 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
-          // Training Readiness (Garmin)
-          const trainingReadiness = daily.training_readiness ?? daily.readiness_score ?? daily.training_readiness_score;
+          // Training Readiness (Garmin) / Body Battery
+          // Log available fields for debugging
+          if (source === 'garmin') {
+            console.log('🔍 Garmin daily fields:', Object.keys(daily));
+            console.log('🔍 Checking Training Readiness/Body Battery:', {
+              training_readiness: daily.training_readiness,
+              readiness_score: daily.readiness_score,
+              training_readiness_score: daily.training_readiness_score,
+              body_battery: daily.body_battery,
+              body_battery_score: daily.body_battery?.score
+            });
+          }
+          
+          const trainingReadiness = 
+            daily.training_readiness ?? 
+            daily.readiness_score ?? 
+            daily.training_readiness_score ??
+            daily.body_battery?.score ??
+            daily.body_battery;
+            
           if (typeof trainingReadiness === 'number') {
+            console.log(`✅ Found Training Readiness: ${trainingReadiness} for ${dateStr}`);
             const { data: readinessMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'Training Readiness',
@@ -844,6 +863,7 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              stats.insertedCounts.daily++;
             }
           }
 
@@ -940,6 +960,46 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+            }
+          }
+
+          // Ultrahuman Recovery Score (если есть)
+          if (source === 'ultrahuman') {
+            console.log('🔍 Ultrahuman daily fields:', Object.keys(daily));
+            console.log('🔍 Checking Ultrahuman Recovery:', {
+              recovery_score: daily.recovery_score,
+              movement_index: daily.movement_index,
+              ultrahuman_score: daily.ultrahuman_score,
+              readiness_score: daily.readiness_score
+            });
+            
+            const ultrahumanRecovery = 
+              daily.recovery_score ?? 
+              daily.ultrahuman_score ??
+              daily.readiness_score;
+              
+            if (typeof ultrahumanRecovery === 'number') {
+              console.log(`✅ Found Ultrahuman Recovery: ${ultrahumanRecovery} for ${dateStr}`);
+              const { data: uhRecMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Ultrahuman Recovery',
+                p_metric_category: 'recovery',
+                p_unit: '%',
+                p_source: source,
+              });
+              if (uhRecMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: uhRecMetricId,
+                  value: ultrahumanRecovery,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_uh_recovery_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                stats.insertedCounts.daily++;
+              }
             }
           }
 

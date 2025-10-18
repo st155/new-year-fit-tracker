@@ -237,6 +237,7 @@ export default function FitnessData() {
     if (!metrics) return result;
 
     const metricValues: { [key: string]: any } = {};
+    const allMetricsByCategory: { [category: string]: any[] } = {};
 
     // Обрабатываем метрики и фильтруем по источнику
     metrics.forEach(metric => {
@@ -294,16 +295,80 @@ export default function FitnessData() {
       }
     });
 
-    // Recovery - показываем только если данные есть
-    const recoveryMetric = metricValues['Recovery Score'] || metricValues['Recovery'] || metricValues['HRV RMSSD'];
-    if (recoveryMetric && recoveryMetric.current > 0) {
-      // For HRV RMSSD, normalize to percentage (50-100 HRV = 30-100%)
-      let recoveryValue = recoveryMetric.current;
-      if (metricValues['HRV RMSSD'] && !metricValues['Recovery Score'] && !metricValues['Recovery']) {
-        recoveryValue = Math.min(100, Math.max(0, (recoveryValue - 30) * 1.4));
+    // ========= UNIFIED RECOVERY SCORE ==========
+    // Приоритет: Whoop Recovery → Garmin Training Readiness → Garmin Sleep Efficiency → Ultrahuman HRV → Garmin HRV
+    const getUnifiedRecovery = () => {
+      // Priority 1: Whoop Recovery Score (самый точный)
+      if (metricValues['Recovery Score'] && metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
+        return {
+          value: metricValues['Recovery Score'].current,
+          source: 'Whoop',
+          sourceName: 'Whoop Recovery',
+          isNormalized: false
+        };
       }
-      result.recovery.score = Math.round(recoveryValue);
-      result.recovery.status = recoveryValue > 70 ? 'Optimal' : recoveryValue > 40 ? 'Normal' : 'Low';
+      
+      // Priority 2: Garmin Training Readiness
+      if (metricValues['Training Readiness']) {
+        return {
+          value: metricValues['Training Readiness'].current,
+          source: 'Garmin',
+          sourceName: 'Training Readiness',
+          isNormalized: false
+        };
+      }
+      
+      // Priority 3: Garmin Sleep Efficiency
+      if (metricValues['Sleep Efficiency'] && metricValues['Sleep Efficiency'].source?.toLowerCase() === 'garmin') {
+        return {
+          value: metricValues['Sleep Efficiency'].current,
+          source: 'Garmin',
+          sourceName: 'Sleep Efficiency',
+          isNormalized: false
+        };
+      }
+      
+      // Priority 4: Ultrahuman HRV RMSSD (нормализовать 30-100ms → 0-100%)
+      if (metricValues['HRV RMSSD'] && metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
+        const hrv = metricValues['HRV RMSSD'].current;
+        const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+        return {
+          value: normalized,
+          source: 'Ultrahuman',
+          sourceName: 'HRV',
+          isNormalized: true
+        };
+      }
+      
+      // Priority 5: Garmin Sleep HRV RMSSD
+      if (metricValues['Sleep HRV RMSSD']) {
+        const hrv = metricValues['Sleep HRV RMSSD'].current;
+        const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+        return {
+          value: normalized,
+          source: 'Garmin',
+          sourceName: 'Sleep HRV',
+          isNormalized: true
+        };
+      }
+      
+      // Fallback: any other Recovery metric
+      if (metricValues['Recovery']) {
+        return {
+          value: metricValues['Recovery'].current,
+          source: metricValues['Recovery'].source || 'Unknown',
+          sourceName: 'Recovery',
+          isNormalized: false
+        };
+      }
+      
+      return null;
+    };
+
+    const unifiedRecovery = getUnifiedRecovery();
+    if (unifiedRecovery) {
+      result.recovery.score = Math.round(unifiedRecovery.value);
+      result.recovery.status = unifiedRecovery.value > 70 ? 'Optimal' : unifiedRecovery.value > 40 ? 'Normal' : 'Low';
     }
 
     // Build cards - показываем ВСЕ доступные метрики
@@ -363,33 +428,13 @@ export default function FitnessData() {
       });
     }
 
-    // Recovery Score - показываем только если данные есть
-    // Приоритет: Recovery Score (Whoop) > Training Readiness (Garmin) > Sleep Efficiency (Garmin) > HRV
-    const recoveryForCard = 
-      metricValues['Recovery Score'] || 
-      metricValues['Recovery'] || 
-      metricValues['Training Readiness'] ||
-      metricValues['Sleep Efficiency'] ||
-      metricValues['Sleep HRV RMSSD'] ||
-      metricValues['HRV RMSSD'];
-    
-    if (recoveryForCard && recoveryForCard.current > 0) {
-      let recoveryValue = recoveryForCard.current;
-      
-      // Normalize only for HRV metrics (50-100 HRV = 30-100%)
-      if ((metricValues['Sleep HRV RMSSD'] || metricValues['HRV RMSSD']) && 
-          !metricValues['Recovery Score'] && 
-          !metricValues['Recovery'] &&
-          !metricValues['Training Readiness'] &&
-          !metricValues['Sleep Efficiency']) {
-        recoveryValue = Math.min(100, Math.max(0, (recoveryValue - 30) * 1.4));
-      }
-      
+    // Recovery Card - show unified recovery with source
+    if (unifiedRecovery && unifiedRecovery.value > 0) {
       const meta = getMetricIcon('recovery', 'recovery');
       cards.push({
         name: 'Recovery',
-        value: Math.round(recoveryValue) + '%',
-        subtitle: recoveryValue > 70 ? 'Optimal' : recoveryValue > 40 ? 'Normal' : 'Low',
+        value: Math.round(unifiedRecovery.value) + '%',
+        subtitle: `${unifiedRecovery.sourceName} • ${result.recovery.status}`,
         icon: meta.icon,
         color: meta.color,
         borderColor: meta.color
@@ -510,25 +555,57 @@ export default function FitnessData() {
       });
     }
 
-    // Любые другие метрики, которые мы еще не отобразили
-    Object.keys(metricValues).forEach(metricKey => {
-      // Пропускаем уже отображенные
-      const displayedMetrics = [
-        'Day Strain', 'Workout Strain', 'Sleep Duration', 'Sleep Quality', 'Sleep Performance',
-        'Recovery Score', 'Recovery', 'VO2Max', 'Body Fat %', 'Heart Rate', 'Resting Heart Rate',
-        'Average Heart Rate', 'Calories', 'Active Energy', 'Active Calories', 'Steps',
-        'HRV', 'Heart Rate Variability', 'Workout Count'
-      ];
+    // ========= SHOW ALL OTHER AVAILABLE METRICS ==========
+    // Exclude metrics already shown in specific cards above
+    const shownMetrics = new Set([
+      'Day Strain', 'Workout Strain', 'Sleep Duration', 'Sleep Quality', 'Sleep Performance',
+      'Recovery Score', 'Recovery', 'Training Readiness', 'Sleep Efficiency', 
+      'VO2Max', 'Body Fat %', 'Heart Rate', 'Resting Heart Rate', 'Average Heart Rate',
+      'Calories', 'Active Energy', 'Active Calories', 'Steps', 'Weight',
+      'HRV RMSSD', 'Sleep HRV RMSSD', 'HRV', 'Heart Rate Variability', 'Workout Count',
+      'Ultrahuman Recovery' // Don't show if it was used for unified recovery
+    ]);
+
+    // Add all other metrics dynamically
+    Object.entries(metricValues).forEach(([metricName, metricData]) => {
+      if (shownMetrics.has(metricName)) return;
+      if (!metricData.current || metricData.current === 0) return;
+
+      const meta = getMetricIcon(metricData.category || 'activity', metricName);
       
-      if (displayedMetrics.includes(metricKey)) return;
+      // Format value based on metric type
+      let formattedValue = '';
+      let subtitle = '';
       
-      const metric = metricValues[metricKey];
-      const meta = getMetricIcon(metric.category, metricKey);
-      
+      if (metricData.unit === '%') {
+        formattedValue = `${Math.round(metricData.current)}%`;
+      } else if (metricData.unit === 'bpm') {
+        formattedValue = `${Math.round(metricData.current)}`;
+        subtitle = 'bpm';
+      } else if (metricData.unit === 'ms') {
+        formattedValue = `${Math.round(metricData.current)}`;
+        subtitle = 'ms';
+      } else if (metricData.unit === 'kcal') {
+        formattedValue = `${Math.round(metricData.current)}`;
+        subtitle = 'kcal';
+      } else if (metricName.toLowerCase().includes('duration') || metricName.toLowerCase().includes('time')) {
+        const hours = Math.floor(metricData.current);
+        const minutes = Math.round((metricData.current - hours) * 60);
+        formattedValue = `${hours}h ${minutes}m`;
+      } else {
+        formattedValue = `${Math.round(metricData.current * 10) / 10}`;
+        subtitle = metricData.unit || '';
+      }
+
+      // Add source info if available
+      if (metricData.source && selectedSource === 'all') {
+        subtitle = subtitle ? `${subtitle} • ${metricData.source}` : metricData.source;
+      }
+
       cards.push({
-        name: metricKey,
-        value: Math.round(metric.current * 10) / 10 + '',
-        subtitle: metric.unit || '',
+        name: metricName,
+        value: formattedValue,
+        subtitle: subtitle,
         icon: meta.icon,
         color: meta.color,
         borderColor: meta.color

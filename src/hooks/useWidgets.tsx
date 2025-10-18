@@ -19,15 +19,18 @@ interface WidgetMetricData {
 }
 
 const DEFAULT_WIDGETS = [
-  { metric_name: 'Steps', source: 'ultrahuman' },
-  { metric_name: 'Steps', source: 'garmin' },
-  { metric_name: 'Day Strain', source: 'whoop' },
   { metric_name: 'Recovery Score', source: 'whoop' },
-  { metric_name: 'Max Heart Rate', source: 'whoop' },
-  { metric_name: 'Recovery Score', source: 'ultrahuman' }, // С fallback на HRV
-  { metric_name: 'Training Readiness', source: 'garmin' }, // С fallback на Body Battery
-  { metric_name: 'Resting Heart Rate', source: 'whoop' },
+  { metric_name: 'Day Strain', source: 'whoop' },
+  { metric_name: 'Sleep Duration', source: 'whoop' },
+  { metric_name: 'Steps', source: 'garmin' },
+  { metric_name: 'Training Readiness', source: 'garmin' },
+  { metric_name: 'Sleep Efficiency', source: 'garmin' },
+  { metric_name: 'HRV RMSSD', source: 'ultrahuman' },
+  { metric_name: 'VO2Max', source: 'garmin' },
   { metric_name: 'Weight', source: 'withings' },
+  { metric_name: 'Body Fat Percentage', source: 'withings' },
+  { metric_name: 'Max Heart Rate', source: 'garmin' },
+  { metric_name: 'Resting Heart Rate', source: 'whoop' },
 ];
 
 export const useWidgets = (userId: string | undefined) => {
