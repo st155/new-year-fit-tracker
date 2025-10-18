@@ -89,6 +89,9 @@ export const useAIPendingActions = (userId: string | undefined) => {
   ) => {
     if (!userId) return null;
 
+    // Optimistic update - remove from UI immediately
+    setPendingActions(prev => prev.filter(a => a.id !== pendingActionId));
+
     setExecuting(true);
     try {
       const { data, error } = await supabase.functions.invoke('trainer-ai-execute', {
@@ -101,6 +104,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
 
       if (error) throw error;
 
+      // Reload to ensure consistency
       await loadPendingActions();
 
       const successCount = data.results.filter((r: any) => r.success).length;
@@ -114,6 +118,8 @@ export const useAIPendingActions = (userId: string | undefined) => {
       return data;
     } catch (error) {
       console.error('Error executing actions:', error);
+      // On error, reload to restore correct state
+      await loadPendingActions();
       toast({
         title: 'Ошибка',
         description: 'Не удалось выполнить действия',
@@ -154,9 +160,11 @@ export const useAIPendingActions = (userId: string | undefined) => {
     loadPendingActions();
   }, [userId]);
 
-  // Set up realtime subscription
+  // Set up realtime subscription with debounce
   useEffect(() => {
     if (!userId) return;
+
+    let debounceTimer: NodeJS.Timeout;
 
     const channel = supabase
       .channel('ai_pending_actions')
@@ -169,12 +177,17 @@ export const useAIPendingActions = (userId: string | undefined) => {
           filter: `trainer_id=eq.${userId}`
         },
         () => {
-          loadPendingActions();
+          // Debounce to avoid rapid reloads
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            loadPendingActions();
+          }, 500);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [userId]);

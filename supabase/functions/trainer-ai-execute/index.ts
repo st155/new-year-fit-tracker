@@ -39,6 +39,17 @@ serve(async (req) => {
     // Execute each action
     for (const action of actions) {
       try {
+        // Validate action structure
+        if (!action || !action.type) {
+          console.error('Invalid action structure:', action);
+          throw new Error('Invalid action: missing type');
+        }
+        
+        if (!action.data) {
+          console.error('Invalid action: missing data', action);
+          throw new Error('Invalid action: missing data');
+        }
+        
         let result;
         
         switch (action.type) {
@@ -77,7 +88,7 @@ serve(async (req) => {
           trainer_id: user.id,
           conversation_id: conversationId,
           pending_action_id: pendingActionId,
-          client_id: action.data.client_id || action.data.user_id,
+          client_id: action.data?.client_id || action.data?.user_id || null,
           action_type: action.type,
           action_details: action.data,
           success: true
@@ -97,7 +108,7 @@ serve(async (req) => {
           trainer_id: user.id,
           conversation_id: conversationId,
           pending_action_id: pendingActionId,
-          client_id: action.data.client_id || action.data.user_id,
+          client_id: action.data?.client_id || action.data?.user_id || null,
           action_type: action.type,
           action_details: action.data,
           success: false,
