@@ -497,7 +497,7 @@ async function syncWhoopData(
               );
 
               // Используем external_id с датой вместо cycle.id для upsert
-              await supabase.from('metric_values').upsert({
+              const { error: recoveryError } = await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
@@ -509,7 +509,12 @@ async function syncWhoopData(
                   user_calibrating: recoveryData.user_calibrating 
                 },
               }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-              console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${cycleDate}`);
+              
+              if (recoveryError) {
+                console.error(`❌ Failed to save Recovery for ${cycleDate}:`, recoveryError);
+              } else {
+                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${cycleDate}`);
+              }
             } else {
               console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
             }
@@ -532,7 +537,7 @@ async function syncWhoopData(
             'whoop'
           );
 
-          await supabase.from('metric_values').upsert({
+          const { error: strainError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: cycle.score.strain,
@@ -540,7 +545,12 @@ async function syncWhoopData(
             external_id: `whoop_strain_${cycle.id}`,
             source_data: { cycle_id: cycle.id, raw: cycle.score },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
-          console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
+          
+          if (strainError) {
+            console.error(`❌ Failed to save Day Strain for ${cycleDate}:`, strainError);
+          } else {
+            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
+          }
         } else {
           console.log(`❌ No strain data for cycle ${cycle.id} (${cycleDate}), cycle.score:`, cycle.score);
         }
@@ -595,7 +605,7 @@ async function syncWhoopData(
             'whoop'
           );
 
-          await supabase.from('metric_values').upsert({
+          const { error: workoutStrainError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: workout.score.strain,
@@ -603,6 +613,10 @@ async function syncWhoopData(
             external_id: `whoop_workout_strain_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          
+          if (workoutStrainError) {
+            console.error(`❌ Failed to save Workout Strain for ${workoutDate}:`, workoutStrainError);
+          }
         }
 
         // Сохраняем Max Heart Rate в метрики
@@ -617,7 +631,7 @@ async function syncWhoopData(
             'whoop'
           );
 
-          await supabase.from('metric_values').upsert({
+          const { error: maxHrError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: workout.score.max_heart_rate,
@@ -625,6 +639,10 @@ async function syncWhoopData(
             external_id: `whoop_max_hr_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          
+          if (maxHrError) {
+            console.error(`❌ Failed to save Max Heart Rate for ${workoutDate}:`, maxHrError);
+          }
         }
       }
     }
@@ -659,7 +677,7 @@ async function syncWhoopData(
             'whoop'
           );
 
-          await supabase.from('metric_values').upsert({
+          const { error: sleepPerfError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: sleep.score.sleep_performance_percentage,
@@ -667,6 +685,10 @@ async function syncWhoopData(
             external_id: `whoop_sleep_perf_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          
+          if (sleepPerfError) {
+            console.error(`❌ Failed to save Sleep Performance for ${sleepDate}:`, sleepPerfError);
+          }
         }
 
         // Sleep Efficiency
@@ -680,7 +702,7 @@ async function syncWhoopData(
             'whoop'
           );
 
-          await supabase.from('metric_values').upsert({
+          const { error: sleepEffError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: sleep.score.sleep_efficiency_percentage,
@@ -688,6 +710,10 @@ async function syncWhoopData(
             external_id: `whoop_sleep_eff_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          
+          if (sleepEffError) {
+            console.error(`❌ Failed to save Sleep Efficiency for ${sleepDate}:`, sleepEffError);
+          }
         }
 
         // Sleep Duration
@@ -703,7 +729,7 @@ async function syncWhoopData(
 
           const hours = sleep.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60);
 
-          await supabase.from('metric_values').upsert({
+          const { error: sleepDurError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: hours,
@@ -711,6 +737,10 @@ async function syncWhoopData(
             external_id: `whoop_sleep_dur_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          
+          if (sleepDurError) {
+            console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError);
+          }
         }
       }
     }
