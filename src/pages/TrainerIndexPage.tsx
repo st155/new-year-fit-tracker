@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrainerAIWidget } from '@/components/trainer/TrainerAIWidget';
+import { AIQuickActionsPanel } from '@/components/trainer/AIQuickActionsPanel';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, Target, CheckCircle, Clock, Activity } from 'lucide-react';
+import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,11 +95,21 @@ export default function TrainerIndexPage() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Тренерский кабинет</h1>
-          <p className="text-muted-foreground mt-1">
-            Управляйте клиентами и целями с помощью AI
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Тренерский кабинет</h1>
+            <p className="text-muted-foreground mt-1">
+              Управляйте клиентами и целями с помощью AI
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/trainer-dashboard')}
+            className="gap-2"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Полный кабинет
+          </Button>
         </div>
 
         {/* Hero с AI */}
@@ -176,6 +187,8 @@ export default function TrainerIndexPage() {
           </CardContent>
         </Card>
       </div>
+      
+      <AIQuickActionsPanel />
     </div>
   );
 }

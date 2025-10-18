@@ -229,12 +229,8 @@ export const AIChatWindow = ({
   };
 
   // Handle client navigation from message
-  const handleNavigateToClient = async (username: string) => {
-    // Remove @ symbol
-    const cleanUsername = username.replace('@', '');
-    
-    // Find client by username
-    navigate(`/trainer-dashboard?tab=clients&search=${cleanUsername}`);
+  const handleNavigateToClient = async (clientId: string) => {
+    navigate(`/trainer-dashboard?tab=clients&client=${clientId}`);
   };
 
   // Handle plan approval
@@ -262,10 +258,16 @@ export const AIChatWindow = ({
   const renderMessageContent = (content: string) => {
     if (!content) return null;
 
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-
-    // Find mentions (@username or full names in content)
+    // Find all mentions for all clients
+    interface Mention {
+      start: number;
+      end: number;
+      text: string;
+      clientId: string;
+    }
+    
+    const mentions: Mention[] = [];
+    
     clients.forEach(client => {
       const patterns = [
         `@${client.username}`,
@@ -273,29 +275,61 @@ export const AIChatWindow = ({
       ];
 
       patterns.forEach(pattern => {
-        let searchIndex = content.indexOf(pattern, lastIndex);
-        while (searchIndex !== -1 && searchIndex >= lastIndex) {
-          // Add text before mention
-          if (searchIndex > lastIndex) {
-            parts.push(content.substring(lastIndex, searchIndex));
-          }
-
-          // Add clickable mention
-          parts.push(
-            <Button
-              key={`${client.user_id}-${searchIndex}`}
-              variant="link"
-              className="p-0 h-auto font-medium text-primary inline"
-              onClick={() => handleNavigateToClient(client.user_id)}
-            >
-              {pattern}
-            </Button>
-          );
-
-          lastIndex = searchIndex + pattern.length;
-          searchIndex = content.indexOf(pattern, lastIndex);
+        let startIndex = 0;
+        while (true) {
+          const index = content.indexOf(pattern, startIndex);
+          if (index === -1) break;
+          
+          mentions.push({
+            start: index,
+            end: index + pattern.length,
+            text: pattern,
+            clientId: client.user_id
+          });
+          
+          startIndex = index + pattern.length;
         }
       });
+    });
+
+    // Sort mentions by position
+    mentions.sort((a, b) => a.start - b.start);
+    
+    // Remove overlapping mentions (keep first)
+    const filteredMentions: Mention[] = [];
+    mentions.forEach(mention => {
+      const hasOverlap = filteredMentions.some(
+        m => (mention.start >= m.start && mention.start < m.end) ||
+             (mention.end > m.start && mention.end <= m.end)
+      );
+      if (!hasOverlap) {
+        filteredMentions.push(mention);
+      }
+    });
+
+    // Build parts array
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+
+    filteredMentions.forEach((mention, idx) => {
+      // Add text before mention
+      if (mention.start > lastIndex) {
+        parts.push(content.substring(lastIndex, mention.start));
+      }
+
+      // Add clickable mention
+      parts.push(
+        <Button
+          key={`mention-${idx}`}
+          variant="link"
+          className="p-0 h-auto font-medium text-primary inline"
+          onClick={() => handleNavigateToClient(mention.clientId)}
+        >
+          {mention.text}
+        </Button>
+      );
+
+      lastIndex = mention.end;
     });
 
     // Add remaining text

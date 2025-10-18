@@ -22,15 +22,12 @@ export const ClientSearchAutocomplete = ({ onSelect, placeholder = "Найти �
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<Client[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Load all clients once for caching
   useEffect(() => {
-    if (search.length < 2) {
-      setResults([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
+    const loadAllClients = async () => {
       if (!user) return;
 
       const { data } = await supabase
@@ -41,22 +38,35 @@ export const ClientSearchAutocomplete = ({ onSelect, placeholder = "Найти �
           )
         `)
         .eq('trainer_id', user.id)
-        .eq('active', true)
-        .or(`username.ilike.%${search}%,full_name.ilike.%${search}%`, { 
-          foreignTable: 'profiles' 
-        })
-        .limit(10);
+        .eq('active', true);
 
       const clients = (data || [])
         .map((tc: any) => tc.profiles)
         .filter(Boolean);
       
-      setResults(clients);
-      setIsOpen(clients.length > 0);
-    }, 300);
+      setAllClients(clients);
+    };
 
-    return () => clearTimeout(timer);
-  }, [search, user]);
+    loadAllClients();
+  }, [user]);
+
+  // Filter locally from cache
+  useEffect(() => {
+    if (search.length < 2) {
+      setResults([]);
+      setIsOpen(false);
+      return;
+    }
+
+    const searchLower = search.toLowerCase();
+    const filtered = allClients.filter(client =>
+      client.username?.toLowerCase().includes(searchLower) ||
+      client.full_name?.toLowerCase().includes(searchLower)
+    ).slice(0, 10);
+
+    setResults(filtered);
+    setIsOpen(filtered.length > 0);
+  }, [search, allClients]);
 
   const handleSelect = (client: Client) => {
     onSelect(client);

@@ -12,6 +12,7 @@ import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
 import { TrainerChat } from "@/components/trainer/TrainerChat";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
+import { AIQuickActionsPanel } from "@/components/trainer/AIQuickActionsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,7 +56,9 @@ function TrainerDashboardContent() {
     if (clientId && clients.length > 0) {
       const client = clients.find(c => c.user_id === clientId);
       if (client) {
-        setSelectedClient(client, { type: 'clients' });
+        // Set navigation source based on tab
+        const source = tab === 'ai-hub' ? { type: 'ai-hub' as const } : { type: 'clients' as const };
+        setSelectedClient(client, source);
       }
     }
   }, [searchParams, clients]);
@@ -230,6 +233,8 @@ function TrainerDashboardContent() {
           </Tabs>
         )}
       </div>
+      
+      <AIQuickActionsPanel />
     </div>
   );
 }

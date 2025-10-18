@@ -3,9 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Sparkles } from 'lucide-react';
 import { TrainerAIWidget } from './TrainerAIWidget';
+import { useAIConversations } from '@/hooks/useAIConversations';
+import { useAuth } from '@/hooks/useAuth';
 
 export const AIQuickActionsPanel = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const { sendMessage, sending } = useAIConversations(user?.id);
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
 
   const quickPrompts = [
     { label: 'Кто не тренировался сегодня?', prompt: 'Кто из моих клиентов не тренировался сегодня?' },
@@ -14,11 +19,20 @@ export const AIQuickActionsPanel = () => {
     { label: 'Задачи на завтра', prompt: 'Создать задачи на завтра для всех клиентов' }
   ];
 
+  const handleQuickPrompt = async (prompt: string) => {
+    if (!isOpen) {
+      setIsOpen(true);
+    }
+    setSelectedPrompt(prompt);
+    await sendMessage(prompt, 'general', [], []);
+    setSelectedPrompt(null);
+  };
+
   return (
     <>
       {/* Floating button */}
       <Button
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
         onClick={() => setIsOpen(true)}
       >
         <Sparkles className="h-6 w-6" />
@@ -42,9 +56,8 @@ export const AIQuickActionsPanel = () => {
                   key={idx}
                   variant="outline"
                   className="h-auto py-3 text-xs whitespace-normal"
-                  onClick={() => {
-                    // TODO: Send prompt directly
-                  }}
+                  onClick={() => handleQuickPrompt(item.prompt)}
+                  disabled={sending}
                 >
                   {item.label}
                 </Button>

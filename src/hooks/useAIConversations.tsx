@@ -125,10 +125,25 @@ export const useAIConversations = (userId: string | undefined) => {
       // Reload conversations and messages
       await loadConversations();
       if (data.conversationId) {
-        // Set the current conversation first
-        const conv = conversations.find(c => c.id === data.conversationId) || 
-                     { id: data.conversationId, trainer_id: userId, context_mode: contextMode } as AIConversation;
-        setCurrentConversation(conv);
+        // Find or create conversation object
+        let conv = conversations.find(c => c.id === data.conversationId);
+        
+        // If new conversation was created, reload to get it
+        if (!conv) {
+          await loadConversations();
+          const { data: freshData } = await supabase
+            .from('ai_conversations')
+            .select('*')
+            .eq('id', data.conversationId)
+            .single();
+          conv = freshData as AIConversation;
+        }
+        
+        setCurrentConversation(conv || { 
+          id: data.conversationId, 
+          trainer_id: userId, 
+          context_mode: contextMode 
+        } as AIConversation);
         
         // Then load messages
         await loadMessages(data.conversationId);
