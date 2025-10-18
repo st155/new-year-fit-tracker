@@ -16,7 +16,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { TrainerAIAssistant } from "@/components/trainer/TrainerAIAssistant";
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -158,7 +157,6 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {profile.trainer_role && <TrainerAIAssistant />}
       <div className="space-y-8">
         {/* Header с градиентом */}
         <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">

@@ -26,26 +26,38 @@ export const AIPendingActionsPanel = ({
   const { setSelectedClient } = useClientContext();
 
   const handleExecute = async (action: AIPendingAction) => {
-    // Parse action_data into executable actions
-    const actions = Array.isArray(action.action_data) 
-      ? action.action_data 
-      : [action.action_data];
+    try {
+      // Parse action_data into executable actions
+      const actions = Array.isArray(action.action_data) 
+        ? action.action_data 
+        : [action.action_data];
 
-    const result = await onExecute(action.id, action.conversation_id, actions);
-    
-    // Show success toast with navigation option
-    if (result?.client_id) {
-      toast.success("Действие выполнено", {
-        action: {
-          label: "Открыть клиента",
-          onClick: () => {
-            // Navigate to client
-            navigate(`/trainer-dashboard?tab=clients&client=${result.client_id}`);
+      const result = await onExecute(action.id, action.conversation_id, actions);
+      
+      // Show success toast with navigation option
+      if (result?.client_id) {
+        toast.success("Действие выполнено", {
+          action: {
+            label: "Открыть клиента",
+            onClick: () => {
+              // Navigate to client
+              navigate(`/trainer-dashboard?tab=clients&client=${result.client_id}`);
+            }
           }
-        }
-      });
-    } else {
-      toast.success("Действие выполнено");
+        });
+      } else {
+        toast.success("Действие выполнено");
+      }
+    } catch (error: any) {
+      // Handle AI rate limit errors
+      if (error.message?.includes('AI rate limit exceeded') || error.message?.includes('429')) {
+        toast.error("AI rate limit exceeded. Please wait a few minutes and try again.");
+      } else if (error.message?.includes('AI credits exhausted') || error.message?.includes('402')) {
+        toast.error("AI credits exhausted. Please add more credits to your Lovable workspace to continue.");
+      } else {
+        toast.error("Failed to execute actions. Please try again.");
+      }
+      console.error('Failed to execute actions:', error);
     }
   };
 

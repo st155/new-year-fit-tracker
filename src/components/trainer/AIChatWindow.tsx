@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useClientContext } from '@/contexts/ClientContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
+import { toast } from 'sonner';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
@@ -137,9 +138,21 @@ export const AIChatWindow = ({
       .map(match => mentions.get(match[1]))
       .filter(Boolean) as string[];
 
-    await onSendMessage(messageText, contextMode, mentionedClientIds);
-    setMentions(new Map()); // Clear mentions after sending
-    setShowMentionSuggestions(false);
+    try {
+      await onSendMessage(messageText, contextMode, mentionedClientIds);
+      setMentions(new Map()); // Clear mentions after sending
+      setShowMentionSuggestions(false);
+    } catch (error: any) {
+      // Handle AI rate limit errors
+      if (error.message?.includes('AI rate limit exceeded') || error.message?.includes('429')) {
+        toast.error("AI rate limit exceeded. Please wait a few minutes and try again.");
+      } else if (error.message?.includes('AI credits exhausted') || error.message?.includes('402')) {
+        toast.error("AI credits exhausted. Please add more credits to your Lovable workspace to continue.");
+      } else {
+        toast.error("Failed to send message. Please try again.");
+      }
+      console.error('Error sending message:', error);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

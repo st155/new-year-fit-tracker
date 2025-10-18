@@ -7,7 +7,6 @@ import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
-import { TrainerAIAssistant } from "@/components/trainer/TrainerAIAssistant";
 import { TrainerAIHub } from "@/components/trainer/TrainerAIHub";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
@@ -231,8 +230,6 @@ function TrainerDashboardContent() {
           </Tabs>
         )}
       </div>
-
-      <TrainerAIAssistant />
     </div>
   );
 }
