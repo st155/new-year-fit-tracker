@@ -560,33 +560,76 @@ IMPORTANT INSTRUCTIONS:
         }
       }
       
-      // Auto-correct client_id if it's not a UUID
-      for (const action of structuredActions) {
-        if (action.data?.client_id && !action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-          console.log(`Non-UUID client_id detected: "${action.data.client_id}"`);
-          
-          // If we have contextClientId, use it
-          if (contextClientId) {
-            console.log(`Auto-correcting to contextClientId: ${contextClientId}`);
+      // Strict client_id normalization: always use contextClientId if available
+      console.log(`📋 Before normalization: ${structuredActions.length} actions, contextClientId=${contextClientId}, mentionedClients=${mentionedClients?.length || 0}`);
+      
+      for (let i = 0; i < structuredActions.length; i++) {
+        const action = structuredActions[i];
+        const beforeClientId = action.data?.client_id;
+        
+        // STRICT RULE: If contextClientId exists and no additional clients mentioned, force it
+        if (contextClientId && (!mentionedClients || mentionedClients.length === 0)) {
+          console.log(`🔒 Action ${i}: Forcing contextClientId (${contextClientId}) regardless of AI output`);
+          if (action.data) {
             action.data.client_id = contextClientId;
-          } else {
-            // Try to resolve by username or full_name
-            const { data: resolvedClient } = await supabaseClient
-              .from('profiles')
-              .select('user_id')
-              .or(`username.ilike.%${action.data.client_id}%,full_name.ilike.%${action.data.client_id}%`)
-              .limit(1)
-              .single();
+          }
+        } 
+        // Otherwise, validate and auto-correct if needed
+        else if (action.data?.client_id) {
+          const isUUID = action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+          
+          if (!isUUID) {
+            console.log(`⚠️ Action ${i}: Non-UUID client_id detected: "${action.data.client_id}"`);
             
-            if (resolvedClient) {
-              console.log(`Resolved "${action.data.client_id}" to UUID: ${resolvedClient.user_id}`);
-              action.data.client_id = resolvedClient.user_id;
+            // Try contextClientId first
+            if (contextClientId) {
+              console.log(`🔧 Action ${i}: Auto-correcting to contextClientId: ${contextClientId}`);
+              action.data.client_id = contextClientId;
             } else {
-              console.error(`Could not resolve client_id: "${action.data.client_id}"`);
+              // Try to resolve by username or full_name
+              const { data: resolvedClient } = await supabaseClient
+                .from('profiles')
+                .select('user_id')
+                .or(`username.ilike.%${action.data.client_id}%,full_name.ilike.%${action.data.client_id}%`)
+                .limit(1)
+                .single();
+              
+              if (resolvedClient) {
+                console.log(`✅ Action ${i}: Resolved "${action.data.client_id}" to UUID: ${resolvedClient.user_id}`);
+                action.data.client_id = resolvedClient.user_id;
+              } else {
+                console.error(`❌ Action ${i}: Could not resolve client_id: "${action.data.client_id}"`);
+              }
             }
           }
+          
+          // Verify client belongs to trainer
+          if (action.data.client_id && action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            const { data: belongsToTrainer } = await supabaseClient
+              .from('trainer_clients')
+              .select('client_id')
+              .eq('trainer_id', user.id)
+              .eq('client_id', action.data.client_id)
+              .eq('active', true)
+              .maybeSingle();
+            
+            if (!belongsToTrainer && contextClientId) {
+              console.log(`🔒 Action ${i}: Client ${action.data.client_id} doesn't belong to trainer, forcing contextClientId`);
+              action.data.client_id = contextClientId;
+            }
+          }
+        } else if (contextClientId) {
+          // No client_id at all, use context
+          console.log(`🔧 Action ${i}: No client_id, using contextClientId: ${contextClientId}`);
+          if (action.data) {
+            action.data.client_id = contextClientId;
+          }
         }
+        
+        console.log(`📝 Action ${i}: ${beforeClientId || 'none'} → ${action.data?.client_id || 'none'}`);
       }
+      
+      console.log(`✅ After normalization: all actions ready with client_id`);
     }
 
     // Check if this is a plan that needs actions (text-based fallback)

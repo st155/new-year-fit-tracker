@@ -184,7 +184,7 @@ async function executeUpdateGoal(supabase: any, data: any) {
 async function executeUpdateGoalByName(supabase: any, trainerId: string, data: any) {
   const { client_id, goal_name, target_value, target_unit } = data;
   
-  console.log(`Updating goal "${goal_name}" for client ${client_id}:`, { target_value, target_unit });
+  console.log(`🔍 executeUpdateGoalByName: searching for goal "${goal_name}" for client ${client_id}`);
   
   // Validate that client belongs to trainer
   const { data: clientCheck, error: clientError } = await supabase
@@ -193,25 +193,38 @@ async function executeUpdateGoalByName(supabase: any, trainerId: string, data: a
     .eq('trainer_id', trainerId)
     .eq('client_id', client_id)
     .eq('active', true)
-    .single();
+    .maybeSingle();
     
   if (clientError || !clientCheck) {
+    console.error(`❌ Client validation failed:`, clientError);
     throw new Error(`Client ${client_id} not found or not assigned to trainer`);
   }
   
-  // Find goal by name for this client
-  const { data: existingGoal, error: findError } = await supabase
+  // Find all goals with this name for this client (may have duplicates)
+  const { data: goals, error: goalsError } = await supabase
     .from('goals')
-    .select('id')
+    .select('id, is_personal, created_at, updated_at, challenge_id')
     .eq('user_id', client_id)
     .ilike('goal_name', goal_name)
-    .single();
+    .order('is_personal', { ascending: false })  // Personal goals first
+    .order('updated_at', { ascending: false });  // Most recent first
   
-  if (findError || !existingGoal) {
+  if (goalsError) {
+    console.error(`❌ Error fetching goals:`, goalsError);
+    throw goalsError;
+  }
+  
+  if (!goals || goals.length === 0) {
     throw new Error(`Goal "${goal_name}" not found for client ${client_id}`);
   }
   
-  // Update the goal
+  console.log(`📊 Found ${goals.length} goal(s) with name "${goal_name}":`, goals.map(g => ({ id: g.id, is_personal: g.is_personal, challenge_id: g.challenge_id })));
+  
+  // Pick the first one (personal + most recent)
+  const selectedGoal = goals[0];
+  console.log(`✅ Selected goal ID: ${selectedGoal.id} (is_personal: ${selectedGoal.is_personal})`);
+  
+  // Update the selected goal
   const { data: result, error } = await supabase
     .from('goals')
     .update({

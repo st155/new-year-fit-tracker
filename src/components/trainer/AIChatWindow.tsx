@@ -150,17 +150,31 @@ export const AIChatWindow = ({
     let names = mentionedNames;
     
     if (!clientIds || !names) {
-      const mentionPattern = /@(\S+)/g;
-      const mentionMatches = [...textToSend.matchAll(mentionPattern)];
+      // iOS/Safari compatible mention extraction without matchAll
+      const findMentions = (text: string): Array<{ full: string; username: string }> => {
+        const pattern = /@(\S+)/g;
+        const results: Array<{ full: string; username: string }> = [];
+        let match: RegExpExecArray | null;
+        
+        while ((match = pattern.exec(text)) !== null) {
+          results.push({ full: match[0], username: match[1] });
+          if (pattern.lastIndex === match.index) {
+            pattern.lastIndex++;
+          }
+        }
+        return results;
+      };
+      
+      const mentionMatches = findMentions(textToSend);
       
       clientIds = mentionMatches
-        .map(match => mentions.get(match[1]))
+        .map(m => mentions.get(m.username))
         .filter(Boolean) as string[];
       
       // Extract raw names (those not resolved via autocomplete)
       names = mentionMatches
-        .filter(match => !mentions.has(match[1]))
-        .map(match => match[1]);
+        .filter(m => !mentions.has(m.username))
+        .map(m => m.username);
     }
 
     try {
