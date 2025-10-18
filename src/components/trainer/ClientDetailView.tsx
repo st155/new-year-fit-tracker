@@ -96,6 +96,60 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     loadClientData();
   });
 
+  // Helper function to merge health data from multiple sources
+  const mergeHealthData = (summaryData: any[], unifiedData: any[]): HealthData[] => {
+    const dataMap = new Map<string, HealthData>();
+
+    // First, populate from daily_health_summary
+    summaryData.forEach(item => {
+      dataMap.set(item.date, {
+        date: item.date,
+        steps: item.steps,
+        weight: item.weight,
+        heart_rate_avg: item.heart_rate_avg,
+        active_calories: item.active_calories,
+        sleep_hours: item.sleep_hours
+      });
+    });
+
+    // Supplement/override with data from unified_metrics
+    unifiedData?.forEach(metric => {
+      const date = metric.measurement_date;
+      const existing = dataMap.get(date) || {
+        date,
+        steps: undefined,
+        weight: undefined,
+        heart_rate_avg: undefined,
+        active_calories: undefined,
+        sleep_hours: undefined
+      };
+
+      switch (metric.metric_name) {
+        case 'Steps':
+          existing.steps = metric.value;
+          break;
+        case 'Average Heart Rate':
+        case 'Resting Heart Rate':
+          // Use any available heart rate metric
+          if (!existing.heart_rate_avg) {
+            existing.heart_rate_avg = metric.value;
+          }
+          break;
+        case 'Weight':
+          if (!existing.weight) {
+            existing.weight = metric.value;
+          }
+          break;
+      }
+
+      dataMap.set(date, existing);
+    });
+
+    return Array.from(dataMap.values()).sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  };
+
   const loadClientData = async () => {
     try {
       setLoading(true);
@@ -157,6 +211,19 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
 
       if (healthError) throw healthError;
 
+      // Load additional metrics from unified metrics
+      const { data: unifiedMetrics, error: unifiedError } = await supabase
+        .from('client_unified_metrics')
+        .select('*')
+        .eq('user_id', client.user_id)
+        .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight'])
+        .gte('measurement_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .order('measurement_date', { ascending: true });
+
+      if (unifiedError) {
+        console.error('Error loading unified metrics:', unifiedError);
+      }
+
       // Load AI history for this client
       const { data: aiLogs, error: aiError } = await supabase
         .from('ai_action_logs')
@@ -178,16 +245,13 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           unit: m.goals?.target_unit || ''
         }))
       );
-      setHealthData(
-        (healthSummary || []).map(h => ({
-          date: h.date,
-          steps: h.steps,
-          weight: h.weight,
-          heart_rate_avg: h.heart_rate_avg,
-          active_calories: h.active_calories,
-          sleep_hours: h.sleep_hours
-        }))
+      
+      // Merge health data from both sources
+      const mergedHealthData = mergeHealthData(
+        healthSummary || [], 
+        unifiedMetrics || []
       );
+      setHealthData(mergedHealthData);
 
     } catch (error) {
       console.error('Error loading client data:', error);
