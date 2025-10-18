@@ -23,6 +23,7 @@ const DEFAULT_WIDGETS = [
   { metric_name: 'Steps', source: 'garmin' },
   { metric_name: 'Day Strain', source: 'whoop' },
   { metric_name: 'Recovery Score', source: 'whoop' },
+  { metric_name: 'Max Heart Rate', source: 'whoop' },
   { metric_name: 'Recovery Score', source: 'ultrahuman' }, // С fallback на HRV
   { metric_name: 'Training Readiness', source: 'garmin' }, // С fallback на Body Battery
   { metric_name: 'Resting Heart Rate', source: 'whoop' },
@@ -203,155 +204,99 @@ export const fetchWidgetData = async (
   try {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const thirtyDaysAgoStr = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
 
-    // Получаем metric_id для конкретной метрики и источника
-    let { data: metricData } = await supabase
-      .from('user_metrics')
-      .select('id, unit, metric_name')
+    // JOIN запрос - получаем свежие данные независимо от unit или user_metrics.id
+    const { data: latestRows, error: latestError } = await supabase
+      .from('metric_values')
+      .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
       .eq('user_id', userId)
-      .eq('metric_name', metricName)
-      .eq('source', source.toLowerCase())
-      .limit(1)
-      .maybeSingle();
+      .eq('user_metrics.metric_name', metricName)
+      .eq('user_metrics.source', source.toLowerCase())
+      .gte('measurement_date', sevenDaysAgo)
+      .lte('measurement_date', todayStr)
+      .order('measurement_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(20);
 
+    if (latestError) {
+      console.error('Error fetching latest metric:', latestError);
+      return null;
+    }
+
+    let latest: any = null;
     let actualMetricName = metricName;
     let needsConversion = false;
+    let unit = '';
 
-    // Если метрика не найдена, пробуем fallback метрики
-    if (!metricData) {
+    // Для Steps - берем максимум за сегодня
+    const isSteps = metricName.toLowerCase().includes('step');
+    if (isSteps && latestRows && latestRows.length > 0) {
+      const todaySteps = latestRows.filter(r => r.measurement_date === todayStr);
+      if (todaySteps.length > 0) {
+        latest = todaySteps.reduce((max, r) => r.value > max.value ? r : max, todaySteps[0]);
+      } else {
+        latest = latestRows[0]; // последний доступный день
+      }
+      unit = (latest.user_metrics as any).unit || 'steps';
+    } else if (latestRows && latestRows.length > 0) {
+      latest = latestRows[0];
+      unit = (latest.user_metrics as any).unit || '';
+    }
+
+    // Если не нашли, пробуем fallback метрики
+    if (!latest) {
       const fallbackMetrics = getFallbackMetrics(metricName, source);
       
       for (const fallback of fallbackMetrics) {
-        const { data: fallbackData } = await supabase
-          .from('user_metrics')
-          .select('id, unit, metric_name')
+        const { data: fallbackRows } = await supabase
+          .from('metric_values')
+          .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
           .eq('user_id', userId)
-          .eq('metric_name', fallback)
-          .eq('source', source.toLowerCase())
-          .limit(1)
-          .maybeSingle();
+          .eq('user_metrics.metric_name', fallback)
+          .eq('user_metrics.source', source.toLowerCase())
+          .gte('measurement_date', sevenDaysAgo)
+          .lte('measurement_date', todayStr)
+          .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(20);
         
-        if (fallbackData) {
-          metricData = fallbackData;
+        if (fallbackRows && fallbackRows.length > 0) {
+          latest = fallbackRows[0];
           actualMetricName = fallback;
           needsConversion = true;
+          unit = (latest.user_metrics as any).unit || '';
           break;
         }
       }
     }
 
-    if (!metricData) return null;
-
-    const isSteps = metricName.toLowerCase().includes('step');
-
-    if (isSteps) {
-      // Для шагов берем максимум за сегодняшний день (инкрементальные события могут приходить не по порядку)
-      const { data: todayRows } = await supabase
-        .from('metric_values')
-        .select('value, measurement_date, created_at')
-        .eq('user_id', userId)
-        .eq('metric_id', metricData.id)
-        .eq('measurement_date', todayStr)
-        .order('value', { ascending: false })
-        .limit(1);
-
-      const latest = todayRows && todayRows.length > 0 ? todayRows[0] : null;
-
-      // Для тренда берем максимум за вчера (если нет — ближайший предыдущий день)
-      let previous: { value: number; measurement_date: string } | null = null;
-
-      const { data: yRows } = await supabase
-        .from('metric_values')
-        .select('value, measurement_date')
-        .eq('user_id', userId)
-        .eq('metric_id', metricData.id)
-        .eq('measurement_date', yesterdayStr)
-        .order('value', { ascending: false })
-        .limit(1);
-
-      if (yRows && yRows.length > 0) {
-        previous = yRows[0] as any;
-      } else {
-        const { data: prevAny } = await supabase
-          .from('metric_values')
-          .select('value, measurement_date')
-          .eq('user_id', userId)
-          .eq('metric_id', metricData.id)
-          .lt('measurement_date', todayStr)
-          .order('measurement_date', { ascending: false })
-          .order('value', { ascending: false })
-          .limit(1);
-        if (prevAny && prevAny.length > 0) previous = prevAny[0] as any;
-      }
-
-      if (!latest) return null;
-
-      let trend: number | undefined;
-      if (previous && previous.value > 0) {
-        trend = ((latest.value - previous.value) / previous.value) * 100;
-      }
-
-      // Применяем конверсию если используется fallback метрика
-      const finalValue = needsConversion 
-        ? convertMetricValue(latest.value, actualMetricName, metricName, source)
-        : latest.value;
-
-      return {
-        value: finalValue,
-        unit: needsConversion ? '%' : metricData.unit,
-        date: latest.measurement_date,
-        trend,
-      };
-    }
-
-    // Для обычных метрик: сначала пытаемся получить данные за сегодня
-    const { data: todayData } = await supabase
-      .from('metric_values')
-      .select('value, measurement_date, created_at')
-      .eq('user_id', userId)
-      .eq('metric_id', metricData.id)
-      .eq('measurement_date', todayStr)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    let latest = todayData && todayData.length > 0 ? todayData[0] : null;
-
-    // Если нет данных за сегодня - берем последнее доступное значение
-    if (!latest) {
-      const { data: latestData } = await supabase
-        .from('metric_values')
-        .select('value, measurement_date, created_at')
-        .eq('user_id', userId)
-        .eq('metric_id', metricData.id)
-        .lte('measurement_date', todayStr)
-        .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      latest = latestData && latestData.length > 0 ? latestData[0] : null;
-    }
-
     if (!latest) return null;
 
-    // Для тренда - берем значение за вчера или последнее перед latest.measurement_date
-    const trendDate = latest.measurement_date === todayStr 
-      ? yesterdayStr 
-      : new Date(new Date(latest.measurement_date).getTime() - 86400000).toISOString().split('T')[0];
+    // Логирование для диагностики
+    console.log(`[Widget] ${metricName} (${source}):`, {
+      date: latest.measurement_date,
+      value: latest.value,
+      unit,
+      actualMetricName,
+      needsConversion
+    });
 
-    const { data: previousData } = await supabase
+    // Для тренда - берем предыдущий день
+    const latestDate = latest.measurement_date;
+    const previousDate = new Date(new Date(latestDate).getTime() - 86400000).toISOString().split('T')[0];
+
+    const { data: previousRows } = await supabase
       .from('metric_values')
-      .select('value, measurement_date')
+      .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
       .eq('user_id', userId)
-      .eq('metric_id', metricData.id)
-      .eq('measurement_date', trendDate)
+      .eq('user_metrics.metric_name', actualMetricName)
+      .eq('user_metrics.source', source.toLowerCase())
+      .eq('measurement_date', previousDate)
       .order('created_at', { ascending: false })
       .limit(1);
 
-    const previous = previousData && previousData.length > 0 ? previousData[0] : null;
+    const previous = previousRows && previousRows.length > 0 ? previousRows[0] : null;
 
     let trend: number | undefined;
     if (previous && previous.value > 0) {
@@ -365,7 +310,7 @@ export const fetchWidgetData = async (
 
     return {
       value: finalValue,
-      unit: needsConversion ? '%' : metricData.unit,
+      unit: needsConversion ? '%' : unit,
       date: latest.measurement_date,
       trend,
     };
