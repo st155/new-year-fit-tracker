@@ -110,6 +110,52 @@ export function useFastingWindow(habitId: string, userId?: string) {
     },
   });
 
+  // Explicitly start fasting from any state (including inactive)
+  const startFasting = useMutation({
+    mutationFn: async () => {
+      if (!userId) throw new Error("User not authenticated");
+
+      const now = new Date();
+
+      // If currently eating, close the eating window first (same as endEating)
+      if (currentWindow) {
+        const eatingStart = new Date(currentWindow.eating_start);
+        const eatingDuration = Math.floor((now.getTime() - eatingStart.getTime()) / 60000);
+
+        const { error } = await supabase
+          .from("fasting_windows")
+          .update({
+            eating_end: now.toISOString(),
+            eating_duration: eatingDuration,
+          })
+          .eq("id", currentWindow.id);
+
+        if (error) throw error;
+        return;
+      }
+
+      // If not currently eating, create a zero-duration eating window to anchor fasting start
+      const { error } = await supabase
+        .from("fasting_windows")
+        .insert({
+          user_id: userId,
+          habit_id: habitId,
+          eating_start: now.toISOString(),
+          eating_end: now.toISOString(),
+          eating_duration: 0,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fasting-windows", habitId] });
+      toast.success("Голодание началось! 💪");
+    },
+    onError: (error) => {
+      toast.error(`Ошибка: ${error.message}`);
+    },
+  });
+
   // Calculate current status
   const getCurrentStatus = () => {
     if (!currentWindow) {
@@ -156,8 +202,10 @@ export function useFastingWindow(habitId: string, userId?: string) {
     status,
     isLoading,
     startEating: startEating.mutate,
+    startFasting: startFasting.mutate,
     endEating: endEating.mutate,
     isStarting: startEating.isPending,
+    isFastingStarting: startFasting.isPending,
     isEnding: endEating.isPending,
   };
 }

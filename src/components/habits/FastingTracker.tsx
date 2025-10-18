@@ -13,7 +13,7 @@ interface FastingTrackerProps {
 }
 
 export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerProps) {
-  const { status, startEating, endEating, isStarting, isEnding, windows } = useFastingWindow(habit.id, userId);
+  const { status, startEating, startFasting, endEating, isStarting, isFastingStarting, isEnding, windows } = useFastingWindow(habit.id, userId);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every minute
@@ -107,9 +107,9 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
         {/* Control Button */}
         <FastingControlButton
           status={status}
-          onStartFasting={() => endEating()}
+          onStartFasting={() => startFasting()}
           onStartEating={() => startEating()}
-          isLoading={isStarting || isEnding}
+          isLoading={isStarting || isFastingStarting || isEnding}
         />
 
         {/* Goal Progress Info */}
