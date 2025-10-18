@@ -17,7 +17,8 @@ serve(async (req) => {
       message, 
       contextMode = 'general',
       mentionedClients = [],
-      mentionedNames = [] // Raw names mentioned (for fuzzy matching)
+      mentionedNames = [], // Raw names mentioned (for fuzzy matching)
+      contextClientId // Client selected in UI context
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -33,7 +34,7 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
-    console.log('AI Chat request:', { conversationId, contextMode, mentionedClients });
+    console.log('AI Chat request:', { conversationId, contextMode, mentionedClients, contextClientId });
 
     // Get or create conversation
     let conversation;
@@ -70,6 +71,75 @@ serve(async (req) => {
     // Build context based on mode and mentioned clients
     let contextData = '';
     let disambiguationNeeded = [];
+    
+    // PRIORITY: Load context client first if specified
+    if (contextClientId) {
+      const { data: contextClientProfile } = await supabaseClient
+        .from('profiles')
+        .select('user_id, username, full_name')
+        .eq('user_id', contextClientId)
+        .single();
+      
+      if (contextClientProfile) {
+        contextData += `\n\n=== 🎯 SELECTED CLIENT IN CURRENT CONTEXT ===\n`;
+        contextData += `**CLIENT_ID (use this in tool calls): "${contextClientProfile.user_id}"**\n`;
+        contextData += `Name: ${contextClientProfile.full_name} (@${contextClientProfile.username})\n`;
+        
+        // Load client's recent goals with measurements
+        const { data: clientGoals } = await supabaseClient
+          .from('goals')
+          .select(`
+            id,
+            goal_name,
+            goal_type,
+            target_value,
+            target_unit,
+            is_personal,
+            created_at,
+            measurements (
+              value,
+              unit,
+              measurement_date
+            )
+          `)
+          .eq('user_id', contextClientId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (clientGoals && clientGoals.length > 0) {
+          contextData += `\nRecent Goals:\n`;
+          clientGoals.forEach(goal => {
+            const measurements = (goal as any).measurements || [];
+            const latestMeasurement = measurements.sort((a: any, b: any) => 
+              new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
+            )[0];
+            
+            contextData += `- ${goal.goal_name} (${goal.goal_type}): Target ${goal.target_value} ${goal.target_unit}`;
+            if (latestMeasurement) {
+              contextData += ` | Current: ${latestMeasurement.value} ${latestMeasurement.unit} (${latestMeasurement.measurement_date})`;
+            } else {
+              contextData += ` | Current: No measurements yet`;
+            }
+            contextData += `\n`;
+          });
+        }
+        
+        // Load recent metrics
+        const { data: recentMetrics } = await supabaseClient
+          .from('client_unified_metrics')
+          .select('*')
+          .eq('user_id', contextClientId)
+          .order('measurement_date', { ascending: false })
+          .limit(20);
+        
+        if (recentMetrics && recentMetrics.length > 0) {
+          contextData += `\nRecent Metrics (last 20):\n`;
+          recentMetrics.forEach(metric => {
+            contextData += `- ${metric.metric_name}: ${metric.value} ${metric.unit} (${metric.measurement_date}, source: ${metric.source})\n`;
+          });
+        }
+      }
+    }
     
     // Handle fuzzy matching for mentioned names
     if (mentionedNames.length > 0) {
@@ -168,10 +238,15 @@ serve(async (req) => {
       );
     }
     
-    if (mentionedClients.length > 0) {
-      console.log('Loading context for mentioned clients:', mentionedClients);
+    // Filter out contextClientId from mentionedClients to avoid duplication
+    const additionalClients = contextClientId 
+      ? mentionedClients.filter(id => id !== contextClientId)
+      : mentionedClients;
+    
+    if (additionalClients.length > 0) {
+      console.log('Loading context for additional mentioned clients:', additionalClients);
       
-      for (const clientId of mentionedClients) {
+      for (const clientId of additionalClients) {
         // Get client profile with details
         const { data: clientProfile } = await supabaseClient
           .from('profiles')
@@ -277,7 +352,9 @@ IMPORTANT INSTRUCTIONS:
 
 4. Be concise but thorough. Focus on actionable advice.
 
-5. CRITICAL: When using tools (create_client_goals, add_measurements), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.`;
+5. CRITICAL: When using tools (create_client_goals, add_measurements), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.
+
+6. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.`;
 
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

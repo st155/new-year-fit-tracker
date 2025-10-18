@@ -96,7 +96,8 @@ export const useAIConversations = (userId: string | undefined) => {
     message: string,
     contextMode: string = 'general',
     mentionedClients: string[] = [],
-    mentionedNames: string[] = []
+    mentionedNames: string[] = [],
+    contextClientId?: string
   ) => {
     if (!userId) return null;
 
@@ -108,7 +109,8 @@ export const useAIConversations = (userId: string | undefined) => {
           message,
           contextMode,
           mentionedClients,
-          mentionedNames
+          mentionedNames,
+          contextClientId
         }
       });
 

@@ -123,6 +123,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
                   messages={messages}
                   currentConversation={currentConversation}
                   contextMode={contextMode}
+                  selectedClient={selectedClient}
                   sending={sending}
                   onSendMessage={sendMessage}
                   onSwitchToActionsTab={() => setActiveTab('actions')}

@@ -18,8 +18,15 @@ interface AIChatWindowProps {
   messages: AIMessage[];
   currentConversation: AIConversation | null;
   contextMode: string;
+  selectedClient?: {
+    id: string;
+    user_id: string;
+    username: string;
+    full_name: string;
+    avatar_url?: string;
+  } | null;
   sending: boolean;
-  onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[]) => Promise<any>;
+  onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[], contextClientId?: string) => Promise<any>;
   onSwitchToActionsTab?: () => void;
 }
 
@@ -27,6 +34,7 @@ export const AIChatWindow = ({
   messages,
   currentConversation,
   contextMode,
+  selectedClient,
   sending,
   onSendMessage,
   onSwitchToActionsTab
@@ -156,7 +164,7 @@ export const AIChatWindow = ({
     }
 
     try {
-      const response = await onSendMessage(textToSend, contextMode, clientIds, names);
+      const response = await onSendMessage(textToSend, contextMode, clientIds, names, selectedClient?.user_id);
       
       // Check if disambiguation is needed
       if (response?.needsDisambiguation) {
@@ -222,7 +230,7 @@ export const AIChatWindow = ({
     const approvalMessage = "Да, выполнить план";
     setInput('');
     
-    await onSendMessage(approvalMessage, contextMode, []);
+    await onSendMessage(approvalMessage, contextMode, [], [], selectedClient?.user_id);
     
     // Switch to actions tab to review
     if (onSwitchToActionsTab) {
