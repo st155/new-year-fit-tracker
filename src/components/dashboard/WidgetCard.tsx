@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle } from 'lucide-react';
 import { fetchWidgetData } from '@/hooks/useWidgets';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface WidgetCardProps {
   metricName: string;
@@ -85,6 +88,7 @@ const getSourceDisplayName = (source: string): string => {
 
 export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
     value: number | string;
@@ -142,18 +146,31 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
 
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
+  
+  // Проверка на устаревшие данные (старше 2 дней)
+  const isDataStale = data?.date && 
+    new Date().getTime() - new Date(data.date).getTime() > 2 * 24 * 60 * 60 * 1000;
+  const isWhoopSource = source.toLowerCase() === 'whoop';
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
+      className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
       style={{
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: trendColor || `${color}30`,
+        borderColor: isDataStale ? '#ef4444' : (trendColor || `${color}30`),
       }}
     >
       <CardContent className="p-6">
+        {isDataStale && isWhoopSource && (
+          <div className="absolute top-2 right-2 flex gap-2">
+            <Badge variant="destructive" className="text-xs">
+              ⚠️ Устарело
+            </Badge>
+          </div>
+        )}
+        
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground mb-1">
@@ -232,6 +249,20 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
             </div>
           )}
         </div>
+
+        {isDataStale && isWhoopSource && (
+          <div className="mt-3 pt-3 border-t">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full text-xs"
+              onClick={() => navigate('/integrations')}
+            >
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Переподключить Whoop
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

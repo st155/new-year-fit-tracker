@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,8 @@ import {
   Zap,
   Activity,
   Moon,
-  Heart
+  Heart,
+  AlertCircle
 } from 'lucide-react';
 
 interface WhoopConnection {
@@ -23,6 +24,7 @@ interface WhoopConnection {
   connectedAt?: string;
   lastSync?: string;
   whoopUserId?: string;
+  isActive?: boolean;
 }
 
 export function WhoopIntegration() {
@@ -57,6 +59,7 @@ export function WhoopIntegration() {
           connectedAt: token.created_at,
           lastSync: token.last_sync_date || token.updated_at,
           whoopUserId: token.whoop_user_id,
+          isActive: token.is_active,
         });
       } else {
         setConnection({ connected: false });
@@ -203,13 +206,28 @@ export function WhoopIntegration() {
 
   return (
     <div className="space-y-6">
+      {/* Inactive token warning */}
+      {connection.connected && !connection.isActive && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Требуется переподключение</AlertTitle>
+          <AlertDescription>
+            Whoop credentials изменились или токен истёк. Пожалуйста, переподключите аккаунт для продолжения синхронизации.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Connected Status */}
       {connection.connected && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-success" />
-              Whoop подключен
+              {connection.isActive ? (
+                <CheckCircle className="h-5 w-5 text-success" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              )}
+              Whoop {connection.isActive ? 'подключен' : 'требует переподключения'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

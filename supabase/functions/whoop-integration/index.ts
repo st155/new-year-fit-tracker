@@ -374,14 +374,18 @@ async function syncWhoopData(
         currentEnvClientId: whoopClientId,
       });
 
-      // Если client_id не совпадает, нужно переподключиться
-      if (errorText.includes('Client ID from this request does not match')) {
+      // Если client_id не совпадает или invalid_request - нужно переподключиться
+      if (errorText.includes('Client ID from this request does not match') || 
+          errorText.includes('invalid_request') ||
+          errorText.includes('invalid_grant')) {
+        
+        console.log('Deactivating token due to credential mismatch or invalid grant');
         await supabase
           .from('whoop_tokens')
           .update({ is_active: false })
           .eq('user_id', userId);
         
-        throw new Error('Whoop credentials have changed. Please reconnect your Whoop account.');
+        throw new Error('RECONNECT_REQUIRED');
       }
 
       throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
