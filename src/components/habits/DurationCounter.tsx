@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { AIMotivation } from "@/components/habits/AIMotivation";
 
 interface DurationCounterProps {
   habit: any;
@@ -70,6 +71,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
   };
 
   const milestone = getMilestone(elapsed.days);
+  const elapsedMinutes = elapsed.days * 1440 + elapsed.hours * 60 + elapsed.minutes;
 
   return (
     <>
@@ -128,10 +130,15 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
                 <div className="text-xs text-muted-foreground">Current</div>
                 <div className="font-semibold">{elapsed.days} days</div>
               </div>
+              </div>
             </div>
-          </div>
 
-          {/* Reset Button */}
+            {/* AI Motivation */}
+            {habit.ai_motivation && (
+              <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
+            )}
+
+            {/* Reset Button */}
           <Button 
             variant="outline" 
             className="w-full"
