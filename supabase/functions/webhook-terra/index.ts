@@ -66,6 +66,29 @@ serve(async (req) => {
       reference_id: payload.reference_id
     });
 
+    // Get user_id for logging
+    let userId = null;
+    if (payload.user?.user_id) {
+      const { data: tokenData } = await supabase
+        .from('terra_tokens')
+        .select('user_id')
+        .eq('terra_user_id', payload.user.user_id)
+        .eq('is_active', true)
+        .maybeSingle();
+      userId = tokenData?.user_id || null;
+    }
+
+    // Log webhook receipt
+    await supabase.from('webhook_logs').insert({
+      webhook_type: 'terra',
+      event_type: payload.type,
+      terra_user_id: payload.user?.user_id || null,
+      user_id: userId,
+      payload: payload,
+      status: 'received',
+      created_at: new Date().toISOString()
+    });
+
     // Persist minimal payload audit trail for diagnostics
     try {
       const auditUser = payload.user?.user_id || payload.reference_id || 'unknown';

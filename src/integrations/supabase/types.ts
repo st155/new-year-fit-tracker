@@ -2257,6 +2257,45 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string | null
+          id: string
+          payload: Json | null
+          status: string
+          terra_user_id: string | null
+          user_id: string | null
+          webhook_type: string
+          whoop_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          status: string
+          terra_user_id?: string | null
+          user_id?: string | null
+          webhook_type: string
+          whoop_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string
+          terra_user_id?: string | null
+          user_id?: string | null
+          webhook_type?: string
+          whoop_user_id?: string | null
+        }
+        Relationships: []
+      }
       whoop_tokens: {
         Row: {
           access_token: string

@@ -105,6 +105,17 @@ serve(async (req) => {
 
     console.log(`✅ Found user: ${tokenData.user_id}, triggering sync...`);
     
+    // Log webhook receipt
+    await supabase.from('webhook_logs').insert({
+      webhook_type: 'whoop',
+      event_type: eventType,
+      whoop_user_id: whoopUserId,
+      user_id: tokenData.user_id,
+      payload: payload,
+      status: 'processed',
+      created_at: new Date().toISOString()
+    });
+    
     // Вызываем функцию синхронизации
     const { data: syncResult, error: syncError } = await supabase.functions.invoke('whoop-integration', {
       body: {
