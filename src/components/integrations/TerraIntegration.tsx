@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
   CheckCircle, 
@@ -65,6 +66,7 @@ const AVAILABLE_PROVIDERS = [
 export function TerraIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -180,7 +182,14 @@ export function TerraIntegration() {
 
       setTimeout(checkStatus, 2000);
       
+      // Очистка всех кэшей метрик
       localStorage.removeItem('fitness_metrics_cache');
+      
+      // Invalidate React Query caches
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['metric-values'] });
+      
       window.dispatchEvent(new CustomEvent('terra-data-updated'));
     } catch (error: any) {
       console.error('Sync error:', error);

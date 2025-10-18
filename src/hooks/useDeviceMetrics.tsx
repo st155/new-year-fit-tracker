@@ -11,9 +11,24 @@ export const useDeviceMetrics = (deviceFilter: DeviceFilter) => {
   const deviceMetrics = metrics
     .filter(m => deviceFilter === 'all' || m.source.toLowerCase() === deviceFilter.toLowerCase())
     .reduce((acc, metric) => {
-      if (!acc[metric.metric_name] || new Date(metric.measurement_date) > new Date(acc[metric.metric_name].measurement_date)) {
+      const existing = acc[metric.metric_name];
+      
+      if (!existing) {
         acc[metric.metric_name] = metric;
+      } else {
+        const existingDate = new Date(existing.measurement_date);
+        const currentDate = new Date(metric.measurement_date);
+        
+        // Если даты одинаковые - выбираем по created_at (самую свежую запись)
+        if (existingDate.getTime() === currentDate.getTime()) {
+          if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
+            acc[metric.metric_name] = metric;
+          }
+        } else if (currentDate > existingDate) {
+          acc[metric.metric_name] = metric;
+        }
       }
+      
       return acc;
     }, {} as Record<string, any>);
   

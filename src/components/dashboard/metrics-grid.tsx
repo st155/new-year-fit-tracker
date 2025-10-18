@@ -195,11 +195,20 @@ export function MetricsGrid() {
           const localKey = unifiedToLocalMapping[unifiedName];
           if (localKey && data) {
             const rawValue = (data.aggregated_value ?? data.value);
-            const displayValue = rawValue != null
-              ? (localKey === 'steps' ? Math.round(Number(rawValue)).toString() : Number(rawValue).toFixed(1))
-              : '—';
+            
+            // Для Day Strain: если 0 - показываем "Нет данных"
+            let displayValue = '—';
+            if (rawValue != null && rawValue !== 0) {
+              displayValue = localKey === 'steps' 
+                ? Math.round(Number(rawValue)).toString() 
+                : Number(rawValue).toFixed(1);
+            } else if (localKey === 'recovery' && rawValue === 0) {
+              // Для Recovery Score: 0 тоже валидное значение
+              displayValue = '0.0';
+            }
 
             const srcs = data.sources || (data.source ? [data.source] : []);
+            const measurementDate = data.measurement_date;
 
             newMetrics[localKey] = {
               value: displayValue,
@@ -208,6 +217,7 @@ export function MetricsGrid() {
               source_count: data.source_count || (srcs.length || 0),
               source_values: data.source_values || {},
               change: null,
+              date: measurementDate,
             };
           }
         });

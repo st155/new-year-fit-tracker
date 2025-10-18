@@ -12,6 +12,7 @@ interface UnifiedMetric {
   source: string;
   unit: string;
   priority: number;
+  created_at?: string;
 }
 
 export const useUnifiedMetrics = (userId: string | undefined, metricName?: string, startDate?: Date, endDate?: Date) => {
