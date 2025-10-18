@@ -60,7 +60,7 @@ export const useAIConversations = (userId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('ai_messages')
-        .select('*')
+        .select('id, conversation_id, role, content, metadata, created_at')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
@@ -221,7 +221,17 @@ export const useAIConversations = (userId: string | undefined) => {
           filter: `conversation_id=eq.${currentConversation.id}`
         },
         (payload) => {
-          setMessages(prev => [...prev, payload.new as AIMessage]);
+          const newMessage = payload.new as AIMessage;
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Show toast for auto-executed system messages
+          if (newMessage.role === 'system' && newMessage.metadata?.autoExecuted) {
+            toast({
+              title: '⚡ Автоматически выполнено',
+              description: 'AI выполнил действия. Проверьте результат.',
+              duration: 5000,
+            });
+          }
         }
       )
       .subscribe();
@@ -229,7 +239,7 @@ export const useAIConversations = (userId: string | undefined) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentConversation?.id]);
+  }, [currentConversation?.id, toast]);
 
   return {
     conversations,

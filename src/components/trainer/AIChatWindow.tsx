@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -14,7 +16,6 @@ import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
-import { Zap, CheckCircle } from 'lucide-react';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
@@ -347,7 +348,139 @@ export const AIChatWindow = ({
       parts.push(content.substring(lastIndex));
     }
 
-    return parts.length > 0 ? parts : content;
+  return parts.length > 0 ? parts : content;
+  };
+
+  // ActionPlanCard component
+  const ActionPlanCard = ({ message, onApprove, onReconsider, sending }: {
+    message: AIMessage;
+    onApprove: () => void;
+    onReconsider: () => void;
+    sending: boolean;
+  }) => {
+    const actionData = message.metadata?.actionData || [];
+    const actionCount = actionData.length || 0;
+
+    return (
+      <div className="mt-3 border-l-4 border-primary pl-3">
+        <div className="flex items-center gap-2 mb-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <Badge variant="secondary" className="text-xs">
+            План ожидает подтверждения
+          </Badge>
+        </div>
+        
+        {actionCount > 0 && (
+          <div className="text-xs text-muted-foreground mb-3">
+            Действий: {actionCount}
+          </div>
+        )}
+        
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={onApprove}
+            disabled={sending}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Выполнить
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onReconsider}
+            disabled={sending}
+          >
+            Подумать
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // AutoExecutionReport component
+  const AutoExecutionReport = ({ message }: { message: AIMessage }) => {
+    const [expanded, setExpanded] = useState(false);
+    const results = message.metadata?.results || [];
+    const successCount = results.filter((r: any) => r.success).length;
+    const failCount = results.filter((r: any) => !r.success).length;
+    const totalCount = results.length;
+
+    return (
+      <div className="flex justify-center my-4 animate-fade-in">
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800 p-4 max-w-2xl w-full shadow-lg">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="bg-green-600 dark:bg-green-500 p-2 rounded-lg">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-green-900 dark:text-green-100">
+                    Автоматически выполнено
+                  </span>
+                  {successCount === totalCount && totalCount > 0 ? (
+                    <Badge variant="secondary" className="bg-green-600 text-white text-xs">
+                      {successCount}/{totalCount} успешно
+                    </Badge>
+                  ) : totalCount > 0 ? (
+                    <Badge variant="destructive" className="text-xs">
+                      {successCount}/{totalCount} успешно
+                    </Badge>
+                  ) : null}
+                </div>
+                
+                <div className="text-xs text-green-700 dark:text-green-300 whitespace-pre-line mb-2">
+                  {message.content}
+                </div>
+
+                {results.length > 0 && (
+                  <>
+                    <div className="space-y-1 mt-3">
+                      {results.slice(0, expanded ? undefined : 3).map((result: any, idx: number) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs">
+                          {result.success ? (
+                            <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="h-3 w-3 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                          )}
+                          <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
+                            {result.message || result.action_type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {results.length > 3 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExpanded(!expanded)}
+                        className="mt-2 h-7 text-xs text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100"
+                      >
+                        {expanded ? (
+                          <>
+                            <ChevronUp className="h-3 w-3 mr-1" />
+                            Свернуть
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-3 w-3 mr-1" />
+                            Показать все ({results.length})
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
   };
 
   return (
@@ -418,19 +551,7 @@ export const AIChatWindow = ({
             {messages.map((message) => (
               <div key={message.id}>
                 {message.role === 'system' ? (
-                  <div className="flex justify-center my-4">
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 max-w-md">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                          Автоматически выполнено
-                        </span>
-                      </div>
-                      <div className="text-xs text-green-700 dark:text-green-300 whitespace-pre-line">
-                        {message.content}
-                      </div>
-                    </div>
-                  </div>
+                  <AutoExecutionReport message={message} />
                 ) : (
                   <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {message.role === 'assistant' && (
@@ -470,25 +591,13 @@ export const AIChatWindow = ({
                         )}
 
                         {/* Show plan approval button */}
-                        {message.role === 'assistant' && message.metadata?.isPlan && (
-                          <div className="flex gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              onClick={handleApprovePlan}
-                              disabled={sending}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              ✅ Да, выполнить план
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setInput("Нужно подумать")}
-                              disabled={sending}
-                            >
-                              Нужно подумать
-                            </Button>
-                          </div>
+                        {message.role === 'assistant' && (message.metadata?.isPlan || message.metadata?.pendingActionId) && (
+                          <ActionPlanCard 
+                            message={message}
+                            onApprove={handleApprovePlan}
+                            onReconsider={() => setInput("Нужно подумать")}
+                            sending={sending}
+                          />
                         )}
                       </div>
                       
