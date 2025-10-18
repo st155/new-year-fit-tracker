@@ -227,6 +227,14 @@ export default {
           "100%": {
             backgroundPosition: "1000px 0"
           }
+        },
+        "pulse-glow": {
+          "0%, 100%": { filter: "drop-shadow(0 0 20px rgba(34, 197, 94, 0.4))" },
+          "50%": { filter: "drop-shadow(0 0 40px rgba(34, 197, 94, 0.8))" }
+        },
+        "milestone-bounce": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)" }
         }
       },
       animation: {
@@ -248,7 +256,9 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "swing": "swing 1s ease-in-out",
         "ripple": "ripple 0.6s ease-out",
-        "shimmer": "shimmer 2s linear infinite"
+        "shimmer": "shimmer 2s linear infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "milestone-bounce": "milestone-bounce 0.6s ease-in-out"
       },
     },
   },

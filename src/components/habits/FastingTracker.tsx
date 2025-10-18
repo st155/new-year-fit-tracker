@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { AIMotivation } from "./AIMotivation";
-import { Clock, Play, Square } from "lucide-react";
+import { CircularFastingProgress } from "./CircularFastingProgress";
+import { FastingControlButton } from "./FastingControlButton";
+import { FastingHistory } from "./FastingHistory";
 
 interface FastingTrackerProps {
   habit: any;
@@ -48,102 +48,96 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
   // Get last 7 completed windows
   const recentWindows = windows?.filter(w => w.eating_end && w.fasting_duration).slice(0, 7) || [];
 
+  // Get current milestone message
+  const getCurrentMilestone = () => {
+    if (!habit.ai_motivation?.milestones || !status.isFasting) return null;
+    
+    const sortedMilestones = [...habit.ai_motivation.milestones].sort((a, b) => a.minutes - b.minutes);
+    
+    for (let i = 0; i < sortedMilestones.length; i++) {
+      const milestone = sortedMilestones[i];
+      if (elapsedMinutes >= milestone.minutes && elapsedMinutes < milestone.minutes + 30) {
+        return milestone.message;
+      }
+    }
+    return null;
+  };
+
+  const currentMilestone = getCurrentMilestone();
+
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{habit.icon}</span>
-          <div>
-            <h3 className="font-semibold text-lg">{habit.name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {status.isFasting ? "Голодание" : status.isEating ? "Окно питания" : "Не активно"}
+    <Card className="relative overflow-hidden">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+      
+      {/* Header */}
+      <CardHeader className="relative">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{habit.icon}</span>
+            <div>
+              <h3 className="text-xl font-bold">{habit.name}</h3>
+              <p className="text-sm text-muted-foreground">
+                Цель: {targetWindow}:8 часов
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      {/* Content */}
+      <CardContent className="relative flex flex-col items-center space-y-6 pb-8">
+        {/* Circular Progress */}
+        <CircularFastingProgress
+          progress={progress}
+          elapsedMinutes={elapsedMinutes}
+          targetMinutes={targetMinutes}
+          status={status}
+        />
+
+        {/* Milestone Message */}
+        {currentMilestone && (
+          <div className="w-full p-4 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10 border border-purple-500/20 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <p className="text-center text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              {currentMilestone}
             </p>
           </div>
-        </div>
-        <div className="text-right">
-          {status.isFasting && (
-            <div className="text-2xl font-bold bg-gradient-to-r from-green-500 to-teal-500 bg-clip-text text-transparent">
-              {formatDuration(elapsedMinutes)}
-            </div>
-          )}
-          {status.isEating && (
-            <div className="text-xl font-semibold text-orange-500">
-              Еда {formatDuration(elapsedMinutes)}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Fasting Progress */}
-      {status.isFasting && (
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Прогресс {targetWindow}ч</span>
-            <span className="font-medium">{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-3" />
-          <p className="text-xs text-muted-foreground mt-1">
-            {elapsedMinutes < targetMinutes 
-              ? `Еще ${formatDuration(targetMinutes - elapsedMinutes)} до цели`
-              : `Цель достигнута! ${formatDuration(elapsedMinutes - targetMinutes)} сверх нормы`
-            }
-          </p>
-        </div>
-      )}
-
-      {/* Control Buttons */}
-      <div className="flex gap-2 mb-4">
-        {!status.isEating && (
-          <Button
-            onClick={() => startEating()}
-            disabled={isStarting}
-            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            {status.isFasting ? "Закончить голодание" : "Начать есть"}
-          </Button>
         )}
-        {status.isEating && (
-          <Button
-            onClick={() => endEating()}
-            disabled={isEnding}
-            className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
-          >
-            <Square className="h-4 w-4 mr-2" />
-            Закончить есть
-          </Button>
-        )}
-      </div>
 
-      {/* AI Motivation */}
-      {status.isFasting && habit.ai_motivation && (
-        <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
-      )}
+        {/* Control Button */}
+        <FastingControlButton
+          status={status}
+          onStartFasting={() => endEating()}
+          onStartEating={() => startEating()}
+          isLoading={isStarting || isEnding}
+        />
 
-      {/* Recent Windows */}
-      {recentWindows.length > 0 && (
-        <div className="mt-4 pt-4 border-t">
-          <p className="text-sm font-medium mb-2">Последние окна голодания</p>
-          <div className="space-y-1">
-            {recentWindows.map((window) => (
-              <div key={window.id} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {new Date(window.eating_end!).toLocaleDateString('ru-RU', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </div>
-                <div className="font-medium">
-                  {formatDuration(window.fasting_duration!)}
-                </div>
-              </div>
-            ))}
+        {/* Goal Progress Info */}
+        {status.isFasting && (
+          <div className="w-full p-3 rounded-lg bg-muted/50 border border-border/50">
+            <p className="text-xs text-center text-muted-foreground">
+              {elapsedMinutes < targetMinutes 
+                ? `⏱️ Еще ${formatDuration(targetMinutes - elapsedMinutes)} до цели`
+                : `🎉 Цель достигнута! +${formatDuration(elapsedMinutes - targetMinutes)} сверх нормы`
+              }
+            </p>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* AI Motivation Progress */}
+        {status.isFasting && habit.ai_motivation && (
+          <div className="w-full">
+            <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
+          </div>
+        )}
+
+        {/* History */}
+        {recentWindows.length > 0 && (
+          <div className="w-full pt-4 border-t">
+            <FastingHistory windows={recentWindows} />
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
