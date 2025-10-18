@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,10 +11,27 @@ import { AIContextSelector } from './AIContextSelector';
 import { MessageSquare, Sparkles } from 'lucide-react';
 import { PageLoader } from '@/components/ui/page-loader';
 
-export const TrainerAIHub = () => {
+interface TrainerAIHubProps {
+  selectedClient?: {
+    id: string;
+    user_id: string;
+    username: string;
+    full_name: string;
+    avatar_url?: string;
+  } | null;
+}
+
+export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
   const { user } = useAuth();
   const [contextMode, setContextMode] = useState('general');
   const [activeTab, setActiveTab] = useState('chat');
+
+  // Автоматически переключаться на контекст клиента, если он выбран
+  useEffect(() => {
+    if (selectedClient && contextMode !== 'goals') {
+      setContextMode('goals');
+    }
+  }, [selectedClient]);
 
   const {
     conversations,
@@ -54,6 +71,12 @@ export const TrainerAIHub = () => {
             </p>
           </div>
         </div>
+        {selectedClient && (
+          <div className="mt-4 p-3 bg-muted rounded-lg border">
+            <p className="text-sm text-muted-foreground mb-1">Выбранный клиент:</p>
+            <p className="font-medium">{selectedClient.full_name || selectedClient.username}</p>
+          </div>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -86,6 +109,7 @@ export const TrainerAIHub = () => {
               <div className="p-4 border-b">
                 <AIContextSelector
                   contextMode={contextMode}
+                  selectedClient={selectedClient}
                   onContextChange={(mode) => {
                     setContextMode(mode);
                     if (!currentConversation) {

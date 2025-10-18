@@ -128,7 +128,7 @@ function TrainerDashboardContent() {
       </div>
 
       <div className="px-4 max-w-7xl mx-auto mt-6">
-        {selectedClient ? (
+        {selectedClient && activeTab !== 'ai-hub' ? (
           <ClientDetailView 
             client={selectedClient} 
             onBack={handleBackToList} 
@@ -225,7 +225,7 @@ function TrainerDashboardContent() {
             </TabsContent>
 
             <TabsContent value="ai-hub">
-              <TrainerAIHub />
+              <TrainerAIHub selectedClient={selectedClient} />
             </TabsContent>
           </Tabs>
         )}

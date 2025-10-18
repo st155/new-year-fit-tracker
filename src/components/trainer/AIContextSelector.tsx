@@ -4,9 +4,16 @@ import { Target, BarChart3, MessageCircle, Trophy } from 'lucide-react';
 interface AIContextSelectorProps {
   contextMode: string;
   onContextChange: (mode: string) => void;
+  selectedClient?: {
+    id: string;
+    user_id: string;
+    username: string;
+    full_name: string;
+    avatar_url?: string;
+  } | null;
 }
 
-export const AIContextSelector = ({ contextMode, onContextChange }: AIContextSelectorProps) => {
+export const AIContextSelector = ({ contextMode, onContextChange, selectedClient }: AIContextSelectorProps) => {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Режим AI</label>
@@ -43,7 +50,9 @@ export const AIContextSelector = ({ contextMode, onContextChange }: AIContextSel
       </Select>
       <p className="text-xs text-muted-foreground">
         {contextMode === 'general' && 'Свободное общение с AI для любых вопросов'}
-        {contextMode === 'goals' && 'Создание и обновление целей для клиентов'}
+        {contextMode === 'goals' && (selectedClient 
+          ? `Работа с целями клиента: ${selectedClient.full_name || selectedClient.username}` 
+          : 'Создание и обновление целей для клиентов')}
         {contextMode === 'analysis' && 'Анализ прогресса и метрик клиентов'}
         {contextMode === 'challenge' && 'Управление челленджами и участниками'}
       </p>
