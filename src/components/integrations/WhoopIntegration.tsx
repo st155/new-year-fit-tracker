@@ -135,7 +135,8 @@ export function WhoopIntegration() {
       // Обновляем статус подключения
       await checkConnection();
       
-      // Инвалидируем все React Query кэши
+      // Инвалидируем все React Query кэши, особенно unified-metrics
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
       queryClient.invalidateQueries();
       
       // Очищаем localStorage кеши

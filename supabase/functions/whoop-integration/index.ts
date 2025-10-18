@@ -431,15 +431,14 @@ async function syncWhoopData(
     console.log('Whoop cycles received:', cyclesData.records?.length || 0);
 
     if (cyclesData.records && cyclesData.records.length > 0) {
+      // Группируем циклы по дате и берём последний для каждой даты
+      const cyclesByDate = new Map<string, any>();
+      
       for (const cycle of cyclesData.records) {
-        // Recovery и Strain относятся к дате окончания цикла (утро после сна)
-        // cycle.end это timestamp в миллисекундах или ISO строка
         let cycleDate: string;
         try {
           const endDate = new Date(cycle.end);
-          // Проверяем что дата валидная (не 1970-01-01)
           if (endDate.getFullYear() < 2020) {
-            // Если дата невалидная, используем start
             cycleDate = new Date(cycle.start).toISOString().split('T')[0];
             console.log(`⚠️ Invalid end date for cycle ${cycle.id}, using start date: ${cycleDate}`);
           } else {
@@ -450,7 +449,18 @@ async function syncWhoopData(
           cycleDate = new Date(cycle.start).toISOString().split('T')[0];
         }
         
-        console.log(`Processing cycle ${cycle.id} for date: ${cycleDate}`);
+        // Берём цикл с максимальным ID для каждой даты (последний)
+        const existing = cyclesByDate.get(cycleDate);
+        if (!existing || cycle.id > existing.id) {
+          cyclesByDate.set(cycleDate, { ...cycle, cycleDate });
+        }
+      }
+      
+      console.log(`Processing ${cyclesByDate.size} unique dates from ${cyclesData.records.length} cycles`);
+      
+      // Обрабатываем только последний цикл для каждой даты
+      for (const [cycleDate, cycle] of cyclesByDate) {
+        console.log(`Processing latest cycle ${cycle.id} for date: ${cycleDate}`);
         
         // Получаем Recovery score для цикла (отдельный API endpoint)
         try {
@@ -482,12 +492,13 @@ async function syncWhoopData(
                 'whoop'
               );
 
+              // Используем external_id с датой вместо cycle.id для upsert
               await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
                 measurement_date: cycleDate,
-                external_id: `whoop_recovery_${cycle.id}`,
+                external_id: `whoop_recovery_${cycleDate}`,
                 source_data: { 
                   cycle_id: cycle.id, 
                   raw: recoveryData.score,
