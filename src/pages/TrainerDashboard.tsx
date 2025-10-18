@@ -135,16 +135,16 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-9 bg-muted/50 p-1">
-              <TabsTrigger value="overview">Обзор</TabsTrigger>
-              <TabsTrigger value="clients">Клиенты</TabsTrigger>
-              <TabsTrigger value="challenges">Челленджи</TabsTrigger>
-              <TabsTrigger value="plans">Планы</TabsTrigger>
-              <TabsTrigger value="tasks">Задачи</TabsTrigger>
-              <TabsTrigger value="chat">Чат</TabsTrigger>
-              <TabsTrigger value="goals">Цели</TabsTrigger>
-              <TabsTrigger value="analytics">Аналитика</TabsTrigger>
-              <TabsTrigger value="ai-hub" className="gap-1">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-9 bg-muted/50 p-1 gap-1">
+              <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Обзор</TabsTrigger>
+              <TabsTrigger value="clients" className="whitespace-nowrap flex-shrink-0">Клиенты</TabsTrigger>
+              <TabsTrigger value="challenges" className="whitespace-nowrap flex-shrink-0">Челленджи</TabsTrigger>
+              <TabsTrigger value="plans" className="whitespace-nowrap flex-shrink-0">Планы</TabsTrigger>
+              <TabsTrigger value="tasks" className="whitespace-nowrap flex-shrink-0">Задачи</TabsTrigger>
+              <TabsTrigger value="chat" className="whitespace-nowrap flex-shrink-0">Чат</TabsTrigger>
+              <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap flex-shrink-0">Аналитика</TabsTrigger>
+              <TabsTrigger value="ai-hub" className="gap-1 whitespace-nowrap flex-shrink-0">
                 <Sparkles className="h-4 w-4" />
                 AI Hub
               </TabsTrigger>
