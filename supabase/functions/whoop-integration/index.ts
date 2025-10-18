@@ -508,7 +508,7 @@ async function syncWhoopData(
                   raw: recoveryData.score,
                   user_calibrating: recoveryData.user_calibrating 
                 },
-              }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+              }, { onConflict: 'user_id,metric_id,external_id' });
               
               if (recoveryError) {
                 console.error(`❌ Failed to save Recovery for ${cycleDate}:`, recoveryError);
@@ -544,7 +544,7 @@ async function syncWhoopData(
             measurement_date: cycleDate,
             external_id: `whoop_strain_${cycle.id}`,
             source_data: { cycle_id: cycle.id, raw: cycle.score },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (strainError) {
             console.error(`❌ Failed to save Day Strain for ${cycleDate}:`, strainError);
@@ -612,7 +612,7 @@ async function syncWhoopData(
             measurement_date: workoutDate,
             external_id: `whoop_workout_strain_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (workoutStrainError) {
             console.error(`❌ Failed to save Workout Strain for ${workoutDate}:`, workoutStrainError);
@@ -638,7 +638,7 @@ async function syncWhoopData(
             measurement_date: workoutDate,
             external_id: `whoop_max_hr_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (maxHrError) {
             console.error(`❌ Failed to save Max Heart Rate for ${workoutDate}:`, maxHrError);
@@ -684,7 +684,7 @@ async function syncWhoopData(
             measurement_date: sleepDate,
             external_id: `whoop_sleep_perf_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepPerfError) {
             console.error(`❌ Failed to save Sleep Performance for ${sleepDate}:`, sleepPerfError);
@@ -709,7 +709,7 @@ async function syncWhoopData(
             measurement_date: sleepDate,
             external_id: `whoop_sleep_eff_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepEffError) {
             console.error(`❌ Failed to save Sleep Efficiency for ${sleepDate}:`, sleepEffError);
@@ -736,7 +736,7 @@ async function syncWhoopData(
             measurement_date: sleepDate,
             external_id: `whoop_sleep_dur_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
-          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+          }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepDurError) {
             console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError);
