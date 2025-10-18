@@ -136,6 +136,15 @@ All colors MUST be HSL.
     --shadow-glow-negative: 0 0 40px hsl(0 100% 65% / 0.5), 0 0 60px hsl(0 100% 65% / 0.3);
     --shadow-glow-positive: 0 0 40px hsl(142 76% 53% / 0.5), 0 0 60px hsl(142 76% 53% / 0.3);
     --shadow-glow-neutral: 0 0 40px hsl(262 83% 58% / 0.5), 0 0 60px hsl(262 83% 58% / 0.3);
+    
+    /* Trainer Dashboard Colors */
+    --trainer-bg: 15 23 42;
+    --trainer-card-bg: 30 41 59;
+    --trainer-card-hover: 51 65 85;
+    --trainer-accent-orange: 249 115 22;
+    --trainer-accent-green: 34 197 94;
+    --trainer-accent-blue: 59 130 246;
+    --trainer-accent-slate: 148 163 184;
   }
 }
 

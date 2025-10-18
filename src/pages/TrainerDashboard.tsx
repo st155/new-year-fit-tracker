@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, MessageSquare, Sparkles } from "lucide-react";
+import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp } from "lucide-react";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
@@ -34,6 +34,7 @@ interface TrainerClient {
 
 function TrainerDashboardContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
@@ -117,14 +118,51 @@ function TrainerDashboardContent() {
     setSearchParams({ tab: currentTab });
   };
 
+  const topNavItems = [
+    { icon: Home, label: "Тренерский кабинет", color: "orange" },
+    { icon: Trophy, label: "Челленджи", color: "green" },
+    { icon: TrendingUp, label: "Мой прогресс", color: "blue" },
+    { icon: Target, label: "Мои цели", color: "purple" },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">
+    <div className="min-h-screen bg-trainer-bg pb-24">
+      {/* Top Navigation */}
+      <div className="px-4 py-6 bg-trainer-bg border-b border-slate-800">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+          <div className="hidden md:flex gap-6 mb-6">
+            {topNavItems.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center gap-2 cursor-pointer group"
+              >
+                <div className={`
+                  h-14 w-14 rounded-full flex items-center justify-center
+                  ${item.color === 'orange' ? 'bg-trainer-orange/10 group-hover:bg-trainer-orange/20' : ''}
+                  ${item.color === 'green' ? 'bg-trainer-green/10 group-hover:bg-trainer-green/20' : ''}
+                  ${item.color === 'blue' ? 'bg-trainer-blue/10 group-hover:bg-trainer-blue/20' : ''}
+                  ${item.color === 'purple' ? 'bg-purple-500/10 group-hover:bg-purple-500/20' : ''}
+                  transition-all duration-300
+                `}>
+                  <item.icon className={`
+                    h-6 w-6
+                    ${item.color === 'orange' ? 'text-trainer-orange' : ''}
+                    ${item.color === 'green' ? 'text-trainer-green' : ''}
+                    ${item.color === 'blue' ? 'text-trainer-blue' : ''}
+                    ${item.color === 'purple' ? 'text-purple-500' : ''}
+                  `} />
+                </div>
+                <span className="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          <h1 className="text-4xl font-bold text-white mb-2">
             Тренерский Кабинет
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-slate-400">
             Управление клиентами, целями и аналитика
           </p>
         </div>
@@ -138,16 +176,59 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-9 bg-muted/50 p-1 gap-1">
-              <TabsTrigger value="overview" className="whitespace-nowrap flex-shrink-0">Обзор</TabsTrigger>
-              <TabsTrigger value="clients" className="whitespace-nowrap flex-shrink-0">Клиенты</TabsTrigger>
-              <TabsTrigger value="challenges" className="whitespace-nowrap flex-shrink-0">Челленджи</TabsTrigger>
-              <TabsTrigger value="plans" className="whitespace-nowrap flex-shrink-0">Планы</TabsTrigger>
-              <TabsTrigger value="tasks" className="whitespace-nowrap flex-shrink-0">Задачи</TabsTrigger>
-              <TabsTrigger value="chat" className="whitespace-nowrap flex-shrink-0">Чат</TabsTrigger>
-              <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели</TabsTrigger>
-              <TabsTrigger value="analytics" className="whitespace-nowrap flex-shrink-0">Аналитика</TabsTrigger>
-              <TabsTrigger value="ai-hub" className="gap-1 whitespace-nowrap flex-shrink-0">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-9 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+              <TabsTrigger 
+                value="overview" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Обзор
+              </TabsTrigger>
+              <TabsTrigger 
+                value="clients" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Клиенты
+              </TabsTrigger>
+              <TabsTrigger 
+                value="challenges" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Челленджи
+              </TabsTrigger>
+              <TabsTrigger 
+                value="plans" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Планы
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tasks" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Задачи
+              </TabsTrigger>
+              <TabsTrigger 
+                value="chat" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Чат
+              </TabsTrigger>
+              <TabsTrigger 
+                value="goals" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Цели
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Аналитика
+              </TabsTrigger>
+              <TabsTrigger 
+                value="ai-hub" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
                 <Sparkles className="h-4 w-4" />
                 AI Hub
               </TabsTrigger>

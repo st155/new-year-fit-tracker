@@ -211,73 +211,86 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 stagger-fade-in">
       {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-200/20">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-slate-900/50 border-slate-800 hover:border-trainer-orange/30 transition-all duration-300 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Активных участников</CardTitle>
-            <Users className="h-4 w-4 text-orange-500" />
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Активных участников
+              </CardTitle>
+              <div className="text-3xl font-bold text-white">{stats.activeClients}</div>
+              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-0">
+                +14%
+              </Badge>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-trainer-orange/10 flex items-center justify-center">
+              <Users className="h-6 w-6 text-trainer-orange" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.activeClients}</div>
-            <Badge variant="secondary" className="mt-1 bg-orange-100 text-orange-700 border-orange-200">
-              +14%
-            </Badge>
-          </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-200/20">
+        <Card className="bg-slate-900/50 border-slate-800 hover:border-trainer-green/30 transition-all duration-300 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Средний прогресс</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Средний прогресс
+              </CardTitle>
+              <div className="text-3xl font-bold text-white">{stats.averageProgress}%</div>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">
+                +8%
+              </Badge>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-trainer-green/10 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-trainer-green" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.averageProgress}%</div>
-            <Badge variant="secondary" className="mt-1 bg-green-100 text-green-700 border-green-200">
-              +8%
-            </Badge>
-          </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-200/20">
+        <Card className="bg-slate-900/50 border-slate-800 hover:border-trainer-blue/30 transition-all duration-300 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Целей достигнуто</CardTitle>
-            <Target className="h-4 w-4 text-blue-500" />
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Целей достигнуто
+              </CardTitle>
+              <div className="text-3xl font-bold text-white">{stats.goalsAchieved}</div>
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0">
+                +12%
+              </Badge>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-trainer-blue/10 flex items-center justify-center">
+              <Target className="h-6 w-6 text-trainer-blue" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{stats.goalsAchieved}</div>
-            <p className="text-xs text-muted-foreground">/мес</p>
-            <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-700 border-blue-200">
-              +12%
-            </Badge>
-          </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden">
+        <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all duration-300 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Обновлений сегодня</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div className="space-y-2">
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Обновлений сегодня
+              </CardTitle>
+              <div className="text-3xl font-bold text-white">{stats.updatesThisWeek}</div>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-slate-700/30 flex items-center justify-center">
+              <Clock className="h-6 w-6 text-slate-400" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.updatesThisWeek}</div>
-          </CardContent>
         </Card>
       </div>
 
       {/* Общий прогресс команды */}
-      <Card>
+      <Card className="bg-slate-900/50 border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-orange-500" />
-              Общий прогресс команды
-            </CardTitle>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Trophy className="h-5 w-5 text-trainer-orange" />
+            Общий прогресс команды
+          </CardTitle>
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
             onClick={() => {/* Already on dashboard */}}
           >
             Посмотреть всех
@@ -285,47 +298,51 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {clients.slice(0, 4).map((client) => (
+          <div className="space-y-3">
+            {clients.slice(0, 4).map((client, idx) => (
               <div 
                 key={client.id} 
-                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
+                className="flex items-center justify-between p-4 bg-slate-900/30 rounded-xl hover:bg-slate-800/50 transition-all duration-300 cursor-pointer group hover-lift border border-slate-800/50 hover:border-slate-700"
                 onClick={() => {
                   setSelectedClient(client, { type: 'overview' });
                   onClientSelect?.(client);
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-12 w-12 border-2 border-trainer-orange/20">
                     <AvatarImage src={client.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                    <AvatarFallback className="bg-trainer-orange/10 text-trainer-orange font-bold">
                       {getInitials(client.full_name || client.username)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{client.full_name || client.username}</p>
-                    <p className="text-sm text-muted-foreground">{client.goals_count} цели</p>
+                    <p className="font-bold text-white">{client.full_name || client.username}</p>
+                    <p className="text-sm text-slate-400">{client.goals_count} цели</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-right min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Progress value={client.progress_percentage} className="w-20 h-2" />
-                      <span className="text-sm font-medium">{client.progress_percentage}%</span>
+                  <div className="text-right min-w-[120px]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Progress 
+                        value={client.progress_percentage} 
+                        className="w-24 h-2 bg-slate-800"
+                      />
+                      <span className="text-sm font-bold text-white">{client.progress_percentage}%</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-500">
                       {formatDate(client.last_measurement_date)}
                     </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-500/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       window.location.href = `/trainer-dashboard?tab=ai-hub&client=${client.user_id}`;
                     }}
                   >
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles className="h-5 w-5 text-purple-400" />
                   </Button>
                 </div>
               </div>
