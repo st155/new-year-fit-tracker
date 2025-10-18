@@ -29,6 +29,7 @@ const ChallengeDetail = lazy(() => import("./pages/ChallengeDetail"));
 const Habits = lazy(() => import("./pages/Habits"));
 const Feed = lazy(() => import("./pages/Feed"));
 const FitnessData = lazy(() => import("./pages/FitnessData"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 // Secondary pages
 const Profile = lazy(() => import("./pages/Profile"));
@@ -157,6 +158,13 @@ const App = () => {
                       <ProtectedRoute>
                         <ModernAppLayout>
                           <FitnessData />
+                        </ModernAppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/leaderboard" element={
+                      <ProtectedRoute>
+                        <ModernAppLayout>
+                          <Leaderboard />
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
