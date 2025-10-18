@@ -33,17 +33,25 @@ export default function Habits() {
   }
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="container py-6 space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Привычки</h1>
-          <p className="text-muted-foreground">Отслеживайте и развивайте свои привычки</p>
+          <h1 className="text-4xl font-bold text-glow bg-gradient-to-r from-primary to-primary-end bg-clip-text text-transparent">
+            Привычки
+          </h1>
+          <p className="text-base text-muted-foreground mt-1">
+            Отслеживайте и развивайте свои привычки
+          </p>
         </div>
         <div className="flex gap-2">
           <HabitMigrationButton onComplete={refetch} />
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Новая привычка
+          <Button 
+            onClick={() => setCreateDialogOpen(true)}
+            className="relative overflow-hidden group glass-strong border border-habit-neutral/50 hover:shadow-glow-neutral"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-habit-neutral/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Plus className="h-4 w-4 mr-2 relative z-10" />
+            <span className="relative z-10">Новая привычка</span>
           </Button>
         </div>
       </div>
@@ -52,7 +60,7 @@ export default function Habits() {
 
       {!habits || habits.length === 0 ? (
         <EmptyState
-          icon={<Target className="h-12 w-12" />}
+          icon={<Target className="h-12 w-12 text-habit-neutral" />}
           title="No habits yet"
           description="Create your first habit to start building a better routine"
           action={{
@@ -61,13 +69,14 @@ export default function Habits() {
           }}
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {habits.map((habit) => (
-            <HabitCard 
-              key={habit.id} 
-              habit={habit} 
-              onCompleted={refetch}
-            />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 stagger-fade-in">
+          {habits.map((habit, index) => (
+            <div key={habit.id} style={{ animationDelay: `${index * 50}ms` }}>
+              <HabitCard 
+                habit={habit} 
+                onCompleted={refetch}
+              />
+            </div>
           ))}
         </div>
       )}

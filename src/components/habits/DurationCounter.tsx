@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, TrendingUp, DollarSign } from "lucide-react";
+import { AlertCircle, TrendingUp, DollarSign, MoreVertical } from "lucide-react";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
 import {
   AlertDialog,
@@ -16,6 +15,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { AIMotivation } from "@/components/habits/AIMotivation";
+import { 
+  getHabitSentiment, 
+  getHabitIcon,
+  getHabitCardClass,
+  getNeonCircleClass 
+} from "@/lib/habit-utils";
 
 interface DurationCounterProps {
   habit: any;
@@ -45,7 +50,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
     };
 
     updateElapsed();
-    const interval = setInterval(updateElapsed, 60000); // Update every minute
+    const interval = setInterval(updateElapsed, 60000);
 
     return () => clearInterval(interval);
   }, [habit.start_date, currentAttempt]);
@@ -56,12 +61,10 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
     setResetReason("");
   };
 
-  // Calculate money saved if cost_per_day is set
   const moneySaved = habit.custom_settings?.cost_per_day 
     ? (elapsed.days * habit.custom_settings.cost_per_day).toFixed(0)
     : null;
 
-  // Determine milestone
   const getMilestone = (days: number) => {
     if (days >= 365) return { emoji: "🌟", text: "1 Year!" };
     if (days >= 100) return { emoji: "💯", text: "100 Days!" };
@@ -72,86 +75,106 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
 
   const milestone = getMilestone(elapsed.days);
   const elapsedMinutes = elapsed.days * 1440 + elapsed.hours * 60 + elapsed.minutes;
+  const sentiment = getHabitSentiment(habit);
+  const IconComponent = getHabitIcon(habit);
+  const cardClass = getHabitCardClass(sentiment);
+  const circleClass = getNeonCircleClass(sentiment);
 
   return (
     <>
-      <Card className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-        
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">{habit.icon || "🔥"}</span>
-                {habit.name}
-              </CardTitle>
-              {milestone && (
-                <Badge variant="secondary" className="mt-2">
-                  {milestone.emoji} {milestone.text}
-                </Badge>
-              )}
-            </div>
-            {longestStreak > 0 && (
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Best Streak</div>
-                <div className="text-sm font-semibold">{longestStreak} days</div>
+      <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
+        {/* More options menu */}
+        <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
+          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+
+        {milestone && (
+          <div className="absolute top-4 left-4">
+            <Badge variant="secondary" className="bg-gradient-to-r from-gold/20 to-bronze/20 border-gold/30 animate-pulse-glow">
+              {milestone.emoji} {milestone.text}
+            </Badge>
+          </div>
+        )}
+
+        {/* Hero Circle with Timer */}
+        <div className="flex justify-center mb-6 mt-8">
+          <div className={`neon-circle ${circleClass} w-48 h-48 rotate-slow`}>
+            <div className="text-center">
+              <div className={`text-5xl font-bold text-glow mb-1 text-${sentiment === 'negative' ? 'habit-negative' : 'habit-positive'}`}>
+                {elapsed.days}
               </div>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* Main Counter */}
-          <div className="text-center py-4">
-            <div className="text-5xl font-bold text-primary">
-              {elapsed.days}
-            </div>
-            <div className="text-muted-foreground">days</div>
-            <div className="text-sm text-muted-foreground mt-1">
-              {elapsed.hours}h {elapsed.minutes}m
+              <div className="text-sm text-muted-foreground">дней</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {elapsed.hours}ч {elapsed.minutes}м
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {moneySaved && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10">
-                <DollarSign className="h-4 w-4 text-green-600" />
+        {/* Habit Title */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <IconComponent className="h-6 w-6 text-muted-foreground" />
+            <h3 className={`text-2xl font-bold text-glow text-${sentiment === 'negative' ? 'habit-negative' : 'habit-positive'}`}>
+              {habit.name}
+            </h3>
+          </div>
+          {longestStreak > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Лучший результат: {longestStreak} дней
+            </p>
+          )}
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {moneySaved && (
+            <div className="stat-glass-card p-3 border-t-habit-positive">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-habit-positive/20 to-success/20">
+                  <DollarSign className="h-4 w-4 text-habit-positive" />
+                </div>
                 <div>
                   <div className="text-xs text-muted-foreground">Saved</div>
-                  <div className="font-semibold">{moneySaved} ₽</div>
+                  <div className="font-bold text-habit-positive">{moneySaved} ₽</div>
                 </div>
               </div>
-            )}
-            
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10">
-              <TrendingUp className="h-4 w-4 text-primary" />
+            </div>
+          )}
+          
+          <div className="stat-glass-card p-3 border-t-primary">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary-end/20">
+                <TrendingUp className="h-4 w-4 text-primary" />
+              </div>
               <div>
                 <div className="text-xs text-muted-foreground">Current</div>
-                <div className="font-semibold">{elapsed.days} days</div>
-              </div>
+                <div className="font-bold text-primary">{elapsed.days} days</div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* AI Motivation */}
-            {habit.ai_motivation && (
-              <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
-            )}
+        {/* AI Motivation */}
+        {habit.ai_motivation && (
+          <div className="mb-6">
+            <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
+          </div>
+        )}
 
-            {/* Reset Button */}
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => setShowResetDialog(true)}
-          >
-            <AlertCircle className="h-4 w-4 mr-2" />
-            Reset Counter
-          </Button>
-        </CardContent>
-      </Card>
+        {/* Reset Button */}
+        <Button 
+          variant="outline" 
+          className="w-full glass-strong border-habit-negative/50 hover:shadow-glow-negative hover:border-habit-negative"
+          onClick={() => setShowResetDialog(true)}
+        >
+          <AlertCircle className="h-4 w-4 mr-2" />
+          Reset Counter
+        </Button>
+      </div>
 
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-strong">
           <AlertDialogHeader>
             <AlertDialogTitle>Reset Habit Counter?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -164,7 +187,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
             placeholder="What happened? (optional)"
             value={resetReason}
             onChange={(e) => setResetReason(e.target.value)}
-            className="min-h-[80px]"
+            className="min-h-[80px] glass-strong"
           />
 
           <AlertDialogFooter>

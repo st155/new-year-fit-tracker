@@ -84,9 +84,17 @@ export default {
         'glow-gold': 'var(--shadow-glow-gold)',
         'glow-silver': 'var(--shadow-glow-silver)',
         'glow-bronze': 'var(--shadow-glow-bronze)',
+        'glow-negative': 'var(--shadow-glow-negative)',
+        'glow-positive': 'var(--shadow-glow-positive)',
+        'glow-neutral': 'var(--shadow-glow-neutral)',
         'card': 'var(--shadow-card)',
       },
       colors: {
+        habit: {
+          negative: "hsl(var(--habit-negative))",
+          positive: "hsl(var(--habit-positive))",
+          neutral: "hsl(var(--habit-neutral))",
+        },
         gold: "hsl(var(--gold))",
         silver: "hsl(var(--silver))",
         bronze: "hsl(var(--bronze))",

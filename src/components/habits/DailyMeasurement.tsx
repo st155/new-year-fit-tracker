@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Check, TrendingUp, TrendingDown } from "lucide-react";
+import { Check, TrendingUp, TrendingDown, MoreVertical } from "lucide-react";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
+import { 
+  getHabitSentiment, 
+  getHabitIcon,
+  getHabitCardClass,
+  getNeonCircleClass 
+} from "@/lib/habit-utils";
 
 interface DailyMeasurementProps {
   habit: any;
@@ -30,6 +34,10 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
   const targetValue = habit.target_value || 0;
   const currentValue = todayMeasurement?.value || 0;
   const progress = targetValue > 0 ? Math.min((currentValue / targetValue) * 100, 100) : 0;
+  const sentiment = getHabitSentiment(habit);
+  const IconComponent = getHabitIcon(habit);
+  const cardClass = getHabitCardClass(sentiment);
+  const circleClass = getNeonCircleClass(sentiment);
 
   // Calculate trend
   const trend = yesterdayMeasurement && todayMeasurement
@@ -43,108 +51,125 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
     : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <span className="text-2xl">{habit.icon || "📈"}</span>
-          {habit.name}
-        </CardTitle>
-      </CardHeader>
+    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
+      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
+        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
 
-      <CardContent className="space-y-4">
-        {/* Today's Progress */}
-        <div className="space-y-2">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <div className="text-3xl font-bold text-primary">
-                {currentValue || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {habit.measurement_unit || "units"} today
-              </div>
+      {/* Hero Circle with Value */}
+      <div className="flex justify-center mb-6">
+        <div className={`neon-circle ${circleClass} w-48 h-48 rotate-slow`}>
+          <div className="text-center">
+            <div className={`text-5xl font-bold text-glow text-${sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}`}>
+              {currentValue || 0}
             </div>
             {targetValue > 0 && (
-              <div className="text-right">
-                <div className="text-sm font-semibold">
-                  Goal: {targetValue}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {progress.toFixed(0)}%
-                </div>
-              </div>
+              <div className="text-sm text-muted-foreground mt-1">/ {targetValue}</div>
             )}
+            <div className="text-xs text-muted-foreground mt-1">
+              {habit.measurement_unit || "units"}
+            </div>
           </div>
-
-          {targetValue > 0 && (
-            <Progress value={progress} />
-          )}
         </div>
+      </div>
 
-        {/* Input Section */}
-        {!todayMeasurement && (
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Enter value"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+      {/* Habit Title */}
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <IconComponent className="h-6 w-6 text-muted-foreground" />
+          <h3 className={`text-2xl font-bold text-glow text-${sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}`}>
+            {habit.name}
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground">Today's measurement</p>
+      </div>
+
+      {/* Progress Bar */}
+      {targetValue > 0 && (
+        <div className="mb-6 space-y-2">
+          <div className="relative h-3 rounded-full bg-white/10 overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
+                sentiment === 'positive' ? 'from-habit-positive to-success' : 'from-habit-neutral to-primary'
+              }`}
+              style={{ width: `${progress}%` }}
             />
-            <Button onClick={handleSubmit} disabled={isAdding || !value}>
-              <Check className="h-4 w-4" />
-            </Button>
           </div>
-        )}
-
-        {todayMeasurement && (
-          <div className="p-3 rounded-lg bg-primary/10 text-center">
-            <div className="text-sm font-medium">Today's measurement recorded!</div>
+          <div className="text-xs text-center text-muted-foreground">
+            {progress.toFixed(0)}% of goal
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-          {trend !== 0 && (
+      {/* Input Section */}
+      {!todayMeasurement ? (
+        <div className="flex gap-2 mb-4">
+          <Input
+            type="number"
+            placeholder="Enter value"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            className="glass-strong"
+          />
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isAdding || !value}
+            className={`glass-strong border-${sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}/50`}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <div className="p-3 rounded-lg bg-gradient-to-r from-success/20 to-success/10 border border-success/30 text-center mb-4 animate-in fade-in">
+          <div className="text-sm font-medium text-success">✓ Today's measurement recorded!</div>
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
+        {trend !== 0 && (
+          <div className="stat-glass-card p-3 border-t-transparent">
             <div className="flex items-center gap-2">
               {trend > 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-habit-positive" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
+                <TrendingDown className="h-4 w-4 text-habit-negative" />
               )}
               <div>
                 <div className="text-xs text-muted-foreground">vs Yesterday</div>
-                <div className="font-semibold">
+                <div className={`font-bold ${trend > 0 ? 'text-habit-positive' : 'text-habit-negative'}`}>
                   {trend > 0 ? '+' : ''}{trend.toFixed(1)}
                 </div>
               </div>
             </div>
-          )}
-
-          <div>
-            <div className="text-xs text-muted-foreground">7-day Avg</div>
-            <div className="font-semibold">
-              {weekAverage.toFixed(1)} {habit.measurement_unit || ""}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent History */}
-        {measurements && measurements.length > 0 && (
-          <div className="space-y-1 pt-2 border-t">
-            <div className="text-xs text-muted-foreground mb-2">Recent entries</div>
-            {measurements.slice(0, 5).map((m) => (
-              <div key={m.id} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {new Date(m.measurement_date).toLocaleDateString()}
-                </span>
-                <span className="font-medium">
-                  {m.value} {habit.measurement_unit || ""}
-                </span>
-              </div>
-            ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+
+        <div className="stat-glass-card p-3 border-t-transparent">
+          <div className="text-xs text-muted-foreground">7-day Avg</div>
+          <div className="font-bold text-foreground">
+            {weekAverage.toFixed(1)} {habit.measurement_unit || ""}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent History */}
+      {measurements && measurements.length > 0 && (
+        <div className="space-y-1 pt-4 border-t border-white/10 mt-4">
+          <div className="text-xs text-muted-foreground mb-2">Recent entries</div>
+          {measurements.slice(0, 5).map((m) => (
+            <div key={m.id} className="flex justify-between text-sm px-2 py-1 rounded hover:bg-white/5 transition-colors">
+              <span className="text-muted-foreground">
+                {new Date(m.measurement_date).toLocaleDateString()}
+              </span>
+              <span className="font-medium text-foreground">
+                {m.value} {habit.measurement_unit || ""}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

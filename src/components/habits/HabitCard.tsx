@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Check, Flame, TrendingUp } from "lucide-react";
+import { Check, Flame, TrendingUp, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import { DurationCounter } from "./DurationCounter";
 import { NumericCounter } from "./NumericCounter";
 import { DailyMeasurement } from "./DailyMeasurement";
 import { FastingTracker } from "./FastingTracker";
+import { 
+  getHabitSentiment, 
+  getHabitIcon, 
+  getHabitCardClass,
+  getNeonCircleClass 
+} from "@/lib/habit-utils";
 
 interface HabitCardProps {
   habit: {
@@ -81,79 +86,114 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      fitness: "bg-blue-500",
-      nutrition: "bg-green-500",
-      sleep: "bg-purple-500",
-      mindfulness: "bg-yellow-500",
-      custom: "bg-gray-500",
-    };
-    return colors[category] || colors.custom;
-  };
+  const sentiment = getHabitSentiment(habit);
+  const IconComponent = getHabitIcon(habit);
+  const cardClass = getHabitCardClass(sentiment);
+  const circleClass = getNeonCircleClass(sentiment);
 
   return (
-    <Card className={habit.completed_today ? "border-green-500" : ""}>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <div
-                className={`w-3 h-3 rounded-full ${habit.color || getCategoryColor(habit.category)}`}
-              />
-              <h3 className="font-semibold text-lg">{habit.name}</h3>
-            </div>
-            {habit.description && (
-              <p className="text-sm text-muted-foreground">{habit.description}</p>
+    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
+      {/* More options menu */}
+      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
+        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+
+      {/* Hero Circle Icon */}
+      <div className="flex justify-center mb-6">
+        <div className={`neon-circle ${circleClass} w-48 h-48 rotate-slow`}>
+          {/* Inner circle with icon */}
+          <div className="relative">
+            <IconComponent className={`h-20 w-20 text-${sentiment === 'negative' ? 'habit-negative' : sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}`} strokeWidth={1.5} />
+            {habit.completed_today && (
+              <div className="absolute -top-2 -right-2 bg-success rounded-full p-1 animate-bounce-in">
+                <Check className="h-4 w-4 text-white" />
+              </div>
             )}
           </div>
-          <Button
-            size="sm"
-            variant={habit.completed_today ? "outline" : "default"}
-            onClick={handleComplete}
-            disabled={isCompleting || habit.completed_today}
-            className="ml-4"
-          >
-            {habit.completed_today ? (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Готово
-              </>
-            ) : (
-              "Отметить"
+        </div>
+      </div>
+
+      {/* Habit Title */}
+      <div className="text-center mb-4">
+        <h3 className={`text-2xl font-bold mb-1 text-glow text-${sentiment === 'negative' ? 'habit-negative' : sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}`}>
+          {habit.name}
+        </h3>
+        {habit.description && (
+          <p className="text-sm text-muted-foreground">{habit.description}</p>
+        )}
+      </div>
+
+      {/* Stats Section */}
+      {habit.stats && (
+        <div className="space-y-4 mb-6">
+          {/* Streak and Completions */}
+          <div className="flex items-center justify-center gap-3">
+            {habit.stats.current_streak > 0 && (
+              <Badge 
+                variant="secondary" 
+                className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-habit-negative/20 to-secondary/20 border-habit-negative/30"
+              >
+                <Flame className="h-3 w-3 text-habit-negative" />
+                <span className="font-semibold">{habit.stats.current_streak}</span>
+                <span className="text-xs">дней</span>
+              </Badge>
             )}
-          </Button>
+            <Badge 
+              variant="outline" 
+              className="flex items-center gap-1 px-3 py-1 border-white/20"
+            >
+              <TrendingUp className="h-3 w-3" />
+              <span className="font-semibold">{habit.stats.total_completions}</span>
+            </Badge>
+          </div>
+
+          {/* Completion Rate Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Процент выполнения</span>
+              <span className="font-semibold text-foreground">{Math.round(habit.stats.completion_rate)}%</span>
+            </div>
+            <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${
+                  sentiment === 'negative' ? 'from-habit-negative to-secondary' :
+                  sentiment === 'positive' ? 'from-habit-positive to-success' :
+                  'from-habit-neutral to-primary'
+                }`}
+                style={{ width: `${habit.stats.completion_rate}%` }}
+              />
+            </div>
+          </div>
         </div>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="space-y-3">
-          {habit.stats && (
-            <>
-              <div className="flex items-center gap-4">
-                {habit.stats.current_streak > 0 && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Flame className="h-3 w-3 text-orange-500" />
-                    {habit.stats.current_streak} дней подряд
-                  </Badge>
-                )}
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  {habit.stats.total_completions} выполнений
-                </Badge>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Процент выполнения</span>
-                  <span className="font-medium">{Math.round(habit.stats.completion_rate)}%</span>
-                </div>
-                <Progress value={habit.stats.completion_rate} className="h-2" />
-              </div>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Action Button */}
+      <Button
+        onClick={handleComplete}
+        disabled={isCompleting || habit.completed_today}
+        className={`w-full relative overflow-hidden group/btn ${
+          habit.completed_today 
+            ? 'bg-success/20 border-success/50 text-success hover:bg-success/30' 
+            : `glass-strong border-${sentiment === 'negative' ? 'habit-negative' : sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}/50`
+        }`}
+        variant={habit.completed_today ? "outline" : "default"}
+      >
+        {!habit.completed_today && (
+          <div className={`absolute inset-0 bg-gradient-to-r ${
+            sentiment === 'negative' ? 'from-habit-negative/20 to-secondary/20' :
+            sentiment === 'positive' ? 'from-habit-positive/20 to-success/20' :
+            'from-habit-neutral/20 to-primary/20'
+          } opacity-0 group-hover/btn:opacity-100 transition-opacity`} />
+        )}
+        {habit.completed_today ? (
+          <>
+            <Check className="mr-2 h-4 w-4 relative z-10" />
+            <span className="relative z-10">Готово</span>
+          </>
+        ) : (
+          <span className="relative z-10 font-semibold">Отметить</span>
+        )}
+      </Button>
+    </div>
   );
 }

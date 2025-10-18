@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MoreVertical } from "lucide-react";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { AIMotivation } from "./AIMotivation";
 import { CircularFastingProgress } from "./CircularFastingProgress";
 import { FastingControlButton } from "./FastingControlButton";
 import { FastingHistory } from "./FastingHistory";
+import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils";
 
 interface FastingTrackerProps {
   habit: any;
@@ -66,29 +67,31 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
   };
 
   const currentMilestone = getCurrentMilestone();
+  const sentiment = getHabitSentiment(habit);
+  const cardClass = getHabitCardClass(sentiment);
 
   return (
-    <Card className="relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-      
+    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
+      {/* More options menu */}
+      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
+        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+
       {/* Header */}
-      <CardHeader className="relative">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{habit.icon}</span>
-            <div>
-              <h3 className="text-xl font-bold">{habit.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                Цель: {targetWindow}:8 часов
-              </p>
-            </div>
-          </div>
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <span className="text-4xl">{habit.icon}</span>
+          <h3 className={`text-2xl font-bold text-glow text-${sentiment === 'positive' ? 'habit-positive' : 'habit-neutral'}`}>
+            {habit.name}
+          </h3>
         </div>
-      </CardHeader>
+        <p className="text-sm text-muted-foreground">
+          Цель: {targetWindow}:8 часов
+        </p>
+      </div>
 
       {/* Content */}
-      <CardContent className="relative flex flex-col items-center space-y-6 pb-8">
+      <div className="flex flex-col items-center space-y-6">
         {/* Circular Progress */}
         <CircularFastingProgress
           progress={progress}
@@ -135,11 +138,11 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
 
         {/* History */}
         {recentWindows.length > 0 && (
-          <div className="w-full pt-4 border-t">
+          <div className="w-full pt-4 border-t border-white/10">
             <FastingHistory windows={recentWindows} />
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
