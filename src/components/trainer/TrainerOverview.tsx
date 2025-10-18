@@ -13,11 +13,17 @@ import {
   User,
   Clock,
   Trophy,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  PartyPopper,
+  Zap
 } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAIPendingActions } from "@/hooks/useAIPendingActions";
+import { TrainerAIWidget } from "./TrainerAIWidget";
+import { useNavigate } from "react-router-dom";
 
 interface Client {
   id: string;
@@ -43,6 +49,7 @@ interface TrainerOverviewProps {
 
 export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<TrainerStats>({
@@ -52,6 +59,25 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
     updatesThisWeek: 0
   });
   const [loading, setLoading] = useState(true);
+  const { pendingActions } = useAIPendingActions(user?.id);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const aiInput = document.querySelector('[data-ai-input]') as HTMLTextAreaElement;
+        aiInput?.focus();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        navigate('/trainer-dashboard?tab=ai-hub');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [navigate]);
 
   useEffect(() => {
     if (user) {
@@ -210,10 +236,34 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
     );
   }
 
+  // Generate contextual suggestions
+  const contextSuggestions: { text: string; icon: string }[] = [];
+  if (stats.updatesThisWeek === 0) {
+    contextSuggestions.push({ 
+      text: "Кто не обновлял прогресс эту неделю?",
+      icon: "📊"
+    });
+  }
+  if (stats.averageProgress < 50) {
+    contextSuggestions.push({ 
+      text: "Кому нужна мотивация?",
+      icon: "💪"
+    });
+  }
+  const clientsWithNoProgress = clients.filter(c => c.progress_percentage === 0);
+  if (clientsWithNoProgress.length > 0) {
+    contextSuggestions.push({ 
+      text: `${clientsWithNoProgress.length} клиента нужно внимание`,
+      icon: "⚠️"
+    });
+  }
+
   return (
-    <div className="space-y-6 stagger-fade-in">
-      {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 stagger-fade-in">
+      {/* Левая колонка - основной контент */}
+      <div className="space-y-6">
+        {/* Статистика */}
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
         <Card className="bg-slate-900/50 border-slate-800 hover:border-trainer-orange/30 transition-all duration-300 hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-2">
@@ -265,23 +315,108 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
           </CardHeader>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all duration-300 hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="space-y-2">
-              <CardTitle className="text-sm font-medium text-slate-400">
-                Обновлений сегодня
-              </CardTitle>
-              <div className="text-3xl font-bold text-white">{stats.updatesThisWeek}</div>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-slate-700/30 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-slate-400" />
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
+          <Card className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all duration-300 hover-lift">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-2">
+                <CardTitle className="text-sm font-medium text-slate-400">
+                  Обновлений сегодня
+                </CardTitle>
+                <div className="text-3xl font-bold text-white">{stats.updatesThisWeek}</div>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-slate-700/30 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-slate-400" />
+              </div>
+            </CardHeader>
+          </Card>
 
-      {/* Общий прогресс команды */}
-      <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-purple-900/30 border-purple-700/30 hover:border-purple-600/50 transition-all duration-300 hover-lift cursor-pointer" onClick={() => navigate('/trainer-dashboard?tab=ai-hub')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-2">
+                <CardTitle className="text-sm font-medium text-slate-400">
+                  AI Actions
+                </CardTitle>
+                <div className="text-3xl font-bold text-white">{pendingActions.length}</div>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="p-0 h-auto text-purple-400 hover:text-purple-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/trainer-dashboard?tab=ai-hub');
+                  }}
+                >
+                  Review →
+                </Button>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-purple-400" />
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* AI Insights Panel */}
+        {contextSuggestions.length > 0 && (
+          <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-700/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+                AI Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {clientsWithNoProgress.length > 0 && (
+                  <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
+                    <div className="h-8 w-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">{clientsWithNoProgress.length} клиента нужно внимание</p>
+                      <p className="text-xs text-slate-400">Нет обновлений прогресса</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => {
+                        const aiInput = document.querySelector('[data-ai-input]') as HTMLTextAreaElement;
+                        if (aiInput) {
+                          aiInput.value = "Покажи клиентов, которым нужно внимание";
+                          aiInput.focus();
+                        }
+                      }}
+                      className="hover:bg-purple-500/10"
+                    >
+                      Ask AI
+                    </Button>
+                  </div>
+                )}
+                
+                {stats.goalsAchieved > 0 && (
+                  <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
+                    <div className="h-8 w-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                      <PartyPopper className="h-4 w-4 text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">{stats.goalsAchieved} целей достигнуто</p>
+                      <p className="text-xs text-slate-400">За последний месяц</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="hover:bg-green-500/10"
+                    >
+                      Details
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Общий прогресс команды */}
+        <Card className="bg-slate-900/50 border-slate-800">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-white">
             <Trophy className="h-5 w-5 text-trainer-orange" />
@@ -349,7 +484,20 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
             ))}
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
+
+      {/* Правая колонка - AI окно (только на desktop) */}
+      <div className="hidden lg:block">
+        <div className="sticky top-6">
+          <TrainerAIWidget 
+            mode="overview"
+            contextSuggestions={contextSuggestions}
+            stats={stats}
+            clients={clients}
+          />
+        </div>
+      </div>
     </div>
   );
 }
