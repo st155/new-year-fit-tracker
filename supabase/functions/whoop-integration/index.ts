@@ -589,6 +589,28 @@ async function syncWhoopData(
             source_data: { workout_id: workout.id, raw: workout.score },
           }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
         }
+
+        // Сохраняем Max Heart Rate в метрики
+        if (workout.score?.max_heart_rate !== undefined) {
+          const workoutDate = new Date(workout.start).toISOString().split('T')[0];
+          const metricId = await getOrCreateMetric(
+            supabase,
+            userId,
+            'Max Heart Rate',
+            'heart_rate',
+            'bpm',
+            'whoop'
+          );
+
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: metricId,
+            value: workout.score.max_heart_rate,
+            measurement_date: workoutDate,
+            external_id: `whoop_max_hr_${workout.id}`,
+            source_data: { workout_id: workout.id, raw: workout.score },
+          }, { onConflict: 'user_id,metric_id,measurement_date,external_id' });
+        }
       }
     }
   }

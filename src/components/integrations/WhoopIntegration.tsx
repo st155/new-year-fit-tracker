@@ -212,26 +212,28 @@ export function WhoopIntegration() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button onClick={syncData} disabled={syncing} className="w-full">
+                {syncing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Синхронизация...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Синхронизировать сейчас
+                  </>
+                )}
+              </Button>
+            </div>
+
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 Автоматическая синхронизация происходит каждые 6 часов. Вы также можете запустить синхронизацию вручную.
               </AlertDescription>
             </Alert>
-
-            <Button onClick={syncData} disabled={syncing} className="w-full">
-              {syncing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Синхронизация...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Синхронизировать данные
-                </>
-              )}
-            </Button>
 
             <div className="p-3 border rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-3">

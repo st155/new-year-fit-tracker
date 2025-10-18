@@ -133,14 +133,16 @@ export function MetricsGrid() {
   // Device-specific metrics
   const { metrics: deviceMetrics, loading: deviceLoading } = useDeviceMetrics(deviceFilter);
   
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "steps"]);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "max_hr"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({
     body_fat: { value: "—", change: null, source: null, sources: [] },
     weight: { value: "—", change: null, source: null, sources: [] },
     vo2max: { value: "—", records: 0, source: null, sources: [] },
     row_2km: { value: "—", change: null, attempts: 0, source: null, sources: [] },
     recovery: { value: "—", change: null, source: null, sources: [] },
-    steps: { value: "—", change: null, source: null, sources: [] }
+    steps: { value: "—", change: null, source: null, sources: [] },
+    max_hr: { value: "—", change: null, source: null, sources: [] },
+    day_strain: { value: "—", change: null, source: null, sources: [] }
   });
   const [loading, setLoading] = useState(true);
   const [syncAttempted, setSyncAttempted] = useState(false);
@@ -151,7 +153,9 @@ export function MetricsGrid() {
     vo2max: { key: "vo2max", title: t('metrics.vo2max'), unit: "ML/KG/MIN", color: "vo2max", description: "Cardiovascular fitness", category: "performance" },
     row_2km: { key: "row_2km", title: "2KM ROW", unit: "MIN", color: "row", description: "Rowing performance", category: "performance" },
     recovery: { key: "recovery", title: t('metrics.recovery'), unit: t('metrics.units.percent'), color: "recovery", description: "Daily recovery", category: "health" },
-    steps: { key: "steps", title: t('metrics.steps'), unit: t('metrics.units.steps'), color: "steps", description: "Step count", category: "health" }
+    steps: { key: "steps", title: t('metrics.steps'), unit: t('metrics.units.steps'), color: "steps", description: "Step count", category: "health" },
+    max_hr: { key: "max_hr", title: "Max HR", unit: "BPM", color: "recovery", description: "Maximum heart rate", category: "health" },
+    day_strain: { key: "day_strain", title: "Day Strain", unit: "STRAIN", color: "vo2max", description: "Daily strain", category: "health" }
   };
 
   // Маппинг unified метрик к нашим ключам
@@ -161,6 +165,8 @@ export function MetricsGrid() {
     'Body Fat Percentage': 'body_fat',
     'VO2Max': 'vo2max',
     'Steps': 'steps',
+    'Max Heart Rate': 'max_hr',
+    'Day Strain': 'day_strain',
   };
 
   useEffect(() => {
@@ -237,7 +243,9 @@ export function MetricsGrid() {
           vo2max: { value: '—', records: 0, source: null, sources: [] },
           row_2km: { value: '—', change: null, attempts: 0, source: null, sources: [] },
           recovery: { value: '—', change: null, source: null, sources: [] },
-          steps: { value: '—', change: null, source: null, sources: [] }
+          steps: { value: '—', change: null, source: null, sources: [] },
+          max_hr: { value: '—', change: null, source: null, sources: [] },
+          day_strain: { value: '—', change: null, source: null, sources: [] }
         };
 
         if (Object.keys(deviceMetrics).length > 0) {
