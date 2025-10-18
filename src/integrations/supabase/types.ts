@@ -1010,6 +1010,50 @@ export type Database = {
         }
         Relationships: []
       }
+      fasting_windows: {
+        Row: {
+          created_at: string | null
+          eating_duration: number | null
+          eating_end: string | null
+          eating_start: string
+          fasting_duration: number | null
+          habit_id: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          eating_duration?: number | null
+          eating_end?: string | null
+          eating_start: string
+          fasting_duration?: number | null
+          habit_id: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          eating_duration?: number | null
+          eating_end?: string | null
+          eating_start?: string
+          fasting_duration?: number | null
+          habit_id?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fasting_windows_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           challenge_id: string | null
@@ -1214,6 +1258,7 @@ export type Database = {
       }
       habits: {
         Row: {
+          ai_motivation: Json | null
           category: string
           color: string | null
           created_at: string
@@ -1234,6 +1279,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_motivation?: Json | null
           category?: string
           color?: string | null
           created_at?: string
@@ -1254,6 +1300,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_motivation?: Json | null
           category?: string
           color?: string | null
           created_at?: string
