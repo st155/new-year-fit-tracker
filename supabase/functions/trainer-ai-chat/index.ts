@@ -588,7 +588,6 @@ IMPORTANT INSTRUCTIONS:
         }
       }
     }
-    }
 
     // Check if this is a plan that needs actions (text-based fallback)
     const isPlan = structuredActions.length > 0 ||
