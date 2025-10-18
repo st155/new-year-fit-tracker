@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -152,8 +152,20 @@ export const AIChatWindow = ({
     const textToSend = messageText || input.trim();
     if (!textToSend || sending) return;
 
+    // Detect confirmation intent
+    const confirmPatterns = ['да', 'yes', 'confirm', 'ок', 'давай', 'согласен'];
+    const isConfirmation = confirmPatterns.some(p => textToSend.toLowerCase().includes(p));
+
     if (!messageText) {
       setInput('');
+    }
+
+    // Show toast for confirmation
+    if (isConfirmation) {
+      toast.success("⚡ Подготовка плана", {
+        description: "AI готовит структурированный план действий...",
+        duration: 3000
+      });
     }
 
     // Extract @mentions if not provided
@@ -358,43 +370,55 @@ export const AIChatWindow = ({
     onReconsider: () => void;
     sending: boolean;
   }) => {
-    const actionData = message.metadata?.actionData || [];
+    const actionData = message.metadata?.suggestedActions || [];
     const actionCount = actionData.length || 0;
+    const isPreparing = message.metadata?.status === 'preparing';
 
     return (
       <div className="mt-3 border-l-4 border-primary pl-3">
         <div className="flex items-center gap-2 mb-2">
-          <FileText className="h-4 w-4 text-primary" />
+          {isPreparing ? (
+            <Loader2 className="h-4 w-4 text-primary animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 text-primary" />
+          )}
           <Badge variant="secondary" className="text-xs">
-            План ожидает подтверждения
+            {isPreparing ? '⏳ Подготовка плана...' : 'План ожидает подтверждения'}
           </Badge>
         </div>
         
-        {actionCount > 0 && (
+        {!isPreparing && actionCount > 0 && (
           <div className="text-xs text-muted-foreground mb-3">
             Действий: {actionCount}
           </div>
         )}
         
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={onApprove}
-            disabled={sending}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Выполнить
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onReconsider}
-            disabled={sending}
-          >
-            Подумать
-          </Button>
-        </div>
+        {isPreparing ? (
+          <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Готовлю структурированный план...</span>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={onApprove}
+              disabled={sending}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Выполнить
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onReconsider}
+              disabled={sending}
+            >
+              Подумать
+            </Button>
+          </div>
+        )}
       </div>
     );
   };

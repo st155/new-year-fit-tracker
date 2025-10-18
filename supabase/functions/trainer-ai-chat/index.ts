@@ -6,6 +6,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Intent detection function
+function detectUserIntent(message: string): { 
+  isConfirmation: boolean;
+  isRejection: boolean;
+  isQuestion: boolean;
+} {
+  const lowerMsg = message.toLowerCase().trim();
+  
+  // Confirmation patterns
+  const confirmPatterns = [
+    'да', 'yes', 'confirm', 'подтверждаю', 'давай', 'согласен',
+    'ок', 'okay', 'выполни', 'делай', 'сделай', 'создай',
+    'правильно', 'верно', 'точно', 'именно', '+', '✓', '✅'
+  ];
+  
+  // Rejection patterns
+  const rejectPatterns = [
+    'нет', 'no', 'отмена', 'cancel', 'не надо', 'подожди',
+    'не правильно', 'не верно', 'ошибка', 'неправильно'
+  ];
+  
+  // Question patterns
+  const questionPatterns = ['?', 'почему', 'зачем', 'как', 'что', 'когда', 'где'];
+  
+  const isConfirmation = confirmPatterns.some(p => lowerMsg.includes(p));
+  const isRejection = rejectPatterns.some(p => lowerMsg.includes(p));
+  const isQuestion = questionPatterns.some(p => lowerMsg.includes(p));
+  
+  return { isConfirmation, isRejection, isQuestion };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -61,6 +92,10 @@ serve(async (req) => {
       conversation = data;
     }
 
+    // Detect user intent BEFORE AI call
+    const userIntent = detectUserIntent(message);
+    console.log('🎯 User intent detected:', userIntent);
+
     // Get conversation history (increased limit for better context)
     const { data: messages } = await supabaseClient
       .from('ai_messages')
@@ -68,6 +103,28 @@ serve(async (req) => {
       .eq('conversation_id', conversation.id)
       .order('created_at', { ascending: true })
       .limit(50);
+
+    // Check if previous AI message was asking for confirmation
+    const lastAIMessage = messages && messages.length > 0 
+      ? messages[messages.length - 1] 
+      : null;
+
+    const wasAskingForConfirmation = lastAIMessage 
+      && lastAIMessage.role === 'assistant'
+      && (
+        lastAIMessage.content.toLowerCase().includes('please confirm') ||
+        lastAIMessage.content.toLowerCase().includes('подтверди') ||
+        lastAIMessage.content.toLowerCase().includes('уточните') ||
+        lastAIMessage.content.toLowerCase().includes('ready to implement') ||
+        lastAIMessage.content.includes('?')
+      );
+
+    // EAGER MODE: If user confirmed and AI was waiting - force plan creation
+    const eagerMode = userIntent.isConfirmation && wasAskingForConfirmation;
+
+    if (eagerMode) {
+      console.log('🚀 EAGER MODE ACTIVATED: User confirmed, forcing plan creation');
+    }
 
     // Build context based on mode and mentioned clients
     let contextData = '';
@@ -357,7 +414,18 @@ IMPORTANT INSTRUCTIONS:
 
 6. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
 
-7. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.`;
+7. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
+
+8. CRITICAL: Plan Creation Rules:
+   - If user confirms with words like "да", "confirm", "давай", "ок" - IMMEDIATELY create a structured plan with tool calls
+   - If you detect confirmation intent - DO NOT ask more questions, CREATE THE PLAN NOW
+   - User confirmation = instant action plan with function calls
+   - After user says "да/yes/confirm" - your NEXT response MUST contain tool calls`;
+
+    // Add eager mode instruction
+    if (eagerMode) {
+      systemPrompt += `\n\n🚨 URGENT: User just confirmed your proposal. CREATE STRUCTURED PLAN NOW with function calls. DO NOT ask more questions. Use the tools immediately.`;
+    }
 
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -370,6 +438,56 @@ IMPORTANT INSTRUCTIONS:
     ];
 
     console.log(`Sending ${aiMessages.length} messages to AI (history: ${messages?.length || 0})`);
+
+    // Create optimistic pending action in eager mode
+    let optimisticPendingAction = null;
+    if (eagerMode) {
+      console.log('🎯 Creating optimistic pending action...');
+      
+      const { data: pendingAction } = await supabaseClient
+        .from('ai_pending_actions')
+        .insert({
+          conversation_id: conversation.id,
+          trainer_id: user.id,
+          action_type: 'plan_execution',
+          action_plan: 'Preparing plan...',
+          action_data: [],
+          status: 'preparing'
+        })
+        .select()
+        .single();
+      
+      optimisticPendingAction = pendingAction;
+      
+      // Send system message with pending action ID
+      await supabaseClient.from('ai_messages').insert({
+        conversation_id: conversation.id,
+        role: 'system',
+        content: '⏳ Готовлю структурированный план...',
+        metadata: {
+          isPlan: true,
+          pendingActionId: pendingAction?.id,
+          status: 'preparing'
+        }
+      });
+      
+      // Set timeout to mark as failed if not updated in 30 seconds
+      setTimeout(async () => {
+        const { data: stillPreparing } = await supabaseClient
+          .from('ai_pending_actions')
+          .select('status')
+          .eq('id', optimisticPendingAction.id)
+          .single();
+        
+        if (stillPreparing?.status === 'preparing') {
+          console.warn('⚠️ Pending action timeout, marking as rejected');
+          await supabaseClient
+            .from('ai_pending_actions')
+            .update({ status: 'rejected' })
+            .eq('id', optimisticPendingAction.id);
+        }
+      }, 30000);
+    }
 
     // Define tools for structured action extraction
     const tools = [
@@ -476,9 +594,15 @@ IMPORTANT INSTRUCTIONS:
     };
 
     // Add tools if user is creating plan or approving
-    if (isApproval || contextMode === 'goals' || mentionedClients.length > 0) {
+    if (isApproval || eagerMode || contextMode === 'goals' || mentionedClients.length > 0) {
       requestBody.tools = tools;
-      requestBody.tool_choice = "auto";
+      // Force tool usage in eager mode
+      if (eagerMode) {
+        requestBody.tool_choice = "required";
+        console.log('🔧 Forcing tool usage in eager mode');
+      } else {
+        requestBody.tool_choice = "auto";
+      }
     }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -685,58 +809,107 @@ IMPORTANT INSTRUCTIONS:
       }
     }
 
-    // Only check for plan if not auto-executed
-    const isPlan = !autoExecuted && structuredActions.length > 0;
-
-    if (isPlan && structuredActions.length > 0) {
-      console.log(`Creating pending action with ${structuredActions.length} structured actions...`);
+    // Handle optimistic pending action update or create new one
+    if (optimisticPendingAction && structuredActions.length > 0) {
+      console.log('📝 Updating optimistic pending action with real data');
       
-      // Create pending action in database with structured actions
-      const { data: pendingAction, error: actionError } = await supabaseClient
+      await supabaseClient
         .from('ai_pending_actions')
-        .insert({
-          conversation_id: conversation.id,
-          trainer_id: user.id,
-          action_type: 'plan_execution',
+        .update({
           action_plan: assistantMessage,
-          action_data: structuredActions, // Store structured actions directly
+          action_data: structuredActions,
           status: 'pending'
         })
-        .select()
-        .single();
+        .eq('id', optimisticPendingAction.id);
+      
+      pendingActionId = optimisticPendingAction.id;
+      suggestedActions = structuredActions.map((action, index) => ({
+        type: action.type,
+        id: `${optimisticPendingAction.id}_${index}`,
+        ...action.data
+      }));
+      
+      // Update system message with real plan
+      await supabaseClient
+        .from('ai_messages')
+        .update({
+          content: assistantMessage,
+          metadata: {
+            isPlan: true,
+            pendingActionId: optimisticPendingAction.id,
+            suggestedActions,
+            status: 'pending'
+          }
+        })
+        .eq('conversation_id', conversation.id)
+        .eq('role', 'system')
+        .eq('metadata->status', 'preparing');
+    } else {
+      // Only check for plan if not auto-executed and no optimistic action
+      const isPlan = !autoExecuted && structuredActions.length > 0;
 
-      if (!actionError && pendingAction) {
-        pendingActionId = pendingAction.id;
-        suggestedActions = structuredActions.map((action, index) => ({
-          type: action.type,
-          id: `${pendingAction.id}_${index}`,
-          ...action.data
-        }));
-        console.log('Created pending action:', pendingActionId, 'with', suggestedActions.length, 'actions');
-      } else if (actionError) {
-        console.error('Error creating pending action:', actionError);
+      if (isPlan && structuredActions.length > 0) {
+        console.log(`Creating pending action with ${structuredActions.length} structured actions...`);
+        
+        // Create pending action in database with structured actions
+        const { data: pendingAction, error: actionError } = await supabaseClient
+          .from('ai_pending_actions')
+          .insert({
+            conversation_id: conversation.id,
+            trainer_id: user.id,
+            action_type: 'plan_execution',
+            action_plan: assistantMessage,
+            action_data: structuredActions,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (!actionError && pendingAction) {
+          pendingActionId = pendingAction.id;
+          suggestedActions = structuredActions.map((action, index) => ({
+            type: action.type,
+            id: `${pendingAction.id}_${index}`,
+            ...action.data
+          }));
+          console.log('Created pending action:', pendingActionId, 'with', suggestedActions.length, 'actions');
+        } else if (actionError) {
+          console.error('Error creating pending action:', actionError);
+        }
       }
     }
 
-    // Save messages to database with metadata
-    await supabaseClient.from('ai_messages').insert([
-      {
+    // Save messages to database with metadata (only if not optimistic mode)
+    if (!optimisticPendingAction) {
+      const isPlan = !autoExecuted && structuredActions.length > 0;
+      
+      await supabaseClient.from('ai_messages').insert([
+        {
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          metadata: { mentioned_clients: mentionedClients }
+        },
+        {
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: assistantMessage,
+          metadata: {
+            isPlan,
+            pendingActionId,
+            suggestedActions
+          }
+        }
+      ]);
+    } else {
+      // Only save user message in optimistic mode (system message already created)
+      await supabaseClient.from('ai_messages').insert({
         conversation_id: conversation.id,
         role: 'user',
         content: message,
         metadata: { mentioned_clients: mentionedClients }
-      },
-      {
-        conversation_id: conversation.id,
-        role: 'assistant',
-        content: assistantMessage,
-        metadata: {
-          isPlan,
-          pendingActionId,
-          suggestedActions
-        }
-      }
-    ]);
+      });
+    }
 
     // Update conversation title if it's the first message
     if (!conversationId && messages?.length === 0) {

@@ -226,12 +226,28 @@ export const useAIConversations = (userId: string | undefined) => {
           
           // Show toast for auto-executed system messages
           if (newMessage.role === 'system' && newMessage.metadata?.autoExecuted) {
+            const successCount = newMessage.metadata.results?.filter((r: any) => r.success).length || 0;
             toast({
-              title: '⚡ Автоматически выполнено',
-              description: 'AI выполнил действия. Проверьте результат.',
+              title: '⚡ Действия выполнены автоматически',
+              description: `Успешно: ${successCount} действий`,
               duration: 5000,
             });
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ai_messages',
+          filter: `conversation_id=eq.${currentConversation.id}`
+        },
+        (payload) => {
+          const updatedMessage = payload.new as AIMessage;
+          setMessages(prev => prev.map(msg => 
+            msg.id === updatedMessage.id ? updatedMessage : msg
+          ));
         }
       )
       .subscribe();
