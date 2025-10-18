@@ -352,9 +352,11 @@ IMPORTANT INSTRUCTIONS:
 
 4. Be concise but thorough. Focus on actionable advice.
 
-5. CRITICAL: When using tools (create_client_goals, add_measurements), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.
+5. CRITICAL: When using tools (create_client_goals, add_measurements, update_goal), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.
 
-6. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.`;
+6. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
+
+7. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.`;
 
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -427,6 +429,35 @@ IMPORTANT INSTRUCTIONS:
               }
             },
             required: ["client_id", "measurements"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "update_goal",
+          description: "Update target value of an existing goal for a client",
+          parameters: {
+            type: "object",
+            properties: {
+              client_id: {
+                type: "string",
+                description: "UUID of the client (use the CLIENT_ID value from context, NOT the client name)"
+              },
+              goal_name: {
+                type: "string",
+                description: "Exact name of the goal to update (e.g., 'Бег 1 км')"
+              },
+              target_value: {
+                type: "number",
+                description: "New target value"
+              },
+              target_unit: {
+                type: "string",
+                description: "Unit of measurement (e.g., 'minutes', 'reps', 'kg')"
+              }
+            },
+            required: ["client_id", "goal_name", "target_value"]
           }
         }
       }
@@ -516,8 +547,47 @@ IMPORTANT INSTRUCTIONS:
               }
             });
           }
+        } else if (functionName === 'update_goal') {
+          structuredActions.push({
+            type: 'update_goal',
+            data: {
+              client_id: args.client_id,
+              goal_name: args.goal_name,
+              target_value: args.target_value,
+              target_unit: args.target_unit
+            }
+          });
         }
       }
+      
+      // Auto-correct client_id if it's not a UUID
+      for (const action of structuredActions) {
+        if (action.data?.client_id && !action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          console.log(`Non-UUID client_id detected: "${action.data.client_id}"`);
+          
+          // If we have contextClientId, use it
+          if (contextClientId) {
+            console.log(`Auto-correcting to contextClientId: ${contextClientId}`);
+            action.data.client_id = contextClientId;
+          } else {
+            // Try to resolve by username or full_name
+            const { data: resolvedClient } = await supabaseClient
+              .from('profiles')
+              .select('user_id')
+              .or(`username.ilike.%${action.data.client_id}%,full_name.ilike.%${action.data.client_id}%`)
+              .limit(1)
+              .single();
+            
+            if (resolvedClient) {
+              console.log(`Resolved "${action.data.client_id}" to UUID: ${resolvedClient.user_id}`);
+              action.data.client_id = resolvedClient.user_id;
+            } else {
+              console.error(`Could not resolve client_id: "${action.data.client_id}"`);
+            }
+          }
+        }
+      }
+    }
     }
 
     // Check if this is a plan that needs actions (text-based fallback)

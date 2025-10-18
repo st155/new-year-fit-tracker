@@ -54,7 +54,12 @@ serve(async (req) => {
         
         switch (action.type) {
           case 'update_goal':
-            result = await executeUpdateGoal(supabaseClient, action.data);
+            // Check if it's update by name or by ID
+            if (action.data.goal_name && !action.data.goal_id) {
+              result = await executeUpdateGoalByName(supabaseClient, user.id, action.data);
+            } else {
+              result = await executeUpdateGoal(supabaseClient, action.data);
+            }
             break;
           
           case 'create_goal':
@@ -169,6 +174,52 @@ async function executeUpdateGoal(supabase: any, data: any) {
       updated_at: new Date().toISOString()
     })
     .eq('id', goal_id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return result;
+}
+
+async function executeUpdateGoalByName(supabase: any, trainerId: string, data: any) {
+  const { client_id, goal_name, target_value, target_unit } = data;
+  
+  console.log(`Updating goal "${goal_name}" for client ${client_id}:`, { target_value, target_unit });
+  
+  // Validate that client belongs to trainer
+  const { data: clientCheck, error: clientError } = await supabase
+    .from('trainer_clients')
+    .select('id')
+    .eq('trainer_id', trainerId)
+    .eq('client_id', client_id)
+    .eq('active', true)
+    .single();
+    
+  if (clientError || !clientCheck) {
+    throw new Error(`Client ${client_id} not found or not assigned to trainer`);
+  }
+  
+  // Find goal by name for this client
+  const { data: existingGoal, error: findError } = await supabase
+    .from('goals')
+    .select('id')
+    .eq('user_id', client_id)
+    .ilike('goal_name', goal_name)
+    .single();
+  
+  if (findError || !existingGoal) {
+    throw new Error(`Goal "${goal_name}" not found for client ${client_id}`);
+  }
+  
+  // Update the goal
+  const { data: result, error } = await supabase
+    .from('goals')
+    .update({
+      target_value,
+      ...(target_unit && { target_unit }),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', existingGoal.id)
     .select()
     .single();
 
