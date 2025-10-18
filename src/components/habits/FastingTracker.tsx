@@ -50,14 +50,16 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
 
   // Get current milestone message
   const getCurrentMilestone = () => {
-    if (!habit.ai_motivation?.milestones || !status.isFasting) return null;
+    if (!status.isFasting) return null;
+    const milestones = habit.ai_motivation?.milestones;
+    if (!Array.isArray(milestones) || milestones.length === 0) return null;
     
-    const sortedMilestones = [...habit.ai_motivation.milestones].sort((a, b) => a.minutes - b.minutes);
+    const sortedMilestones = [...milestones].sort((a, b) => (a?.minutes ?? 0) - (b?.minutes ?? 0));
     
     for (let i = 0; i < sortedMilestones.length; i++) {
       const milestone = sortedMilestones[i];
-      if (elapsedMinutes >= milestone.minutes && elapsedMinutes < milestone.minutes + 30) {
-        return milestone.message;
+      if (elapsedMinutes >= (milestone?.minutes ?? Infinity) && elapsedMinutes < (milestone?.minutes ?? Infinity) + 30) {
+        return milestone?.message;
       }
     }
     return null;
