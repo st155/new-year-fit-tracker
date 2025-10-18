@@ -23,6 +23,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
+import { DEFAULT_HABIT_TEMPLATES } from "@/lib/habit-templates";
 
 interface HabitCreateDialogProps {
   open: boolean;
@@ -46,40 +47,9 @@ const frequencies = [
 const habitTypes = [
   { value: "daily_check", label: "Daily Check-in", description: "Simple daily completion", icon: "✅" },
   { value: "duration_counter", label: "Duration Counter", description: "Track time (e.g., quit smoking)", icon: "⏱️" },
+  { value: "fasting_tracker", label: "Fasting Tracker", description: "Track intermittent fasting windows", icon: "⏰🍽️" },
   { value: "numeric_counter", label: "Numeric Counter", description: "Count items (e.g., books read)", icon: "🔢" },
   { value: "daily_measurement", label: "Daily Measurement", description: "Track daily values (e.g., pages read)", icon: "📊" },
-];
-
-const habitTemplates = [
-  { 
-    name: "Бросить курить", 
-    type: "duration_counter", 
-    category: "fitness", 
-    icon: "🚭",
-    settings: { cost_per_day: 300 }
-  },
-  { 
-    name: "Не пить алкоголь", 
-    type: "duration_counter", 
-    category: "fitness", 
-    icon: "🚫🍺",
-  },
-  { 
-    name: "Прочитать книги", 
-    type: "numeric_counter", 
-    category: "custom", 
-    icon: "📚",
-    target_value: 12,
-    measurement_unit: "книг"
-  },
-  { 
-    name: "Читать страниц в день", 
-    type: "daily_measurement", 
-    category: "custom", 
-    icon: "📖",
-    target_value: 50,
-    measurement_unit: "страниц"
-  },
 ];
 
 export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps) {
@@ -98,19 +68,19 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
   const [costPerDay, setCostPerDay] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
-  const applyTemplate = (templateName: string) => {
-    const template = habitTemplates.find(t => t.name === templateName);
+  const applyTemplate = (templateId: string) => {
+    const template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === templateId);
     if (!template) return;
 
     setName(template.name);
-    setHabitType(template.type);
+    setHabitType(template.habit_type);
     setCategory(template.category);
     
-    if (template.target_value) setTargetValue(template.target_value.toString());
-    if (template.measurement_unit) setMeasurementUnit(template.measurement_unit);
-    if (template.settings?.cost_per_day) setCostPerDay(template.settings.cost_per_day.toString());
+    if (template.custom_settings?.cost_per_day) {
+      setCostPerDay(template.custom_settings.cost_per_day.toString());
+    }
     
-    setSelectedTemplate(templateName);
+    setSelectedTemplate(templateId);
   };
 
   const handleCreate = async () => {
@@ -125,7 +95,12 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
       
       if (habitType === "duration_counter" && costPerDay) {
         customSettings.cost_per_day = parseFloat(costPerDay);
+        customSettings.show_health_benefits = true;
       }
+
+      // Get AI motivation from selected template
+      const template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === selectedTemplate);
+      const aiMotivation = template?.ai_motivation || null;
 
       const habitData: any = {
         user_id: user.id,
@@ -136,7 +111,10 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
         target_count: targetCount,
         is_active: true,
         habit_type: habitType,
-        custom_settings: customSettings,
+        custom_settings: Object.keys(customSettings).length > 0 ? customSettings : null,
+        ai_motivation: aiMotivation,
+        icon: template?.icon || null,
+        color: template?.color || null,
       };
 
       // Add type-specific fields
@@ -209,14 +187,14 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
         <div className="space-y-4 py-4">
           {/* Template Quick Select */}
           <div className="space-y-2">
-            <Label>Шаблоны</Label>
+            <Label>Популярные шаблоны</Label>
             <div className="grid grid-cols-2 gap-2">
-              {habitTemplates.map((template) => (
+              {DEFAULT_HABIT_TEMPLATES.map((template) => (
                 <Button
-                  key={template.name}
-                  variant={selectedTemplate === template.name ? "default" : "outline"}
+                  key={template.id}
+                  variant={selectedTemplate === template.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => applyTemplate(template.name)}
+                  onClick={() => applyTemplate(template.id)}
                   className="justify-start"
                 >
                   <span className="mr-2">{template.icon}</span>

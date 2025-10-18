@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
+import { HabitMigrationButton } from "@/components/habits/HabitMigrationButton";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { HabitStats } from "@/components/habits/HabitStats";
 import { HabitCreateDialog } from "@/components/habits/HabitCreateDialog";
@@ -35,13 +36,16 @@ export default function Habits() {
     <div className="container py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Habits</h1>
-          <p className="text-muted-foreground">Build and track your daily habits</p>
+          <h1 className="text-3xl font-bold">Привычки</h1>
+          <p className="text-muted-foreground">Отслеживайте и развивайте свои привычки</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Habit
-        </Button>
+        <div className="flex gap-2">
+          <HabitMigrationButton onComplete={refetch} />
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Новая привычка
+          </Button>
+        </div>
       </div>
 
       <HabitStats userId={user?.id} />
