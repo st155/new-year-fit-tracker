@@ -14,7 +14,25 @@ interface FastingWindow {
   updated_at: string;
 }
 
-export function useFastingWindow(habitId: string, userId?: string) {
+interface UseFastingWindowReturn {
+  windows: FastingWindow[] | undefined;
+  currentWindow: FastingWindow | undefined;
+  status: {
+    isFasting: boolean;
+    isEating: boolean;
+    duration: number;
+    startTime?: Date;
+  };
+  isLoading: boolean;
+  startEating: () => void;
+  startFasting: () => void;
+  endEating: () => void;
+  isStarting: boolean;
+  isFastingStarting: boolean;
+  isEnding: boolean;
+}
+
+export function useFastingWindow(habitId: string, userId?: string): UseFastingWindowReturn {
   const queryClient = useQueryClient();
 
   const { data: windows, isLoading } = useQuery({
@@ -201,9 +219,9 @@ export function useFastingWindow(habitId: string, userId?: string) {
     currentWindow,
     status,
     isLoading,
-    startEating: startEating.mutate,
-    startFasting: startFasting.mutate,
-    endEating: endEating.mutate,
+    startEating: () => startEating.mutate(),
+    startFasting: () => startFasting.mutate(),
+    endEating: () => endEating.mutate(),
     isStarting: startEating.isPending,
     isFastingStarting: startFasting.isPending,
     isEnding: endEating.isPending,
