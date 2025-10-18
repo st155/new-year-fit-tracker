@@ -168,6 +168,21 @@ async function executeUpdateGoal(supabase: any, data: any) {
 async function executeCreateGoal(supabase: any, trainerId: string, data: any) {
   const { client_id, goal_name, goal_type, target_value, target_unit, challenge_id } = data;
   
+  console.log(`Creating goal for client ${client_id}:`, { goal_name, target_value, target_unit });
+  
+  // Validate that client belongs to trainer
+  const { data: clientCheck, error: clientError } = await supabase
+    .from('trainer_clients')
+    .select('id')
+    .eq('trainer_id', trainerId)
+    .eq('client_id', client_id)
+    .eq('active', true)
+    .single();
+    
+  if (clientError || !clientCheck) {
+    throw new Error(`Client ${client_id} not found or not assigned to trainer`);
+  }
+  
   const { data: result, error } = await supabase
     .from('goals')
     .insert({
@@ -182,29 +197,84 @@ async function executeCreateGoal(supabase: any, trainerId: string, data: any) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error creating goal:', error);
+    throw error;
+  }
+  
+  console.log(`✅ Created goal: ${goal_name} (${target_value} ${target_unit}) for client ${client_id}`);
   return result;
 }
 
 async function executeAddMeasurement(supabase: any, data: any) {
-  const { goal_id, user_id, value, unit, measurement_date, notes } = data;
+  const { goal_id, user_id, client_id, goal_name, value, unit, measurement_date, notes } = data;
+  
+  console.log(`Adding measurement:`, { goal_id, goal_name, client_id, value, unit });
+  
+  let finalGoalId = goal_id;
+  let finalUserId = user_id || client_id;
+  
+  // If goal_name is provided instead of goal_id, find the goal
+  if (!finalGoalId && goal_name && finalUserId) {
+    const { data: goalData, error: goalError } = await supabase
+      .from('goals')
+      .select('id, user_id, goal_name, target_unit')
+      .eq('user_id', finalUserId)
+      .eq('goal_name', goal_name)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (goalError || !goalData) {
+      console.error(`Goal not found: ${goal_name} for user ${finalUserId}`);
+      throw new Error(`Goal "${goal_name}" not found for user ${finalUserId}`);
+    }
+    
+    finalGoalId = goalData.id;
+    finalUserId = goalData.user_id;
+    console.log(`Found goal: ${goalData.goal_name} (${finalGoalId})`);
+  }
+  
+  // Validate that goal exists and belongs to user
+  if (finalGoalId) {
+    const { data: goal, error: goalCheckError } = await supabase
+      .from('goals')
+      .select('id, user_id, goal_name')
+      .eq('id', finalGoalId)
+      .single();
+      
+    if (goalCheckError || !goal) {
+      throw new Error(`Goal ${finalGoalId} not found`);
+    }
+    
+    if (finalUserId && goal.user_id !== finalUserId) {
+      throw new Error(`Goal ${finalGoalId} does not belong to user ${finalUserId}`);
+    }
+    
+    finalUserId = goal.user_id;
+  }
   
   const { data: result, error } = await supabase
     .from('measurements')
     .insert({
-      goal_id,
-      user_id,
+      goal_id: finalGoalId,
+      user_id: finalUserId,
       value,
       unit,
       measurement_date: measurement_date || new Date().toISOString().split('T')[0],
-      source: 'trainer',
+      source: 'ai_trainer',
       verified_by_trainer: true,
       ...(notes && { notes })
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error adding measurement:', error);
+    throw error;
+  }
+  
+  console.log(`✅ Added measurement: ${value} ${unit} for goal ${finalGoalId}`);
   return result;
 }
 

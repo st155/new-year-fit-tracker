@@ -190,44 +190,198 @@ IMPORTANT INSTRUCTIONS:
 
     console.log(`Sending ${aiMessages.length} messages to AI (history: ${messages?.length || 0})`);
 
+    // Define tools for structured action extraction
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "create_client_goals",
+          description: "Create multiple goals for a client with specific targets",
+          parameters: {
+            type: "object",
+            properties: {
+              client_id: { 
+                type: "string",
+                description: "UUID of the client"
+              },
+              goals: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    goal_name: { type: "string", description: "Name of the goal (e.g., 'Гребля 2 км')" },
+                    goal_type: { type: "string", description: "Type of goal (e.g., 'rowing_2000m', 'running_1000m', 'pullups', 'bench_press')" },
+                    target_value: { type: "number", description: "Target value to achieve" },
+                    target_unit: { type: "string", description: "Unit of measurement (e.g., 'minutes', 'reps', 'kg', '%')" }
+                  },
+                  required: ["goal_name", "goal_type", "target_value", "target_unit"]
+                }
+              }
+            },
+            required: ["client_id", "goals"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "add_measurements",
+          description: "Add current measurements to existing goals for tracking progress",
+          parameters: {
+            type: "object",
+            properties: {
+              client_id: {
+                type: "string",
+                description: "UUID of the client"
+              },
+              measurements: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    goal_name: { type: "string", description: "Name of the goal to add measurement to" },
+                    value: { type: "number", description: "Current measurement value" },
+                    unit: { type: "string", description: "Unit of measurement" },
+                    measurement_date: { type: "string", description: "Date of measurement in YYYY-MM-DD format" }
+                  },
+                  required: ["goal_name", "value", "unit"]
+                }
+              }
+            },
+            required: ["client_id", "measurements"]
+          }
+        }
+      }
+    ];
+
+    // Check if user is approving a plan
+    const isApproval = message.toLowerCase().includes('да, выполнить') ||
+                       message.toLowerCase().includes('yes, execute') ||
+                       message.toLowerCase().includes('выполнить план') ||
+                       message.toLowerCase().includes('да, реализовать');
+
+    const requestBody: any = {
+      model: 'google/gemini-2.5-flash',
+      messages: aiMessages,
+    };
+
+    // Add tools if user is creating plan or approving
+    if (isApproval || contextMode === 'goals' || mentionedClients.length > 0) {
+      requestBody.tools = tools;
+      requestBody.tool_choice = "auto";
+    }
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: aiMessages,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('AI rate limit exceeded. Please try again in a few minutes.');
+      }
+      if (response.status === 402) {
+        throw new Error('AI credits exhausted. Please add more credits to continue.');
+      }
       const errorText = await response.text();
       console.error('AI API error:', response.status, errorText);
       throw new Error(`AI API error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
-    const assistantMessage = aiResponse.choices[0].message.content;
+    const assistantMessage = aiResponse.choices[0].message.content || '';
+    const toolCalls = aiResponse.choices[0].message.tool_calls;
 
     console.log('AI response generated');
 
-    // Check if this is a plan that needs actions
-    const isPlan = assistantMessage.toLowerCase().includes('ready to implement') ||
+    // Parse structured actions from tool calls
+    let structuredActions = [];
+    let suggestedActions = null;
+    let pendingActionId = null;
+
+    if (toolCalls && toolCalls.length > 0) {
+      console.log(`Parsing ${toolCalls.length} tool calls...`);
+      
+      for (const toolCall of toolCalls) {
+        const functionName = toolCall.function.name;
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        console.log(`Tool call: ${functionName}`, args);
+        
+        if (functionName === 'create_client_goals') {
+          for (const goal of args.goals) {
+            structuredActions.push({
+              type: 'create_goal',
+              data: {
+                client_id: args.client_id,
+                goal_name: goal.goal_name,
+                goal_type: goal.goal_type,
+                target_value: goal.target_value,
+                target_unit: goal.target_unit
+              }
+            });
+          }
+        } else if (functionName === 'add_measurements') {
+          for (const measurement of args.measurements) {
+            structuredActions.push({
+              type: 'add_measurement',
+              data: {
+                client_id: args.client_id,
+                goal_name: measurement.goal_name,
+                value: measurement.value,
+                unit: measurement.unit,
+                measurement_date: measurement.measurement_date || new Date().toISOString().split('T')[0]
+              }
+            });
+          }
+        }
+      }
+    }
+
+    // Check if this is a plan that needs actions (text-based fallback)
+    const isPlan = structuredActions.length > 0 ||
+                   assistantMessage.toLowerCase().includes('ready to implement') ||
                    assistantMessage.toLowerCase().includes('do you want to implement') ||
                    assistantMessage.toLowerCase().includes('готов реализовать') ||
                    assistantMessage.toLowerCase().includes('хотите реализовать') ||
                    assistantMessage.toLowerCase().includes('план действий');
 
-    // Parse potential actions and create pending action if it's a plan
-    let suggestedActions = null;
-    let pendingActionId = null;
-
-    if (isPlan) {
-      console.log('Detected plan response, creating pending action...');
+    if (isPlan && structuredActions.length > 0) {
+      console.log(`Creating pending action with ${structuredActions.length} structured actions...`);
       
-      // Create pending action in database
+      // Create pending action in database with structured actions
+      const { data: pendingAction, error: actionError } = await supabaseClient
+        .from('ai_pending_actions')
+        .insert({
+          conversation_id: conversation.id,
+          trainer_id: user.id,
+          action_type: 'plan_execution',
+          action_plan: assistantMessage,
+          action_data: structuredActions, // Store structured actions directly
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (!actionError && pendingAction) {
+        pendingActionId = pendingAction.id;
+        suggestedActions = structuredActions.map((action, index) => ({
+          type: action.type,
+          id: `${pendingAction.id}_${index}`,
+          ...action.data
+        }));
+        console.log('Created pending action:', pendingActionId, 'with', suggestedActions.length, 'actions');
+      } else if (actionError) {
+        console.error('Error creating pending action:', actionError);
+      }
+    } else if (isPlan) {
+      console.log('Detected plan response (text-based), creating pending action...');
+      
+      // Fallback for text-based plans
       const { data: pendingAction, error: actionError } = await supabaseClient
         .from('ai_pending_actions')
         .insert({
