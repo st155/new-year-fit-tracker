@@ -5,6 +5,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
+import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -93,6 +94,9 @@ const Index = () => {
             ))}
           </div>
         )}
+
+        {/* Habits Section */}
+        <HabitsSection />
 
         {/* Integrations Section */}
         <div className="mt-8">

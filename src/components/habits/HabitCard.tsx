@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { DurationCounter } from "./DurationCounter";
 import { NumericCounter } from "./NumericCounter";
 import { DailyMeasurement } from "./DailyMeasurement";
+import { FastingTracker } from "./FastingTracker";
 
 interface HabitCardProps {
   habit: {
@@ -40,6 +41,10 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
   // Route to custom habit cards based on type
   if (habit.habit_type === "duration_counter") {
     return <DurationCounter habit={habit} userId={user?.id} />;
+  }
+
+  if (habit.habit_type === "fasting_tracker") {
+    return <FastingTracker habit={habit} userId={user?.id} onCompleted={onCompleted} />;
   }
 
   if (habit.habit_type === "numeric_counter") {
