@@ -99,17 +99,17 @@ export const ClientTasksManager = () => {
         </div>
 
         <Tabs defaultValue="all">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">
+          <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-4 bg-muted/50 p-1 gap-1">
+            <TabsTrigger value="all" className="whitespace-nowrap flex-shrink-0">
               Все ({tasks.length})
             </TabsTrigger>
-            <TabsTrigger value="pending">
+            <TabsTrigger value="pending" className="whitespace-nowrap flex-shrink-0">
               В ожидании ({filterTasks('pending').length})
             </TabsTrigger>
-            <TabsTrigger value="in_progress">
+            <TabsTrigger value="in_progress" className="whitespace-nowrap flex-shrink-0">
               В процессе ({filterTasks('in_progress').length})
             </TabsTrigger>
-            <TabsTrigger value="completed">
+            <TabsTrigger value="completed" className="whitespace-nowrap flex-shrink-0">
               Завершено ({filterTasks('completed').length})
             </TabsTrigger>
           </TabsList>

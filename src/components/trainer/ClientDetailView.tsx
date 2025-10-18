@@ -334,11 +334,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       </Card>
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="goals">Цели и прогресс</TabsTrigger>
-          <TabsTrigger value="measurements">Измерения</TabsTrigger>
-          <TabsTrigger value="health">Данные здоровья</TabsTrigger>
-          <TabsTrigger value="ai-history">AI История ({aiHistory.length})</TabsTrigger>
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-4 bg-muted/50 p-1 gap-1">
+          <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
+          <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
+          <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
+          <TabsTrigger value="ai-history" className="whitespace-nowrap flex-shrink-0">AI История ({aiHistory.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
