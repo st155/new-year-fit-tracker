@@ -185,7 +185,7 @@ serve(async (req) => {
         }
 
         contextData += `\n\n=== Client: ${clientProfile.full_name} (@${clientProfile.username}) ===\n`;
-        contextData += `User ID: ${clientProfile.user_id}\n`;
+        contextData += `**CLIENT_ID (use this in tool calls): "${clientProfile.user_id}"**\n`;
         
         // Get all client goals with recent measurements
         const { data: clientGoals } = await supabaseClient
@@ -275,7 +275,9 @@ IMPORTANT INSTRUCTIONS:
 
 3. Use @username format when referring to specific clients.
 
-4. Be concise but thorough. Focus on actionable advice.`;
+4. Be concise but thorough. Focus on actionable advice.
+
+5. CRITICAL: When using tools (create_client_goals, add_measurements), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.`;
 
     // Call Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -301,7 +303,7 @@ IMPORTANT INSTRUCTIONS:
             properties: {
               client_id: { 
                 type: "string",
-                description: "UUID of the client"
+                description: "UUID of the client (use the CLIENT_ID value from context, NOT the client name)"
               },
               goals: {
                 type: "array",
@@ -331,7 +333,7 @@ IMPORTANT INSTRUCTIONS:
             properties: {
               client_id: {
                 type: "string",
-                description: "UUID of the client"
+                description: "UUID of the client (use the CLIENT_ID value from context, NOT the client name)"
               },
               measurements: {
                 type: "array",
