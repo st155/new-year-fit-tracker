@@ -234,6 +234,10 @@ export const useAIConversations = (userId: string | undefined) => {
           variant: 'destructive'
         });
       }
+      
+      // Fallback: reload conversations to catch any that were created before the error
+      await loadConversations();
+      
       return null;
     } finally {
       setSending(false);

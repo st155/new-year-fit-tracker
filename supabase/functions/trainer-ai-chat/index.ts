@@ -243,13 +243,8 @@ serve(async (req) => {
           console.log(`Alias match found for "${mentionedName}":`, aliasMatch);
           mentionedClients.push(aliasMatch.client_id);
           
-          // Increment usage count
-          await supabaseClient
-            .from('client_aliases')
-            .update({ used_count: supabaseClient.raw('used_count + 1') })
-            .eq('trainer_id', user.id)
-            .eq('client_id', aliasMatch.client_id)
-            .eq('alias_name', mentionedName);
+          // Note: used_count increment removed to prevent edge function crashes
+          // TODO: Implement safe counter increment via RPC or trigger
         } else {
           // No exact match - perform fuzzy search
           const { data: candidates } = await supabaseClient
@@ -822,6 +817,9 @@ IMPORTANT INSTRUCTIONS:
     const toolCalls = aiResponse.choices[0].message.tool_calls;
 
     console.log('AI response generated');
+    
+    // Initialize isPlan at the top level to avoid scope issues
+    let isPlan = false;
 
     // Parse structured actions from tool calls
     let structuredActions = [];
@@ -1098,7 +1096,7 @@ IMPORTANT INSTRUCTIONS:
         .eq('metadata->status', 'preparing');
     } else {
       // Only check for plan if not auto-executed and no optimistic action
-      const isPlan = !autoExecuted && structuredActions.length > 0;
+      isPlan = !autoExecuted && structuredActions.length > 0;
 
       if (isPlan && structuredActions.length > 0) {
         console.log(`Creating pending action with ${structuredActions.length} structured actions...`);
@@ -1133,7 +1131,7 @@ IMPORTANT INSTRUCTIONS:
 
     // Save messages to database with metadata (only if not optimistic mode)
     if (!optimisticPendingAction) {
-      const isPlan = !autoExecuted && structuredActions.length > 0;
+      isPlan = !autoExecuted && structuredActions.length > 0;
       
       await supabaseClient.from('ai_messages').insert([
         {
