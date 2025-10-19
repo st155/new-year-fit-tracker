@@ -74,7 +74,7 @@ export const useTrainingPlanDetail = (planId: string | null) => {
           )
         `)
         .eq('id', planId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       console.log('Plan loaded:', data);

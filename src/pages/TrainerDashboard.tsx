@@ -246,7 +246,24 @@ function TrainerDashboardContent() {
                 clients={clients as any}
                 onSelectClient={(client) => handleClientSelect(client)}
                 onAddClient={async (clientUserId) => {
-                  await loadClients();
+                  try {
+                    if (!user) return;
+                    
+                    const { error } = await supabase
+                      .from('trainer_clients')
+                      .insert({
+                        trainer_id: user.id,
+                        client_id: clientUserId,
+                        active: true
+                      });
+                    
+                    if (error) throw error;
+                    
+                    await loadClients();
+                  } catch (error: any) {
+                    console.error('Error adding client:', error);
+                    throw error;
+                  }
                 }}
                 onRefresh={() => loadClients()}
                 loading={loading}
