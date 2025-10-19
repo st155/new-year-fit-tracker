@@ -751,12 +751,67 @@ IMPORTANT INSTRUCTIONS:
     });
 
     if (!response.ok) {
+      // Handle rate limiting
       if (response.status === 429) {
-        throw new Error('AI rate limit exceeded. Please try again in a few minutes.');
+        console.error('⚠️ AI rate limit exceeded (429)');
+        
+        // Save user message with error info
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          metadata: {}
+        });
+        
+        // Save error message
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'system',
+          content: '⚠️ Превышен лимит запросов к AI. Пожалуйста, попробуйте через несколько минут.',
+          metadata: { error: 'rate_limit', status: 429 }
+        });
+        
+        return new Response(
+          JSON.stringify({
+            conversationId: conversation.id,
+            message: 'Превышен лимит запросов к AI. Пожалуйста, попробуйте через несколько минут.',
+            error: 'rate_limit'
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+      
+      // Handle payment required
       if (response.status === 402) {
-        throw new Error('AI credits exhausted. Please add more credits to continue.');
+        console.error('⚠️ AI credits exhausted (402)');
+        
+        // Save user message with error info
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          metadata: {}
+        });
+        
+        // Save error message
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'system',
+          content: '⚠️ Кредиты AI исчерпаны. Пожалуйста, пополните баланс для продолжения работы.',
+          metadata: { error: 'credits_exhausted', status: 402 }
+        });
+        
+        return new Response(
+          JSON.stringify({
+            conversationId: conversation.id,
+            message: 'Кредиты AI исчерпаны. Пожалуйста, пополните баланс.',
+            error: 'credits_exhausted'
+          }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+      
+      // Handle other errors
       const errorText = await response.text();
       console.error('AI API error:', response.status, errorText);
       throw new Error(`AI API error: ${response.status}`);

@@ -18,8 +18,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { PageLoader } from "@/components/ui/page-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
 
 interface TrainerClient {
@@ -35,12 +37,21 @@ interface TrainerClient {
 
 function TrainerDashboardContent() {
   const { user } = useAuth();
+  const { role, isTrainer, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
+
+  // Check trainer role and redirect if not a trainer
+  useEffect(() => {
+    if (!roleLoading && !isTrainer) {
+      toast.error('Доступ запрещен. Только для тренеров.');
+      navigate('/', { replace: true });
+    }
+  }, [isTrainer, roleLoading, navigate]);
 
   useEffect(() => {
     loadClients();
@@ -125,6 +136,16 @@ function TrainerDashboardContent() {
     { icon: TrendingUp, label: "Мой прогресс", color: "blue" },
     { icon: Target, label: "Мои цели", color: "purple" },
   ];
+
+  // Show loading state while checking role
+  if (roleLoading) {
+    return <PageLoader message="Проверка доступа..." />;
+  }
+
+  // Don't render if not a trainer (will redirect)
+  if (!isTrainer) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-trainer-bg pb-24">

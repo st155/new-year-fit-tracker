@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +30,11 @@ export const useAIConversations = (userId: string | undefined) => {
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
+  // Use useCallback to avoid recreating toast function
+  const showToast = useCallback((options: any) => {
+    toast(options);
+  }, [toast]);
+
   // Load conversations
   const loadConversations = async () => {
     if (!userId) return;
@@ -45,7 +50,7 @@ export const useAIConversations = (userId: string | undefined) => {
       setConversations(data || []);
     } catch (error) {
       console.error('Error loading conversations:', error);
-      toast({
+      showToast({
         title: 'Ошибка',
         description: 'Не удалось загрузить историю разговоров',
         variant: 'destructive'
@@ -68,7 +73,7 @@ export const useAIConversations = (userId: string | undefined) => {
       setMessages((data || []) as AIMessage[]);
     } catch (error) {
       console.error('Error loading messages:', error);
-      toast({
+      showToast({
         title: 'Ошибка',
         description: 'Не удалось загрузить сообщения',
         variant: 'destructive'
@@ -154,7 +159,7 @@ export const useAIConversations = (userId: string | undefined) => {
       return data;
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
+      showToast({
         title: 'Ошибка',
         description: 'Не удалось отправить сообщение',
         variant: 'destructive'
@@ -188,13 +193,13 @@ export const useAIConversations = (userId: string | undefined) => {
 
       await loadConversations();
 
-      toast({
+      showToast({
         title: 'Удалено',
         description: 'Разговор удален'
       });
     } catch (error) {
       console.error('Error deleting conversation:', error);
-      toast({
+      showToast({
         title: 'Ошибка',
         description: 'Не удалось удалить разговор',
         variant: 'destructive'
@@ -227,7 +232,7 @@ export const useAIConversations = (userId: string | undefined) => {
           // Show toast for auto-executed system messages
           if (newMessage.role === 'system' && newMessage.metadata?.autoExecuted) {
             const successCount = newMessage.metadata.results?.filter((r: any) => r.success).length || 0;
-            toast({
+            showToast({
               title: '⚡ Действия выполнены автоматически',
               description: `Успешно: ${successCount} действий`,
               duration: 5000,
@@ -255,7 +260,7 @@ export const useAIConversations = (userId: string | undefined) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentConversation?.id, toast]);
+  }, [currentConversation?.id, showToast]);
 
   return {
     conversations,
