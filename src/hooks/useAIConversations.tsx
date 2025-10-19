@@ -282,6 +282,7 @@ export const useAIConversations = (userId: string | undefined) => {
   const startNewConversation = (contextMode: string = 'general') => {
     setCurrentConversation(null);
     setMessages([]);
+    setOptimisticMessages([]);
   };
 
   // Delete conversation

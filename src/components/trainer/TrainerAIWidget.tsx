@@ -60,8 +60,25 @@ export const TrainerAIWidget = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
-  const { messages, sending, sendMessage } = useAIConversations(user?.id);
+  const { 
+    messages, 
+    conversations, 
+    currentConversation, 
+    sending, 
+    sendMessage, 
+    selectConversation,
+    startNewConversation 
+  } = useAIConversations(user?.id);
   const { pendingActions } = useAIPendingActions(user?.id);
+
+  // Auto-select last conversation on mount (for overview mode only)
+  useEffect(() => {
+    if (mode === 'overview' && conversations.length > 0 && !currentConversation) {
+      const lastConversation = conversations[0]; // Already sorted by last_message_at
+      console.log('📌 Auto-selecting last conversation:', lastConversation.id);
+      selectConversation(lastConversation.id);
+    }
+  }, [conversations, currentConversation, mode]);
 
   const recentMessages = mode === 'overview' ? messages.slice(-3) : messages.slice(-5);
 
@@ -269,14 +286,81 @@ export const TrainerAIWidget = ({
           <ScrollArea className="flex-1 p-4">
             {recentMessages.length === 0 ? (
               <div className="text-center text-slate-400 py-8">
-                <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Начните разговор с AI</p>
-                {!selectedClient && (
-                  <p className="text-xs mt-1">Выберите клиента или задайте общий вопрос</p>
+                <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                
+                {currentConversation ? (
+                  // Show last conversation preview with continue/new options
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-300">Последний разговор</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {formatDistanceToNow(new Date(currentConversation.last_message_at || currentConversation.created_at), { 
+                          addSuffix: true, 
+                          locale: ru 
+                        })}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={() => {
+                          selectConversation(currentConversation.id);
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        Продолжить разговор
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          startNewConversation();
+                          inputRef.current?.focus();
+                          toast.info('Начат новый разговор');
+                        }}
+                      >
+                        Начать новую
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // No conversations yet - show default empty state
+                  <>
+                    <p className="text-sm">Начните разговор с AI</p>
+                    {!selectedClient && (
+                      <p className="text-xs mt-1">Выберите клиента или задайте общий вопрос</p>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
               <div className="space-y-4">
+                {/* Conversation header badge */}
+                {currentConversation && (
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800/50">
+                    <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-400">
+                      Разговор от {formatDistanceToNow(new Date(currentConversation.created_at), { 
+                        addSuffix: true, 
+                        locale: ru 
+                      })}
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        startNewConversation();
+                        toast.info('Начат новый разговор');
+                      }}
+                    >
+                      Начать новую
+                    </Button>
+                  </div>
+                )}
+                
                 {recentMessages.map((msg, idx) => (
                   <div
                     key={idx}
