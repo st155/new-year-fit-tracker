@@ -464,7 +464,15 @@ IMPORTANT INSTRUCTIONS:
 
 8. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
 
-9. CRITICAL: Plan Creation Rules:
+9. Creating Training Plans:
+   - When the trainer asks to create a training plan, use the create_training_plan tool
+   - Examples: "Создай план на неделю для @pavel_radaev: грудь + трицепс в понедельник, спина + бицепс в среду, ноги + плечи в пятницу"
+   - Use Russian exercise names (e.g., "Жим штанги лежа", "Подтягивания", "Приседания")
+   - Typical workout structure: 4-6 exercises, 3-4 sets each, 8-12 reps for hypertrophy
+   - Rest: 60-90 seconds for smaller muscles, 90-120 for compound exercises
+   - Always include day_of_week (0=Monday, 6=Sunday)
+
+10. CRITICAL: Plan Creation Rules:
    - If user confirms with words like "да", "confirm", "давай", "ок" - IMMEDIATELY create a structured plan with tool calls
    - If you detect confirmation intent - DO NOT ask more questions, CREATE THE PLAN NOW
    - User confirmation = instant action plan with function calls
@@ -627,6 +635,86 @@ IMPORTANT INSTRUCTIONS:
             required: ["client_id", "goal_name", "target_value"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "create_training_plan",
+          description: "Create a complete weekly training plan for a client",
+          parameters: {
+            type: "object",
+            properties: {
+              client_id: {
+                type: "string",
+                description: "UUID of the client"
+              },
+              plan_name: {
+                type: "string",
+                description: "Name of the training plan (e.g., 'Набор массы 4 недели')"
+              },
+              description: {
+                type: "string",
+                description: "Optional description of the plan goals"
+              },
+              duration_weeks: {
+                type: "number",
+                description: "Duration in weeks (default: 4)"
+              },
+              workouts: {
+                type: "array",
+                description: "List of workouts for the week",
+                items: {
+                  type: "object",
+                  properties: {
+                    day_of_week: {
+                      type: "number",
+                      description: "0=Monday, 1=Tuesday, ... 6=Sunday"
+                    },
+                    workout_name: {
+                      type: "string",
+                      description: "Name of the workout (e.g., 'Грудь + Трицепс')"
+                    },
+                    description: {
+                      type: "string",
+                      description: "Optional workout description"
+                    },
+                    exercises: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          exercise_name: {
+                            type: "string",
+                            description: "Name of exercise in Russian (e.g., 'Жим штанги лежа')"
+                          },
+                          sets: {
+                            type: "number",
+                            description: "Number of sets"
+                          },
+                          reps: {
+                            type: "string",
+                            description: "Reps (e.g., '10' or '8-12')"
+                          },
+                          rest_seconds: {
+                            type: "number",
+                            description: "Rest time in seconds"
+                          },
+                          notes: {
+                            type: "string",
+                            description: "Optional technique notes"
+                          }
+                        },
+                        required: ["exercise_name", "sets", "reps", "rest_seconds"]
+                      }
+                    }
+                  },
+                  required: ["day_of_week", "workout_name", "exercises"]
+                }
+              }
+            },
+            required: ["client_id", "plan_name", "workouts"]
+          }
+        }
       }
     ];
 
@@ -730,33 +818,81 @@ IMPORTANT INSTRUCTIONS:
               target_unit: args.target_unit
             }
           });
+        } else if (functionName === 'create_training_plan') {
+          structuredActions.push({
+            type: 'create_training_plan',
+            data: {
+              client_id: args.client_id,
+              plan_name: args.plan_name,
+              description: args.description,
+              duration_weeks: args.duration_weeks || 4,
+              workouts: args.workouts
+            }
+          });
         }
       }
       
-      // Strict client_id normalization: always use contextClientId if available
+      // IMPROVED: Better handling of multiple clients
       console.log(`📋 Before normalization: ${structuredActions.length} actions, contextClientId=${contextClientId}, mentionedClients=${mentionedClients?.length || 0}`);
       
       for (let i = 0; i < structuredActions.length; i++) {
         const action = structuredActions[i];
         const beforeClientId = action.data?.client_id;
         
-        // STRICT RULE: If contextClientId exists and no additional clients mentioned, force it
-        if (contextClientId && (!mentionedClients || mentionedClients.length === 0)) {
-          console.log(`🔒 Action ${i}: Forcing contextClientId (${contextClientId}) regardless of AI output`);
+        // Single client in context - force it
+        if (contextClientId && mentionedClients.length === 0) {
+          console.log(`🔒 Action ${i}: Forcing contextClientId (${contextClientId})`);
           if (action.data) {
             action.data.client_id = contextClientId;
           }
         } 
-        // Otherwise, validate and auto-correct if needed
+        // Single mentioned client - use it
+        else if (mentionedClients.length === 1) {
+          console.log(`✅ Action ${i}: Using single mentioned client`);
+          if (action.data) {
+            action.data.client_id = mentionedClients[0];
+          }
+        }
+        // Multiple clients - try to match by name
+        else if (mentionedClients.length > 1) {
+          const actionClientName = action.data.goal_name || action.data.plan_name || '';
+          
+          // Load all mentioned client profiles for matching
+          const { data: mentionedProfiles } = await supabaseClient
+            .from('profiles')
+            .select('user_id, username, full_name')
+            .in('user_id', mentionedClients);
+          
+          if (mentionedProfiles) {
+            const matchedClient = mentionedProfiles.find(c => 
+              actionClientName.toLowerCase().includes(c.full_name.toLowerCase()) ||
+              actionClientName.toLowerCase().includes(c.username.toLowerCase())
+            );
+            
+            if (matchedClient) {
+              console.log(`🎯 Action ${i}: Matched to ${matchedClient.full_name} by name`);
+              if (action.data) {
+                action.data.client_id = matchedClient.user_id;
+              }
+            } else if (contextClientId) {
+              console.log(`⚠️ Action ${i}: Can't match name, using contextClientId`);
+              if (action.data) {
+                action.data.client_id = contextClientId;
+              }
+            } else {
+              console.error(`❌ Action ${i}: Can't determine client from ${mentionedClients.length} options`);
+            }
+          }
+        }
+        // Validate and auto-correct if needed
         else if (action.data?.client_id) {
           const isUUID = action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
           
           if (!isUUID) {
-            console.log(`⚠️ Action ${i}: Non-UUID client_id detected: "${action.data.client_id}"`);
+            console.log(`⚠️ Action ${i}: Non-UUID client_id: "${action.data.client_id}"`);
             
-            // Try contextClientId first
             if (contextClientId) {
-              console.log(`🔧 Action ${i}: Auto-correcting to contextClientId: ${contextClientId}`);
+              console.log(`🔧 Action ${i}: Auto-correcting to contextClientId`);
               action.data.client_id = contextClientId;
             } else {
               // Try to resolve by username or full_name
@@ -764,36 +900,16 @@ IMPORTANT INSTRUCTIONS:
                 .from('profiles')
                 .select('user_id')
                 .or(`username.ilike.%${action.data.client_id}%,full_name.ilike.%${action.data.client_id}%`)
-                .limit(1)
-                .single();
+                .maybeSingle();
               
               if (resolvedClient) {
-                console.log(`✅ Action ${i}: Resolved "${action.data.client_id}" to UUID: ${resolvedClient.user_id}`);
+                console.log(`✅ Action ${i}: Resolved to ${resolvedClient.user_id}`);
                 action.data.client_id = resolvedClient.user_id;
-              } else {
-                console.error(`❌ Action ${i}: Could not resolve client_id: "${action.data.client_id}"`);
               }
             }
           }
-          
-          // Verify client belongs to trainer
-          if (action.data.client_id && action.data.client_id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            const { data: belongsToTrainer } = await supabaseClient
-              .from('trainer_clients')
-              .select('client_id')
-              .eq('trainer_id', user.id)
-              .eq('client_id', action.data.client_id)
-              .eq('active', true)
-              .maybeSingle();
-            
-            if (!belongsToTrainer && contextClientId) {
-              console.log(`🔒 Action ${i}: Client ${action.data.client_id} doesn't belong to trainer, forcing contextClientId`);
-              action.data.client_id = contextClientId;
-            }
-          }
         } else if (contextClientId) {
-          // No client_id at all, use context
-          console.log(`🔧 Action ${i}: No client_id, using contextClientId: ${contextClientId}`);
+          console.log(`🔧 Action ${i}: No client_id, using contextClientId`);
           if (action.data) {
             action.data.client_id = contextClientId;
           }

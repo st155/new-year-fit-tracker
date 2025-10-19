@@ -181,36 +181,67 @@ export const TrainerAIWidget = ({
         <>
           {/* Quick Commands for overview mode */}
           {mode === 'overview' && (
-            <div className="p-4 border-b border-slate-800 bg-gradient-to-r from-purple-900/10 to-transparent">
-              <h4 className="text-xs font-semibold mb-2 flex items-center gap-1 text-slate-300">
-                <Zap className="h-3 w-3 text-purple-400" />
-                Quick Commands
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                <Badge 
-                  variant="secondary" 
-                  className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
-                  onClick={() => sendQuickCommand("Кто не тренировался сегодня?")}
-                >
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Today's stats
-                </Badge>
-                <Badge 
-                  variant="secondary" 
-                  className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
-                  onClick={() => sendQuickCommand("Создать цели для клиентов")}
-                >
-                  <Target className="h-3 w-3 mr-1" />
-                  Create goals
-                </Badge>
-                <Badge 
-                  variant="secondary" 
-                  className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
-                  onClick={() => sendQuickCommand("Прогресс за неделю")}
-                >
-                  <BarChart3 className="h-3 w-3 mr-1" />
-                  Weekly progress
-                </Badge>
+            <div className="p-4 border-b border-slate-800 bg-gradient-to-r from-purple-900/10 to-transparent space-y-3">
+              <div>
+                <h4 className="text-xs font-semibold mb-2 flex items-center gap-1 text-slate-300">
+                  <Zap className="h-3 w-3 text-purple-400" />
+                  Quick Commands
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  <Badge 
+                    variant="secondary" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
+                    onClick={() => sendQuickCommand("Кто не тренировался сегодня?")}
+                  >
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Today's stats
+                  </Badge>
+                  <Badge 
+                    variant="secondary" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
+                    onClick={() => sendQuickCommand("Создать цели для клиентов")}
+                  >
+                    <Target className="h-3 w-3 mr-1" />
+                    Create goals
+                  </Badge>
+                  <Badge 
+                    variant="secondary" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors bg-slate-800 text-slate-300 border-slate-700"
+                    onClick={() => sendQuickCommand("Прогресс за неделю")}
+                  >
+                    <BarChart3 className="h-3 w-3 mr-1" />
+                    Weekly progress
+                  </Badge>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-xs font-semibold mb-2 text-slate-300">📋 Создание планов</h4>
+                <div className="flex flex-wrap gap-2">
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors text-slate-300"
+                    onClick={() => sendQuickCommand('Создай недельный план тренировок для выбранного клиента: понедельник - грудь + трицепс, среда - спина + бицепс, пятница - ноги + плечи')}
+                  >
+                    Push/Pull/Legs
+                  </Badge>
+                  
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors text-slate-300"
+                    onClick={() => sendQuickCommand('Составь программу для начинающего на 3 тренировки в неделю: full body каждый день')}
+                  >
+                    Full Body 3x
+                  </Badge>
+                  
+                  <Badge 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-purple-500/20 transition-colors text-slate-300"
+                    onClick={() => sendQuickCommand('Создай план для набора массы: 4 тренировки в неделю, верх/низ сплит')}
+                  >
+                    Масса 4x
+                  </Badge>
+                </div>
               </div>
             </div>
           )}

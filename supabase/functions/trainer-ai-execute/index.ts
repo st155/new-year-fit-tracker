@@ -78,6 +78,10 @@ serve(async (req) => {
           case 'update_task':
             result = await executeUpdateTask(supabaseClient, action.data);
             break;
+          
+          case 'create_training_plan':
+            result = await executeCreateTrainingPlan(supabaseClient, user.id, action.data);
+            break;
 
           default:
             throw new Error(`Unknown action type: ${action.type}`);
@@ -395,4 +399,88 @@ async function executeUpdateTask(supabase: any, data: any) {
 
   if (error) throw error;
   return result;
+}
+
+async function executeCreateTrainingPlan(supabase: any, trainerId: string, data: any) {
+  const { client_id, plan_name, description, duration_weeks, workouts } = data;
+  
+  console.log(`Creating training plan "${plan_name}" for client ${client_id}`);
+  
+  // Validate that client belongs to trainer
+  const { data: clientCheck, error: clientError } = await supabase
+    .from('trainer_clients')
+    .select('id')
+    .eq('trainer_id', trainerId)
+    .eq('client_id', client_id)
+    .eq('active', true)
+    .maybeSingle();
+    
+  if (clientError || !clientCheck) {
+    throw new Error(`Client ${client_id} not found or not assigned to trainer`);
+  }
+  
+  // 1. Create the training plan
+  const { data: plan, error: planError } = await supabase
+    .from('training_plans')
+    .insert({
+      trainer_id: trainerId,
+      name: plan_name,
+      description: description || '',
+      duration_weeks: duration_weeks || 4
+    })
+    .select()
+    .single();
+
+  if (planError) {
+    console.error('Error creating training plan:', planError);
+    throw planError;
+  }
+
+  console.log(`✅ Created plan: ${plan.name} (${plan.id})`);
+
+  // 2. Create workouts with exercises
+  if (workouts && workouts.length > 0) {
+    const workoutsToInsert = workouts.map((w: any) => ({
+      plan_id: plan.id,
+      day_of_week: w.day_of_week,
+      workout_name: w.workout_name,
+      description: w.description || '',
+      exercises: w.exercises // JSONB array
+    }));
+
+    const { error: workoutsError } = await supabase
+      .from('training_plan_workouts')
+      .insert(workoutsToInsert);
+
+    if (workoutsError) {
+      console.error('Error creating workouts:', workoutsError);
+      throw workoutsError;
+    }
+
+    console.log(`✅ Created ${workoutsToInsert.length} workouts`);
+  }
+
+  // 3. Assign plan to client
+  const { error: assignError } = await supabase
+    .from('assigned_training_plans')
+    .insert({
+      plan_id: plan.id,
+      client_id: client_id,
+      assigned_by: trainerId,
+      start_date: new Date().toISOString().split('T')[0],
+      status: 'active'
+    });
+
+  if (assignError) {
+    console.error('Error assigning plan:', assignError);
+    throw assignError;
+  }
+
+  console.log(`✅ Assigned plan to client ${client_id}`);
+
+  return {
+    plan_id: plan.id,
+    plan_name: plan.name,
+    workouts_count: workouts?.length || 0
+  };
 }
