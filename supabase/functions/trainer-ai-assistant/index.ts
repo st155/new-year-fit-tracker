@@ -132,14 +132,34 @@ const tools = [
   }
 ];
 
-async function findClientByName(supabase: any, trainerId: string, clientName: string) {
+// Глобальный кеш клиентов для избежания повторных запросов
+const clientsCache = new Map<string, { data: any[], timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+
+async function getTrainerClients(supabase: any, trainerId: string, forceRefresh = false) {
+  const cached = clientsCache.get(trainerId);
+  const now = Date.now();
+  
+  if (!forceRefresh && cached && (now - cached.timestamp < CACHE_TTL)) {
+    return cached.data;
+  }
+
   const { data: clients } = await supabase
     .from('trainer_clients')
     .select('client_id, profiles!trainer_clients_client_id_fkey(user_id, username, full_name)')
     .eq('trainer_id', trainerId)
     .eq('active', true);
 
-  if (!clients || clients.length === 0) return null;
+  const clientsData = clients || [];
+  clientsCache.set(trainerId, { data: clientsData, timestamp: now });
+  
+  return clientsData;
+}
+
+async function findClientByName(supabase: any, trainerId: string, clientName: string) {
+  const clients = await getTrainerClients(supabase, trainerId);
+  
+  if (clients.length === 0) return null;
 
   const nameLower = clientName.toLowerCase();
   const found = clients.find((c: any) => {

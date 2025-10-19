@@ -52,6 +52,8 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<Client[]>([]);
+  const [displayedClients, setDisplayedClients] = useState<Client[]>([]);
+  const [clientsPage, setClientsPage] = useState(1);
   const [stats, setStats] = useState<TrainerStats>({
     activeClients: 0,
     averageProgress: 0,
@@ -60,6 +62,8 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
   });
   const [loading, setLoading] = useState(true);
   const { pendingActions } = useAIPendingActions(user?.id);
+
+  const CLIENTS_PER_PAGE = 6;
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -84,6 +88,13 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
       loadTrainerData();
     }
   }, [user]);
+
+  // Обновляем отображаемых клиентов при изменении страницы
+  useEffect(() => {
+    const start = 0;
+    const end = clientsPage * CLIENTS_PER_PAGE;
+    setDisplayedClients(clients.slice(start, end));
+  }, [clients, clientsPage]);
 
   const loadTrainerData = async () => {
     if (!user) return;
@@ -434,7 +445,7 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {clients.slice(0, 4).map((client, idx) => (
+            {displayedClients.map((client, idx) => (
               <div 
                 key={client.id} 
                 className="flex items-center justify-between p-4 bg-slate-900/30 rounded-xl hover:bg-slate-800/50 transition-all duration-300 cursor-pointer group hover-lift border border-slate-800/50 hover:border-slate-700"
@@ -482,6 +493,17 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
                 </div>
               </div>
             ))}
+
+            {/* Кнопка "Загрузить еще" */}
+            {displayedClients.length < clients.length && (
+              <Button
+                variant="outline"
+                className="w-full mt-4 bg-slate-900/30 hover:bg-slate-800/50 border-slate-700"
+                onClick={() => setClientsPage(prev => prev + 1)}
+              >
+                Загрузить еще ({clients.length - displayedClients.length} клиентов)
+              </Button>
+            )}
           </div>
         </CardContent>
         </Card>
