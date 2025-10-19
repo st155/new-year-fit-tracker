@@ -8,6 +8,7 @@ import { Trophy, Medal, Award, TrendingUp, TrendingDown, Minus } from "lucide-re
 import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from "@/lib/translations";
+import { calculateProgressScore } from "@/lib/challenge-scoring";
 
 const Leaderboard = () => {
   const { user } = useAuth();
@@ -24,9 +25,9 @@ const Leaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       if (!user) return;
-
       setLoading(true);
 
+      // 1. Get active challenge
       const { data: participantData } = await supabase
         .from('challenge_participants')
         .select(`
@@ -34,29 +35,38 @@ const Leaderboard = () => {
           challenges (
             id,
             title,
-            is_active
+            is_active,
+            start_date
           )
         `)
         .eq('user_id', user.id);
 
       let challengeId = null;
+      let challengeStartDate = null;
       if (participantData && participantData.length > 0) {
         const activeChallenge = participantData.find(p => 
           p.challenges && p.challenges.is_active
         );
         challengeId = activeChallenge?.challenge_id;
+        challengeStartDate = activeChallenge?.challenges?.start_date;
       }
 
-      if (!challengeId) {
+      if (!challengeId || !challengeStartDate) {
         setLeaderboardData([]);
         setLoading(false);
         return;
       }
 
+      // 2. Get all participants with baseline data
       const { data: allParticipants } = await supabase
         .from('challenge_participants')
         .select(`
           user_id,
+          baseline_weight,
+          baseline_body_fat,
+          baseline_muscle_mass,
+          baseline_source,
+          baseline_recorded_at,
           profiles (
             username,
             full_name,
@@ -74,8 +84,9 @@ const Leaderboard = () => {
       const now = new Date();
       const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
 
+      // 3. Calculate points for each participant
       const leaderboardPromises = allParticipants.map(async (participant) => {
-        const [workoutsData, measurementsData, bodyCompositionData] = await Promise.all([
+        const [workoutsData, measurementsData, currentBodyData] = await Promise.all([
           supabase
             .from('workouts')
             .select('id, calories_burned')
@@ -87,35 +98,116 @@ const Leaderboard = () => {
             .eq('user_id', participant.user_id)
             .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
           supabase
-            .from('body_composition')
-            .select('weight, body_fat_percentage')
+            .from('inbody_analyses')
+            .select('weight, percent_body_fat, skeletal_muscle_mass, test_date')
             .eq('user_id', participant.user_id)
-            .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0])
+            .order('test_date', { ascending: false })
+            .limit(1)
+            .maybeSingle()
         ]);
 
-        let points = 0;
-        
         const workouts = workoutsData.data || [];
-        points += workouts.length * 50;
-        
-        const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
-        points += Math.floor(totalCalories / 10);
-        
         const measurements = measurementsData.data || [];
-        points += measurements.length * 20;
-        
-        const bodyComp = bodyCompositionData.data || [];
-        points += bodyComp.length * 30;
+        const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+
+        // Check if baseline exists
+        const hasBaseline = 
+          participant.baseline_body_fat && 
+          (participant.baseline_source === 'inbody' || participant.baseline_source === 'withings');
+
+        if (!hasBaseline) {
+          return {
+            user_id: participant.user_id,
+            username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
+            avatar_url: participant.profiles?.avatar_url,
+            points: 0,
+            hasBaseline: false,
+            workouts: workouts.length,
+            measurements: measurements.length,
+            isUser: participant.user_id === user.id,
+          };
+        }
+
+        const currentMetrics = currentBodyData.data || null;
+
+        if (!currentMetrics) {
+          // No current data - activity only
+          const activityOnly = calculateProgressScore(
+            {
+              body_fat_percentage: participant.baseline_body_fat,
+              weight: participant.baseline_weight,
+              muscle_mass: participant.baseline_muscle_mass,
+              measurement_date: participant.baseline_recorded_at,
+              source: participant.baseline_source as any,
+            },
+            {
+              body_fat_percentage: participant.baseline_body_fat,
+              weight: participant.baseline_weight,
+              muscle_mass: participant.baseline_muscle_mass,
+              measurement_date: new Date().toISOString(),
+              source: participant.baseline_source as any,
+            },
+            {
+              workouts: workouts.length,
+              totalCalories,
+              measurements: measurements.length,
+              bodyCompEntries: 0,
+            }
+          );
+
+          return {
+            user_id: participant.user_id,
+            username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
+            avatar_url: participant.profiles?.avatar_url,
+            points: activityOnly.totalPoints,
+            hasBaseline: true,
+            workouts: workouts.length,
+            measurements: measurements.length,
+            bodyFatStart: participant.baseline_body_fat,
+            bodyFatCurrent: participant.baseline_body_fat,
+            bodyFatImprovement: 0,
+            isUser: participant.user_id === user.id,
+          };
+        }
+
+        // Calculate score using hybrid formula
+        const scoreBreakdown = calculateProgressScore(
+          {
+            body_fat_percentage: participant.baseline_body_fat,
+            weight: participant.baseline_weight,
+            muscle_mass: participant.baseline_muscle_mass,
+            measurement_date: participant.baseline_recorded_at,
+            source: participant.baseline_source as any,
+          },
+          {
+            body_fat_percentage: currentMetrics.percent_body_fat,
+            weight: currentMetrics.weight,
+            muscle_mass: currentMetrics.skeletal_muscle_mass,
+            measurement_date: currentMetrics.test_date,
+            source: 'inbody',
+          },
+          {
+            workouts: workouts.length,
+            totalCalories,
+            measurements: measurements.length,
+            bodyCompEntries: 1,
+          }
+        );
+
+        const fatImprovement = participant.baseline_body_fat - (currentMetrics.percent_body_fat || participant.baseline_body_fat);
 
         return {
           user_id: participant.user_id,
           username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
           avatar_url: participant.profiles?.avatar_url,
-          points: points,
+          points: scoreBreakdown.totalPoints,
+          hasBaseline: true,
           workouts: workouts.length,
           measurements: measurements.length,
-          bodyCompositions: bodyComp.length,
-          isUser: participant.user_id === user.id
+          bodyFatStart: participant.baseline_body_fat,
+          bodyFatCurrent: currentMetrics.percent_body_fat || participant.baseline_body_fat,
+          bodyFatImprovement: fatImprovement,
+          isUser: participant.user_id === user.id,
         };
       });
 
@@ -126,7 +218,7 @@ const Leaderboard = () => {
         .map((item, index) => ({
           ...item,
           rank: index + 1,
-          change: Math.floor(Math.random() * 5) - 2 // Placeholder
+          change: Math.floor(Math.random() * 5) - 2
         }));
 
       setLeaderboardData(sortedLeaderboard);
@@ -261,9 +353,18 @@ const Leaderboard = () => {
                         <div className="font-semibold">
                           {item.username}
                           {item.isUser && <span className="ml-2 text-xs text-primary">(You)</span>}
+                          {!item.hasBaseline && (
+                            <Badge variant="outline" className="ml-2 text-xs">Нет baseline</Badge>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {item.workouts} workouts · {item.measurements} measurements · {item.bodyCompositions} body comp
+                          {item.workouts} workouts · {item.measurements} measurements
+                          {item.bodyFatImprovement !== undefined && item.bodyFatImprovement > 0 && (
+                            <span className="ml-2 text-success">
+                              • Жир: {item.bodyFatStart?.toFixed(1)}% → {item.bodyFatCurrent?.toFixed(1)}% 
+                              (-{item.bodyFatImprovement.toFixed(1)}%)
+                            </span>
+                          )}
                         </div>
                       </div>
 

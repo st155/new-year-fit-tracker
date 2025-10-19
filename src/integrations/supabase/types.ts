@@ -546,18 +546,33 @@ export type Database = {
       }
       challenge_participants: {
         Row: {
+          baseline_body_fat: number | null
+          baseline_muscle_mass: number | null
+          baseline_recorded_at: string | null
+          baseline_source: string | null
+          baseline_weight: number | null
           challenge_id: string
           id: string
           joined_at: string
           user_id: string
         }
         Insert: {
+          baseline_body_fat?: number | null
+          baseline_muscle_mass?: number | null
+          baseline_recorded_at?: string | null
+          baseline_source?: string | null
+          baseline_weight?: number | null
           challenge_id: string
           id?: string
           joined_at?: string
           user_id: string
         }
         Update: {
+          baseline_body_fat?: number | null
+          baseline_muscle_mass?: number | null
+          baseline_recorded_at?: string | null
+          baseline_source?: string | null
+          baseline_weight?: number | null
           challenge_id?: string
           id?: string
           joined_at?: string

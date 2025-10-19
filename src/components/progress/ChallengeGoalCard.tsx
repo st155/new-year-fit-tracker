@@ -138,7 +138,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           </div>
 
           {/* Progress Bar */}
-          <Progress value={goal.progress_percentage} className="mb-4" />
+          <Progress value={goal.progress_percentage} autoColor={true} className="mb-4" />
 
           {/* Sparkline & Trend */}
           <div className="flex items-center justify-between">

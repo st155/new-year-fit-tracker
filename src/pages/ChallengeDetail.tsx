@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
+import { captureBaseline } from "@/lib/challenge-baseline";
 
 export default function ChallengeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +57,12 @@ export default function ChallengeDetail() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Capture baseline metrics
+      if (user && id) {
+        await captureBaseline(user.id, id);
+      }
+      
       toast.success("Вы присоединились к челленджу!");
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
