@@ -315,12 +315,26 @@ export const AIChatWindow = ({
       });
     });
 
-    // Sort mentions by position
-    mentions.sort((a, b) => a.start - b.start);
+    // Filter out mentions that don't match any real client
+    const validMentions = mentions.filter(mention => {
+      const matchingClient = clients.find(c => 
+        c.user_id === mention.clientId
+      );
+      
+      if (!matchingClient) {
+        console.warn(`⚠️ Skipping invalid mention (no matching client): ${mention.text}`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Sort valid mentions by position
+    validMentions.sort((a, b) => a.start - b.start);
     
     // Remove overlapping mentions (keep first)
     const filteredMentions: Mention[] = [];
-    mentions.forEach(mention => {
+    validMentions.forEach(mention => {
       const hasOverlap = filteredMentions.some(
         m => (mention.start >= m.start && mention.start < m.end) ||
              (mention.end > m.start && mention.end <= m.end)

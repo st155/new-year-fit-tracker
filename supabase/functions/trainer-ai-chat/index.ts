@@ -130,6 +130,32 @@ serve(async (req) => {
     let contextData = '';
     let disambiguationNeeded = [];
     
+    // Load ALL active clients for AI context
+    const { data: allTrainerClients } = await supabaseClient
+      .from('trainer_clients')
+      .select(`
+        client_id,
+        profiles!trainer_clients_client_id_fkey (
+          user_id,
+          username,
+          full_name
+        )
+      `)
+      .eq('trainer_id', user.id)
+      .eq('active', true)
+      .limit(20);
+
+    if (allTrainerClients && allTrainerClients.length > 0) {
+      contextData += '\n\n📋 YOUR ACTIVE CLIENTS (use these names ONLY):\n';
+      for (const tc of allTrainerClients) {
+        const profile = tc.profiles as any;
+        if (profile) {
+          contextData += `- ${profile.full_name} (@${profile.username}) [ID: ${profile.user_id}]\n`;
+        }
+      }
+      contextData += '\n⚠️ CRITICAL: Only use these exact client names in your responses. Never invent fake names like @coach_*, @john_*, @sarah_*.\n';
+    }
+    
     // PRIORITY: Load context client first if specified
     if (contextClientId) {
       const { data: contextClientProfile } = await supabaseClient
@@ -374,11 +400,26 @@ serve(async (req) => {
             contextData += `- ${metric.metric_name}: ${metric.value} ${metric.unit} (${metric.measurement_date}, source: ${metric.source})\n`;
           });
         }
-      }
     }
+  }
 
-    // Add mode-specific context
-    if (contextMode === 'goals' || contextMode === 'analysis') {
+  // Helper function to extract real client names from context
+  const extractClientNamesFromContext = (context: string): string => {
+    const clientPattern = /=== Client: (.+?) \(@(\S+)\) ===/g;
+    const matches = [];
+    let match;
+    
+    while ((match = clientPattern.exec(context)) !== null) {
+      matches.push(`${match[1]} (@${match[2]})`);
+    }
+    
+    return matches.length > 0 
+      ? matches.join(', ') 
+      : 'No clients found in context';
+  };
+
+  // Add mode-specific context
+  if (contextMode === 'goals' || contextMode === 'analysis') {
       const { data: allClients } = await supabaseClient
         .from('trainer_clients')
         .select('client_id, profiles(username, full_name)')
@@ -412,11 +453,18 @@ IMPORTANT INSTRUCTIONS:
 
 5. CRITICAL: When using tools (create_client_goals, add_measurements, update_goal), ALWAYS use the CLIENT_ID UUID from the context, never use client names or usernames.
 
-6. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
+6. CRITICAL CLIENT NAMES RULE:
+   - When mentioning clients in your responses, ALWAYS use EXACT names from the context data
+   - NEVER invent fake usernames like @coach_alisa, @john_doe, @sarah_connor, @trainer_*, @client_*, @alice_*, @bob_*
+   - Only use real client names provided in the context: ${contextData ? extractClientNamesFromContext(contextData) : 'no clients loaded'}
+   - If no specific client is in context, ask the trainer to specify which client they're referring to
+   - Example: Use "@pavel_radaev" or "Pavel Radaev" (from context), NOT "@coach_alisa" (fake)
 
-7. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
+7. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
 
-8. CRITICAL: Plan Creation Rules:
+8. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
+
+9. CRITICAL: Plan Creation Rules:
    - If user confirms with words like "да", "confirm", "давай", "ок" - IMMEDIATELY create a structured plan with tool calls
    - If you detect confirmation intent - DO NOT ask more questions, CREATE THE PLAN NOW
    - User confirmation = instant action plan with function calls
@@ -808,6 +856,39 @@ IMPORTANT INSTRUCTIONS:
         autoExecuted = false;
       }
     }
+
+    // Validate AI response for fake client mentions
+    const fakePatterns = ['@coach_', '@john_', '@sarah_', '@trainer_', '@client_', '@alice_', '@bob_'];
+    let validatedAssistantMessage = assistantMessage;
+
+    for (const fakePattern of fakePatterns) {
+      if (validatedAssistantMessage.includes(fakePattern)) {
+        console.warn(`⚠️ Detected fake client mention: ${fakePattern}`);
+        
+        // Try to replace with actual client from context if available
+        if (contextClientId && contextData) {
+          const clientNameMatch = contextData.match(/Name: (.+?) \(@(\S+)\)/);
+          if (clientNameMatch) {
+            const [_, fullName, username] = clientNameMatch;
+            console.log(`🔧 Replacing fake mention with real client: @${username}`);
+            validatedAssistantMessage = validatedAssistantMessage.replace(
+              new RegExp(fakePattern + '\\w*', 'g'),
+              `@${username}`
+            );
+          }
+        } else {
+          // If no context client, remove fake mentions with warning
+          console.warn(`❌ Removing fake mention ${fakePattern} - no real client to replace with`);
+          validatedAssistantMessage = validatedAssistantMessage.replace(
+            new RegExp(fakePattern + '\\w*', 'g'),
+            '[CLIENT_NAME_REMOVED]'
+          );
+        }
+      }
+    }
+
+    // Use validated message instead of raw AI response
+    assistantMessage = validatedAssistantMessage;
 
     // Handle optimistic pending action update or create new one
     if (optimisticPendingAction && structuredActions.length > 0) {
