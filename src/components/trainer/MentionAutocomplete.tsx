@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Loader2 } from 'lucide-react';
 
 export interface ClientSuggestion {
   user_id: string;
@@ -14,6 +15,7 @@ interface MentionAutocompleteProps {
   onSelect: (client: ClientSuggestion) => void;
   onClose: () => void;
   position: { top: number; left: number };
+  loading?: boolean;
 }
 
 export const MentionAutocomplete = ({
@@ -21,55 +23,75 @@ export const MentionAutocomplete = ({
   query,
   onSelect,
   onClose,
-  position
+  position,
+  loading = false,
 }: MentionAutocompleteProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   // No filtering here - clients are already filtered in parent component
   const filteredClients = clients;
 
+  // Clamp within viewport to avoid overflow
+  const minWidth = 260;
+  const safeLeft = Math.min(Math.max(8, position.left), (typeof window !== 'undefined' ? window.innerWidth : 1200) - minWidth - 8);
+  const safeTop = Math.min(Math.max(8, position.top), (typeof window !== 'undefined' ? window.innerHeight : 800) - 8);
+
   useEffect(() => {
     setSelectedIndex(0);
   }, [filteredClients]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex(i => (i + 1) % filteredClients.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex(i => (i - 1 + filteredClients.length) % filteredClients.length);
-      } else if (e.key === 'Enter' && filteredClients[selectedIndex]) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent event bubbling to parent textarea
-        onSelect(filteredClients[selectedIndex]);
-      } else if (e.key === 'Escape') {
-        onClose();
-      }
-    };
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowDown' && filteredClients.length > 0) {
+      e.preventDefault();
+      setSelectedIndex(i => (i + 1) % filteredClients.length);
+    } else if (e.key === 'ArrowUp' && filteredClients.length > 0) {
+      e.preventDefault();
+      setSelectedIndex(i => (i - 1 + filteredClients.length) % filteredClients.length);
+    } else if (e.key === 'Enter' && filteredClients[selectedIndex]) {
+      e.preventDefault();
+      e.stopPropagation(); // Prevent event bubbling to parent textarea
+      onSelect(filteredClients[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredClients, selectedIndex, onSelect, onClose]);
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [filteredClients, selectedIndex, onSelect, onClose]);
 
-  if (filteredClients.length === 0) {
-    return (
-      <div
-        className="fixed z-[9999] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl p-3 min-w-[250px] pointer-events-auto"
-        style={{ top: `${position.top}px`, left: `${position.left}px` }}
-      >
-        <p className="text-sm text-muted-foreground">
-          {query ? 'Клиент не найден' : 'Нет доступных клиентов'}
-        </p>
+if (loading) {
+  return (
+    <div
+      className="fixed z-[100000] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl p-3 min-w-[250px] pointer-events-auto"
+      style={{ top: `${safeTop}px`, left: `${safeLeft}px` }}
+    >
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Загрузка клиентов…</span>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
+if (filteredClients.length === 0) {
+  return (
+    <div
+      className="fixed z-[100000] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl p-3 min-w-[250px] pointer-events-auto"
+      style={{ top: `${safeTop}px`, left: `${safeLeft}px` }}
+    >
+      <p className="text-sm text-muted-foreground">
+        {query ? 'Клиент не найден' : 'Нет доступных клиентов'}
+      </p>
+    </div>
+  );
+}
 
   return (
     <div
-      className="fixed z-[9999] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl max-h-60 overflow-auto min-w-[250px] pointer-events-auto"
-      style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      className="fixed z-[100000] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl max-h-60 overflow-auto min-w-[250px] pointer-events-auto"
+      style={{ top: `${safeTop}px`, left: `${safeLeft}px` }}
     >
       <div className="sticky top-0 bg-background dark:bg-slate-900 border-b border-border px-3 py-2">
         <p className="text-xs text-muted-foreground">

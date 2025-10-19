@@ -16,7 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-
+import { createPortal } from 'react-dom';
 interface Client {
   user_id: string;
   username: string;
@@ -519,15 +519,19 @@ export const TrainerAIWidget = ({
                 disabled={sending}
               />
               
-              {showMentionSuggestions && (
-                <MentionAutocomplete
-                  clients={trainerClients}
-                  query={mentionQuery}
-                  position={mentionPosition}
-                  onSelect={handleSelectMention}
-                  onClose={() => setShowMentionSuggestions(false)}
-                />
-              )}
+              {showMentionSuggestions && typeof document !== 'undefined' &&
+                createPortal(
+                  <MentionAutocomplete
+                    clients={trainerClients}
+                    query={mentionQuery}
+                    position={mentionPosition}
+                    onSelect={handleSelectMention}
+                    onClose={() => setShowMentionSuggestions(false)}
+                    loading={loadingClients}
+                  />,
+                  document.body
+                )
+              }
             </div>
             
             <div className="flex justify-between items-center">

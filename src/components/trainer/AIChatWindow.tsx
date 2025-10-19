@@ -17,7 +17,7 @@ import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-
+import { createPortal } from 'react-dom';
 interface AIChatWindowProps {
   messages: AIMessage[];
   currentConversation: AIConversation | null;
@@ -1069,16 +1069,20 @@ export const AIChatWindow = ({
         </div>
       </div>
 
-      {/* Mention autocomplete dropdown - rendered at root level to avoid clipping */}
-        {showMentionSuggestions && (
-          <MentionAutocomplete
-            clients={filteredClientsForDropdown}
-            query={mentionQuery}
-            onSelect={selectClient}
-            onClose={() => setShowMentionSuggestions(false)}
-            position={mentionPosition}
-          />
-        )}
+      {/* Mention autocomplete dropdown - rendered via portal to avoid clipping */}
+        {showMentionSuggestions && typeof document !== 'undefined' &&
+          createPortal(
+            <MentionAutocomplete
+              clients={filteredClientsForDropdown}
+              query={mentionQuery}
+              onSelect={selectClient}
+              onClose={() => setShowMentionSuggestions(false)}
+              position={mentionPosition}
+              loading={loadingClients}
+            />,
+            document.body
+          )
+        }
 
       <ClientDisambiguationModal
         open={showDisambiguation}
