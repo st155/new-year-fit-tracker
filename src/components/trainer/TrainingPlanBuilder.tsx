@@ -44,10 +44,10 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
   };
 
   const handleSavePlan = async () => {
-    if (!planName.trim() || !selectedClient || workouts.length === 0) {
+    if (!planName.trim() || workouts.length === 0) {
       toast({
         title: 'Ошибка',
-        description: 'Заполните все обязательные поля и добавьте хотя бы одну тренировку',
+        description: 'Введите название плана и добавьте хотя бы одну тренировку',
         variant: 'destructive'
       });
       return;
@@ -88,23 +88,30 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
 
       if (workoutsError) throw workoutsError;
 
-      // Назначаем план клиенту
-      const { error: assignError } = await supabase
-        .from('assigned_training_plans')
-        .insert({
-          plan_id: plan.id,
-          client_id: selectedClient,
-          assigned_by: user.user.id,
-          start_date: new Date().toISOString().split('T')[0],
-          status: 'active'
+      // Назначаем план клиенту (если выбран)
+      if (selectedClient) {
+        const { error: assignError } = await supabase
+          .from('assigned_training_plans')
+          .insert({
+            plan_id: plan.id,
+            client_id: selectedClient,
+            assigned_by: user.user.id,
+            start_date: new Date().toISOString().split('T')[0],
+            status: 'active'
+          });
+
+        if (assignError) throw assignError;
+        
+        toast({
+          title: 'Успешно',
+          description: 'Тренировочный план создан и назначен клиенту'
         });
-
-      if (assignError) throw assignError;
-
-      toast({
-        title: 'Успешно',
-        description: 'Тренировочный план создан и назначен клиенту'
-      });
+      } else {
+        toast({
+          title: 'Успешно',
+          description: 'План создан. Назначьте его клиенту в настройках плана'
+        });
+      }
 
       onSuccess();
       handleClose();
@@ -155,12 +162,13 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
               </div>
 
               <div>
-                <Label>Клиент *</Label>
+                <Label>Клиент (необязательно)</Label>
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите клиента" />
+                    <SelectValue placeholder="Не назначать сейчас" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">Не назначать сейчас</SelectItem>
                     {clients.map(client => (
                       <SelectItem key={client.user_id} value={client.user_id}>
                         {client.full_name} (@{client.username})
@@ -168,6 +176,11 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
                     ))}
                   </SelectContent>
                 </Select>
+                {!selectedClient && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Вы сможете назначить план клиенту позже
+                  </p>
+                )}
               </div>
             </div>
 
@@ -230,7 +243,7 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
             <Button variant="outline" onClick={handleClose}>
               Отмена
             </Button>
-            <Button onClick={handleSavePlan} disabled={saving || !planName.trim() || !selectedClient || workouts.length === 0}>
+            <Button onClick={handleSavePlan} disabled={saving || !planName.trim() || workouts.length === 0}>
               {saving ? 'Сохранение...' : 'Создать план'}
             </Button>
           </DialogFooter>

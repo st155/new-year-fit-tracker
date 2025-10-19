@@ -56,8 +56,22 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
       }));
 
       setPlans(plansWithCount);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading plans:', error);
+      
+      // Log error for diagnostics
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase.from('error_logs').insert({
+          user_id: user.id,
+          error_type: 'training_plans_load',
+          error_message: error?.message || 'Failed to load training plans',
+          source: 'TrainingPlansList',
+          stack_trace: error?.stack,
+          error_details: { error }
+        });
+      }
+      
       toast({
         title: 'Ошибка',
         description: 'Не удалось загрузить планы',
@@ -109,11 +123,25 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
       if (planExists) {
         setSelectedPlanId(planId);
       } else {
-        toast({
-          title: 'План не найден',
-          description: 'Запрошенный план не существует или был удален',
-          variant: 'destructive'
-        });
+        // Try to load plan directly by ID in case it wasn't in the list
+        const loadPlanById = async () => {
+          const { data, error } = await supabase
+            .from('training_plans')
+            .select('*')
+            .eq('id', planId)
+            .single();
+          
+          if (data && !error) {
+            setSelectedPlanId(planId);
+          } else {
+            toast({
+              title: 'План не найден',
+              description: 'Запрошенный план не существует или был удален',
+              variant: 'destructive'
+            });
+          }
+        };
+        loadPlanById();
       }
     }
   }, [plans, searchParams, initialPlanId, toast]);
@@ -140,10 +168,18 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
             <p className="text-muted-foreground mb-4">
               Создайте первый план для ваших клиентов
             </p>
-            <Button onClick={() => setShowBuilder(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Создать план
-            </Button>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={() => setShowBuilder(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Создать план
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedPlanId('demo-plan')}
+              >
+                Показать демо-план
+              </Button>
+            </div>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -178,6 +214,7 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
 
       <TrainingPlanDetailView
         planId={selectedPlanId}
+        isDemoMode={selectedPlanId === 'demo-plan'}
         onClose={() => {
           setSelectedPlanId(null);
           // Очистить URL параметр

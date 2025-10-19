@@ -5,7 +5,7 @@ import { TrainerAIWidget } from '@/components/trainer/TrainerAIWidget';
 import { AIQuickActionsPanel } from '@/components/trainer/AIQuickActionsPanel';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard } from 'lucide-react';
+import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,7 +150,7 @@ export default function TrainerIndexPage() {
             <CardTitle>Быстрый доступ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Button
                 variant="outline"
                 className="h-20 flex flex-col gap-2"
@@ -166,6 +166,14 @@ export default function TrainerIndexPage() {
               >
                 <Target className="h-5 w-5" />
                 <span className="text-sm">Цели</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+                onClick={() => navigate('/trainer-dashboard?tab=plans')}
+              >
+                <Dumbbell className="h-5 w-5" />
+                <span className="text-sm">Планы</span>
               </Button>
               <Button
                 variant="outline"
