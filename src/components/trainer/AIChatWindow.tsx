@@ -61,6 +61,7 @@ export const AIChatWindow = ({
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+  const [filteredClientsForDropdown, setFilteredClientsForDropdown] = useState<ClientSuggestion[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [showDisambiguation, setShowDisambiguation] = useState(false);
   const [disambiguations, setDisambiguations] = useState<any[]>([]);
@@ -1074,15 +1075,15 @@ export const AIChatWindow = ({
       </div>
 
       {/* Mention autocomplete dropdown - rendered at root level to avoid clipping */}
-      {showMentionSuggestions && (
-        <MentionAutocomplete
-          clients={clients}
-          query={mentionQuery}
-          onSelect={selectClient}
-          onClose={() => setShowMentionSuggestions(false)}
-          position={mentionPosition}
-        />
-      )}
+        {showMentionSuggestions && (
+          <MentionAutocomplete
+            clients={filteredClientsForDropdown}
+            query={mentionQuery}
+            onSelect={selectClient}
+            onClose={() => setShowMentionSuggestions(false)}
+            position={mentionPosition}
+          />
+        )}
 
       <ClientDisambiguationModal
         open={showDisambiguation}

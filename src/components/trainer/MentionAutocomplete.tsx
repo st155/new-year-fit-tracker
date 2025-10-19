@@ -25,14 +25,8 @@ export const MentionAutocomplete = ({
 }: MentionAutocompleteProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  const filteredClients = useMemo(() => {
-    if (!query) return clients;
-    const lowerQuery = query.toLowerCase();
-    return clients.filter(c => 
-      c.username.toLowerCase().includes(lowerQuery) ||
-      c.full_name.toLowerCase().includes(lowerQuery)
-    );
-  }, [clients, query]);
+  // No filtering here - clients are already filtered in parent component
+  const filteredClients = clients;
 
   useEffect(() => {
     setSelectedIndex(0);
