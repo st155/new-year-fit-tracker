@@ -1185,7 +1185,7 @@ IMPORTANT INSTRUCTIONS:
       }));
       
       // Update system message with real plan
-      await supabaseClient
+      const { count } = await supabaseClient
         .from('ai_messages')
         .update({
           content: assistantMessage,
@@ -1199,6 +1199,24 @@ IMPORTANT INSTRUCTIONS:
         .eq('conversation_id', conversation.id)
         .eq('role', 'system')
         .eq('metadata->status', 'preparing');
+      
+      // Fallback: If optimistic message not found, create new assistant message
+      if (!count || count === 0) {
+        console.warn('⚠️ Optimistic message not found, creating new assistant message');
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: assistantMessage,
+          metadata: {
+            isPlan: true,
+            pendingActionId: optimisticPendingAction.id,
+            suggestedActions,
+            status: 'pending'
+          }
+        });
+      } else {
+        console.log(`✅ Updated ${count} optimistic message(s) with AI response`);
+      }
     } else {
       // Only check for plan if not auto-executed and no optimistic action
       isPlan = !autoExecuted && structuredActions.length > 0;
