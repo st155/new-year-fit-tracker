@@ -26,6 +26,7 @@ export const useAIConversations = (userId: string | undefined) => {
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<AIConversation | null>(null);
   const [messages, setMessages] = useState<AIMessage[]>([]);
+  const [optimisticMessages, setOptimisticMessages] = useState<AIMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
@@ -96,7 +97,34 @@ export const useAIConversations = (userId: string | undefined) => {
     }
   };
 
-  // Send message
+  // Add optimistic message
+  const addOptimisticMessage = (content: string, role: 'user' | 'assistant') => {
+    const optimisticMsg: AIMessage = {
+      id: `temp-${Date.now()}`,
+      conversation_id: currentConversation?.id || 'temp',
+      role,
+      content,
+      metadata: { isOptimistic: true, status: 'sending' },
+      created_at: new Date().toISOString()
+    };
+    
+    setOptimisticMessages(prev => [...prev, optimisticMsg]);
+    return optimisticMsg.id;
+  };
+
+  // Remove optimistic message
+  const removeOptimisticMessage = (id: string) => {
+    setOptimisticMessages(prev => prev.filter(msg => msg.id !== id));
+  };
+
+  // Update optimistic message
+  const updateOptimisticMessage = (id: string, updates: Partial<AIMessage>) => {
+    setOptimisticMessages(prev => prev.map(msg => 
+      msg.id === id ? { ...msg, ...updates } : msg
+    ));
+  };
+
+  // Send message with streaming support
   const sendMessage = async (
     message: string,
     contextMode: string = 'general',
@@ -106,6 +134,9 @@ export const useAIConversations = (userId: string | undefined) => {
     autoExecute: boolean = true
   ) => {
     if (!userId) return null;
+
+    // Add optimistic user message
+    const optimisticId = addOptimisticMessage(message, 'user');
 
     setSending(true);
     try {
@@ -122,6 +153,9 @@ export const useAIConversations = (userId: string | undefined) => {
       });
 
       if (error) throw error;
+
+      // Remove optimistic message after successful send
+      removeOptimisticMessage(optimisticId);
 
       // Check for disambiguation needed
       if (data?.needsDisambiguation) {
@@ -157,13 +191,34 @@ export const useAIConversations = (userId: string | undefined) => {
       }
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
-      showToast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить сообщение',
-        variant: 'destructive'
+      
+      // Mark optimistic message as failed
+      updateOptimisticMessage(optimisticId, { 
+        metadata: { isOptimistic: true, status: 'failed' } 
       });
+      
+      // Show specific error messages
+      if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+        showToast({
+          title: 'AI rate limit exceeded',
+          description: 'Please wait a few minutes and try again.',
+          variant: 'destructive'
+        });
+      } else if (error.message?.includes('402') || error.message?.includes('credits')) {
+        showToast({
+          title: 'AI credits exhausted',
+          description: 'Please add more credits to your Lovable workspace.',
+          variant: 'destructive'
+        });
+      } else {
+        showToast({
+          title: 'Ошибка',
+          description: 'Не удалось отправить сообщение',
+          variant: 'destructive'
+        });
+      }
       return null;
     } finally {
       setSending(false);
@@ -265,13 +320,16 @@ export const useAIConversations = (userId: string | undefined) => {
   return {
     conversations,
     currentConversation,
-    messages,
+    messages: [...messages, ...optimisticMessages],
     loading,
     sending,
     selectConversation,
     sendMessage,
     startNewConversation,
     deleteConversation,
-    refresh: loadConversations
+    refresh: loadConversations,
+    addOptimisticMessage,
+    removeOptimisticMessage,
+    updateOptimisticMessage
   };
 };

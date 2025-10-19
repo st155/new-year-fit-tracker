@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle } from 'lucide-react';
+import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle, ArrowDown } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -57,14 +57,35 @@ export const AIChatWindow = ({
   });
   const [disambiguations, setDisambiguations] = useState<any[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string>('');
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Smart auto-scroll: only scroll if user is at bottom
   useEffect(() => {
-    if (scrollRef.current) {
+    if (!isUserScrolling && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isUserScrolling]);
+
+  // Track user scrolling
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+    
+    setIsUserScrolling(!isAtBottom);
+    setShowScrollButton(!isAtBottom);
+  };
+
+  // Scroll to bottom button handler
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      setIsUserScrolling(false);
+      setShowScrollButton(false);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('ai-auto-execute', JSON.stringify(autoExecute));
@@ -156,9 +177,13 @@ export const AIChatWindow = ({
     const confirmPatterns = ['да', 'yes', 'confirm', 'ок', 'давай', 'согласен'];
     const isConfirmation = confirmPatterns.some(p => textToSend.toLowerCase().includes(p));
 
+    // Clear input immediately for better UX
     if (!messageText) {
       setInput('');
     }
+    
+    // Auto-scroll to bottom when sending
+    setIsUserScrolling(false);
 
     // Show toast for confirmation
     if (isConfirmation) {
@@ -214,14 +239,7 @@ export const AIChatWindow = ({
       setMentions(new Map()); // Clear mentions after sending
       setShowMentionSuggestions(false);
     } catch (error: any) {
-      // Handle AI rate limit errors
-      if (error.message?.includes('AI rate limit exceeded') || error.message?.includes('429')) {
-        toast.error("AI rate limit exceeded. Please wait a few minutes and try again.");
-      } else if (error.message?.includes('AI credits exhausted') || error.message?.includes('402')) {
-        toast.error("AI credits exhausted. Please add more credits to your Lovable workspace to continue.");
-      } else {
-        toast.error("Failed to send message. Please try again.");
-      }
+      // Errors are already handled in useAIConversations hook
       console.error('Error sending message:', error);
     }
   };
@@ -574,7 +592,8 @@ export const AIChatWindow = ({
         </div>
       </div>
 
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+      <div className="flex-1 relative">
+        <ScrollArea ref={scrollRef} className="h-full p-4" onScrollCapture={handleScroll}>
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
             <Bot className="h-16 w-16 mb-4 opacity-50" />
@@ -600,7 +619,7 @@ export const AIChatWindow = ({
                     
                     <div className="flex-1 flex flex-col gap-1">
                       <div
-                        className={`rounded-lg p-3 ${
+                         className={`rounded-lg p-3 ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto max-w-[80%]'
                             : 'bg-muted max-w-[80%]'
@@ -609,6 +628,24 @@ export const AIChatWindow = ({
                         <div className="whitespace-pre-wrap text-sm">
                           {message.role === 'assistant' ? renderMessageContent(message.content) : message.content}
                         </div>
+                        
+                        {/* Optimistic message status indicator */}
+                        {message.metadata?.isOptimistic && (
+                          <div className="text-xs mt-2 flex items-center gap-1">
+                            {message.metadata.status === 'sending' && (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span className="opacity-70">Отправка...</span>
+                              </>
+                            )}
+                            {message.metadata.status === 'failed' && (
+                              <>
+                                <XCircle className="h-3 w-3 text-destructive" />
+                                <span className="text-destructive">Не отправлено</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                     
                         {/* Show client mention buttons for AI messages */}
                         {message.role === 'assistant' && extractClientMentions(message.content).length > 0 && (
@@ -663,14 +700,29 @@ export const AIChatWindow = ({
                     <Bot className="h-4 w-4 text-primary" />
                   </Avatar>
                   <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-muted-foreground">AI думает...</span>
+                    <div className="flex gap-1">
+                      <span className="animate-bounce" style={{ animationDelay: '0ms' }}>●</span>
+                      <span className="animate-bounce" style={{ animationDelay: '150ms' }}>●</span>
+                      <span className="animate-bounce" style={{ animationDelay: '300ms' }}>●</span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           )}
         </ScrollArea>
+
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <Button
+            size="icon"
+            className="absolute bottom-4 right-4 rounded-full shadow-lg z-10"
+            onClick={scrollToBottom}
+          >
+            <ArrowDown className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
       <div className="p-4 border-t relative">
         <div className="flex gap-2">
