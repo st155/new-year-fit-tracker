@@ -50,6 +50,7 @@ export const AIChatWindow = ({
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+  const [loadingClients, setLoadingClients] = useState(true);
   const [showDisambiguation, setShowDisambiguation] = useState(false);
   const [autoExecute, setAutoExecute] = useState(() => {
     const saved = localStorage.getItem('ai-auto-execute');
@@ -120,25 +121,44 @@ export const AIChatWindow = ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
-      .from('trainer_clients')
-      .select(`
-        client_id,
-        profiles!trainer_clients_client_id_fkey (
-          user_id,
-          username,
-          full_name,
-          avatar_url
-        )
-      `)
-      .eq('trainer_id', user.id)
-      .eq('active', true);
-    
-    if (data) {
+    setLoadingClients(true);
+    try {
+      const { data, error } = await supabase
+        .from('trainer_clients')
+        .select(`
+          client_id,
+          profiles:client_id (
+            user_id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('trainer_id', user.id)
+        .eq('active', true);
+
+      if (error) {
+        console.error('Error loading trainer clients for mentions:', error);
+        setLoadingClients(false);
+        return;
+      }
+
+      if (!data) {
+        console.log('No clients data returned');
+        setLoadingClients(false);
+        return;
+      }
+
       const clientsList = data
         .map(tc => tc.profiles)
         .filter(Boolean) as ClientSuggestion[];
+      
+      console.log('Loaded clients for mentions:', clientsList.length);
       setClients(clientsList);
+    } catch (error) {
+      console.error('Error loading trainer clients:', error);
+    } finally {
+      setLoadingClients(false);
     }
   };
 

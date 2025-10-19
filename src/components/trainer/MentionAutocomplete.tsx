@@ -59,7 +59,16 @@ export const MentionAutocomplete = ({
   }, [filteredClients, selectedIndex, onSelect, onClose]);
 
   if (filteredClients.length === 0) {
-    return null;
+    return (
+      <div
+        className="absolute z-50 bg-popover border border-border rounded-md shadow-lg p-3 min-w-[250px]"
+        style={{ top: position.top, left: position.left }}
+      >
+        <p className="text-sm text-muted-foreground">
+          {query ? 'Клиент не найден' : 'Нет доступных клиентов'}
+        </p>
+      </div>
+    );
   }
 
   return (
