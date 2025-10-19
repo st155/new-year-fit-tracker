@@ -135,24 +135,64 @@ export const useAIConversations = (userId: string | undefined) => {
   ) => {
     if (!userId) return null;
 
+    // Reset sending state first to clear any stuck states
+    setSending(false);
+
     // Add optimistic user message
     const optimisticId = addOptimisticMessage(message, 'user');
 
-    setSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('trainer-ai-chat', {
-        body: {
-          conversationId: currentConversation?.id,
-          message,
-          contextMode,
-          mentionedClients,
-          mentionedNames,
-          contextClientId,
-          autoExecute
-        }
+    // 60-second timeout for stuck requests
+    const timeoutId = setTimeout(() => {
+      setSending(false);
+      showToast({
+        title: '⏱️ Превышено время ожидания',
+        description: 'Ответ AI занял слишком много времени. Проверьте результат в истории сообщений.',
+        variant: 'destructive'
       });
+      if (currentConversation) {
+        loadMessages(currentConversation.id);
+      }
+    }, 60000);
+
+    setSending(true);
+    
+    let retryAttempt = 0;
+    const maxRetries = 1;
+    
+    try {
+      let data, error;
+      
+      // Retry logic for edge function errors
+      while (retryAttempt <= maxRetries) {
+        const response = await supabase.functions.invoke('trainer-ai-chat', {
+          body: {
+            conversationId: currentConversation?.id,
+            message,
+            contextMode,
+            mentionedClients,
+            mentionedNames,
+            contextClientId,
+            autoExecute
+          }
+        });
+        
+        data = response.data;
+        error = response.error;
+        
+        // If error is related to deployment (isPlan), wait and retry
+        if (error && error.message?.includes('isPlan') && retryAttempt < maxRetries) {
+          console.log(`⚠️ Deployment error detected, retrying in 2 seconds... (attempt ${retryAttempt + 1})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          retryAttempt++;
+        } else {
+          break;
+        }
+      }
 
       if (error) throw error;
+      
+      // Clear timeout on success
+      clearTimeout(timeoutId);
 
       // Mark optimistic message as sent (don't remove yet, wait for realtime)
       updateOptimisticMessage(optimisticId, {
@@ -207,6 +247,9 @@ export const useAIConversations = (userId: string | undefined) => {
 
       return data;
     } catch (error: any) {
+      // Clear timeout on error
+      clearTimeout(timeoutId);
+      
       console.error('Error sending message:', error);
       
       // Mark optimistic message as failed
@@ -289,6 +332,8 @@ export const useAIConversations = (userId: string | undefined) => {
   useEffect(() => {
     if (!currentConversation?.id) return;
 
+    console.log(`🔔 Setting up realtime subscription for conversation: ${currentConversation.id}`);
+
     const channel = supabase
       .channel(`ai_messages_${currentConversation.id}`)
       .on(
@@ -300,6 +345,7 @@ export const useAIConversations = (userId: string | undefined) => {
           filter: `conversation_id=eq.${currentConversation.id}`
         },
         (payload) => {
+          console.log('📨 Realtime INSERT event received:', payload);
           const newMessage = payload.new as AIMessage;
           
           // Deduplication: check for matching optimistic message
@@ -318,7 +364,16 @@ export const useAIConversations = (userId: string | undefined) => {
             return prev;
           });
           
-          setMessages(prev => [...prev, newMessage]);
+          // Deduplication: don't add if message already exists by id
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === newMessage.id);
+            if (exists) {
+              console.log('⚠️ Message already exists, skipping:', newMessage.id);
+              return prev;
+            }
+            console.log('✅ Adding new message to UI:', newMessage.id);
+            return [...prev, newMessage];
+          });
           
           // Show toast for auto-executed system messages
           if (newMessage.role === 'system' && newMessage.metadata?.autoExecuted) {

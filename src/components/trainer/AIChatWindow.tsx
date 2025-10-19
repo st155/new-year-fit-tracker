@@ -59,8 +59,18 @@ export const AIChatWindow = ({
   const [pendingMessage, setPendingMessage] = useState<string>('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [sendingStartTime, setSendingStartTime] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Track sending start time
+  useEffect(() => {
+    if (sending) {
+      setSendingStartTime(Date.now());
+    } else {
+      setSendingStartTime(null);
+    }
+  }, [sending]);
 
   // Smart auto-scroll: only scroll if user is at bottom
   useEffect(() => {
@@ -611,6 +621,28 @@ export const AIChatWindow = ({
                   <AutoExecutionReport message={message} />
                 ) : (
                   <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {/* AI thinking indicator */}
+                    {message.role === 'assistant' && message.metadata?.isThinking && (
+                      <div className="flex items-start gap-3 max-w-[80%]">
+                        <Avatar className="h-8 w-8 bg-primary/10">
+                          <Bot className="h-4 w-4 text-primary" />
+                        </Avatar>
+                        <div className="rounded-lg p-3 bg-muted">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <span className="text-muted-foreground">
+                              🤖 AI генерирует ответ
+                              <span className="animate-pulse">...</span>
+                            </span>
+                            {sendingStartTime && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {Math.floor((Date.now() - sendingStartTime) / 1000)}s
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {message.role === 'assistant' && (
                       <Avatar className="h-8 w-8 bg-primary/10">
                         <Bot className="h-4 w-4 text-primary" />
@@ -710,16 +742,24 @@ export const AIChatWindow = ({
               </div>
             ))}
 
+              {/* AI thinking indicator when sending */}
               {sending && (
-                <div className="flex gap-3 justify-start">
+                <div className="flex gap-3 justify-start animate-fade-in">
                   <Avatar className="h-8 w-8 bg-primary/10">
                     <Bot className="h-4 w-4 text-primary" />
                   </Avatar>
-                  <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <span className="animate-bounce" style={{ animationDelay: '0ms' }}>●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '150ms' }}>●</span>
-                      <span className="animate-bounce" style={{ animationDelay: '300ms' }}>●</span>
+                  <div className="bg-muted rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span className="text-muted-foreground">
+                        🤖 AI генерирует ответ
+                        <span className="animate-pulse">...</span>
+                      </span>
+                      {sendingStartTime && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {Math.floor((Date.now() - sendingStartTime) / 1000)}s
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

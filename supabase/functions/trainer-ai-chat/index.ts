@@ -1,3 +1,5 @@
+// Trainer AI Chat Assistant - Edge Function
+// Updated: Force redeployment to apply isPlan scope fix and client alias improvements
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
