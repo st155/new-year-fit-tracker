@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, User, Dumbbell, Plus } from 'lucide-react';
+import { Dumbbell, Plus } from 'lucide-react';
 import { TrainingPlanBuilder } from './TrainingPlanBuilder';
+import { TrainingPlanCard } from './TrainingPlanCard';
+import { TrainingPlanDetailView } from './TrainingPlanDetailView';
 
 interface TrainingPlan {
   id: string;
@@ -14,6 +15,7 @@ interface TrainingPlan {
   duration_weeks: number;
   created_at: string;
   assigned_count: number;
+  workout_count?: number;
 }
 
 export const TrainingPlansList = () => {
@@ -21,6 +23,7 @@ export const TrainingPlansList = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadPlans = async () => {
@@ -32,7 +35,8 @@ export const TrainingPlansList = () => {
         .from('training_plans')
         .select(`
           *,
-          assigned_training_plans (count)
+          assigned_training_plans (count),
+          training_plan_workouts (count)
         `)
         .eq('trainer_id', user.user.id)
         .order('created_at', { ascending: false });
@@ -41,7 +45,8 @@ export const TrainingPlansList = () => {
 
       const plansWithCount = data.map(plan => ({
         ...plan,
-        assigned_count: plan.assigned_training_plans?.[0]?.count || 0
+        assigned_count: plan.assigned_training_plans?.[0]?.count || 0,
+        workout_count: plan.training_plan_workouts?.[0]?.count || 0
       }));
 
       setPlans(plansWithCount);
@@ -116,33 +121,21 @@ export const TrainingPlansList = () => {
             </Button>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {plans.map(plan => (
-              <Card key={plan.id} className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-semibold mb-1">{plan.name}</h4>
-                    {plan.description && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {plan.description}
-                      </p>
-                    )}
-                    <div className="flex gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {plan.duration_weeks} {plan.duration_weeks === 1 ? 'неделя' : 'недели'}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        Назначен: {plan.assigned_count}
-                      </div>
-                    </div>
-                  </div>
-                  <Badge variant="secondary">
-                    {new Date(plan.created_at).toLocaleDateString('ru-RU')}
-                  </Badge>
-                </div>
-              </Card>
+              <TrainingPlanCard
+                key={plan.id}
+                plan={plan}
+                onClick={() => setSelectedPlanId(plan.id)}
+                onDuplicate={() => {
+                  // Will be handled by detail view
+                  setSelectedPlanId(plan.id);
+                }}
+                onDelete={() => {
+                  // Will be handled by detail view
+                  setSelectedPlanId(plan.id);
+                }}
+              />
             ))}
           </div>
         )}
@@ -156,6 +149,15 @@ export const TrainingPlansList = () => {
           setShowBuilder(false);
         }}
         clients={clients}
+      />
+
+      <TrainingPlanDetailView
+        planId={selectedPlanId}
+        onClose={() => setSelectedPlanId(null)}
+        onDeleted={() => {
+          loadPlans();
+          setSelectedPlanId(null);
+        }}
       />
     </>
   );
