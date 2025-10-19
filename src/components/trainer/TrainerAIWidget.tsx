@@ -510,10 +510,11 @@ export const TrainerAIWidget = ({
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+                  // Если дропдаун открыт — не обрабатываем Enter в textarea
+                  if (showMentionSuggestions && e.key === 'Enter') {
+                    return; // Дропдаун сам обработает
                   }
+                  // Больше никакой логики отправки — только через кнопку "Отправить"
                 }}
                 className="min-h-[60px] resize-none bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
                 disabled={sending}

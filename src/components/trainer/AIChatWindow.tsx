@@ -466,17 +466,13 @@ export const AIChatWindow = ({
     setDisambiguations([]);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Block send if mention dropdown is open OR actively selecting
-      if (showMentionSuggestions || isSelectingMention) {
-        console.log('[@mentions] Blocked Enter - dropdown open or selecting mention');
-        return; // Don't prevent default, let MentionAutocomplete handle it
-      }
-      
-      e.preventDefault();
-      handleSend();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Если дропдаун открыт — не обрабатываем Enter в textarea (его обработает MentionAutocomplete)
+    if (showMentionSuggestions && e.key === 'Enter') {
+      // Ничего не делаем, дропдаун сам обработает
+      return;
     }
+    // Больше никакой логики отправки по Enter — только через кнопку "Отправить"
   };
 
   // Extract client mentions from message
