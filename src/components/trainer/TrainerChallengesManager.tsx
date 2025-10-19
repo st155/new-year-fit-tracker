@@ -12,8 +12,7 @@ import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle } from "lucide
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useChallengeParticipantsRealtime } from "@/hooks/useRealtime";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 export function TrainerChallengesManager() {
   const { user } = useAuth();
@@ -24,16 +23,34 @@ export function TrainerChallengesManager() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [challengeToEdit, setChallengeToEdit] = useState<any>(null);
 
-  // Real-time updates for all challenges
+  // Real-time updates for challenge participants с правильной очисткой
   useEffect(() => {
     if (!selectedChallenge) return;
     
-    // Subscribe to participant changes for selected challenge
-    useChallengeParticipantsRealtime(selectedChallenge, () => {
-      console.log("Challenge participants updated");
-      refetch();
-    });
-  }, [selectedChallenge]);
+    // Создаем канал для real-time подписки
+    const channel = supabase
+      .channel(`challenge-participants-${selectedChallenge}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'challenge_participants',
+          filter: `challenge_id=eq.${selectedChallenge}`
+        },
+        () => {
+          console.log("Challenge participants updated");
+          sonnerToast.info("Список участников обновлен");
+          refetch();
+        }
+      )
+      .subscribe();
+
+    // Обязательная очистка при размонтировании
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedChallenge, refetch]);
 
   const handleCompleteChallenge = async (challengeId: string) => {
     try {

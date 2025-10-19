@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,8 @@ import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/Navig
 import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useClientDetailData } from "@/hooks/useClientDetailData";
 
 interface Client {
   id: string;
@@ -74,191 +74,29 @@ interface ClientDetailViewProps {
 export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
   const navigate = useNavigate();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [healthData, setHealthData] = useState<HealthData[]>([]);
-  const [aiHistory, setAiHistory] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
 
-  useEffect(() => {
-    loadClientData();
-  }, [client.user_id]);
+  // Используем оптимизированный хук для загрузки данных
+  const { 
+    goals, 
+    measurements, 
+    healthData, 
+    aiHistory, 
+    loading, 
+    error, 
+    refetch 
+  } = useClientDetailData(client.user_id);
 
   // Real-time updates for goals and measurements
   useGoalsRealtime(client.user_id, () => {
     toast.info("Цели обновлены");
-    loadClientData();
+    refetch();
   });
 
   useMeasurementsRealtime(client.user_id, () => {
     toast.info("Добавлено новое измерение");
-    loadClientData();
+    refetch();
   });
-
-  // Helper function to merge health data from multiple sources
-  const mergeHealthData = (summaryData: any[], unifiedData: any[]): HealthData[] => {
-    const dataMap = new Map<string, HealthData>();
-
-    // First, populate from daily_health_summary
-    summaryData.forEach(item => {
-      dataMap.set(item.date, {
-        date: item.date,
-        steps: item.steps,
-        weight: item.weight,
-        heart_rate_avg: item.heart_rate_avg,
-        active_calories: item.active_calories,
-        sleep_hours: item.sleep_hours
-      });
-    });
-
-    // Supplement/override with data from unified_metrics
-    unifiedData?.forEach(metric => {
-      const date = metric.measurement_date;
-      const existing = dataMap.get(date) || {
-        date,
-        steps: undefined,
-        weight: undefined,
-        heart_rate_avg: undefined,
-        active_calories: undefined,
-        sleep_hours: undefined
-      };
-
-      switch (metric.metric_name) {
-        case 'Steps':
-          existing.steps = metric.value;
-          break;
-        case 'Average Heart Rate':
-        case 'Resting Heart Rate':
-          // Use any available heart rate metric
-          if (!existing.heart_rate_avg) {
-            existing.heart_rate_avg = metric.value;
-          }
-          break;
-        case 'Weight':
-          if (!existing.weight) {
-            existing.weight = metric.value;
-          }
-          break;
-      }
-
-      dataMap.set(date, existing);
-    });
-
-    return Array.from(dataMap.values()).sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  };
-
-  const loadClientData = async () => {
-    try {
-      setLoading(true);
-
-      // Загружаем цели клиента
-      const { data: goalsData, error: goalsError } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', client.user_id);
-
-      if (goalsError) throw goalsError;
-
-      // Для каждой цели получаем последнее измерение
-      const goalsWithProgress = await Promise.all(
-        (goalsData || []).map(async (goal) => {
-          const { data: latestMeasurement } = await supabase
-            .from('measurements')
-            .select('value, measurement_date')
-            .eq('goal_id', goal.id)
-            .order('measurement_date', { ascending: false })
-            .limit(1)
-            .single();
-
-          const currentValue = latestMeasurement?.value || 0;
-          const progressPercentage = goal.target_value 
-            ? Math.min(100, Math.round((currentValue / goal.target_value) * 100))
-            : 0;
-
-          return {
-            ...goal,
-            current_value: currentValue,
-            progress_percentage: progressPercentage
-          };
-        })
-      );
-
-      // Загружаем измерения за последние 30 дней
-      const { data: measurementsData, error: measurementsError } = await supabase
-        .from('measurements')
-        .select(`
-          id,
-          value,
-          measurement_date,
-          goals (goal_name, target_unit)
-        `)
-        .eq('user_id', client.user_id)
-        .gte('measurement_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .order('measurement_date', { ascending: false });
-
-      if (measurementsError) throw measurementsError;
-
-      // Загружаем данные здоровья за последние 30 дней
-      const { data: healthSummary, error: healthError } = await supabase
-        .from('daily_health_summary')
-        .select('*')
-        .eq('user_id', client.user_id)
-        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: true });
-
-      if (healthError) throw healthError;
-
-      // Load additional metrics from unified metrics
-      const { data: unifiedMetrics, error: unifiedError } = await supabase
-        .from('client_unified_metrics')
-        .select('*')
-        .eq('user_id', client.user_id)
-        .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight'])
-        .gte('measurement_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('measurement_date', { ascending: true });
-
-      if (unifiedError) {
-        console.error('Error loading unified metrics:', unifiedError);
-      }
-
-      // Load AI history for this client
-      const { data: aiLogs, error: aiError } = await supabase
-        .from('ai_action_logs')
-        .select('*')
-        .eq('client_id', client.user_id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (aiError) throw aiError;
-      setAiHistory(aiLogs || []);
-
-      setGoals(goalsWithProgress);
-      setMeasurements(
-        (measurementsData || []).map(m => ({
-          id: m.id,
-          value: m.value,
-          measurement_date: m.measurement_date,
-          goal_name: m.goals?.goal_name || 'Неизвестная цель',
-          unit: m.goals?.target_unit || ''
-        }))
-      );
-      
-      // Merge health data from both sources
-      const mergedHealthData = mergeHealthData(
-        healthSummary || [], 
-        unifiedMetrics || []
-      );
-      setHealthData(mergedHealthData);
-
-    } catch (error) {
-      console.error('Error loading client data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getInitials = (name: string) => {
     return name
@@ -627,7 +465,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         open={showGoalDialog}
         onOpenChange={setShowGoalDialog}
         onGoalCreated={() => {
-          loadClientData();
+          refetch();
         }}
       />
     </div>
