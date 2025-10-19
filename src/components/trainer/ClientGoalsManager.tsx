@@ -53,11 +53,38 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
     is_personal: true
   });
 
+  const [clientChallenges, setClientChallenges] = useState<any[]>([]);
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
+
   useEffect(() => {
     if (selectedClient) {
       loadClientGoals();
+      loadClientChallenges();
     }
   }, [selectedClient]);
+
+  const loadClientChallenges = async () => {
+    if (!selectedClient) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id, challenges(id, title)')
+        .eq('user_id', selectedClient.user_id);
+
+      if (error) throw error;
+      
+      const challenges = data?.map(cp => cp.challenges).filter(Boolean) || [];
+      setClientChallenges(challenges);
+      
+      // Auto-select first challenge if exists
+      if (challenges.length > 0 && !selectedChallengeId) {
+        setSelectedChallengeId(challenges[0].id);
+      }
+    } catch (error: any) {
+      console.error('Error loading client challenges:', error);
+    }
+  };
 
   const loadClientGoals = async () => {
     if (!selectedClient) return;
@@ -83,17 +110,27 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
   const handleCreateGoal = async () => {
     if (!selectedClient || !newGoal.goal_name.trim()) return;
 
+    // Determine if this is a challenge goal
+    const isForChallenge = !newGoal.is_personal && selectedChallengeId;
+    
     try {
+      const goalData: any = {
+        user_id: selectedClient.user_id,
+        goal_name: newGoal.goal_name,
+        goal_type: newGoal.goal_type,
+        target_value: newGoal.target_value,
+        target_unit: newGoal.target_unit,
+        is_personal: newGoal.is_personal
+      };
+
+      // Add challenge_id for challenge goals
+      if (isForChallenge) {
+        goalData.challenge_id = selectedChallengeId;
+      }
+
       const { error } = await supabase
         .from('goals')
-        .insert({
-          user_id: selectedClient.user_id,
-          goal_name: newGoal.goal_name,
-          goal_type: newGoal.goal_type,
-          target_value: newGoal.target_value,
-          target_unit: newGoal.target_unit,
-          is_personal: newGoal.is_personal
-        });
+        .insert(goalData);
 
       if (error) throw error;
 
@@ -109,7 +146,7 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
       loadClientGoals();
     } catch (error: any) {
       console.error('Error creating goal:', error);
-      toast.error('Ошибка создания цели');
+      toast.error('Ошибка: ' + error.message);
     }
   };
 
@@ -178,13 +215,64 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
                 <DialogTitle>Создать цель для {selectedClient.full_name}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                {/* Challenge info */}
+                {clientChallenges.length > 0 && (
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm">
+                      💪 Клиент участвует в {clientChallenges.length} челлендже(ах)
+                    </p>
+                  </div>
+                )}
+                
+                {/* Goal type selector */}
+                <div className="flex items-center gap-4 p-3 border rounded-md">
+                  <Label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="goalScope"
+                      checked={newGoal.is_personal}
+                      onChange={() => setNewGoal({ ...newGoal, is_personal: true })}
+                    />
+                    Личная цель
+                  </Label>
+                  <Label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="goalScope"
+                      checked={!newGoal.is_personal}
+                      onChange={() => setNewGoal({ ...newGoal, is_personal: false })}
+                      disabled={clientChallenges.length === 0}
+                    />
+                    Цель челленджа
+                  </Label>
+                </div>
+
+                {/* Challenge selector */}
+                {!newGoal.is_personal && clientChallenges.length > 0 && (
+                  <div>
+                    <Label>Выберите челлендж</Label>
+                    <Select value={selectedChallengeId || ''} onValueChange={setSelectedChallengeId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите челлендж" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clientChallenges.map((challenge: any) => (
+                          <SelectItem key={challenge.id} value={challenge.id}>
+                            {challenge.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div>
                   <Label htmlFor="goal_name">Название цели</Label>
                   <Input
                     id="goal_name"
                     value={newGoal.goal_name}
                     onChange={(e) => setNewGoal({ ...newGoal, goal_name: e.target.value })}
-                    placeholder="Например: Жим лёжа"
+                    placeholder="Например: Подтягивания"
                   />
                 </div>
 

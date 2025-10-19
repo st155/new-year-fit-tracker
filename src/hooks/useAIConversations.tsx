@@ -141,18 +141,18 @@ export const useAIConversations = (userId: string | undefined) => {
     // Add optimistic user message
     const optimisticId = addOptimisticMessage(message, 'user');
 
-    // 60-second timeout for stuck requests
+    // 30-second timeout for stuck requests
     const timeoutId = setTimeout(() => {
       setSending(false);
       showToast({
-        title: '⏱️ Превышено время ожидания',
-        description: 'Ответ AI занял слишком много времени. Проверьте результат в истории сообщений.',
+        title: '⏱️ AI не отвечает',
+        description: 'Попробуйте еще раз',
         variant: 'destructive'
       });
       if (currentConversation) {
         loadMessages(currentConversation.id);
       }
-    }, 60000);
+    }, 30000);
 
     setSending(true);
     
@@ -179,10 +179,10 @@ export const useAIConversations = (userId: string | undefined) => {
         data = response.data;
         error = response.error;
         
-        // If error is related to deployment (isPlan), wait and retry
+        // Only retry for isPlan deployment errors
         if (error && error.message?.includes('isPlan') && retryAttempt < maxRetries) {
-          console.log(`⚠️ Deployment error detected, retrying in 2 seconds... (attempt ${retryAttempt + 1})`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log(`🔄 Deployment error, retry in 1s (${retryAttempt + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           retryAttempt++;
         } else {
           break;
@@ -199,18 +199,7 @@ export const useAIConversations = (userId: string | undefined) => {
         metadata: { isOptimistic: true, status: 'sent' }
       });
 
-      // Fallback: if realtime doesn't deliver within 30 seconds, force reload
-      setTimeout(() => {
-        setOptimisticMessages(prev => {
-          const stillPending = prev.find(m => m.id === optimisticId);
-          if (stillPending && currentConversation) {
-            console.warn('⚠️ Real-time delay detected, forcing reload');
-            loadMessages(currentConversation.id);
-            return prev.filter(m => m.id !== optimisticId);
-          }
-          return prev;
-        });
-      }, 30000);
+      // Realtime subscription handles message delivery - no fallback needed
 
       // Check for disambiguation needed
       if (data?.needsDisambiguation) {
