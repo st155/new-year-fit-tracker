@@ -18,6 +18,7 @@ import {
   Plus,
   Sparkles,
   Info,
+  Wifi,
   LayoutDashboard,
   Trophy
 } from "lucide-react";
@@ -55,6 +56,7 @@ interface Measurement {
   measurement_date: string;
   goal_name: string;
   unit: string;
+  source?: string;
 }
 
 interface HealthData {
@@ -284,17 +286,28 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             <CardContent>
               {measurements.length > 0 ? (
                 <div className="space-y-3">
-                  {measurements.slice(0, 10).map((measurement) => (
+                  {measurements.slice(0, 20).map((measurement) => (
                     <div key={measurement.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                      <div>
-                        <p className="font-medium">{measurement.goal_name}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium">{measurement.goal_name}</p>
+                          {measurement.source && measurement.source !== 'manual' && (
+                            <Badge variant="outline" className="text-xs capitalize">
+                              <Wifi className="w-3 h-3 mr-1" />
+                              {measurement.source}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {format(new Date(measurement.measurement_date), 'dd.MM.yyyy')}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {measurement.value} {measurement.unit}
+                          {typeof measurement.value === 'number' 
+                            ? measurement.value.toFixed(1)
+                            : measurement.value
+                          } {measurement.unit}
                         </p>
                       </div>
                     </div>

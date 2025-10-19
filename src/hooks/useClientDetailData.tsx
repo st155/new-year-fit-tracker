@@ -17,6 +17,7 @@ interface Measurement {
   measurement_date: string;
   goal_name: string;
   unit: string;
+  source?: string;
 }
 
 interface HealthData {
@@ -103,6 +104,7 @@ export function useClientDetailData(clientUserId: string) {
       const [
         goalsResult,
         measurementsResult,
+        unifiedMeasurementsResult,
         healthSummaryResult,
         unifiedMetricsResult,
         aiLogsResult
@@ -128,7 +130,7 @@ export function useClientDetailData(clientUserId: string) {
           })
           .limit(1, { referencedTable: 'measurements' }),
 
-        // Измерения за последние 30 дней
+        // Измерения за последние 30 дней (ручные)
         supabase
           .from('measurements')
           .select(`
@@ -139,6 +141,20 @@ export function useClientDetailData(clientUserId: string) {
           `)
           .eq('user_id', clientUserId)
           .gte('measurement_date', thirtyDaysAgoISO)
+          .order('measurement_date', { ascending: false }),
+
+        // Unified metrics (автоматические от интеграций)
+        supabase
+          .from('client_unified_metrics')
+          .select('*')
+          .eq('user_id', clientUserId)
+          .gte('measurement_date', thirtyDaysAgoDate)
+          .in('metric_name', [
+            'Recovery Score', 'Day Strain', 'Sleep Duration', 
+            'Workout Calories', 'Average Heart Rate', 'Max Heart Rate',
+            'Sleep Efficiency', 'Sleep Performance', 'Resting Heart Rate',
+            'Body Battery', 'Stress Level', 'VO2 Max'
+          ])
           .order('measurement_date', { ascending: false }),
 
         // Данные здоровья
@@ -169,6 +185,7 @@ export function useClientDetailData(clientUserId: string) {
 
       if (goalsResult.error) throw goalsResult.error;
       if (measurementsResult.error) throw measurementsResult.error;
+      if (unifiedMeasurementsResult.error) throw unifiedMeasurementsResult.error;
       if (healthSummaryResult.error) throw healthSummaryResult.error;
       if (aiLogsResult.error) throw aiLogsResult.error;
 
@@ -191,14 +208,29 @@ export function useClientDetailData(clientUserId: string) {
         };
       });
 
-      // Обрабатываем измерения
-      const processedMeasurements = (measurementsResult.data || []).map(m => ({
+      // Обрабатываем ручные измерения
+      const manualMeasurements = (measurementsResult.data || []).map(m => ({
         id: m.id,
         value: m.value,
         measurement_date: m.measurement_date,
         goal_name: m.goals?.goal_name || 'Неизвестная цель',
-        unit: m.goals?.target_unit || ''
+        unit: m.goals?.target_unit || '',
+        source: 'manual'
       }));
+
+      // Обрабатываем автоматические измерения из unified metrics
+      const autoMeasurements = (unifiedMeasurementsResult.data || []).map(um => ({
+        id: `${um.user_id}-${um.measurement_date}-${um.metric_name}`,
+        value: um.value,
+        measurement_date: um.measurement_date,
+        goal_name: um.metric_name,
+        unit: um.unit || '',
+        source: um.source
+      }));
+
+      // Объединяем и сортируем по дате
+      const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
+        .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
 
       // Объединяем данные здоровья
       const mergedHealthData = mergeHealthData(
