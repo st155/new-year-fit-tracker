@@ -66,10 +66,21 @@ export const AIChatWindow = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Smart auto-scroll: only scroll if user is at bottom
+  // Smart auto-scroll: scroll on initial load or if user is at bottom
   useEffect(() => {
-    if (!isUserScrolling && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!scrollRef.current) return;
+    
+    const isInitialLoad = messages.length > 0 && scrollRef.current.scrollTop === 0;
+    const lastMessage = messages[messages.length - 1];
+    const isOwnMessage = lastMessage?.role === 'user';
+    
+    // Always scroll for initial load, user's own messages, or if at bottom
+    if (isInitialLoad || isOwnMessage || !isUserScrolling) {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      });
     }
   }, [messages, pendingActions, isUserScrolling]);
 
@@ -90,6 +101,63 @@ export const AIChatWindow = ({
       setShowScrollButton(false);
     }
   };
+
+  // Prevent page scroll when scrolling chat
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const target = scrollRef.current;
+    if (!target) return;
+    
+    const isScrollingDown = e.deltaY > 0;
+    const isAtTop = target.scrollTop === 0;
+    const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+    
+    // Prevent page scroll if we're at boundaries
+    if ((isAtTop && !isScrollingDown) || (isAtBottom && isScrollingDown)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  // Initial scroll to bottom on mount
+  useEffect(() => {
+    // Double RAF for guaranteed full render
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          setIsUserScrolling(false);
+        }
+      });
+    });
+    
+    // Fallback for slow connections
+    const fallbackTimeout = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, 500);
+    
+    return () => clearTimeout(fallbackTimeout);
+  }, []);
+
+  // Auto-focus textarea on mount
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  // Scroll to bottom when switching conversations
+  useEffect(() => {
+    if (currentConversation?.id) {
+      setIsUserScrolling(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        });
+      });
+    }
+  }, [currentConversation?.id]);
 
   useEffect(() => {
     loadTrainerClients();
@@ -190,7 +258,7 @@ export const AIChatWindow = ({
     const beforeAt = input.slice(0, lastAtIndex);
     const afterQuery = input.slice(lastAtIndex + 1).replace(/^\S*/, '');
     
-    const newInput = `${beforeAt}@${client.username} ${afterQuery}`; // Add space after username
+    const newInput = `${beforeAt}@${client.username} ${afterQuery}`;
     setInput(newInput);
     
     // Save username -> user_id mapping
@@ -204,7 +272,6 @@ export const AIChatWindow = ({
     setTimeout(() => {
       setIsSelectingMention(false);
       textareaRef.current?.focus();
-      // Set cursor at end
       const len = newInput.length;
       textareaRef.current?.setSelectionRange(len, len);
     }, 10);
@@ -227,6 +294,14 @@ export const AIChatWindow = ({
     
     // Auto-scroll to bottom when sending
     setIsUserScrolling(false);
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ 
+          top: scrollRef.current.scrollHeight, 
+          behavior: 'smooth' 
+        });
+      }
+    }, 100);
 
     // Show toast for confirmation
     if (isConfirmation) {
@@ -284,6 +359,11 @@ export const AIChatWindow = ({
       
       setMentions(new Map()); // Clear mentions after sending
       setShowMentionSuggestions(false);
+      
+      // Return focus to textarea
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 150);
     } catch (error: any) {
       // Errors are already handled in useAIConversations hook
       console.error('Error sending message:', error);
@@ -667,8 +747,8 @@ export const AIChatWindow = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea ref={scrollRef} className="h-full" onScrollCapture={handleScroll}>
+      <div className="flex-1 overflow-hidden relative">
+        <ScrollArea ref={scrollRef} className="h-full" onScrollCapture={handleScroll} onWheel={handleWheel}>
           <div className="p-4">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
@@ -845,7 +925,12 @@ export const AIChatWindow = ({
             className="absolute bottom-4 right-4 rounded-full shadow-lg animate-scale-in hover:scale-110 transition-transform z-10"
             onClick={scrollToBottom}
           >
-            <ArrowDown className="h-4 w-4" />
+            <div className="flex flex-col items-center">
+              <ArrowDown className="h-4 w-4" />
+              {messages.length > 0 && isUserScrolling && (
+                <span className="text-[10px] mt-0.5">Новое</span>
+              )}
+            </div>
           </Button>
         )}
       </div>
@@ -855,6 +940,9 @@ export const AIChatWindow = ({
           <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
+              aria-autocomplete="list"
+              aria-expanded={showMentionSuggestions}
+              aria-controls="mention-suggestions"
               placeholder={loadingClients 
                 ? "Загрузка клиентов..." 
                 : clients.length > 0 
