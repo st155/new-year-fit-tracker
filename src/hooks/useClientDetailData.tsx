@@ -477,11 +477,20 @@ export function useClientDetailData(clientUserId: string) {
           .order('measurement_date', { ascending: false }),
 
         supabase
-          .from('client_unified_metrics')
-          .select('*')
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(
+              metric_name,
+              source,
+              unit,
+              metric_category
+            )
+          `)
           .eq('user_id', clientUserId)
           .gte('measurement_date', thirtyDaysAgoDate)
-          .in('metric_name', [
+          .in('user_metrics.metric_name', [
             'Recovery Score', 'Day Strain', 'Sleep Duration', 
             'Workout Calories', 'Active Calories', 'Average Heart Rate', 'Max Heart Rate',
             'Sleep Efficiency', 'Sleep Performance', 'Resting Heart Rate',
@@ -499,10 +508,19 @@ export function useClientDetailData(clientUserId: string) {
           .order('date', { ascending: true }),
 
         supabase
-          .from('client_unified_metrics')
-          .select('*')
+          .from('metric_values')
+          .select(`
+            value,
+            measurement_date,
+            user_metrics!inner(
+              metric_name,
+              source,
+              unit,
+              metric_category
+            )
+          `)
           .eq('user_id', clientUserId)
-          .in('metric_name', [
+          .in('user_metrics.metric_name', [
             // Activity
             'Steps', 'Active Calories', 'Distance', 'Avg Speed', 
             'Max Speed', 'Elevation Gain', 'Workout Time',
@@ -568,8 +586,8 @@ export function useClientDetailData(clientUserId: string) {
         let currentValue = latestMeasurement?.value || 0;
         
         if (!currentValue && unifiedMeasurementsResult.data) {
-          const matchingMetric = unifiedMeasurementsResult.data.find(m => 
-            m.metric_name === goal.goal_name || m.metric_name === goal.goal_type
+          const matchingMetric = unifiedMeasurementsResult.data.find((m: any) => 
+            m.user_metrics.metric_name === goal.goal_name || m.user_metrics.metric_name === goal.goal_type
           );
           currentValue = matchingMetric?.value || 0;
         }
@@ -598,54 +616,36 @@ export function useClientDetailData(clientUserId: string) {
         source: 'manual'
       }));
 
-      const autoMeasurements = (unifiedMeasurementsResult.data || []).map(um => ({
-        id: `${um.user_id}-${um.measurement_date}-${um.metric_name}`,
+      const autoMeasurements = (unifiedMeasurementsResult.data || []).map((um: any) => ({
+        id: `${clientUserId}-${um.measurement_date}-${um.user_metrics.metric_name}`,
         value: um.value,
         measurement_date: um.measurement_date,
-        goal_name: um.metric_name,
-        unit: um.unit || '',
-        source: um.source
+        goal_name: um.user_metrics.metric_name,
+        unit: um.user_metrics.unit || '',
+        source: um.user_metrics.source
       }));
 
       const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
         .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
 
-      let unifiedMetrics = unifiedMetricsResult.data || [];
-      
-      // If no data from view, try secure RPC as backup
-      if (unifiedMetrics.length === 0 || unifiedMetricsResult.error) {
-        console.log('Using backup RPC to fetch unified metrics for:', clientUserId);
-        const rpcResult = await supabase.rpc('get_client_unified_metrics_secure', {
-          p_user_id: clientUserId,
-          p_start_date: thirtyDaysAgoDate,
-          p_end_date: null,
-          p_unified_metric_name: null
-        });
-
-        if (rpcResult.error) {
-          console.error('Backup RPC also failed:', rpcResult.error);
-        } else if (rpcResult.data && rpcResult.data.length > 0) {
-          console.log('Successfully loaded metrics via backup RPC:', rpcResult.data.length);
-          // Transform RPC result to match expected format
-          unifiedMetrics = rpcResult.data.map((r: any) => ({
-            user_id: clientUserId,
-            measurement_date: r.measurement_date,
-            metric_name: r.unified_metric_name,
-            value: r.aggregated_value,
-            unit: r.unified_unit,
-            source: (r.sources && r.sources[0]) || 'unknown',
-            priority: 1
-          }));
-        }
-      }
+      // Transform metric_values with joined user_metrics to expected format
+      const unifiedMetrics = (unifiedMetricsResult.data || []).map((mv: any) => ({
+        user_id: clientUserId,
+        measurement_date: mv.measurement_date,
+        metric_name: mv.user_metrics.metric_name,
+        value: mv.value,
+        unit: mv.user_metrics.unit,
+        source: mv.user_metrics.source,
+        priority: 1
+      }));
 
       const mergedHealthData = mergeHealthData(
         healthSummaryResult.data || [], 
         unifiedMetrics
       );
 
-      const whoopData = calculateWhoopSummary(unifiedMetricsResult.data || []);
-      const ouraData = calculateOuraSummary(unifiedMetricsResult.data || []);
+      const whoopData = calculateWhoopSummary(unifiedMetrics);
+      const ouraData = calculateOuraSummary(unifiedMetrics);
 
       setGoals(goalsWithProgress);
       setMeasurements(processedMeasurements);
