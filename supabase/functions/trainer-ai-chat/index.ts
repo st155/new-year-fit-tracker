@@ -8,6 +8,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Auto-detect context mode from message content
+function detectContextMode(message: string, hasClients: boolean): string {
+  const lowerMsg = message.toLowerCase();
+  
+  // Goal-related keywords
+  const goalKeywords = ['цель', 'goal', 'прогресс', 'progress', 'вес', 'weight', 
+    'достиж', 'achiev', 'target', 'целевой', 'измерен', 'measurement'];
+  
+  // Analysis keywords
+  const analysisKeywords = ['анализ', 'analysis', 'статистик', 'statistic', 
+    'динамик', 'trend', 'сравн', 'compare', 'оцен', 'assess', 'результат', 'result'];
+  
+  // Challenge keywords
+  const challengeKeywords = ['челлендж', 'challenge', 'соревнован', 'competition', 
+    'лидер', 'leader', 'участник', 'participant'];
+  
+  // Count keyword matches
+  const goalScore = goalKeywords.filter(k => lowerMsg.includes(k)).length;
+  const analysisScore = analysisKeywords.filter(k => lowerMsg.includes(k)).length;
+  const challengeScore = challengeKeywords.filter(k => lowerMsg.includes(k)).length;
+  
+  // Determine mode based on highest score
+  if (challengeScore > 0 && challengeScore >= goalScore && challengeScore >= analysisScore) {
+    return 'challenge';
+  }
+  if (analysisScore > 0 && analysisScore >= goalScore) {
+    return 'analysis';
+  }
+  if (goalScore > 0 || hasClients) {
+    return 'goals';
+  }
+  
+  return 'general';
+}
+
 // Intent detection function
 function detectUserIntent(message: string): { 
   isConfirmation: boolean;
@@ -48,7 +83,7 @@ serve(async (req) => {
     const { 
       conversationId, 
       message, 
-      contextMode = 'general',
+      contextMode, // Optional - AI will auto-detect if not provided
       mentionedClients = [],
       mentionedNames = [], // Raw names mentioned (for fuzzy matching)
       contextClientId, // Client selected in UI context
@@ -426,13 +461,21 @@ serve(async (req) => {
       contextData += `\n\n=== All Your Clients ===\n${JSON.stringify(allClients, null, 2)}\n`;
     }
 
+    // Auto-detect context mode if not provided
+    const detectedMode = contextMode || detectContextMode(
+      message, 
+      mentionedClients.length > 0 || !!contextClientId
+    );
+
+    console.log(`Context mode: ${detectedMode} (${contextMode ? 'explicit' : 'auto-detected'})`);
+
     // Build system prompt
     let systemPrompt = `You are a professional fitness trainer AI assistant. You help trainers manage their clients, analyze progress, and create effective training plans.
 
-Current mode: ${contextMode}
-${contextMode === 'goals' ? '- Focus on goal setting and progress tracking\n- Suggest specific, measurable goals' : ''}
-${contextMode === 'analysis' ? '- Analyze client data and provide insights\n- Identify patterns and potential issues' : ''}
-${contextMode === 'challenge' ? '- Help manage challenges and competitions\n- Suggest engagement strategies' : ''}
+Current mode: ${detectedMode}
+${detectedMode === 'goals' ? '- Focus on goal setting and progress tracking\n- Suggest specific, measurable goals' : ''}
+${detectedMode === 'analysis' ? '- Analyze client data and provide insights\n- Identify patterns and potential issues' : ''}
+${detectedMode === 'challenge' ? '- Help manage challenges and competitions\n- Suggest engagement strategies' : ''}
 
 Context data:${contextData}
 
@@ -455,13 +498,28 @@ IMPORTANT INSTRUCTIONS:
    - NEVER invent fake usernames like @coach_alisa, @john_doe, @sarah_connor, @trainer_*, @client_*, @alice_*, @bob_*
    - Only use real client names provided in the context: ${contextData ? extractClientNamesFromContext(contextData) : 'no clients loaded'}
    - If no specific client is in context, ask the trainer to specify which client they're referring to
-   - Example: Use "@pavel_radaev" or "Pavel Radaev" (from context), NOT "@coach_alisa" (fake)
+   - Example GOOD: "Updating goal for @pavel_radaev (Pavel Radaev)" (using actual client from context)
+   - Example BAD: "Updating goal for @john_doe" (fake username not in context)
 
-7. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
+7. SMART AUTO-EXECUTION RULES:
+   - Simple, safe actions (create goal, add note, record measurement) → Execute immediately
+   - Potentially dangerous actions (delete, mass update, challenge management) → Always ask for confirmation
+   - When in doubt → Ask for confirmation
+   - Structure response to clearly indicate if confirmation needed:
+     * If auto-executable: End with "Executing now..." and use tools immediately
+     * If needs confirmation: End with "Ready to implement? (yes/no)" and wait for user response
+   
+8. PLAN CREATION:
+   - When user requests changes, create a clear plan with numbered steps
+   - Use tools to execute the plan (don't just describe what to do)
+   - If auto-executable, execute immediately and report results
+   - If confirmation needed, present plan and wait for "yes"/"да" response
 
-8. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
+9. If there is a "🎯 SELECTED CLIENT IN CURRENT CONTEXT", assume all actions relate to this client unless explicitly stated otherwise.
 
-9. Creating Training Plans:
+10. When trainer says "update goal" or "change goal", use the update_goal tool if the goal already exists. Check the context data for existing goals before deciding to create or update.
+
+11. Creating Training Plans:
    - When the trainer asks to create a training plan, use the create_training_plan tool
    - Examples: "Создай план на неделю для @pavel_radaev: грудь + трицепс в понедельник, спина + бицепс в среду, ноги + плечи в пятницу"
    - Use Russian exercise names (e.g., "Жим штанги лежа", "Подтягивания", "Приседания")
@@ -469,7 +527,7 @@ IMPORTANT INSTRUCTIONS:
    - Rest: 60-90 seconds for smaller muscles, 90-120 for compound exercises
    - Always include day_of_week (0=Monday, 6=Sunday)
 
-10. CRITICAL: Plan Creation Rules:
+12. CRITICAL: Plan Creation Rules:
    - If user confirms with words like "да", "confirm", "давай", "ок" - IMMEDIATELY create a structured plan with tool calls
    - If you detect confirmation intent - DO NOT ask more questions, CREATE THE PLAN NOW
    - User confirmation = instant action plan with function calls

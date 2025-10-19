@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sparkles, History, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AIChatWindow } from './AIChatWindow';
 import { AIConversationList } from './AIConversationList';
 import { useAIConversations } from '@/hooks/useAIConversations';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLoader } from '@/components/ui/page-loader';
 
 interface TrainerAIHubProps {
@@ -24,6 +26,7 @@ interface TrainerAIHubProps {
 
 export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [localSelectedClient, setLocalSelectedClient] = useState(selectedClient);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -59,6 +62,32 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
     }
   }, [conversations, currentConversation, selectConversation]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K - открыть историю
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setHistoryOpen(true);
+      }
+      
+      // Ctrl/Cmd + N - новый разговор
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        startNewConversation();
+        setHistoryOpen(false);
+      }
+      
+      // Esc - закрыть историю
+      if (e.key === 'Escape' && historyOpen) {
+        setHistoryOpen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [historyOpen, startNewConversation]);
+
   const handleSendMessage = async (
     message: string,
     contextMode: string,
@@ -80,34 +109,41 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-4">
-      {/* Compact header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
+    <div className="container max-w-7xl mx-auto p-2 md:p-4">
+      {/* Compact header - stack vertically on mobile */}
+      <div className="mb-3 md:mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+            <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">AI Assistant</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold">AI Assistant</h1>
+            <p className="text-xs text-muted-foreground hidden md:block">
               Умный помощник для работы с клиентами
             </p>
           </div>
         </div>
         
         {/* History button with sheet */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           {pendingActions.length > 0 && (
             <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
-              {pendingActions.length} {pendingActions.length === 1 ? 'действие' : 'действий'}
+              {pendingActions.length}
             </Badge>
           )}
           
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size={isMobile ? "default" : "sm"} 
+                className="gap-2 w-full md:w-auto"
+              >
                 <History className="h-4 w-4" />
                 История
+                <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
                 {conversations.length > 0 && (
                   <Badge variant="secondary" className="ml-1">
                     {conversations.length}
@@ -115,41 +151,55 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[400px]">
+            <SheetContent 
+              side="right" 
+              className={isMobile ? "w-full" : "w-[400px]"}
+            >
               <SheetHeader>
                 <SheetTitle>История разговоров</SheetTitle>
               </SheetHeader>
               <div className="mt-4">
-                <AIConversationList
-                  conversations={conversations}
-                  currentConversation={currentConversation}
-                  onSelectConversation={(id) => {
-                    selectConversation(id);
-                    setHistoryOpen(false);
-                  }}
-                  onNewConversation={() => {
-                    startNewConversation();
-                    setHistoryOpen(false);
-                  }}
-                  onDeleteConversation={deleteConversation}
-                />
+                {conversationsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <AIConversationList
+                    conversations={conversations}
+                    currentConversation={currentConversation}
+                    onSelectConversation={(id) => {
+                      selectConversation(id);
+                      setHistoryOpen(false);
+                    }}
+                    onNewConversation={() => {
+                      startNewConversation();
+                      setHistoryOpen(false);
+                    }}
+                    onDeleteConversation={deleteConversation}
+                  />
+                )}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
 
-      {/* Selected client indicator (if any) */}
+      {/* Selected client indicator (if any) - компактный на mobile */}
       {localSelectedClient && (
-        <div className="mb-3 p-2 bg-muted rounded-lg border flex items-center justify-between">
+        <div className="mb-2 md:mb-3 p-2 bg-muted rounded-lg border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-6 w-6 md:h-8 md:w-8">
               <AvatarImage src={localSelectedClient.avatar_url} />
               <AvatarFallback className="text-xs">
                 {localSelectedClient.full_name?.[0] || localSelectedClient.username?.[0]}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium">
+            <span className="text-sm md:text-base font-medium truncate max-w-[200px] md:max-w-none">
               {localSelectedClient.full_name || localSelectedClient.username}
             </span>
           </div>
@@ -159,8 +209,16 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
         </div>
       )}
 
-      {/* Full-width chat */}
-      <Card className="p-0 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+      {/* Full-width chat - адаптивная высота */}
+      <Card 
+        className="p-0 flex flex-col overflow-hidden" 
+        style={{ 
+          height: isMobile 
+            ? 'calc(100vh - 180px)' 
+            : 'calc(100vh - 200px)', 
+          minHeight: isMobile ? '400px' : '600px' 
+        }}
+      >
         <AIChatWindow
           messages={messages}
           currentConversation={currentConversation}

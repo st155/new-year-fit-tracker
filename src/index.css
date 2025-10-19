@@ -80,6 +80,37 @@ All colors MUST be HSL.
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
   .dark {
     --background: 226 34% 6%;
     --foreground: 0 0% 98%;
@@ -533,6 +564,36 @@ All colors MUST be HSL.
   .neon-circle-neutral {
     border-color: hsl(var(--habit-neutral) / 0.5);
     box-shadow: 0 0 30px hsl(var(--habit-neutral) / 0.4), inset 0 0 20px hsl(var(--habit-neutral) / 0.1);
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
   }
 
   .stat-glass-card {

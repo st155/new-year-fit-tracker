@@ -15,6 +15,7 @@ import { useClientContext } from '@/contexts/ClientContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 
 interface AIChatWindowProps {
@@ -48,6 +49,7 @@ export const AIChatWindow = ({
 }: AIChatWindowProps) => {
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
+  const isMobile = useIsMobile();
   const [input, setInput] = useState('');
   const [clients, setClients] = useState<ClientSuggestion[]>([]);
   const [mentions, setMentions] = useState<Map<string, string>>(new Map());
@@ -554,26 +556,34 @@ export const AIChatWindow = ({
     onReject: () => void;
     executing: boolean;
   }) => {
+    const handleExecute = () => {
+      toast.loading("Выполняется...", {
+        description: "План выполняется, подождите",
+        duration: 2000
+      });
+      onExecute();
+    };
+
     return (
-      <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 p-4 my-3">
+      <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 p-3 md:p-4 my-3 animate-fade-in">
         <div className="space-y-3">
           <div className="flex items-start gap-2">
-            <Sparkles className="h-5 w-5 text-amber-600 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="font-medium text-amber-900 dark:text-amber-100">
+            <Sparkles className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-amber-900 dark:text-amber-100 text-sm md:text-base">
                 План готов к выполнению
               </h4>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 whitespace-pre-wrap">
+              <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 mt-1 whitespace-pre-wrap break-words">
                 {action.action_plan}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
             <Button 
               size="sm" 
-              onClick={onExecute}
+              onClick={handleExecute}
               disabled={executing}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 justify-center bg-green-600 hover:bg-green-700 text-white"
             >
               {executing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
               Выполнить
@@ -583,7 +593,7 @@ export const AIChatWindow = ({
               variant="outline"
               onClick={onReject}
               disabled={executing}
-              className="flex-1"
+              className="flex-1 justify-center"
             >
               <XCircle className="h-4 w-4 mr-2" />
               Пересмотреть
@@ -643,7 +653,7 @@ export const AIChatWindow = ({
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
-              <div key={message.id}>
+              <div key={message.id} className="animate-fade-in">
                 {message.role === 'system' ? (
                   <AutoExecutionReport message={message} />
                 ) : (
@@ -802,7 +812,8 @@ export const AIChatWindow = ({
         {showScrollButton && (
           <Button
             size="icon"
-            className="absolute bottom-4 right-4 rounded-full shadow-lg z-10"
+            variant="secondary"
+            className="absolute bottom-4 right-4 rounded-full shadow-lg animate-scale-in hover:scale-110 transition-transform z-10"
             onClick={scrollToBottom}
           >
             <ArrowDown className="h-4 w-4" />
