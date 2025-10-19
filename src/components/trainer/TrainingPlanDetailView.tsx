@@ -29,9 +29,11 @@ import {
   Edit,
   Trash2,
   Copy,
-  UserPlus
+  UserPlus,
+  CalendarDays
 } from 'lucide-react';
 import { useState } from 'react';
+import { TrainingPlanCalendarView } from './TrainingPlanCalendarView';
 
 interface TrainingPlanDetailViewProps {
   planId: string | null;
@@ -117,14 +119,22 @@ export const TrainingPlanDetailView = ({
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="schedule" className="mt-6">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="schedule">Расписание</TabsTrigger>
+              <Tabs defaultValue="calendar" className="mt-6">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="calendar" className="flex items-center gap-1">
+                    <CalendarDays className="h-4 w-4" />
+                    Неделя
+                  </TabsTrigger>
+                  <TabsTrigger value="schedule">Детали</TabsTrigger>
                   <TabsTrigger value="clients">
                     Клиенты ({plan.assigned_training_plans.length})
                   </TabsTrigger>
                   <TabsTrigger value="settings">Настройки</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="calendar" className="mt-4">
+                  <TrainingPlanCalendarView workouts={plan.training_plan_workouts} />
+                </TabsContent>
 
                 <TabsContent value="schedule" className="space-y-4 mt-4">
                   <div className="grid gap-3">

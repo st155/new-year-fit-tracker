@@ -2180,6 +2180,7 @@ export type Database = {
         Row: {
           created_at: string | null
           day_of_week: number | null
+          description: string | null
           duration_minutes: number | null
           exercises: Json | null
           id: string
@@ -2191,6 +2192,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           day_of_week?: number | null
+          description?: string | null
           duration_minutes?: number | null
           exercises?: Json | null
           id?: string
@@ -2202,6 +2204,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           day_of_week?: number | null
+          description?: string | null
           duration_minutes?: number | null
           exercises?: Json | null
           id?: string

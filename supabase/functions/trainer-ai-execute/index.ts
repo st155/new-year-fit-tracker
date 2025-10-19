@@ -444,7 +444,7 @@ async function executeCreateTrainingPlan(supabase: any, trainerId: string, data:
       plan_id: plan.id,
       day_of_week: w.day_of_week,
       workout_name: w.workout_name,
-      description: w.description || '',
+      description: w.description || null,
       exercises: w.exercises // JSONB array
     }));
 
