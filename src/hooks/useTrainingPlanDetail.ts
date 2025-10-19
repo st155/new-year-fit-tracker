@@ -60,8 +60,12 @@ export const useTrainingPlanDetail = (planId: string | null) => {
           *,
           training_plan_workouts (*),
           assigned_training_plans (
-            *,
-            profiles:client_id (
+            id,
+            client_id,
+            start_date,
+            end_date,
+            status,
+            profiles!assigned_training_plans_client_id_fkey (
               user_id,
               username,
               full_name,
@@ -73,6 +77,12 @@ export const useTrainingPlanDetail = (planId: string | null) => {
         .single();
 
       if (error) throw error;
+      console.log('Plan loaded:', data);
+      
+      if (!data) {
+        throw new Error('План не найден');
+      }
+      
       setPlan(data as any);
     } catch (error) {
       console.error('Error loading plan:', error);

@@ -54,18 +54,20 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
 
       if (error) throw error;
 
+      console.log('Task created successfully');
+      
       toast({
         title: 'Успешно',
         description: 'Задача создана'
       });
 
-      handleClose();
       onSuccess();
-    } catch (error) {
-      console.error('Error creating task:', error);
+      handleClose();
+    } catch (error: any) {
+      console.error('Detailed error:', error);
       toast({
         title: 'Ошибка',
-        description: 'Не удалось создать задачу',
+        description: error.message || 'Не удалось создать задачу',
         variant: 'destructive'
       });
     } finally {

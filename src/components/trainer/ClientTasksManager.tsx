@@ -179,7 +179,11 @@ export const ClientTasksManager = () => {
       <CreateTaskDialog
         open={showCreate}
         onClose={() => setShowCreate(false)}
-        onSuccess={loadTasks}
+        onSuccess={() => {
+          loadTasks();
+          setTasksPage(1);
+          setShowCreate(false);
+        }}
         clients={clients}
       />
     </>
