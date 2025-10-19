@@ -100,6 +100,23 @@ function TrainerDashboardContent() {
 
       if (error) throw error;
 
+      // Get all client user IDs
+      const clientUserIds = (data || []).map((tc: any) => tc.profiles.user_id);
+      
+      // Fetch goals count for all clients in one query
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('goals')
+        .select('user_id')
+        .in('user_id', clientUserIds);
+      
+      if (goalsError) throw goalsError;
+      
+      // Count goals for each client
+      const goalsCountMap = (goalsData || []).reduce((acc: Record<string, number>, goal: any) => {
+        acc[goal.user_id] = (acc[goal.user_id] || 0) + 1;
+        return acc;
+      }, {});
+
       const formattedClients: TrainerClient[] = (data || []).map((tc: any) => ({
         id: tc.id,
         user_id: tc.profiles.user_id,
@@ -107,7 +124,8 @@ function TrainerDashboardContent() {
         full_name: tc.profiles.full_name || '',
         avatar_url: tc.profiles.avatar_url,
         assigned_at: tc.assigned_at,
-        active: tc.active
+        active: tc.active,
+        goals_count: goalsCountMap[tc.profiles.user_id] || 0
       }));
 
       setClients(formattedClients);
