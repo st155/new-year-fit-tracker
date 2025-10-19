@@ -187,7 +187,7 @@ export function useFastingWindow(habitId: string, userId?: string): UseFastingWi
         return {
           isFasting: true,
           isEating: false,
-          duration: fastingMinutes,
+          duration: Math.max(0, fastingMinutes),
           startTime: fastingStart,
         };
       }
@@ -207,7 +207,7 @@ export function useFastingWindow(habitId: string, userId?: string): UseFastingWi
     return {
       isFasting: false,
       isEating: true,
-      duration: eatingMinutes,
+      duration: Math.max(0, eatingMinutes),
       startTime: eatingStart,
     };
   };

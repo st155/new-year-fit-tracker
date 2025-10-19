@@ -9,6 +9,7 @@ interface FastingControlButtonProps {
   };
   onStartFasting: () => void;
   onStartEating: () => void;
+  onEndEating: () => void;
   isLoading?: boolean;
   className?: string;
 }
@@ -17,6 +18,7 @@ export function FastingControlButton({
   status,
   onStartFasting,
   onStartEating,
+  onEndEating,
   isLoading = false,
   className,
 }: FastingControlButtonProps) {
@@ -29,23 +31,21 @@ export function FastingControlButton({
         disabled={isLoading}
         size="lg"
         className={cn(
-          "w-full h-14 text-lg font-semibold",
-          "bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500",
-          "hover:from-green-600 hover:via-emerald-600 hover:to-teal-600",
-          "shadow-lg shadow-green-500/30 hover:shadow-green-500/50",
+          "w-full py-6 text-base font-semibold",
+          "bg-gradient-to-r from-green-500 to-emerald-600",
+          "hover:from-green-600 hover:to-emerald-700",
+          "text-white shadow-lg shadow-green-500/30",
           "transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
-          "relative overflow-hidden group",
           className
         )}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
-        <Play className="h-5 w-5 mr-2 relative z-10" />
-        <span className="relative z-10">Начать голод!</span>
+        <Play className="h-5 w-5 mr-2" />
+        Начать голодание
       </Button>
     );
   }
 
-  // Fasting active - Start Eating
+  // Fasting active - Start Eating (Orange "Окно питания")
   if (status.isFasting) {
     return (
       <Button
@@ -53,41 +53,37 @@ export function FastingControlButton({
         disabled={isLoading}
         size="lg"
         className={cn(
-          "w-full h-14 text-lg font-semibold",
-          "bg-gradient-to-r from-orange-500 via-red-500 to-pink-500",
-          "hover:from-orange-600 hover:via-red-600 hover:to-pink-600",
-          "shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50",
+          "w-full py-6 text-base font-semibold",
+          "bg-gradient-to-r from-orange-500 to-orange-600",
+          "hover:from-orange-600 hover:to-red-600",
+          "text-white shadow-lg shadow-orange-500/30",
           "transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
-          "relative overflow-hidden group",
           className
         )}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
-        <Utensils className="h-5 w-5 mr-2 relative z-10" />
-        <span className="relative z-10">Начать есть</span>
+        <Utensils className="h-5 w-5 mr-2" />
+        Окно питания
       </Button>
     );
   }
 
-  // Eating window active - End Eating (Start Fasting)
+  // Eating window active - End Eating (Green "Закончить есть")
   return (
     <Button
-      onClick={onStartFasting}
+      onClick={onEndEating}
       disabled={isLoading}
       size="lg"
       className={cn(
-        "w-full h-14 text-lg font-semibold",
-        "bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500",
-        "hover:from-green-600 hover:via-emerald-600 hover:to-teal-600",
-        "shadow-lg shadow-green-500/30 hover:shadow-green-500/50",
+        "w-full py-6 text-base font-semibold",
+        "bg-gradient-to-r from-green-500 to-teal-600",
+        "hover:from-green-600 hover:to-teal-700",
+        "text-white shadow-lg shadow-green-500/30",
         "transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
-        "relative overflow-hidden group",
         className
       )}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
-      <Square className="h-5 w-5 mr-2 relative z-10" />
-      <span className="relative z-10">Закончить есть</span>
+      <Square className="h-5 w-5 mr-2" />
+      Закончить есть
     </Button>
   );
 }

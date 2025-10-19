@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Utensils } from "lucide-react";
 
 interface CircularFastingProgressProps {
   progress: number;
@@ -20,8 +21,8 @@ export function CircularFastingProgress({
   status,
   className,
 }: CircularFastingProgressProps) {
-  const size = 280;
-  const strokeWidth = 20;
+  const size = 340;
+  const strokeWidth = 24;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -35,14 +36,8 @@ export function CircularFastingProgress({
 
   const getStatusColor = () => {
     if (status.isFasting) return "from-green-400 via-emerald-500 to-teal-500";
-    if (status.isEating) return "from-orange-400 via-red-500 to-pink-500";
+    if (status.isEating) return "from-orange-500 via-orange-600 to-red-500";
     return "from-gray-300 to-gray-400";
-  };
-
-  const getStatusEmoji = () => {
-    if (status.isFasting) return "🔥";
-    if (status.isEating) return "🍽️";
-    return "⏸️";
   };
 
   const getStatusText = () => {
@@ -111,9 +106,15 @@ export function CircularFastingProgress({
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="text-6xl mb-2 animate-in fade-in duration-500">
-            {getStatusEmoji()}
-          </div>
+          {status.isEating ? (
+            <div className="mb-3">
+              <Utensils className="w-16 h-16 text-orange-500" />
+            </div>
+          ) : status.isFasting ? (
+            <div className="text-7xl mb-3">🔥</div>
+          ) : (
+            <div className="text-7xl mb-3">⏸️</div>
+          )}
           <div className={cn(
             "text-5xl font-bold bg-gradient-to-r bg-clip-text text-transparent transition-all duration-500",
             getStatusColor()

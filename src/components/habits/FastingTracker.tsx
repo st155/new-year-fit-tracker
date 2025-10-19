@@ -5,6 +5,7 @@ import { AIMotivation } from "./AIMotivation";
 import { CircularFastingProgress } from "./CircularFastingProgress";
 import { FastingControlButton } from "./FastingControlButton";
 import { FastingHistory } from "./FastingHistory";
+import { Badge } from "@/components/ui/badge";
 import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils";
 
 interface FastingTrackerProps {
@@ -91,14 +92,17 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
       </div>
 
       {/* Content */}
-      <div className="flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center space-y-8 transition-all duration-300">
         {/* Circular Progress */}
-        <CircularFastingProgress
-          progress={progress}
-          elapsedMinutes={elapsedMinutes}
-          targetMinutes={targetMinutes}
-          status={status}
-        />
+        <div className="relative">
+          <CircularFastingProgress
+            progress={progress}
+            elapsedMinutes={elapsedMinutes}
+            targetMinutes={targetMinutes}
+            status={status}
+            className="scale-105 hover:scale-110 transition-transform duration-300"
+          />
+        </div>
 
         {/* Milestone Message */}
         {currentMilestone && (
@@ -109,11 +113,23 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
           </div>
         )}
 
+        {/* Eating Window Badge - показывается только при isEating */}
+        {status.isEating && (
+          <div className="w-full flex justify-center">
+            <Badge 
+              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 text-sm font-semibold shadow-lg shadow-orange-500/30"
+            >
+              Окно питания
+            </Badge>
+          </div>
+        )}
+
         {/* Control Button */}
         <FastingControlButton
           status={status}
           onStartFasting={() => startFasting()}
           onStartEating={() => startEating()}
+          onEndEating={() => endEating()}
           isLoading={isStarting || isFastingStarting || isEnding}
         />
 
