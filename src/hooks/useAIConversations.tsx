@@ -207,31 +207,27 @@ export const useAIConversations = (userId: string | undefined) => {
         return data; // Return to UI for handling
       }
 
-      // Reload conversations and messages
-      await loadConversations();
-      if (data.conversationId) {
-        // Find or create conversation object
-        let conv = conversations.find(c => c.id === data.conversationId);
+      // Only reload conversations if this is a NEW conversation
+      if (data.conversationId && !currentConversation) {
+        const { data: freshData } = await supabase
+          .from('ai_conversations')
+          .select('*')
+          .eq('id', data.conversationId)
+          .single();
         
-        // If new conversation was created, reload to get it
-        if (!conv) {
-          await loadConversations();
-          const { data: freshData } = await supabase
-            .from('ai_conversations')
-            .select('*')
-            .eq('id', data.conversationId)
-            .single();
-          conv = freshData as AIConversation;
+        if (freshData) {
+          setCurrentConversation(freshData as AIConversation);
+          setConversations(prev => [freshData as AIConversation, ...prev]);
         }
-        
-        setCurrentConversation(conv || { 
-          id: data.conversationId, 
-          trainer_id: userId, 
-          context_mode: contextMode 
-        } as AIConversation);
-        
-        // Then load messages
-        await loadMessages(data.conversationId);
+      } else if (currentConversation) {
+        // Just update last_message_at via realtime subscription
+        setConversations(prev => 
+          prev.map(c => 
+            c.id === currentConversation.id 
+              ? { ...c, last_message_at: new Date().toISOString() }
+              : c
+          )
+        );
       }
 
       return data;

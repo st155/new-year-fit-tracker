@@ -621,28 +621,6 @@ export const AIChatWindow = ({
                   <AutoExecutionReport message={message} />
                 ) : (
                   <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {/* AI thinking indicator */}
-                    {message.role === 'assistant' && message.metadata?.isThinking && (
-                      <div className="flex items-start gap-3 max-w-[80%]">
-                        <Avatar className="h-8 w-8 bg-primary/10">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </Avatar>
-                        <div className="rounded-lg p-3 bg-muted">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                            <span className="text-muted-foreground">
-                              🤖 AI генерирует ответ
-                              <span className="animate-pulse">...</span>
-                            </span>
-                            {sendingStartTime && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                {Math.floor((Date.now() - sendingStartTime) / 1000)}s
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
                     {message.role === 'assistant' && (
                       <Avatar className="h-8 w-8 bg-primary/10">
                         <Bot className="h-4 w-4 text-primary" />
@@ -748,15 +726,19 @@ export const AIChatWindow = ({
                   <Avatar className="h-8 w-8 bg-primary/10">
                     <Bot className="h-4 w-4 text-primary" />
                   </Avatar>
-                  <div className="bg-muted rounded-lg p-3">
+                  <div className="bg-muted rounded-lg p-3 animate-pulse">
                     <div className="flex items-center gap-2 text-sm">
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       <span className="text-muted-foreground">
-                        🤖 AI генерирует ответ
-                        <span className="animate-pulse">...</span>
+                        AI генерирует ответ
+                        <span className="inline-block w-3 text-left ml-0.5">
+                          <span className="animate-[pulse_1.5s_ease-in-out_infinite]">.</span>
+                          <span className="animate-[pulse_1.5s_ease-in-out_0.2s_infinite]">.</span>
+                          <span className="animate-[pulse_1.5s_ease-in-out_0.4s_infinite]">.</span>
+                        </span>
                       </span>
                       {sendingStartTime && (
-                        <span className="text-xs text-muted-foreground ml-2">
+                        <span className="text-xs font-mono bg-background/50 px-1.5 py-0.5 rounded ml-1">
                           {Math.floor((Date.now() - sendingStartTime) / 1000)}s
                         </span>
                       )}
