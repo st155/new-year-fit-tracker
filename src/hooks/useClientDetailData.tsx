@@ -31,11 +31,36 @@ interface HealthData {
   day_strain?: number;
 }
 
+interface WhoopSummary {
+  recoveryScore: {
+    avg: number;
+    min: number;
+    max: number;
+    count: number;
+  };
+  sleep: {
+    durationAvg: number;
+    durationMin: number;
+    durationMax: number;
+    efficiencyAvg: number;
+    performanceAvg: number;
+    count: number;
+  };
+  strain: {
+    dayStrainAvg: number;
+    dayStrainMin: number;
+    dayStrainMax: number;
+    workoutCount: number;
+    workoutStrainAvg: number;
+  };
+}
+
 export function useClientDetailData(clientUserId: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [healthData, setHealthData] = useState<HealthData[]>([]);
   const [aiHistory, setAiHistory] = useState<any[]>([]);
+  const [whoopSummary, setWhoopSummary] = useState<WhoopSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -105,6 +130,50 @@ export function useClientDetailData(clientUserId: string) {
     return Array.from(dataMap.values()).sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
+  };
+
+  const calculateWhoopSummary = (unifiedData: any[]): WhoopSummary | null => {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentData = unifiedData.filter(d => 
+      new Date(d.measurement_date) >= sevenDaysAgo && d.source === 'whoop'
+    );
+
+    if (recentData.length === 0) return null;
+
+    const recoveryScores = recentData.filter(d => d.metric_name === 'Recovery Score');
+    const sleepDurations = recentData.filter(d => d.metric_name === 'Sleep Duration');
+    const sleepEfficiency = recentData.filter(d => d.metric_name === 'Sleep Efficiency');
+    const sleepPerformance = recentData.filter(d => d.metric_name === 'Sleep Performance');
+    const dayStrains = recentData.filter(d => d.metric_name === 'Day Strain');
+    const workoutStrains = recentData.filter(d => d.metric_name === 'Workout Strain');
+
+    const avg = (arr: any[]) => arr.length > 0 ? arr.reduce((sum, d) => sum + d.value, 0) / arr.length : 0;
+    const min = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map(d => d.value)) : 0;
+    const max = (arr: any[]) => arr.length > 0 ? Math.max(...arr.map(d => d.value)) : 0;
+
+    return {
+      recoveryScore: {
+        avg: Math.round(avg(recoveryScores)),
+        min: Math.round(min(recoveryScores)),
+        max: Math.round(max(recoveryScores)),
+        count: recoveryScores.length
+      },
+      sleep: {
+        durationAvg: parseFloat(avg(sleepDurations).toFixed(1)),
+        durationMin: parseFloat(min(sleepDurations).toFixed(1)),
+        durationMax: parseFloat(max(sleepDurations).toFixed(1)),
+        efficiencyAvg: Math.round(avg(sleepEfficiency)),
+        performanceAvg: Math.round(avg(sleepPerformance)),
+        count: sleepDurations.length
+      },
+      strain: {
+        dayStrainAvg: parseFloat(avg(dayStrains).toFixed(1)),
+        dayStrainMin: parseFloat(min(dayStrains).toFixed(1)),
+        dayStrainMax: parseFloat(max(dayStrains).toFixed(1)),
+        workoutCount: workoutStrains.length,
+        workoutStrainAvg: parseFloat(avg(workoutStrains).toFixed(1))
+      }
+    };
   };
 
   const loadClientData = async () => {
@@ -263,10 +332,14 @@ export function useClientDetailData(clientUserId: string) {
         unifiedMetricsResult.data || []
       );
 
+      // Рассчитываем Whoop summary
+      const whoopData = calculateWhoopSummary(unifiedMetricsResult.data || []);
+
       setGoals(goalsWithProgress);
       setMeasurements(processedMeasurements);
       setHealthData(mergedHealthData);
       setAiHistory(aiLogsResult.data || []);
+      setWhoopSummary(whoopData);
 
     } catch (err) {
       console.error('Error loading client data:', err);
@@ -281,6 +354,7 @@ export function useClientDetailData(clientUserId: string) {
     measurements,
     healthData,
     aiHistory,
+    whoopSummary,
     loading,
     error,
     refetch: loadClientData

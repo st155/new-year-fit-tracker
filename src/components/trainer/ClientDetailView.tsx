@@ -20,7 +20,9 @@ import {
   Info,
   Wifi,
   LayoutDashboard,
-  Trophy
+  Trophy,
+  Moon,
+  Flame
 } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
 import { useNavigate } from "react-router-dom";
@@ -85,7 +87,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     goals, 
     measurements, 
     healthData, 
-    aiHistory, 
+    aiHistory,
+    whoopSummary,
     loading, 
     error, 
     refetch 
@@ -275,6 +278,162 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               </Card>
             ))}
           </div>
+
+          {/* Whoop Health Metrics */}
+          {whoopSummary && whoopSummary.recoveryScore.count > 0 && (
+            <div className="space-y-4 mt-8">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Метрики здоровья от Whoop
+                <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Recovery Score Card */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-green-500" />
+                        Recovery Score
+                      </CardTitle>
+                      <Badge variant="outline">Whoop</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-3xl font-bold">
+                        {whoopSummary.recoveryScore.avg}%
+                      </div>
+                      <Progress 
+                        value={whoopSummary.recoveryScore.avg} 
+                        className="h-2"
+                        variant={
+                          whoopSummary.recoveryScore.avg > 66 ? "success" :
+                          whoopSummary.recoveryScore.avg > 33 ? "warning" :
+                          "danger"
+                        }
+                      />
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Мин: {whoopSummary.recoveryScore.min}%</span>
+                        <span>Макс: {whoopSummary.recoveryScore.max}%</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Средний показатель за 7 дней
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Sleep Quality Card */}
+                {whoopSummary.sleep.count > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Moon className="h-5 w-5 text-blue-500" />
+                          Качество сна
+                        </CardTitle>
+                        <Badge variant="outline">Whoop</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-3xl font-bold">
+                          {whoopSummary.sleep.durationAvg}ч
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Эффективность</span>
+                            <span className="font-medium">{whoopSummary.sleep.efficiencyAvg}%</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Производительность</span>
+                            <span className="font-medium">{whoopSummary.sleep.performanceAvg}%</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Диапазон: {whoopSummary.sleep.durationMin}ч - {whoopSummary.sleep.durationMax}ч</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Средние показатели за 7 дней
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Day Strain Card */}
+                {whoopSummary.strain.dayStrainAvg > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Flame className="h-5 w-5 text-orange-500" />
+                          Day Strain
+                        </CardTitle>
+                        <Badge variant="outline">Whoop</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-3xl font-bold">
+                          {whoopSummary.strain.dayStrainAvg}
+                        </div>
+                        <Progress 
+                          value={Math.min(100, (whoopSummary.strain.dayStrainAvg / 20) * 100)} 
+                          className="h-2"
+                          variant={
+                            whoopSummary.strain.dayStrainAvg >= 10 && whoopSummary.strain.dayStrainAvg <= 15 ? "success" :
+                            whoopSummary.strain.dayStrainAvg > 15 ? "warning" :
+                            "default"
+                          }
+                        />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Мин: {whoopSummary.strain.dayStrainMin}</span>
+                          <span>Макс: {whoopSummary.strain.dayStrainMax}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Средняя нагрузка за 7 дней
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Workout Activity Card */}
+                {whoopSummary.strain.workoutCount > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-purple-500" />
+                          Тренировки
+                        </CardTitle>
+                        <Badge variant="outline">Whoop</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-3xl font-bold">
+                          {whoopSummary.strain.workoutCount}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Средний Workout Strain</span>
+                            <span className="font-medium">{whoopSummary.strain.workoutStrainAvg}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Тренировок за последние 7 дней
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="measurements" className="space-y-4">
