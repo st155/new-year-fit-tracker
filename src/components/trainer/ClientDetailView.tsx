@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
 import { useClientDetailData, formatSourceName } from "@/hooks/useClientDetailData";
+import { HealthDataTabs } from "./health-data/HealthDataTabs";
 
 interface Client {
   id: string;
@@ -525,6 +526,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsContent>
 
         <TabsContent value="health" className="space-y-4">
+          <HealthDataTabs healthData={healthData} loading={loading} />
+        </TabsContent>
+
+        <TabsContent value="health_old" className="space-y-4 hidden">
           {healthData.length === 0 ? (
             <Card>
               <CardContent className="py-12">

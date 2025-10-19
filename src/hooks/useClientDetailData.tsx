@@ -20,35 +20,88 @@ interface Measurement {
   source?: string;
 }
 
-interface HealthData {
+export interface HealthData {
   date: string;
+  
+  // Activity
   steps?: number;
   steps_source?: string;
-  weight?: number;
-  weight_source?: string;
-  heart_rate_avg?: number;
-  heart_rate_avg_source?: string;
   active_calories?: number;
   active_calories_source?: string;
+  distance?: number;
+  distance_source?: string;
+  avg_speed?: number;
+  avg_speed_source?: string;
+  max_speed?: number;
+  max_speed_source?: string;
+  elevation_gain?: number;
+  elevation_gain_source?: string;
+  workout_time?: number;
+  workout_time_source?: string;
+  
+  // Heart
+  heart_rate_avg?: number;
+  heart_rate_avg_source?: string;
+  resting_heart_rate?: number;
+  resting_heart_rate_source?: string;
+  max_heart_rate?: number;
+  max_heart_rate_source?: string;
+  hrv?: number;
+  hrv_source?: string;
+  sleep_hrv?: number;
+  sleep_hrv_source?: string;
+  hr_zones_low?: number;
+  hr_zones_low_source?: string;
+  hr_zones_high?: number;
+  hr_zones_high_source?: string;
+  
+  // Sleep
   sleep_hours?: number;
   sleep_hours_source?: string;
-  recovery_score?: number;
-  recovery_score_source?: string;
-  day_strain?: number;
-  day_strain_source?: string;
-  // Oura/Garmin-specific metrics
   sleep_efficiency?: number;
   sleep_efficiency_source?: string;
+  sleep_performance?: number;
+  sleep_performance_source?: string;
   deep_sleep_duration?: number;
   deep_sleep_duration_source?: string;
   light_sleep_duration?: number;
   light_sleep_duration_source?: string;
   rem_sleep_duration?: number;
   rem_sleep_duration_source?: string;
-  hrv?: number;
-  hrv_source?: string;
   respiratory_rate?: number;
   respiratory_rate_source?: string;
+  
+  // Body Composition
+  weight?: number;
+  weight_source?: string;
+  body_fat?: number;
+  body_fat_source?: string;
+  muscle_mass?: number;
+  muscle_mass_source?: string;
+  muscle_percent?: number;
+  muscle_percent_source?: string;
+  
+  // Recovery
+  recovery_score?: number;
+  recovery_score_source?: string;
+  day_strain?: number;
+  day_strain_source?: string;
+  workout_strain?: number;
+  workout_strain_source?: string;
+  body_battery?: number;
+  body_battery_source?: string;
+  stress_level?: number;
+  stress_level_source?: string;
+  
+  // Workouts
+  workout_calories?: number;
+  workout_calories_source?: string;
+  
+  // Health Metrics
+  vo2_max?: number;
+  vo2_max_source?: string;
+  blood_pressure?: number;
+  blood_pressure_source?: string;
 }
 
 interface WhoopSummary {
@@ -112,137 +165,170 @@ export function useClientDetailData(clientUserId: string) {
   const mergeHealthData = (summaryData: any[], unifiedData: any[]): HealthData[] => {
     const dataMap = new Map<string, HealthData>();
 
-    // First process unified metrics (Whoop, Withings, etc.) - they have priority
+    // Process unified metrics
     unifiedData?.forEach(metric => {
       const date = metric.measurement_date;
-      const existing = dataMap.get(date) || {
-        date,
-        steps: undefined,
-        steps_source: undefined,
-        weight: undefined,
-        weight_source: undefined,
-        heart_rate_avg: undefined,
-        heart_rate_avg_source: undefined,
-        active_calories: undefined,
-        active_calories_source: undefined,
-        sleep_hours: undefined,
-        sleep_hours_source: undefined,
-        recovery_score: undefined,
-        recovery_score_source: undefined,
-        day_strain: undefined,
-        day_strain_source: undefined,
-        sleep_efficiency: undefined,
-        sleep_efficiency_source: undefined,
-        deep_sleep_duration: undefined,
-        deep_sleep_duration_source: undefined,
-        light_sleep_duration: undefined,
-        light_sleep_duration_source: undefined,
-        rem_sleep_duration: undefined,
-        rem_sleep_duration_source: undefined,
-        hrv: undefined,
-        hrv_source: undefined,
-        respiratory_rate: undefined,
-        respiratory_rate_source: undefined
-      };
+      const existing = dataMap.get(date) || { date } as HealthData;
 
+      const entry = existing;
+      
       switch (metric.metric_name) {
+        // Activity
         case 'Steps':
-          existing.steps = metric.value;
-          existing.steps_source = metric.source;
+          entry.steps = metric.value;
+          entry.steps_source = metric.source;
           break;
-        case 'Average Heart Rate':
-        case 'Resting Heart Rate':
-          if (!existing.heart_rate_avg) {
-            existing.heart_rate_avg = metric.value;
-            existing.heart_rate_avg_source = metric.source;
-          }
-          break;
-        case 'Weight':
-          if (!existing.weight) {
-            existing.weight = metric.value;
-            existing.weight_source = metric.source;
-          }
-          break;
-        case 'Sleep Duration':
-          existing.sleep_hours = metric.value;
-          existing.sleep_hours_source = metric.source;
-          break;
-        case 'Recovery Score':
-          existing.recovery_score = metric.value;
-          existing.recovery_score_source = metric.source;
-          break;
-        case 'Day Strain':
-          existing.day_strain = metric.value;
-          existing.day_strain_source = metric.source;
-          break;
-        case 'Workout Calories':
         case 'Active Calories':
-          existing.active_calories = metric.value;
-          existing.active_calories_source = metric.source;
+          entry.active_calories = metric.value;
+          entry.active_calories_source = metric.source;
           break;
-        // Oura/Garmin-specific metrics
-        case 'Sleep Efficiency':
-          existing.sleep_efficiency = metric.value;
-          existing.sleep_efficiency_source = metric.source;
+        case 'Distance':
+          entry.distance = metric.value;
+          entry.distance_source = metric.source;
           break;
-        case 'Deep Sleep Duration':
-          existing.deep_sleep_duration = metric.value;
-          existing.deep_sleep_duration_source = metric.source;
+        case 'Avg Speed':
+          entry.avg_speed = metric.value;
+          entry.avg_speed_source = metric.source;
           break;
-        case 'Light Sleep Duration':
-          existing.light_sleep_duration = metric.value;
-          existing.light_sleep_duration_source = metric.source;
+        case 'Max Speed':
+          entry.max_speed = metric.value;
+          entry.max_speed_source = metric.source;
           break;
-        case 'REM Sleep Duration':
-          existing.rem_sleep_duration = metric.value;
-          existing.rem_sleep_duration_source = metric.source;
+        case 'Elevation Gain':
+          entry.elevation_gain = metric.value;
+          entry.elevation_gain_source = metric.source;
+          break;
+        case 'Workout Time':
+          entry.workout_time = metric.value;
+          entry.workout_time_source = metric.source;
+          break;
+          
+        // Heart
+        case 'Average Heart Rate':
+          entry.heart_rate_avg = metric.value;
+          entry.heart_rate_avg_source = metric.source;
+          break;
+        case 'Resting Heart Rate':
+          entry.resting_heart_rate = metric.value;
+          entry.resting_heart_rate_source = metric.source;
+          break;
+        case 'Max Heart Rate':
+          entry.max_heart_rate = metric.value;
+          entry.max_heart_rate_source = metric.source;
+          break;
+        case 'HRV RMSSD':
+          entry.hrv = metric.value;
+          entry.hrv_source = metric.source;
           break;
         case 'Sleep HRV RMSSD':
-          existing.hrv = metric.value;
-          existing.hrv_source = metric.source;
+          entry.sleep_hrv = metric.value;
+          entry.sleep_hrv_source = metric.source;
+          break;
+        case 'HR Zones 1-3 (Weekly)':
+          entry.hr_zones_low = metric.value;
+          entry.hr_zones_low_source = metric.source;
+          break;
+        case 'HR Zones 4-5 (Weekly)':
+          entry.hr_zones_high = metric.value;
+          entry.hr_zones_high_source = metric.source;
+          break;
+          
+        // Sleep
+        case 'Sleep Duration':
+          entry.sleep_hours = metric.value;
+          entry.sleep_hours_source = metric.source;
+          break;
+        case 'Sleep Efficiency':
+          entry.sleep_efficiency = metric.value;
+          entry.sleep_efficiency_source = metric.source;
+          break;
+        case 'Sleep Performance':
+          entry.sleep_performance = metric.value;
+          entry.sleep_performance_source = metric.source;
+          break;
+        case 'Deep Sleep Duration':
+          entry.deep_sleep_duration = metric.value;
+          entry.deep_sleep_duration_source = metric.source;
+          break;
+        case 'Light Sleep Duration':
+          entry.light_sleep_duration = metric.value;
+          entry.light_sleep_duration_source = metric.source;
+          break;
+        case 'REM Sleep Duration':
+          entry.rem_sleep_duration = metric.value;
+          entry.rem_sleep_duration_source = metric.source;
           break;
         case 'Respiratory Rate':
-          existing.respiratory_rate = metric.value;
-          existing.respiratory_rate_source = metric.source;
+          entry.respiratory_rate = metric.value;
+          entry.respiratory_rate_source = metric.source;
+          break;
+          
+        // Body Composition
+        case 'Weight':
+          entry.weight = metric.value;
+          entry.weight_source = metric.source;
+          break;
+        case 'Body Fat Percentage':
+        case 'Процент жира':
+          entry.body_fat = metric.value;
+          entry.body_fat_source = metric.source;
+          break;
+        case 'Мышечная масса':
+          entry.muscle_mass = metric.value;
+          entry.muscle_mass_source = metric.source;
+          break;
+        case 'Процент мышц':
+          entry.muscle_percent = metric.value;
+          entry.muscle_percent_source = metric.source;
+          break;
+          
+        // Recovery
+        case 'Recovery Score':
+          entry.recovery_score = metric.value;
+          entry.recovery_score_source = metric.source;
+          break;
+        case 'Day Strain':
+          entry.day_strain = metric.value;
+          entry.day_strain_source = metric.source;
+          break;
+        case 'Workout Strain':
+          entry.workout_strain = metric.value;
+          entry.workout_strain_source = metric.source;
+          break;
+        case 'Body Battery':
+          entry.body_battery = metric.value;
+          entry.body_battery_source = metric.source;
+          break;
+        case 'Stress Level':
+          entry.stress_level = metric.value;
+          entry.stress_level_source = metric.source;
+          break;
+          
+        // Workouts
+        case 'Workout Calories':
+          entry.workout_calories = metric.value;
+          entry.workout_calories_source = metric.source;
+          break;
+          
+        // Health Metrics
+        case 'VO2 Max':
+        case 'VO2Max':
+          entry.vo2_max = metric.value;
+          entry.vo2_max_source = metric.source;
+          break;
+        case 'Пульсовое давление':
+          entry.blood_pressure = metric.value;
+          entry.blood_pressure_source = metric.source;
           break;
       }
 
-      dataMap.set(date, existing);
+      dataMap.set(date, entry);
     });
 
-    // Then supplement with daily_health_summary (Apple Health, etc.)
+    // Supplement with daily_health_summary
     summaryData.forEach(item => {
-      const existing = dataMap.get(item.date) || {
-        date: item.date,
-        steps: undefined,
-        steps_source: undefined,
-        weight: undefined,
-        weight_source: undefined,
-        heart_rate_avg: undefined,
-        heart_rate_avg_source: undefined,
-        active_calories: undefined,
-        active_calories_source: undefined,
-        sleep_hours: undefined,
-        sleep_hours_source: undefined,
-        recovery_score: undefined,
-        recovery_score_source: undefined,
-        day_strain: undefined,
-        day_strain_source: undefined,
-        sleep_efficiency: undefined,
-        sleep_efficiency_source: undefined,
-        deep_sleep_duration: undefined,
-        deep_sleep_duration_source: undefined,
-        light_sleep_duration: undefined,
-        light_sleep_duration_source: undefined,
-        rem_sleep_duration: undefined,
-        rem_sleep_duration_source: undefined,
-        hrv: undefined,
-        hrv_source: undefined,
-        respiratory_rate: undefined,
-        respiratory_rate_source: undefined
-      };
+      const existing = dataMap.get(item.date) || { date: item.date } as HealthData;
 
-      // Fill only fields that don't exist yet (unified metrics have priority)
       existing.steps = existing.steps ?? item.steps;
       existing.weight = existing.weight ?? item.weight;
       existing.heart_rate_avg = existing.heart_rate_avg ?? item.heart_rate_avg;
@@ -253,7 +339,7 @@ export function useClientDetailData(clientUserId: string) {
     });
 
     return Array.from(dataMap.values()).sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
+      new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   };
 
@@ -350,7 +436,6 @@ export function useClientDetailData(clientUserId: string) {
       const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
       const thirtyDaysAgoDate = thirtyDaysAgo.toISOString().split('T')[0];
 
-      // Оптимизированный запрос: загружаем все данные параллельно
       const [
         goalsResult,
         measurementsResult,
@@ -359,7 +444,6 @@ export function useClientDetailData(clientUserId: string) {
         unifiedMetricsResult,
         aiLogsResult
       ] = await Promise.all([
-        // Загружаем цели с последними измерениями одним запросом
         supabase
           .from('goals')
           .select(`
@@ -380,7 +464,6 @@ export function useClientDetailData(clientUserId: string) {
           })
           .limit(1, { referencedTable: 'measurements' }),
 
-        // Измерения за последние 30 дней (ручные)
         supabase
           .from('measurements')
           .select(`
@@ -393,7 +476,6 @@ export function useClientDetailData(clientUserId: string) {
           .gte('measurement_date', thirtyDaysAgoISO)
           .order('measurement_date', { ascending: false }),
 
-        // Unified metrics (автоматические от интеграций)
         supabase
           .from('client_unified_metrics')
           .select('*')
@@ -409,7 +491,6 @@ export function useClientDetailData(clientUserId: string) {
           ])
           .order('measurement_date', { ascending: false }),
 
-        // Данные здоровья
         supabase
           .from('daily_health_summary')
           .select('*')
@@ -417,16 +498,42 @@ export function useClientDetailData(clientUserId: string) {
           .gte('date', thirtyDaysAgoDate)
           .order('date', { ascending: true }),
 
-        // Unified метрики
         supabase
           .from('client_unified_metrics')
           .select('*')
           .eq('user_id', clientUserId)
-          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories', 'Active Calories', 'Sleep Efficiency', 'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration', 'Sleep HRV RMSSD', 'Respiratory Rate'])
+          .in('metric_name', [
+            // Activity
+            'Steps', 'Active Calories', 'Distance', 'Avg Speed', 
+            'Max Speed', 'Elevation Gain', 'Workout Time',
+            
+            // Heart
+            'Average Heart Rate', 'Resting Heart Rate', 'Max Heart Rate',
+            'HRV RMSSD', 'Sleep HRV RMSSD', 'HR Zones 1-3 (Weekly)', 
+            'HR Zones 4-5 (Weekly)',
+            
+            // Sleep
+            'Sleep Duration', 'Sleep Efficiency', 'Sleep Performance',
+            'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration',
+            'Respiratory Rate',
+            
+            // Body Composition
+            'Weight', 'Body Fat Percentage', 'Мышечная масса', 
+            'Процент мышц', 'Процент жира',
+            
+            // Recovery
+            'Recovery Score', 'Day Strain', 'Workout Strain',
+            'Body Battery', 'Stress Level',
+            
+            // Workouts
+            'Workout Calories',
+            
+            // Health Metrics
+            'VO2 Max', 'VO2Max', 'Пульсовое давление'
+          ])
           .gte('measurement_date', thirtyDaysAgoDate)
           .order('measurement_date', { ascending: true }),
 
-        // AI история
         supabase
           .from('ai_action_logs')
           .select('*')
@@ -441,12 +548,10 @@ export function useClientDetailData(clientUserId: string) {
       if (healthSummaryResult.error) throw healthSummaryResult.error;
       if (aiLogsResult.error) throw aiLogsResult.error;
 
-      // Обрабатываем цели
       const goalsWithProgress = (goalsResult.data || []).map(goal => {
         const latestMeasurement = goal.measurements?.[0];
         let currentValue = latestMeasurement?.value || 0;
         
-        // If no manual measurements, try to find from unified metrics
         if (!currentValue && unifiedMeasurementsResult.data) {
           const matchingMetric = unifiedMeasurementsResult.data.find(m => 
             m.metric_name === goal.goal_name || m.metric_name === goal.goal_type
@@ -469,7 +574,6 @@ export function useClientDetailData(clientUserId: string) {
         };
       });
 
-      // Обрабатываем ручные измерения
       const manualMeasurements = (measurementsResult.data || []).map(m => ({
         id: m.id,
         value: m.value,
@@ -479,7 +583,6 @@ export function useClientDetailData(clientUserId: string) {
         source: 'manual'
       }));
 
-      // Обрабатываем автоматические измерения из unified metrics
       const autoMeasurements = (unifiedMeasurementsResult.data || []).map(um => ({
         id: `${um.user_id}-${um.measurement_date}-${um.metric_name}`,
         value: um.value,
@@ -489,20 +592,15 @@ export function useClientDetailData(clientUserId: string) {
         source: um.source
       }));
 
-      // Объединяем и сортируем по дате
       const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
         .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
 
-      // Объединяем данные здоровья
       const mergedHealthData = mergeHealthData(
         healthSummaryResult.data || [], 
         unifiedMetricsResult.data || []
       );
 
-      // Рассчитываем Whoop summary
       const whoopData = calculateWhoopSummary(unifiedMetricsResult.data || []);
-      
-      // Рассчитываем Oura summary
       const ouraData = calculateOuraSummary(unifiedMetricsResult.data || []);
 
       setGoals(goalsWithProgress);
@@ -533,7 +631,6 @@ export function useClientDetailData(clientUserId: string) {
   };
 }
 
-// Функция для форматирования названий источников
 export const formatSourceName = (source: string): string => {
   const sourceMap: Record<string, string> = {
     'whoop': 'Whoop',
@@ -547,3 +644,4 @@ export const formatSourceName = (source: string): string => {
   };
   return sourceMap[source.toLowerCase()] || source;
 };
+
