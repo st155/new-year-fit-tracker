@@ -708,9 +708,37 @@ export const AIChatWindow = ({
                           ) : (
                             <AlertCircle className="h-3 w-3 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                           )}
-                          <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
-                            {result.message || result.action_type}
-                          </span>
+                          <div className="flex-1 flex items-center gap-2 flex-wrap">
+                            <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
+                              {result.message || result.action_type}
+                            </span>
+                            
+                            {/* Link to view created training plan */}
+                            {result.success && result.action === 'create_training_plan' && result.data?.plan_id && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                                onClick={() => navigate(`/trainer-dashboard?tab=plans&plan=${result.data.plan_id}`)}
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Посмотреть план
+                              </Button>
+                            )}
+                            
+                            {/* Link to view created goal */}
+                            {result.success && result.action === 'create_goal' && result.data?.goal_id && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                                onClick={() => navigate(`/trainer-dashboard?tab=goals&goal=${result.data.goal_id}`)}
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Посмотреть цель
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

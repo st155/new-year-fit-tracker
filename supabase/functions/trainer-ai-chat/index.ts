@@ -1111,12 +1111,28 @@ IMPORTANT INSTRUCTIONS:
           const successCount = executeResult.results.filter((r: any) => r.success).length;
           const failCount = executeResult.results.filter((r: any) => !r.success).length;
           
+          // Format results with detailed information
+          const resultsText = executeResult.results.map((r: any, i: number) => {
+            let actionText = r.action || r.action_type || 'Unknown action';
+            
+            // Add details for specific actions
+            if (r.action === 'create_training_plan' && r.success && r.data) {
+              const planName = r.data.plan_name || 'План';
+              const workoutsCount = r.data.workouts_count || 0;
+              actionText = `Создан план "${planName}" (${workoutsCount} тренировок)`;
+            } else if (r.action === 'create_goal' && r.success && r.data) {
+              actionText = `Создана цель "${r.data.goal_name || 'Цель'}"`;
+            } else if (r.action === 'add_measurement' && r.success && r.data) {
+              actionText = `Добавлено измерение: ${r.data.value} ${r.data.unit || ''}`;
+            }
+            
+            return `${i+1}. ${r.success ? '✓' : '✗'} ${actionText}`;
+          }).join('\n');
+          
           await supabaseClient.from('ai_messages').insert({
             conversation_id: conversation.id,
             role: 'system',
-            content: `✅ Действия выполнены автоматически:\n${executeResult.results.map((r: any, i: number) => 
-              `${i+1}. ${r.success ? '✓' : '✗'} ${r.action || r.action_type || 'Unknown action'}`
-            ).join('\n')}\n\nУспешно: ${successCount}, Ошибок: ${failCount}`,
+            content: `✅ Действия выполнены автоматически:\n${resultsText}\n\nУспешно: ${successCount}, Ошибок: ${failCount}`,
             metadata: { 
               autoExecuted: true, 
               results: executeResult.results,

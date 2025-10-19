@@ -25,6 +25,7 @@ export const TrainingPlansList = () => {
   const [showBuilder, setShowBuilder] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const { toast } = useToast();
+  const [searchParams] = useState(() => new URLSearchParams(window.location.search));
 
   const loadPlans = async () => {
     try {
@@ -92,6 +93,17 @@ export const TrainingPlansList = () => {
     loadPlans();
     loadClients();
   }, []);
+
+  // Handle plan URL parameter for direct navigation from AI chat
+  useEffect(() => {
+    const planId = searchParams.get('plan');
+    if (planId && plans.length > 0) {
+      const planExists = plans.find(p => p.id === planId);
+      if (planExists) {
+        setSelectedPlanId(planId);
+      }
+    }
+  }, [plans, searchParams]);
 
   if (loading) {
     return <div className="text-center py-8">Загрузка...</div>;

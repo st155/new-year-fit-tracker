@@ -58,13 +58,21 @@ function TrainerDashboardContent() {
     loadClients();
   }, [user]);
 
-  // Handle URL parameters for client selection
+  // Handle URL parameters for client selection and plan selection
   useEffect(() => {
     const clientId = searchParams.get('client');
+    const planId = searchParams.get('plan');
     const tab = searchParams.get('tab');
     
     if (tab) {
       setActiveTab(tab);
+    }
+    
+    // Handle plan parameter for direct navigation to plan details
+    if (planId && tab === 'plans') {
+      // The TrainingPlansList component will handle opening the plan detail view
+      // We just need to ensure we're on the plans tab
+      console.log('Opening plan:', planId);
     }
     
     if (clientId && clients.length > 0) {
