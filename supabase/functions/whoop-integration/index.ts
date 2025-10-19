@@ -29,11 +29,11 @@ serve(async (req) => {
     if (action === 'sync-all-users') {
       console.log('Starting sync for all Whoop users');
       
+      // Получаем все активные токены (включая те, что скоро истекут)
       const { data: tokens } = await supabase
         .from('whoop_tokens')
-        .select('user_id')
-        .eq('is_active', true)
-        .gt('expires_at', new Date().toISOString());
+        .select('user_id, expires_at, access_token, refresh_token')
+        .eq('is_active', true);
 
       if (!tokens || tokens.length === 0) {
         return new Response(
@@ -42,11 +42,28 @@ serve(async (req) => {
         );
       }
 
+      console.log(`Found ${tokens.length} active Whoop tokens`);
+
       const results = [];
+      const now = new Date();
+      const twelveHoursFromNow = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+
       for (const token of tokens) {
+        const expiresAt = new Date(token.expires_at);
+        const willExpireSoon = twelveHoursFromNow >= expiresAt;
+        
+        console.log(`User ${token.user_id}: expires ${expiresAt.toISOString()}, will expire soon: ${willExpireSoon}`);
+
         try {
+          // Если токен истек или скоро истечёт, сначала обновляем его
+          if (willExpireSoon) {
+            console.log(`⚠️ Token for user ${token.user_id} will expire soon, refreshing first...`);
+            await refreshTokenIfNeeded(supabase, token.user_id, whoopClientId, whoopClientSecret, true);
+          }
+
+          // Затем синхронизируем данные
           await syncWhoopData(supabase, token.user_id, whoopClientId, whoopClientSecret);
-          results.push({ user_id: token.user_id, success: true });
+          results.push({ user_id: token.user_id, success: true, tokenRefreshed: willExpireSoon });
         } catch (error: any) {
           console.error(`Failed to sync user ${token.user_id}:`, error);
           results.push({ user_id: token.user_id, success: false, error: error.message });
@@ -301,6 +318,97 @@ async function getOrCreateMetric(
   return newMetric.id;
 }
 
+// Отдельная функция для обновления токена
+async function refreshTokenIfNeeded(
+  supabase: any,
+  userId: string,
+  whoopClientId: string,
+  whoopClientSecret: string,
+  forceRefresh: boolean = false
+): Promise<string> {
+  const { data: token } = await supabase
+    .from('whoop_tokens')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (!token) {
+    throw new Error('No active Whoop token found');
+  }
+
+  const now = new Date();
+  const expiresAt = new Date(token.expires_at);
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+  
+  // Обновляем если истёк, истечёт через 5 минут, или принудительно
+  if (forceRefresh || fiveMinutesFromNow >= expiresAt) {
+    console.log(`🔄 Refreshing token for user ${userId}`, {
+      forceRefresh,
+      expiresAt: expiresAt.toISOString(),
+      now: now.toISOString()
+    });
+
+    const clientIdForRefresh = token.client_id || whoopClientId;
+
+    const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: token.refresh_token,
+        client_id: clientIdForRefresh,
+        client_secret: whoopClientSecret,
+      }),
+    });
+
+    if (!refreshResponse.ok) {
+      const errorText = await refreshResponse.text();
+      console.error('Token refresh failed:', {
+        status: refreshResponse.status,
+        error: errorText,
+        userId
+      });
+
+      if (errorText.includes('Client ID from this request does not match') || 
+          errorText.includes('invalid_request') ||
+          errorText.includes('invalid_grant')) {
+        
+        console.log('Deactivating token due to credential mismatch');
+        await supabase
+          .from('whoop_tokens')
+          .update({ is_active: false })
+          .eq('user_id', userId);
+        
+        throw new Error('RECONNECT_REQUIRED');
+      }
+
+      throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
+    }
+
+    const refreshData = await refreshResponse.json();
+    const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+
+    await supabase
+      .from('whoop_tokens')
+      .update({
+        access_token: refreshData.access_token,
+        refresh_token: refreshData.refresh_token,
+        expires_at: newExpiresAt.toISOString(),
+        last_sync_date: new Date().toISOString(),
+        client_id: clientIdForRefresh,
+      })
+      .eq('user_id', userId);
+    
+    console.log('✅ Token refreshed successfully for user:', userId, 'new expires_at:', newExpiresAt.toISOString());
+    return refreshData.access_token;
+  }
+
+  return token.access_token;
+}
+
 // Функция синхронизации данных Whoop для пользователя
 async function syncWhoopData(
   supabase: any,
@@ -332,83 +440,8 @@ async function syncWhoopData(
     throw new Error('Invalid Whoop token. Please reconnect your Whoop account.');
   }
 
-  // Проверяем токен и обновляем при необходимости (с запасом 5 минут)
-  const now = new Date();
-  const expiresAt = new Date(token.expires_at);
-  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-  let accessToken = token.access_token;
-
-  if (fiveMinutesFromNow >= expiresAt) {
-    console.log('Refreshing Whoop token');
-
-    // Используем тот client_id, с которым токен был изначально выдан
-    const clientIdForRefresh = token.client_id || whoopClientId;
-    console.log('Whoop token refresh using client_id:', {
-      storedClientId: token.client_id,
-      envClientId: whoopClientId,
-      effectiveClientId: clientIdForRefresh,
-    });
-
-    const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: token.refresh_token,
-        client_id: clientIdForRefresh,
-        client_secret: whoopClientSecret,
-      }),
-    });
-
-    if (!refreshResponse.ok) {
-      const errorText = await refreshResponse.text();
-      console.error('Token refresh failed:', {
-        status: refreshResponse.status,
-        statusText: refreshResponse.statusText,
-        error: errorText,
-        tokenExpiresAt: token.expires_at,
-        now: now.toISOString(),
-        triedClientId: clientIdForRefresh,
-        currentEnvClientId: whoopClientId,
-      });
-
-      // Если client_id не совпадает или invalid_request - нужно переподключиться
-      if (errorText.includes('Client ID from this request does not match') || 
-          errorText.includes('invalid_request') ||
-          errorText.includes('invalid_grant')) {
-        
-        console.log('Deactivating token due to credential mismatch or invalid grant');
-        await supabase
-          .from('whoop_tokens')
-          .update({ is_active: false })
-          .eq('user_id', userId);
-        
-        throw new Error('RECONNECT_REQUIRED');
-      }
-
-      throw new Error(`Failed to refresh token: ${refreshResponse.status} ${errorText}`);
-    } else {
-      const refreshData = await refreshResponse.json();
-      accessToken = refreshData.access_token;
-      const newExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
-
-      await supabase
-        .from('whoop_tokens')
-        .update({
-          access_token: refreshData.access_token,
-          refresh_token: refreshData.refresh_token,
-          expires_at: newExpiresAt.toISOString(),
-          last_sync_date: new Date().toISOString(),
-          // Фиксируем корректный client_id, чтобы будущие рефреши использовали его же
-          client_id: clientIdForRefresh,
-        })
-        .eq('user_id', userId);
-      
-      console.log('✅ Token refreshed successfully for user:', userId);
-    }
-  }
+  // Используем новую функцию refreshTokenIfNeeded
+  const accessToken = await refreshTokenIfNeeded(supabase, userId, whoopClientId, whoopClientSecret);
 
   // Получаем данные за последние 7 дней
   const endDate = new Date();
