@@ -154,20 +154,19 @@ export const AIChatWindow = ({
       const afterAt = text.slice(lastAtIndex + 1);
       const queryMatch = afterAt.match(/^(\S*)/);
       
-      if (queryMatch) {
-        const query = queryMatch[1];
-        setMentionQuery(query);
-        setShowMentionSuggestions(true);
-        
-        // Calculate position for dropdown
-        if (textareaRef.current) {
-          const textarea = textareaRef.current;
-          const rect = textarea.getBoundingClientRect();
-          setMentionPosition({
-            top: rect.bottom + 5,
-            left: rect.left
-          });
-        }
+      // Always show list, even if query is empty
+      const query = queryMatch ? queryMatch[1] : '';
+      setMentionQuery(query);
+      setShowMentionSuggestions(true);
+      
+      // Calculate position for dropdown
+      if (textareaRef.current) {
+        const textarea = textareaRef.current;
+        const rect = textarea.getBoundingClientRect();
+        setMentionPosition({
+          top: rect.bottom + 5,
+          left: rect.left
+        });
       }
     } else {
       setShowMentionSuggestions(false);
