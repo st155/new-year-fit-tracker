@@ -638,10 +638,26 @@ export const AIChatWindow = ({
                                 <span className="opacity-70">Отправка...</span>
                               </>
                             )}
+                            {message.metadata.status === 'sent' && (
+                              <>
+                                <CheckCircle className="h-3 w-3 text-green-600" />
+                                <span className="opacity-70">✓ Отправлено</span>
+                              </>
+                            )}
                             {message.metadata.status === 'failed' && (
                               <>
                                 <XCircle className="h-3 w-3 text-destructive" />
                                 <span className="text-destructive">Не отправлено</span>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs ml-2"
+                                  onClick={() => {
+                                    onSendMessage(message.content, contextMode, [], undefined, selectedClient?.id, autoExecute);
+                                  }}
+                                >
+                                  Повторить
+                                </Button>
                               </>
                             )}
                           </div>

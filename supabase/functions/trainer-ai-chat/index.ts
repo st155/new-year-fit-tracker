@@ -818,7 +818,7 @@ IMPORTANT INSTRUCTIONS:
     }
 
     const aiResponse = await response.json();
-    const assistantMessage = aiResponse.choices[0].message.content || '';
+    let assistantMessage = aiResponse.choices[0].message.content || '';
     const toolCalls = aiResponse.choices[0].message.tool_calls;
 
     console.log('AI response generated');

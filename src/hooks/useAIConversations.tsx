@@ -154,8 +154,23 @@ export const useAIConversations = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      // Remove optimistic message after successful send
-      removeOptimisticMessage(optimisticId);
+      // Mark optimistic message as sent (don't remove yet, wait for realtime)
+      updateOptimisticMessage(optimisticId, {
+        metadata: { isOptimistic: true, status: 'sent' }
+      });
+
+      // Fallback: if realtime doesn't deliver within 30 seconds, force reload
+      setTimeout(() => {
+        setOptimisticMessages(prev => {
+          const stillPending = prev.find(m => m.id === optimisticId);
+          if (stillPending && currentConversation) {
+            console.warn('⚠️ Real-time delay detected, forcing reload');
+            loadMessages(currentConversation.id);
+            return prev.filter(m => m.id !== optimisticId);
+          }
+          return prev;
+        });
+      }, 30000);
 
       // Check for disambiguation needed
       if (data?.needsDisambiguation) {
@@ -282,6 +297,23 @@ export const useAIConversations = (userId: string | undefined) => {
         },
         (payload) => {
           const newMessage = payload.new as AIMessage;
+          
+          // Deduplication: check for matching optimistic message
+          setOptimisticMessages(prev => {
+            const matchingOptimistic = prev.find(
+              m => m.role === newMessage.role && 
+                   m.content === newMessage.content &&
+                   m.conversation_id === newMessage.conversation_id
+            );
+            
+            if (matchingOptimistic) {
+              console.log('✅ Real-time message received, removing optimistic:', matchingOptimistic.id);
+              return prev.filter(m => m.id !== matchingOptimistic.id);
+            }
+            
+            return prev;
+          });
+          
           setMessages(prev => [...prev, newMessage]);
           
           // Show toast for auto-executed system messages
