@@ -481,8 +481,8 @@ async function syncWhoopData(
     throw new Error('No active Whoop connection found. Please reconnect your Whoop account.');
   }
 
-  // Проверяем валидность токена
-  if (!token.access_token || !token.refresh_token) {
+  // Проверяем валидность токена (refresh_token опционален для Whoop v2)
+  if (!token.access_token) {
     await supabase
       .from('whoop_tokens')
       .update({ is_active: false })
