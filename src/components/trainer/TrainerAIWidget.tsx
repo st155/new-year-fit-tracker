@@ -11,9 +11,11 @@ import { useAIConversations } from '@/hooks/useAIConversations';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
 import { ClientSearchAutocomplete } from './ClientSearchAutocomplete';
+import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Client {
   user_id: string;
@@ -58,7 +60,14 @@ export const TrainerAIWidget = ({
   const [selectedClient, setSelectedClient] = useState<Client | null>(initialClient || null);
   const [input, setInput] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Mention autocomplete state
+  const [trainerClients, setTrainerClients] = useState<ClientSuggestion[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   
   const { 
     messages, 
@@ -71,14 +80,69 @@ export const TrainerAIWidget = ({
   } = useAIConversations(user?.id);
   const { pendingActions } = useAIPendingActions(user?.id);
 
-  // Auto-select last conversation on mount (for overview mode only)
+  // Load trainer clients for mentions
   useEffect(() => {
-    if (mode === 'overview' && conversations.length > 0 && !currentConversation) {
-      const lastConversation = conversations[0]; // Already sorted by last_message_at
-      console.log('📌 Auto-selecting last conversation:', lastConversation.id);
-      selectConversation(lastConversation.id);
+    const loadTrainerClients = async () => {
+      if (!user?.id) return;
+      
+      setLoadingClients(true);
+      try {
+        const { data, error } = await supabase
+          .from('trainer_clients')
+          .select(`
+            client_id,
+            profiles!trainer_clients_client_id_fkey (
+              user_id,
+              username,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('trainer_id', user.id)
+          .eq('active', true);
+
+        if (error) throw error;
+
+        const clientsList = data
+          ?.map(item => item.profiles)
+          .filter(Boolean)
+          .map(profile => ({
+            user_id: profile.user_id,
+            username: profile.username || '',
+            full_name: profile.full_name || '',
+            avatar_url: profile.avatar_url
+          })) || [];
+
+        setTrainerClients(clientsList);
+      } catch (error) {
+        console.error('Error loading clients:', error);
+      } finally {
+        setLoadingClients(false);
+      }
+    };
+
+    loadTrainerClients();
+  }, [user?.id]);
+
+  // Auto-select last conversation and reload if needed
+  useEffect(() => {
+    if (mode === 'overview' && conversations.length > 0) {
+      const lastConversation = conversations[0];
+      
+      if (!currentConversation || (currentConversation && messages.length === 0)) {
+        console.log('📌 Loading last conversation:', lastConversation.id);
+        selectConversation(lastConversation.id);
+      }
     }
-  }, [conversations, currentConversation, mode]);
+  }, [conversations, currentConversation, messages.length, mode]);
+
+  // Force reload messages when pending actions appear but no messages
+  useEffect(() => {
+    if (pendingActions.length > 0 && currentConversation && messages.length === 0) {
+      console.log('⚠️ Pending actions exist but no messages - reloading');
+      selectConversation(currentConversation.id);
+    }
+  }, [pendingActions.length, currentConversation?.id, messages.length]);
 
   const recentMessages = mode === 'overview' ? messages.slice(-3) : messages.slice(-5);
 
@@ -104,8 +168,60 @@ export const TrainerAIWidget = ({
 
   const sendQuickCommand = (command: string) => {
     setInput(command);
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
     toast.info('Quick command added to input');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    
+    // Detect @ mention
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.slice(lastAtIndex + 1);
+      if (!textAfterAt.includes(' ')) {
+        setShowMentionSuggestions(true);
+        setMentionQuery(textAfterAt);
+        
+        // Calculate position
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const rect = textarea.getBoundingClientRect();
+          setMentionPosition({
+            top: rect.bottom + 5,
+            left: rect.left
+          });
+        }
+      } else {
+        setShowMentionSuggestions(false);
+      }
+    } else {
+      setShowMentionSuggestions(false);
+    }
+  };
+
+  const handleSelectMention = (client: ClientSuggestion) => {
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = input.slice(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const newInput = input.slice(0, lastAtIndex) + '@' + client.full_name + ' ' + input.slice(cursorPos);
+      setInput(newInput);
+      setSelectedClient({
+        user_id: client.user_id,
+        username: client.username,
+        full_name: client.full_name,
+        avatar_url: client.avatar_url
+      });
+    }
+    
+    setShowMentionSuggestions(false);
+    textareaRef.current?.focus();
   };
 
   const handleExpand = () => {
@@ -308,7 +424,7 @@ export const TrainerAIWidget = ({
                         className="bg-purple-600 hover:bg-purple-700"
                         onClick={() => {
                           selectConversation(currentConversation.id);
-                          inputRef.current?.focus();
+                          textareaRef.current?.focus();
                         }}
                       >
                         Продолжить разговор
@@ -318,7 +434,7 @@ export const TrainerAIWidget = ({
                         size="sm"
                         onClick={() => {
                           startNewConversation();
-                          inputRef.current?.focus();
+                          textareaRef.current?.focus();
                           toast.info('Начат новый разговор');
                         }}
                       >
@@ -386,21 +502,34 @@ export const TrainerAIWidget = ({
 
           {/* Input Area */}
           <CardContent className="p-4 border-t border-slate-800 space-y-2">
-            <Textarea
-              ref={inputRef}
-              data-ai-input
-              placeholder="Спросите AI..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              className="min-h-[60px] resize-none bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
-              disabled={sending}
-            />
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                data-ai-input
+                placeholder="Спросите AI... (используйте @ для упоминания клиента)"
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                className="min-h-[60px] resize-none bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                disabled={sending}
+              />
+              
+              {showMentionSuggestions && (
+                <MentionAutocomplete
+                  clients={trainerClients}
+                  query={mentionQuery}
+                  position={mentionPosition}
+                  onSelect={handleSelectMention}
+                  onClose={() => setShowMentionSuggestions(false)}
+                />
+              )}
+            </div>
+            
             <div className="flex justify-between items-center">
               <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/30">
                 Pending: {pendingActions.length}
