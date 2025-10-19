@@ -42,6 +42,32 @@ export function WhoopIntegration() {
     }
   }, [user]);
 
+  // Realtime subscription for token updates
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase
+      .channel(`whoop_tokens:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'whoop_tokens',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 Whoop token updated via realtime:', payload);
+          checkConnection();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const checkConnection = async () => {
     if (!user) return;
     
@@ -156,13 +182,31 @@ export function WhoopIntegration() {
       
     } catch (error: any) {
       console.error('Sync error:', error);
-      toast({
-        title: 'Ошибка синхронизации',
-        description: error.message,
-        variant: 'destructive',
-      });
       
-      // Перепроверяем подключение при любой ошибке
+      // Check if reconnect is needed
+      const needsReconnect = error.message?.includes('reconnect') || 
+                            error.message?.includes('credentials have changed') ||
+                            error.status === 401;
+      
+      if (needsReconnect) {
+        // Update connection status
+        await checkConnection();
+        
+        toast({
+          title: 'Требуется переподключение',
+          description: 'Whoop credentials изменились. Нажмите "Переподключить Whoop" для повторной авторизации.',
+          variant: 'destructive',
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: 'Ошибка синхронизации',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+      
+      // Always recheck connection on any error
       await checkConnection();
     } finally {
       setSyncing(false);
@@ -211,8 +255,25 @@ export function WhoopIntegration() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Требуется переподключение</AlertTitle>
-          <AlertDescription>
-            Whoop credentials изменились или токен истёк. Пожалуйста, переподключите аккаунт для продолжения синхронизации.
+          <AlertDescription className="space-y-3">
+            <p>
+              Whoop credentials изменились или токен истёк. Пожалуйста, переподключите аккаунт для продолжения синхронизации.
+            </p>
+            <Button 
+              onClick={connectWhoop}
+              disabled={connecting}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Подключение...
+                </>
+              ) : (
+                'Переподключить Whoop'
+              )}
+            </Button>
           </AlertDescription>
         </Alert>
       )}

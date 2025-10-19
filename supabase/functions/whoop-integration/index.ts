@@ -66,7 +66,21 @@ serve(async (req) => {
           results.push({ user_id: token.user_id, success: true, tokenRefreshed: willExpireSoon });
         } catch (error: any) {
           console.error(`Failed to sync user ${token.user_id}:`, error);
-          results.push({ user_id: token.user_id, success: false, error: error.message });
+          
+          // If reconnect required, deactivate token
+          if (error.message === 'RECONNECT_REQUIRED') {
+            await supabase
+              .from('whoop_tokens')
+              .update({ is_active: false })
+              .eq('user_id', token.user_id);
+          }
+          
+          results.push({ 
+            user_id: token.user_id, 
+            success: false, 
+            error: error.message,
+            needsReconnect: error.message === 'RECONNECT_REQUIRED'
+          });
         }
       }
 
@@ -212,12 +226,25 @@ serve(async (req) => {
 
     // Синхронизировать данные
     if (action === 'sync' || action === 'sync-data') {
-      await syncWhoopData(supabase, user.id, whoopClientId, whoopClientSecret);
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        await syncWhoopData(supabase, user.id, whoopClientId, whoopClientSecret);
+        
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: any) {
+        if (error.message === 'RECONNECT_REQUIRED') {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Whoop credentials have changed. Please reconnect your account.',
+              needsReconnect: true 
+            }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        throw error;
+      }
     }
 
     // Отключить Whoop
