@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Maximize2, Sparkles, X, Minimize2, Zap, TrendingUp, Target, BarChart3 } from 'lucide-react';
+import { Maximize2, Sparkles, X, Minimize2, Zap, TrendingUp, Target, BarChart3, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAIConversations } from '@/hooks/useAIConversations';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
@@ -46,7 +46,91 @@ interface TrainerAIWidgetProps {
   clients?: any[];
 }
 
-export const TrainerAIWidget = ({ 
+// AutoExecutionReport component for displaying execution results
+const AutoExecutionReport = ({ message }: { message: any }) => {
+  const [expanded, setExpanded] = useState(false);
+  const results = message.metadata?.results || [];
+  const successCount = results.filter((r: any) => r.success).length;
+  const failCount = results.filter((r: any) => !r.success).length;
+  const totalCount = results.length;
+
+  return (
+    <div className="flex justify-center my-4 animate-fade-in">
+      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800 p-4 max-w-2xl w-full shadow-lg">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="bg-green-600 dark:bg-green-500 p-2 rounded-lg">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-semibold text-green-900 dark:text-green-100">
+                  Автоматически выполнено
+                </span>
+                {successCount === totalCount && totalCount > 0 ? (
+                  <Badge variant="secondary" className="bg-green-600 text-white text-xs">
+                    {successCount}/{totalCount} успешно
+                  </Badge>
+                ) : totalCount > 0 ? (
+                  <Badge variant="destructive" className="text-xs">
+                    {successCount}/{totalCount} успешно
+                  </Badge>
+                ) : null}
+              </div>
+              
+              <div className="text-xs text-green-700 dark:text-green-300 whitespace-pre-line mb-2">
+                {message.content}
+              </div>
+
+              {results.length > 0 && (
+                <>
+                  <div className="space-y-1 mt-3">
+                    {results.slice(0, expanded ? undefined : 3).map((result: any, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs">
+                        {result.success ? (
+                          <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                        )}
+                        <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
+                          {result.message || result.action_type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {results.length > 3 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpanded(!expanded)}
+                      className="mt-2 h-7 text-xs text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100"
+                    >
+                      {expanded ? (
+                        <>
+                          <ChevronUp className="h-3 w-3 mr-1" />
+                          Свернуть
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3 w-3 mr-1" />
+                          Показать все ({results.length})
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export const TrainerAIWidget = ({
   selectedClient: initialClient, 
   compact = false, 
   embedded = false,
@@ -477,25 +561,33 @@ export const TrainerAIWidget = ({
                   </div>
                 )}
                 
-                {recentMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+                {recentMessages.map((msg, idx) => {
+                  // Проверяем, является ли сообщение отчётом о выполнении
+                  if (msg.role === 'assistant' && msg.metadata?.status === 'executed') {
+                    return <AutoExecutionReport key={idx} message={msg} />;
+                  }
+
+                  // Обычное сообщение
+                  return (
                     <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.role === 'user'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-slate-800 text-slate-200'
-                      }`}
+                      key={idx}
+                      className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ru })}
-                      </p>
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          msg.role === 'user'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-800 text-slate-200'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ru })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
