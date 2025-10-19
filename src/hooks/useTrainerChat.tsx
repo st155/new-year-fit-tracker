@@ -38,7 +38,6 @@ export const useTrainerChat = (userId: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Загрузка списка диалогов
   const loadConversations = async () => {
     if (!userId) return;
 
@@ -59,40 +58,55 @@ export const useTrainerChat = (userId: string | undefined) => {
 
       if (clientsError) throw clientsError;
 
-      // Для каждого клиента получаем последнее сообщение и количество непрочитанных
-      const conversationsData = await Promise.all(
-        clients.map(async (client: any) => {
-          const clientId = client.profiles.user_id;
+      const clientIds = clients.map((c: any) => c.profiles.user_id);
 
-          // Последнее сообщение
-          const { data: lastMsg } = await supabase
-            .from('trainer_client_messages')
-            .select('message_text, created_at')
-            .or(`sender_id.eq.${clientId},recipient_id.eq.${clientId}`)
-            .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+      // Оптимизированный запрос: получаем все последние сообщения одним запросом
+      const { data: allMessages } = await supabase
+        .from('trainer_client_messages')
+        .select('sender_id, recipient_id, message_text, created_at')
+        .or(`sender_id.in.(${clientIds.join(',')}),recipient_id.in.(${clientIds.join(',')})`)
+        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
 
-          // Непрочитанные сообщения
-          const { count } = await supabase
-            .from('trainer_client_messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('sender_id', clientId)
-            .eq('recipient_id', userId)
-            .eq('is_read', false);
+      // Получаем количество непрочитанных одним запросом
+      const { data: unreadCounts } = await supabase
+        .from('trainer_client_messages')
+        .select('sender_id')
+        .in('sender_id', clientIds)
+        .eq('recipient_id', userId)
+        .eq('is_read', false);
 
-          return {
-            user_id: clientId,
-            username: client.profiles.username,
-            full_name: client.profiles.full_name,
-            avatar_url: client.profiles.avatar_url,
-            last_message: lastMsg?.message_text || 'Нет сообщений',
-            last_message_time: lastMsg?.created_at || '',
-            unread_count: count || 0
-          };
-        })
-      );
+      // Создаем Map для быстрого доступа
+      const unreadMap = new Map<string, number>();
+      unreadCounts?.forEach(msg => {
+        unreadMap.set(msg.sender_id, (unreadMap.get(msg.sender_id) || 0) + 1);
+      });
+
+      const lastMessagesMap = new Map<string, { text: string; time: string }>();
+      allMessages?.forEach(msg => {
+        const clientId = msg.sender_id === userId ? msg.recipient_id : msg.sender_id;
+        if (!lastMessagesMap.has(clientId)) {
+          lastMessagesMap.set(clientId, {
+            text: msg.message_text,
+            time: msg.created_at
+          });
+        }
+      });
+
+      const conversationsData = clients.map((client: any) => {
+        const clientId = client.profiles.user_id;
+        const lastMsg = lastMessagesMap.get(clientId);
+
+        return {
+          user_id: clientId,
+          username: client.profiles.username,
+          full_name: client.profiles.full_name,
+          avatar_url: client.profiles.avatar_url,
+          last_message: lastMsg?.text || 'Нет сообщений',
+          last_message_time: lastMsg?.time || '',
+          unread_count: unreadMap.get(clientId) || 0
+        };
+      });
 
       setConversations(conversationsData.sort((a, b) => 
         new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime()

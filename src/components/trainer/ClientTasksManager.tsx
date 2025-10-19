@@ -10,10 +10,14 @@ import { Plus, ListTodo } from 'lucide-react';
 
 export const ClientTasksManager = () => {
   const [tasks, setTasks] = useState<any[]>([]);
+  const [displayedTasks, setDisplayedTasks] = useState<any[]>([]);
+  const [tasksPage, setTasksPage] = useState(1);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const { toast } = useToast();
+
+  const TASKS_PER_PAGE = 10;
 
   const loadTasks = async () => {
     try {
@@ -78,9 +82,21 @@ export const ClientTasksManager = () => {
     loadClients();
   }, []);
 
+  // Обновляем отображаемые задачи при изменении страницы
+  useEffect(() => {
+    const start = 0;
+    const end = tasksPage * TASKS_PER_PAGE;
+    setDisplayedTasks(tasks.slice(start, end));
+  }, [tasks, tasksPage]);
+
   const filterTasks = (status: string) => {
-    if (status === 'all') return tasks;
-    return tasks.filter(t => t.status === status);
+    if (status === 'all') return displayedTasks;
+    return displayedTasks.filter(t => t.status === status);
+  };
+
+  const getTotalFilteredTasks = (status: string) => {
+    if (status === 'all') return tasks.length;
+    return tasks.filter(t => t.status === status).length;
   };
 
   if (loading) {
@@ -98,19 +114,19 @@ export const ClientTasksManager = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="all" onValueChange={() => setTasksPage(1)}>
           <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-4 bg-muted/50 p-1 gap-1">
             <TabsTrigger value="all" className="whitespace-nowrap flex-shrink-0">
-              Все ({tasks.length})
+              Все ({getTotalFilteredTasks('all')})
             </TabsTrigger>
             <TabsTrigger value="pending" className="whitespace-nowrap flex-shrink-0">
-              В ожидании ({filterTasks('pending').length})
+              В ожидании ({getTotalFilteredTasks('pending')})
             </TabsTrigger>
             <TabsTrigger value="in_progress" className="whitespace-nowrap flex-shrink-0">
-              В процессе ({filterTasks('in_progress').length})
+              В процессе ({getTotalFilteredTasks('in_progress')})
             </TabsTrigger>
             <TabsTrigger value="completed" className="whitespace-nowrap flex-shrink-0">
-              Завершено ({filterTasks('completed').length})
+              Завершено ({getTotalFilteredTasks('completed')})
             </TabsTrigger>
           </TabsList>
 
@@ -128,9 +144,20 @@ export const ClientTasksManager = () => {
                 </Button>
               </Card>
             ) : (
-              tasks.map(task => (
-                <TaskCard key={task.id} task={task} onUpdate={loadTasks} />
-              ))
+              <>
+                {filterTasks('all').map(task => (
+                  <TaskCard key={task.id} task={task} onUpdate={loadTasks} />
+                ))}
+                {displayedTasks.length < tasks.length && (
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={() => setTasksPage(prev => prev + 1)}
+                  >
+                    Загрузить еще ({tasks.length - displayedTasks.length} задач)
+                  </Button>
+                )}
+              </>
             )}
           </TabsContent>
 
