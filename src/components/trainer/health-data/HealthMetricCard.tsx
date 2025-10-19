@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { formatSourceName } from "@/hooks/useClientDetailData";
+import { format, parseISO } from "date-fns";
+import { ru } from "date-fns/locale";
 
 interface HealthMetricCardProps {
   title: string;
@@ -47,18 +49,24 @@ export function HealthMetricCard({ title, icon, value, unit, source, data, trend
             <div className="h-[60px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload[0]) {
-                        return (
-                          <div className="bg-background border rounded px-2 py-1 text-xs">
-                            {payload[0].value} {unit}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
+            <Tooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload[0]) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-background border rounded px-2 py-1 text-xs shadow-lg">
+                      <div className="font-medium text-primary">
+                        {format(parseISO(data.date), 'd MMM yyyy', { locale: ru })}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {payload[0].value} {unit}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
                   <Line 
                     type="monotone" 
                     dataKey="value" 

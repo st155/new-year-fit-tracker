@@ -542,11 +542,26 @@ export function useClientDetailData(clientUserId: string) {
           .limit(20)
       ]);
 
-      if (goalsResult.error) throw goalsResult.error;
-      if (measurementsResult.error) throw measurementsResult.error;
-      if (unifiedMeasurementsResult.error) throw unifiedMeasurementsResult.error;
-      if (healthSummaryResult.error) throw healthSummaryResult.error;
-      if (aiLogsResult.error) throw aiLogsResult.error;
+      if (goalsResult.error) {
+        console.error('Error loading goals:', goalsResult.error);
+        throw goalsResult.error;
+      }
+      if (measurementsResult.error) {
+        console.error('Error loading measurements:', measurementsResult.error);
+        throw measurementsResult.error;
+      }
+      if (unifiedMeasurementsResult.error) {
+        console.error('Error loading unified measurements:', unifiedMeasurementsResult.error);
+      }
+      if (healthSummaryResult.error) {
+        console.error('Error loading health summary:', healthSummaryResult.error);
+      }
+      if (unifiedMetricsResult.error) {
+        console.error('Error loading unified metrics:', unifiedMetricsResult.error);
+      }
+      if (aiLogsResult.error) {
+        console.error('Error loading AI logs:', aiLogsResult.error);
+      }
 
       const goalsWithProgress = (goalsResult.data || []).map(goal => {
         const latestMeasurement = goal.measurements?.[0];
@@ -595,9 +610,15 @@ export function useClientDetailData(clientUserId: string) {
       const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
         .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
 
+      const unifiedMetrics = unifiedMetricsResult.data || [];
+      
+      if (unifiedMetrics.length === 0 && !unifiedMetricsResult.error) {
+        console.warn('No unified metrics found for client:', clientUserId);
+      }
+
       const mergedHealthData = mergeHealthData(
         healthSummaryResult.data || [], 
-        unifiedMetricsResult.data || []
+        unifiedMetrics
       );
 
       const whoopData = calculateWhoopSummary(unifiedMetricsResult.data || []);
