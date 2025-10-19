@@ -173,7 +173,12 @@ serve(async (req) => {
       }
 
       const tokenData = await tokenResponse.json();
-      console.log('Whoop token received');
+      console.log('Whoop token received:', {
+        has_access_token: !!tokenData.access_token,
+        has_refresh_token: !!tokenData.refresh_token,
+        expires_in: tokenData.expires_in,
+        token_type: tokenData.token_type
+      });
 
       // Получаем информацию о пользователе Whoop (v2 API)
       const userResponse = await fetch('https://api.prod.whoop.com/developer/v2/user/profile/basic', {
@@ -192,7 +197,8 @@ serve(async (req) => {
       const userData = await userResponse.json();
       console.log('Whoop user profile:', userData);
 
-      // Сохраняем токен в базу
+      // Whoop v2 API возвращает долгоживущие токены (срок действия ~6 месяцев)
+      // refresh_token может отсутствовать - это нормально для Whoop
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
       const { error: dbError } = await supabase
@@ -201,7 +207,7 @@ serve(async (req) => {
           user_id: user.id,
           whoop_user_id: userData.user_id.toString(),
           access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
+          refresh_token: tokenData.refresh_token || null, // может быть null
           expires_at: expiresAt.toISOString(),
           scope: tokenData.scope,
           client_id: whoopClientId,
@@ -368,6 +374,24 @@ async function refreshTokenIfNeeded(
   const expiresAt = new Date(token.expires_at);
   const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
   
+  // Whoop v2 API: refresh_token может быть null для долгоживущих токенов
+  // В этом случае используем существующий access_token пока не истёк
+  if (!token.refresh_token) {
+    // Если токен истёк и нет refresh_token - требуется переподключение
+    if (now >= expiresAt) {
+      console.log(`❌ Token expired and no refresh_token available for user ${userId}`);
+      await supabase
+        .from('whoop_tokens')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+      throw new Error('RECONNECT_REQUIRED');
+    }
+    
+    // Токен ещё действителен, используем его
+    console.log(`✅ Using existing long-lived token for user ${userId}, expires at ${expiresAt.toISOString()}`);
+    return token.access_token;
+  }
+  
   // Обновляем если истёк, истечёт через 5 минут, или принудительно
   if (forceRefresh || fiveMinutesFromNow >= expiresAt) {
     console.log(`🔄 Refreshing token for user ${userId}`, {
@@ -422,7 +446,7 @@ async function refreshTokenIfNeeded(
       .from('whoop_tokens')
       .update({
         access_token: refreshData.access_token,
-        refresh_token: refreshData.refresh_token,
+        refresh_token: refreshData.refresh_token || token.refresh_token,
         expires_at: newExpiresAt.toISOString(),
         last_sync_date: new Date().toISOString(),
         client_id: clientIdForRefresh,
