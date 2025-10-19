@@ -469,10 +469,11 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
                 <div className="flex items-center gap-4">
                   <div className="text-right min-w-[120px]">
                     <div className="flex items-center gap-2 mb-1">
-                      <Progress 
-                        value={client.progress_percentage} 
-                        className="w-24 h-2 bg-slate-800"
-                      />
+                            <Progress 
+                              value={client.progress_percentage} 
+                              autoColor={true}
+                              className="w-24 h-2 bg-slate-800"
+                            />
                       <span className="text-sm font-bold text-white">{client.progress_percentage}%</span>
                     </div>
                     <p className="text-xs text-slate-500">
