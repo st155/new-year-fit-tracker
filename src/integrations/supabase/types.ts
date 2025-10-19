@@ -2595,6 +2595,24 @@ export type Database = {
         }
         Returns: string
       }
+      get_client_unified_metrics_secure: {
+        Args: {
+          p_end_date?: string
+          p_start_date?: string
+          p_unified_metric_name?: string
+          p_user_id: string
+        }
+        Returns: {
+          aggregated_value: number
+          measurement_date: string
+          source_count: number
+          source_values: Json
+          sources: string[]
+          unified_category: string
+          unified_metric_name: string
+          unified_unit: string
+        }[]
+      }
       get_unified_metrics: {
         Args: {
           p_end_date?: string

@@ -610,10 +610,33 @@ export function useClientDetailData(clientUserId: string) {
       const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
         .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
 
-      const unifiedMetrics = unifiedMetricsResult.data || [];
+      let unifiedMetrics = unifiedMetricsResult.data || [];
       
-      if (unifiedMetrics.length === 0 && !unifiedMetricsResult.error) {
-        console.warn('No unified metrics found for client:', clientUserId);
+      // If no data from view, try secure RPC as backup
+      if (unifiedMetrics.length === 0 || unifiedMetricsResult.error) {
+        console.log('Using backup RPC to fetch unified metrics for:', clientUserId);
+        const rpcResult = await supabase.rpc('get_client_unified_metrics_secure', {
+          p_user_id: clientUserId,
+          p_start_date: thirtyDaysAgoDate,
+          p_end_date: null,
+          p_unified_metric_name: null
+        });
+
+        if (rpcResult.error) {
+          console.error('Backup RPC also failed:', rpcResult.error);
+        } else if (rpcResult.data && rpcResult.data.length > 0) {
+          console.log('Successfully loaded metrics via backup RPC:', rpcResult.data.length);
+          // Transform RPC result to match expected format
+          unifiedMetrics = rpcResult.data.map((r: any) => ({
+            user_id: clientUserId,
+            measurement_date: r.measurement_date,
+            metric_name: r.unified_metric_name,
+            value: r.aggregated_value,
+            unit: r.unified_unit,
+            source: (r.sources && r.sources[0]) || 'unknown',
+            priority: 1
+          }));
+        }
       }
 
       const mergedHealthData = mergeHealthData(
