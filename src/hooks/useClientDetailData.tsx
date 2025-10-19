@@ -27,6 +27,8 @@ interface HealthData {
   heart_rate_avg?: number;
   active_calories?: number;
   sleep_hours?: number;
+  recovery_score?: number;
+  day_strain?: number;
 }
 
 export function useClientDetailData(clientUserId: string) {
@@ -63,7 +65,9 @@ export function useClientDetailData(clientUserId: string) {
         weight: undefined,
         heart_rate_avg: undefined,
         active_calories: undefined,
-        sleep_hours: undefined
+        sleep_hours: undefined,
+        recovery_score: undefined,
+        day_strain: undefined
       };
 
       switch (metric.metric_name) {
@@ -80,6 +84,18 @@ export function useClientDetailData(clientUserId: string) {
           if (!existing.weight) {
             existing.weight = metric.value;
           }
+          break;
+        case 'Sleep Duration':
+          existing.sleep_hours = metric.value;
+          break;
+        case 'Recovery Score':
+          existing.recovery_score = metric.value;
+          break;
+        case 'Day Strain':
+          existing.day_strain = metric.value;
+          break;
+        case 'Workout Calories':
+          existing.active_calories = metric.value;
           break;
       }
 
@@ -118,7 +134,7 @@ export function useClientDetailData(clientUserId: string) {
             target_value,
             target_unit,
             goal_type,
-            measurements!inner(
+            measurements(
               value,
               measurement_date
             )
@@ -170,7 +186,7 @@ export function useClientDetailData(clientUserId: string) {
           .from('client_unified_metrics')
           .select('*')
           .eq('user_id', clientUserId)
-          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight'])
+          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories'])
           .gte('measurement_date', thirtyDaysAgoDate)
           .order('measurement_date', { ascending: true }),
 
@@ -192,7 +208,16 @@ export function useClientDetailData(clientUserId: string) {
       // Обрабатываем цели
       const goalsWithProgress = (goalsResult.data || []).map(goal => {
         const latestMeasurement = goal.measurements?.[0];
-        const currentValue = latestMeasurement?.value || 0;
+        let currentValue = latestMeasurement?.value || 0;
+        
+        // If no manual measurements, try to find from unified metrics
+        if (!currentValue && unifiedMeasurementsResult.data) {
+          const matchingMetric = unifiedMeasurementsResult.data.find(m => 
+            m.metric_name === goal.goal_name || m.metric_name === goal.goal_type
+          );
+          currentValue = matchingMetric?.value || 0;
+        }
+        
         const progressPercentage = goal.target_value 
           ? Math.min(100, Math.round((currentValue / goal.target_value) * 100))
           : 0;

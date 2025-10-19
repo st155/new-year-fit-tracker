@@ -66,6 +66,8 @@ interface HealthData {
   heart_rate_avg?: number;
   active_calories?: number;
   sleep_hours?: number;
+  recovery_score?: number;
+  day_strain?: number;
 }
 
 interface ClientDetailViewProps {
@@ -419,6 +421,66 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 )}
               </CardContent>
             </Card>
+
+            {/* Recovery Score */}
+            {healthData.filter(d => d.recovery_score).length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-green-500" />
+                    <CardTitle className="text-lg">Recovery Score</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={150}>
+                    <LineChart data={healthData.filter(d => d.recovery_score)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                      />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                        formatter={(value: any) => [value, '%']}
+                      />
+                      <Line type="monotone" dataKey="recovery_score" stroke="#22c55e" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Day Strain */}
+            {healthData.filter(d => d.day_strain).length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-orange-500" />
+                    <CardTitle className="text-lg">Day Strain</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={150}>
+                    <LineChart data={healthData.filter(d => d.day_strain)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                      />
+                      <YAxis domain={[0, 21]} tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                        formatter={(value: any) => [value, 'Strain']}
+                      />
+                      <Line type="monotone" dataKey="day_strain" stroke="#f97316" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 
