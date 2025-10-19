@@ -33,7 +33,7 @@ import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
-import { useClientDetailData } from "@/hooks/useClientDetailData";
+import { useClientDetailData, formatSourceName } from "@/hooks/useClientDetailData";
 
 interface Client {
   id: string;
@@ -545,7 +545,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <Activity className="h-5 w-5 text-blue-500" />
                           <CardTitle className="text-lg">Шаги</CardTitle>
                         </div>
-                        <Badge variant="outline" className="text-xs">Apple Health</Badge>
+                        {healthData.find(d => d.steps)?.steps_source && (
+                          <Badge variant="outline" className="text-xs">
+                            {formatSourceName(healthData.find(d => d.steps)?.steps_source || '')}
+                          </Badge>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -578,7 +582,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <Weight className="h-5 w-5 text-green-500" />
                           <CardTitle className="text-lg">Вес</CardTitle>
                         </div>
-                        <Badge variant="outline" className="text-xs">Withings</Badge>
+                        {healthData.find(d => d.weight)?.weight_source && (
+                          <Badge variant="outline" className="text-xs">
+                            {formatSourceName(healthData.find(d => d.weight)?.weight_source || '')}
+                          </Badge>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -611,7 +619,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <Heart className="h-5 w-5 text-red-500" />
                           <CardTitle className="text-lg">Пульс</CardTitle>
                         </div>
-                        <Badge variant="outline" className="text-xs">Whoop</Badge>
+                        {healthData.find(d => d.heart_rate_avg)?.heart_rate_avg_source && (
+                          <Badge variant="outline" className="text-xs">
+                            {formatSourceName(healthData.find(d => d.heart_rate_avg)?.heart_rate_avg_source || '')}
+                          </Badge>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -640,9 +652,16 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               {healthData.filter(d => d.recovery_score).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-green-500" />
-                      <CardTitle className="text-lg">Recovery Score</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-green-500" />
+                        <CardTitle className="text-lg">Recovery Score</CardTitle>
+                      </div>
+                      {healthData.find(d => d.recovery_score)?.recovery_score_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.recovery_score)?.recovery_score_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -675,7 +694,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <Activity className="h-5 w-5 text-orange-500" />
                         <CardTitle className="text-lg">Day Strain</CardTitle>
                       </div>
-                      <Badge variant="outline" className="text-xs">Whoop</Badge>
+                      {healthData.find(d => d.day_strain)?.day_strain_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.day_strain)?.day_strain_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -699,7 +722,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </Card>
               )}
 
-              {/* Sleep Efficiency (Oura) */}
+              {/* Sleep Efficiency (Oura/Garmin/Whoop) */}
               {healthData.filter(d => d.sleep_efficiency).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
@@ -708,7 +731,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <Moon className="h-5 w-5 text-indigo-500" />
                         <CardTitle className="text-lg">Эффективность сна</CardTitle>
                       </div>
-                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                      {healthData.find(d => d.sleep_efficiency)?.sleep_efficiency_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.sleep_efficiency)?.sleep_efficiency_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -732,7 +759,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </Card>
               )}
 
-              {/* Sleep Stages (Oura) */}
+              {/* Sleep Stages (Oura/Garmin) */}
               {healthData.filter(d => d.deep_sleep_duration || d.light_sleep_duration || d.rem_sleep_duration).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
@@ -741,7 +768,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <Moon className="h-5 w-5 text-purple-500" />
                         <CardTitle className="text-lg">Фазы сна</CardTitle>
                       </div>
-                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                      {healthData.find(d => d.deep_sleep_duration || d.light_sleep_duration || d.rem_sleep_duration)?.deep_sleep_duration_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.deep_sleep_duration)?.deep_sleep_duration_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -768,7 +799,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </Card>
               )}
 
-              {/* HRV (Oura) */}
+              {/* HRV (Oura/Garmin) */}
               {healthData.filter(d => d.hrv).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
@@ -777,7 +808,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <Heart className="h-5 w-5 text-pink-500" />
                         <CardTitle className="text-lg">HRV (вариабельность пульса)</CardTitle>
                       </div>
-                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                      {healthData.find(d => d.hrv)?.hrv_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.hrv)?.hrv_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -801,7 +836,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </Card>
               )}
 
-              {/* Respiratory Rate (Oura) */}
+              {/* Respiratory Rate (Oura/Garmin) */}
               {healthData.filter(d => d.respiratory_rate).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
@@ -810,7 +845,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <Wind className="h-5 w-5 text-cyan-500" />
                         <CardTitle className="text-lg">Частота дыхания</CardTitle>
                       </div>
-                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                      {healthData.find(d => d.respiratory_rate)?.respiratory_rate_source && (
+                        <Badge variant="outline" className="text-xs">
+                          {formatSourceName(healthData.find(d => d.respiratory_rate)?.respiratory_rate_source || '')}
+                        </Badge>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>

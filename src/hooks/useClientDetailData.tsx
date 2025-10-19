@@ -23,19 +23,32 @@ interface Measurement {
 interface HealthData {
   date: string;
   steps?: number;
+  steps_source?: string;
   weight?: number;
+  weight_source?: string;
   heart_rate_avg?: number;
+  heart_rate_avg_source?: string;
   active_calories?: number;
+  active_calories_source?: string;
   sleep_hours?: number;
+  sleep_hours_source?: string;
   recovery_score?: number;
+  recovery_score_source?: string;
   day_strain?: number;
-  // Oura-specific metrics
+  day_strain_source?: string;
+  // Oura/Garmin-specific metrics
   sleep_efficiency?: number;
+  sleep_efficiency_source?: string;
   deep_sleep_duration?: number;
+  deep_sleep_duration_source?: string;
   light_sleep_duration?: number;
+  light_sleep_duration_source?: string;
   rem_sleep_duration?: number;
+  rem_sleep_duration_source?: string;
   hrv?: number;
+  hrv_source?: string;
   respiratory_rate?: number;
+  respiratory_rate_source?: string;
 }
 
 interface WhoopSummary {
@@ -105,65 +118,92 @@ export function useClientDetailData(clientUserId: string) {
       const existing = dataMap.get(date) || {
         date,
         steps: undefined,
+        steps_source: undefined,
         weight: undefined,
+        weight_source: undefined,
         heart_rate_avg: undefined,
+        heart_rate_avg_source: undefined,
         active_calories: undefined,
+        active_calories_source: undefined,
         sleep_hours: undefined,
+        sleep_hours_source: undefined,
         recovery_score: undefined,
+        recovery_score_source: undefined,
         day_strain: undefined,
+        day_strain_source: undefined,
         sleep_efficiency: undefined,
+        sleep_efficiency_source: undefined,
         deep_sleep_duration: undefined,
+        deep_sleep_duration_source: undefined,
         light_sleep_duration: undefined,
+        light_sleep_duration_source: undefined,
         rem_sleep_duration: undefined,
+        rem_sleep_duration_source: undefined,
         hrv: undefined,
-        respiratory_rate: undefined
+        hrv_source: undefined,
+        respiratory_rate: undefined,
+        respiratory_rate_source: undefined
       };
 
       switch (metric.metric_name) {
         case 'Steps':
           existing.steps = metric.value;
+          existing.steps_source = metric.source;
           break;
         case 'Average Heart Rate':
         case 'Resting Heart Rate':
           if (!existing.heart_rate_avg) {
             existing.heart_rate_avg = metric.value;
+            existing.heart_rate_avg_source = metric.source;
           }
           break;
         case 'Weight':
           if (!existing.weight) {
             existing.weight = metric.value;
+            existing.weight_source = metric.source;
           }
           break;
         case 'Sleep Duration':
           existing.sleep_hours = metric.value;
+          existing.sleep_hours_source = metric.source;
           break;
         case 'Recovery Score':
           existing.recovery_score = metric.value;
+          existing.recovery_score_source = metric.source;
           break;
         case 'Day Strain':
           existing.day_strain = metric.value;
+          existing.day_strain_source = metric.source;
           break;
         case 'Workout Calories':
+        case 'Active Calories':
           existing.active_calories = metric.value;
+          existing.active_calories_source = metric.source;
           break;
-        // Oura-specific metrics
+        // Oura/Garmin-specific metrics
         case 'Sleep Efficiency':
           existing.sleep_efficiency = metric.value;
+          existing.sleep_efficiency_source = metric.source;
           break;
         case 'Deep Sleep Duration':
           existing.deep_sleep_duration = metric.value;
+          existing.deep_sleep_duration_source = metric.source;
           break;
         case 'Light Sleep Duration':
           existing.light_sleep_duration = metric.value;
+          existing.light_sleep_duration_source = metric.source;
           break;
         case 'REM Sleep Duration':
           existing.rem_sleep_duration = metric.value;
+          existing.rem_sleep_duration_source = metric.source;
           break;
         case 'Sleep HRV RMSSD':
           existing.hrv = metric.value;
+          existing.hrv_source = metric.source;
           break;
         case 'Respiratory Rate':
           existing.respiratory_rate = metric.value;
+          existing.respiratory_rate_source = metric.source;
           break;
       }
 
@@ -175,18 +215,31 @@ export function useClientDetailData(clientUserId: string) {
       const existing = dataMap.get(item.date) || {
         date: item.date,
         steps: undefined,
+        steps_source: undefined,
         weight: undefined,
+        weight_source: undefined,
         heart_rate_avg: undefined,
+        heart_rate_avg_source: undefined,
         active_calories: undefined,
+        active_calories_source: undefined,
         sleep_hours: undefined,
+        sleep_hours_source: undefined,
         recovery_score: undefined,
+        recovery_score_source: undefined,
         day_strain: undefined,
+        day_strain_source: undefined,
         sleep_efficiency: undefined,
+        sleep_efficiency_source: undefined,
         deep_sleep_duration: undefined,
+        deep_sleep_duration_source: undefined,
         light_sleep_duration: undefined,
+        light_sleep_duration_source: undefined,
         rem_sleep_duration: undefined,
+        rem_sleep_duration_source: undefined,
         hrv: undefined,
-        respiratory_rate: undefined
+        hrv_source: undefined,
+        respiratory_rate: undefined,
+        respiratory_rate_source: undefined
       };
 
       // Fill only fields that don't exist yet (unified metrics have priority)
@@ -348,11 +401,11 @@ export function useClientDetailData(clientUserId: string) {
           .gte('measurement_date', thirtyDaysAgoDate)
           .in('metric_name', [
             'Recovery Score', 'Day Strain', 'Sleep Duration', 
-            'Workout Calories', 'Average Heart Rate', 'Max Heart Rate',
+            'Workout Calories', 'Active Calories', 'Average Heart Rate', 'Max Heart Rate',
             'Sleep Efficiency', 'Sleep Performance', 'Resting Heart Rate',
             'Body Battery', 'Stress Level', 'VO2 Max',
             'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration',
-            'Sleep HRV RMSSD', 'Respiratory Rate'
+            'Sleep HRV RMSSD', 'Respiratory Rate', 'Steps'
           ])
           .order('measurement_date', { ascending: false }),
 
@@ -369,7 +422,7 @@ export function useClientDetailData(clientUserId: string) {
           .from('client_unified_metrics')
           .select('*')
           .eq('user_id', clientUserId)
-          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories', 'Sleep Efficiency', 'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration', 'Sleep HRV RMSSD', 'Respiratory Rate'])
+          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories', 'Active Calories', 'Sleep Efficiency', 'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration', 'Sleep HRV RMSSD', 'Respiratory Rate'])
           .gte('measurement_date', thirtyDaysAgoDate)
           .order('measurement_date', { ascending: true }),
 
@@ -479,3 +532,18 @@ export function useClientDetailData(clientUserId: string) {
     refetch: loadClientData
   };
 }
+
+// Функция для форматирования названий источников
+export const formatSourceName = (source: string): string => {
+  const sourceMap: Record<string, string> = {
+    'whoop': 'Whoop',
+    'garmin': 'Garmin',
+    'oura': 'Oura',
+    'apple_health': 'Apple Health',
+    'withings': 'Withings',
+    'terra': 'Terra',
+    'manual': 'Ручной ввод',
+    'ultrahuman': 'Ultrahuman'
+  };
+  return sourceMap[source.toLowerCase()] || source;
+};
