@@ -108,7 +108,28 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
   };
 
   const handleCreateGoal = async () => {
-    if (!selectedClient || !newGoal.goal_name.trim()) return;
+    // Validation
+    if (!newGoal.goal_name?.trim()) {
+      toast.error('Введите название цели');
+      return;
+    }
+
+    if (!newGoal.target_value || newGoal.target_value <= 0) {
+      toast.error('Целевое значение должно быть больше 0');
+      return;
+    }
+
+    if (!newGoal.target_unit?.trim()) {
+      toast.error('Введите единицу измерения');
+      return;
+    }
+
+    if (!newGoal.is_personal && !selectedChallengeId) {
+      toast.error('Выберите челлендж для цели');
+      return;
+    }
+
+    if (!selectedClient) return;
 
     // Determine if this is a challenge goal
     const isForChallenge = !newGoal.is_personal && selectedChallengeId;
@@ -116,10 +137,10 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
     try {
       const goalData: any = {
         user_id: selectedClient.user_id,
-        goal_name: newGoal.goal_name,
+        goal_name: newGoal.goal_name.trim(),
         goal_type: newGoal.goal_type,
         target_value: newGoal.target_value,
-        target_unit: newGoal.target_unit,
+        target_unit: newGoal.target_unit.trim(),
         is_personal: newGoal.is_personal
       };
 
@@ -134,7 +155,7 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
 
       if (error) throw error;
 
-      toast.success('Цель создана');
+      toast.success(`Цель "${goalData.goal_name}" создана`);
       setIsCreateDialogOpen(false);
       setNewGoal({
         goal_name: "",
@@ -143,10 +164,19 @@ export function ClientGoalsManager({ clients, selectedClient, onSelectClient }: 
         target_unit: "",
         is_personal: true
       });
+      setSelectedChallengeId(null);
       loadClientGoals();
     } catch (error: any) {
       console.error('Error creating goal:', error);
-      toast.error('Ошибка: ' + error.message);
+      
+      let errorMessage = 'Не удалось создать цель';
+      if (error.message?.includes('row-level security')) {
+        errorMessage = 'Нет прав для создания цели';
+      } else if (error.message?.includes('duplicate')) {
+        errorMessage = 'Цель с таким названием уже существует';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 

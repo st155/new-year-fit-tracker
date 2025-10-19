@@ -36,9 +36,15 @@ export const useAIConversations = (userId: string | undefined) => {
     toast(options);
   }, [toast]);
 
-  // Load conversations
-  const loadConversations = async () => {
+  // Load conversations with caching
+  const loadConversations = async (skipCache = false) => {
     if (!userId) return;
+
+    // Use cached data if available and not forcing refresh
+    if (!skipCache && conversations.length > 0) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -310,7 +316,9 @@ export const useAIConversations = (userId: string | undefined) => {
   };
 
   useEffect(() => {
-    loadConversations();
+    if (userId) {
+      loadConversations(true); // Force refresh on mount
+    }
   }, [userId]);
 
   // Set up realtime subscription for messages
