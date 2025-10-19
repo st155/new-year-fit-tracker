@@ -62,6 +62,7 @@ export const AIChatWindow = ({
   const [pendingMessage, setPendingMessage] = useState<string>('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isSelectingMention, setIsSelectingMention] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -182,24 +183,38 @@ export const AIChatWindow = ({
   };
 
   const selectClient = (client: ClientSuggestion) => {
+    console.log('[@mentions] Selected client:', client.username);
+    setIsSelectingMention(true);
+    
     const lastAtIndex = input.lastIndexOf('@');
     const beforeAt = input.slice(0, lastAtIndex);
     const afterQuery = input.slice(lastAtIndex + 1).replace(/^\S*/, '');
     
-    const newInput = `${beforeAt}@${client.username}${afterQuery}`;
+    const newInput = `${beforeAt}@${client.username} ${afterQuery}`; // Add space after username
     setInput(newInput);
     
     // Save username -> user_id mapping
     setMentions(prev => new Map(prev).set(client.username, client.user_id));
-    setShowMentionSuggestions(false);
     
-    // Focus back on textarea
-    textareaRef.current?.focus();
+    // Close dropdown immediately
+    setShowMentionSuggestions(false);
+    setMentionQuery('');
+    
+    // Focus back on textarea with delay
+    setTimeout(() => {
+      setIsSelectingMention(false);
+      textareaRef.current?.focus();
+      // Set cursor at end
+      const len = newInput.length;
+      textareaRef.current?.setSelectionRange(len, len);
+    }, 10);
   };
 
   const handleSend = async (messageText?: string, mentionedClientIds?: string[], mentionedNames?: string[]) => {
     const textToSend = messageText || input.trim();
     if (!textToSend || sending) return;
+    
+    console.log('[@mentions] Sending message:', textToSend);
 
     // Detect confirmation intent
     const confirmPatterns = ['да', 'yes', 'confirm', 'ок', 'давай', 'согласен'];
@@ -251,6 +266,9 @@ export const AIChatWindow = ({
       names = mentionMatches
         .filter(m => !mentions.has(m.username))
         .map(m => m.username);
+      
+      console.log('[@mentions] Extracted client IDs:', clientIds);
+      console.log('[@mentions] Unresolved names:', names);
     }
 
     try {
@@ -284,7 +302,7 @@ export const AIChatWindow = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !showMentionSuggestions) {
+    if (e.key === 'Enter' && !e.shiftKey && !isSelectingMention) {
       e.preventDefault();
       handleSend();
     }
@@ -833,19 +851,28 @@ export const AIChatWindow = ({
       </div>
 
       <div className="p-4 border-t relative">
-        <div className="flex gap-2">
-          <Textarea
-            ref={textareaRef}
-            placeholder={clients.length > 0 
-              ? "Напишите @ для упоминания клиента или задайте вопрос..." 
-              : "Задайте вопрос или опишите задачу..."
-            }
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            className="min-h-[60px] resize-none"
-            disabled={sending}
-          />
+        <div className="flex gap-2 relative">
+          <div className="relative flex-1">
+            <Textarea
+              ref={textareaRef}
+              placeholder={loadingClients 
+                ? "Загрузка клиентов..." 
+                : clients.length > 0 
+                  ? "Напишите @имя для упоминания клиента или задайте вопрос..." 
+                  : "Задайте вопрос или опишите задачу..."
+              }
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              className="min-h-[60px] resize-none w-full"
+              disabled={sending}
+            />
+            {mentions.size > 0 && (
+              <Badge variant="secondary" className="absolute top-2 right-2 text-xs pointer-events-none">
+                {mentions.size} {mentions.size === 1 ? 'упоминание' : 'упоминаний'}
+              </Badge>
+            )}
+          </div>
           {showMentionSuggestions && (
             <MentionAutocomplete
               clients={clients}
@@ -855,6 +882,8 @@ export const AIChatWindow = ({
               position={mentionPosition}
             />
           )}
+        </div>
+        <div className="mt-2 flex items-center justify-end">
           <Button
             size="icon"
             onClick={() => handleSend()}

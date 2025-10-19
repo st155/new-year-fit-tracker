@@ -143,6 +143,7 @@ export const useAIConversations = (userId: string | undefined) => {
 
     // Reset sending state first to clear any stuck states
     setSending(false);
+    await new Promise(resolve => setTimeout(resolve, 100)); // Ensure state reset
 
     // Add optimistic user message
     const optimisticId = addOptimisticMessage(message, 'user');

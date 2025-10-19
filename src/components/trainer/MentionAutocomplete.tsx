@@ -48,6 +48,7 @@ export const MentionAutocomplete = ({
         setSelectedIndex(i => (i - 1 + filteredClients.length) % filteredClients.length);
       } else if (e.key === 'Enter' && filteredClients[selectedIndex]) {
         e.preventDefault();
+        e.stopPropagation(); // Prevent event bubbling to parent textarea
         onSelect(filteredClients[selectedIndex]);
       } else if (e.key === 'Escape') {
         onClose();
