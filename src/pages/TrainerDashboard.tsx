@@ -13,6 +13,7 @@ import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
 import { TrainerChat } from "@/components/trainer/TrainerChat";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
 import { AIQuickActionsPanel } from "@/components/trainer/AIQuickActionsPanel";
+import { ClientsList } from "@/components/trainer/ClientsList";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,7 +40,7 @@ function TrainerDashboardContent() {
   const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
 
   useEffect(() => {
     loadClients();
@@ -178,6 +179,13 @@ function TrainerDashboardContent() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-9 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
+                value="ai-hub" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Hub
+              </TabsTrigger>
+              <TabsTrigger 
                 value="overview" 
                 className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
@@ -225,59 +233,26 @@ function TrainerDashboardContent() {
               >
                 Аналитика
               </TabsTrigger>
-              <TabsTrigger 
-                value="ai-hub" 
-                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                <Sparkles className="h-4 w-4" />
-                AI Hub
-              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ai-hub">
+              <TrainerAIHub selectedClient={selectedClient} />
+            </TabsContent>
 
             <TabsContent value="overview">
               <TrainerOverview onClientSelect={handleClientSelect} />
             </TabsContent>
 
             <TabsContent value="clients">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Мои клиенты</CardTitle>
-                  <CardDescription>Список активных подопечных</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <p className="text-center py-8 text-muted-foreground">Загрузка...</p>
-                  ) : clients.length === 0 ? (
-                    <p className="text-center py-8 text-muted-foreground">
-                      У вас пока нет клиентов
-                    </p>
-                  ) : (
-                    <div className="grid gap-4">
-                      {clients.map((client) => (
-                        <div
-                          key={client.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                          onClick={() => handleClientSelect(client)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={client.avatar_url} />
-                              <AvatarFallback>
-                                {client.full_name?.substring(0, 2).toUpperCase() || 'CL'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{client.full_name || client.username}</p>
-                              <p className="text-sm text-muted-foreground">@{client.username}</p>
-                            </div>
-                          </div>
-                          <Badge variant="outline">Активен</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ClientsList 
+                clients={clients as any}
+                onSelectClient={(client) => handleClientSelect(client)}
+                onAddClient={async (clientUserId) => {
+                  await loadClients();
+                }}
+                onRefresh={() => loadClients()}
+                loading={loading}
+              />
             </TabsContent>
 
             <TabsContent value="challenges">
@@ -306,10 +281,6 @@ function TrainerDashboardContent() {
 
             <TabsContent value="analytics">
               <TrainerAnalytics />
-            </TabsContent>
-
-            <TabsContent value="ai-hub">
-              <TrainerAIHub selectedClient={selectedClient} />
             </TabsContent>
           </Tabs>
         )}
