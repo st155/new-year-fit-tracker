@@ -632,8 +632,9 @@ export const AIChatWindow = ({
         </div>
       </div>
 
-      <div className="flex-1 relative">
-        <ScrollArea ref={scrollRef} className="h-full p-4" onScrollCapture={handleScroll}>
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea ref={scrollRef} className="h-full" onScrollCapture={handleScroll}>
+          <div className="p-4">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
             <Bot className="h-16 w-16 mb-4 opacity-50" />
@@ -778,6 +779,7 @@ export const AIChatWindow = ({
               )}
             </div>
           )}
+          </div>
         </ScrollArea>
 
         {/* Scroll to bottom button */}

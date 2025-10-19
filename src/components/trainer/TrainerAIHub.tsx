@@ -131,7 +131,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
             </Card>
 
             {/* Chat window */}
-            <Card className="lg:col-span-3 p-0 flex flex-col" style={{ height: 'calc(100vh - 300px)' }}>
+            <Card className="lg:col-span-3 p-0 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
               <div className="p-4 border-b">
                 <AIContextSelector
                   contextMode={contextMode}
