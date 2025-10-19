@@ -84,8 +84,8 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-6">
-      <div className="mb-6">
+    <div className="container max-w-7xl mx-auto p-4">
+      <div className="mb-4">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
@@ -98,7 +98,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
           </div>
         </div>
         {selectedClient && (
-          <div className="mt-4 p-3 bg-muted rounded-lg border">
+          <div className="mt-2 p-2 bg-muted rounded-lg border">
             <p className="text-sm text-muted-foreground mb-1">Выбранный клиент:</p>
             <p className="font-medium">{selectedClient.full_name || selectedClient.username}</p>
           </div>
@@ -118,9 +118,9 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
         </TabsList>
 
         <TabsContent value="chat" className="space-y-0">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Conversations sidebar */}
-            <Card className="lg:col-span-1 p-4">
+            <Card className="hidden lg:block lg:col-span-1 p-4">
               <AIConversationList
                 conversations={conversations}
                 currentConversation={currentConversation}
@@ -131,8 +131,8 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
             </Card>
 
             {/* Chat window */}
-            <Card className="lg:col-span-3 p-0 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
-              <div className="p-4 border-b">
+            <Card className="lg:col-span-4 p-0 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '600px' }}>
+              <div className="p-3 border-b">
                 <AIContextSelector
                   contextMode={contextMode}
                   selectedClient={selectedClient}
