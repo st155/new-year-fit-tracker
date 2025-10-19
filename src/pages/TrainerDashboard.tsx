@@ -14,6 +14,7 @@ import { TrainerChat } from "@/components/trainer/TrainerChat";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
 import { AIQuickActionsPanel } from "@/components/trainer/AIQuickActionsPanel";
 import { ClientsList } from "@/components/trainer/ClientsList";
+import { ClientAliasesManager } from "@/components/trainer/ClientAliasesManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -168,7 +169,7 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-9 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-10 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="ai-hub" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
@@ -224,6 +225,12 @@ function TrainerDashboardContent() {
               >
                 Аналитика
               </TabsTrigger>
+              <TabsTrigger 
+                value="aliases" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Псевдонимы
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="ai-hub">
@@ -272,6 +279,10 @@ function TrainerDashboardContent() {
 
             <TabsContent value="analytics">
               <TrainerAnalytics />
+            </TabsContent>
+
+            <TabsContent value="aliases">
+              <ClientAliasesManager />
             </TabsContent>
           </Tabs>
         )}

@@ -52,6 +52,11 @@ export const AIChatWindow = ({
   const isMobile = useIsMobile();
   const [input, setInput] = useState('');
   const [clients, setClients] = useState<ClientSuggestion[]>([]);
+  const [clientAliases, setClientAliases] = useState<Array<{
+    id: string;
+    client_id: string;
+    alias_name: string;
+  }>>([]);
   const [mentions, setMentions] = useState<Map<string, string>>(new Map());
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -177,6 +182,7 @@ export const AIChatWindow = ({
 
   useEffect(() => {
     loadTrainerClients();
+    loadClientAliases();
   }, []);
 
   const loadTrainerClients = async () => {
@@ -230,6 +236,28 @@ export const AIChatWindow = ({
     }
   };
 
+  const loadClientAliases = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('client_aliases')
+        .select('id, client_id, alias_name')
+        .eq('trainer_id', user.id);
+
+      if (error) {
+        console.error('[@mentions] Error loading aliases:', error);
+        return;
+      }
+
+      setClientAliases(data || []);
+      console.log('[@mentions] Loaded aliases:', data?.length || 0);
+    } catch (error) {
+      console.error('[@mentions] Exception loading aliases:', error);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInput(text);
@@ -247,10 +275,50 @@ export const AIChatWindow = ({
       
       console.log('[@mentions] Detected @ symbol');
       console.log('[@mentions] Available clients:', clients.length);
+      console.log('[@mentions] Available aliases:', clientAliases.length);
       console.log('[@mentions] Query after @:', query);
       
       setMentionQuery(query);
-      setShowMentionSuggestions(true);
+      
+      // Filter clients with priority: aliases first, then username, then full_name
+      const lowerQuery = query.toLowerCase();
+      const filteredClients = clients.filter(c => {
+        // Check aliases first (priority)
+        const hasMatchingAlias = clientAliases.some(
+          alias => alias.client_id === c.user_id && 
+                   alias.alias_name.toLowerCase().includes(lowerQuery)
+        );
+        if (hasMatchingAlias) return true;
+        
+        // Then check username and full_name
+        return c.username.toLowerCase().includes(lowerQuery) ||
+               c.full_name.toLowerCase().includes(lowerQuery);
+      });
+      
+      // Sort by priority: exact alias match > username match > name match
+      filteredClients.sort((a, b) => {
+        const aExactAlias = clientAliases.find(
+          alias => alias.client_id === a.user_id && 
+                   alias.alias_name.toLowerCase() === lowerQuery
+        );
+        const bExactAlias = clientAliases.find(
+          alias => alias.client_id === b.user_id && 
+                   alias.alias_name.toLowerCase() === lowerQuery
+        );
+        
+        if (aExactAlias && !bExactAlias) return -1;
+        if (!aExactAlias && bExactAlias) return 1;
+        
+        const aUsernameMatch = a.username.toLowerCase().startsWith(lowerQuery);
+        const bUsernameMatch = b.username.toLowerCase().startsWith(lowerQuery);
+        
+        if (aUsernameMatch && !bUsernameMatch) return -1;
+        if (!aUsernameMatch && bUsernameMatch) return 1;
+        
+        return 0;
+      });
+      
+      setShowMentionSuggestions(filteredClients.length > 0 || query.length === 0);
       
       // Calculate position for dropdown (viewport-relative for fixed positioning)
       if (textareaRef.current) {
@@ -261,6 +329,7 @@ export const AIChatWindow = ({
           left: rect.left
         });
         console.log('[@mentions] Dropdown position:', { top: rect.bottom + 5, left: rect.left });
+        console.log('[@mentions] Filtered clients:', filteredClients.length);
       }
     } else {
       setShowMentionSuggestions(false);
