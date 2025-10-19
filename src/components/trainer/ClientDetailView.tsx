@@ -22,7 +22,8 @@ import {
   LayoutDashboard,
   Trophy,
   Moon,
-  Flame
+  Flame,
+  Wind
 } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
 import { useNavigate } from "react-router-dom";
@@ -30,7 +31,7 @@ import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
 import { useClientDetailData } from "@/hooks/useClientDetailData";
 
@@ -89,9 +90,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     healthData, 
     aiHistory,
     whoopSummary,
+    ouraSummary,
     loading, 
     error, 
-    refetch 
+    refetch
   } = useClientDetailData(client.user_id);
 
   // Real-time updates for goals and measurements
@@ -432,6 +434,45 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                   </Card>
                 )}
               </div>
+
+              {/* Oura Summary */}
+              {ouraSummary && ouraSummary.sleep.count > 0 && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-5 w-5 text-purple-500" />
+                      <CardTitle>Статистика Oura (7 дней)</CardTitle>
+                      <Badge variant="outline">Oura Ring</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Сон</p>
+                      <div className="space-y-1">
+                        <p className="text-sm">Средняя продолжительность: <strong>{ouraSummary.sleep.durationAvg}h</strong></p>
+                        <p className="text-sm">Эффективность: <strong>{ouraSummary.sleep.efficiencyAvg}%</strong></p>
+                        <p className="text-sm">Глубокий сон: <strong>{ouraSummary.sleep.deepSleepAvg}h</strong></p>
+                        <p className="text-sm">REM сон: <strong>{ouraSummary.sleep.remSleepAvg}h</strong></p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">HRV</p>
+                      <div className="space-y-1">
+                        <p className="text-sm">Среднее: <strong>{ouraSummary.hrv.avg} ms</strong></p>
+                        <p className="text-sm">Диапазон: <strong>{ouraSummary.hrv.min} - {ouraSummary.hrv.max} ms</strong></p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Дыхание</p>
+                      <div className="space-y-1">
+                        <p className="text-sm">Средняя частота: <strong>{ouraSummary.respiratoryRate.avg} вдохов/мин</strong></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </TabsContent>
@@ -629,9 +670,12 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               {healthData.filter(d => d.day_strain).length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-orange-500" />
-                      <CardTitle className="text-lg">Day Strain</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-orange-500" />
+                        <CardTitle className="text-lg">Day Strain</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Whoop</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -649,6 +693,141 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           formatter={(value: any) => [value, 'Strain']}
                         />
                         <Line type="monotone" dataKey="day_strain" stroke="#f97316" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sleep Efficiency (Oura) */}
+              {healthData.filter(d => d.sleep_efficiency).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Moon className="h-5 w-5 text-indigo-500" />
+                        <CardTitle className="text-lg">Эффективность сна</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <LineChart data={healthData.filter(d => d.sleep_efficiency)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value + '%', 'Эффективность']}
+                        />
+                        <Line type="monotone" dataKey="sleep_efficiency" stroke="#6366f1" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sleep Stages (Oura) */}
+              {healthData.filter(d => d.deep_sleep_duration || d.light_sleep_duration || d.rem_sleep_duration).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Moon className="h-5 w-5 text-purple-500" />
+                        <CardTitle className="text-lg">Фазы сна</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={healthData.filter(d => d.deep_sleep_duration || d.light_sleep_duration || d.rem_sleep_duration)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value ? value.toFixed(1) + 'h' : '0h', '']}
+                        />
+                        <Legend />
+                        <Bar dataKey="deep_sleep_duration" fill="#7c3aed" name="Глубокий сон" stackId="sleep" />
+                        <Bar dataKey="light_sleep_duration" fill="#a78bfa" name="Легкий сон" stackId="sleep" />
+                        <Bar dataKey="rem_sleep_duration" fill="#ddd6fe" name="REM сон" stackId="sleep" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* HRV (Oura) */}
+              {healthData.filter(d => d.hrv).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-5 w-5 text-pink-500" />
+                        <CardTitle className="text-lg">HRV (вариабельность пульса)</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <LineChart data={healthData.filter(d => d.hrv)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value + ' ms', 'HRV RMSSD']}
+                        />
+                        <Line type="monotone" dataKey="hrv" stroke="#ec4899" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Respiratory Rate (Oura) */}
+              {healthData.filter(d => d.respiratory_rate).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Wind className="h-5 w-5 text-cyan-500" />
+                        <CardTitle className="text-lg">Частота дыхания</CardTitle>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Oura</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <LineChart data={healthData.filter(d => d.respiratory_rate)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis domain={[10, 20]} tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value.toFixed(1) + ' вдохов/мин', 'Частота']}
+                        />
+                        <Line type="monotone" dataKey="respiratory_rate" stroke="#06b6d4" strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </CardContent>

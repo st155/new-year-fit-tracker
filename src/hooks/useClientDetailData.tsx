@@ -29,6 +29,13 @@ interface HealthData {
   sleep_hours?: number;
   recovery_score?: number;
   day_strain?: number;
+  // Oura-specific metrics
+  sleep_efficiency?: number;
+  deep_sleep_duration?: number;
+  light_sleep_duration?: number;
+  rem_sleep_duration?: number;
+  hrv?: number;
+  respiratory_rate?: number;
 }
 
 interface WhoopSummary {
@@ -55,12 +62,33 @@ interface WhoopSummary {
   };
 }
 
+interface OuraSummary {
+  sleep: {
+    durationAvg: number;
+    efficiencyAvg: number;
+    deepSleepAvg: number;
+    remSleepAvg: number;
+    count: number;
+  };
+  hrv: {
+    avg: number;
+    min: number;
+    max: number;
+    count: number;
+  };
+  respiratoryRate: {
+    avg: number;
+    count: number;
+  };
+}
+
 export function useClientDetailData(clientUserId: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [healthData, setHealthData] = useState<HealthData[]>([]);
   const [aiHistory, setAiHistory] = useState<any[]>([]);
   const [whoopSummary, setWhoopSummary] = useState<WhoopSummary | null>(null);
+  const [ouraSummary, setOuraSummary] = useState<OuraSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -82,7 +110,13 @@ export function useClientDetailData(clientUserId: string) {
         active_calories: undefined,
         sleep_hours: undefined,
         recovery_score: undefined,
-        day_strain: undefined
+        day_strain: undefined,
+        sleep_efficiency: undefined,
+        deep_sleep_duration: undefined,
+        light_sleep_duration: undefined,
+        rem_sleep_duration: undefined,
+        hrv: undefined,
+        respiratory_rate: undefined
       };
 
       switch (metric.metric_name) {
@@ -112,6 +146,25 @@ export function useClientDetailData(clientUserId: string) {
         case 'Workout Calories':
           existing.active_calories = metric.value;
           break;
+        // Oura-specific metrics
+        case 'Sleep Efficiency':
+          existing.sleep_efficiency = metric.value;
+          break;
+        case 'Deep Sleep Duration':
+          existing.deep_sleep_duration = metric.value;
+          break;
+        case 'Light Sleep Duration':
+          existing.light_sleep_duration = metric.value;
+          break;
+        case 'REM Sleep Duration':
+          existing.rem_sleep_duration = metric.value;
+          break;
+        case 'Sleep HRV RMSSD':
+          existing.hrv = metric.value;
+          break;
+        case 'Respiratory Rate':
+          existing.respiratory_rate = metric.value;
+          break;
       }
 
       dataMap.set(date, existing);
@@ -127,7 +180,13 @@ export function useClientDetailData(clientUserId: string) {
         active_calories: undefined,
         sleep_hours: undefined,
         recovery_score: undefined,
-        day_strain: undefined
+        day_strain: undefined,
+        sleep_efficiency: undefined,
+        deep_sleep_duration: undefined,
+        light_sleep_duration: undefined,
+        rem_sleep_duration: undefined,
+        hrv: undefined,
+        respiratory_rate: undefined
       };
 
       // Fill only fields that don't exist yet (unified metrics have priority)
@@ -185,6 +244,46 @@ export function useClientDetailData(clientUserId: string) {
         dayStrainMax: parseFloat(max(dayStrains).toFixed(1)),
         workoutCount: workoutStrains.length,
         workoutStrainAvg: parseFloat(avg(workoutStrains).toFixed(1))
+      }
+    };
+  };
+
+  const calculateOuraSummary = (unifiedData: any[]): OuraSummary | null => {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentData = unifiedData.filter(d => 
+      new Date(d.measurement_date) >= sevenDaysAgo && d.source === 'oura'
+    );
+
+    if (recentData.length === 0) return null;
+
+    const sleepDurations = recentData.filter(d => d.metric_name === 'Sleep Duration');
+    const sleepEfficiency = recentData.filter(d => d.metric_name === 'Sleep Efficiency');
+    const deepSleep = recentData.filter(d => d.metric_name === 'Deep Sleep Duration');
+    const remSleep = recentData.filter(d => d.metric_name === 'REM Sleep Duration');
+    const hrvData = recentData.filter(d => d.metric_name === 'Sleep HRV RMSSD');
+    const respRate = recentData.filter(d => d.metric_name === 'Respiratory Rate');
+
+    const avg = (arr: any[]) => arr.length > 0 ? arr.reduce((sum, d) => sum + d.value, 0) / arr.length : 0;
+    const min = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map(d => d.value)) : 0;
+    const max = (arr: any[]) => arr.length > 0 ? Math.max(...arr.map(d => d.value)) : 0;
+
+    return {
+      sleep: {
+        durationAvg: parseFloat(avg(sleepDurations).toFixed(1)),
+        efficiencyAvg: Math.round(avg(sleepEfficiency)),
+        deepSleepAvg: parseFloat(avg(deepSleep).toFixed(1)),
+        remSleepAvg: parseFloat(avg(remSleep).toFixed(1)),
+        count: sleepDurations.length
+      },
+      hrv: {
+        avg: Math.round(avg(hrvData)),
+        min: Math.round(min(hrvData)),
+        max: Math.round(max(hrvData)),
+        count: hrvData.length
+      },
+      respiratoryRate: {
+        avg: parseFloat(avg(respRate).toFixed(1)),
+        count: respRate.length
       }
     };
   };
@@ -251,7 +350,9 @@ export function useClientDetailData(clientUserId: string) {
             'Recovery Score', 'Day Strain', 'Sleep Duration', 
             'Workout Calories', 'Average Heart Rate', 'Max Heart Rate',
             'Sleep Efficiency', 'Sleep Performance', 'Resting Heart Rate',
-            'Body Battery', 'Stress Level', 'VO2 Max'
+            'Body Battery', 'Stress Level', 'VO2 Max',
+            'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration',
+            'Sleep HRV RMSSD', 'Respiratory Rate'
           ])
           .order('measurement_date', { ascending: false }),
 
@@ -268,7 +369,7 @@ export function useClientDetailData(clientUserId: string) {
           .from('client_unified_metrics')
           .select('*')
           .eq('user_id', clientUserId)
-          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories'])
+          .in('metric_name', ['Steps', 'Average Heart Rate', 'Resting Heart Rate', 'Weight', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Workout Calories', 'Sleep Efficiency', 'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration', 'Sleep HRV RMSSD', 'Respiratory Rate'])
           .gte('measurement_date', thirtyDaysAgoDate)
           .order('measurement_date', { ascending: true }),
 
@@ -347,12 +448,16 @@ export function useClientDetailData(clientUserId: string) {
 
       // Рассчитываем Whoop summary
       const whoopData = calculateWhoopSummary(unifiedMetricsResult.data || []);
+      
+      // Рассчитываем Oura summary
+      const ouraData = calculateOuraSummary(unifiedMetricsResult.data || []);
 
       setGoals(goalsWithProgress);
       setMeasurements(processedMeasurements);
       setHealthData(mergedHealthData);
       setAiHistory(aiLogsResult.data || []);
       setWhoopSummary(whoopData);
+      setOuraSummary(ouraData);
 
     } catch (err) {
       console.error('Error loading client data:', err);
@@ -368,6 +473,7 @@ export function useClientDetailData(clientUserId: string) {
     healthData,
     aiHistory,
     whoopSummary,
+    ouraSummary,
     loading,
     error,
     refetch: loadClientData
