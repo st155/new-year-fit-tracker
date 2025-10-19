@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
-import { HabitWidgetCard } from "@/components/habits/HabitWidgetCard";
+import { HabitDashboardCard } from "@/components/habits/HabitDashboardCard";
 import { Target, Plus, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -50,27 +50,33 @@ export function HabitsSection() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Привычки</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+            Привычки
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Отслеживайте свой прогресс каждый день
           </p>
         </div>
         <Link to="/habits">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 hover:bg-primary/10">
             Все привычки
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {displayHabits.map((habit) => (
-          <Link key={habit.id} to="/habits">
-            <HabitWidgetCard habit={habit} />
-          </Link>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {displayHabits.map((habit, index) => (
+          <div
+            key={habit.id}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <HabitDashboardCard habit={habit} userId={user?.id} />
+          </div>
         ))}
       </div>
     </div>
