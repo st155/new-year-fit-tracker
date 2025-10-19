@@ -60,15 +60,26 @@ export const AIChatWindow = ({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [sendingStartTime, setSendingStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Track sending start time
+  // Track sending time and update elapsed seconds
+  useEffect(() => {
+    if (sending && sendingStartTime) {
+      const interval = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - sendingStartTime) / 1000));
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setSendingStartTime(null);
+      setElapsedSeconds(0);
+    }
+  }, [sending, sendingStartTime]);
+
   useEffect(() => {
     if (sending) {
       setSendingStartTime(Date.now());
-    } else {
-      setSendingStartTime(null);
     }
   }, [sending]);
 
