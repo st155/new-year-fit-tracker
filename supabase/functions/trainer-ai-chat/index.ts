@@ -1115,11 +1115,15 @@ IMPORTANT INSTRUCTIONS:
           const resultsText = executeResult.results.map((r: any, i: number) => {
             let actionText = r.action || r.action_type || 'Unknown action';
             
-            // Add details for specific actions
-            if (r.action === 'create_training_plan' && r.success && r.data) {
-              const planName = r.data.plan_name || 'План';
-              const workoutsCount = r.data.workouts_count || 0;
-              actionText = `Создан план "${planName}" (${workoutsCount} тренировок)`;
+            // Add details for specific actions with fallback
+            if (r.action === 'create_training_plan' && r.success) {
+              if (r.data?.plan_id && r.data?.plan_name) {
+                const planName = r.data.plan_name;
+                const workoutsCount = r.data.workouts_count || 0;
+                actionText = `Создан план "${planName}" (${workoutsCount} тренировок)`;
+              } else {
+                actionText = 'Создан план тренировок';
+              }
             } else if (r.action === 'create_goal' && r.success && r.data) {
               actionText = `Создана цель "${r.data.goal_name || 'Цель'}"`;
             } else if (r.action === 'add_measurement' && r.success && r.data) {

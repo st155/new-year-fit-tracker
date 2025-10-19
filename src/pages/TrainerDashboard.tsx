@@ -43,6 +43,7 @@ function TrainerDashboardContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
 
@@ -70,9 +71,7 @@ function TrainerDashboardContent() {
     
     // Handle plan parameter for direct navigation to plan details
     if (planId && tab === 'plans') {
-      // The TrainingPlansList component will handle opening the plan detail view
-      // We just need to ensure we're on the plans tab
-      console.log('Opening plan:', planId);
+      setSelectedPlanId(planId);
     }
     
     if (clientId && clients.length > 0) {
@@ -283,7 +282,7 @@ function TrainerDashboardContent() {
             </TabsContent>
 
             <TabsContent value="plans">
-              <TrainingPlansList />
+              <TrainingPlansList initialPlanId={selectedPlanId} />
             </TabsContent>
 
             <TabsContent value="tasks">

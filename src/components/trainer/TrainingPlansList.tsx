@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,14 +19,18 @@ interface TrainingPlan {
   workout_count?: number;
 }
 
-export const TrainingPlansList = () => {
+interface TrainingPlansListProps {
+  initialPlanId?: string | null;
+}
+
+export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => {
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [searchParams] = useState(() => new URLSearchParams(window.location.search));
+  const [searchParams] = useSearchParams();
 
   const loadPlans = async () => {
     try {
@@ -96,14 +101,22 @@ export const TrainingPlansList = () => {
 
   // Handle plan URL parameter for direct navigation from AI chat
   useEffect(() => {
-    const planId = searchParams.get('plan');
+    const planIdFromUrl = searchParams.get('plan');
+    const planId = initialPlanId || planIdFromUrl;
+    
     if (planId && plans.length > 0) {
       const planExists = plans.find(p => p.id === planId);
       if (planExists) {
         setSelectedPlanId(planId);
+      } else {
+        toast({
+          title: 'План не найден',
+          description: 'Запрошенный план не существует или был удален',
+          variant: 'destructive'
+        });
       }
     }
-  }, [plans, searchParams]);
+  }, [plans, searchParams, initialPlanId, toast]);
 
   if (loading) {
     return <div className="text-center py-8">Загрузка...</div>;
@@ -165,10 +178,20 @@ export const TrainingPlansList = () => {
 
       <TrainingPlanDetailView
         planId={selectedPlanId}
-        onClose={() => setSelectedPlanId(null)}
+        onClose={() => {
+          setSelectedPlanId(null);
+          // Очистить URL параметр
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.delete('plan');
+          window.history.replaceState({}, '', `${window.location.pathname}?${newSearchParams.toString()}`);
+        }}
         onDeleted={() => {
           loadPlans();
           setSelectedPlanId(null);
+          // Очистить URL параметр
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.delete('plan');
+          window.history.replaceState({}, '', `${window.location.pathname}?${newSearchParams.toString()}`);
         }}
       />
     </>
