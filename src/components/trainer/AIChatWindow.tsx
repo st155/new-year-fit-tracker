@@ -96,9 +96,14 @@ export const AIChatWindow = ({
 
   const loadTrainerClients = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log('[@mentions] No authenticated user');
+      return;
+    }
 
+    console.log('[@mentions] Loading clients for trainer:', user.id);
     setLoadingClients(true);
+    
     try {
       const { data, error } = await supabase
         .from('trainer_clients')
@@ -115,13 +120,13 @@ export const AIChatWindow = ({
         .eq('active', true);
 
       if (error) {
-        console.error('Error loading trainer clients for mentions:', error);
+        console.error('[@mentions] Error loading clients:', error);
         setLoadingClients(false);
         return;
       }
 
       if (!data) {
-        console.log('No clients data returned');
+        console.log('[@mentions] No clients data returned');
         setLoadingClients(false);
         return;
       }
@@ -130,10 +135,10 @@ export const AIChatWindow = ({
         .map(tc => tc.profiles)
         .filter(Boolean) as ClientSuggestion[];
       
-      console.log('Loaded clients for mentions:', clientsList.length);
+      console.log('[@mentions] Loaded clients:', clientsList.length, clientsList);
       setClients(clientsList);
     } catch (error) {
-      console.error('Error loading trainer clients:', error);
+      console.error('[@mentions] Error loading clients:', error);
     } finally {
       setLoadingClients(false);
     }
@@ -153,10 +158,15 @@ export const AIChatWindow = ({
       
       // Always show list, even if query is empty
       const query = queryMatch ? queryMatch[1] : '';
+      
+      console.log('[@mentions] Detected @ symbol');
+      console.log('[@mentions] Available clients:', clients.length);
+      console.log('[@mentions] Query after @:', query);
+      
       setMentionQuery(query);
       setShowMentionSuggestions(true);
       
-      // Calculate position for dropdown
+      // Calculate position for dropdown (viewport-relative for fixed positioning)
       if (textareaRef.current) {
         const textarea = textareaRef.current;
         const rect = textarea.getBoundingClientRect();
@@ -164,6 +174,7 @@ export const AIChatWindow = ({
           top: rect.bottom + 5,
           left: rect.left
         });
+        console.log('[@mentions] Dropdown position:', { top: rect.bottom + 5, left: rect.left });
       }
     } else {
       setShowMentionSuggestions(false);
@@ -825,7 +836,10 @@ export const AIChatWindow = ({
         <div className="flex gap-2">
           <Textarea
             ref={textareaRef}
-            placeholder="Напишите сообщение... (@username для упоминания клиента)"
+            placeholder={clients.length > 0 
+              ? "Напишите @ для упоминания клиента или задайте вопрос..." 
+              : "Задайте вопрос или опишите задачу..."
+            }
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

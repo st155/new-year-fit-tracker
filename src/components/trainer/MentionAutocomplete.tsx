@@ -61,8 +61,8 @@ export const MentionAutocomplete = ({
   if (filteredClients.length === 0) {
     return (
       <div
-        className="absolute z-50 bg-popover border border-border rounded-md shadow-lg p-3 min-w-[250px]"
-        style={{ top: position.top, left: position.left }}
+        className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg p-3 min-w-[250px] pointer-events-auto"
+        style={{ top: `${position.top}px`, left: `${position.left}px` }}
       >
         <p className="text-sm text-muted-foreground">
           {query ? 'Клиент не найден' : 'Нет доступных клиентов'}
@@ -73,9 +73,15 @@ export const MentionAutocomplete = ({
 
   return (
     <div
-      className="absolute z-50 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto min-w-[250px]"
-      style={{ top: position.top, left: position.left }}
+      className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto min-w-[250px] pointer-events-auto"
+      style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
+      <div className="sticky top-0 bg-popover border-b border-border px-3 py-2">
+        <p className="text-xs text-muted-foreground">
+          {filteredClients.length} {filteredClients.length === 1 ? 'клиент' : 'клиентов'}
+          <span className="ml-2 text-[10px]">↑↓ Enter Esc</span>
+        </p>
+      </div>
       {filteredClients.map((client, index) => (
         <div
           key={client.user_id}
