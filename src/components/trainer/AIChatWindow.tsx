@@ -5,8 +5,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, X, Zap, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle, ArrowDown } from 'lucide-react';
+import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, Sparkles, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle, ArrowDown, Zap } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
+import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -15,12 +16,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { toast } from 'sonner';
-import { Switch } from '@/components/ui/switch';
 
 interface AIChatWindowProps {
   messages: AIMessage[];
   currentConversation: AIConversation | null;
-  contextMode: string;
   selectedClient?: {
     id: string;
     user_id: string;
@@ -30,17 +29,22 @@ interface AIChatWindowProps {
   } | null;
   sending: boolean;
   onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[], contextClientId?: string, autoExecute?: boolean) => Promise<any>;
-  onSwitchToActionsTab?: () => void;
+  pendingActions: AIPendingAction[];
+  onExecuteAction: (pendingActionId: string, conversationId: string, actions: any[]) => Promise<any>;
+  onRejectAction: (actionId: string) => Promise<void>;
+  executing: boolean;
 }
 
 export const AIChatWindow = ({
   messages,
   currentConversation,
-  contextMode,
   selectedClient,
   sending,
   onSendMessage,
-  onSwitchToActionsTab
+  pendingActions,
+  onExecuteAction,
+  onRejectAction,
+  executing
 }: AIChatWindowProps) => {
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
@@ -52,44 +56,19 @@ export const AIChatWindow = ({
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [loadingClients, setLoadingClients] = useState(true);
   const [showDisambiguation, setShowDisambiguation] = useState(false);
-  const [autoExecute, setAutoExecute] = useState(() => {
-    const saved = localStorage.getItem('ai-auto-execute');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
   const [disambiguations, setDisambiguations] = useState<any[]>([]);
   const [pendingMessage, setPendingMessage] = useState<string>('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [sendingStartTime, setSendingStartTime] = useState<number | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Track sending time and update elapsed seconds
-  useEffect(() => {
-    if (sending && sendingStartTime) {
-      const interval = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - sendingStartTime) / 1000));
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setSendingStartTime(null);
-      setElapsedSeconds(0);
-    }
-  }, [sending, sendingStartTime]);
-
-  useEffect(() => {
-    if (sending) {
-      setSendingStartTime(Date.now());
-    }
-  }, [sending]);
 
   // Smart auto-scroll: only scroll if user is at bottom
   useEffect(() => {
     if (!isUserScrolling && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isUserScrolling]);
+  }, [messages, pendingActions, isUserScrolling]);
 
   // Track user scrolling
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -108,10 +87,6 @@ export const AIChatWindow = ({
       setShowScrollButton(false);
     }
   };
-
-  useEffect(() => {
-    localStorage.setItem('ai-auto-execute', JSON.stringify(autoExecute));
-  }, [autoExecute]);
 
   useEffect(() => {
     loadTrainerClients();
@@ -266,7 +241,7 @@ export const AIChatWindow = ({
     }
 
     try {
-      const response = await onSendMessage(textToSend, contextMode, clientIds, names, selectedClient?.user_id, autoExecute);
+      const response = await onSendMessage(textToSend, 'general', clientIds, names, selectedClient?.user_id, true);
       
       // Check if disambiguation is needed
       if (response?.needsDisambiguation) {
@@ -321,14 +296,7 @@ export const AIChatWindow = ({
     const approvalMessage = "Да, выполнить план";
     setInput('');
     
-    await onSendMessage(approvalMessage, contextMode, [], [], selectedClient?.user_id);
-    
-    // Switch to actions tab to review
-    if (onSwitchToActionsTab) {
-      setTimeout(() => {
-        onSwitchToActionsTab();
-      }, 1000);
-    }
+    await onSendMessage(approvalMessage, 'general', [], [], selectedClient?.user_id, true);
   };
 
   const getInitials = (name: string) => {
@@ -579,57 +547,85 @@ export const AIChatWindow = ({
     );
   };
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header with selected client context */}
-      <div className="p-4 border-b bg-muted/30">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            {selectedClient ? (
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={selectedClient.avatar_url} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {getInitials(selectedClient.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{selectedClient.full_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Контекст AI: работа с этим клиентом
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground">
-                <MessageSquare className="h-5 w-5 mx-auto mb-2" />
-                <p className="text-sm font-medium">Общий чат с AI</p>
-                <p className="text-xs">Выберите клиента для работы с его данными</p>
-              </div>
-            )}
+  // PendingActionCard component - показывается прямо в чате
+  const PendingActionCard = ({ action, onExecute, onReject, executing }: {
+    action: AIPendingAction;
+    onExecute: () => void;
+    onReject: () => void;
+    executing: boolean;
+  }) => {
+    return (
+      <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 p-4 my-3">
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <Sparkles className="h-5 w-5 text-amber-600 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium text-amber-900 dark:text-amber-100">
+                План готов к выполнению
+              </h4>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 whitespace-pre-wrap">
+                {action.action_plan}
+              </p>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            {selectedClient && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/trainer-dashboard?tab=clients&client=${selectedClient.user_id}`)}
-              >
-                Профиль
-              </Button>
-            )}
-            
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <Switch
-                checked={autoExecute}
-                onCheckedChange={setAutoExecute}
-              />
-              <Zap className={`h-4 w-4 ${autoExecute ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span className="text-muted-foreground hidden sm:inline">Авто</span>
-            </label>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              onClick={onExecute}
+              disabled={executing}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {executing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              Выполнить
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={onReject}
+              disabled={executing}
+              className="flex-1"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Пересмотреть
+            </Button>
           </div>
         </div>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Simplified header */}
+      <div className="p-3 border-b bg-muted/20">
+        {selectedClient ? (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={selectedClient.avatar_url} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                {getInitials(selectedClient.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{selectedClient.full_name}</p>
+              <p className="text-xs text-muted-foreground">
+                AI работает с этим клиентом
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/trainer-dashboard?tab=clients&client=${selectedClient.user_id}`)}
+            >
+              Профиль
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center py-2">
+            <p className="text-sm font-medium">Чат с AI</p>
+            <p className="text-xs text-muted-foreground">Используйте @username для работы с клиентами</p>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
@@ -694,7 +690,7 @@ export const AIChatWindow = ({
                                   variant="ghost"
                                   className="h-6 px-2 text-xs ml-2"
                                   onClick={() => {
-                                    onSendMessage(message.content, contextMode, [], undefined, selectedClient?.id, autoExecute);
+                                    onSendMessage(message.content, 'general', [], undefined, selectedClient?.id, true);
                                   }}
                                 >
                                   Повторить
@@ -751,6 +747,31 @@ export const AIChatWindow = ({
               </div>
             ))}
 
+            {/* Pending actions in chat flow */}
+            {pendingActions.length > 0 && (
+              <div className="space-y-2">
+                {pendingActions.map((action) => (
+                  <PendingActionCard
+                    key={action.id}
+                    action={action}
+                    onExecute={() => {
+                      try {
+                        const actionData = typeof action.action_data === 'string' 
+                          ? JSON.parse(action.action_data) 
+                          : action.action_data;
+                        onExecuteAction(action.id, action.conversation_id, actionData.actions || []);
+                      } catch (error) {
+                        console.error('Error parsing action data:', error);
+                        toast.error('Ошибка при выполнении действия');
+                      }
+                    }}
+                    onReject={() => onRejectAction(action.id)}
+                    executing={executing}
+                  />
+                ))}
+              </div>
+            )}
+
               {/* AI thinking indicator when sending */}
               {sending && (
                 <div className="flex gap-3 justify-start animate-fade-in">
@@ -768,11 +789,6 @@ export const AIChatWindow = ({
                           <span className="animate-[pulse_1.5s_ease-in-out_0.4s_infinite]">.</span>
                         </span>
                       </span>
-                      {sendingStartTime && (
-                        <span className="text-xs font-mono bg-background/50 px-1.5 py-0.5 rounded ml-1">
-                          {Math.floor((Date.now() - sendingStartTime) / 1000)}s
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
