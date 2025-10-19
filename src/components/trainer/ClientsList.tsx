@@ -36,6 +36,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showAllUsers, setShowAllUsers] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const loadAllUsers = async () => {
     setLoadingUsers(true);
@@ -91,12 +92,29 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
   };
 
   const handleAddClient = async (user: any) => {
-    await onAddClient(user.user_id);
-    // Обновляем списки после добавления
-    setFoundUsers([]);
-    setAllUsers([]);
-    setSearchEmail("");
-    setShowAllUsers(false);
+    try {
+      // Проверяем, что тренер не добавляет себя
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (user.user_id === currentUser?.id) {
+        toast.error('Вы не можете добавить себя как клиента');
+        return;
+      }
+
+      setIsAdding(true);
+      await onAddClient(user.user_id);
+      toast.success(`${user.username || user.full_name} добавлен как клиент`);
+      
+      // Обновляем списки после добавления
+      setFoundUsers([]);
+      setAllUsers([]);
+      setSearchEmail("");
+      setShowAllUsers(false);
+    } catch (error: any) {
+      console.error('Error adding client:', error);
+      toast.error(error.message || 'Ошибка при добавлении клиента');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const resetSearch = () => {
@@ -171,8 +189,8 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                             <p className="text-sm text-muted-foreground">{user.username}</p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => handleAddClient(user)}>
-                          Добавить
+                        <Button size="sm" onClick={() => handleAddClient(user)} disabled={isAdding}>
+                          {isAdding ? "Добавление..." : "Добавить"}
                         </Button>
                       </div>
                     ))}
@@ -201,8 +219,8 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                             <p className="text-sm text-muted-foreground">{user.username}</p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => handleAddClient(user)}>
-                          Добавить
+                        <Button size="sm" onClick={() => handleAddClient(user)} disabled={isAdding}>
+                          {isAdding ? "Добавление..." : "Добавить"}
                         </Button>
                       </div>
                     ))}

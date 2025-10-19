@@ -7,17 +7,25 @@ export function useTrainerChallenges(trainerId?: string) {
     queryFn: async () => {
       if (!trainerId) return [];
 
-      // Получаем все челленджи где пользователь тренер или создатель
-      const { data: allChallenges, error: challengesError } = await supabase
-        .from("challenges")
-        .select("*")
-        .or(`created_by.eq.${trainerId},id.in.(${
-          await supabase
-            .from("challenge_trainers")
-            .select("challenge_id")
-            .eq("trainer_id", trainerId)
-            .then(({ data }) => data?.map(ct => ct.challenge_id).join(",") || "")
-        })`);
+      // Сначала получаем ID челленджей где пользователь назначен тренером
+      const { data: trainerChallenges } = await supabase
+        .from("challenge_trainers")
+        .select("challenge_id")
+        .eq("trainer_id", trainerId);
+
+      const trainerChallengeIds = trainerChallenges?.map(ct => ct.challenge_id) || [];
+
+      // Формируем запрос: челленджи где пользователь создатель ИЛИ назначен тренером
+      let query = supabase.from("challenges").select("*");
+      
+      if (trainerChallengeIds.length > 0) {
+        query = query.or(`created_by.eq.${trainerId},id.in.(${trainerChallengeIds.join(",")})`);
+      } else {
+        // Если нет назначенных челленджей, берем только созданные
+        query = query.eq("created_by", trainerId);
+      }
+
+      const { data: allChallenges, error: challengesError } = await query;
 
       if (challengesError) throw challengesError;
       if (!allChallenges) return [];
