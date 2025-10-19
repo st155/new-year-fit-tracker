@@ -71,17 +71,7 @@ export function useClientDetailData(clientUserId: string) {
   const mergeHealthData = (summaryData: any[], unifiedData: any[]): HealthData[] => {
     const dataMap = new Map<string, HealthData>();
 
-    summaryData.forEach(item => {
-      dataMap.set(item.date, {
-        date: item.date,
-        steps: item.steps,
-        weight: item.weight,
-        heart_rate_avg: item.heart_rate_avg,
-        active_calories: item.active_calories,
-        sleep_hours: item.sleep_hours
-      });
-    });
-
+    // First process unified metrics (Whoop, Withings, etc.) - they have priority
     unifiedData?.forEach(metric => {
       const date = metric.measurement_date;
       const existing = dataMap.get(date) || {
@@ -125,6 +115,29 @@ export function useClientDetailData(clientUserId: string) {
       }
 
       dataMap.set(date, existing);
+    });
+
+    // Then supplement with daily_health_summary (Apple Health, etc.)
+    summaryData.forEach(item => {
+      const existing = dataMap.get(item.date) || {
+        date: item.date,
+        steps: undefined,
+        weight: undefined,
+        heart_rate_avg: undefined,
+        active_calories: undefined,
+        sleep_hours: undefined,
+        recovery_score: undefined,
+        day_strain: undefined
+      };
+
+      // Fill only fields that don't exist yet (unified metrics have priority)
+      existing.steps = existing.steps ?? item.steps;
+      existing.weight = existing.weight ?? item.weight;
+      existing.heart_rate_avg = existing.heart_rate_avg ?? item.heart_rate_avg;
+      existing.active_calories = existing.active_calories ?? item.active_calories;
+      existing.sleep_hours = existing.sleep_hours ?? item.sleep_hours;
+
+      dataMap.set(item.date, existing);
     });
 
     return Array.from(dataMap.values()).sort((a, b) => 

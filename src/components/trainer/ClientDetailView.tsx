@@ -484,163 +484,178 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsContent>
 
         <TabsContent value="health" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Шаги */}
+          {healthData.length === 0 ? (
             <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-blue-500" />
-                  <CardTitle className="text-lg">Шаги</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {healthData.filter(d => d.steps).length > 0 ? (
-                  <ResponsiveContainer width="100%" height={150}>
-                    <LineChart data={healthData.filter(d => d.steps)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
-                      />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                        formatter={(value: any) => [value, 'Шаги']}
-                      />
-                      <Line type="monotone" dataKey="steps" stroke="#3b82f6" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
-                )}
+              <CardContent className="py-12">
+                <p className="text-center text-muted-foreground">
+                  Нет данных здоровья за последние 30 дней
+                </p>
               </CardContent>
             </Card>
-
-            {/* Вес */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Weight className="h-5 w-5 text-green-500" />
-                  <CardTitle className="text-lg">Вес</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {healthData.filter(d => d.weight).length > 0 ? (
-                  <ResponsiveContainer width="100%" height={150}>
-                    <LineChart data={healthData.filter(d => d.weight)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
-                      />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                        formatter={(value: any) => [value, 'кг']}
-                      />
-                      <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Шаги - только если есть данные */}
+                {healthData.filter(d => d.steps).length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-5 w-5 text-blue-500" />
+                          <CardTitle className="text-lg">Шаги</CardTitle>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Apple Health</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={150}>
+                        <LineChart data={healthData.filter(d => d.steps)}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                            formatter={(value: any) => [value, 'Шаги']}
+                          />
+                          <Line type="monotone" dataKey="steps" stroke="#3b82f6" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
                 )}
-              </CardContent>
-            </Card>
 
-            {/* Пульс */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  <CardTitle className="text-lg">Пульс</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {healthData.filter(d => d.heart_rate_avg).length > 0 ? (
-                  <ResponsiveContainer width="100%" height={150}>
-                    <LineChart data={healthData.filter(d => d.heart_rate_avg)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
-                      />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                        formatter={(value: any) => [value, 'уд/мин']}
-                      />
-                      <Line type="monotone" dataKey="heart_rate_avg" stroke="#ef4444" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                {/* Вес - только если есть данные */}
+                {healthData.filter(d => d.weight).length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Weight className="h-5 w-5 text-green-500" />
+                          <CardTitle className="text-lg">Вес</CardTitle>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Withings</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={150}>
+                        <LineChart data={healthData.filter(d => d.weight)}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                            formatter={(value: any) => [value, 'кг']}
+                          />
+                          <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
                 )}
-              </CardContent>
-            </Card>
 
-            {/* Recovery Score */}
-            {healthData.filter(d => d.recovery_score).length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-green-500" />
-                    <CardTitle className="text-lg">Recovery Score</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={150}>
-                    <LineChart data={healthData.filter(d => d.recovery_score)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
-                      />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                        formatter={(value: any) => [value, '%']}
-                      />
-                      <Line type="monotone" dataKey="recovery_score" stroke="#22c55e" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            )}
+                {/* Пульс - только если есть данные */}
+                {healthData.filter(d => d.heart_rate_avg).length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Heart className="h-5 w-5 text-red-500" />
+                          <CardTitle className="text-lg">Пульс</CardTitle>
+                        </div>
+                        <Badge variant="outline" className="text-xs">Whoop</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={150}>
+                        <LineChart data={healthData.filter(d => d.heart_rate_avg)}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                            formatter={(value: any) => [value, 'уд/мин']}
+                          />
+                          <Line type="monotone" dataKey="heart_rate_avg" stroke="#ef4444" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
-            {/* Day Strain */}
-            {healthData.filter(d => d.day_strain).length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-orange-500" />
-                    <CardTitle className="text-lg">Day Strain</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={150}>
-                    <LineChart data={healthData.filter(d => d.day_strain)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => format(new Date(value), 'dd.MM')}
-                      />
-                      <YAxis domain={[0, 21]} tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                        formatter={(value: any) => [value, 'Strain']}
-                      />
-                      <Line type="monotone" dataKey="day_strain" stroke="#f97316" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+              {/* Recovery Score */}
+              {healthData.filter(d => d.recovery_score).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-green-500" />
+                      <CardTitle className="text-lg">Recovery Score</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <LineChart data={healthData.filter(d => d.recovery_score)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value, '%']}
+                        />
+                        <Line type="monotone" dataKey="recovery_score" stroke="#22c55e" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Day Strain */}
+              {healthData.filter(d => d.day_strain).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-orange-500" />
+                      <CardTitle className="text-lg">Day Strain</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <LineChart data={healthData.filter(d => d.day_strain)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => format(new Date(value), 'dd.MM')}
+                        />
+                        <YAxis domain={[0, 21]} tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
+                          formatter={(value: any) => [value, 'Strain']}
+                        />
+                        <Line type="monotone" dataKey="day_strain" stroke="#f97316" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
         </TabsContent>
 
         {/* AI History Tab */}
