@@ -108,7 +108,7 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
         .select(`
           id,
           client_id,
-          profiles!trainer_clients_client_id_fkey (
+          profiles:client_id (
             user_id,
             username,
             full_name,

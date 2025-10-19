@@ -71,6 +71,14 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
     rejectAction
   } = useAIPendingActions(user?.id);
 
+  // Автоматически выбираем последний разговор при загрузке
+  useEffect(() => {
+    if (!conversationsLoading && conversations.length > 0 && !currentConversation) {
+      console.log('📌 Auto-selecting last conversation:', conversations[0].id);
+      selectConversation(conversations[0].id);
+    }
+  }, [conversationsLoading, conversations, currentConversation, selectConversation]);
+
   if (conversationsLoading || actionsLoading) {
     return <PageLoader message="Загрузка AI Hub..." />;
   }
