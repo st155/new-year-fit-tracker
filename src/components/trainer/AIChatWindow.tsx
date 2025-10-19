@@ -263,24 +263,19 @@ export const AIChatWindow = ({
     const text = e.target.value;
     setInput(text);
     
-    // Check for @ mentions
-    const lastAtIndex = text.lastIndexOf('@');
-    const cursorIsAfterAt = lastAtIndex !== -1 && lastAtIndex < text.length;
+    // Detect active @mention segment based on caret position
+    const caret = e.target.selectionStart ?? text.length;
+    const atIndex = text.lastIndexOf('@', Math.max(0, caret - 1));
+    const cursorIsAfterAt = atIndex !== -1 && atIndex < caret;
     
     if (cursorIsAfterAt) {
-      const afterAt = text.slice(lastAtIndex + 1);
+      // Extract query between @ and caret (stop at whitespace)
+      const afterAt = text.slice(atIndex + 1, caret);
       const queryMatch = afterAt.match(/^(\S*)/);
-      
-      // Always show list, even if query is empty
       const query = queryMatch ? queryMatch[1] : '';
-      
-      console.log('[@mentions] Detected @ symbol');
-      console.log('[@mentions] Available clients:', clients.length);
-      console.log('[@mentions] Available aliases:', clientAliases.length);
-      console.log('[@mentions] Query after @:', query);
-      
+
       setMentionQuery(query);
-      
+
       // Filter clients with priority: aliases first, then username, then full_name
       const lowerQuery = query.toLowerCase();
       const filteredClients = clients.filter(c => {
@@ -318,8 +313,10 @@ export const AIChatWindow = ({
         
         return 0;
       });
-      
-      setShowMentionSuggestions(filteredClients.length > 0 || query.length === 0);
+
+      // Provide data to dropdown and always show when @ is active
+      setFilteredClientsForDropdown(filteredClients);
+      setShowMentionSuggestions(true);
       
       // Calculate position for dropdown (viewport-relative for fixed positioning)
       if (textareaRef.current) {
@@ -329,14 +326,12 @@ export const AIChatWindow = ({
           top: rect.bottom + 5,
           left: rect.left
         });
-        console.log('[@mentions] Dropdown position:', { top: rect.bottom + 5, left: rect.left });
-        console.log('[@mentions] Filtered clients:', filteredClients.length);
       }
     } else {
       setShowMentionSuggestions(false);
+      setFilteredClientsForDropdown([]);
     }
   };
-
   const selectClient = (client: ClientSuggestion) => {
     console.log('[@mentions] Selected client:', client.username);
     setIsSelectingMention(true);
