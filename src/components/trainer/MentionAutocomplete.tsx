@@ -62,7 +62,7 @@ export const MentionAutocomplete = ({
   if (filteredClients.length === 0) {
     return (
       <div
-        className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg p-3 min-w-[250px] pointer-events-auto"
+        className="fixed z-[9999] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl p-3 min-w-[250px] pointer-events-auto"
         style={{ top: `${position.top}px`, left: `${position.left}px` }}
       >
         <p className="text-sm text-muted-foreground">
@@ -74,10 +74,10 @@ export const MentionAutocomplete = ({
 
   return (
     <div
-      className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto min-w-[250px] pointer-events-auto"
+      className="fixed z-[9999] bg-background dark:bg-slate-900 border-2 border-primary/20 rounded-md shadow-2xl max-h-60 overflow-auto min-w-[250px] pointer-events-auto"
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
     >
-      <div className="sticky top-0 bg-popover border-b border-border px-3 py-2">
+      <div className="sticky top-0 bg-background dark:bg-slate-900 border-b border-border px-3 py-2">
         <p className="text-xs text-muted-foreground">
           {filteredClients.length} {filteredClients.length === 1 ? 'клиент' : 'клиентов'}
           <span className="ml-2 text-[10px]">↑↓ Enter Esc</span>

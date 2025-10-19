@@ -70,15 +70,18 @@ export const AIChatWindow = ({
   useEffect(() => {
     if (!scrollRef.current) return;
     
-    const isInitialLoad = messages.length > 0 && scrollRef.current.scrollTop === 0;
+    const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (!scrollableElement) return;
+    
+    const isInitialLoad = messages.length > 0 && scrollableElement.scrollTop === 0;
     const lastMessage = messages[messages.length - 1];
     const isOwnMessage = lastMessage?.role === 'user';
     
     // Always scroll for initial load, user's own messages, or if at bottom
     if (isInitialLoad || isOwnMessage || !isUserScrolling) {
       requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (scrollableElement) {
+          scrollableElement.scrollTop = scrollableElement.scrollHeight;
         }
       });
     }
@@ -96,9 +99,13 @@ export const AIChatWindow = ({
   // Scroll to bottom button handler
   const scrollToBottom = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-      setIsUserScrolling(false);
-      setShowScrollButton(false);
+      // Get the actual scrollable element from ScrollArea
+      const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      if (scrollableElement) {
+        scrollableElement.scrollTo({ top: scrollableElement.scrollHeight, behavior: 'smooth' });
+        setIsUserScrolling(false);
+        setShowScrollButton(false);
+      }
     }
   };
 
@@ -124,8 +131,11 @@ export const AIChatWindow = ({
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-          setIsUserScrolling(false);
+          const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+          if (scrollableElement) {
+            scrollableElement.scrollTop = scrollableElement.scrollHeight;
+            setIsUserScrolling(false);
+          }
         }
       });
     });
@@ -133,7 +143,10 @@ export const AIChatWindow = ({
     // Fallback for slow connections
     const fallbackTimeout = setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+        if (scrollableElement) {
+          scrollableElement.scrollTop = scrollableElement.scrollHeight;
+        }
       }
     }, 500);
     
@@ -152,7 +165,10 @@ export const AIChatWindow = ({
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+            if (scrollableElement) {
+              scrollableElement.scrollTop = scrollableElement.scrollHeight;
+            }
           }
         });
       });
@@ -190,6 +206,7 @@ export const AIChatWindow = ({
 
       if (error) {
         console.error('[@mentions] Error loading clients:', error);
+        toast.error('Не удалось загрузить список клиентов');
         setLoadingClients(false);
         return;
       }
@@ -274,7 +291,7 @@ export const AIChatWindow = ({
       textareaRef.current?.focus();
       const len = newInput.length;
       textareaRef.current?.setSelectionRange(len, len);
-    }, 10);
+    }, 50);
   };
 
   const handleSend = async (messageText?: string, mentionedClientIds?: string[], mentionedNames?: string[]) => {
@@ -296,10 +313,13 @@ export const AIChatWindow = ({
     setIsUserScrolling(false);
     setTimeout(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTo({ 
-          top: scrollRef.current.scrollHeight, 
-          behavior: 'smooth' 
-        });
+        const scrollableElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+        if (scrollableElement) {
+          scrollableElement.scrollTo({ 
+            top: scrollableElement.scrollHeight,
+            behavior: 'smooth' 
+          });
+        }
       }
     }, 100);
 
@@ -382,7 +402,13 @@ export const AIChatWindow = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isSelectingMention) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Block send if mention dropdown is open OR actively selecting
+      if (showMentionSuggestions || isSelectingMention) {
+        console.log('[@mentions] Blocked Enter - dropdown open or selecting mention');
+        return; // Don't prevent default, let MentionAutocomplete handle it
+      }
+      
       e.preventDefault();
       handleSend();
     }
@@ -961,15 +987,6 @@ export const AIChatWindow = ({
               </Badge>
             )}
           </div>
-          {showMentionSuggestions && (
-            <MentionAutocomplete
-              clients={clients}
-              query={mentionQuery}
-              onSelect={selectClient}
-              onClose={() => setShowMentionSuggestions(false)}
-              position={mentionPosition}
-            />
-          )}
         </div>
         <div className="mt-2 flex items-center justify-end">
           <Button
@@ -986,6 +1003,17 @@ export const AIChatWindow = ({
           </Button>
         </div>
       </div>
+
+      {/* Mention autocomplete dropdown - rendered at root level to avoid clipping */}
+      {showMentionSuggestions && (
+        <MentionAutocomplete
+          clients={clients}
+          query={mentionQuery}
+          onSelect={selectClient}
+          onClose={() => setShowMentionSuggestions(false)}
+          position={mentionPosition}
+        />
+      )}
 
       <ClientDisambiguationModal
         open={showDisambiguation}
