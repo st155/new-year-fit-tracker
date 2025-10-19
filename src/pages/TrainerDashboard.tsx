@@ -130,13 +130,6 @@ function TrainerDashboardContent() {
     setSearchParams({ tab: currentTab });
   };
 
-  const topNavItems = [
-    { icon: Home, label: "Тренерский кабинет", color: "orange" },
-    { icon: Trophy, label: "Челленджи", color: "green" },
-    { icon: TrendingUp, label: "Мой прогресс", color: "blue" },
-    { icon: Target, label: "Мои цели", color: "purple" },
-  ];
-
   // Show loading state while checking role
   if (roleLoading) {
     return <PageLoader message="Проверка доступа..." />;
@@ -149,47 +142,6 @@ function TrainerDashboardContent() {
 
   return (
     <div className="min-h-screen bg-trainer-bg pb-24">
-      {/* Top Navigation */}
-      <div className="px-4 py-6 bg-trainer-bg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="hidden md:flex gap-6 mb-6">
-            {topNavItems.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col items-center gap-2 cursor-pointer group"
-              >
-                <div className={`
-                  h-14 w-14 rounded-full flex items-center justify-center
-                  ${item.color === 'orange' ? 'bg-trainer-orange/10 group-hover:bg-trainer-orange/20' : ''}
-                  ${item.color === 'green' ? 'bg-trainer-green/10 group-hover:bg-trainer-green/20' : ''}
-                  ${item.color === 'blue' ? 'bg-trainer-blue/10 group-hover:bg-trainer-blue/20' : ''}
-                  ${item.color === 'purple' ? 'bg-purple-500/10 group-hover:bg-purple-500/20' : ''}
-                  transition-all duration-300
-                `}>
-                  <item.icon className={`
-                    h-6 w-6
-                    ${item.color === 'orange' ? 'text-trainer-orange' : ''}
-                    ${item.color === 'green' ? 'text-trainer-green' : ''}
-                    ${item.color === 'blue' ? 'text-trainer-blue' : ''}
-                    ${item.color === 'purple' ? 'text-purple-500' : ''}
-                  `} />
-                </div>
-                <span className="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-          
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Тренерский Кабинет
-          </h1>
-          <p className="text-slate-400">
-            Управление клиентами, целями и аналитика
-          </p>
-        </div>
-      </div>
-
       <div className="px-4 max-w-7xl mx-auto mt-6">
         {selectedClient && activeTab !== 'ai-hub' ? (
           <ClientDetailView 

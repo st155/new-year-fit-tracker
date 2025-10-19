@@ -49,7 +49,13 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   const navItems = isTrainer ? trainerNavItems : userNavItems;
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/trainer-dashboard') {
+      // Active only on main dashboard without client parameter
+      return location.pathname === path && !location.search.includes('client=');
+    }
+    return location.pathname === path;
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -128,7 +134,13 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               key={item.path}
               variant="ghost"
               size="sm"
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                if (item.path === '/trainer-dashboard') {
+                  navigate('/trainer-dashboard?tab=overview');
+                } else {
+                  navigate(item.path);
+                }
+              }}
               className={cn(
                 "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",
                 isActive(item.path) && "bg-accent/30"
