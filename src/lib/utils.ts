@@ -23,3 +23,10 @@ export function formatTimeDisplay(decimalMinutes: number): string {
   const seconds = Math.round((decimalMinutes - minutes) * 60);
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
+
+// Проверка, является ли единица измерения временной
+export function isTimeUnit(unit?: string): boolean {
+  if (!unit) return false;
+  const lowerUnit = unit.toLowerCase();
+  return lowerUnit.includes('мин') || lowerUnit.includes('min');
+}

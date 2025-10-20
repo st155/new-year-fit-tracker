@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
-import { cn, formatTimeDisplay } from "@/lib/utils";
+import { cn, formatTimeDisplay, isTimeUnit } from "@/lib/utils";
 
 interface ChallengeGoalCardProps {
   goal: ChallengeGoal;
@@ -73,9 +73,13 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
     setShowQuickAdd(true);
   };
 
-  const isLowerBetter = goal.goal_name.toLowerCase().includes('жир') || 
-                        goal.goal_name.toLowerCase().includes('fat') ||
-                        goal.goal_name.toLowerCase().includes('вес') && goal.goal_type === 'body_composition';
+  const isTimeGoal = isTimeUnit(goal.target_unit) ||
+    goal.goal_name.toLowerCase().includes('время') ||
+    goal.goal_name.toLowerCase().includes('бег');
+
+  const isLowerBetter = isTimeGoal ||
+    goal.goal_name.toLowerCase().includes('жир') ||
+    goal.goal_name.toLowerCase().includes('fat');
 
   const getTrendColor = () => {
     if (Math.abs(goal.trend_percentage) < 0.5) return 'hsl(var(--muted-foreground))';
@@ -100,14 +104,14 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 <Icon className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
                 <div className="flex flex-col">
                   <h3 className="font-semibold">{goal.goal_name}</h3>
-                  {goal.baseline_value && isLowerBetter && (
-                    <span className="text-xs text-muted-foreground">
-                      Начал с: {goal.target_unit?.includes("мін") 
-                        ? formatTimeDisplay(goal.baseline_value)
-                        : goal.baseline_value.toFixed(1)
-                      } {goal.target_unit}
-                    </span>
-                  )}
+          {goal.baseline_value && isLowerBetter && (
+            <span className="text-xs text-muted-foreground">
+              Начал с: {isTimeGoal 
+                ? formatTimeDisplay(goal.baseline_value)
+                : goal.baseline_value.toFixed(1)
+              } {goal.target_unit}
+            </span>
+          )}
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -137,20 +141,20 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           {/* Values */}
           <div className="mb-4">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-3xl font-bold" style={{ color: theme.color }}>
-                {goal.target_unit?.includes("мін") 
-                  ? formatTimeDisplay(goal.current_value)
-                  : goal.current_value.toFixed(1)
+            <span className="text-3xl font-bold" style={{ color: theme.color }}>
+              {isTimeGoal 
+                ? formatTimeDisplay(goal.current_value)
+                : goal.current_value.toFixed(1)
+              }
+            </span>
+            <span className="text-muted-foreground">
+              / {goal.target_value 
+                  ? (isTimeGoal
+                      ? formatTimeDisplay(goal.target_value)
+                      : goal.target_value)
+                  : '?'
                 }
-              </span>
-              <span className="text-muted-foreground">
-                / {goal.target_value 
-                    ? (goal.target_unit?.includes("мін")
-                        ? formatTimeDisplay(goal.target_value)
-                        : goal.target_value)
-                    : '?'
-                  }
-              </span>
+            </span>
               <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
             </div>
             <div className="text-sm text-muted-foreground">

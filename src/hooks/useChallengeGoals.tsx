@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAggregatedBodyMetrics } from "./useAggregatedBodyMetrics";
+import { isTimeUnit } from "@/lib/utils";
 
 export interface ChallengeGoal {
   id: string;
@@ -41,27 +42,41 @@ export function useChallengeGoals(userId?: string) {
 
       const challengeIds = participations?.map(p => p.challenge_id) || [];
 
-      // 2. Get ALL user's goals from challenges + personal goals
-      let goalsQuery = supabase
+      // 2. Fetch personal goals
+      const { data: personalGoals, error: personalError } = await supabase
         .from("goals")
         .select("*")
         .eq("user_id", userId)
+        .eq("is_personal", true)
         .order("created_at", { ascending: false });
 
-      // Filter by challenges OR personal goals
+      if (personalError) throw personalError;
+
+      // 3. Fetch challenge goals
+      let challengeGoalsData: any[] = [];
       if (challengeIds.length > 0) {
-        goalsQuery = goalsQuery.or(`challenge_id.in.(${challengeIds.join(',')}),is_personal.eq.true`);
-      } else {
-        // Only personal goals if no challenges
-        goalsQuery = goalsQuery.eq("is_personal", true);
+        const { data, error: challengeError } = await supabase
+          .from("goals")
+          .select("*")
+          .eq("is_personal", false)
+          .in("challenge_id", challengeIds)
+          .order("created_at", { ascending: false });
+
+        if (challengeError) throw challengeError;
+        challengeGoalsData = data || [];
       }
 
-      const { data: goals, error: goalsError } = await goalsQuery;
+      console.info('Goals loaded:', { 
+        personal: personalGoals?.length || 0, 
+        challenge: challengeGoalsData.length,
+        challengeIds 
+      });
 
-      if (goalsError) throw goalsError;
-      if (!goals) return [];
+      // 4. Combine all goals
+      const goals = [...(personalGoals || []), ...challengeGoalsData];
+      if (!goals.length) return [];
 
-      // 3. Get ALL measurements for all goals (not limited)
+      // 5. Get ALL measurements for all goals (not limited)
       const goalIds = goals.map(g => g.id);
       const { data: measurements } = await supabase
         .from("measurements")
@@ -70,41 +85,43 @@ export function useChallengeGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // 4. Deduplicate goals: only replace personal goals with challenge goals of same type
-      const deduplicatedGoals = goals.reduce((acc, goal) => {
-        // Find existing goal with same type that's either:
-        // - From same challenge (if both are challenge goals)
-        // - Personal goal that could be replaced by challenge goal
-        const existing = acc.find(g => 
-          g.goal_type === goal.goal_type && 
-          (
-            // Both from same challenge
-            (g.challenge_id === goal.challenge_id && goal.challenge_id !== null) ||
-            // Personal vs Challenge with same type
-            (g.is_personal && !goal.is_personal)
-          )
-        );
+      // 6. Deduplicate: priority to challenge goals over personal for same goal_type
+      // BUT keep all different challenge goals with same goal_type
+      const goalsByTypeAndChallenge = new Map<string, any>();
+      
+      goals.forEach(goal => {
+        const key = goal.is_personal 
+          ? `personal_${goal.goal_type}` 
+          : `challenge_${goal.challenge_id}_${goal.goal_type}`;
         
-        if (!existing) {
-          // No duplicate, add goal
-          acc.push(goal);
-        } else if (!goal.is_personal && existing.is_personal) {
-          // Replace personal goal with challenge goal of same type
-          const index = acc.indexOf(existing);
-          acc[index] = goal;
+        if (!goalsByTypeAndChallenge.has(key)) {
+          goalsByTypeAndChallenge.set(key, goal);
         }
-        // Otherwise skip (keep existing challenge goal)
-        
-        return acc;
-      }, [] as typeof goals);
+      });
 
-      // 5. Map goals with measurements and calculate progress
+      // Remove personal goals if there's a challenge goal with same goal_type
+      const personalKeys = Array.from(goalsByTypeAndChallenge.keys()).filter(k => k.startsWith('personal_'));
+      personalKeys.forEach(personalKey => {
+        const goalType = personalKey.replace('personal_', '');
+        const hasChallengeGoal = Array.from(goalsByTypeAndChallenge.keys())
+          .some(k => k.includes(`_${goalType}`) && k.startsWith('challenge_'));
+        
+        if (hasChallengeGoal) {
+          goalsByTypeAndChallenge.delete(personalKey);
+        }
+      });
+
+      const deduplicatedGoals = Array.from(goalsByTypeAndChallenge.values());
+      console.info('After deduplication:', deduplicatedGoals.length);
+
+      // 7. Map goals with measurements and calculate progress
       const challengeGoals: ChallengeGoal[] = deduplicatedGoals.map(goal => {
         const allMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
         
         // Check if this is a time-based goal
-        const isTimeGoal = goal.target_unit?.toLowerCase().includes("мин") || 
-                          goal.target_unit?.toLowerCase().includes("min");
+        const isTimeGoal = isTimeUnit(goal.target_unit) ||
+          goal.goal_name.toLowerCase().includes('время') ||
+          goal.goal_name.toLowerCase().includes('бег');
         
         // For body composition goals, use aggregated metrics
         let currentValue = 0;
@@ -172,9 +189,9 @@ export function useChallengeGoals(userId?: string) {
         // Calculate progress ONLY if target_value is set
         let progress = 0;
         if (goal.target_value && currentValue && baselineValue !== null) {
-          const isLowerBetter = goalNameLower.includes('жир') || 
-                                goalNameLower.includes('fat') ||
-                                isTimeGoal;
+          const isLowerBetter = isTimeGoal ||
+            goalNameLower.includes('жир') ||
+            goalNameLower.includes('fat');
           
           if (isLowerBetter) {
             // For "lower is better" metrics, use baseline

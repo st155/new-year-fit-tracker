@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn, parseTimeInput } from "@/lib/utils";
+import { cn, parseTimeInput, isTimeUnit } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -51,10 +51,9 @@ export function QuickMeasurementDialog({
   const parseTimeValue = (value: string): number => {
     if (!value) return 0;
     
-    const isTimeGoal = goal.target_unit.includes('мин') || 
+    const isTimeGoal = isTimeUnit(goal.target_unit) || 
                       goal.goal_name.toLowerCase().includes('время') ||
-                      goal.goal_name.toLowerCase().includes('бег') ||
-                      goal.goal_name.toLowerCase().includes('км');
+                      goal.goal_name.toLowerCase().includes('бег');
     
     if (isTimeGoal) {
       return parseTimeInput(value);
@@ -262,12 +261,7 @@ export function QuickMeasurementDialog({
   };
 
   const getValuePlaceholder = () => {
-    const isTimeGoal = goal.target_unit.includes('мін') || 
-                      goal.goal_name.toLowerCase().includes('время') ||
-                      goal.goal_name.toLowerCase().includes('бег') ||
-                      goal.goal_name.toLowerCase().includes('км');
-    
-    if (isTimeGoal) {
+    if (isTimeUnit(goal.target_unit)) {
       return "Например: 4:40 (4 мин 40 сек)";
     }
     
@@ -334,7 +328,7 @@ export function QuickMeasurementDialog({
             />
             <p className="text-xs text-muted-foreground mt-1">
               {goal.target_unit}
-              {(goal.target_unit.includes('мін') || goal.goal_name.toLowerCase().includes('время')) && 
+              {isTimeUnit(goal.target_unit) && 
                 " • Формат: ММ:СС (например: 4:40 = 4 мин 40 сек)"}
             </p>
           </div>
