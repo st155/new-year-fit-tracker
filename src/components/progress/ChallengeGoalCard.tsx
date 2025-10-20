@@ -105,28 +105,13 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
       >
         <div className={`h-1 bg-gradient-to-r ${theme.gradient}`} />
         
-        <CardContent className="p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
+        <CardContent className="p-6 space-y-4">
+          {/* Header - Compact */}
+          <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-2">
                 <Icon className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
-                <div className="flex flex-col">
-                  <h3 className="font-semibold">{goal.goal_name}</h3>
-                  {goal.baseline_value && goal.baseline_value !== goal.current_value && (
-                    <span className="text-xs text-muted-foreground">
-                      Начал с: {isTimeGoal 
-                        ? formatTimeDisplay(goal.baseline_value)
-                        : goal.baseline_value.toFixed(1)
-                      } {goal.target_unit}
-                    </span>
-                  )}
-                  {!goal.baseline_value && goal.current_value > 0 && (
-                    <span className="text-xs text-muted-foreground/60">
-                      Ожидаем второй замер для точного прогресса
-                    </span>
-                  )}
-                </div>
+                <h3 className="font-semibold truncate">{goal.goal_name}</h3>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {goal.is_personal ? (
@@ -134,16 +119,10 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 ) : (
                   <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
                 )}
-                {goal.subSources && goal.subSources.length > 0 ? (
-                  goal.subSources.map(s => (
-                    <Badge 
-                      key={s.source} 
-                      variant={s.source === goal.source ? 'default' : 'outline'}
-                      className="text-xs"
-                    >
-                      {s.label} {s.value.toFixed(1)}%
-                    </Badge>
-                  ))
+                {goal.subSources && goal.subSources.length > 1 ? (
+                  <span className="text-xs text-muted-foreground">
+                    Данные из {goal.subSources.length} источников: {goal.subSources.map(s => `${s.label} (${s.value.toFixed(1)}%)`).join(', ')}
+                  </span>
                 ) : sourceBadge && (
                   <Badge variant={sourceBadge.variant} className="text-xs">
                     {sourceBadge.label}
@@ -162,50 +141,80 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             </Button>
           </div>
 
-          {/* Values */}
-          <div className="mb-4">
-            <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-3xl font-bold" style={{ color: theme.color }}>
-              {isTimeGoal 
-                ? formatTimeDisplay(goal.current_value)
-                : goal.current_value.toFixed(1)
-              }
-            </span>
-            <span className="text-muted-foreground">
-              / {goal.target_value 
-                  ? (isTimeGoal
-                      ? formatTimeDisplay(goal.target_value)
-                      : goal.target_value)
-                  : '?'
+          {/* Progress Bar - ALWAYS HERE */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground">
+                {goal.current_value === 0 
+                  ? "Нужен первый замер" 
+                  : goal.progress_percentage === 0 && !goal.baseline_value
+                  ? "Добавьте начальный замер для точного прогресса"
+                  : !goal.baseline_value && goal.current_value > 0
+                  ? "Ожидаем второй замер для точного прогресса"
+                  : `${goal.progress_percentage.toFixed(0)}% выполнено`
                 }
-            </span>
-              <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
+              </span>
+              {goal.trend !== 'stable' && (
+                <div 
+                  className="flex items-center gap-1 text-xs font-medium"
+                  style={{ color: getTrendColor() }}
+                >
+                  {goal.trend === 'up' ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
+                </div>
+              )}
             </div>
-            {goal.current_value === 0 ? (
-              <Badge variant="outline" className="text-xs mt-1">
-                Нужен первый замер
-              </Badge>
-            ) : goal.progress_percentage === 0 && !goal.baseline_value ? (
-              <Badge variant="secondary" className="text-xs mt-1">
-                📊 Добавьте начальный замер для точного прогресса
-              </Badge>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                {goal.progress_percentage.toFixed(0)}% выполнено
+            <Progress 
+              value={goal.current_value === 0 ? 0 : goal.progress_percentage} 
+              autoColor={true} 
+              className="h-2"
+            />
+          </div>
+
+          {/* Values - Compact */}
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span 
+                className={cn(
+                  "font-bold",
+                  goal.current_value === 0 ? "text-xl text-muted-foreground" : "text-2xl"
+                )}
+                style={goal.current_value > 0 ? { color: theme.color } : {}}
+              >
+                {isTimeGoal 
+                  ? formatTimeDisplay(goal.current_value)
+                  : goal.current_value.toFixed(1)
+                }
+              </span>
+              <span className="text-sm text-muted-foreground">
+                / {goal.target_value 
+                    ? (isTimeGoal
+                        ? formatTimeDisplay(goal.target_value)
+                        : goal.target_value)
+                    : '?'
+                  } {goal.target_unit}
+              </span>
+            </div>
+            {goal.baseline_value && goal.baseline_value !== goal.current_value && (
+              <div className="text-xs text-muted-foreground mt-1">
+                Начал с: {isTimeGoal 
+                  ? formatTimeDisplay(goal.baseline_value)
+                  : goal.baseline_value.toFixed(1)
+                } {goal.target_unit}
               </div>
             )}
           </div>
 
-          {/* Progress Bar */}
-          <Progress value={goal.progress_percentage} autoColor={true} className="mb-4" />
-
-          {/* Sparkline & Trend */}
-          <div className="flex items-center justify-between">
-            {/* Mini sparkline */}
-            <div className="flex items-end gap-[2px] h-8">
-              {goal.measurements.slice(0, 7).reverse().map((m, i) => {
-                const max = Math.max(...goal.measurements.slice(0, 7).map(d => d.value));
-                const min = Math.min(...goal.measurements.slice(0, 7).map(d => d.value));
+          {/* Sparkline - Fixed Height */}
+          <div className="h-8 flex items-end gap-[2px]">
+            {goal.measurements.length > 0 ? (
+              goal.measurements.slice(0, 10).reverse().map((m, i) => {
+                const max = Math.max(...goal.measurements.slice(0, 10).map(d => d.value));
+                const min = Math.min(...goal.measurements.slice(0, 10).map(d => d.value));
                 const range = max - min || 1;
                 const height = ((m.value - min) / range) * 100;
                 
@@ -219,21 +228,10 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                     }}
                   />
                 );
-              })}
-            </div>
-
-            {/* Trend */}
-            {goal.trend !== 'stable' && (
-              <div 
-                className="flex items-center gap-1 text-xs font-medium"
-                style={{ color: getTrendColor() }}
-              >
-                {goal.trend === 'up' ? (
-                  <TrendingUp className="h-3 w-3" />
-                ) : (
-                  <TrendingDown className="h-3 w-3" />
-                )}
-                <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
+              })
+            ) : (
+              <div className="text-xs text-muted-foreground/50">
+                Нет истории замеров
               </div>
             )}
           </div>
