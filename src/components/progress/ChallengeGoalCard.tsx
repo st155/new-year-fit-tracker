@@ -133,7 +133,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           {/* Progress Bar - СРАЗУ ПОСЛЕ ИКОНКИ */}
           <div className="mb-2">
             <Progress 
-              value={goal.progress_percentage} 
+              value={goal.progress_percentage ?? 0} 
               autoColor={true} 
               className="h-2"
             />
