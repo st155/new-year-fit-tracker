@@ -1021,17 +1021,18 @@ export const AIChatWindow = ({
               </div>
             )}
 
-              {/* AI thinking indicator when sending */}
-              {sending && (
+              {/* Enhanced AI status indicators */}
+              {(sendingState === 'sending' || sendingState === 'processing') && (
                 <div className="flex gap-3 justify-start animate-fade-in">
                   <Avatar className="h-8 w-8 bg-primary/10">
                     <Bot className="h-4 w-4 text-primary" />
                   </Avatar>
-                  <div className="bg-muted rounded-lg p-3 animate-pulse">
+                  <div className="bg-muted rounded-lg p-3">
                     <div className="flex items-center gap-2 text-sm">
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       <span className="text-muted-foreground">
-                        AI генерирует ответ
+                        {sendingState === 'sending' ? 'Отправка' : 'AI генерирует ответ'}
+                        {elapsedTime > 0 && ` (${elapsedTime}s)`}
                         <span className="inline-block w-3 text-left ml-0.5">
                           <span className="animate-[pulse_1.5s_ease-in-out_infinite]">.</span>
                           <span className="animate-[pulse_1.5s_ease-in-out_0.2s_infinite]">.</span>
@@ -1041,6 +1042,35 @@ export const AIChatWindow = ({
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Error indicator */}
+              {sendingState === 'error' && (
+                <Card className="bg-destructive/10 border-destructive/50 p-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                    <span className="text-sm">Ошибка отправки. Попробуйте еще раз.</span>
+                  </div>
+                </Card>
+              )}
+
+              {/* Timeout indicator with refresh button */}
+              {sendingState === 'timeout' && (
+                <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <span className="text-sm">AI не отвечает уже 30 секунд</span>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                    >
+                      Обновить страницу
+                    </Button>
+                  </div>
+                </Card>
               )}
             </div>
           )}

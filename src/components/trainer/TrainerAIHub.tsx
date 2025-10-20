@@ -41,6 +41,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
     messages,
     loading: conversationsLoading,
     sending,
+    sendingState,
     selectConversation,
     sendMessage,
     startNewConversation,
@@ -287,6 +288,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
           currentConversation={currentConversation}
           selectedClient={localSelectedClient}
           sending={sending}
+          sendingState={sendingState}
           onSendMessage={handleSendMessage}
           pendingActions={pendingActions}
           onExecuteAction={executeActions}
