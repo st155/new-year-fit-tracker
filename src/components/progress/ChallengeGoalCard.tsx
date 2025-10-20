@@ -185,6 +185,10 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
               <Badge variant="outline" className="text-xs mt-1">
                 Нужен первый замер
               </Badge>
+            ) : goal.progress_percentage === 0 && !goal.baseline_value ? (
+              <Badge variant="secondary" className="text-xs mt-1">
+                📊 Добавьте начальный замер для точного прогресса
+              </Badge>
             ) : (
               <div className="text-sm text-muted-foreground">
                 {goal.progress_percentage.toFixed(0)}% выполнено

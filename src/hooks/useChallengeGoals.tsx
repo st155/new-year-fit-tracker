@@ -236,8 +236,13 @@ export function useChallengeGoals(userId?: string) {
             const progressMade = baselineValue - currentValue;
             progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
           } else {
-            // Fallback when no baseline: show 0% with suggestion to add baseline
-            progress = 0;
+            // Fallback when no baseline: assume started 50% worse than current
+            // Example: fat 21.7%, target 11% → assume started at 32.55% (21.7 * 1.5)
+            // Progress = (32.55 - 21.7) / (32.55 - 11) * 100 ≈ 50%
+            const assumedStart = currentValue * 1.5;
+            const totalRange = assumedStart - targetValue;
+            const progressMade = assumedStart - currentValue;
+            progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
           }
         } else {
           // Higher is better (duration, strength, reps)
