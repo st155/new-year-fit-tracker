@@ -569,7 +569,8 @@ async function syncWhoopData(
               calibrating: recoveryData.user_calibrating
             });
             
-            // Проверяем что recovery scored (не в калибровке)
+            // Recovery Score измеряется за ночь и применяется к дате пробуждения
+            // cycleDate (cycle.end) = утро пробуждения = правильная дата для recovery
             if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined) {
               const metricId = await getOrCreateMetric(
                 supabase,
@@ -580,12 +581,11 @@ async function syncWhoopData(
                 'whoop'
               );
 
-              // Используем external_id с датой вместо cycle.id для upsert
               const { error: recoveryError } = await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
-                measurement_date: cycleDate,
+                measurement_date: cycleDate, // Правильно: recovery на утро cycleDate
                 external_id: `whoop_recovery_${cycleDate}`,
                 source_data: { 
                   cycle_id: cycle.id, 
@@ -609,9 +609,13 @@ async function syncWhoopData(
           console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
         }
 
-        // Day Strain (общая дневная нагрузка)
+        // Day Strain относится к активности ДО окончания цикла
+        // Цикл завершается утром (cycle.end), поэтому strain за предыдущий день
+        // Используем cycle.start для правильной даты
         if (cycle.score?.strain !== undefined) {
-          console.log(`Saving Day Strain ${cycle.score.strain} for ${cycleDate}`);
+          const strainDate = new Date(cycle.start).toISOString().split('T')[0];
+          
+          console.log(`Saving Day Strain ${cycle.score.strain} for ${strainDate} (cycle ended ${cycleDate})`);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -625,15 +629,19 @@ async function syncWhoopData(
             user_id: userId,
             metric_id: metricId,
             value: cycle.score.strain,
-            measurement_date: cycleDate,
+            measurement_date: strainDate, // Используем дату начала цикла
             external_id: `whoop_strain_${cycle.id}`,
-            source_data: { cycle_id: cycle.id, raw: cycle.score },
+            source_data: { 
+              cycle_id: cycle.id, 
+              raw: cycle.score,
+              cycle_end: cycleDate // Сохраняем для справки
+            },
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (strainError) {
-            console.error(`❌ Failed to save Day Strain for ${cycleDate}:`, strainError);
+            console.error(`❌ Failed to save Day Strain for ${strainDate}:`, strainError);
           } else {
-            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
+            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${strainDate}`);
           }
         } else {
           console.log(`❌ No strain data for cycle ${cycle.id} (${cycleDate}), cycle.score:`, cycle.score);
