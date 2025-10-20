@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp } from "lucide-react";
+import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
