@@ -163,31 +163,78 @@ export function useChallengeGoals(userId?: string) {
 
         const targetValue = goal.target_value || 0;
 
+        // Определяем тип цели для правильного расчета прогресса
+        const isDurationGoal = goalNameLower.includes('планка') || 
+                              goalNameLower.includes('plank') ||
+                              goalNameLower.includes('vo2');
+        
+        const isRunningGoal = goalNameLower.includes('бег') || 
+                             goalNameLower.includes('run') ||
+                             goalNameLower.includes('км');
+        
+        // "Меньше = лучше" только для жира, веса и бега (не для планки!)
+        const isLowerBetter = (goalNameLower.includes('жир') || 
+                              goalNameLower.includes('вес') ||
+                              isRunningGoal) && !isDurationGoal;
+
         // Calculate progress ONLY if target_value is set
         let progress = 0;
         if (goal.target_value && currentValue && baselineValue !== null) {
-          const isLowerBetter = isTimeGoal ||
-            goalNameLower.includes('жир') ||
-            goalNameLower.includes('fat');
-          
-          if (isLowerBetter) {
-            // For "lower is better" metrics, use baseline
+          if (isLowerBetter && baselineValue > targetValue) {
+            // Для "меньше = лучше" (жир, вес, время бега)
             if (currentValue <= targetValue) {
-              // Already at or below target
               progress = 100;
-            } else if (baselineValue > targetValue) {
-              // Calculate: (baseline - current) / (baseline - target) * 100
+            } else {
               const totalRange = baselineValue - targetValue;
               const progressMade = baselineValue - currentValue;
               progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
-            } else {
-              // Baseline already below target
+              
+              console.debug(`📊 ${goal.goal_name} (lower is better):`, {
+                baseline: baselineValue,
+                current: currentValue,
+                target: targetValue,
+                progressMade,
+                totalRange,
+                progress: progress.toFixed(1) + '%'
+              });
+            }
+          } else if (isDurationGoal || (!isLowerBetter && baselineValue < targetValue)) {
+            // Для длительности (планка) или силовых упражнений - больше = лучше
+            if (currentValue >= targetValue) {
               progress = 100;
+            } else if (baselineValue !== currentValue) {
+              const totalRange = targetValue - baselineValue;
+              const progressMade = currentValue - baselineValue;
+              progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
+              
+              console.debug(`📊 ${goal.goal_name} (higher is better):`, {
+                baseline: baselineValue,
+                current: currentValue,
+                target: targetValue,
+                progressMade,
+                totalRange,
+                progress: progress.toFixed(1) + '%'
+              });
             }
           } else {
-            // For "higher is better" metrics
+            // Fallback: простое соотношение для целей без baseline
             progress = Math.min(100, (currentValue / targetValue) * 100);
+            
+            console.debug(`📊 ${goal.goal_name} (simple ratio):`, {
+              current: currentValue,
+              target: targetValue,
+              progress: progress.toFixed(1) + '%'
+            });
           }
+        }
+
+        // Валидация данных
+        if (currentValue === 0 && allMeasurements.length > 0) {
+          console.warn(`⚠️ ${goal.goal_name}: currentValue is 0 but measurements exist:`, allMeasurements.slice(0, 3));
+        }
+        
+        if (isLowerBetter && !baselineValue) {
+          console.warn(`⚠️ ${goal.goal_name}: "lower is better" goal missing baseline value`);
         }
 
         // Calculate trend
