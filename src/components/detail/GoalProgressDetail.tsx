@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatTimeDisplay } from "@/lib/utils";
 
 interface GoalData {
   date: string;
@@ -157,7 +158,12 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">
-              {currentValue ? `${currentValue} ${goal.target_unit}` : 'Нет данных'}
+              {currentValue 
+                ? `${goal.target_unit.includes('мін')
+                    ? formatTimeDisplay(currentValue)
+                    : currentValue
+                  } ${goal.target_unit}` 
+                : 'Нет данных'}
             </div>
             <p className="text-xs text-muted-foreground">Текущий результат</p>
           </CardContent>
@@ -265,7 +271,12 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
               {goalData.slice().reverse().map((entry, index) => (
                 <div key={entry.date} className="flex items-center justify-between p-2 border rounded-lg">
                   <div>
-                    <p className="font-medium">{entry.value} {goal.target_unit}</p>
+                    <p className="font-medium">
+                      {goal.target_unit.includes('мін')
+                        ? formatTimeDisplay(entry.value)
+                        : entry.value
+                      } {goal.target_unit}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(entry.date), 'd MMMM yyyy', { locale: ru })}
                     </p>

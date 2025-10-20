@@ -2,14 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAggregatedBodyMetrics } from "./useAggregatedBodyMetrics";
 
-// Normalize time values stored as M.SS to actual minutes (M + SS/60)
-// Example: 3.50 (3:50) → 3.8333 minutes, 4.10 (4:10) → 4.1667 minutes
-function normalizeTimeMinutes(value: number): number {
-  const minutes = Math.floor(value);
-  const seconds = Math.round((value - minutes) * 100);
-  return minutes + seconds / 60;
-}
-
 export interface ChallengeGoal {
   id: string;
   goal_name: string;
@@ -173,20 +165,9 @@ export function useChallengeGoals(userId?: string) {
           // Use earliest measurement as baseline
           const earliestMeasurement = allMeasurements[allMeasurements.length - 1];
           baselineValue = earliestMeasurement?.value || currentValue;
-          
-          // Normalize time values
-          if (isTimeGoal && currentValue) {
-            currentValue = normalizeTimeMinutes(currentValue);
-            if (baselineValue) {
-              baselineValue = normalizeTimeMinutes(baselineValue);
-            }
-          }
         }
 
-        // Normalize target value for time goals
-        const targetValue = goal.target_value ? 
-          (isTimeGoal ? normalizeTimeMinutes(goal.target_value) : goal.target_value) : 
-          0;
+        const targetValue = goal.target_value || 0;
 
         // Calculate progress ONLY if target_value is set
         let progress = 0;
@@ -220,14 +201,8 @@ export function useChallengeGoals(userId?: string) {
         let trendPercentage = 0;
 
         if (sparklineData.length >= 2) {
-          let latest = sparklineData[0].value;
-          let previous = sparklineData[1].value;
-          
-          // Normalize for time goals
-          if (isTimeGoal) {
-            latest = normalizeTimeMinutes(latest);
-            previous = normalizeTimeMinutes(previous);
-          }
+          const latest = sparklineData[0].value;
+          const previous = sparklineData[1].value;
           
           const diff = latest - previous;
           trendPercentage = previous ? (diff / previous) * 100 : 0;

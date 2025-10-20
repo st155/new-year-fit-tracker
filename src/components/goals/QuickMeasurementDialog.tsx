@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { cn, parseTimeInput } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -48,23 +48,16 @@ export function QuickMeasurementDialog({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Функция для преобразования MM.SS в десятичные минуты для временных целей
   const parseTimeValue = (value: string): number => {
     if (!value) return 0;
     
-    // Проверяем, является ли цель временной (содержит "время" или единицы времени)
     const isTimeGoal = goal.target_unit.includes('мин') || 
                       goal.goal_name.toLowerCase().includes('время') ||
                       goal.goal_name.toLowerCase().includes('бег') ||
                       goal.goal_name.toLowerCase().includes('км');
     
-    if (isTimeGoal && value.includes('.')) {
-      const parts = value.split('.');
-      if (parts.length === 2 && parts[1].length <= 2) {
-        const minutes = parseInt(parts[0]) || 0;
-        const seconds = parseInt(parts[1]) || 0;
-        return minutes + (seconds / 60);
-      }
+    if (isTimeGoal) {
+      return parseTimeInput(value);
     }
     
     return parseFloat(value) || 0;
@@ -269,13 +262,13 @@ export function QuickMeasurementDialog({
   };
 
   const getValuePlaceholder = () => {
-    const isTimeGoal = goal.target_unit.includes('мин') || 
+    const isTimeGoal = goal.target_unit.includes('мін') || 
                       goal.goal_name.toLowerCase().includes('время') ||
                       goal.goal_name.toLowerCase().includes('бег') ||
                       goal.goal_name.toLowerCase().includes('км');
     
     if (isTimeGoal) {
-      return "Например: 4.40 (4 мин 40 сек)";
+      return "Например: 4:40 (4 мин 40 сек)";
     }
     
     return `Введите значение в ${goal.target_unit}`;
@@ -341,8 +334,8 @@ export function QuickMeasurementDialog({
             />
             <p className="text-xs text-muted-foreground mt-1">
               {goal.target_unit}
-              {(goal.target_unit.includes('мин') || goal.goal_name.toLowerCase().includes('время')) && 
-                " • Формат: ММ.СС (например: 4.40 = 4 мин 40 сек)"}
+              {(goal.target_unit.includes('мін') || goal.goal_name.toLowerCase().includes('время')) && 
+                " • Формат: ММ:СС (например: 4:40 = 4 мин 40 сек)"}
             </p>
           </div>
 

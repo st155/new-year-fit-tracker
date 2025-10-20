@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
+import { cn, formatTimeDisplay } from "@/lib/utils";
 
 interface ChallengeGoalCardProps {
   goal: ChallengeGoal;
@@ -101,7 +102,10 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                   <h3 className="font-semibold">{goal.goal_name}</h3>
                   {goal.baseline_value && isLowerBetter && (
                     <span className="text-xs text-muted-foreground">
-                      Начал с: {goal.baseline_value.toFixed(goal.target_unit?.includes("мин") ? 2 : 1)} {goal.target_unit}
+                      Начал с: {goal.target_unit?.includes("мін") 
+                        ? formatTimeDisplay(goal.baseline_value)
+                        : goal.baseline_value.toFixed(1)
+                      } {goal.target_unit}
                     </span>
                   )}
                 </div>
@@ -134,9 +138,19 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           <div className="mb-4">
             <div className="flex items-baseline gap-2 mb-1">
               <span className="text-3xl font-bold" style={{ color: theme.color }}>
-                {goal.current_value.toFixed(1)}
+                {goal.target_unit?.includes("мін") 
+                  ? formatTimeDisplay(goal.current_value)
+                  : goal.current_value.toFixed(1)
+                }
               </span>
-              <span className="text-muted-foreground">/ {goal.target_value}</span>
+              <span className="text-muted-foreground">
+                / {goal.target_value 
+                    ? (goal.target_unit?.includes("мін")
+                        ? formatTimeDisplay(goal.target_value)
+                        : goal.target_value)
+                    : '?'
+                  }
+              </span>
               <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
             </div>
             <div className="text-sm text-muted-foreground">
