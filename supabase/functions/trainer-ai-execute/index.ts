@@ -105,7 +105,11 @@ serve(async (req) => {
         });
 
       } catch (error) {
-        console.error(`Error executing action ${action.type}:`, error);
+        console.error(`❌ Error executing action ${action.type}:`, {
+          action_data: action.data,
+          error_message: error.message,
+          error_details: error
+        });
         
         executionResults.push({
           action: action.type,

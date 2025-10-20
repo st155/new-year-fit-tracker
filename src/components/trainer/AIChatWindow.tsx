@@ -684,19 +684,49 @@ export const AIChatWindow = ({
     const failCount = results.filter((r: any) => !r.success).length;
     const totalCount = results.length;
 
+    // Определяем цвет карточки в зависимости от результата
+    const cardColorClass = failCount === 0 && successCount > 0
+      ? "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800"
+      : failCount > 0 && successCount === 0
+        ? "bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 border-red-200 dark:border-red-800"
+        : "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-800";
+
+    const iconColorClass = failCount === 0 && successCount > 0
+      ? "bg-green-600 dark:bg-green-500"
+      : failCount > 0 && successCount === 0
+        ? "bg-red-600 dark:bg-red-500"
+        : "bg-amber-600 dark:bg-amber-500";
+
     return (
       <div className="flex justify-center my-4 animate-fade-in">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800 p-4 max-w-2xl w-full shadow-lg">
+        <Card className={`${cardColorClass} p-4 max-w-2xl w-full shadow-lg`}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3 flex-1">
-              <div className="bg-green-600 dark:bg-green-500 p-2 rounded-lg">
-                <Zap className="h-5 w-5 text-white" />
+              <div className={`${iconColorClass} p-2 rounded-lg`}>
+                {failCount > 0 && successCount === 0 ? (
+                  <XCircle className="h-5 w-5 text-white" />
+                ) : failCount > 0 ? (
+                  <AlertCircle className="h-5 w-5 text-white" />
+                ) : (
+                  <Zap className="h-5 w-5 text-white" />
+                )}
               </div>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-green-900 dark:text-green-100">
-                    Автоматически выполнено
+                  <span className={`text-sm font-semibold ${
+                    failCount === 0 
+                      ? 'text-green-900 dark:text-green-100'
+                      : failCount > 0 && successCount === 0
+                        ? 'text-red-900 dark:text-red-100'
+                        : 'text-amber-900 dark:text-amber-100'
+                  }`}>
+                    {failCount === 0 && successCount > 0
+                      ? 'Автоматически выполнено'
+                      : failCount > 0 && successCount === 0
+                        ? 'Ошибка выполнения'
+                        : 'Частично выполнено'
+                    }
                   </span>
                   {successCount === totalCount && totalCount > 0 ? (
                     <Badge variant="secondary" className="bg-green-600 text-white text-xs">
@@ -709,7 +739,13 @@ export const AIChatWindow = ({
                   ) : null}
                 </div>
                 
-                <div className="text-xs text-green-700 dark:text-green-300 whitespace-pre-line mb-2">
+                <div className={`text-xs whitespace-pre-line mb-2 ${
+                  failCount === 0 
+                    ? 'text-green-700 dark:text-green-300'
+                    : failCount > 0 && successCount === 0
+                      ? 'text-red-700 dark:text-red-300'
+                      : 'text-amber-700 dark:text-amber-300'
+                }`}>
                   {message.content}
                 </div>
 
@@ -725,7 +761,10 @@ export const AIChatWindow = ({
                           )}
                           <div className="flex-1 flex items-center gap-2 flex-wrap">
                             <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
-                              {result.message || result.action_type}
+                              {result.success 
+                                ? (result.message || result.action_type)
+                                : `${result.action || result.action_type}: ${result.error || 'Неизвестная ошибка'}`
+                              }
                             </span>
                             
                             {/* Link to view created training plan */}
