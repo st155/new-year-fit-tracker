@@ -69,16 +69,31 @@ export function useChallengeGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // 4. Deduplicate goals by goal_type (prioritize challenge goals over personal)
+      // 4. Deduplicate goals: only replace personal goals with challenge goals of same type
       const deduplicatedGoals = goals.reduce((acc, goal) => {
-        const existing = acc.find(g => g.goal_type === goal.goal_type);
+        // Find existing goal with same type that's either:
+        // - From same challenge (if both are challenge goals)
+        // - Personal goal that could be replaced by challenge goal
+        const existing = acc.find(g => 
+          g.goal_type === goal.goal_type && 
+          (
+            // Both from same challenge
+            (g.challenge_id === goal.challenge_id && goal.challenge_id !== null) ||
+            // Personal vs Challenge with same type
+            (g.is_personal && !goal.is_personal)
+          )
+        );
+        
         if (!existing) {
+          // No duplicate, add goal
           acc.push(goal);
         } else if (!goal.is_personal && existing.is_personal) {
-          // Replace personal goal with challenge goal
+          // Replace personal goal with challenge goal of same type
           const index = acc.indexOf(existing);
           acc[index] = goal;
         }
+        // Otherwise skip (keep existing challenge goal)
+        
         return acc;
       }, [] as typeof goals);
 
