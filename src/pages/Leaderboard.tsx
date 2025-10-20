@@ -9,12 +9,15 @@ import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from "@/lib/translations";
 import { calculateProgressScore } from "@/lib/challenge-scoring";
+import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 
 const Leaderboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -328,8 +331,12 @@ const Leaderboard = () => {
                 {leaderboardData.map((item, index) => (
                   <div 
                     key={item.user_id}
+                    onClick={() => {
+                      setSelectedUserId(item.user_id);
+                      setSelectedUserName(item.username);
+                    }}
                     className={cn(
-                      "flex items-center justify-between p-4 rounded-lg transition-all",
+                      "flex items-center justify-between p-4 rounded-lg transition-all cursor-pointer hover:bg-accent/50",
                       item.isUser ? "bg-primary/10 border-2 border-primary/30" : "bg-background/50"
                     )}
                   >
@@ -401,6 +408,13 @@ const Leaderboard = () => {
           </Card>
         </div>
       )}
+
+      <UserHealthDetailDialog
+        userId={selectedUserId}
+        userName={selectedUserName}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+      />
     </div>
   );
 };

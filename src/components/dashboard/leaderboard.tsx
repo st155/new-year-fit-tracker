@@ -9,12 +9,7 @@ import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/lib/translations";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 
 interface LeaderboardUser {
   rank: number;
@@ -30,9 +25,8 @@ export function Leaderboard() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [userStats, setUserStats] = useState<any>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -161,61 +155,10 @@ export function Leaderboard() {
     }
   };
 
-  const fetchUserStats = async (userId: string) => {
-    setLoadingStats(true);
-    try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const [workoutsData, measurementsData, goalsData, bodyCompositionData] = await Promise.all([
-        supabase
-          .from('workouts')
-          .select('*')
-          .eq('user_id', userId)
-          .gte('start_time', thirtyDaysAgo.toISOString()),
-        supabase
-          .from('measurements')
-          .select('*')
-          .eq('user_id', userId)
-          .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
-        supabase
-          .from('goals')
-          .select('*')
-          .eq('user_id', userId),
-        supabase
-          .from('body_composition')
-          .select('*')
-          .eq('user_id', userId)
-          .order('measurement_date', { ascending: false })
-          .limit(1)
-      ]);
-
-      const workouts = workoutsData.data || [];
-      const totalWorkouts = workouts.length;
-      const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
-      const totalMinutes = workouts.reduce((sum, w) => sum + (w.duration_minutes || 0), 0);
-      const avgCaloriesPerWorkout = totalWorkouts > 0 ? Math.round(totalCalories / totalWorkouts) : 0;
-
-      setUserStats({
-        workouts: totalWorkouts,
-        totalCalories,
-        totalMinutes,
-        avgCaloriesPerWorkout,
-        measurements: measurementsData.data?.length || 0,
-        goals: goalsData.data?.length || 0,
-        bodyComposition: bodyCompositionData.data?.[0],
-      });
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
   const handleUserClick = (e: React.MouseEvent, userEntry: any) => {
     e.stopPropagation();
-    setSelectedUser(userEntry);
-    fetchUserStats(userEntry.user_id);
+    setSelectedUserId(userEntry.user_id);
+    setSelectedUserName(userEntry.username);
   };
 
   if (loading) {
@@ -318,97 +261,12 @@ export function Leaderboard() {
       </Card>
 
       {/* User Stats Dialog */}
-      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-4">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={selectedUser?.avatar_url} />
-                <AvatarFallback>
-                  {selectedUser?.username?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="text-xl font-bold">{selectedUser?.username}</div>
-                <div className="text-sm text-muted-foreground">{selectedUser?.points} points</div>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          
-          {loadingStats ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : userStats && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{userStats.workouts}</div>
-                    <div className="text-sm text-muted-foreground">Workouts (30 days)</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{userStats.totalCalories.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">Total Calories</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{Math.round(userStats.totalMinutes / 60)}h {userStats.totalMinutes % 60}m</div>
-                    <div className="text-sm text-muted-foreground">Total Time</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{userStats.avgCaloriesPerWorkout}</div>
-                    <div className="text-sm text-muted-foreground">Avg Calories/Workout</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {userStats.bodyComposition && (
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="font-semibold mb-4">Latest Body Composition</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {userStats.bodyComposition.weight && (
-                        <div>
-                          <div className="text-lg font-bold">{userStats.bodyComposition.weight} kg</div>
-                          <div className="text-sm text-muted-foreground">Weight</div>
-                        </div>
-                      )}
-                      {userStats.bodyComposition.body_fat_percentage && (
-                        <div>
-                          <div className="text-lg font-bold">{userStats.bodyComposition.body_fat_percentage}%</div>
-                          <div className="text-sm text-muted-foreground">Body Fat</div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-4">Activity Summary</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Measurements tracked:</span>
-                      <span className="font-semibold">{userStats.measurements}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Active goals:</span>
-                      <span className="font-semibold">{userStats.goals}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <UserHealthDetailDialog
+        userId={selectedUserId}
+        userName={selectedUserName}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+      />
     </div>
   );
 }
