@@ -53,11 +53,13 @@ export function useChallengeGoals(userId?: string) {
       if (personalError) throw personalError;
 
       // 3. Fetch challenge goals
+      // CRITICAL: Filter by user_id to get only current user's instances of challenge goals
       let challengeGoalsData: any[] = [];
       if (challengeIds.length > 0) {
         const { data, error: challengeError } = await supabase
           .from("goals")
           .select("*")
+          .eq("user_id", userId)
           .eq("is_personal", false)
           .in("challenge_id", challengeIds)
           .order("created_at", { ascending: false });
@@ -85,37 +87,12 @@ export function useChallengeGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // 6. Deduplicate: priority to challenge goals over personal for same goal_type
-      // BUT keep all different challenge goals with same goal_type
-      const goalsByTypeAndChallenge = new Map<string, any>();
-      
-      goals.forEach(goal => {
-        const key = goal.is_personal 
-          ? `personal_${goal.goal_type}` 
-          : `challenge_${goal.challenge_id}_${goal.goal_type}`;
-        
-        if (!goalsByTypeAndChallenge.has(key)) {
-          goalsByTypeAndChallenge.set(key, goal);
-        }
-      });
-
-      // Remove personal goals if there's a challenge goal with same goal_type
-      const personalKeys = Array.from(goalsByTypeAndChallenge.keys()).filter(k => k.startsWith('personal_'));
-      personalKeys.forEach(personalKey => {
-        const goalType = personalKey.replace('personal_', '');
-        const hasChallengeGoal = Array.from(goalsByTypeAndChallenge.keys())
-          .some(k => k.includes(`_${goalType}`) && k.startsWith('challenge_'));
-        
-        if (hasChallengeGoal) {
-          goalsByTypeAndChallenge.delete(personalKey);
-        }
-      });
-
-      const deduplicatedGoals = Array.from(goalsByTypeAndChallenge.values());
-      console.info('After deduplication:', deduplicatedGoals.length);
+      // 6. Return all goals without deduplication
+      // Display all 9 challenge goals + 2 personal goals (total 11)
+      console.info('Total goals (no deduplication):', goals.length);
 
       // 7. Map goals with measurements and calculate progress
-      const challengeGoals: ChallengeGoal[] = deduplicatedGoals.map(goal => {
+      const challengeGoals: ChallengeGoal[] = goals.map(goal => {
         const allMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
         
         // Check if this is a time-based goal
