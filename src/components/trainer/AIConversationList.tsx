@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, MessageSquare, Trash2 } from 'lucide-react';
-import { AIConversation } from '@/hooks/useAIConversations';
+import { AIConversation } from '@/types/trainer';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {

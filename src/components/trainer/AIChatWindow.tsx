@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, Sparkles, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle, ArrowDown, Zap } from 'lucide-react';
-import { AIMessage, AIConversation } from '@/hooks/useAIConversations';
+import { AIMessage, AIConversation } from '@/types/trainer';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';

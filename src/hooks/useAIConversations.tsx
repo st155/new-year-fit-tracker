@@ -1,27 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface AIConversation {
-  id: string;
-  trainer_id: string;
-  title: string | null;
-  context_mode: string;
-  category?: string;
-  last_message_at: string;
-  created_at: string;
-  updated_at: string;
-  metadata: any;
-}
-
-export interface AIMessage {
-  id: string;
-  conversation_id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  metadata: any;
-  created_at: string;
-}
+import { AIConversation, AIMessage } from '@/types/trainer';
 
 export const useAIConversations = (userId: string | undefined) => {
   const [conversations, setConversations] = useState<AIConversation[]>([]);
@@ -55,7 +35,7 @@ export const useAIConversations = (userId: string | undefined) => {
         .order('last_message_at', { ascending: false });
 
       if (error) throw error;
-      setConversations(data || []);
+      setConversations((data || []) as AIConversation[]);
     } catch (error) {
       console.error('Error loading conversations:', error);
       showToast({
@@ -244,6 +224,24 @@ export const useAIConversations = (userId: string | undefined) => {
       clearTimeout(timeoutId);
       
       console.error('Error sending message:', error);
+      
+      // ✅ Логируем ошибку в БД
+      try {
+        await supabase.from('error_logs').insert({
+          user_id: userId,
+          error_type: 'ai_request_failed',
+          error_message: error.message || 'Unknown AI error',
+          source: 'trainer_ai_chat',
+          stack_trace: error.stack,
+          error_details: {
+            conversation_id: currentConversation?.id,
+            context_mode: currentConversation?.context_mode,
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log AI error:', logError);
+      }
       
       // Mark optimistic message as failed
       updateOptimisticMessage(optimisticId, { 
