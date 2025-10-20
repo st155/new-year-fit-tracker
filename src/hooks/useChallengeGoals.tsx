@@ -69,8 +69,21 @@ export function useChallengeGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // 4. Map goals with measurements and calculate progress
-      const challengeGoals: ChallengeGoal[] = goals.map(goal => {
+      // 4. Deduplicate goals by goal_type (prioritize challenge goals over personal)
+      const deduplicatedGoals = goals.reduce((acc, goal) => {
+        const existing = acc.find(g => g.goal_type === goal.goal_type);
+        if (!existing) {
+          acc.push(goal);
+        } else if (!goal.is_personal && existing.is_personal) {
+          // Replace personal goal with challenge goal
+          const index = acc.indexOf(existing);
+          acc[index] = goal;
+        }
+        return acc;
+      }, [] as typeof goals);
+
+      // 5. Map goals with measurements and calculate progress
+      const challengeGoals: ChallengeGoal[] = deduplicatedGoals.map(goal => {
         const goalMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
         
         // For body composition goals, use aggregated metrics
@@ -118,10 +131,26 @@ export function useChallengeGoals(userId?: string) {
         // Calculate progress ONLY if target_value is set
         let progress = 0;
         if (goal.target_value && currentValue) {
-          const isLowerBetter = goalNameLower.includes('жир') || goalNameLower.includes('бег');
+          const isLowerBetter = goalNameLower.includes('жир') || goalNameLower.includes('бег') || goalNameLower.includes('fat');
+          
           if (isLowerBetter) {
-            progress = Math.max(0, Math.min(100, ((goal.target_value - currentValue) / goal.target_value) * 100));
+            // For "lower is better" metrics, use baseline (first measurement)
+            const baselineValue = sparklineData[sparklineData.length - 1]?.value || currentValue;
+            
+            if (currentValue <= goal.target_value) {
+              // Already at or below target
+              progress = 100;
+            } else if (baselineValue > goal.target_value) {
+              // Calculate: (baseline - current) / (baseline - target) * 100
+              const totalRange = baselineValue - goal.target_value;
+              const progressMade = baselineValue - currentValue;
+              progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
+            } else {
+              // No baseline or already below target
+              progress = 100;
+            }
           } else {
+            // For "higher is better" metrics
             progress = Math.min(100, (currentValue / goal.target_value) * 100);
           }
         }
