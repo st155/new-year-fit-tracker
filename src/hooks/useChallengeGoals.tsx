@@ -224,32 +224,45 @@ export function useChallengeGoals(userId?: string) {
 
         // Calculate progress ONLY if target_value is set
         let progress = 0;
-        if (goal.target_value && currentValue) {
-          if (isLowerBetter) {
-            // Lower is better (body fat, weight, running time)
-            if (currentValue <= targetValue) {
-              progress = 100;
-            } else if (baselineValue && baselineValue > targetValue && baselineValue !== currentValue) {
-              const totalRange = baselineValue - targetValue;
-              const progressMade = baselineValue - currentValue;
-              progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
-            } else {
-              // Fallback when no baseline or baseline == current
-              progress = Math.max(0, Math.min(100, (1 - currentValue / targetValue) * 100));
-            }
+        if (!goal.target_value || !currentValue) {
+          progress = 0;
+          console.debug(`⏭️ ${goal.goal_name}: Skipping progress calc (target=${goal.target_value}, current=${currentValue})`);
+        } else if (isLowerBetter) {
+          // Lower is better (body fat, weight, running time)
+          if (currentValue <= targetValue) {
+            progress = 100;
+          } else if (baselineValue && baselineValue > targetValue && baselineValue !== currentValue) {
+            const totalRange = baselineValue - targetValue;
+            const progressMade = baselineValue - currentValue;
+            progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
           } else {
-            // Higher is better (duration, strength, reps)
-            if (currentValue >= targetValue) {
-              progress = 100;
-            } else if (baselineValue && baselineValue < targetValue && baselineValue !== currentValue) {
-              const totalRange = targetValue - baselineValue;
-              const progressMade = currentValue - baselineValue;
-              progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
-            } else {
-              // Fallback when no baseline or baseline == current
-              progress = Math.max(0, Math.min(100, (currentValue / targetValue) * 100));
-            }
+            // Fallback when no baseline: show 0% with suggestion to add baseline
+            progress = 0;
           }
+        } else {
+          // Higher is better (duration, strength, reps)
+          if (currentValue >= targetValue) {
+            progress = 100;
+          } else if (baselineValue && baselineValue < targetValue && baselineValue !== currentValue) {
+            const totalRange = targetValue - baselineValue;
+            const progressMade = currentValue - baselineValue;
+            progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
+          } else {
+            // Fallback when no baseline: show simple ratio (10/16 = 62.5%)
+            progress = Math.max(0, Math.min(100, (currentValue / targetValue) * 100));
+          }
+        }
+
+        // Debug logging for 0% progress
+        if (progress === 0 && currentValue > 0) {
+          console.warn(`🚨 ${goal.goal_name}: Progress is 0% despite current=${currentValue}`, {
+            currentValue,
+            targetValue,
+            baselineValue,
+            isLowerBetter,
+            isDurationGoal,
+            measurements: allMeasurements.length
+          });
         }
 
         // Validation

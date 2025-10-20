@@ -121,9 +121,9 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                       } {goal.target_unit}
                     </span>
                   )}
-                  {goal.baseline_value === goal.current_value && goal.baseline_value && (
+                  {!goal.baseline_value && goal.current_value > 0 && (
                     <span className="text-xs text-muted-foreground/60">
-                      Ожидаем второй замер
+                      Ожидаем второй замер для точного прогресса
                     </span>
                   )}
                 </div>
@@ -181,9 +181,15 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             </span>
               <span className="text-sm text-muted-foreground">{goal.target_unit}</span>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {goal.progress_percentage.toFixed(0)}% выполнено
-            </div>
+            {goal.current_value === 0 ? (
+              <Badge variant="outline" className="text-xs mt-1">
+                Нужен первый замер
+              </Badge>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {goal.progress_percentage.toFixed(0)}% выполнено
+              </div>
+            )}
           </div>
 
           {/* Progress Bar */}
