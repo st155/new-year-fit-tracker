@@ -35,6 +35,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { useClientDetailData, formatSourceName } from "@/hooks/useClientDetailData";
 import { HealthDataTabs } from "./health-data/HealthDataTabs";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Client {
   id: string;
@@ -83,6 +84,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
   const navigate = useNavigate();
   const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   // Используем оптимизированный хук для загрузки данных
   const { 
@@ -97,10 +99,31 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     refetch
   } = useClientDetailData(client.user_id);
 
-  // Real-time updates for goals and measurements
-  useGoalsRealtime(client.user_id, () => {
+  // Real-time updates for goals with optimistic updates
+  useGoalsRealtime(client.user_id, (payload) => {
     toast.info("Цели обновлены");
-    refetch();
+    
+    // Точечное обновление goals в React Query кэше
+    queryClient.setQueryData(['client-detail', client.user_id], (old: any) => {
+      if (!old) return old;
+      
+      if (payload.eventType === 'INSERT') {
+        return { ...old, goals: [...old.goals, payload.new] };
+      }
+      if (payload.eventType === 'UPDATE') {
+        return { 
+          ...old, 
+          goals: old.goals.map((g: any) => g.id === payload.new.id ? payload.new : g)
+        };
+      }
+      if (payload.eventType === 'DELETE') {
+        return { 
+          ...old, 
+          goals: old.goals.filter((g: any) => g.id !== payload.old.id)
+        };
+      }
+      return old;
+    });
   });
 
   useMeasurementsRealtime(client.user_id, () => {

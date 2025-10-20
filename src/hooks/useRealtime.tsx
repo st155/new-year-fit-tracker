@@ -73,7 +73,7 @@ export const useRealtime = ({
 };
 
 // Specific hooks for common use cases
-export const useGoalsRealtime = (userId: string, onUpdate: () => void) => {
+export const useGoalsRealtime = (userId: string, onUpdate: (payload: any) => void) => {
   useRealtime({
     table: 'goals',
     filter: `user_id=eq.${userId}`,
