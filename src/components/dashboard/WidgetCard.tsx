@@ -3,10 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchWidgetData } from '@/hooks/useWidgets';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface WidgetCardProps {
   metricName: string;
@@ -89,7 +91,9 @@ const getSourceDisplayName = (source: string): string => {
 export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [data, setData] = useState<{
     value: number | string;
     unit: string;
@@ -101,6 +105,33 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     loadData();
   }, [metricName, source, user, refreshKey]);
 
+  // Realtime подписка на новые метрики
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`metric-updates-${user.id}-${metricName}-${source}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'metric_values',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('📊 New metric value inserted:', payload);
+          // Перезагружаем данные виджета
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, metricName, source]);
+
   const loadData = async () => {
     if (!user) return;
     
@@ -108,6 +139,37 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     const result = await fetchWidgetData(user.id, metricName, source);
     setData(result);
     setLoading(false);
+  };
+
+  const syncWhoopData = async () => {
+    if (!user) return;
+    
+    setSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke('whoop-integration', {
+        body: { action: 'sync-data' }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Синхронизация запущена',
+        description: 'Whoop данные обновляются...',
+      });
+      
+      // Обновляем данные через 3 секунды
+      setTimeout(() => {
+        loadData();
+      }, 3000);
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка синхронизации',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const Icon = getMetricIcon(metricName);
@@ -251,7 +313,26 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         </div>
 
         {isDataStale && isWhoopSource && (
-          <div className="mt-3 pt-3 border-t">
+          <div className="mt-3 pt-3 border-t space-y-2">
+            <Button 
+              size="sm" 
+              variant="default" 
+              className="w-full text-xs"
+              onClick={syncWhoopData}
+              disabled={syncing}
+            >
+              {syncing ? (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                  Синхронизация...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Обновить Whoop
+                </>
+              )}
+            </Button>
             <Button 
               size="sm" 
               variant="outline" 
@@ -259,7 +340,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
               onClick={() => navigate('/integrations')}
             >
               <AlertCircle className="h-3 w-3 mr-1" />
-              Переподключить Whoop
+              Переподключить
             </Button>
           </div>
         )}

@@ -155,17 +155,13 @@ export function WhoopIntegration() {
         throw new Error(errorMsg || 'Ошибка синхронизации');
       }
 
-      // Успешная синхронизация
-      toast({
-        title: 'Данные синхронизированы',
-        description: 'Whoop данные успешно обновлены',
-      });
-
-      // Обновляем статус подключения
+      // Успешная синхронизация - обновляем статус
       await checkConnection();
       
-      // Инвалидируем все React Query кэши, особенно unified-metrics
+      // Инвалидируем все React Query кэши
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['widgets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries();
       
       // Очищаем localStorage кеши
@@ -179,6 +175,16 @@ export function WhoopIntegration() {
       
       // Уведомляем другие компоненты об обновлении
       window.dispatchEvent(new CustomEvent('whoop-data-updated'));
+      
+      toast({
+        title: 'Данные синхронизированы',
+        description: 'Whoop данные успешно обновлены',
+      });
+      
+      // Перезагружаем страницу для гарантии обновления виджетов
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
     } catch (error: any) {
       console.error('Sync error:', error);
