@@ -246,7 +246,28 @@ export const fetchWidgetData = async (
         latest = latestRows[0]; // последний доступный день
       }
       unit = (latest.user_metrics as any).unit || 'steps';
-    } else if (latestRows && latestRows.length > 0) {
+    }
+    // Для Workout Strain - берем MAX за сегодня (может быть несколько тренировок)
+    else if (metricName === 'Workout Strain' && latestRows && latestRows.length > 0) {
+      const todayWorkouts = latestRows.filter(r => r.measurement_date === todayStr);
+      if (todayWorkouts.length > 0) {
+        latest = todayWorkouts.reduce((max, r) => r.value > max.value ? r : max, todayWorkouts[0]);
+      } else {
+        latest = latestRows[0];
+      }
+      unit = (latest.user_metrics as any).unit || 'score';
+    }
+    // Для Max Heart Rate - берем MAX за сегодня
+    else if (metricName === 'Max Heart Rate' && latestRows && latestRows.length > 0) {
+      const todayHR = latestRows.filter(r => r.measurement_date === todayStr);
+      if (todayHR.length > 0) {
+        latest = todayHR.reduce((max, r) => r.value > max.value ? r : max, todayHR[0]);
+      } else {
+        latest = latestRows[0];
+      }
+      unit = (latest.user_metrics as any).unit || 'bpm';
+    }
+    else if (latestRows && latestRows.length > 0) {
       // Для Day Strain и Workout Strain - приоритет сегодняшней дате
       const isDayStrain = metricName === 'Day Strain';
       const isWorkoutStrain = metricName === 'Workout Strain';

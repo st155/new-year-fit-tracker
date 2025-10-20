@@ -260,7 +260,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             {(() => {
-              const isToday = data.date === new Date().toISOString().split('T')[0];
+              const now = new Date();
+              const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+              const todayStr = todayLocal.toISOString().split('T')[0];
+              const isToday = data.date === todayStr;
               const daysDiff = Math.floor(
                 (new Date().getTime() - new Date(data.date).getTime()) / (1000 * 60 * 60 * 24)
               );
