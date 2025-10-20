@@ -46,6 +46,7 @@ function TrainerDashboardContent() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
+  const [previousTab, setPreviousTab] = useState<string>('');
 
   // Check trainer role and redirect if not a trainer
   useEffect(() => {
@@ -146,14 +147,17 @@ function TrainerDashboardContent() {
   };
 
   const handleClientSelect = (client: any, source?: { type: string; challengeId?: string; challengeName?: string }) => {
+    setPreviousTab(activeTab);
     setSelectedClient(client as TrainerClient, source as any);
     setSearchParams({ tab: 'clients', client: client.user_id });
   };
 
   const handleBackToList = () => {
     setSelectedClient(null);
-    const currentTab = searchParams.get('tab') || 'overview';
-    setSearchParams({ tab: currentTab });
+    const returnTab = previousTab || 'overview';
+    setSearchParams({ tab: returnTab });
+    setActiveTab(returnTab);
+    setPreviousTab('');
   };
 
   // Show loading state while checking role
@@ -166,9 +170,58 @@ function TrainerDashboardContent() {
     return null;
   }
 
+  // Build breadcrumbs
+  const breadcrumbs: Breadcrumb[] = [
+    { label: 'Главная', path: '/', icon: <Home className="h-4 w-4" /> }
+  ];
+
+  const tabIcons: Record<string, JSX.Element> = {
+    'ai-hub': <Sparkles className="h-4 w-4" />,
+    'overview': <Home className="h-4 w-4" />,
+    'clients': <Users className="h-4 w-4" />,
+    'challenges': <Trophy className="h-4 w-4" />,
+    'plans': <TrendingUp className="h-4 w-4" />,
+    'tasks': <Target className="h-4 w-4" />,
+    'chat': <MessageSquare className="h-4 w-4" />,
+    'goals': <Target className="h-4 w-4" />,
+    'analytics': <BarChart3 className="h-4 w-4" />,
+  };
+
+  const tabLabels: Record<string, string> = {
+    'ai-hub': 'AI Ассистент',
+    'overview': 'Обзор',
+    'clients': 'Клиенты',
+    'challenges': 'Челленджи',
+    'plans': 'Планы',
+    'tasks': 'Задачи',
+    'chat': 'Чат',
+    'goals': 'Цели',
+    'analytics': 'Аналитика',
+  };
+
+  if (!selectedClient) {
+    breadcrumbs.push({
+      label: tabLabels[activeTab] || 'Тренер',
+      icon: tabIcons[activeTab],
+    });
+  } else {
+    if (previousTab) {
+      breadcrumbs.push({
+        label: tabLabels[previousTab] || 'Тренер',
+        icon: tabIcons[previousTab],
+      });
+    }
+    breadcrumbs.push({
+      label: selectedClient.full_name || selectedClient.username,
+      icon: <Users className="h-4 w-4" />,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-trainer-bg pb-24">
       <div className="px-4 max-w-7xl mx-auto mt-6">
+        <NavigationBreadcrumbs items={breadcrumbs} />
+        
         {selectedClient && activeTab !== 'ai-hub' ? (
           <ClientDetailView 
             client={selectedClient} 
