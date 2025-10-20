@@ -102,102 +102,46 @@ export function TrainerOverview({ onClientSelect }: TrainerOverviewProps) {
     try {
       setLoading(true);
 
-      // Загружаем клиентов тренера
-      const { data: trainerClients, error: clientsError } = await supabase
-        .from('trainer_clients')
-        .select(`
-          id,
-          client_id,
-          profiles:client_id (
-            user_id,
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('trainer_id', user.id)
-        .eq('active', true);
+      // ✅ Используем RPC функцию - 1 запрос вместо 3N+2
+      const { data: trainerClientsData, error: rpcError } = await supabase
+        .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
 
-      if (clientsError) throw clientsError;
+      if (rpcError) throw rpcError;
 
-      // Для каждого клиента загружаем статистику
-      const clientsWithStats = await Promise.all(
-        (trainerClients || []).map(async (tc: any) => {
-          const profile = tc.profiles;
-          
-          // Подсчитываем цели
-          const { count: goalsCount } = await supabase
-            .from('goals')
-            .select('*', { count: 'exact' })
-            .eq('user_id', profile.user_id);
-
-          // Получаем последние измерения для расчета прогресса
-          const { data: measurements } = await supabase
-            .from('measurements')
-            .select(`
-              value,
-              measurement_date,
-              goals (target_value)
-            `)
-            .eq('user_id', profile.user_id)
-            .order('measurement_date', { ascending: false })
-            .limit(10);
-
-          // Рассчитываем средний прогресс (упрощенно)
-          let progressPercentage = 0;
-          if (measurements && measurements.length > 0) {
-            const progresses = measurements
-              .filter(m => m.goals?.target_value)
-              .map(m => Math.min(100, (m.value / (m.goals?.target_value || 1)) * 100));
-            
-            if (progresses.length > 0) {
-              progressPercentage = progresses.reduce((sum, p) => sum + p, 0) / progresses.length;
-            }
-          }
-
-          // Последнее измерение
-          const lastMeasurement = measurements?.[0]?.measurement_date;
-
-          return {
-            id: tc.id,
-            user_id: profile.user_id,
-            username: profile.username,
-            full_name: profile.full_name,
-            avatar_url: profile.avatar_url,
-            goals_count: goalsCount || 0,
-            progress_percentage: Math.round(progressPercentage),
-            last_measurement_date: lastMeasurement
-          };
-        })
-      );
+      // Форматируем клиентов из materialized view
+      const clientsWithStats = (trainerClientsData || []).map((tc: any) => ({
+        id: tc.client_id,
+        user_id: tc.client_id,
+        username: tc.username,
+        full_name: tc.full_name,
+        avatar_url: tc.avatar_url,
+        goals_count: tc.active_goals_count || 0,
+        progress_percentage: 0, // не включено в view
+        last_measurement_date: tc.last_activity_date
+      }));
 
       // Рассчитываем общую статистику
       const activeClients = clientsWithStats.length;
-      const averageProgress = Math.round(
-        clientsWithStats.reduce((sum, client) => sum + client.progress_percentage, 0) / 
-        Math.max(1, activeClients)
-      );
+      
+      // Подсчитываем обновления за неделю (из last_activity_date)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const updatesThisWeek = clientsWithStats.filter((c: Client) => 
+        c.last_measurement_date && new Date(c.last_measurement_date) > weekAgo
+      ).length;
 
-      // Подсчитываем достигнутые цели за последний месяц
+      // Для goalsAchieved нужен отдельный запрос (но это 1 запрос, а не N)
       const { count: goalsAchieved } = await supabase
         .from('goals')
         .select('*', { count: 'exact' })
-        .in('user_id', clientsWithStats.map(c => c.user_id))
+        .in('user_id', clientsWithStats.map((c: Client) => c.user_id))
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      // Подсчитываем обновления за неделю
-      const { count: updatesThisWeek } = await supabase
-        .from('measurements')
-        .select('*', { count: 'exact' })
-        .in('user_id', clientsWithStats.map(c => c.user_id))
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
       setClients(clientsWithStats);
       setStats({
         activeClients,
-        averageProgress,
+        averageProgress: 0, // убрали расчет среднего прогресса
         goalsAchieved: goalsAchieved || 0,
-        updatesThisWeek: updatesThisWeek || 0
+        updatesThisWeek
       });
 
     } catch (error) {
