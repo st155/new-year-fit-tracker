@@ -100,117 +100,119 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
   return (
     <>
       <Card 
-        className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer group"
+        className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer group min-h-[360px]"
         onClick={handleCardClick}
       >
         <div className={`h-1 bg-gradient-to-r ${theme.gradient}`} />
         
-        <CardContent className="p-6 space-y-4">
-          {/* Header - Compact */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
-                <h3 className="font-semibold truncate">{goal.goal_name}</h3>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {goal.is_personal ? (
-                  <Badge variant="outline" className="text-xs">Личная</Badge>
-                ) : (
-                  <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
-                )}
-                {goal.subSources && goal.subSources.length > 1 ? (
-                  <span className="text-xs text-muted-foreground">
-                    Данные из {goal.subSources.length} источников: {goal.subSources.map(s => `${s.label} (${s.value.toFixed(1)}%)`).join(', ')}
-                  </span>
-                ) : sourceBadge && (
-                  <Badge variant={sourceBadge.variant} className="text-xs">
-                    {sourceBadge.label}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <Button
-              size="icon"
-              variant="ghost"
-              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={handleAddClick}
+        <CardContent className="p-6 space-y-4 relative">
+          {/* Trend Indicator - Top Right Corner */}
+          {goal.trend !== 'stable' && (
+            <div 
+              className="absolute top-4 right-4 flex items-center gap-1"
+              style={{ color: getTrendColor() }}
             >
-              <Plus className="h-4 w-4" />
-            </Button>
+              {goal.trend === 'up' ? (
+                <TrendingUp className="h-4 w-4" />
+              ) : (
+                <TrendingDown className="h-4 w-4" />
+              )}
+            </div>
+          )}
+
+          {/* Icon - Centered */}
+          <div className="flex justify-center mb-3">
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${theme.color}15` }}
+            >
+              <Icon className="h-6 w-6" style={{ color: theme.color }} />
+            </div>
           </div>
 
-          {/* Progress Bar - ALWAYS HERE */}
+          {/* Title - Centered */}
+          <h3 className="font-semibold text-center mb-2 line-clamp-2 px-8">
+            {goal.goal_name}
+          </h3>
+
+          {/* Badges - Centered */}
+          <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
+            {goal.is_personal ? (
+              <Badge variant="outline" className="text-xs">Личная</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
+            )}
+            {goal.subSources && goal.subSources.length > 1 ? (
+              <span className="text-xs text-muted-foreground text-center">
+                Данные из {goal.subSources.length} источников
+              </span>
+            ) : sourceBadge && (
+              <Badge variant={sourceBadge.variant} className="text-xs">
+                {sourceBadge.label}
+              </Badge>
+            )}
+          </div>
+
+          {/* Progress Bar - ALWAYS SHOWN */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs text-muted-foreground">
                 {goal.current_value === 0 
                   ? "Нужен первый замер" 
-                  : goal.progress_percentage === 0 && !goal.baseline_value
-                  ? "Добавьте начальный замер для точного прогресса"
-                  : !goal.baseline_value && goal.current_value > 0
-                  ? "Ожидаем второй замер для точного прогресса"
+                  : goal.progress_percentage === 0
+                  ? "0% выполнено"
                   : `${goal.progress_percentage.toFixed(0)}% выполнено`
                 }
               </span>
               {goal.trend !== 'stable' && (
-                <div 
-                  className="flex items-center gap-1 text-xs font-medium"
-                  style={{ color: getTrendColor() }}
-                >
-                  {goal.trend === 'up' ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  <span>{Math.abs(goal.trend_percentage).toFixed(1)}%</span>
-                </div>
+                <span className="text-xs font-medium" style={{ color: getTrendColor() }}>
+                  {goal.trend === 'up' ? '↗' : '↘'} {Math.abs(goal.trend_percentage).toFixed(1)}%
+                </span>
               )}
             </div>
             <Progress 
-              value={goal.current_value === 0 ? 0 : goal.progress_percentage} 
+              value={goal.progress_percentage} 
               autoColor={true} 
               className="h-2"
             />
           </div>
 
-          {/* Values - Compact */}
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span 
-                className={cn(
-                  "font-bold",
-                  goal.current_value === 0 ? "text-xl text-muted-foreground" : "text-2xl"
-                )}
-                style={goal.current_value > 0 ? { color: theme.color } : {}}
-              >
-                {isTimeGoal 
-                  ? formatTimeDisplay(goal.current_value)
-                  : goal.current_value.toFixed(1)
-                }
-              </span>
-              <span className="text-sm text-muted-foreground">
-                / {goal.target_value 
-                    ? (isTimeGoal
-                        ? formatTimeDisplay(goal.target_value)
-                        : goal.target_value)
-                    : '?'
-                  } {goal.target_unit}
-              </span>
-            </div>
-            {goal.baseline_value && goal.baseline_value !== goal.current_value && (
-              <div className="text-xs text-muted-foreground mt-1">
-                Начал с: {isTimeGoal 
-                  ? formatTimeDisplay(goal.baseline_value)
-                  : goal.baseline_value.toFixed(1)
+          {/* Values - Centered */}
+          <div className="flex items-center justify-center gap-2">
+            <span 
+              className={cn(
+                "font-bold",
+                goal.current_value === 0 ? "text-xl text-muted-foreground" : "text-2xl"
+              )}
+              style={goal.current_value > 0 ? { color: theme.color } : {}}
+            >
+              {isTimeGoal 
+                ? formatTimeDisplay(goal.current_value)
+                : goal.current_value.toFixed(1)
+              }
+            </span>
+            <span className="text-sm text-muted-foreground">
+              / {goal.target_value 
+                  ? (isTimeGoal
+                      ? formatTimeDisplay(goal.target_value)
+                      : goal.target_value)
+                  : '?'
                 } {goal.target_unit}
-              </div>
-            )}
+            </span>
           </div>
 
-          {/* Sparkline - Fixed Height */}
-          <div className="h-8 flex items-end gap-[2px]">
+          {/* Baseline - Centered */}
+          {goal.baseline_value && goal.baseline_value !== goal.current_value && (
+            <div className="text-xs text-muted-foreground text-center">
+              Начал с: {isTimeGoal 
+                ? formatTimeDisplay(goal.baseline_value)
+                : goal.baseline_value.toFixed(1)
+              } {goal.target_unit}
+            </div>
+          )}
+
+          {/* Sparkline - Fixed Height, Centered */}
+          <div className="h-8 flex items-end justify-center gap-[2px]">
             {goal.measurements.length > 0 ? (
               goal.measurements.slice(0, 10).reverse().map((m, i) => {
                 const max = Math.max(...goal.measurements.slice(0, 10).map(d => d.value));
@@ -230,11 +232,21 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 );
               })
             ) : (
-              <div className="text-xs text-muted-foreground/50">
+              <div className="text-xs text-muted-foreground/50 text-center">
                 Нет истории замеров
               </div>
             )}
           </div>
+
+          {/* Add Button - Bottom Right */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleAddClick}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </CardContent>
       </Card>
 
