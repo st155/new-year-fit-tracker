@@ -432,227 +432,80 @@ export function useClientDetailData(clientUserId: string) {
       setLoading(true);
       setError(null);
 
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
-      const thirtyDaysAgoDate = thirtyDaysAgo.toISOString().split('T')[0];
+      // Use new optimized RPC function - fetches all data in one call
+      const { data: rawData, error: rpcError } = await supabase
+        .rpc('get_client_detailed_data', {
+          p_client_id: clientUserId,
+          p_days: 30
+        });
 
-      const [
-        goalsResult,
-        measurementsResult,
-        unifiedMeasurementsResult,
-        healthSummaryResult,
-        unifiedMetricsResult,
-        aiLogsResult
-      ] = await Promise.all([
-        supabase
-          .from('goals')
-          .select(`
-            id,
-            goal_name,
-            target_value,
-            target_unit,
-            goal_type,
-            measurements(
-              value,
-              measurement_date
-            )
-          `)
-          .eq('user_id', clientUserId)
-          .order('measurement_date', { 
-            referencedTable: 'measurements', 
-            ascending: false 
-          })
-          .limit(1, { referencedTable: 'measurements' }),
+      if (rpcError) throw rpcError;
 
-        supabase
-          .from('measurements')
-          .select(`
-            id,
-            value,
-            measurement_date,
-            goals!inner(goal_name, target_unit)
-          `)
-          .eq('user_id', clientUserId)
-          .gte('measurement_date', thirtyDaysAgoISO)
-          .order('measurement_date', { ascending: false }),
+      // Parse JSONB response
+      const clientData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
 
-        supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(
-              metric_name,
-              source,
-              unit,
-              metric_category
-            )
-          `)
-          .eq('user_id', clientUserId)
-          .gte('measurement_date', thirtyDaysAgoDate)
-          .in('user_metrics.metric_name', [
-            'Recovery Score', 'Day Strain', 'Sleep Duration', 
-            'Workout Calories', 'Active Calories', 'Average Heart Rate', 'Max Heart Rate',
-            'Sleep Efficiency', 'Sleep Performance', 'Resting Heart Rate',
-            'Body Battery', 'Stress Level', 'VO2 Max',
-            'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration',
-            'Sleep HRV RMSSD', 'Respiratory Rate', 'Steps'
-          ])
-          .order('measurement_date', { ascending: false }),
-
-        supabase
-          .from('daily_health_summary')
-          .select('*')
-          .eq('user_id', clientUserId)
-          .gte('date', thirtyDaysAgoDate)
-          .order('date', { ascending: true }),
-
-        supabase
-          .from('metric_values')
-          .select(`
-            value,
-            measurement_date,
-            user_metrics!inner(
-              metric_name,
-              source,
-              unit,
-              metric_category
-            )
-          `)
-          .eq('user_id', clientUserId)
-          .in('user_metrics.metric_name', [
-            // Activity
-            'Steps', 'Active Calories', 'Distance', 'Avg Speed', 
-            'Max Speed', 'Elevation Gain', 'Workout Time',
-            
-            // Heart
-            'Average Heart Rate', 'Resting Heart Rate', 'Max Heart Rate',
-            'HRV RMSSD', 'Sleep HRV RMSSD', 'HR Zones 1-3 (Weekly)', 
-            'HR Zones 4-5 (Weekly)',
-            
-            // Sleep
-            'Sleep Duration', 'Sleep Efficiency', 'Sleep Performance',
-            'Deep Sleep Duration', 'Light Sleep Duration', 'REM Sleep Duration',
-            'Respiratory Rate',
-            
-            // Body Composition
-            'Weight', 'Body Fat Percentage', 'Мышечная масса', 
-            'Процент мышц', 'Процент жира',
-            
-            // Recovery
-            'Recovery Score', 'Day Strain', 'Workout Strain',
-            'Body Battery', 'Stress Level',
-            
-            // Workouts
-            'Workout Calories',
-            
-            // Health Metrics
-            'VO2 Max', 'VO2Max', 'Пульсовое давление'
-          ])
-          .gte('measurement_date', thirtyDaysAgoDate)
-          .order('measurement_date', { ascending: true }),
-
-        supabase
-          .from('ai_action_logs')
-          .select('*')
-          .eq('client_id', clientUserId)
-          .order('created_at', { ascending: false })
-          .limit(20)
-      ]);
-
-      if (goalsResult.error) {
-        console.error('Error loading goals:', goalsResult.error);
-        throw goalsResult.error;
-      }
-      if (measurementsResult.error) {
-        console.error('Error loading measurements:', measurementsResult.error);
-        throw measurementsResult.error;
-      }
-      if (unifiedMeasurementsResult.error) {
-        console.error('Error loading unified measurements:', unifiedMeasurementsResult.error);
-      }
-      if (healthSummaryResult.error) {
-        console.error('Error loading health summary:', healthSummaryResult.error);
-      }
-      if (unifiedMetricsResult.error) {
-        console.error('Error loading unified metrics:', unifiedMetricsResult.error);
-      }
-      if (aiLogsResult.error) {
-        console.error('Error loading AI logs:', aiLogsResult.error);
+      if (!clientData) {
+        setGoals([]);
+        setMeasurements([]);
+        setHealthData([]);
+        setAiHistory([]);
+        setWhoopSummary(null);
+        setOuraSummary(null);
+        setLoading(false);
+        return;
       }
 
-      const goalsWithProgress = (goalsResult.data || []).map(goal => {
-        const latestMeasurement = goal.measurements?.[0];
-        let currentValue = latestMeasurement?.value || 0;
-        
-        if (!currentValue && unifiedMeasurementsResult.data) {
-          const matchingMetric = unifiedMeasurementsResult.data.find((m: any) => 
-            m.user_metrics.metric_name === goal.goal_name || m.user_metrics.metric_name === goal.goal_type
-          );
-          currentValue = matchingMetric?.value || 0;
-        }
-        
-        const progressPercentage = goal.target_value 
-          ? Math.min(100, Math.round((currentValue / goal.target_value) * 100))
-          : 0;
+      // Process goals
+      const goalsData = (clientData.goals || []).map((g: any) => ({
+        id: g.id,
+        goal_name: g.goal_name,
+        target_value: g.target_value,
+        target_unit: g.target_unit,
+        goal_type: g.goal_type,
+        current_value: g.current_value,
+        progress_percentage: g.current_value && g.target_value 
+          ? Math.min(100, Math.round((g.current_value / g.target_value) * 100))
+          : undefined
+      }));
 
-        return {
-          id: goal.id,
-          goal_name: goal.goal_name,
-          target_value: goal.target_value,
-          target_unit: goal.target_unit,
-          goal_type: goal.goal_type,
-          current_value: currentValue,
-          progress_percentage: progressPercentage
-        };
-      });
-
-      const manualMeasurements = (measurementsResult.data || []).map(m => ({
+      // Process measurements
+      const measurementsData = (clientData.measurements || []).map((m: any) => ({
         id: m.id,
         value: m.value,
         measurement_date: m.measurement_date,
-        goal_name: m.goals?.goal_name || 'Неизвестная цель',
-        unit: m.goals?.target_unit || '',
-        source: 'manual'
+        goal_name: m.goal_name,
+        unit: m.unit,
+        source: m.source
       }));
 
-      const autoMeasurements = (unifiedMeasurementsResult.data || []).map((um: any) => ({
-        id: `${clientUserId}-${um.measurement_date}-${um.user_metrics.metric_name}`,
-        value: um.value,
-        measurement_date: um.measurement_date,
-        goal_name: um.user_metrics.metric_name,
-        unit: um.user_metrics.unit || '',
-        source: um.user_metrics.source
-      }));
-
-      const processedMeasurements = [...manualMeasurements, ...autoMeasurements]
-        .sort((a, b) => new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime());
-
-      // Transform metric_values with joined user_metrics to expected format
-      const unifiedMetrics = (unifiedMetricsResult.data || []).map((mv: any) => ({
+      // Process unified metrics with proper format
+      const unifiedMetricsData = (clientData.unified_metrics || []).map((m: any) => ({
         user_id: clientUserId,
-        measurement_date: mv.measurement_date,
-        metric_name: mv.user_metrics.metric_name,
-        value: mv.value,
-        unit: mv.user_metrics.unit,
-        source: mv.user_metrics.source,
+        metric_name: m.metric_name,
+        value: m.value,
+        measurement_date: m.measurement_date,
+        source: m.source,
+        unit: m.unit,
         priority: 1
       }));
 
-      const mergedHealthData = mergeHealthData(
-        healthSummaryResult.data || [], 
-        unifiedMetrics
+      // Merge health data
+      const mergedHealth = mergeHealthData(
+        clientData.health_summary || [],
+        unifiedMetricsData
       );
 
-      const whoopData = calculateWhoopSummary(unifiedMetrics);
-      const ouraData = calculateOuraSummary(unifiedMetrics);
+      // Calculate summaries
+      const whoopSum = calculateWhoopSummary(unifiedMetricsData);
+      const ouraSum = calculateOuraSummary(unifiedMetricsData);
 
-      setGoals(goalsWithProgress);
-      setMeasurements(processedMeasurements);
-      setHealthData(mergedHealthData);
-      setAiHistory(aiLogsResult.data || []);
-      setWhoopSummary(whoopData);
-      setOuraSummary(ouraData);
+      setGoals(goalsData);
+      setMeasurements(measurementsData);
+      setHealthData(mergedHealth);
+      setAiHistory(clientData.ai_history || []);
+      setWhoopSummary(whoopSum);
+      setOuraSummary(ouraSum);
+      setError(null);
 
     } catch (err) {
       console.error('Error loading client data:', err);

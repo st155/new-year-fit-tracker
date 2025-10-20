@@ -2631,28 +2631,6 @@ export type Database = {
           },
         ]
       }
-      trainer_client_summary_secure: {
-        Row: {
-          active_goals_count: number | null
-          avatar_url: string | null
-          client_id: string | null
-          full_name: string | null
-          health_summary: Json | null
-          last_activity_date: string | null
-          recent_measurements_count: number | null
-          trainer_id: string | null
-          username: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trainer_clients_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
     }
     Functions: {
       aggregate_daily_health_data: {
@@ -2689,6 +2667,20 @@ export type Database = {
           unified_category: string
           unified_metric_name: string
           unified_unit: string
+        }[]
+      }
+      get_trainer_clients_summary: {
+        Args: { p_trainer_id?: string }
+        Returns: {
+          active_goals_count: number
+          avatar_url: string
+          client_id: string
+          full_name: string
+          health_summary: Json
+          last_activity_date: string
+          recent_measurements_count: number
+          trainer_id: string
+          username: string
         }[]
       }
       get_unified_metrics: {
