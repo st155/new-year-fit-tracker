@@ -266,7 +266,29 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
               );
               const isWorkoutMetric = metricName.toLowerCase().includes('workout') || 
                                      metricName.toLowerCase().includes('strain');
+              const isRecoveryScore = metricName === 'Recovery Score';
               
+              // Recovery Score: показывать дату только если старше 24 часов
+              if (isRecoveryScore) {
+                if (daysDiff > 0) {
+                  return (
+                    <>
+                      <span className="text-muted-foreground">
+                        {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      </span>
+                      {daysDiff > 1 && (
+                        <span className="text-xs text-yellow-600 font-medium">
+                          ({daysDiff} дн. назад)
+                        </span>
+                      )}
+                    </>
+                  );
+                }
+                // Если свежие данные - не показываем дату для Recovery Score
+                return null;
+              }
+              
+              // Для остальных метрик - стандартная логика
               if (isToday) {
                 return <span className="text-muted-foreground">Сегодня</span>;
               } else if (isWorkoutMetric && daysDiff > 1) {

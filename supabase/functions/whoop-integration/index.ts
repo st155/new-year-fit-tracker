@@ -609,13 +609,11 @@ async function syncWhoopData(
           console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
         }
 
-        // Day Strain относится к активности ДО окончания цикла
-        // Цикл завершается утром (cycle.end), поэтому strain за предыдущий день
-        // Используем cycle.start для правильной даты
+        // Day Strain (общая дневная нагрузка за цикл)
+        // Цикл накапливает strain в течение дня и завершается утром следующего дня
+        // Day Strain относится к дате окончания цикла (когда он завершился)
         if (cycle.score?.strain !== undefined) {
-          const strainDate = new Date(cycle.start).toISOString().split('T')[0];
-          
-          console.log(`Saving Day Strain ${cycle.score.strain} for ${strainDate} (cycle ended ${cycleDate})`);
+          console.log(`Saving Day Strain ${cycle.score.strain} for ${cycleDate}`);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -629,19 +627,18 @@ async function syncWhoopData(
             user_id: userId,
             metric_id: metricId,
             value: cycle.score.strain,
-            measurement_date: strainDate, // Используем дату начала цикла
+            measurement_date: cycleDate, // Используем дату окончания цикла
             external_id: `whoop_strain_${cycle.id}`,
             source_data: { 
               cycle_id: cycle.id, 
-              raw: cycle.score,
-              cycle_end: cycleDate // Сохраняем для справки
+              raw: cycle.score
             },
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (strainError) {
-            console.error(`❌ Failed to save Day Strain for ${strainDate}:`, strainError);
+            console.error(`❌ Failed to save Day Strain for ${cycleDate}:`, strainError);
           } else {
-            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${strainDate}`);
+            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
           }
         } else {
           console.log(`❌ No strain data for cycle ${cycle.id} (${cycleDate}), cycle.score:`, cycle.score);
