@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, TrendingUp, DollarSign, MoreVertical } from "lucide-react";
+import { AlertCircle, TrendingUp, DollarSign } from "lucide-react";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
 import {
   AlertDialog,
@@ -21,6 +21,7 @@ import {
   getHabitCardClass,
   getNeonCircleClass 
 } from "@/lib/habit-utils";
+import { HabitHistory } from "./HabitHistory";
 
 interface DurationCounterProps {
   habit: any;
@@ -31,7 +32,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
   const [elapsed, setElapsed] = useState({ days: 0, hours: 0, minutes: 0 });
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetReason, setResetReason] = useState("");
-  const { currentAttempt, longestStreak, resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
+  const { currentAttempt, attempts, longestStreak, resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
 
   useEffect(() => {
     if (!habit.start_date && !currentAttempt?.start_date) return;
@@ -82,11 +83,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
 
   return (
     <>
-      <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
-        {/* More options menu */}
-        <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
-          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-        </button>
+      <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-4`}>
 
         {milestone && (
           <div className="absolute top-4 left-4">
@@ -157,8 +154,18 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
 
         {/* AI Motivation */}
         {habit.ai_motivation && (
-          <div className="mb-6">
-            <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
+          <AIMotivation habit={habit} elapsedMinutes={elapsedMinutes} />
+        )}
+
+        {/* History of attempts */}
+        {attempts && attempts.length > 1 && (
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground">История попыток</div>
+            <HabitHistory 
+              attempts={attempts.filter(a => a.end_date)}
+              type="attempts"
+              maxItems={3}
+            />
           </div>
         )}
 

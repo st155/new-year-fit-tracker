@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, MoreVertical } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { 
   getHabitSentiment, 
@@ -7,6 +7,8 @@ import {
   getHabitCardClass,
   getNeonCircleClass 
 } from "@/lib/habit-utils";
+import { HabitSparkline } from "./HabitSparkline";
+import { HabitHistory } from "./HabitHistory";
 
 interface NumericCounterProps {
   habit: any;
@@ -14,7 +16,7 @@ interface NumericCounterProps {
 }
 
 export function NumericCounter({ habit, userId }: NumericCounterProps) {
-  const { stats, addMeasurement, isAdding } = useHabitMeasurements(habit.id, userId);
+  const { stats, measurements, addMeasurement, isAdding } = useHabitMeasurements(habit.id, userId);
 
   const currentValue = stats?.total || 0;
   const targetValue = habit.target_value || 0;
@@ -35,10 +37,7 @@ export function NumericCounter({ habit, userId }: NumericCounterProps) {
   };
 
   return (
-    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
-      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
-        <MoreVertical className="h-4 w-4 text-muted-foreground" />
-      </button>
+    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-4`}>
 
       {/* Hero Circle with Value */}
       <div className="flex justify-center mb-6">
@@ -104,17 +103,42 @@ export function NumericCounter({ habit, userId }: NumericCounterProps) {
         </Button>
       </div>
 
+      {/* Sparkline */}
+      {measurements && measurements.length > 1 && (
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">Последние 7 дней</div>
+          <HabitSparkline 
+            data={measurements.slice(0, 7).reverse().map(m => m.value)}
+            width={250}
+            height={40}
+            color={`hsl(var(--habit-${sentiment === 'positive' ? 'positive' : 'neutral'}))`}
+          />
+        </div>
+      )}
+
       {/* Stats */}
       {stats && stats.count > 0 && (
-        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
-          <div className="text-center">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="text-center p-2 glass-card rounded">
             <div className="text-xs text-muted-foreground">Total Entries</div>
             <div className="font-bold text-foreground">{stats.count}</div>
           </div>
-          <div className="text-center">
+          <div className="text-center p-2 glass-card rounded">
             <div className="text-xs text-muted-foreground">Avg per Entry</div>
             <div className="font-bold text-foreground">{stats.average.toFixed(1)}</div>
           </div>
+        </div>
+      )}
+
+      {/* Recent History */}
+      {measurements && measurements.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">Последние записи</div>
+          <HabitHistory 
+            measurements={measurements}
+            type="measurements"
+            maxItems={3}
+          />
         </div>
       )}
     </div>

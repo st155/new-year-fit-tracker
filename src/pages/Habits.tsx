@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
 import { HabitMigrationButton } from "@/components/habits/HabitMigrationButton";
@@ -7,13 +7,27 @@ import { HabitStats } from "@/components/habits/HabitStats";
 import { HabitCreateDialog } from "@/components/habits/HabitCreateDialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Plus, Target } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Target, LayoutGrid, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Habits() {
   const { user } = useAuth();
   const { habits, isLoading, refetch } = useHabits(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Group habits by category
+  const habitsByCategory = {
+    all: habits || [],
+    health: habits?.filter(h => h.category === 'health') || [],
+    fitness: habits?.filter(h => h.category === 'fitness') || [],
+    nutrition: habits?.filter(h => h.category === 'nutrition') || [],
+    custom: habits?.filter(h => h.category === 'custom' || !h.category) || [],
+  };
+
+  const displayHabits = habitsByCategory[selectedCategory as keyof typeof habitsByCategory] || [];
 
   if (isLoading) {
     return (
@@ -69,15 +83,63 @@ export default function Habits() {
           }}
         />
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 stagger-fade-in">
-          {habits.map((habit, index) => (
-            <div key={habit.id} style={{ animationDelay: `${index * 50}ms` }}>
-              <HabitCard 
-                habit={habit} 
-                onCompleted={refetch}
-              />
+        <div className="space-y-6">
+          {/* Category Tabs + View Toggle */}
+          <div className="flex items-center justify-between gap-4">
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1">
+              <TabsList className="glass-card border-white/10">
+                <TabsTrigger value="all">Все ({habits.length})</TabsTrigger>
+                <TabsTrigger value="health">Здоровье ({habitsByCategory.health.length})</TabsTrigger>
+                <TabsTrigger value="fitness">Фитнес ({habitsByCategory.fitness.length})</TabsTrigger>
+                <TabsTrigger value="nutrition">Питание ({habitsByCategory.nutrition.length})</TabsTrigger>
+                <TabsTrigger value="custom">Прочее ({habitsByCategory.custom.length})</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* View Mode Toggle */}
+            <div className="flex gap-2 glass-card border-white/10 p-1 rounded-lg">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-primary/20' : ''}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-primary/20' : ''}
+              >
+                <List className="h-4 w-4" />
+              </Button>
             </div>
-          ))}
+          </div>
+
+          {/* Habits Grid/List */}
+          <div className={
+            viewMode === 'grid' 
+              ? "grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 stagger-fade-in"
+              : "space-y-4 stagger-fade-in"
+          }>
+            {displayHabits.map((habit, index) => (
+              <div key={habit.id} style={{ animationDelay: `${index * 50}ms` }}>
+                <HabitCard 
+                  habit={habit} 
+                  onCompleted={refetch}
+                />
+              </div>
+            ))}
+          </div>
+
+          {displayHabits.length === 0 && selectedCategory !== 'all' && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                Нет привычек в категории "{selectedCategory}"
+              </p>
+            </div>
+          )}
         </div>
       )}
 

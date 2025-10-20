@@ -499,6 +499,34 @@ All colors MUST be HSL.
     }
   }
 
+  /* Habit-specific animations */
+  @keyframes milestone-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--habit-positive) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(var(--habit-positive) / 0.8), 0 0 60px hsl(var(--habit-positive) / 0.4);
+    }
+  }
+
+  @keyframes progress-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .habit-milestone-pulse {
+    animation: milestone-pulse 2s ease-in-out infinite;
+  }
+
+  .habit-progress-bar {
+    transform-origin: left;
+    animation: progress-fill 0.8s ease-out;
+  }
+
   @keyframes marquee {
     0% {
       transform: translateX(0);

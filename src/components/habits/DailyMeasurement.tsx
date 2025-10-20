@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, TrendingUp, TrendingDown, MoreVertical } from "lucide-react";
+import { Check, TrendingUp, TrendingDown } from "lucide-react";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { 
   getHabitSentiment, 
@@ -9,6 +9,8 @@ import {
   getHabitCardClass,
   getNeonCircleClass 
 } from "@/lib/habit-utils";
+import { HabitHistory } from "./HabitHistory";
+import { HabitSparkline } from "./HabitSparkline";
 
 interface DailyMeasurementProps {
   habit: any;
@@ -51,10 +53,7 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
     : 0;
 
   return (
-    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
-      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
-        <MoreVertical className="h-4 w-4 text-muted-foreground" />
-      </button>
+    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-4`}>
 
       {/* Hero Circle with Value */}
       <div className="flex justify-center mb-6">
@@ -154,20 +153,28 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
         </div>
       </div>
 
+      {/* Sparkline */}
+      {measurements && measurements.length > 1 && (
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">Тренд за неделю</div>
+          <HabitSparkline 
+            data={measurements.slice(0, 7).reverse().map(m => m.value)}
+            width={250}
+            height={40}
+            color={`hsl(var(--habit-${sentiment === 'positive' ? 'positive' : 'neutral'}))`}
+          />
+        </div>
+      )}
+
       {/* Recent History */}
       {measurements && measurements.length > 0 && (
-        <div className="space-y-1 pt-4 border-t border-white/10 mt-4">
-          <div className="text-xs text-muted-foreground mb-2">Recent entries</div>
-          {measurements.slice(0, 5).map((m) => (
-            <div key={m.id} className="flex justify-between text-sm px-2 py-1 rounded hover:bg-white/5 transition-colors">
-              <span className="text-muted-foreground">
-                {new Date(m.measurement_date).toLocaleDateString()}
-              </span>
-              <span className="font-medium text-foreground">
-                {m.value} {habit.measurement_unit || ""}
-              </span>
-            </div>
-          ))}
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">Последние замеры</div>
+          <HabitHistory 
+            measurements={measurements}
+            type="measurements"
+            maxItems={5}
+          />
         </div>
       )}
     </div>
