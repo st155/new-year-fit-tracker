@@ -2631,6 +2631,28 @@ export type Database = {
           },
         ]
       }
+      trainer_client_summary_secure: {
+        Row: {
+          active_goals_count: number | null
+          avatar_url: string | null
+          client_id: string | null
+          full_name: string | null
+          health_summary: Json | null
+          last_activity_date: string | null
+          recent_measurements_count: number | null
+          trainer_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       aggregate_daily_health_data: {
