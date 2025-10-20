@@ -29,6 +29,7 @@ interface AIChatWindowProps {
     avatar_url?: string;
   } | null;
   sending: boolean;
+  sendingState: 'idle' | 'sending' | 'processing' | 'error' | 'timeout';
   onSendMessage: (message: string, contextMode: string, mentionedClients: string[], mentionedNames?: string[], contextClientId?: string, autoExecute?: boolean) => Promise<any>;
   pendingActions: AIPendingAction[];
   onExecuteAction: (pendingActionId: string, conversationId: string, actions: any[]) => Promise<any>;
@@ -41,6 +42,7 @@ export const AIChatWindow = ({
   currentConversation,
   selectedClient,
   sending,
+  sendingState,
   onSendMessage,
   pendingActions,
   onExecuteAction,
@@ -69,8 +71,21 @@ export const AIChatWindow = ({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isSelectingMention, setIsSelectingMention] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Timer for elapsed time display
+  useEffect(() => {
+    if (sendingState === 'processing') {
+      const interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setElapsedTime(0);
+    }
+  }, [sendingState]);
 
   // Smart auto-scroll: scroll on initial load or if user is at bottom
   useEffect(() => {

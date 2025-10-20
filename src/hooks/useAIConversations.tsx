@@ -10,6 +10,7 @@ export const useAIConversations = (userId: string | undefined) => {
   const [optimisticMessages, setOptimisticMessages] = useState<AIMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendingState, setSendingState] = useState<'idle' | 'sending' | 'processing' | 'error' | 'timeout'>('idle');
   const { toast } = useToast();
 
   // Use useCallback to avoid recreating toast function
@@ -124,7 +125,13 @@ export const useAIConversations = (userId: string | undefined) => {
 
     // Reset sending state first to clear any stuck states
     setSending(false);
+    setSendingState('idle');
     await new Promise(resolve => setTimeout(resolve, 100)); // Ensure state reset
+
+    console.log('[AI Chat] Sending message:', {
+      conversationId: currentConversation?.id,
+      timestamp: new Date().toISOString()
+    });
 
     // Add optimistic user message
     const optimisticId = addOptimisticMessage(message, 'user');
@@ -132,9 +139,10 @@ export const useAIConversations = (userId: string | undefined) => {
     // 30-second timeout for stuck requests
     const timeoutId = setTimeout(() => {
       setSending(false);
+      setSendingState('timeout');
       showToast({
         title: '⏱️ AI не отвечает',
-        description: 'Попробуйте еще раз',
+        description: 'Обновите страницу или попробуйте позже',
         variant: 'destructive'
       });
       if (currentConversation) {
@@ -143,12 +151,16 @@ export const useAIConversations = (userId: string | undefined) => {
     }, 30000);
 
     setSending(true);
+    setSendingState('sending');
     
     let retryAttempt = 0;
     const maxRetries = 1;
     
     try {
       let data, error;
+      
+      // Update to processing state
+      setSendingState('processing');
       
       // Retry logic for edge function errors
       while (retryAttempt <= maxRetries) {
@@ -166,6 +178,11 @@ export const useAIConversations = (userId: string | undefined) => {
         
         data = response.data;
         error = response.error;
+        
+        console.log('[AI Chat] Response received:', {
+          success: !error,
+          hasData: !!data
+        });
         
         // Only retry for isPlan deployment errors
         if (error && error.message?.includes('isPlan') && retryAttempt < maxRetries) {
@@ -248,6 +265,13 @@ export const useAIConversations = (userId: string | undefined) => {
         metadata: { isOptimistic: true, status: 'failed' } 
       });
       
+      // Set error state
+      if (error.message?.includes('timeout')) {
+        setSendingState('timeout');
+      } else {
+        setSendingState('error');
+      }
+      
       // Show specific error messages
       if (error.message?.includes('429') || error.message?.includes('rate limit')) {
         showToast({
@@ -261,10 +285,16 @@ export const useAIConversations = (userId: string | undefined) => {
           description: 'Please add more credits to your Lovable workspace.',
           variant: 'destructive'
         });
+      } else if (error.message?.includes('timeout')) {
+        showToast({
+          title: 'Таймаут',
+          description: 'AI не отвечает. Обновите страницу.',
+          variant: 'destructive'
+        });
       } else {
         showToast({
           title: 'Ошибка',
-          description: 'Не удалось отправить сообщение',
+          description: 'Не удалось отправить сообщение. Попробуйте еще раз.',
           variant: 'destructive'
         });
       }
@@ -275,6 +305,10 @@ export const useAIConversations = (userId: string | undefined) => {
       return null;
     } finally {
       setSending(false);
+      // Only reset to idle if not already in error/timeout state
+      if (sendingState === 'sending' || sendingState === 'processing') {
+        setSendingState('idle');
+      }
     }
   };
 
@@ -408,6 +442,7 @@ export const useAIConversations = (userId: string | undefined) => {
     messages: [...messages, ...optimisticMessages],
     loading,
     sending,
+    sendingState,
     selectConversation,
     sendMessage,
     startNewConversation,
