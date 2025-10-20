@@ -8,8 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { PhotoUpload } from "@/components/ui/photo-upload";
-import { Camera, Calendar, ChevronDown } from "lucide-react";
+import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 interface Goal {
   id: string;
@@ -45,6 +46,7 @@ export function QuickMeasurementDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Функция для преобразования MM.SS в десятичные минуты для временных целей
   const parseTimeValue = (value: string): number => {
@@ -91,6 +93,24 @@ export function QuickMeasurementDialog({
       toast({
         title: "Ошибка",
         description: "Цель не найдена",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ✅ Валидация даты
+    const selectedDate = new Date(form.measurement_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    const maxFutureDate = new Date(today);
+    maxFutureDate.setDate(today.getDate() + 1); // максимум завтра
+    
+    if (selectedDate > maxFutureDate) {
+      toast({
+        title: "Некорректная дата",
+        description: "Нельзя добавлять измерения так далеко в будущее. Проверьте год!",
         variant: "destructive",
       });
       return;
@@ -180,17 +200,30 @@ export function QuickMeasurementDialog({
 
       console.log('Measurement saved successfully:', result);
 
-      // Сбрасываем форму
-      setForm({
-        value: '',
-        notes: '',
-        measurement_date: new Date().toISOString().split('T')[0],
-        photo_url: ''
-      });
+      // ✅ Показываем success animation
+      setShowSuccess(true);
       
-      // Обновляем данные и закрываем диалог
-      onMeasurementAdded();
-      onOpenChange(false);
+      // ✅ Закрываем диалог с небольшой задержкой для анимации
+      setTimeout(() => {
+        // Сбрасываем форму
+        setForm({
+          value: '',
+          notes: '',
+          measurement_date: new Date().toISOString().split('T')[0],
+          photo_url: ''
+        });
+        
+        // Закрываем диалог
+        onOpenChange(false);
+        setShowSuccess(false);
+        
+        // ✅ Вызываем callback в try-catch чтобы не блокировать закрытие
+        try {
+          onMeasurementAdded();
+        } catch (callbackError) {
+          console.error('Error in onMeasurementAdded callback:', callbackError);
+        }
+      }, 500);
     } catch (error: any) {
       console.error('Error saving measurement:', error);
       
@@ -394,12 +427,27 @@ export function QuickMeasurementDialog({
 
           {/* Date Picker (conditional) */}
           {showDatePicker && (
-            <div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Выберите дату</span>
+                <span className={cn(
+                  "font-semibold",
+                  new Date(form.measurement_date).getFullYear() !== new Date().getFullYear() && "text-destructive"
+                )}>
+                  {new Date(form.measurement_date).getFullYear() === new Date().getFullYear() 
+                    ? "✓ Текущий год" 
+                    : "⚠️ Проверьте год!"}
+                </span>
+              </div>
               <Input
                 type="date"
                 value={form.measurement_date}
+                max={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // завтра
                 onChange={(e) => setForm(prev => ({ ...prev, measurement_date: e.target.value }))}
-                className="h-9"
+                className={cn(
+                  "h-9",
+                  new Date(form.measurement_date).getFullYear() !== new Date().getFullYear() && "border-destructive"
+                )}
               />
             </div>
           )}
@@ -456,10 +504,22 @@ export function QuickMeasurementDialog({
           </Button>
           <Button
             onClick={addMeasurement}
-            className="flex-1 bg-gradient-primary hover:opacity-90"
+            className={cn(
+              "flex-1 bg-gradient-primary hover:opacity-90 transition-all",
+              showSuccess && "bg-green-500"
+            )}
             disabled={isSubmitting || !form.value.trim()}
           >
-            {isSubmitting ? "Добавляю..." : "Добавить"}
+            {showSuccess ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Готово!
+              </>
+            ) : isSubmitting ? (
+              "Добавляю..."
+            ) : (
+              "Добавить"
+            )}
           </Button>
         </div>
     </ResponsiveDialog>
