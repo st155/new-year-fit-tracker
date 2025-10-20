@@ -1,15 +1,26 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Check, Flame, TrendingUp, MoreVertical } from "lucide-react";
+import { Check, Flame, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { DurationCounter } from "./DurationCounter";
 import { NumericCounter } from "./NumericCounter";
 import { DailyMeasurement } from "./DailyMeasurement";
 import { FastingTracker } from "./FastingTracker";
+import { HabitOptionsMenu } from "./HabitOptionsMenu";
+import { HabitEditDialog } from "./HabitEditDialog";
+import { HabitCelebration } from "./HabitCelebration";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   getHabitSentiment, 
   getHabitIcon, 
@@ -30,6 +41,7 @@ interface HabitCardProps {
     target_value?: number;
     measurement_unit?: string;
     custom_settings?: any;
+    user_id?: string;
     stats?: {
       current_streak: number;
       total_completions: number;
@@ -41,41 +53,46 @@ interface HabitCardProps {
 }
 
 export function HabitCard({ habit, onCompleted }: HabitCardProps) {
-  const { user } = useAuth();
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
 
   // Route to custom habit cards based on type
   if (habit.habit_type === "duration_counter") {
-    return <DurationCounter habit={habit} userId={user?.id} />;
+    return <DurationCounter habit={habit} userId={habit.user_id} />;
   }
 
   if (habit.habit_type === "fasting_tracker") {
-    return <FastingTracker habit={habit} userId={user?.id} onCompleted={onCompleted} />;
+    return <FastingTracker habit={habit} userId={habit.user_id} onCompleted={onCompleted} />;
   }
 
   if (habit.habit_type === "numeric_counter") {
-    return <NumericCounter habit={habit} userId={user?.id} />;
+    return <NumericCounter habit={habit} userId={habit.user_id} />;
   }
 
   if (habit.habit_type === "daily_measurement") {
-    return <DailyMeasurement habit={habit} userId={user?.id} />;
+    return <DailyMeasurement habit={habit} userId={habit.user_id} />;
   }
 
   // Default: daily_check habit card
   const [isCompleting, setIsCompleting] = useState(false);
 
   const handleComplete = async () => {
-    if (!user || habit.completed_today) return;
+    if (habit.completed_today) return;
 
     setIsCompleting(true);
     try {
       const { error } = await supabase.from("habit_completions").insert({
         habit_id: habit.id,
-        user_id: user.id,
+        user_id: habit.user_id,
         completed_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
+      setCelebrate(true);
+      setTimeout(() => setCelebrate(false), 100);
+      
       toast.success("Привычка выполнена! 🎉");
       onCompleted();
     } catch (error) {
@@ -86,17 +103,39 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from("habits")
+        .update({ is_active: false })
+        .eq("id", habit.id);
+
+      if (error) throw error;
+
+      toast.success("Привычка архивирована");
+      onCompleted?.();
+    } catch (error) {
+      console.error("Error archiving habit:", error);
+      toast.error("Ошибка при архивировании");
+    }
+  };
+
   const sentiment = getHabitSentiment(habit);
   const IconComponent = getHabitIcon(habit);
   const cardClass = getHabitCardClass(sentiment);
   const circleClass = getNeonCircleClass(sentiment);
 
   return (
-    <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden`}>
-      {/* More options menu */}
-      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-0 group-hover:opacity-100">
-        <MoreVertical className="h-4 w-4 text-muted-foreground" />
-      </button>
+    <>
+      <HabitCelebration trigger={celebrate} type="completion" />
+      
+      <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-6`}>
+        <div className="absolute top-4 right-4">
+          <HabitOptionsMenu
+            onEdit={() => setShowEditDialog(true)}
+            onDelete={() => setShowDeleteDialog(true)}
+          />
+        </div>
 
       {/* Hero Circle Icon */}
       <div className="flex justify-center mb-6">
@@ -195,5 +234,35 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
         )}
       </Button>
     </div>
+
+    <HabitEditDialog
+      open={showEditDialog}
+      onOpenChange={setShowEditDialog}
+      habit={habit}
+      onSuccess={onCompleted}
+    />
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent className="glass-strong border-white/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="glass-card border-white/20">
+            Отмена
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-destructive hover:bg-destructive/90"
+          >
+            Архивировать
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }

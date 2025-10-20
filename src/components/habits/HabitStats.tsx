@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Flame, Trophy, TrendingUp, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Flame, Trophy, TrendingUp, Award } from "lucide-react";
 
 interface HabitStatsProps {
   userId?: string;
@@ -16,6 +16,7 @@ export function HabitStats({ userId }: HabitStatsProps) {
     activeStreaks: 0,
     totalCompletions: 0,
     averageCompletionRate: 0,
+    topHabit: null as { name: string; streak: number } | null,
   });
   const [loading, setLoading] = useState(true);
 
@@ -30,10 +31,10 @@ export function HabitStats({ userId }: HabitStatsProps) {
 
     setLoading(true);
     try {
-      // Get total habits
-      const { count: habitsCount } = await supabase
+      // Get total habits with names
+      const { data: habits, count: habitsCount } = await supabase
         .from("habits")
-        .select("*", { count: "exact", head: true })
+        .select("id, name", { count: "exact" })
         .eq("user_id", user.id)
         .eq("is_active", true);
 
@@ -49,11 +50,30 @@ export function HabitStats({ userId }: HabitStatsProps) {
         ? statsData.reduce((sum, s) => sum + s.completion_rate, 0) / statsData.length
         : 0;
 
+      // Find top habit by current streak
+      let topHabit = null;
+      if (statsData && statsData.length > 0 && habits) {
+        const topStat = statsData.reduce((max, stat) => 
+          stat.current_streak > (max?.current_streak || 0) ? stat : max
+        );
+        
+        if (topStat && topStat.current_streak > 0) {
+          const topHabitData = habits?.find(h => h.id === topStat.habit_id);
+          if (topHabitData) {
+            topHabit = {
+              name: topHabitData.name,
+              streak: topStat.current_streak
+            };
+          }
+        }
+      }
+
       setStats({
         totalHabits: habitsCount || 0,
         activeStreaks,
         totalCompletions,
         averageCompletionRate: avgRate,
+        topHabit,
       });
     } catch (error) {
       console.error("Error loading stats:", error);
@@ -108,26 +128,47 @@ export function HabitStats({ userId }: HabitStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-fade-in">
-      {statCards.map((stat, index) => (
-        <div 
-          key={index}
-          className={`stat-glass-card p-4 border-t-${stat.iconColor.replace('text-', '')} group`}
-          style={{ animationDelay: `${index * 100}ms` }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {stat.title}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 stagger-fade-in">
+        {statCards.map((stat, index) => (
+          <div 
+            key={index}
+            className={`stat-glass-card p-4 border-t-${stat.iconColor.replace('text-', '')} group`}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {stat.title}
+              </div>
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.gradient} group-hover:scale-110 transition-transform`}>
+                <stat.icon className={`h-4 w-4 ${stat.iconColor} group-hover:animate-pulse-glow`} />
+              </div>
             </div>
-            <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.gradient} group-hover:scale-110 transition-transform`}>
-              <stat.icon className={`h-4 w-4 ${stat.iconColor} group-hover:animate-pulse-glow`} />
+            <div className={`text-3xl font-bold text-glow ${stat.iconColor}`}>
+              {stat.value}
             </div>
           </div>
-          <div className={`text-3xl font-bold text-glow ${stat.iconColor}`}>
-            {stat.value}
+        ))}
+      </div>
+
+      {/* Top Habit of the Week */}
+      {stats.topHabit && (
+        <div className="glass-card p-4 border border-gold/30 bg-gradient-to-r from-gold/5 to-bronze/5 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-gold/20 to-bronze/20">
+              <Award className="h-5 w-5 text-gold" />
+            </div>
+            <div className="flex-1">
+              <div className="text-xs text-muted-foreground mb-1">🏆 Привычка недели</div>
+              <div className="font-semibold text-foreground">{stats.topHabit.name}</div>
+            </div>
+            <Badge variant="secondary" className="bg-gold/20 border-gold/30 text-gold">
+              <Flame className="h-3 w-3 mr-1" />
+              {stats.topHabit.streak} дней
+            </Badge>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }

@@ -4,9 +4,10 @@ import { FastingControlButton } from "./FastingControlButton";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
-import { cn } from "@/lib/utils";
 import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils";
 import { CheckCircle2, TrendingUp, Flame } from "lucide-react";
+import { HabitHistory } from "./HabitHistory";
+import { HabitSparkline } from "./HabitSparkline";
 
 interface HabitDashboardCardProps {
   habit: any;
@@ -26,8 +27,8 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
 
   // Hooks for different habit types
   const fastingWindow = useFastingWindow(habit.id, userId);
-  const { stats } = useHabitMeasurements(habit.id, userId);
-  const { currentAttempt } = useHabitAttempts(habit.id, userId);
+  const { stats, measurements } = useHabitMeasurements(habit.id, userId);
+  const { currentAttempt, attempts } = useHabitAttempts(habit.id, userId);
 
   // Update elapsed time for duration counters
   useEffect(() => {
@@ -158,6 +159,18 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
               </span>
             )}
           </div>
+
+          {/* Recent History */}
+          {fastingWindow.windows && fastingWindow.windows.length > 1 && (
+            <div className="pt-3 space-y-2">
+              <div className="text-xs text-muted-foreground">Последние окна</div>
+              <HabitHistory 
+                windows={fastingWindow.windows.slice(1, 4)}
+                type="windows"
+                maxItems={3}
+              />
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -215,6 +228,18 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
               <span>Лучшая: {currentAttempt.days_lasted} дн.</span>
             )}
           </div>
+
+          {/* Recent Attempts History */}
+          {attempts && attempts.length > 1 && (
+            <div className="pt-3 space-y-2">
+              <div className="text-xs text-muted-foreground">История попыток</div>
+              <HabitHistory 
+                attempts={attempts.filter(a => a.end_date).slice(0, 3)}
+                type="attempts"
+                maxItems={3}
+              />
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -302,6 +327,24 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
             {stats.average && (
               <span>Среднее: {stats.average.toFixed(1)}</span>
             )}
+          </div>
+        )}
+
+        {/* Recent Measurements + Sparkline */}
+        {habit.habit_type === "numeric_counter" && measurements && measurements.length > 1 && (
+          <div className="pt-3 space-y-3">
+            <div className="text-xs text-muted-foreground">Тренд</div>
+            <HabitSparkline 
+              data={measurements.slice(0, 7).reverse().map(m => m.value)}
+              width={200}
+              height={30}
+              color={neonColor}
+            />
+            <HabitHistory 
+              measurements={measurements.slice(0, 3)}
+              type="measurements"
+              maxItems={3}
+            />
           </div>
         )}
       </div>

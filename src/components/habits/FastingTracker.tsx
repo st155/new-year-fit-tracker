@@ -4,7 +4,7 @@ import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { AIMotivation } from "./AIMotivation";
 import { CircularFastingProgress } from "./CircularFastingProgress";
 import { FastingControlButton } from "./FastingControlButton";
-import { FastingHistory } from "./FastingHistory";
+import { HabitHistory } from "./HabitHistory";
 import { Badge } from "@/components/ui/badge";
 import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils";
 
@@ -154,8 +154,13 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
 
         {/* History */}
         {recentWindows.length > 0 && (
-          <div className="w-full pt-4 border-t border-white/10">
-            <FastingHistory windows={recentWindows} />
+          <div className="w-full pt-4 border-t border-white/10 space-y-2">
+            <div className="text-xs text-muted-foreground">Последние окна голодания</div>
+            <HabitHistory 
+              windows={recentWindows}
+              type="windows"
+              maxItems={5}
+            />
           </div>
         )}
       </div>
