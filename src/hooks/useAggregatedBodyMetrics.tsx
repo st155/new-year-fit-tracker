@@ -13,6 +13,11 @@ export interface MetricData {
   sparklineData?: { date: string; value: number }[];
   zone?: string;
   percentOfNorm?: number;
+  sources?: {
+    inbody?: { value: number; date: string; sparklineData: { date: string; value: number }[] };
+    withings?: { value: number; date: string; sparklineData: { date: string; value: number }[] };
+    manual?: { value: number; date: string; sparklineData: { date: string; value: number }[] };
+  };
 }
 
 export interface SegmentalData {
@@ -153,43 +158,80 @@ export function useAggregatedBodyMetrics(userId?: string) {
       };
     }
 
-    // Body Fat %: InBody (ALWAYS priority) → Withings → Manual
+    // Body Fat %: Collect all sources and select primary
+    const bodyFatSources: MetricData['sources'] = {};
+    
     if (latestInBody?.percent_body_fat) {
       const inbodyHistory = inbodyData?.slice(0, 30).map(d => ({ value: d.percent_body_fat!, date: d.test_date })) || [];
-      const trendData = calculateTrend(inbodyHistory);
-      metrics.bodyFat = {
+      const sortedHistory = [...inbodyHistory].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      bodyFatSources.inbody = {
         value: latestInBody.percent_body_fat,
-        unit: '%',
-        source: 'inbody',
         date: latestInBody.test_date,
-        ...trendData,
-        sparklineData: inbodyHistory.map(d => ({ date: d.date.split('T')[0], value: d.value })),
-        zone: getBodyFatZone(latestInBody.percent_body_fat),
+        sparklineData: sortedHistory.map(d => ({ date: d.date.split('T')[0], value: d.value })),
       };
-    } else if (withingsData?.bodyFat?.[0]) {
-      const trendData = calculateTrend(withingsData.bodyFat);
-      metrics.bodyFat = {
+    }
+    
+    if (withingsData?.bodyFat?.[0]) {
+      const sortedHistory = [...withingsData.bodyFat].sort((a, b) => 
+        new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
+      );
+      bodyFatSources.withings = {
         value: withingsData.bodyFat[0].value,
-        unit: '%',
-        source: 'withings',
         date: withingsData.bodyFat[0].measurement_date,
-        ...trendData,
-        sparklineData: withingsData.bodyFat.map(d => ({ date: d.measurement_date, value: d.value })),
-        zone: getBodyFatZone(withingsData.bodyFat[0].value),
+        sparklineData: sortedHistory.map(d => ({ date: d.measurement_date, value: d.value })),
       };
-    } else if (manualCurrent?.body_fat_percentage) {
+    }
+    
+    if (manualCurrent?.body_fat_percentage) {
       const manualBodyFat = manualHistory
         ?.filter(d => d.body_fat_percentage)
         .map(d => ({ value: d.body_fat_percentage!, measurement_date: d.measurement_date })) || [];
-      const trendData = calculateTrend(manualBodyFat);
-      metrics.bodyFat = {
+      const sortedHistory = [...manualBodyFat].sort((a, b) => 
+        new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
+      );
+      bodyFatSources.manual = {
         value: manualCurrent.body_fat_percentage,
+        date: manualCurrent.measurement_date,
+        sparklineData: sortedHistory.slice(0, 30).map(d => ({ date: d.measurement_date, value: d.value })),
+      };
+    }
+    
+    // Set primary body fat (priority: InBody > Withings > Manual)
+    if (bodyFatSources.inbody) {
+      const trendData = calculateTrend(bodyFatSources.inbody.sparklineData.slice().reverse());
+      metrics.bodyFat = {
+        value: bodyFatSources.inbody.value,
+        unit: '%',
+        source: 'inbody',
+        date: bodyFatSources.inbody.date,
+        ...trendData,
+        sparklineData: bodyFatSources.inbody.sparklineData,
+        zone: getBodyFatZone(bodyFatSources.inbody.value),
+        sources: bodyFatSources,
+      };
+    } else if (bodyFatSources.withings) {
+      const trendData = calculateTrend(bodyFatSources.withings.sparklineData.slice().reverse());
+      metrics.bodyFat = {
+        value: bodyFatSources.withings.value,
+        unit: '%',
+        source: 'withings',
+        date: bodyFatSources.withings.date,
+        ...trendData,
+        sparklineData: bodyFatSources.withings.sparklineData,
+        zone: getBodyFatZone(bodyFatSources.withings.value),
+        sources: bodyFatSources,
+      };
+    } else if (bodyFatSources.manual) {
+      const trendData = calculateTrend(bodyFatSources.manual.sparklineData.slice().reverse());
+      metrics.bodyFat = {
+        value: bodyFatSources.manual.value,
         unit: '%',
         source: 'manual',
-        date: manualCurrent.measurement_date,
+        date: bodyFatSources.manual.date,
         ...trendData,
-        sparklineData: manualBodyFat.slice(0, 30).map(d => ({ date: d.measurement_date, value: d.value })),
-        zone: getBodyFatZone(manualCurrent.body_fat_percentage),
+        sparklineData: bodyFatSources.manual.sparklineData,
+        zone: getBodyFatZone(bodyFatSources.manual.value),
+        sources: bodyFatSources,
       };
     }
 

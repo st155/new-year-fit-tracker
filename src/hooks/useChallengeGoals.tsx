@@ -24,6 +24,11 @@ export interface ChallengeGoal {
   source?: 'inbody' | 'withings' | 'manual';
   has_target: boolean;
   baseline_value?: number;
+  subSources?: Array<{
+    source: 'inbody' | 'withings' | 'manual';
+    value: number;
+    label: string;
+  }>;
 }
 
 export function useChallengeGoals(userId?: string) {
@@ -37,7 +42,7 @@ export function useChallengeGoals(userId?: string) {
       // 1. Get user's challenge participations with baseline data
       const { data: participations } = await supabase
         .from("challenge_participants")
-        .select("challenge_id, baseline_body_fat, baseline_weight, baseline_muscle_mass, challenges(title)")
+        .select("challenge_id, baseline_body_fat, baseline_weight, baseline_muscle_mass, baseline_recorded_at, challenges(title, start_date)")
         .eq("user_id", userId);
 
       const challengeIds = participations?.map(p => p.challenge_id) || [];
@@ -108,6 +113,10 @@ export function useChallengeGoals(userId?: string) {
 
         const goalNameLower = goal.goal_name.toLowerCase();
         const participation = participations?.find(p => p.challenge_id === goal.challenge_id);
+        const challengeStartDate = participation?.challenges?.start_date;
+        const baselineDate = participation?.baseline_recorded_at || challengeStartDate;
+        
+        let subSources: ChallengeGoal['subSources'] = undefined;
         
         if (goalNameLower.includes('вес') || goalNameLower.includes('weight')) {
           currentValue = bodyMetrics.weight?.value || allMeasurements[0]?.value || 0;
@@ -119,14 +128,33 @@ export function useChallengeGoals(userId?: string) {
               measurement_date: d.date
             }));
           }
-          // Baseline: participation data > earliest measurement
-          baselineValue = participation?.baseline_weight || 
-                         allMeasurements[allMeasurements.length - 1]?.value || 
-                         currentValue;
+          // Baseline: from sparkline earliest point > participation > earliest measurement
+          if (bodyMetrics.weight?.sparklineData && bodyMetrics.weight.sparklineData.length > 0) {
+            baselineValue = bodyMetrics.weight.sparklineData[0].value;
+          }
+          if (!baselineValue) {
+            baselineValue = participation?.baseline_weight || allMeasurements[allMeasurements.length - 1]?.value || null;
+          }
         } else if (goalNameLower.includes('жир') || goalNameLower.includes('fat')) {
+          // Collect all sources
+          const sources = bodyMetrics.bodyFat?.sources;
+          if (sources) {
+            subSources = [];
+            if (sources.inbody) {
+              subSources.push({ source: 'inbody', value: sources.inbody.value, label: 'InBody' });
+            }
+            if (sources.withings) {
+              subSources.push({ source: 'withings', value: sources.withings.value, label: 'Withings' });
+            }
+            if (sources.manual) {
+              subSources.push({ source: 'manual', value: sources.manual.value, label: 'Калипер' });
+            }
+          }
+          
           // Priority: InBody > Withings > Manual
           currentValue = bodyMetrics.bodyFat?.value || allMeasurements[0]?.value || 0;
           source = bodyMetrics.bodyFat?.source;
+          
           if (bodyMetrics.bodyFat?.sparklineData) {
             sparklineData = bodyMetrics.bodyFat.sparklineData.slice(0, 14).map(d => ({
               goal_id: goal.id,
@@ -134,10 +162,20 @@ export function useChallengeGoals(userId?: string) {
               measurement_date: d.date
             }));
           }
-          // Baseline: participation data > earliest measurement
-          baselineValue = participation?.baseline_body_fat || 
-                         allMeasurements[allMeasurements.length - 1]?.value || 
-                         currentValue;
+          
+          // Baseline: from sparkline earliest point (after challenge start) > participation > earliest measurement
+          if (bodyMetrics.bodyFat?.sparklineData && bodyMetrics.bodyFat.sparklineData.length > 0) {
+            let sparkline = bodyMetrics.bodyFat.sparklineData;
+            if (baselineDate) {
+              sparkline = sparkline.filter(d => new Date(d.date) >= new Date(baselineDate));
+            }
+            if (sparkline.length > 0) {
+              baselineValue = sparkline[0].value;
+            }
+          }
+          if (!baselineValue) {
+            baselineValue = participation?.baseline_body_fat || allMeasurements[allMeasurements.length - 1]?.value || null;
+          }
         } else if (goalNameLower.includes('мышц') || goalNameLower.includes('muscle')) {
           currentValue = bodyMetrics.muscleMass?.value || allMeasurements[0]?.value || 0;
           source = bodyMetrics.muscleMass?.source;
@@ -148,17 +186,24 @@ export function useChallengeGoals(userId?: string) {
               measurement_date: d.date
             }));
           }
-          baselineValue = participation?.baseline_muscle_mass || 
-                         allMeasurements[allMeasurements.length - 1]?.value || 
-                         currentValue;
+          // Baseline: from sparkline earliest point > participation > earliest measurement
+          if (bodyMetrics.muscleMass?.sparklineData && bodyMetrics.muscleMass.sparklineData.length > 0) {
+            baselineValue = bodyMetrics.muscleMass.sparklineData[0].value;
+          }
+          if (!baselineValue) {
+            baselineValue = participation?.baseline_muscle_mass || allMeasurements[allMeasurements.length - 1]?.value || null;
+          }
         } else {
           // For other goals (running, pull-ups, etc.)
           currentValue = allMeasurements[0]?.value || 0;
           source = 'manual';
           
-          // Use earliest measurement as baseline
-          const earliestMeasurement = allMeasurements[allMeasurements.length - 1];
-          baselineValue = earliestMeasurement?.value || currentValue;
+          // Use earliest measurement as baseline, but NOT currentValue
+          if (allMeasurements.length > 1) {
+            baselineValue = allMeasurements[allMeasurements.length - 1].value;
+          } else {
+            baselineValue = null;
+          }
         }
 
         const targetValue = goal.target_value || 0;
@@ -179,62 +224,37 @@ export function useChallengeGoals(userId?: string) {
 
         // Calculate progress ONLY if target_value is set
         let progress = 0;
-        if (goal.target_value && currentValue && baselineValue !== null) {
-          if (isLowerBetter && baselineValue > targetValue) {
-            // Для "меньше = лучше" (жир, вес, время бега)
+        if (goal.target_value && currentValue) {
+          if (isLowerBetter) {
+            // Lower is better (body fat, weight, running time)
             if (currentValue <= targetValue) {
               progress = 100;
-            } else {
+            } else if (baselineValue && baselineValue > targetValue && baselineValue !== currentValue) {
               const totalRange = baselineValue - targetValue;
               const progressMade = baselineValue - currentValue;
               progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
-              
-              console.debug(`📊 ${goal.goal_name} (lower is better):`, {
-                baseline: baselineValue,
-                current: currentValue,
-                target: targetValue,
-                progressMade,
-                totalRange,
-                progress: progress.toFixed(1) + '%'
-              });
+            } else {
+              // Fallback when no baseline or baseline == current
+              progress = Math.max(0, Math.min(100, (1 - currentValue / targetValue) * 100));
             }
-          } else if (isDurationGoal || (!isLowerBetter && baselineValue < targetValue)) {
-            // Для длительности (планка) или силовых упражнений - больше = лучше
+          } else {
+            // Higher is better (duration, strength, reps)
             if (currentValue >= targetValue) {
               progress = 100;
-            } else if (baselineValue !== currentValue) {
+            } else if (baselineValue && baselineValue < targetValue && baselineValue !== currentValue) {
               const totalRange = targetValue - baselineValue;
               const progressMade = currentValue - baselineValue;
               progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
-              
-              console.debug(`📊 ${goal.goal_name} (higher is better):`, {
-                baseline: baselineValue,
-                current: currentValue,
-                target: targetValue,
-                progressMade,
-                totalRange,
-                progress: progress.toFixed(1) + '%'
-              });
+            } else {
+              // Fallback when no baseline or baseline == current
+              progress = Math.max(0, Math.min(100, (currentValue / targetValue) * 100));
             }
-          } else {
-            // Fallback: простое соотношение для целей без baseline
-            progress = Math.min(100, (currentValue / targetValue) * 100);
-            
-            console.debug(`📊 ${goal.goal_name} (simple ratio):`, {
-              current: currentValue,
-              target: targetValue,
-              progress: progress.toFixed(1) + '%'
-            });
           }
         }
 
-        // Валидация данных
-        if (currentValue === 0 && allMeasurements.length > 0) {
-          console.warn(`⚠️ ${goal.goal_name}: currentValue is 0 but measurements exist:`, allMeasurements.slice(0, 3));
-        }
-        
-        if (isLowerBetter && !baselineValue) {
-          console.warn(`⚠️ ${goal.goal_name}: "lower is better" goal missing baseline value`);
+        // Validation
+        if (baselineValue === currentValue && currentValue > 0) {
+          console.debug(`ℹ️ ${goal.goal_name}: baseline equals current (${baselineValue}), using ratio formula`);
         }
 
         // Calculate trend
@@ -273,6 +293,7 @@ export function useChallengeGoals(userId?: string) {
           source,
           has_target: goal.target_value !== null,
           baseline_value: baselineValue || undefined,
+          subSources,
         };
       });
 

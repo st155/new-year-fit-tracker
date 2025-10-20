@@ -73,13 +73,22 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
     setShowQuickAdd(true);
   };
 
+  const goalNameLower = goal.goal_name.toLowerCase();
   const isTimeGoal = isTimeUnit(goal.target_unit) ||
-    goal.goal_name.toLowerCase().includes('время') ||
-    goal.goal_name.toLowerCase().includes('бег');
+    goalNameLower.includes('время') ||
+    goalNameLower.includes('бег');
 
-  const isLowerBetter = isTimeGoal ||
-    goal.goal_name.toLowerCase().includes('жир') ||
-    goal.goal_name.toLowerCase().includes('fat');
+  const isDurationGoal = goalNameLower.includes('планка') || 
+    goalNameLower.includes('plank') ||
+    goalNameLower.includes('vo2');
+
+  const isRunningGoal = goalNameLower.includes('бег') || 
+    goalNameLower.includes('run') ||
+    goalNameLower.includes('км');
+
+  const isLowerBetter = (goalNameLower.includes('жир') || 
+    goalNameLower.includes('вес') ||
+    isRunningGoal) && !isDurationGoal;
 
   const getTrendColor = () => {
     if (Math.abs(goal.trend_percentage) < 0.5) return 'hsl(var(--muted-foreground))';
@@ -104,14 +113,19 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 <Icon className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
                 <div className="flex flex-col">
                   <h3 className="font-semibold">{goal.goal_name}</h3>
-          {goal.baseline_value && isLowerBetter && (
-            <span className="text-xs text-muted-foreground">
-              Начал с: {isTimeGoal 
-                ? formatTimeDisplay(goal.baseline_value)
-                : goal.baseline_value.toFixed(1)
-              } {goal.target_unit}
-            </span>
-          )}
+                  {goal.baseline_value && goal.baseline_value !== goal.current_value && (
+                    <span className="text-xs text-muted-foreground">
+                      Начал с: {isTimeGoal 
+                        ? formatTimeDisplay(goal.baseline_value)
+                        : goal.baseline_value.toFixed(1)
+                      } {goal.target_unit}
+                    </span>
+                  )}
+                  {goal.baseline_value === goal.current_value && goal.baseline_value && (
+                    <span className="text-xs text-muted-foreground/60">
+                      Ожидаем второй замер
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -120,7 +134,17 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 ) : (
                   <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
                 )}
-                {sourceBadge && (
+                {goal.subSources && goal.subSources.length > 0 ? (
+                  goal.subSources.map(s => (
+                    <Badge 
+                      key={s.source} 
+                      variant={s.source === goal.source ? 'default' : 'outline'}
+                      className="text-xs"
+                    >
+                      {s.label} {s.value.toFixed(1)}%
+                    </Badge>
+                  ))
+                ) : sourceBadge && (
                   <Badge variant={sourceBadge.variant} className="text-xs">
                     {sourceBadge.label}
                   </Badge>
