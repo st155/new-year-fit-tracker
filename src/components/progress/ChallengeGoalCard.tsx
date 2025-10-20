@@ -97,7 +97,14 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <Icon className="h-5 w-5 flex-shrink-0" style={{ color: theme.color }} />
-                <h3 className="font-semibold truncate">{goal.goal_name}</h3>
+                <div className="flex flex-col">
+                  <h3 className="font-semibold">{goal.goal_name}</h3>
+                  {goal.baseline_value && isLowerBetter && (
+                    <span className="text-xs text-muted-foreground">
+                      Начал с: {goal.baseline_value.toFixed(goal.target_unit?.includes("мин") ? 2 : 1)} {goal.target_unit}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {goal.is_personal ? (
