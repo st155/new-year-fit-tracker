@@ -78,45 +78,107 @@ export function QuickMeasurementDialog({
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Ошибка",
+        description: "Пользователь не авторизован",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!goal?.id) {
+      toast({
+        title: "Ошибка",
+        description: "Цель не найдена",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       const parsedValue = parseTimeValue(form.value);
       
-      console.log('Adding measurement:', {
-        goal_id: goal.id,
-        goal_name: goal.goal_name,
-        value: parsedValue,
-        unit: goal.target_unit,
-        measurement_date: form.measurement_date,
-        user_id: user!.id
-      });
-      
-      const { data, error } = await supabase
+      // Проверяем, есть ли уже измерение на эту дату
+      const { data: existingMeasurement, error: checkError } = await supabase
         .from('measurements')
-        .insert({
-          user_id: user!.id,
+        .select('id, value')
+        .eq('user_id', user.id)
+        .eq('goal_id', goal.id)
+        .eq('measurement_date', form.measurement_date)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing measurement:', checkError);
+        throw checkError;
+      }
+
+      let result;
+
+      if (existingMeasurement) {
+        // Обновляем существующее измерение
+        console.log('Updating existing measurement:', existingMeasurement.id);
+        
+        const { data, error } = await supabase
+          .from('measurements')
+          .update({
+            value: parsedValue,
+            notes: form.notes.trim() || null,
+            photo_url: form.photo_url || null
+          })
+          .eq('id', existingMeasurement.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+
+        toast({
+          title: "Обновлено!",
+          description: `Измерение для "${goal.goal_name}" обновлено (было: ${existingMeasurement.value}, стало: ${parsedValue})`,
+        });
+      } else {
+        // Создаем новое измерение
+        console.log('Creating new measurement:', {
           goal_id: goal.id,
+          goal_name: goal.goal_name,
           value: parsedValue,
           unit: goal.target_unit,
           measurement_date: form.measurement_date,
-          notes: form.notes.trim() || null,
-          photo_url: form.photo_url || null
-        })
-        .select()
-        .single();
+          user_id: user.id
+        });
+        
+        const { data, error } = await supabase
+          .from('measurements')
+          .insert({
+            user_id: user.id,
+            goal_id: goal.id,
+            value: parsedValue,
+            unit: goal.target_unit,
+            measurement_date: form.measurement_date,
+            notes: form.notes.trim() || null,
+            photo_url: form.photo_url || null,
+            source: 'manual' // явно указываем источник
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+        if (error) {
+          console.error('Supabase INSERT error:', error);
+          throw error;
+        }
+
+        result = data;
+
+        toast({
+          title: "Успешно!",
+          description: `Измерение для "${goal.goal_name}" добавлено: ${parsedValue} ${goal.target_unit}`,
+        });
       }
 
-      console.log('Measurement added successfully:', data);
-
-      toast({
-        title: "Успешно!",
-        description: `Измерение для "${goal.goal_name}" добавлено`,
-      });
+      console.log('Measurement saved successfully:', result);
 
       // Сбрасываем форму
       setForm({
@@ -130,12 +192,44 @@ export function QuickMeasurementDialog({
       onMeasurementAdded();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error adding measurement:', error);
+      console.error('Error saving measurement:', error);
+      
+      // Более детальная обработка ошибок
+      let errorMessage = "Не удалось сохранить измерение. Попробуйте еще раз.";
+      
+      if (error?.code === '23503') {
+        errorMessage = "Ошибка связи с целью. Попробуйте перезагрузить страницу.";
+      } else if (error?.code === '42501') {
+        errorMessage = "Недостаточно прав для добавления измерения.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
       toast({
-        title: "Ошибка при добавлении",
-        description: error?.message || "Не удалось добавить измерение. Попробуйте еще раз.",
+        title: "Ошибка при сохранении",
+        description: errorMessage,
         variant: "destructive",
       });
+
+      // Логируем ошибку в таблицу error_logs
+      try {
+        await supabase.from('error_logs').insert({
+          user_id: user?.id,
+          error_type: 'measurement_save_failed',
+          error_message: error?.message || 'Unknown error',
+          source: 'quick_measurement_dialog',
+          stack_trace: error?.stack,
+          error_details: {
+            goal_id: goal?.id,
+            goal_name: goal?.goal_name,
+            value: form.value,
+            measurement_date: form.measurement_date,
+            error_code: error?.code
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
     } finally {
       setIsSubmitting(false);
     }

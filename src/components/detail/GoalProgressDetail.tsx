@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface GoalData {
   date: string;
@@ -31,6 +32,7 @@ interface GoalProgressDetailProps {
 
 const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [goalData, setGoalData] = useState<GoalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentValue, setCurrentValue] = useState<number | null>(null);
@@ -290,7 +292,10 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
         goal={goal}
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onMeasurementAdded={fetchGoalData}
+        onMeasurementAdded={() => {
+          fetchGoalData();
+          queryClient.invalidateQueries({ queryKey: ['goals', user?.id] });
+        }}
       />
     </div>
   );

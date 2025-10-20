@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PullUpsData {
   date: string;
@@ -21,6 +22,7 @@ interface PullUpsProgressDetailProps {
 
 export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [pullUpsData, setPullUpsData] = useState<PullUpsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPullUps, setCurrentPullUps] = useState<number | null>(null);
@@ -360,12 +362,15 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
 
       {/* Quick Measurement Dialog */}
       {pullUpGoal && (
-        <QuickMeasurementDialog
-          goal={pullUpGoal}
-          isOpen={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onMeasurementAdded={fetchPullUpsData}
-        />
+      <QuickMeasurementDialog
+        goal={pullUpGoal}
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onMeasurementAdded={() => {
+          fetchPullUpsData();
+          queryClient.invalidateQueries({ queryKey: ['goals', user?.id] });
+        }}
+      />
       )}
     </div>
   );
