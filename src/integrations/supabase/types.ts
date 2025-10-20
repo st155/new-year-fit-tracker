@@ -2609,6 +2609,28 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_client_summary: {
+        Row: {
+          active_goals_count: number | null
+          avatar_url: string | null
+          client_id: string | null
+          full_name: string | null
+          health_summary: Json | null
+          last_activity_date: string | null
+          recent_measurements_count: number | null
+          trainer_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       aggregate_daily_health_data: {
@@ -2624,6 +2646,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      get_client_detailed_data: {
+        Args: { p_client_id: string; p_days?: number }
+        Returns: Json
       }
       get_client_unified_metrics_secure: {
         Args: {
@@ -2679,6 +2705,10 @@ export type Database = {
       is_trainer: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      refresh_trainer_client_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       sync_all_whoop_users: {
         Args: Record<PropertyKey, never>
