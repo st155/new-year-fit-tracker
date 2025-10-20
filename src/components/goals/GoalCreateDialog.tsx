@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, X } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -111,6 +112,13 @@ export function GoalCreateDialog({
       setValue('type', template.type);
       setValue('value', template.value);
       setValue('unit', template.unit);
+      
+      // Принудительно пометить поля как "тронутые" для визуальной обратной связи
+      setFieldTouched('name');
+      setFieldTouched('type');
+      setFieldTouched('value');
+      setFieldTouched('unit');
+      
       setSelectedTemplate(templateName);
     }
   };
@@ -229,20 +237,42 @@ export function GoalCreateDialog({
           )}
 
           <div>
-            <Label>Выберите шаблон или создайте свою цель</Label>
-            <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите готовую цель" />
-              </SelectTrigger>
-              <SelectContent>
-                {goalTemplates.map((template) => (
-                  <SelectItem key={template.name} value={template.name}>
-                    {template.name} - {template.value} {template.unit}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-muted-foreground text-sm">
+              Быстрый выбор шаблона (необязательно)
+            </Label>
+            <div className="flex gap-2">
+              <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Выберите готовую цель" />
+                </SelectTrigger>
+                <SelectContent>
+                  {goalTemplates.map((template) => (
+                    <SelectItem key={template.name} value={template.name}>
+                      {template.name} - {template.value} {template.unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedTemplate && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  type="button"
+                  onClick={() => {
+                    setSelectedTemplate("");
+                    reset();
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
+
+          <Separator className="my-4" />
+          <p className="text-sm text-muted-foreground -mt-2 mb-2">
+            или заполните вручную:
+          </p>
 
           <div>
             <Label htmlFor="goal_name">Название цели</Label>

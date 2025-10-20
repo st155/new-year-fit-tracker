@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, X, AlertCircle } from "lucide-react";
 
 interface ValidationRule {
@@ -185,7 +185,18 @@ export function useFormValidation<T extends Record<string, any>>(
     setTouched({} as Record<keyof T, boolean>);
   };
 
-  const isFormValid = Object.values(errors).every(fieldErrors => fieldErrors.length === 0);
+  const isFormValid = useMemo(() => {
+    // Проверяем значения напрямую по схеме валидации
+    return Object.keys(validationSchema).every(field => {
+      const value = values[field as keyof T];
+      const rules = validationSchema[field as keyof T] || [];
+      
+      // Проверяем что все error-правила проходят
+      return rules
+        .filter(r => r.type === 'error')
+        .every(rule => rule.test(value));
+    });
+  }, [values, validationSchema]);
 
   return {
     values,
