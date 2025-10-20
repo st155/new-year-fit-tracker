@@ -3,16 +3,19 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sparkles, History, X } from 'lucide-react';
+import { Sparkles, History, X, Filter, FileDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AIChatWindow } from './AIChatWindow';
 import { AIConversationList } from './AIConversationList';
+import { ConversationSearch } from './ConversationSearch';
 import { useAIConversations } from '@/hooks/useAIConversations';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageLoader } from '@/components/ui/page-loader';
+import { toast } from 'sonner';
 
 interface TrainerAIHubProps {
   selectedClient?: {
@@ -29,6 +32,8 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
   const isMobile = useIsMobile();
   const [localSelectedClient, setLocalSelectedClient] = useState(selectedClient);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const {
     conversations,
@@ -104,6 +109,32 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
     setLocalSelectedClient(null);
   };
 
+  const handleExportConversation = () => {
+    if (!currentConversation) return;
+    
+    // Generate markdown export
+    const markdown = messages.map(msg => 
+      `**${msg.role === 'user' ? 'You' : 'AI Assistant'}** (${new Date(msg.created_at).toLocaleString()}):\n\n${msg.content}\n\n---\n\n`
+    ).join('');
+    
+    const blob = new Blob([`# ${currentConversation.title}\n\n${markdown}`], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${currentConversation.id}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Conversation exported");
+  };
+
+  // Filter conversations
+  const filteredConversations = conversations.filter(conv => {
+    const matchesSearch = searchQuery === "" || 
+      conv.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || conv.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   if (conversationsLoading || actionsLoading) {
     return <PageLoader message="Загрузка AI Assistant..." />;
   }
@@ -156,9 +187,41 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
               className={isMobile ? "w-full" : "w-[400px]"}
             >
               <SheetHeader>
-                <SheetTitle>История разговоров</SheetTitle>
+                <div className="flex items-center justify-between">
+                  <SheetTitle>История разговоров</SheetTitle>
+                  {currentConversation && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleExportConversation}
+                    >
+                      <FileDown className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </SheetHeader>
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
+                <ConversationSearch 
+                  onSearch={setSearchQuery}
+                  placeholder="Search conversations..."
+                />
+                
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All categories</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="client_analysis">Client Analysis</SelectItem>
+                      <SelectItem value="tasks">Tasks</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 {conversationsLoading ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map(i => (
@@ -170,7 +233,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
                   </div>
                 ) : (
                   <AIConversationList
-                    conversations={conversations}
+                    conversations={filteredConversations}
                     currentConversation={currentConversation}
                     onSelectConversation={(id) => {
                       selectConversation(id);

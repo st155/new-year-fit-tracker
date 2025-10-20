@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
+import { GlobalClientSearch } from "@/components/trainer/GlobalClientSearch";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerOverview } from "@/components/trainer/TrainerOverview";
 import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
@@ -48,6 +50,7 @@ function TrainerDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
   const [previousTab, setPreviousTab] = useState<string>('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Check trainer role and redirect if not a trainer
   useEffect(() => {
@@ -221,7 +224,14 @@ function TrainerDashboardContent() {
   return (
     <div className="min-h-screen bg-trainer-bg pb-24">
       <div className="px-4 max-w-7xl mx-auto mt-6">
-        <NavigationBreadcrumbs items={breadcrumbs} />
+        <div className="flex items-center justify-between mb-4">
+          <NavigationBreadcrumbs items={breadcrumbs} />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+          </div>
+        </div>
+        
+        <GlobalClientSearch open={searchOpen} onOpenChange={setSearchOpen} />
         
         {selectedClient && activeTab !== 'ai-hub' ? (
           <ClientDetailView 

@@ -13,11 +13,14 @@ import {
   AlertTriangle,
   CheckCircle,
   Activity,
-  BarChart3
+  BarChart3,
+  Download
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { ExportReportsDialog } from "./ExportReportsDialog";
+import { ClientProgressCharts } from "./ClientProgressCharts";
 
 interface ClientStats {
   id: string;
@@ -46,6 +49,8 @@ export function TrainerAnalytics() {
   const [clientStats, setClientStats] = useState<ClientStats[]>([]);
   const [overallStats, setOverallStats] = useState<OverallStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [selectedClientForExport, setSelectedClientForExport] = useState<{id: string, name: string} | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -270,10 +275,23 @@ export function TrainerAnalytics() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Аналитика и статистика</h2>
-        <p className="text-muted-foreground">Отслеживайте прогресс всех подопечных</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Аналитика и статистика</h2>
+          <p className="text-muted-foreground">Отслеживайте прогресс всех подопечных</p>
+        </div>
+        <Button onClick={() => setExportOpen(true)} variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Экспорт отчета
+        </Button>
       </div>
+      
+      <ExportReportsDialog 
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        clientId={selectedClientForExport?.id}
+        clientName={selectedClientForExport?.name}
+      />
 
       {/* Общая статистика */}
       {overallStats && (

@@ -200,6 +200,7 @@ export type Database = {
       }
       ai_conversations: {
         Row: {
+          category: string | null
           context_mode: string
           created_at: string | null
           id: string
@@ -210,6 +211,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          category?: string | null
           context_mode?: string
           created_at?: string | null
           id?: string
@@ -220,6 +222,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          category?: string | null
           context_mode?: string
           created_at?: string | null
           id?: string

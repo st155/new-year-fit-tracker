@@ -7,6 +7,7 @@ export interface AIConversation {
   trainer_id: string;
   title: string | null;
   context_mode: string;
+  category?: string;
   last_message_at: string;
   created_at: string;
   updated_at: string;
