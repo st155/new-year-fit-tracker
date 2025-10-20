@@ -205,9 +205,13 @@ export const fetchWidgetData = async (
   source: string
 ): Promise<WidgetMetricData | null> => {
   try {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    // Use local dates to match timezone-aware backend
+    const now = new Date();
+    const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    const todayStr = todayLocal.toISOString().split('T')[0];
+    
+    const sevenDaysAgoLocal = new Date(todayLocal.getTime() - 7 * 86400000);
+    const sevenDaysAgo = sevenDaysAgoLocal.toISOString().split('T')[0];
 
     // JOIN запрос - получаем свежие данные независимо от unit или user_metrics.id
     const { data: latestRows, error: latestError } = await supabase
@@ -243,7 +247,16 @@ export const fetchWidgetData = async (
       }
       unit = (latest.user_metrics as any).unit || 'steps';
     } else if (latestRows && latestRows.length > 0) {
-      latest = latestRows[0];
+      // Для Day Strain и Workout Strain - приоритет сегодняшней дате
+      const isDayStrain = metricName === 'Day Strain';
+      const isWorkoutStrain = metricName === 'Workout Strain';
+      
+      if ((isDayStrain || isWorkoutStrain) && source.toLowerCase() === 'whoop') {
+        const todayRow = latestRows.find(r => r.measurement_date === todayStr);
+        latest = todayRow ?? latestRows[0];
+      } else {
+        latest = latestRows[0];
+      }
       unit = (latest.user_metrics as any).unit || '';
     }
 
@@ -309,9 +322,11 @@ export const fetchWidgetData = async (
       duplicatesFound: duplicatesCheck?.length || 0
     });
 
-    // Для тренда - берем предыдущий день
+    // Для тренда - берем предыдущий день (с учетом локального времени)
     const latestDate = latest.measurement_date;
-    const previousDate = new Date(new Date(latestDate).getTime() - 86400000).toISOString().split('T')[0];
+    const latestDateObj = new Date(latestDate + 'T00:00:00');
+    const previousDateObj = new Date(latestDateObj.getTime() - 86400000);
+    const previousDate = previousDateObj.toISOString().split('T')[0];
 
     const { data: previousRows } = await supabase
       .from('metric_values')

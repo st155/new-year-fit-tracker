@@ -460,6 +460,19 @@ async function refreshTokenIfNeeded(
   return token.access_token;
 }
 
+// Local date utilities - convert ISO to local date string accounting for timezone
+function toLocalDateStr(iso: string): string {
+  const d = new Date(iso);
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().split('T')[0];
+}
+
+function todayLocalStr(): string {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().split('T')[0];
+}
+
 // Функция синхронизации данных Whoop для пользователя
 async function syncWhoopData(
   supabase: any,
@@ -550,6 +563,9 @@ async function syncWhoopData(
       for (const [cycleDate, cycle] of cyclesByDate) {
         console.log(`Processing latest cycle ${cycle.id} for date: ${cycleDate}`);
         
+        const startLocal = toLocalDateStr(cycle.start);
+        const endLocal = cycle.end ? toLocalDateStr(cycle.end) : null;
+        
         // Получаем Recovery score для цикла (отдельный API endpoint)
         try {
           const recoveryResponse = await fetch(
@@ -566,12 +582,12 @@ async function syncWhoopData(
             console.log(`Recovery for cycle ${cycle.id} (${cycleDate}):`, {
               state: recoveryData.score_state,
               score: recoveryData.score?.recovery_score,
-              calibrating: recoveryData.user_calibrating
+              calibrating: recoveryData.user_calibrating,
+              endLocal
             });
             
             // Recovery Score измеряется за ночь и применяется к дате пробуждения
-            // cycleDate (cycle.end) = утро пробуждения = правильная дата для recovery
-            if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined) {
+            if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined && endLocal) {
               const metricId = await getOrCreateMetric(
                 supabase,
                 userId,
@@ -585,8 +601,8 @@ async function syncWhoopData(
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
-                measurement_date: cycleDate, // Правильно: recovery на утро cycleDate
-                external_id: `whoop_recovery_${cycleDate}`,
+                measurement_date: endLocal, // Используем локальную дату окончания цикла
+                external_id: `whoop_recovery_${cycle.id}`,
                 source_data: { 
                   cycle_id: cycle.id, 
                   raw: recoveryData.score,
@@ -595,9 +611,9 @@ async function syncWhoopData(
               }, { onConflict: 'user_id,metric_id,external_id' });
               
               if (recoveryError) {
-                console.error(`❌ Failed to save Recovery for ${cycleDate}:`, recoveryError);
+                console.error(`❌ Failed to save Recovery for ${endLocal}:`, recoveryError);
               } else {
-                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${cycleDate}`);
+                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${endLocal}`);
               }
             } else {
               console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
@@ -610,10 +626,14 @@ async function syncWhoopData(
         }
 
         // Day Strain (общая дневная нагрузка за цикл)
-        // Цикл накапливает strain в течение дня и завершается утром следующего дня
-        // Day Strain относится к дате окончания цикла (когда он завершился)
+        // Закрытый цикл: используем startLocal (день, к которому относится strain)
+        // Активный цикл: используем todayLocalStr() для отображения текущего прогресса
         if (cycle.score?.strain !== undefined) {
-          console.log(`Saving Day Strain ${cycle.score.strain} for ${cycleDate}`);
+          const isClosed = !!endLocal && new Date(cycle.end) <= new Date();
+          const targetDate = isClosed ? startLocal : todayLocalStr();
+          
+          console.log(`Saving Day Strain ${cycle.score.strain} for ${targetDate} (cycle ${isClosed ? 'closed' : 'active'})`);
+          
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -627,18 +647,39 @@ async function syncWhoopData(
             user_id: userId,
             metric_id: metricId,
             value: cycle.score.strain,
-            measurement_date: cycleDate, // Используем дату окончания цикла
+            measurement_date: targetDate,
             external_id: `whoop_strain_${cycle.id}`,
             source_data: { 
               cycle_id: cycle.id, 
-              raw: cycle.score
+              raw: cycle.score,
+              is_active: !isClosed
             },
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (strainError) {
-            console.error(`❌ Failed to save Day Strain for ${cycleDate}:`, strainError);
+            console.error(`❌ Failed to save Day Strain for ${targetDate}:`, strainError);
           } else {
-            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${cycleDate}`);
+            console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${targetDate}`);
+            
+            // Очистка дубликатов: оставляем только самую новую запись с правильной датой
+            const { data: duplicates } = await supabase
+              .from('metric_values')
+              .select('id, measurement_date, created_at')
+              .eq('user_id', userId)
+              .eq('metric_id', metricId)
+              .eq('external_id', `whoop_strain_${cycle.id}`)
+              .order('created_at', { ascending: false });
+            
+            if (duplicates && duplicates.length > 1) {
+              const keepId = duplicates[0].id;
+              const deleteIds = duplicates.slice(1).map(d => d.id);
+              console.log(`🧹 Cleaning up ${deleteIds.length} duplicate Day Strain records for cycle ${cycle.id}`);
+              
+              await supabase
+                .from('metric_values')
+                .delete()
+                .in('id', deleteIds);
+            }
           }
         } else {
           console.log(`❌ No strain data for cycle ${cycle.id} (${cycleDate}), cycle.score:`, cycle.score);
@@ -684,7 +725,7 @@ async function syncWhoopData(
 
         // Также сохраняем Workout Strain в метрики
         if (workout.score?.strain !== undefined) {
-          const workoutDate = new Date(workout.start).toISOString().split('T')[0];
+          const workoutDate = toLocalDateStr(workout.start);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -710,7 +751,7 @@ async function syncWhoopData(
 
         // Сохраняем Max Heart Rate в метрики
         if (workout.score?.max_heart_rate !== undefined) {
-          const workoutDate = new Date(workout.start).toISOString().split('T')[0];
+          const workoutDate = toLocalDateStr(workout.start);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -753,7 +794,7 @@ async function syncWhoopData(
 
     if (sleepData.records && sleepData.records.length > 0) {
       for (const sleep of sleepData.records) {
-        const sleepDate = new Date(sleep.end).toISOString().split('T')[0];
+        const sleepDate = toLocalDateStr(sleep.end);
         
         // Sleep Performance
         if (sleep.score?.sleep_performance_percentage !== undefined) {
