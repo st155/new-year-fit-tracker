@@ -119,7 +119,8 @@ serve(async (req) => {
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=code&` +
         `scope=${encodeURIComponent(scope)}&` +
-        `state=${state}`;
+        `state=${state}&` +
+        `access_type=offline`;
 
       console.log('Generated Whoop auth URL:', { redirectUri, baseUrl: whoopRedirectBaseUrl });
 
@@ -177,7 +178,9 @@ serve(async (req) => {
         has_access_token: !!tokenData.access_token,
         has_refresh_token: !!tokenData.refresh_token,
         expires_in: tokenData.expires_in,
-        token_type: tokenData.token_type
+        expires_in_hours: tokenData.expires_in ? Math.round(tokenData.expires_in / 3600) : 'N/A',
+        token_type: tokenData.token_type,
+        scope: tokenData.scope
       });
 
       // Получаем информацию о пользователе Whoop (v2 API)
@@ -377,9 +380,18 @@ async function refreshTokenIfNeeded(
   // Whoop v2 API: refresh_token может быть null для долгоживущих токенов
   // В этом случае используем существующий access_token пока не истёк
   if (!token.refresh_token) {
-    // Если токен истёк и нет refresh_token - требуется переподключение
+    // Если токен истёк
     if (now >= expiresAt) {
-      console.log(`❌ Token expired and no refresh_token available for user ${userId}`);
+      const daysSinceExpiry = Math.floor((now.getTime() - expiresAt.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Если истёк недавно (< 7 дней) - логируем warning, но пытаемся использовать
+      if (daysSinceExpiry < 7) {
+        console.log(`⚠️ Token expired ${daysSinceExpiry} days ago for user ${userId}, attempting to use anyway`);
+        return token.access_token;
+      }
+      
+      // Если истёк давно - требуем переподключения
+      console.log(`❌ Token expired ${daysSinceExpiry} days ago and no refresh_token available for user ${userId}`);
       await supabase
         .from('whoop_tokens')
         .update({ is_active: false })
