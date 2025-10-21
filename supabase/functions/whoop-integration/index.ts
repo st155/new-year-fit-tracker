@@ -627,6 +627,54 @@ async function syncWhoopData(
               } else {
                 console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${endLocal}`);
               }
+
+              // Resting HR
+              if (recoveryData.score?.resting_heart_rate !== undefined) {
+                const restingHrMetric = await getOrCreateMetric(
+                  supabase, userId, 'Resting HR', 'heart_rate', 'bpm', 'whoop'
+                );
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: restingHrMetric,
+                  value: recoveryData.score.resting_heart_rate,
+                  measurement_date: endLocal,
+                  external_id: `whoop_resting_hr_${cycle.id}`,
+                  source_data: { cycle_id: cycle.id, raw: recoveryData.score },
+                }, { onConflict: 'user_id,metric_id,external_id' });
+                console.log(`✅ Saved Resting HR ${recoveryData.score.resting_heart_rate} bpm for ${endLocal}`);
+              }
+
+              // HRV
+              if (recoveryData.score?.hrv_rmssd_milli !== undefined) {
+                const hrvMetric = await getOrCreateMetric(
+                  supabase, userId, 'HRV', 'heart_rate', 'ms', 'whoop'
+                );
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: hrvMetric,
+                  value: recoveryData.score.hrv_rmssd_milli,
+                  measurement_date: endLocal,
+                  external_id: `whoop_hrv_${cycle.id}`,
+                  source_data: { cycle_id: cycle.id, raw: recoveryData.score },
+                }, { onConflict: 'user_id,metric_id,external_id' });
+                console.log(`✅ Saved HRV ${recoveryData.score.hrv_rmssd_milli} ms for ${endLocal}`);
+              }
+
+              // SpO2
+              if (recoveryData.score?.spo2_percentage !== undefined) {
+                const spo2Metric = await getOrCreateMetric(
+                  supabase, userId, 'SpO2', 'recovery', '%', 'whoop'
+                );
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: spo2Metric,
+                  value: recoveryData.score.spo2_percentage,
+                  measurement_date: endLocal,
+                  external_id: `whoop_spo2_${cycle.id}`,
+                  source_data: { cycle_id: cycle.id, raw: recoveryData.score },
+                }, { onConflict: 'user_id,metric_id,external_id' });
+                console.log(`✅ Saved SpO2 ${recoveryData.score.spo2_percentage}% for ${endLocal}`);
+              }
             } else {
               console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
             }
@@ -786,6 +834,41 @@ async function syncWhoopData(
             console.error(`❌ Failed to save Max Heart Rate for ${workoutDate}:`, maxHrError);
           }
         }
+
+        // Active Calories
+        if (workout.score?.kilojoule !== undefined) {
+          const activeCalMetric = await getOrCreateMetric(
+            supabase, userId, 'Active Calories', 'workout', 'kcal', 'whoop'
+          );
+          const kcal = Math.round(workout.score.kilojoule * 0.239);
+          
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: activeCalMetric,
+            value: kcal,
+            measurement_date: workoutDate,
+            external_id: `whoop_active_cal_${workout.id}`,
+            source_data: { workout_id: workout.id, raw: workout.score },
+          }, { onConflict: 'user_id,metric_id,external_id' });
+          console.log(`✅ Saved Active Calories ${kcal} kcal for ${workoutDate}`);
+        }
+
+        // Average HR (from workout)
+        if (workout.score?.average_heart_rate !== undefined) {
+          const avgHrMetric = await getOrCreateMetric(
+            supabase, userId, 'Average HR', 'heart_rate', 'bpm', 'whoop'
+          );
+          
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: avgHrMetric,
+            value: workout.score.average_heart_rate,
+            measurement_date: workoutDate,
+            external_id: `whoop_avg_hr_${workout.id}`,
+            source_data: { workout_id: workout.id, raw: workout.score },
+          }, { onConflict: 'user_id,metric_id,external_id' });
+          console.log(`✅ Saved Average HR ${workout.score.average_heart_rate} bpm for ${workoutDate}`);
+        }
       }
     }
   }
@@ -882,6 +965,78 @@ async function syncWhoopData(
           
           if (sleepDurError) {
             console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError);
+          }
+        }
+
+        // Respiratory Rate
+        if (sleep.score?.respiratory_rate !== undefined) {
+          const respRateMetric = await getOrCreateMetric(
+            supabase, userId, 'Respiratory Rate', 'sleep', 'brpm', 'whoop'
+          );
+          
+          await supabase.from('metric_values').upsert({
+            user_id: userId,
+            metric_id: respRateMetric,
+            value: sleep.score.respiratory_rate,
+            measurement_date: sleepDate,
+            external_id: `whoop_resp_rate_${sleep.id}`,
+            source_data: { sleep_id: sleep.id, raw: sleep.score },
+          }, { onConflict: 'user_id,metric_id,external_id' });
+          console.log(`✅ Saved Respiratory Rate ${sleep.score.respiratory_rate} brpm for ${sleepDate}`);
+        }
+
+        // Sleep Stages
+        const stages = sleep.score?.stage_summary;
+        if (stages) {
+          // REM Sleep
+          if (stages.rem_sleep_duration_milli !== undefined) {
+            const remMetric = await getOrCreateMetric(
+              supabase, userId, 'REM Sleep', 'sleep', 'hours', 'whoop'
+            );
+            const remHours = stages.rem_sleep_duration_milli / (1000 * 60 * 60);
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: remMetric,
+              value: remHours,
+              measurement_date: sleepDate,
+              external_id: `whoop_rem_${sleep.id}`,
+              source_data: { sleep_id: sleep.id, raw: stages },
+            }, { onConflict: 'user_id,metric_id,external_id' });
+            console.log(`✅ Saved REM Sleep ${remHours.toFixed(2)} hours for ${sleepDate}`);
+          }
+          
+          // Deep Sleep
+          if (stages.slow_wave_sleep_duration_milli !== undefined) {
+            const deepMetric = await getOrCreateMetric(
+              supabase, userId, 'Deep Sleep', 'sleep', 'hours', 'whoop'
+            );
+            const deepHours = stages.slow_wave_sleep_duration_milli / (1000 * 60 * 60);
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: deepMetric,
+              value: deepHours,
+              measurement_date: sleepDate,
+              external_id: `whoop_deep_${sleep.id}`,
+              source_data: { sleep_id: sleep.id, raw: stages },
+            }, { onConflict: 'user_id,metric_id,external_id' });
+            console.log(`✅ Saved Deep Sleep ${deepHours.toFixed(2)} hours for ${sleepDate}`);
+          }
+          
+          // Light Sleep
+          if (stages.light_sleep_duration_milli !== undefined) {
+            const lightMetric = await getOrCreateMetric(
+              supabase, userId, 'Light Sleep', 'sleep', 'hours', 'whoop'
+            );
+            const lightHours = stages.light_sleep_duration_milli / (1000 * 60 * 60);
+            await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: lightMetric,
+              value: lightHours,
+              measurement_date: sleepDate,
+              external_id: `whoop_light_${sleep.id}`,
+              source_data: { sleep_id: sleep.id, raw: stages },
+            }, { onConflict: 'user_id,metric_id,external_id' });
+            console.log(`✅ Saved Light Sleep ${lightHours.toFixed(2)} hours for ${sleepDate}`);
           }
         }
       }

@@ -248,22 +248,32 @@ export const fetchWidgetData = async (
       unit = (latest.user_metrics as any).unit || 'steps';
     }
     // Для Workout Strain - берем MAX за сегодня (может быть несколько тренировок)
+    // Если сегодня нет - берем MAX за последний день с тренировками
     else if (metricName === 'Workout Strain' && latestRows && latestRows.length > 0) {
       const todayWorkouts = latestRows.filter(r => r.measurement_date === todayStr);
       if (todayWorkouts.length > 0) {
+        // Есть тренировки сегодня → берём MAX
         latest = todayWorkouts.reduce((max, r) => r.value > max.value ? r : max, todayWorkouts[0]);
       } else {
-        latest = latestRows[0];
+        // Нет тренировок сегодня → берём MAX за последний день с тренировками
+        const latestDate = latestRows[0].measurement_date;
+        const latestDayWorkouts = latestRows.filter(r => r.measurement_date === latestDate);
+        latest = latestDayWorkouts.reduce((max, r) => r.value > max.value ? r : max, latestDayWorkouts[0]);
       }
       unit = (latest.user_metrics as any).unit || 'score';
     }
     // Для Max Heart Rate - берем MAX за сегодня
+    // Если сегодня нет - берем MAX за последнюю тренировку
     else if (metricName === 'Max Heart Rate' && latestRows && latestRows.length > 0) {
       const todayHR = latestRows.filter(r => r.measurement_date === todayStr);
       if (todayHR.length > 0) {
+        // Есть данные сегодня → берём MAX
         latest = todayHR.reduce((max, r) => r.value > max.value ? r : max, todayHR[0]);
       } else {
-        latest = latestRows[0];
+        // Нет данных сегодня → берём MAX за последний день
+        const latestDate = latestRows[0].measurement_date;
+        const latestDayHR = latestRows.filter(r => r.measurement_date === latestDate);
+        latest = latestDayHR.reduce((max, r) => r.value > max.value ? r : max, latestDayHR[0]);
       }
       unit = (latest.user_metrics as any).unit || 'bpm';
     }

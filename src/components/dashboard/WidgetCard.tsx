@@ -271,13 +271,19 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                                      metricName.toLowerCase().includes('strain');
               const isRecoveryScore = metricName === 'Recovery Score';
               
-              // Recovery Score: показывать дату только если старше 24 часов
+              // Recovery Score: показывать "Сегодня" если данные за вчерашнюю ночь (но получены сегодня)
               if (isRecoveryScore) {
-                if (daysDiff > 0) {
+                const dataDate = new Date(data.date);
+                const daysDiff = Math.floor((now.getTime() - dataDate.getTime()) / (1000 * 60 * 60 * 24));
+                
+                // Если Recovery за вчерашнюю ночь (но получен сегодня) → "Сегодня"
+                if (daysDiff === 0 || daysDiff === 1) {
+                  return <span className="text-muted-foreground">Сегодня</span>;
+                } else {
                   return (
                     <>
                       <span className="text-muted-foreground">
-                        {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                        {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                       </span>
                       {daysDiff > 1 && (
                         <span className="text-xs text-yellow-600 font-medium">
@@ -287,8 +293,6 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                     </>
                   );
                 }
-                // Если свежие данные - не показываем дату для Recovery Score
-                return null;
               }
               
               // Для остальных метрик - стандартная логика
