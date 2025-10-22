@@ -145,6 +145,19 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     };
   }, [metricName, source]);
 
+  // Слушаем глобальное событие принудительного обновления всех виджетов
+  useEffect(() => {
+    const handleHardRefetch = () => {
+      console.log('📢 [WidgetCard] Received widgets-hard-refetch event');
+      loadData();
+    };
+
+    window.addEventListener('widgets-hard-refetch', handleHardRefetch);
+    return () => {
+      window.removeEventListener('widgets-hard-refetch', handleHardRefetch);
+    };
+  }, []);
+
   const loadData = async () => {
     if (!user) return;
     
@@ -165,38 +178,32 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     setSyncing(true);
     try {
       console.log('🔄 [WidgetCard] Starting Whoop sync from widget...');
+      
+      // Clear all caches
+      localStorage.removeItem(`widgets_${user.id}`);
+      localStorage.removeItem(`widget_${metricName}_${source}_${user.id}`);
+      localStorage.removeItem(`latest_metrics_${user.id}`);
+      
       const { error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync-data' }
+        body: { action: 'sync', user_id: user.id }
       });
       
       if (error) throw error;
       
+      console.log('✅ Whoop sync completed');
       toast({
         title: 'Синхронизация запущена',
         description: 'Whoop данные обновляются...',
       });
       
-      // 🧹 АГРЕССИВНАЯ ОЧИСТКА ВСЕХ КЕШЕЙ после синхронизации
-      console.log('🧹 [WidgetCard] Clearing all caches after Whoop sync');
-      
-      // Очищаем localStorage кеши
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes('widget_') || 
-            key.includes('fitness_') || 
-            key.includes('whoop_') ||
-            key.includes('cache')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Обновляем данные через 3 секунды
+      // Dispatch global refetch event for all widgets
       setTimeout(() => {
-        loadData();
-        // Диспатчим событие для обновления других виджетов
-        window.dispatchEvent(new Event('whoop-data-updated'));
-      }, 3000);
+        console.log('📢 Dispatching widgets-hard-refetch event');
+        window.dispatchEvent(new Event('widgets-hard-refetch'));
+      }, 2000);
+      
     } catch (error: any) {
-      console.error('❌ [WidgetCard] Sync error:', error);
+      console.error('❌ Whoop sync failed:', error);
       toast({
         title: 'Ошибка синхронизации',
         description: error.message,
@@ -244,9 +251,9 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
   
-  // Проверка на устаревшие данные (старше 2 дней)
+  // Проверка на устаревшие данные (старше 48 часов)
   const isDataStale = data?.date && 
-    new Date().getTime() - new Date(data.date).getTime() > 2 * 24 * 60 * 60 * 1000;
+    new Date().getTime() - new Date(data.date).getTime() > 48 * 60 * 60 * 1000;
   const isWhoopSource = source.toLowerCase() === 'whoop';
 
   return (

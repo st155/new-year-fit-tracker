@@ -212,225 +212,235 @@ export const fetchWidgetData = async (
   metricName: string,
   source: string
 ): Promise<WidgetMetricData | null> => {
+  console.log('🔍 [fetchWidgetData] Starting fetch:', { userId, metricName, source });
+  
+  // 🧹 Очистка кэшей
+  const cacheKeys = [
+    `widgets_${userId}`,
+    `widget_${metricName}_${source}_${userId}`,
+    `metric_${metricName}`,
+    `latest_metrics_${userId}`,
+  ];
+  
+  cacheKeys.forEach(key => {
+    localStorage.removeItem(key);
+    console.log('🧹 Cleared cache:', key);
+  });
+
   try {
-    // 🧹 АГРЕССИВНАЯ ОЧИСТКА КЕШЕЙ перед загрузкой
-    console.log(`🧹 [fetchWidgetData] Clearing caches for ${metricName}/${source}`);
-    localStorage.removeItem(`widget_${userId}_${metricName}_${source}`);
-    localStorage.removeItem('fitness_metrics_cache');
-    localStorage.removeItem('fitness_data_cache_whoop');
-    localStorage.removeItem('fitness_data_cache');
+    const fallbackMetrics = getFallbackMetrics(metricName, source);
+    const metricVariants = [metricName, ...fallbackMetrics];
     
-    // Очистка всех widget_ кешей
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('widget_') || key.includes('whoop') || key.includes('fitness')) {
-        localStorage.removeItem(key);
-      }
-    });
-
-    // Use local dates to match timezone-aware backend
-    const now = new Date();
-    const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    const todayStr = todayLocal.toISOString().split('T')[0];
+    // Учитываем алиасы
+    const aliasEntry = METRIC_ALIASES[metricName];
+    if (aliasEntry?.unifiedName && !metricVariants.includes(aliasEntry.unifiedName)) {
+      metricVariants.push(aliasEntry.unifiedName);
+    }
     
-    const sevenDaysAgoLocal = new Date(todayLocal.getTime() - 7 * 86400000);
-    const sevenDaysAgo = sevenDaysAgoLocal.toISOString().split('T')[0];
+    console.log('📋 [fetchWidgetData] Metric variants:', metricVariants);
 
-    // Генерируем варианты написания источника и метрики (case-insensitive)
-    const sources = sourceVariants(source);
-    const metricVariants = Array.from(new Set([
-      metricName,
-      METRIC_ALIASES[metricName]?.unifiedName
-    ].filter(Boolean) as string[]));
-
-    console.log(`🔍 [fetchWidgetData] Searching for ${metricName}/${source}`, {
-      sources,
-      metricVariants
-    });
-
-    // JOIN запрос - получаем свежие данные независимо от unit или user_metrics.id
-    const { data: latestRows, error: latestError } = await supabase
-      .from('metric_values')
-      .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
+    // ==================== ШАГ 1: Найти metric_id ====================
+    console.log('🔎 [STEP 1] Querying user_metrics...');
+    
+    const { data: userMetrics, error: metricsError } = await supabase
+      .from('user_metrics')
+      .select('id, metric_name, unit, source')
       .eq('user_id', userId)
-      .in('user_metrics.metric_name', metricVariants)
-      .in('user_metrics.source', sources)
-      .gte('measurement_date', sevenDaysAgo)
-      .lte('measurement_date', todayStr)
-      .order('measurement_date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(20);
+      .ilike('source', source) // case-insensitive
+      .in('metric_name', metricVariants)
+      .order('created_at', { ascending: false });
 
-    if (latestError) {
-      console.error('Error fetching latest metric:', latestError);
+    if (metricsError) {
+      console.error('❌ [STEP 1] Error querying user_metrics:', metricsError);
       return null;
     }
 
-    // 🔍 Диагностика: какие источники нашлись в базе
-    if (latestRows && latestRows.length > 0) {
-      const foundSources = Array.from(new Set(latestRows.map(r => (r.user_metrics as any).source)));
-      console.log(`✅ [fetchWidgetData] Found sources in DB:`, foundSources);
-    } else {
-      console.warn(`⚠️ [fetchWidgetData] No data found for ${metricName}/${source}`);
+    if (!userMetrics || userMetrics.length === 0) {
+      console.warn('⚠️ [STEP 1] No user_metrics found for:', { metricVariants, source });
+      return null;
     }
 
-    let latest: any = null;
-    let actualMetricName = metricName;
-    let needsConversion = false;
-    let unit = '';
-
-    // Для Steps - берем максимум за сегодня
-    const isSteps = metricName.toLowerCase().includes('step');
-    if (isSteps && latestRows && latestRows.length > 0) {
-      const todaySteps = latestRows.filter(r => r.measurement_date === todayStr);
-      if (todaySteps.length > 0) {
-        latest = todaySteps.reduce((max, r) => r.value > max.value ? r : max, todaySteps[0]);
-      } else {
-        latest = latestRows[0]; // последний доступный день
-      }
-      unit = (latest.user_metrics as any).unit || 'steps';
-    }
-    // Для Workout Strain - берем MAX за сегодня (может быть несколько тренировок)
-    // Если сегодня нет - берем MAX за последний день с тренировками
-    else if (metricName === 'Workout Strain' && latestRows && latestRows.length > 0) {
-      const todayWorkouts = latestRows.filter(r => r.measurement_date === todayStr);
-      if (todayWorkouts.length > 0) {
-        // Есть тренировки сегодня → берём MAX
-        latest = todayWorkouts.reduce((max, r) => r.value > max.value ? r : max, todayWorkouts[0]);
-      } else {
-        // Нет тренировок сегодня → берём MAX за последний день с тренировками
-        const latestDate = latestRows[0].measurement_date;
-        const latestDayWorkouts = latestRows.filter(r => r.measurement_date === latestDate);
-        latest = latestDayWorkouts.reduce((max, r) => r.value > max.value ? r : max, latestDayWorkouts[0]);
-      }
-      unit = (latest.user_metrics as any).unit || 'score';
-    }
-    // Для Max Heart Rate - берем MAX за сегодня
-    // Если сегодня нет - берем MAX за последнюю тренировку
-    else if (metricName === 'Max Heart Rate' && latestRows && latestRows.length > 0) {
-      const todayHR = latestRows.filter(r => r.measurement_date === todayStr);
-      if (todayHR.length > 0) {
-        // Есть данные сегодня → берём MAX
-        latest = todayHR.reduce((max, r) => r.value > max.value ? r : max, todayHR[0]);
-      } else {
-        // Нет данных сегодня → берём MAX за последний день
-        const latestDate = latestRows[0].measurement_date;
-        const latestDayHR = latestRows.filter(r => r.measurement_date === latestDate);
-        latest = latestDayHR.reduce((max, r) => r.value > max.value ? r : max, latestDayHR[0]);
-      }
-      unit = (latest.user_metrics as any).unit || 'bpm';
-    }
-    else if (latestRows && latestRows.length > 0) {
-      // Для Day Strain и Workout Strain - приоритет сегодняшней дате
-      const isDayStrain = metricName === 'Day Strain';
-      const isWorkoutStrain = metricName === 'Workout Strain';
-      
-      if ((isDayStrain || isWorkoutStrain) && source.toLowerCase() === 'whoop') {
-        const todayRow = latestRows.find(r => r.measurement_date === todayStr);
-        latest = todayRow ?? latestRows[0];
-      } else {
-        latest = latestRows[0];
-      }
-      unit = (latest.user_metrics as any).unit || '';
-    }
-
-    // Если не нашли, пробуем fallback метрики
-    if (!latest) {
-      const fallbackMetrics = getFallbackMetrics(metricName, source);
-      
-      for (const fallback of fallbackMetrics) {
-        const { data: fallbackRows } = await supabase
-          .from('metric_values')
-          .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
-          .eq('user_id', userId)
-          .eq('user_metrics.metric_name', fallback)
-          .in('user_metrics.source', sources)
-          .gte('measurement_date', sevenDaysAgo)
-          .lte('measurement_date', todayStr)
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(20);
-        
-        if (fallbackRows && fallbackRows.length > 0) {
-          latest = fallbackRows[0];
-          actualMetricName = fallback;
-          needsConversion = true;
-          unit = (latest.user_metrics as any).unit || '';
-          break;
-        }
-      }
-    }
-
-    if (!latest) return null;
-
-    // Логирование для диагностики
-    console.log(`[Widget] ${metricName} (${source}):`, {
-      date: latest.measurement_date,
-      value: latest.value,
-      unit,
-      actualMetricName,
-      needsConversion
-    });
-
-    // Проверяем на дубликаты за одну дату
-    const { data: duplicatesCheck } = await supabase
-      .from('metric_values')
-      .select('id, value, created_at, user_metrics!inner(metric_name, source)')
-      .eq('user_id', userId)
-      .in('user_metrics.source', sources)
-      .eq('user_metrics.metric_name', actualMetricName)
-      .eq('measurement_date', latest.measurement_date);
+    const metricIds = userMetrics.map(m => m.id);
+    const unit = userMetrics[0].unit;
     
-    if (duplicatesCheck && duplicatesCheck.length > 1) {
-      console.warn(`⚠️ Multiple ${metricName} values found for ${latest.measurement_date}:`, 
-        duplicatesCheck.map(d => ({ value: d.value, created_at: d.created_at }))
-      );
-    }
+    console.log('✅ [STEP 1] Found metric_ids:', metricIds);
+    console.log('📊 [STEP 1] Using unit:', unit);
 
-    console.log(`📊 Fetched widget data for ${metricName}:`, {
-      date: latest.measurement_date,
-      value: latest.value,
-      unit: latest.user_metrics.unit,
-      actualMetricName: latest.user_metrics.metric_name,
-      wasConverted: needsConversion ? 'yes' : 'no',
-      duplicatesFound: duplicatesCheck?.length || 0
+    // ==================== ШАГ 2: Найти последние данные ====================
+    const todayStr = new Date().toISOString().split('T')[0];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    console.log('🔎 [STEP 2] Querying metric_values (last 7 days)...', { 
+      from: sevenDaysAgoStr, 
+      to: todayStr,
+      todayStr 
     });
 
-    // Для тренда - берем предыдущий день (с учетом локального времени)
-    const latestDate = latest.measurement_date;
-    const latestDateObj = new Date(latestDate + 'T00:00:00');
-    const previousDateObj = new Date(latestDateObj.getTime() - 86400000);
-    const previousDate = previousDateObj.toISOString().split('T')[0];
-
-    const { data: previousRows } = await supabase
+    const { data: metricValues, error: valuesError } = await supabase
       .from('metric_values')
-      .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
-      .eq('user_id', userId)
-      .eq('user_metrics.metric_name', actualMetricName)
-      .in('user_metrics.source', sources)
-      .eq('measurement_date', previousDate)
+      .select('*')
+      .in('metric_id', metricIds)
+      .gte('measurement_date', sevenDaysAgoStr)
+      .lte('measurement_date', todayStr)
+      .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(1);
+      .limit(100);
 
-    const previous = previousRows && previousRows.length > 0 ? previousRows[0] : null;
-
-    let trend: number | undefined;
-    if (previous && previous.value > 0) {
-      trend = ((latest.value - previous.value) / previous.value) * 100;
+    if (valuesError) {
+      console.error('❌ [STEP 2] Error querying metric_values:', valuesError);
+      return null;
     }
 
-    // Применяем конверсию если используется fallback метрика
-    const finalValue = needsConversion 
-      ? convertMetricValue(latest.value, actualMetricName, metricName, source)
-      : latest.value;
+    let candidateData = metricValues || [];
+    console.log(`📊 [STEP 2] Found ${candidateData.length} records in last 7 days`);
+    
+    const todayRecords = candidateData.filter(r => r.measurement_date === todayStr);
+    console.log(`📅 Today (${todayStr}): ${todayRecords.length} records`);
+
+    // Fallback: если нет данных за 7 дней - запросить без ограничений
+    if (candidateData.length === 0) {
+      console.log('⚠️ [STEP 2] No data in 7 days, trying fallback query...');
+      
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('metric_values')
+        .select('*')
+        .in('metric_id', metricIds)
+        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (fallbackError) {
+        console.error('❌ [FALLBACK] Error:', fallbackError);
+        return null;
+      }
+
+      candidateData = fallbackData || [];
+      console.log(`📊 [FALLBACK] Found ${candidateData.length} records total`);
+    }
+
+    if (candidateData.length === 0) {
+      console.warn('⚠️ No metric_values found at all');
+      return null;
+    }
+
+    // Показать топ-3 кандидата для диагностики
+    console.log('🔝 Top 3 candidates:', candidateData.slice(0, 3).map(r => ({
+      date: r.measurement_date,
+      value: r.value,
+      created: r.created_at
+    })));
+
+    // ==================== ШАГ 3: Применить правила выбора ====================
+    let selectedRow: any = null;
+
+    if (metricName === 'Steps') {
+      // Steps: максимум за сегодня, иначе последний день
+      const todaySteps = candidateData.filter(r => r.measurement_date === todayStr);
+      if (todaySteps.length > 0) {
+        selectedRow = todaySteps.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log('🚶 [Steps] Selected max for today:', selectedRow.value);
+      } else {
+        const lastDate = candidateData[0].measurement_date;
+        const lastDaySteps = candidateData.filter(r => r.measurement_date === lastDate);
+        selectedRow = lastDaySteps.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log('🚶 [Steps] Selected max for last day:', { date: lastDate, value: selectedRow.value });
+      }
+    } else if (metricName === 'Workout Strain' || metricName === 'Day Strain') {
+      // Strain: максимум за сегодня, иначе максимум за последний день с данными
+      const todayStrain = candidateData.filter(r => r.measurement_date === todayStr);
+      if (todayStrain.length > 0) {
+        selectedRow = todayStrain.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log(`💪 [${metricName}] Selected max for today:`, selectedRow.value);
+      } else {
+        const lastDate = candidateData[0].measurement_date;
+        const lastDayStrain = candidateData.filter(r => r.measurement_date === lastDate);
+        selectedRow = lastDayStrain.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log(`💪 [${metricName}] Selected max for last day:`, { date: lastDate, value: selectedRow.value });
+      }
+    } else if (metricName === 'Max Heart Rate' || metricName === 'Max HR') {
+      // Max HR: максимум за сегодня, иначе максимум за последний день
+      const todayHR = candidateData.filter(r => r.measurement_date === todayStr);
+      if (todayHR.length > 0) {
+        selectedRow = todayHR.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log('❤️ [Max HR] Selected max for today:', selectedRow.value);
+      } else {
+        const lastDate = candidateData[0].measurement_date;
+        const lastDayHR = candidateData.filter(r => r.measurement_date === lastDate);
+        selectedRow = lastDayHR.reduce((max, curr) => 
+          curr.value > max.value ? curr : max
+        );
+        console.log('❤️ [Max HR] Selected max for last day:', { date: lastDate, value: selectedRow.value });
+      }
+    } else {
+      // Все остальные метрики: просто последняя запись
+      selectedRow = candidateData[0];
+      console.log('📈 [Default] Selected latest record:', { 
+        date: selectedRow.measurement_date, 
+        value: selectedRow.value 
+      });
+    }
+
+    if (!selectedRow) {
+      console.warn('⚠️ No row selected after applying rules');
+      return null;
+    }
+
+    console.log('✅ [FINAL] Selected row:', {
+      date: selectedRow.measurement_date,
+      value: selectedRow.value,
+      unit,
+      created: selectedRow.created_at
+    });
+
+    // ==================== ШАГ 4: Рассчитать тренд ====================
+    const yesterdayStr = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    const { data: previousData } = await supabase
+      .from('metric_values')
+      .select('value')
+      .in('metric_id', metricIds)
+      .eq('measurement_date', yesterdayStr)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let trend: number | undefined = undefined;
+    if (previousData?.value) {
+      trend = selectedRow.value - previousData.value;
+      console.log('📊 Trend calculated:', { current: selectedRow.value, previous: previousData.value, trend });
+    }
+
+    // ==================== ШАГ 5: Применить конверсию если нужно ====================
+    let finalValue = selectedRow.value;
+    
+    // Проверяем, нужна ли конверсия через fallback
+    const usedMetricName = userMetrics.find(m => m.id === selectedRow.metric_id)?.metric_name || metricName;
+    if (usedMetricName !== metricName) {
+      finalValue = convertMetricValue(selectedRow.value, usedMetricName, metricName, source);
+      console.log('🔄 Applied converter:', { original: selectedRow.value, converted: finalValue });
+    }
 
     return {
       value: finalValue,
-      unit: needsConversion ? '%' : unit,
-      date: latest.measurement_date,
-      trend,
+      unit,
+      date: selectedRow.measurement_date,
+      trend
     };
+
   } catch (error) {
-    console.error('Error fetching widget data:', error);
+    console.error('❌ [fetchWidgetData] Unexpected error:', error);
     return null;
   }
 };

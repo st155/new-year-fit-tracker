@@ -178,10 +178,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Supabase API - Network First с коротким таймаутом
-  if (url.hostname.includes('supabase.co')) {
-    event.respondWith(strategies.networkFirst(request, DYNAMIC_CACHE, 3000));
-    return;
+  // ⚡ ИСКЛЮЧАЕМ Supabase REST/Realtime из кэширования
+  if (url.hostname.includes('supabase.co') || url.pathname.startsWith('/rest/v1/')) {
+    console.log('⚡ [SW] Bypassing cache for Supabase:', url.pathname);
+    return; // Просто пропускаем без кэширования
   }
 
   // Изображения - Stale While Revalidate
