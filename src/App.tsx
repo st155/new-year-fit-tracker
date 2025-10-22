@@ -15,6 +15,7 @@ import { useAutoCacheClear } from "@/hooks/useAutoCacheClear";
 
 import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
+import { TrainerOnlyRoute } from "@/components/TrainerOnlyRoute";
 
 // Critical pages - load immediately
 const Landing = lazy(() => import("./pages/Landing"));
@@ -195,9 +196,11 @@ const App = () => {
                     } />
                     <Route path="/trainer-dashboard" element={
                       <ProtectedRoute>
-                        <ModernAppLayout>
-                          <TrainerDashboard />
-                        </ModernAppLayout>
+                        <TrainerOnlyRoute>
+                          <ModernAppLayout>
+                            <TrainerDashboard />
+                          </ModernAppLayout>
+                        </TrainerOnlyRoute>
                       </ProtectedRoute>
                     } />
           {/* Test page only in development */}
