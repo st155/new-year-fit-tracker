@@ -172,7 +172,7 @@ export function WhoopIntegration() {
     
     try {
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync-data' },
+        body: { action: 'sync' },
       });
 
       if (error) {
