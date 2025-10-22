@@ -328,14 +328,24 @@ export default function FitnessData() {
         };
       }
       
-      // Priority 4: Ultrahuman HRV RMSSD (нормализовать 30-100ms → 0-100%)
+      // Priority 4: Ultrahuman Movement Index (dynamic recovery based on HRV)
+      if (metricValues['Movement Index'] && metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
+        return {
+          value: metricValues['Movement Index'].current,
+          source: 'Ultrahuman',
+          sourceName: 'Movement Index',
+          isNormalized: false
+        };
+      }
+
+      // Priority 5: Ultrahuman HRV RMSSD (нормализовать 30-100ms → 0-100% как fallback)
       if (metricValues['HRV RMSSD'] && metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
         const hrv = metricValues['HRV RMSSD'].current;
         const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
         return {
           value: normalized,
           source: 'Ultrahuman',
-          sourceName: 'HRV',
+          sourceName: 'HRV (normalized)',
           isNormalized: true
         };
       }
@@ -435,6 +445,20 @@ export default function FitnessData() {
         name: 'Recovery',
         value: Math.round(unifiedRecovery.value) + '%',
         subtitle: `${unifiedRecovery.sourceName} • ${result.recovery.status}`,
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Movement Index (Ultrahuman) - show as separate card if available
+    if (metricValues['Movement Index'] && metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
+      const movementIndex = metricValues['Movement Index'];
+      const meta = getMetricIcon('recovery', 'movement');
+      cards.push({
+        name: 'Movement Index',
+        value: Math.round(movementIndex.current) + '%',
+        subtitle: movementIndex.current > 70 ? 'Excellent' : movementIndex.current > 50 ? 'Good' : 'Low',
         icon: meta.icon,
         color: meta.color,
         borderColor: meta.color
@@ -563,7 +587,7 @@ export default function FitnessData() {
       'VO2Max', 'Body Fat %', 'Heart Rate', 'Resting Heart Rate', 'Average Heart Rate',
       'Calories', 'Active Energy', 'Active Calories', 'Steps', 'Weight',
       'HRV RMSSD', 'Sleep HRV RMSSD', 'HRV', 'Heart Rate Variability', 'Workout Count',
-      'Ultrahuman Recovery' // Don't show if it was used for unified recovery
+      'Ultrahuman Recovery', 'Movement Index' // Don't show duplicates
     ]);
 
     // Add all other metrics dynamically

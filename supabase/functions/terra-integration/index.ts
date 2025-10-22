@@ -1001,6 +1001,36 @@ async function processTerraData(supabase: any, payload: any) {
                 stats.insertedCounts.daily++;
               }
             }
+
+            // Movement Index (Ultrahuman Dynamic Recovery based on HRV)
+            const movementIndex = 
+              daily.movement_index ?? 
+              daily.recovery?.movement_index ??
+              daily.movement_score;
+              
+            if (typeof movementIndex === 'number') {
+              console.log(`✅ Found Ultrahuman Movement Index: ${movementIndex} for ${dateStr}`);
+              const { data: miMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Movement Index',
+                p_metric_category: 'recovery',
+                p_unit: '%',
+                p_source: source,
+              });
+              if (miMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: miMetricId,
+                  value: movementIndex,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_movement_index_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                stats.insertedCounts.daily++;
+              }
+            }
           }
 
           // HRV RMSSD
