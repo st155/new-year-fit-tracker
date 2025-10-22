@@ -29,6 +29,14 @@ export const useUserRole = () => {
           .eq('user_id', user.id)
           .single();
 
+        console.log('🔐 Role check:', {
+          userId: user.id,
+          userRoles: roles?.map(r => r.role) || [],
+          profileTrainerRole: profile?.trainer_role,
+          hasRoleInUserRoles: roles && roles.length > 0,
+          finalIsTrainer: roles && roles.length > 0 && profile?.trainer_role
+        });
+
         // User is trainer only if: has role in user_roles AND trainer_role is enabled
         if (roles && roles.length > 0 && profile?.trainer_role) {
           setRole('trainer');
@@ -36,7 +44,7 @@ export const useUserRole = () => {
           setRole('user');
         }
       } catch (error) {
-        console.error('Error checking role:', error);
+        console.error('❌ Error checking role:', error);
         setRole('user');
       } finally {
         setLoading(false);

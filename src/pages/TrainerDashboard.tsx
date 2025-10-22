@@ -55,10 +55,15 @@ function TrainerDashboardContent() {
   // Check trainer role and redirect if not a trainer
   useEffect(() => {
     if (!roleLoading && !isTrainer) {
-      toast.error('Доступ запрещен. Только для тренеров.');
-      navigate('/', { replace: true });
+      console.log('🚫 Trainer access denied:', { 
+        userId: user?.id, 
+        role, 
+        isTrainer 
+      });
+      toast.error('Доступ запрещен. Активируйте тренерскую роль в профиле.');
+      navigate('/profile', { replace: true });
     }
-  }, [isTrainer, roleLoading, navigate]);
+  }, [isTrainer, roleLoading, navigate, user?.id, role]);
 
   useEffect(() => {
     loadClients();

@@ -272,20 +272,37 @@ const ProfilePage = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="trainer-mode"
-                      checked={profile.trainer_role}
-                      onCheckedChange={(checked) => setProfile(prev => ({ ...prev, trainer_role: checked }))}
-                    />
-                    <div className="space-y-0.5">
-                      <Label htmlFor="trainer-mode" className="text-sm font-medium">
-                        Trainer Mode
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Enable to access client management features
-                      </p>
+                  <div className="p-4 border-2 border-primary/30 rounded-lg bg-gradient-to-r from-primary/5 to-purple-500/5">
+                    <div className="flex items-center space-x-3">
+                      <Switch
+                        id="trainer-mode"
+                        checked={profile.trainer_role}
+                        onCheckedChange={(checked) => setProfile(prev => ({ ...prev, trainer_role: checked }))}
+                      />
+                      <div className="space-y-1 flex-1">
+                        <Label htmlFor="trainer-mode" className="text-base font-semibold flex items-center gap-2">
+                          🎯 Trainer Mode
+                          {profile.trainer_role && (
+                            <Badge variant="default" className="bg-gradient-primary">
+                              Active
+                            </Badge>
+                          )}
+                        </Label>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {profile.trainer_role 
+                            ? "Access to client management, training plans, and analytics"
+                            : "Enable to unlock professional trainer features and tools"
+                          }
+                        </p>
+                      </div>
                     </div>
+                    {profile.trainer_role !== initialTrainerRole && (
+                      <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                          ⚠️ Click "Save Changes" to apply trainer role activation
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end pt-4">
