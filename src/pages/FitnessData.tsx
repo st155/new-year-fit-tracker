@@ -15,6 +15,8 @@ interface MetricCard {
   icon: any;
   color: string;
   borderColor: string;
+  isUnified?: boolean;
+  sourceCount?: number;
 }
 
 interface DashboardData {
@@ -236,8 +238,18 @@ export default function FitnessData() {
 
     if (!metrics) return result;
 
-    const metricValues: { [key: string]: any } = {};
-    const allMetricsByCategory: { [category: string]: any[] } = {};
+    // Функция определения веса источника
+    const getSourceWeight = (source: string): number => {
+      const s = source?.toLowerCase() || '';
+      if (s === 'whoop') return 1.0;
+      if (s === 'garmin') return 0.9;
+      if (s === 'ultrahuman') return 0.8;
+      if (s === 'manual' || s === 'apple_health') return 0.7;
+      return 0.5;
+    };
+
+    // Store multiple sources per metric for weighted averaging
+    const metricSources: { [key: string]: Array<{value: number, source: string, weight: number, date: string, category: string, unit: string}> } = {};
 
     // Обрабатываем метрики и фильтруем по источнику
     metrics.forEach(metric => {
@@ -254,7 +266,6 @@ export default function FitnessData() {
       );
       
       const latestValue = sortedValues[0]?.value;
-      const previousValue = sortedValues[1]?.value;
 
       let currentValue: number;
       
@@ -276,117 +287,252 @@ export default function FitnessData() {
       }
 
       const metricKey = metric.metric_name;
+      const weight = getSourceWeight(metric.source);
       
-      // Для "all" (United Data) если есть несколько источников с одинаковым метриком - усредняем
-      if (metricValues[metricKey]) {
-        // Уже есть такой метрик от другого источника - усредним
-        metricValues[metricKey].current = (metricValues[metricKey].current + currentValue) / 2;
-        if (previousValue !== undefined && metricValues[metricKey].previous !== undefined) {
-          metricValues[metricKey].previous = (metricValues[metricKey].previous + previousValue) / 2;
-        }
+      if (!metricSources[metricKey]) {
+        metricSources[metricKey] = [];
+      }
+      
+      metricSources[metricKey].push({
+        value: currentValue,
+        source: metric.source,
+        weight: weight,
+        date: sortedValues[0]?.measurement_date,
+        category: metric.metric_category,
+        unit: metric.unit
+      });
+    });
+
+    // Calculate weighted averages or single values
+    const metricValues: { [key: string]: any } = {};
+    
+    Object.entries(metricSources).forEach(([metricName, sources]) => {
+      if (selectedSource === 'all' && sources.length > 1) {
+        // Взвешенное среднее для нескольких источников
+        const totalWeight = sources.reduce((sum, s) => sum + s.weight, 0);
+        const weightedSum = sources.reduce((sum, s) => sum + (s.value * s.weight), 0);
+        const unified = weightedSum / totalWeight;
+        
+        // Список источников для отображения
+        const sourcesStr = sources.map(s => s.source).join(' + ');
+        
+        metricValues[metricName] = {
+          current: unified,
+          category: sources[0].category,
+          unit: sources[0].unit,
+          source: sourcesStr,
+          date: sources[0].date,
+          isUnified: true,
+          sourceCount: sources.length,
+          sources: sources // Сохраняем все источники для детального отображения
+        };
       } else {
-        metricValues[metricKey] = {
-          current: currentValue,
-          previous: previousValue,
-          category: metric.metric_category,
-          unit: metric.unit,
-          source: metric.source,
-          date: sortedValues[0]?.measurement_date
+        // Один источник - просто берем значение
+        metricValues[metricName] = {
+          current: sources[0].value,
+          category: sources[0].category,
+          unit: sources[0].unit,
+          source: sources[0].source,
+          date: sources[0].date,
+          isUnified: false,
+          sourceCount: 1
         };
       }
     });
 
     // ========= UNIFIED RECOVERY SCORE ==========
-    // Приоритет: Whoop Recovery → Garmin Training Readiness → Garmin Sleep Efficiency → Ultrahuman HRV → Garmin HRV
     const getUnifiedRecovery = () => {
-      // Priority 1: Whoop Recovery Score (самый точный)
-      if (metricValues['Recovery Score'] && metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
-        return {
-          value: metricValues['Recovery Score'].current,
-          source: 'Whoop',
-          sourceName: 'Whoop Recovery',
-          isNormalized: false
-        };
-      }
-      
-      // Priority 2: Garmin Training Readiness
-      if (metricValues['Training Readiness']) {
-        return {
-          value: metricValues['Training Readiness'].current,
-          source: 'Garmin',
-          sourceName: 'Training Readiness',
-          isNormalized: false
-        };
-      }
-      
-      // Priority 3: Garmin Sleep Efficiency
-      if (metricValues['Sleep Efficiency'] && metricValues['Sleep Efficiency'].source?.toLowerCase() === 'garmin') {
-        return {
-          value: metricValues['Sleep Efficiency'].current,
-          source: 'Garmin',
-          sourceName: 'Sleep Efficiency',
-          isNormalized: false
-        };
-      }
-      
-      // Priority 4: Ultrahuman Movement Index (dynamic recovery based on HRV)
-      if (metricValues['Movement Index'] && metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
-        return {
-          value: metricValues['Movement Index'].current,
-          source: 'Ultrahuman',
-          sourceName: 'Movement Index',
-          isNormalized: false
-        };
-      }
+      if (selectedSource !== 'all') {
+        // Если выбран конкретный источник - используем логику приоритета
+        // Priority 1: Whoop Recovery Score (самый точный)
+        if (metricValues['Recovery Score'] && metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
+          return {
+            value: metricValues['Recovery Score'].current,
+            source: 'Whoop',
+            sourceName: 'Whoop Recovery',
+            isNormalized: false,
+            sourceCount: 1
+          };
+        }
+        
+        // Priority 2: Garmin Training Readiness
+        if (metricValues['Training Readiness']) {
+          return {
+            value: metricValues['Training Readiness'].current,
+            source: 'Garmin',
+            sourceName: 'Training Readiness',
+            isNormalized: false,
+            sourceCount: 1
+          };
+        }
+        
+        // Priority 3: Garmin Body Battery
+        if (metricValues['Body Battery']) {
+          return {
+            value: metricValues['Body Battery'].current,
+            source: 'Garmin',
+            sourceName: 'Body Battery',
+            isNormalized: false,
+            sourceCount: 1
+          };
+        }
+        
+        // Priority 4: Garmin Sleep Efficiency
+        if (metricValues['Sleep Efficiency'] && metricValues['Sleep Efficiency'].source?.toLowerCase() === 'garmin') {
+          return {
+            value: metricValues['Sleep Efficiency'].current,
+            source: 'Garmin',
+            sourceName: 'Sleep Efficiency',
+            isNormalized: false,
+            sourceCount: 1
+          };
+        }
+        
+        // Priority 5: Ultrahuman Movement Index
+        if (metricValues['Movement Index'] && metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
+          return {
+            value: metricValues['Movement Index'].current,
+            source: 'Ultrahuman',
+            sourceName: 'Movement Index',
+            isNormalized: false,
+            sourceCount: 1
+          };
+        }
 
-      // Priority 5: Ultrahuman HRV RMSSD (нормализовать 30-100ms → 0-100% как fallback)
-      if (metricValues['HRV RMSSD'] && metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
-        const hrv = metricValues['HRV RMSSD'].current;
-        const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+        // Priority 6: Ultrahuman HRV RMSSD (normalized)
+        if (metricValues['HRV RMSSD'] && metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
+          const hrv = metricValues['HRV RMSSD'].current;
+          const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+          return {
+            value: normalized,
+            source: 'Ultrahuman',
+            sourceName: 'HRV (normalized)',
+            isNormalized: true,
+            sourceCount: 1
+          };
+        }
+        
+        // Priority 7: Garmin Resting HR fallback
+        if (metricValues['Resting Heart Rate'] && metricValues['Resting Heart Rate'].source?.toLowerCase() === 'garmin') {
+          const restingHR = metricValues['Resting Heart Rate'].current;
+          const normalized = Math.min(100, Math.max(0, 100 - ((restingHR - 40) / 40) * 100));
+          return {
+            value: normalized,
+            source: 'Garmin',
+            sourceName: 'Resting HR (normalized)',
+            isNormalized: true,
+            sourceCount: 1
+          };
+        }
+        
+        return null;
+      } else {
+        // UNIFIED MODE: взвешенное усреднение всех доступных recovery метрик
+        const recoveryMetrics: Array<{value: number, source: string, weight: number, name: string}> = [];
+        
+        // Whoop Recovery Score
+        if (metricValues['Recovery Score']) {
+          const sources = metricValues['Recovery Score'].sources || [metricValues['Recovery Score']];
+          sources.forEach((s: any) => {
+            if (s.source?.toLowerCase() === 'whoop' || metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
+              recoveryMetrics.push({
+                value: s.value || metricValues['Recovery Score'].current,
+                source: 'Whoop',
+                weight: 1.0,
+                name: 'Recovery Score'
+              });
+            }
+          });
+        }
+        
+        // Garmin Training Readiness
+        if (metricValues['Training Readiness']) {
+          recoveryMetrics.push({
+            value: metricValues['Training Readiness'].current,
+            source: 'Garmin',
+            weight: 0.95,
+            name: 'Training Readiness'
+          });
+        }
+        
+        // Garmin Body Battery
+        if (metricValues['Body Battery']) {
+          recoveryMetrics.push({
+            value: metricValues['Body Battery'].current,
+            source: 'Garmin',
+            weight: 0.9,
+            name: 'Body Battery'
+          });
+        }
+        
+        // Ultrahuman Movement Index
+        if (metricValues['Movement Index']) {
+          const sources = metricValues['Movement Index'].sources || [metricValues['Movement Index']];
+          sources.forEach((s: any) => {
+            if (s.source?.toLowerCase() === 'ultrahuman' || metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
+              recoveryMetrics.push({
+                value: s.value || metricValues['Movement Index'].current,
+                source: 'Ultrahuman',
+                weight: 0.85,
+                name: 'Movement Index'
+              });
+            }
+          });
+        }
+        
+        // Garmin Sleep Efficiency (как fallback)
+        if (metricValues['Sleep Efficiency']) {
+          const sources = metricValues['Sleep Efficiency'].sources || [metricValues['Sleep Efficiency']];
+          sources.forEach((s: any) => {
+            if (s.source?.toLowerCase() === 'garmin' || metricValues['Sleep Efficiency'].source?.toLowerCase() === 'garmin') {
+              recoveryMetrics.push({
+                value: s.value || metricValues['Sleep Efficiency'].current,
+                source: 'Garmin',
+                weight: 0.7,
+                name: 'Sleep Efficiency'
+              });
+            }
+          });
+        }
+        
+        // Ultrahuman HRV (normalized)
+        if (metricValues['HRV RMSSD']) {
+          const sources = metricValues['HRV RMSSD'].sources || [metricValues['HRV RMSSD']];
+          sources.forEach((s: any) => {
+            if (s.source?.toLowerCase() === 'ultrahuman' || metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
+              const hrv = s.value || metricValues['HRV RMSSD'].current;
+              const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+              recoveryMetrics.push({
+                value: normalized,
+                source: 'Ultrahuman',
+                weight: 0.6,
+                name: 'HRV (normalized)'
+              });
+            }
+          });
+        }
+        
+        if (recoveryMetrics.length === 0) return null;
+        
+        // Взвешенное среднее
+        const totalWeight = recoveryMetrics.reduce((sum, m) => sum + m.weight, 0);
+        const weightedSum = recoveryMetrics.reduce((sum, m) => sum + (m.value * m.weight), 0);
+        const unifiedValue = weightedSum / totalWeight;
+        
+        // Создаем красивое описание источников
+        const sourcesDescription = recoveryMetrics
+          .map(m => `${m.source} ${Math.round(m.value)}%`)
+          .join(' + ');
+        
         return {
-          value: normalized,
-          source: 'Ultrahuman',
-          sourceName: 'HRV (normalized)',
-          isNormalized: true
+          value: unifiedValue,
+          source: 'Unified',
+          sourceName: sourcesDescription,
+          isNormalized: false,
+          sourceCount: recoveryMetrics.length,
+          details: recoveryMetrics
         };
       }
-      
-      // Priority 6: Garmin Resting HR fallback (нормализовать 40-80 bpm → 100-0%)
-      if (metricValues['Resting Heart Rate'] && metricValues['Resting Heart Rate'].source?.toLowerCase() === 'garmin') {
-        const restingHR = metricValues['Resting Heart Rate'].current;
-        // Lower RHR = better recovery: 40 bpm = 100%, 80 bpm = 0%
-        const normalized = Math.min(100, Math.max(0, 100 - ((restingHR - 40) / 40) * 100));
-        return {
-          value: normalized,
-          source: 'Garmin',
-          sourceName: 'Resting HR (normalized)',
-          isNormalized: true
-        };
-      }
-      
-      // Priority 7: Garmin Sleep HRV RMSSD
-      if (metricValues['Sleep HRV RMSSD']) {
-        const hrv = metricValues['Sleep HRV RMSSD'].current;
-        const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
-        return {
-          value: normalized,
-          source: 'Garmin',
-          sourceName: 'Sleep HRV',
-          isNormalized: true
-        };
-      }
-      
-      // Fallback: any other Recovery metric
-      if (metricValues['Recovery']) {
-        return {
-          value: metricValues['Recovery'].current,
-          source: metricValues['Recovery'].source || 'Unknown',
-          sourceName: 'Recovery',
-          isNormalized: false
-        };
-      }
-      
-      return null;
     };
 
     const unifiedRecovery = getUnifiedRecovery();
@@ -431,7 +577,9 @@ export default function FitnessData() {
         subtitle: value > 15 ? 'Very High' : value > 10 ? 'High' : 'Moderate',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: strain.isUnified,
+        sourceCount: strain.sourceCount
       });
     }
 
@@ -448,7 +596,9 @@ export default function FitnessData() {
         subtitle: quality ? `Quality: ${Math.round(quality.current)}%` : '',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: sleepDur.isUnified,
+        sourceCount: sleepDur.sourceCount
       });
     }
 
@@ -461,7 +611,9 @@ export default function FitnessData() {
         subtitle: `${unifiedRecovery.sourceName} • ${result.recovery.status}`,
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: selectedSource === 'all' && unifiedRecovery.sourceCount > 1,
+        sourceCount: unifiedRecovery.sourceCount
       });
     }
 
@@ -475,7 +627,9 @@ export default function FitnessData() {
         subtitle: movementIndex.current > 70 ? 'Excellent' : movementIndex.current > 50 ? 'Good' : 'Low',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: movementIndex.isUnified,
+        sourceCount: movementIndex.sourceCount
       });
     }
 
@@ -489,7 +643,9 @@ export default function FitnessData() {
         subtitle: 'ml/kg/min',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: vo2.isUnified,
+        sourceCount: vo2.sourceCount
       });
     }
 
@@ -505,7 +661,9 @@ export default function FitnessData() {
         subtitle: trend,
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: fat.isUnified,
+        sourceCount: fat.sourceCount
       });
     }
 
@@ -524,7 +682,9 @@ export default function FitnessData() {
         subtitle: isStale ? `bpm (${new Date(hr.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })})` : 'bpm',
         icon: meta.icon,
         color: isStale ? '#EAB308' : meta.color,
-        borderColor: isStale ? '#EAB308' : meta.color
+        borderColor: isStale ? '#EAB308' : meta.color,
+        isUnified: hr.isUnified,
+        sourceCount: hr.sourceCount
       });
     }
 
@@ -538,7 +698,9 @@ export default function FitnessData() {
         subtitle: 'kcal',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: cal.isUnified,
+        sourceCount: cal.sourceCount
       });
     }
 
@@ -552,7 +714,9 @@ export default function FitnessData() {
         subtitle: 'per day',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: steps.isUnified,
+        sourceCount: steps.sourceCount
       });
     }
 
@@ -566,7 +730,9 @@ export default function FitnessData() {
         subtitle: perf.current > 80 ? 'Excellent' : perf.current > 60 ? 'Good' : 'Poor',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: perf.isUnified,
+        sourceCount: perf.sourceCount
       });
     }
 
@@ -585,7 +751,9 @@ export default function FitnessData() {
         subtitle: isStale ? `ms (${new Date(hrv.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })})` : 'ms',
         icon: meta.icon,
         color: isStale ? '#EAB308' : meta.color,
-        borderColor: isStale ? '#EAB308' : meta.color
+        borderColor: isStale ? '#EAB308' : meta.color,
+        isUnified: hrv.isUnified,
+        sourceCount: hrv.sourceCount
       });
     }
 
@@ -599,7 +767,9 @@ export default function FitnessData() {
         subtitle: selectedFilter === 'today' ? 'today' : selectedFilter === 'week' ? 'this week' : 'this month',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: count.isUnified,
+        sourceCount: count.sourceCount
       });
     }
 
@@ -613,7 +783,9 @@ export default function FitnessData() {
         subtitle: 'brpm',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: respRate.isUnified,
+        sourceCount: respRate.sourceCount
       });
     }
 
@@ -627,7 +799,9 @@ export default function FitnessData() {
         subtitle: 'Blood Oxygen',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: spo2.isUnified,
+        sourceCount: spo2.sourceCount
       });
     }
 
@@ -641,7 +815,9 @@ export default function FitnessData() {
         subtitle: 'bpm',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: maxHR.isUnified,
+        sourceCount: maxHR.sourceCount
       });
     }
 
@@ -657,7 +833,9 @@ export default function FitnessData() {
         subtitle: 'hours',
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: timeInBed.isUnified,
+        sourceCount: timeInBed.sourceCount
       });
     }
 
@@ -705,7 +883,9 @@ export default function FitnessData() {
       }
 
       // Add source info if available
-      if (metricData.source && selectedSource === 'all') {
+      if (metricData.isUnified && metricData.sourceCount > 1) {
+        subtitle = subtitle ? `${subtitle} • ${metricData.sourceCount} sources` : `${metricData.sourceCount} sources`;
+      } else if (metricData.source && selectedSource === 'all' && !metricData.isUnified) {
         subtitle = subtitle ? `${subtitle} • ${metricData.source}` : metricData.source;
       }
 
@@ -715,7 +895,9 @@ export default function FitnessData() {
         subtitle: subtitle,
         icon: meta.icon,
         color: meta.color,
-        borderColor: meta.color
+        borderColor: meta.color,
+        isUnified: metricData.isUnified,
+        sourceCount: metricData.sourceCount
       });
     });
 
@@ -787,53 +969,62 @@ export default function FitnessData() {
       </div>
 
       {/* Hero Card: Recovery */}
-      <div
-        className="relative rounded-3xl p-6 mb-4 transition-all duration-300"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          border: '2px solid',
-          borderColor: recoveryColor.color,
-          boxShadow: `0 0 30px ${recoveryColor.color}66`
-        }}
-      >
-        <h2 className="text-xl font-bold text-white mb-4">Recovery</h2>
-        
-        <div className="flex items-center justify-center">
-          {/* Donut Chart - Smaller */}
-          <div className="relative w-32 h-32">
-            <svg className="w-full h-full transform -rotate-90">
-              <circle
-                cx="64"
-                cy="64"
-                r="52"
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.1)"
-                strokeWidth="12"
-              />
-              <circle
-                cx="64"
-                cy="64"
-                r="52"
-                fill="none"
-                stroke={recoveryColor.color}
-                strokeWidth="12"
-                strokeDasharray={`${2 * Math.PI * 52 * (data.recovery.score / 100)} ${2 * Math.PI * 52}`}
-                strokeLinecap="round"
-                style={{
-                  filter: `drop-shadow(0 0 6px ${recoveryColor.color})`
-                }}
-              />
-            </svg>
-            
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-3xl font-bold text-white">{data.recovery.score}%</div>
-              <div className="text-xs text-white/80">{data.recovery.status}</div>
+      {data.recovery.score > 0 && (
+        <div
+          className="relative rounded-3xl p-6 mb-4 transition-all duration-300"
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '2px solid',
+            borderColor: recoveryColor.color,
+            boxShadow: `0 0 30px ${recoveryColor.color}66`
+          }}
+        >
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-bold text-white">Recovery</h2>
+            {selectedSource === 'all' && data.recovery.score > 0 && (
+              <div className="bg-white/10 px-3 py-1 rounded-full text-xs text-white backdrop-blur-sm">
+                Unified
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center justify-center">
+            {/* Donut Chart - Smaller */}
+            <div className="relative w-32 h-32">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="52"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="12"
+                />
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="52"
+                  fill="none"
+                  stroke={recoveryColor.color}
+                  strokeWidth="12"
+                  strokeDasharray={`${2 * Math.PI * 52 * (data.recovery.score / 100)} ${2 * Math.PI * 52}`}
+                  strokeLinecap="round"
+                  style={{
+                    filter: `drop-shadow(0 0 6px ${recoveryColor.color})`
+                  }}
+                />
+              </svg>
+              
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-3xl font-bold text-white">{data.recovery.score}%</div>
+                <div className="text-xs text-white/80">{data.recovery.status}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Compact Metrics Grid */}
       <div className="grid grid-cols-2 gap-3 mb-4">
