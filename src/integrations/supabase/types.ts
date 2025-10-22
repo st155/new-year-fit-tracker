@@ -2787,10 +2787,6 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
-      refresh_trainer_client_summary: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       sync_all_whoop_users: {
         Args: Record<PropertyKey, never>
         Returns: undefined
