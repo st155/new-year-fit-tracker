@@ -290,7 +290,8 @@ export default function FitnessData() {
           previous: previousValue,
           category: metric.metric_category,
           unit: metric.unit,
-          source: metric.source
+          source: metric.source,
+          date: sortedValues[0]?.measurement_date
         };
       }
     });
@@ -350,7 +351,20 @@ export default function FitnessData() {
         };
       }
       
-      // Priority 5: Garmin Sleep HRV RMSSD
+      // Priority 6: Garmin Resting HR fallback (нормализовать 40-80 bpm → 100-0%)
+      if (metricValues['Resting Heart Rate'] && metricValues['Resting Heart Rate'].source?.toLowerCase() === 'garmin') {
+        const restingHR = metricValues['Resting Heart Rate'].current;
+        // Lower RHR = better recovery: 40 bpm = 100%, 80 bpm = 0%
+        const normalized = Math.min(100, Math.max(0, 100 - ((restingHR - 40) / 40) * 100));
+        return {
+          value: normalized,
+          source: 'Garmin',
+          sourceName: 'Resting HR (normalized)',
+          isNormalized: true
+        };
+      }
+      
+      // Priority 7: Garmin Sleep HRV RMSSD
       if (metricValues['Sleep HRV RMSSD']) {
         const hrv = metricValues['Sleep HRV RMSSD'].current;
         const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
@@ -376,7 +390,7 @@ export default function FitnessData() {
     };
 
     const unifiedRecovery = getUnifiedRecovery();
-    if (unifiedRecovery) {
+    if (unifiedRecovery && unifiedRecovery.value > 0) {
       result.recovery.score = Math.round(unifiedRecovery.value);
       result.recovery.status = unifiedRecovery.value > 70 ? 'Optimal' : unifiedRecovery.value > 40 ? 'Normal' : 'Low';
     }
@@ -495,17 +509,22 @@ export default function FitnessData() {
       });
     }
 
-    // Heart Rate
+    // Heart Rate with stale data indicator
     if (metricValues['Heart Rate'] || metricValues['Resting Heart Rate'] || metricValues['Average Heart Rate']) {
       const hr = metricValues['Heart Rate'] || metricValues['Resting Heart Rate'] || metricValues['Average Heart Rate'];
       const meta = getMetricIcon('cardio', 'heart');
+      
+      // Check if data is stale (older than today)
+      const isStale = selectedFilter === 'today' && hr.date && 
+        new Date(hr.date).toDateString() !== new Date().toDateString();
+      
       cards.push({
         name: metricValues['Resting Heart Rate'] ? 'Resting HR' : 'Heart Rate',
         value: Math.round(hr.current) + '',
-        subtitle: 'bpm',
+        subtitle: isStale ? `bpm (${new Date(hr.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })})` : 'bpm',
         icon: meta.icon,
-        color: meta.color,
-        borderColor: meta.color
+        color: isStale ? '#EAB308' : meta.color,
+        borderColor: isStale ? '#EAB308' : meta.color
       });
     }
 
@@ -551,17 +570,22 @@ export default function FitnessData() {
       });
     }
 
-    // HRV (если есть)
+    // HRV with stale data indicator
     if (metricValues['HRV'] || metricValues['Heart Rate Variability']) {
       const hrv = metricValues['HRV'] || metricValues['Heart Rate Variability'];
       const meta = getMetricIcon('recovery', 'hrv');
+      
+      // Check if data is stale (older than today)
+      const isStale = selectedFilter === 'today' && hrv.date && 
+        new Date(hrv.date).toDateString() !== new Date().toDateString();
+      
       cards.push({
         name: 'HRV',
         value: Math.round(hrv.current) + '',
-        subtitle: 'ms',
+        subtitle: isStale ? `ms (${new Date(hrv.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })})` : 'ms',
         icon: meta.icon,
-        color: meta.color,
-        borderColor: meta.color
+        color: isStale ? '#EAB308' : meta.color,
+        borderColor: isStale ? '#EAB308' : meta.color
       });
     }
 
@@ -579,6 +603,64 @@ export default function FitnessData() {
       });
     }
 
+    // Respiratory Rate (Whoop)
+    if (metricValues['Respiratory Rate']) {
+      const respRate = metricValues['Respiratory Rate'];
+      const meta = getMetricIcon('recovery', 'respiratory');
+      cards.push({
+        name: 'Respiratory Rate',
+        value: (Math.round(respRate.current * 10) / 10) + '',
+        subtitle: 'brpm',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // SpO2 / Blood Oxygen
+    if (metricValues['SpO2'] || metricValues['Blood Oxygen']) {
+      const spo2 = metricValues['SpO2'] || metricValues['Blood Oxygen'];
+      const meta = getMetricIcon('recovery', 'spo2');
+      cards.push({
+        name: 'SpO2',
+        value: (Math.round(spo2.current * 10) / 10) + '%',
+        subtitle: 'Blood Oxygen',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Max Heart Rate
+    if (metricValues['Max Heart Rate']) {
+      const maxHR = metricValues['Max Heart Rate'];
+      const meta = getMetricIcon('cardio', 'max_hr');
+      cards.push({
+        name: 'Max Heart Rate',
+        value: Math.round(maxHR.current) + '',
+        subtitle: 'bpm',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
+    // Time in Bed (Whoop/Garmin)
+    if (metricValues['Time in Bed']) {
+      const timeInBed = metricValues['Time in Bed'];
+      const hours = Math.floor(timeInBed.current);
+      const minutes = Math.round((timeInBed.current - hours) * 60);
+      const meta = getMetricIcon('sleep', 'time_in_bed');
+      cards.push({
+        name: 'Time in Bed',
+        value: `${hours}:${minutes.toString().padStart(2, '0')}`,
+        subtitle: 'hours',
+        icon: meta.icon,
+        color: meta.color,
+        borderColor: meta.color
+      });
+    }
+
     // ========= SHOW ALL OTHER AVAILABLE METRICS ==========
     // Exclude metrics already shown in specific cards above
     const shownMetrics = new Set([
@@ -587,7 +669,8 @@ export default function FitnessData() {
       'VO2Max', 'Body Fat %', 'Heart Rate', 'Resting Heart Rate', 'Average Heart Rate',
       'Calories', 'Active Energy', 'Active Calories', 'Steps', 'Weight',
       'HRV RMSSD', 'Sleep HRV RMSSD', 'HRV', 'Heart Rate Variability', 'Workout Count',
-      'Ultrahuman Recovery', 'Movement Index' // Don't show duplicates
+      'Ultrahuman Recovery', 'Movement Index',
+      'Respiratory Rate', 'SpO2', 'Blood Oxygen', 'Max Heart Rate', 'Time in Bed'
     ]);
 
     // Add all other metrics dynamically

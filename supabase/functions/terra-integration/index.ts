@@ -1031,6 +1031,31 @@ async function processTerraData(supabase: any, payload: any) {
                 stats.insertedCounts.daily++;
               }
             }
+
+            // Body Battery (Garmin)
+            if (daily.body_battery !== undefined && daily.body_battery !== null) {
+              console.log(`✅ Found Garmin Body Battery: ${daily.body_battery} for ${dateStr}`);
+              const { data: bbMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Body Battery',
+                p_metric_category: 'recovery',
+                p_unit: '%',
+                p_source: source,
+              });
+              if (bbMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: bbMetricId,
+                  value: daily.body_battery,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_body_battery_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                stats.insertedCounts.daily++;
+              }
+            }
           }
 
           // HRV RMSSD
