@@ -29,33 +29,67 @@ export default function WhoopCallback() {
   const processedRef = useRef(false);
 
   useEffect(() => {
+    // Timeout safety net: redirect after 10 seconds if still waiting for user
+    const timeoutId = setTimeout(() => {
+      if (!user && !processedRef.current) {
+        console.error('❌ Timeout: user not loaded after 10 seconds');
+        toast({ 
+          title: 'Ошибка подключения', 
+          description: 'Не удалось загрузить данные пользователя. Попробуйте снова.', 
+          variant: 'destructive' 
+        });
+        navigate('/integrations');
+      }
+    }, 10000);
+
     const handleCallback = async () => {
+      console.log('🔄 WhoopCallback: useEffect triggered', { 
+        hasUser: !!user, 
+        userId: user?.id,
+        hasCode: !!searchParams.get('code'),
+        hasState: !!searchParams.get('state')
+      });
+
       // Очистка старых кодов
       cleanupOldCodes();
       
-      if (processedRef.current) return; // Guard against double-invoke
+      if (processedRef.current) {
+        console.log('✅ Already processed, skipping');
+        return;
+      }
 
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
 
+      console.log('📋 Callback params:', { 
+        hasCode: !!code, 
+        hasState: !!state, 
+        hasError: !!error 
+      });
+
       if (error) {
+        console.error('❌ OAuth error:', error);
         toast({ title: 'Ошибка авторизации', description: 'Не удалось подключить Whoop', variant: 'destructive' });
         navigate('/integrations');
         return;
       }
 
       if (!code || !state) {
+        console.warn('⚠️ Missing code or state');
         navigate('/integrations');
         return;
       }
 
       if (!user) {
-        // Wait for user to load
-        return;
+        console.log('⏳ Waiting for user to load...');
+        return; // Exit early, useEffect will re-run when user changes
       }
+      
+      console.log('✅ User loaded:', user.id);
 
       if (state !== user.id) {
+        console.error('❌ State mismatch:', { state, userId: user.id });
         toast({ title: 'Ошибка', description: 'Неверный state параметр', variant: 'destructive' });
         navigate('/integrations');
         return;
@@ -68,6 +102,8 @@ export default function WhoopCallback() {
       if (existingUse) {
         const timestamp = parseInt(existingUse);
         const minutesAgo = (Date.now() - timestamp) / (1000 * 60);
+        
+        console.log(`🔍 Code already used ${minutesAgo.toFixed(1)} minutes ago`);
         
         // Если код был использован менее 5 минут назад - пропускаем
         if (minutesAgo < 5) {
@@ -83,17 +119,23 @@ export default function WhoopCallback() {
       sessionStorage.setItem(usedKey, Date.now().toString());
       processedRef.current = true;
 
+      console.log('🚀 Exchanging authorization code...');
+
       try {
         const { error: exchangeError } = await supabase.functions.invoke('whoop-integration', {
           body: { action: 'exchange-code', code },
         });
 
-        if (exchangeError) throw exchangeError;
+        if (exchangeError) {
+          console.error('❌ Exchange error:', exchangeError);
+          throw exchangeError;
+        }
 
+        console.log('✅ Whoop connected successfully');
         toast({ title: 'Whoop подключен', description: 'Устройство успешно подключено' });
         navigate('/integrations');
       } catch (error: any) {
-        console.error('Whoop callback error:', error);
+        console.error('❌ Whoop callback error:', error);
         const msg = typeof error?.message === 'string' && error.message.includes('already been used')
           ? 'Код уже использован — соединение почти наверняка установлено. Проверьте статус интеграции.'
           : (error?.message || 'Не удалось подключить Whoop');
@@ -103,6 +145,8 @@ export default function WhoopCallback() {
     };
 
     handleCallback();
+
+    return () => clearTimeout(timeoutId);
   }, [searchParams, user, navigate, toast]);
 
   return <PageLoader message="Подключение Whoop..." />;
