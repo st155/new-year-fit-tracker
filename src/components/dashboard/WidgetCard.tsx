@@ -132,11 +132,29 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     };
   }, [user?.id, metricName, source]);
 
+  // Слушаем событие обновления Whoop данных
+  useEffect(() => {
+    const handleWhoopUpdate = () => {
+      console.log(`🔄 [WidgetCard] Whoop data updated event, reloading ${metricName}/${source}`);
+      loadData();
+    };
+
+    window.addEventListener('whoop-data-updated', handleWhoopUpdate);
+    return () => {
+      window.removeEventListener('whoop-data-updated', handleWhoopUpdate);
+    };
+  }, [metricName, source]);
+
   const loadData = async () => {
     if (!user) return;
     
     setLoading(true);
     const result = await fetchWidgetData(user.id, metricName, source);
+    console.log(`📊 [WidgetCard] Loaded ${metricName}/${source}:`, {
+      value: result?.value,
+      date: result?.date,
+      trend: result?.trend
+    });
     setData(result);
     setLoading(false);
   };
@@ -146,6 +164,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     
     setSyncing(true);
     try {
+      console.log('🔄 [WidgetCard] Starting Whoop sync from widget...');
       const { error } = await supabase.functions.invoke('whoop-integration', {
         body: { action: 'sync-data' }
       });
@@ -157,11 +176,17 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         description: 'Whoop данные обновляются...',
       });
       
+      // Очищаем кеши сразу после запуска синхронизации
+      localStorage.removeItem('fitness_metrics_cache');
+      localStorage.removeItem('fitness_data_cache_whoop');
+      localStorage.removeItem('fitness_data_cache');
+      
       // Обновляем данные через 3 секунды
       setTimeout(() => {
         loadData();
       }, 3000);
     } catch (error: any) {
+      console.error('❌ [WidgetCard] Sync error:', error);
       toast({
         title: 'Ошибка синхронизации',
         description: error.message,

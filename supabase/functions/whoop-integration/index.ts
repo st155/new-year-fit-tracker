@@ -492,7 +492,26 @@ async function syncWhoopData(
   whoopClientId: string,
   whoopClientSecret: string
 ) {
-  console.log('Syncing Whoop data for user:', userId);
+  const syncStartTime = new Date().toISOString();
+  console.log(`🔄 [${syncStartTime}] Starting Whoop sync for user: ${userId}`);
+
+  // Счетчики для summary
+  const counts = {
+    cyclesFetched: 0,
+    recoveriesSaved: 0,
+    dayStrainSaved: 0,
+    workoutsFetched: 0,
+    workoutStrainSaved: 0,
+    maxHrSaved: 0,
+    caloriesSaved: 0,
+    avgHrSaved: 0,
+    sleepsFetched: 0,
+    sleepPerfSaved: 0,
+    sleepEffSaved: 0,
+    sleepDurSaved: 0,
+    stagesSaved: 0,
+  };
+  const errors: { section: string; error: string }[] = [];
 
   // Получаем токен пользователя
   const { data: token } = await supabase
@@ -527,21 +546,38 @@ async function syncWhoopData(
   const start = startDate.toISOString();
   const end = endDate.toISOString();
 
-  console.log('Syncing Whoop data from', start, 'to', end);
+  console.log(`📅 Sync window: ${start} to ${end}`);
 
-  // Синхронизация циклов
-  const cyclesResponse = await fetch(
-    `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    }
-  );
+  // ============ СИНХРОНИЗАЦИЯ ЦИКЛОВ (Recovery, Day Strain) ============
+  try {
+    console.log('📊 Fetching cycles...');
+    const cyclesResponse = await fetch(
+      `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
 
-  if (cyclesResponse.ok) {
-    const cyclesData = await cyclesResponse.json();
-    console.log('Whoop cycles received:', cyclesData.records?.length || 0);
+    if (cyclesResponse.status === 429) {
+      console.log('⚠️ Rate limited on cycles, waiting 2s...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Retry once
+      const retryResponse = await fetch(
+        `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      if (!retryResponse.ok) {
+        throw new Error(`Cycles fetch failed after retry: ${retryResponse.status}`);
+      }
+      const cyclesData = await retryResponse.json();
+      counts.cyclesFetched = cyclesData.records?.length || 0;
+      console.log(`✅ Cycles fetched (retry): ${counts.cyclesFetched}`);
+    } else if (cyclesResponse.ok) {
+      const cyclesData = await cyclesResponse.json();
+      counts.cyclesFetched = cyclesData.records?.length || 0;
+      console.log(`✅ Cycles fetched: ${counts.cyclesFetched}`);
 
     if (cyclesData.records && cyclesData.records.length > 0) {
       // Группируем циклы по дате и берём последний для каждой даты
@@ -599,7 +635,14 @@ async function syncWhoopData(
             });
             
             // Recovery Score измеряется за ночь и применяется к дате пробуждения
-            if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined && endLocal) {
+            // Fallback: если endLocal невалидный но есть score, используем сегодняшнюю дату
+            let recoveryDate = endLocal;
+            if (!recoveryDate || recoveryDate.length < 10) {
+              recoveryDate = todayLocalStr();
+              console.log(`⚠️ Recovery cycle ${cycle.id}: invalid endLocal, using today (${recoveryDate})`);
+            }
+            
+            if (recoveryData.score_state === 'SCORED' && recoveryData.score?.recovery_score !== undefined) {
               const metricId = await getOrCreateMetric(
                 supabase,
                 userId,
@@ -613,7 +656,7 @@ async function syncWhoopData(
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
-                measurement_date: endLocal, // Используем локальную дату окончания цикла
+                measurement_date: recoveryDate,
                 external_id: `whoop_recovery_${cycle.id}`,
                 source_data: { 
                   cycle_id: cycle.id, 
@@ -623,9 +666,11 @@ async function syncWhoopData(
               }, { onConflict: 'user_id,metric_id,external_id' });
               
               if (recoveryError) {
-                console.error(`❌ Failed to save Recovery for ${endLocal}:`, recoveryError);
+                console.error(`❌ Failed to save Recovery for ${recoveryDate}:`, recoveryError.message, recoveryError.code);
+                errors.push({ section: 'recovery', error: `${recoveryError.code}: ${recoveryError.message}` });
               } else {
-                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${endLocal}`);
+                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${recoveryDate}`);
+                counts.recoveriesSaved++;
               }
 
               // Resting HR
@@ -717,9 +762,11 @@ async function syncWhoopData(
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (strainError) {
-            console.error(`❌ Failed to save Day Strain for ${targetDate}:`, strainError);
+            console.error(`❌ Failed to save Day Strain for ${targetDate}:`, strainError.message, strainError.code);
+            errors.push({ section: 'day_strain', error: `${strainError.code}: ${strainError.message}` });
           } else {
             console.log(`✅ Saved Day Strain ${cycle.score.strain} for ${targetDate}`);
+            counts.dayStrainSaved++;
             
             // Очистка дубликатов: оставляем только самую новую запись с правильной датой
             const { data: duplicates } = await supabase
@@ -746,24 +793,40 @@ async function syncWhoopData(
         }
       }
     }
+    } else {
+      console.log(`⚠️ Cycles API returned non-OK status: ${cyclesResponse.status}`);
+    }
+  } catch (error: any) {
+    console.error('❌ Error in cycles section:', error.message);
+    errors.push({ section: 'cycles', error: error.message });
   }
 
-  // Синхронизация workouts
-  const workoutsResponse = await fetch(
-    `https://api.prod.whoop.com/developer/v2/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+  // ============ СИНХРОНИЗАЦИЯ WORKOUTS (Workout Strain, Max HR, Calories, Avg HR) ============
+  try {
+    console.log('💪 Fetching workouts...');
+    const workoutsResponse = await fetch(
+      `https://api.prod.whoop.com/developer/v2/activity/workout?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (workoutsResponse.status === 429) {
+      console.log('⚠️ Rate limited on workouts, waiting 2s...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-  );
 
-  if (workoutsResponse.ok) {
-    const workoutsData = await workoutsResponse.json();
-    console.log('Whoop workouts received:', workoutsData.records?.length || 0);
+    if (workoutsResponse.ok) {
+      const workoutsData = await workoutsResponse.json();
+      counts.workoutsFetched = workoutsData.records?.length || 0;
+      console.log(`✅ Workouts fetched: ${counts.workoutsFetched}`);
 
-    if (workoutsData.records && workoutsData.records.length > 0) {
-      for (const workout of workoutsData.records) {
+      if (workoutsData.records && workoutsData.records.length > 0) {
+        for (const workout of workoutsData.records) {
+          // 🔧 FIX: Define workoutDate ONCE at the start of the loop
+          const workoutDate = toLocalDateStr(workout.start);
         // Сохраняем в таблицу workouts
         const { error: workoutError } = await supabase.from('workouts').upsert({
           user_id: userId,
@@ -785,7 +848,6 @@ async function syncWhoopData(
 
         // Также сохраняем Workout Strain в метрики
         if (workout.score?.strain !== undefined) {
-          const workoutDate = toLocalDateStr(workout.start);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -805,13 +867,15 @@ async function syncWhoopData(
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (workoutStrainError) {
-            console.error(`❌ Failed to save Workout Strain for ${workoutDate}:`, workoutStrainError);
+            console.error(`❌ Failed to save Workout Strain for ${workoutDate}:`, workoutStrainError.message);
+            errors.push({ section: 'workout_strain', error: workoutStrainError.message });
+          } else {
+            counts.workoutStrainSaved++;
           }
         }
 
         // Сохраняем Max Heart Rate в метрики
         if (workout.score?.max_heart_rate !== undefined) {
-          const workoutDate = toLocalDateStr(workout.start);
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
@@ -831,7 +895,10 @@ async function syncWhoopData(
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (maxHrError) {
-            console.error(`❌ Failed to save Max Heart Rate for ${workoutDate}:`, maxHrError);
+            console.error(`❌ Failed to save Max Heart Rate for ${workoutDate}:`, maxHrError.message);
+            errors.push({ section: 'max_hr', error: maxHrError.message });
+          } else {
+            counts.maxHrSaved++;
           }
         }
 
@@ -842,7 +909,7 @@ async function syncWhoopData(
           );
           const kcal = Math.round(workout.score.kilojoule * 0.239);
           
-          await supabase.from('metric_values').upsert({
+          const { error: calError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: activeCalMetric,
             value: kcal,
@@ -850,7 +917,14 @@ async function syncWhoopData(
             external_id: `whoop_active_cal_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
           }, { onConflict: 'user_id,metric_id,external_id' });
-          console.log(`✅ Saved Active Calories ${kcal} kcal for ${workoutDate}`);
+          
+          if (calError) {
+            console.error(`❌ Failed to save Active Calories:`, calError.message);
+            errors.push({ section: 'calories', error: calError.message });
+          } else {
+            console.log(`✅ Saved Active Calories ${kcal} kcal for ${workoutDate}`);
+            counts.caloriesSaved++;
+          }
         }
 
         // Average HR (from workout)
@@ -859,7 +933,7 @@ async function syncWhoopData(
             supabase, userId, 'Average HR', 'heart_rate', 'bpm', 'whoop'
           );
           
-          await supabase.from('metric_values').upsert({
+          const { error: avgHrError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: avgHrMetric,
             value: workout.score.average_heart_rate,
@@ -867,29 +941,55 @@ async function syncWhoopData(
             external_id: `whoop_avg_hr_${workout.id}`,
             source_data: { workout_id: workout.id, raw: workout.score },
           }, { onConflict: 'user_id,metric_id,external_id' });
-          console.log(`✅ Saved Average HR ${workout.score.average_heart_rate} bpm for ${workoutDate}`);
+          
+          if (avgHrError) {
+            console.error(`❌ Failed to save Average HR:`, avgHrError.message);
+            errors.push({ section: 'avg_hr', error: avgHrError.message });
+          } else {
+            console.log(`✅ Saved Average HR ${workout.score.average_heart_rate} bpm for ${workoutDate}`);
+            counts.avgHrSaved++;
+          }
+        }
         }
       }
+    } else {
+      console.log(`⚠️ Workouts API returned non-OK status: ${workoutsResponse.status}`);
     }
+  } catch (error: any) {
+    console.error('❌ Error in workouts section:', error.message);
+    errors.push({ section: 'workouts', error: error.message });
   }
 
-  // Синхронизация sleep
-  const sleepResponse = await fetch(
-    `https://api.prod.whoop.com/developer/v2/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-    {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+  // ============ СИНХРОНИЗАЦИЯ SLEEP (Sleep Performance, Efficiency, Duration, Stages) ============
+  try {
+    console.log('😴 Fetching sleep...');
+    const sleepResponse = await fetch(
+      `https://api.prod.whoop.com/developer/v2/activity/sleep?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (sleepResponse.status === 429) {
+      console.log('⚠️ Rate limited on sleep, waiting 2s...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-  );
 
-  if (sleepResponse.ok) {
-    const sleepData = await sleepResponse.json();
-    console.log('Whoop sleep received:', sleepData.records?.length || 0);
+    if (sleepResponse.ok) {
+      const sleepData = await sleepResponse.json();
+      counts.sleepsFetched = sleepData.records?.length || 0;
+      console.log(`✅ Sleep records fetched: ${counts.sleepsFetched}`);
 
-    if (sleepData.records && sleepData.records.length > 0) {
-      for (const sleep of sleepData.records) {
-        const sleepDate = toLocalDateStr(sleep.end);
+      if (sleepData.records && sleepData.records.length > 0) {
+        for (const sleep of sleepData.records) {
+          // Fallback для невалидной даты
+          let sleepDate = toLocalDateStr(sleep.end);
+          if (!sleepDate || sleepDate.length < 10) {
+            sleepDate = todayLocalStr();
+            console.log(`⚠️ Sleep ${sleep.id}: invalid end date, using today (${sleepDate})`);
+          }
         
         // Sleep Performance
         if (sleep.score?.sleep_performance_percentage !== undefined) {
@@ -912,7 +1012,10 @@ async function syncWhoopData(
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepPerfError) {
-            console.error(`❌ Failed to save Sleep Performance for ${sleepDate}:`, sleepPerfError);
+            console.error(`❌ Failed to save Sleep Performance for ${sleepDate}:`, sleepPerfError.message);
+            errors.push({ section: 'sleep_perf', error: sleepPerfError.message });
+          } else {
+            counts.sleepPerfSaved++;
           }
         }
 
@@ -937,7 +1040,10 @@ async function syncWhoopData(
            }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepEffError) {
-            console.error(`❌ Failed to save Sleep Efficiency for ${sleepDate}:`, sleepEffError);
+            console.error(`❌ Failed to save Sleep Efficiency for ${sleepDate}:`, sleepEffError.message);
+            errors.push({ section: 'sleep_eff', error: sleepEffError.message });
+          } else {
+            counts.sleepEffSaved++;
           }
         }
 
@@ -964,7 +1070,10 @@ async function syncWhoopData(
           }, { onConflict: 'user_id,metric_id,external_id' });
           
           if (sleepDurError) {
-            console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError);
+            console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError.message);
+            errors.push({ section: 'sleep_dur', error: sleepDurError.message });
+          } else {
+            counts.sleepDurSaved++;
           }
         }
 
@@ -994,7 +1103,7 @@ async function syncWhoopData(
               supabase, userId, 'REM Sleep', 'sleep', 'hours', 'whoop'
             );
             const remHours = stages.rem_sleep_duration_milli / (1000 * 60 * 60);
-            await supabase.from('metric_values').upsert({
+            const { error: remError } = await supabase.from('metric_values').upsert({
               user_id: userId,
               metric_id: remMetric,
               value: remHours,
@@ -1002,7 +1111,12 @@ async function syncWhoopData(
               external_id: `whoop_rem_${sleep.id}`,
               source_data: { sleep_id: sleep.id, raw: stages },
             }, { onConflict: 'user_id,metric_id,external_id' });
-            console.log(`✅ Saved REM Sleep ${remHours.toFixed(2)} hours for ${sleepDate}`);
+            if (!remError) {
+              console.log(`✅ Saved REM Sleep ${remHours.toFixed(2)} hours for ${sleepDate}`);
+              counts.stagesSaved++;
+            } else {
+              errors.push({ section: 'rem_sleep', error: remError.message });
+            }
           }
           
           // Deep Sleep
@@ -1011,7 +1125,7 @@ async function syncWhoopData(
               supabase, userId, 'Deep Sleep', 'sleep', 'hours', 'whoop'
             );
             const deepHours = stages.slow_wave_sleep_duration_milli / (1000 * 60 * 60);
-            await supabase.from('metric_values').upsert({
+            const { error: deepError } = await supabase.from('metric_values').upsert({
               user_id: userId,
               metric_id: deepMetric,
               value: deepHours,
@@ -1019,7 +1133,12 @@ async function syncWhoopData(
               external_id: `whoop_deep_${sleep.id}`,
               source_data: { sleep_id: sleep.id, raw: stages },
             }, { onConflict: 'user_id,metric_id,external_id' });
-            console.log(`✅ Saved Deep Sleep ${deepHours.toFixed(2)} hours for ${sleepDate}`);
+            if (!deepError) {
+              console.log(`✅ Saved Deep Sleep ${deepHours.toFixed(2)} hours for ${sleepDate}`);
+              counts.stagesSaved++;
+            } else {
+              errors.push({ section: 'deep_sleep', error: deepError.message });
+            }
           }
           
           // Light Sleep
@@ -1028,7 +1147,7 @@ async function syncWhoopData(
               supabase, userId, 'Light Sleep', 'sleep', 'hours', 'whoop'
             );
             const lightHours = stages.light_sleep_duration_milli / (1000 * 60 * 60);
-            await supabase.from('metric_values').upsert({
+            const { error: lightError } = await supabase.from('metric_values').upsert({
               user_id: userId,
               metric_id: lightMetric,
               value: lightHours,
@@ -1036,11 +1155,22 @@ async function syncWhoopData(
               external_id: `whoop_light_${sleep.id}`,
               source_data: { sleep_id: sleep.id, raw: stages },
             }, { onConflict: 'user_id,metric_id,external_id' });
-            console.log(`✅ Saved Light Sleep ${lightHours.toFixed(2)} hours for ${sleepDate}`);
+            if (!lightError) {
+              console.log(`✅ Saved Light Sleep ${lightHours.toFixed(2)} hours for ${sleepDate}`);
+              counts.stagesSaved++;
+            } else {
+              errors.push({ section: 'light_sleep', error: lightError.message });
+            }
           }
         }
       }
     }
+    } else {
+      console.log(`⚠️ Sleep API returned non-OK status: ${sleepResponse.status}`);
+    }
+  } catch (error: any) {
+    console.error('❌ Error in sleep section:', error.message);
+    errors.push({ section: 'sleep', error: error.message });
   }
 
   // Обновляем last_sync_date
@@ -1049,5 +1179,16 @@ async function syncWhoopData(
     .update({ last_sync_date: new Date().toISOString() })
     .eq('user_id', userId);
 
-  console.log('Whoop sync completed for user:', userId);
+  // ============ SUMMARY LOG ============
+  const syncEndTime = new Date().toISOString();
+  console.log('✅ ============ WHOOP SYNC SUMMARY ============');
+  console.log(JSON.stringify({
+    userId,
+    syncWindow: { start, end },
+    duration: `${Math.round((new Date(syncEndTime).getTime() - new Date(syncStartTime).getTime()) / 1000)}s`,
+    counts,
+    errors: errors.length > 0 ? errors : 'none',
+    finishedAt: syncEndTime
+  }, null, 2));
+  console.log('===============================================');
 }

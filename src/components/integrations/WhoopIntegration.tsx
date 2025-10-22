@@ -167,6 +167,9 @@ export function WhoopIntegration() {
     if (!user) return;
 
     setSyncing(true);
+    console.group('🔄 Whoop Sync');
+    console.log('Starting sync for user:', user.id);
+    
     try {
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: { action: 'sync-data' },
@@ -175,6 +178,7 @@ export function WhoopIntegration() {
       if (error) {
         const errorMsg = (error as any)?.message || error;
         const statusCode = (error as any)?.status;
+        console.error('Sync error:', { statusCode, errorMsg });
         
         // Если 401 или ошибка токена - переподключение
         if (statusCode === 401 || 
@@ -190,31 +194,38 @@ export function WhoopIntegration() {
             description: 'Токен Whoop истёк или был отозван. Пожалуйста, подключите аккаунт заново.',
             variant: 'destructive',
           });
+          console.groupEnd();
           return;
         }
         
         throw new Error(errorMsg || 'Ошибка синхронизации');
       }
 
+      console.log('✅ Sync completed successfully');
+      
       // Успешная синхронизация - обновляем статус
       await checkConnection();
       
       // Инвалидируем все React Query кэши
+      console.log('🧹 Invalidating React Query caches...');
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['widgets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['metric_values'] });
       
       // Очищаем localStorage кеши
+      console.log('🧹 Clearing localStorage caches...');
       localStorage.removeItem('fitness_metrics_cache');
       localStorage.removeItem('fitness_data_cache_whoop');
+      localStorage.removeItem('fitness_data_cache');
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('progress_cache_')) {
+        if (key.startsWith('progress_cache_') || key.includes('whoop') || key.includes('fitness')) {
           localStorage.removeItem(key);
         }
       });
       
       // Уведомляем другие компоненты об обновлении
+      console.log('📢 Dispatching whoop-data-updated event...');
       window.dispatchEvent(new CustomEvent('whoop-data-updated'));
       
       toast({
@@ -222,9 +233,11 @@ export function WhoopIntegration() {
         description: 'Whoop данные успешно обновлены',
       });
       
-      // Перезагружаем страницу для гарантии обновления виджетов
+      console.groupEnd();
+      
+      // Ждем немного перед рефрешем виджетов
       setTimeout(() => {
-        window.location.reload();
+        queryClient.refetchQueries({ queryKey: ['widgets'] });
       }, 1000);
       
     } catch (error: any) {
