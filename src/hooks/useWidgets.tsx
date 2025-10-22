@@ -205,6 +205,20 @@ export const fetchWidgetData = async (
   source: string
 ): Promise<WidgetMetricData | null> => {
   try {
+    // 🧹 АГРЕССИВНАЯ ОЧИСТКА КЕШЕЙ перед загрузкой
+    console.log(`🧹 [fetchWidgetData] Clearing caches for ${metricName}/${source}`);
+    localStorage.removeItem(`widget_${userId}_${metricName}_${source}`);
+    localStorage.removeItem('fitness_metrics_cache');
+    localStorage.removeItem('fitness_data_cache_whoop');
+    localStorage.removeItem('fitness_data_cache');
+    
+    // Очистка всех widget_ кешей
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('widget_') || key.includes('whoop') || key.includes('fitness')) {
+        localStorage.removeItem(key);
+      }
+    });
+
     // Use local dates to match timezone-aware backend
     const now = new Date();
     const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);

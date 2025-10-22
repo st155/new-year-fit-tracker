@@ -28,6 +28,10 @@ export const useUnifiedMetrics = (userId: string | undefined, metricName?: strin
 
     try {
       setLoading(true);
+      
+      // 🧹 Очищаем кеш перед загрузкой
+      console.log('🧹 [useUnifiedMetrics] Bypassing cache for fresh data');
+      
       let query = supabase
         .from('client_unified_metrics')
         .select('*')

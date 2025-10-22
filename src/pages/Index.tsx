@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWidgets } from '@/hooks/useWidgets';
@@ -17,6 +17,19 @@ const Index = () => {
   const { isTrainer, role, loading: roleLoading } = useUserRole();
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // 🧹 АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕШЕЙ при заходе на главную страницу
+  useEffect(() => {
+    console.log('🧹 [Index] Clearing stale caches on mount');
+    const cacheKeys = Object.keys(localStorage).filter(key => 
+      key.includes('widget_') || 
+      key.includes('fitness_') || 
+      key.includes('whoop_') ||
+      key.includes('cache')
+    );
+    cacheKeys.forEach(key => localStorage.removeItem(key));
+    console.log(`🧹 [Index] Cleared ${cacheKeys.length} cache keys`);
+  }, []); // Только при монтировании компонента
 
   console.log('🏠 [Index] Render', {
     timestamp: new Date().toISOString(),

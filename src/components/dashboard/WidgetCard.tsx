@@ -176,14 +176,24 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         description: 'Whoop данные обновляются...',
       });
       
-      // Очищаем кеши сразу после запуска синхронизации
-      localStorage.removeItem('fitness_metrics_cache');
-      localStorage.removeItem('fitness_data_cache_whoop');
-      localStorage.removeItem('fitness_data_cache');
+      // 🧹 АГРЕССИВНАЯ ОЧИСТКА ВСЕХ КЕШЕЙ после синхронизации
+      console.log('🧹 [WidgetCard] Clearing all caches after Whoop sync');
+      
+      // Очищаем localStorage кеши
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('widget_') || 
+            key.includes('fitness_') || 
+            key.includes('whoop_') ||
+            key.includes('cache')) {
+          localStorage.removeItem(key);
+        }
+      });
       
       // Обновляем данные через 3 секунды
       setTimeout(() => {
         loadData();
+        // Диспатчим событие для обновления других виджетов
+        window.dispatchEvent(new Event('whoop-data-updated'));
       }, 3000);
     } catch (error: any) {
       console.error('❌ [WidgetCard] Sync error:', error);

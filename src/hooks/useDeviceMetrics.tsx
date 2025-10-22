@@ -5,7 +5,7 @@ import type { DeviceFilter } from '@/hooks/useUnifiedMetrics';
 export const useDeviceMetrics = (deviceFilter: DeviceFilter) => {
   const { user } = useAuth();
   
-  const { metrics, loading, error } = useUnifiedMetrics(user?.id);
+  const { metrics, loading, error, refetch } = useUnifiedMetrics(user?.id);
   
   // Filter by device and get latest value for each metric
   const deviceMetrics = metrics
@@ -32,5 +32,5 @@ export const useDeviceMetrics = (deviceFilter: DeviceFilter) => {
       return acc;
     }, {} as Record<string, any>);
   
-  return { metrics: deviceMetrics, loading, error };
+  return { metrics: deviceMetrics, loading, error, refetch };
 };
