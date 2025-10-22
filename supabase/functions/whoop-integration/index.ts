@@ -140,13 +140,7 @@ serve(async (req) => {
         .insert({ user_id: user.id, endpoint: 'whoop-integration' });
     }
     // ============================================
-    );
 
-    if (authError || !authUser) {
-      throw new Error('Unauthorized');
-    }
-
-    user = authUser;
     console.log('Whoop integration action:', { action, userId: user.id });
 
     // Получить URL авторизации Whoop
