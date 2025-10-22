@@ -21,9 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
@@ -42,18 +46,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           toast.success(`Signed in as ${session.user.email}`);
         }
+        
+        // Handle token refresh
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('✅ Token refreshed successfully');
+        }
+        
+        // Handle sign out
+        if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out');
+        }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check for existing session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('❌ Session check error:', error);
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Initial session check:', session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        console.error('❌ Session check failed:', error);
+        setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []); // Empty dependency array - auth state listener should only run once
 
   const signUp = async (email: string, password: string, username: string) => {
@@ -101,6 +132,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       toast.error(`Sign in error: ${error.message}`);
+      
+      // Log failed login attempt for security audit
+      if (user?.id) {
+        const { logAuthAttempt } = await import('@/lib/security-audit');
+        logAuthAttempt(user.id, 'email', false, error.message);
+      }
+    } else {
+      // Log successful login
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { logAuthAttempt } = await import('@/lib/security-audit');
+        logAuthAttempt(authUser.id, 'email', true);
+      }
     }
 
     return { error };
@@ -129,6 +173,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Google auth error:', error);
+        
+        // Log failed OAuth attempt
+        if (user?.id) {
+          const { logAuthAttempt } = await import('@/lib/security-audit');
+          logAuthAttempt(user.id, 'google', false, error.message);
+        }
         
         // Handle specific error cases
         if (error.message.includes('requested path is invalid') || 

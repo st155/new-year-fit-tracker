@@ -99,6 +99,8 @@ function TrainerDashboardContent() {
     
     try {
       setLoading(true);
+      
+      // Оптимизированный запрос: один JOIN вместо N+1 проблемы
       const { data, error } = await supabase
         .from('trainer_clients')
         .select(`
@@ -111,29 +113,15 @@ function TrainerDashboardContent() {
             username,
             full_name,
             avatar_url
+          ),
+          goals:goals!user_id (
+            id
           )
         `)
         .eq('trainer_id', user.id)
         .eq('active', true);
 
       if (error) throw error;
-
-      // Get all client user IDs
-      const clientUserIds = (data || []).map((tc: any) => tc.profiles.user_id);
-      
-      // Fetch goals count for all clients in one query
-      const { data: goalsData, error: goalsError } = await supabase
-        .from('goals')
-        .select('user_id')
-        .in('user_id', clientUserIds);
-      
-      if (goalsError) throw goalsError;
-      
-      // Count goals for each client
-      const goalsCountMap = (goalsData || []).reduce((acc: Record<string, number>, goal: any) => {
-        acc[goal.user_id] = (acc[goal.user_id] || 0) + 1;
-        return acc;
-      }, {});
 
       const formattedClients: TrainerClient[] = (data || []).map((tc: any) => ({
         id: tc.id,
@@ -143,7 +131,7 @@ function TrainerDashboardContent() {
         avatar_url: tc.profiles.avatar_url,
         assigned_at: tc.assigned_at,
         active: tc.active,
-        goals_count: goalsCountMap[tc.profiles.user_id] || 0
+        goals_count: tc.goals?.length || 0
       }));
 
       setClients(formattedClients);

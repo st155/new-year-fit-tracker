@@ -200,11 +200,35 @@ const App = () => {
                         </ModernAppLayout>
                       </ProtectedRoute>
                     } />
-                    <Route path="/trainer-test" element={<TrainerTestPage />} />
+          {/* Test page only in development */}
+          {import.meta.env.DEV && (
+            <Route path="/trainer-test" element={<TrainerTestPage />} />
+          )}
                     
                     {/* OAuth callbacks */}
                     <Route path="/terra-callback" element={<TerraCallback />} />
-                    <Route path="/integrations/whoop/callback" element={<WhoopCallback />} />
+          <Route path="/integrations/whoop/callback" element={
+            <ErrorBoundary
+              fallback={
+                <div className="min-h-screen flex items-center justify-center p-4">
+                  <div className="max-w-md w-full bg-card rounded-lg border border-border p-6">
+                    <h2 className="text-xl font-semibold mb-2">Ошибка подключения Whoop</h2>
+                    <p className="text-muted-foreground mb-4">
+                      Не удалось завершить подключение. Попробуйте снова.
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/integrations'}
+                      className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      Вернуться к интеграциям
+                    </button>
+                  </div>
+                </div>
+              }
+            >
+              <WhoopCallback />
+            </ErrorBoundary>
+          } />
                     
                     {/* Static pages */}
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />

@@ -91,12 +91,23 @@ export class ErrorLogger {
   }
 
   static async logFileUploadError(errorMessage: string, fileInfo?: any, userId?: string): Promise<void> {
-    // Расширенная информация о файле и системе
+    // Hash sensitive data for privacy
+    const hashString = (str: string) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return hash.toString(16);
+    };
+
+    // Расширенная информация о файле и системе (с анонимизацией)
     const enhancedFileInfo = {
       ...fileInfo,
       timestamp: new Date().toISOString(),
       browserInfo: typeof navigator !== 'undefined' ? {
-        userAgent: navigator.userAgent,
+        userAgentHash: hashString(navigator.userAgent), // Хешированный UA для приватности
         platform: navigator.platform,
         cookieEnabled: navigator.cookieEnabled,
         onLine: navigator.onLine

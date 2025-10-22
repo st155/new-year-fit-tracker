@@ -105,6 +105,48 @@ serve(async (req) => {
     }
 
     user = authUser;
+
+    // ============================================
+    // RATE LIMITING CHECK
+    // ============================================
+    if (action !== 'exchange-code') { // Skip rate limit for initial OAuth exchange
+      const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+      
+      const { count, error: rateLimitError } = await supabase
+        .from('api_rate_limits')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('endpoint', 'whoop-integration')
+        .gte('created_at', oneMinuteAgo);
+
+      if (rateLimitError) {
+        console.error('Rate limit check error:', rateLimitError);
+      } else if (count !== null && count >= 20) { // 20 requests per minute
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please try again in a minute.',
+            retryAfter: 60 
+          }),
+          { 
+            status: 429, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Log this request
+      await supabase
+        .from('api_rate_limits')
+        .insert({ user_id: user.id, endpoint: 'whoop-integration' });
+    }
+    // ============================================
+    );
+
+    if (authError || !authUser) {
+      throw new Error('Unauthorized');
+    }
+
+    user = authUser;
     console.log('Whoop integration action:', { action, userId: user.id });
 
     // Получить URL авторизации Whoop
