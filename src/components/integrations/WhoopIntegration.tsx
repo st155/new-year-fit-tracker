@@ -97,6 +97,47 @@ export function WhoopIntegration() {
     }
   };
 
+  const clearAllCaches = () => {
+    // Очистка localStorage
+    const keysToRemove = [
+      'fitness_metrics_cache',
+      'fitness_data_cache_whoop',
+      'fitness_data_cache',
+      'metrics_view_mode',
+      'metrics_device_filter'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Очистка всех ключей, связанных с Whoop и fitness
+    Object.keys(localStorage).forEach(key => {
+      if (key.includes('whoop') || key.includes('fitness') || key.startsWith('progress_cache_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Очистка sessionStorage
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.includes('whoop_code')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    
+    // Инвалидация React Query кеша
+    queryClient.invalidateQueries({ queryKey: ['metric_values'] });
+    queryClient.invalidateQueries({ queryKey: ['user_metrics'] });
+    queryClient.invalidateQueries({ queryKey: ['workouts'] });
+    queryClient.invalidateQueries({ queryKey: ['cycles'] });
+    queryClient.invalidateQueries({ queryKey: ['sleep'] });
+    queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+    queryClient.invalidateQueries({ queryKey: ['widgets'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    
+    console.log('✅ All Whoop caches cleared');
+  };
+
   const connectWhoop = async () => {
     if (!user) return;
 
@@ -223,17 +264,26 @@ export function WhoopIntegration() {
     if (!user) return;
 
     try {
-      await supabase
+      setLoading(true);
+      
+      // 1. Деактивировать токен в базе
+      const { error: dbError } = await supabase
         .from('whoop_tokens')
         .update({ is_active: false })
         .eq('user_id', user.id);
-
+      
+      if (dbError) throw dbError;
+      
+      // 2. Очистить все кеши
+      clearAllCaches();
+      
+      // 3. Обновить состояние
+      setConnection({ connected: false });
+      
       toast({
-        title: 'Whoop отключен',
-        description: 'Устройство успешно отключено',
+        title: 'Whoop отключён',
+        description: 'Все данные и кеши очищены. Можно подключить заново.',
       });
-
-      await checkConnection();
     } catch (error: any) {
       console.error('Disconnect error:', error);
       toast({
@@ -241,6 +291,8 @@ export function WhoopIntegration() {
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -299,7 +351,7 @@ export function WhoopIntegration() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button onClick={syncData} disabled={syncing} className="w-full">
+              <Button onClick={syncData} disabled={syncing || loading} className="w-full">
                 {syncing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -311,6 +363,21 @@ export function WhoopIntegration() {
                     Синхронизировать сейчас
                   </>
                 )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  clearAllCaches();
+                  toast({
+                    title: 'Кеш очищен',
+                    description: 'Все кешированные данные Whoop удалены',
+                  });
+                }}
+                disabled={loading}
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Очистить кеш
               </Button>
             </div>
 

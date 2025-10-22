@@ -5,6 +5,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoader } from '@/components/ui/page-loader';
 
+// Очистка истёкших whoop_code записей из sessionStorage
+const cleanupOldCodes = () => {
+  Object.keys(sessionStorage).forEach(key => {
+    if (key.startsWith('whoop_code_')) {
+      const timestamp = parseInt(sessionStorage.getItem(key) || '0');
+      const hoursAgo = (Date.now() - timestamp) / (1000 * 60 * 60);
+      
+      // Удалить коды старше 1 часа
+      if (hoursAgo > 1) {
+        sessionStorage.removeItem(key);
+        console.log(`🧹 Removed old whoop_code: ${key}`);
+      }
+    }
+  });
+};
+
 export default function WhoopCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -14,6 +30,9 @@ export default function WhoopCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Очистка старых кодов
+      cleanupOldCodes();
+      
       if (processedRef.current) return; // Guard against double-invoke
 
       const code = searchParams.get('code');
@@ -44,11 +63,24 @@ export default function WhoopCallback() {
 
       // Idempotency: prevent re-using the same code on refresh/strict mode
       const usedKey = `whoop_code_${code}`;
-      if (sessionStorage.getItem(usedKey)) {
-        navigate('/integrations');
-        return;
+      const existingUse = sessionStorage.getItem(usedKey);
+
+      if (existingUse) {
+        const timestamp = parseInt(existingUse);
+        const minutesAgo = (Date.now() - timestamp) / (1000 * 60);
+        
+        // Если код был использован менее 5 минут назад - пропускаем
+        if (minutesAgo < 5) {
+          console.log('⚠️ Code already used recently, skipping');
+          navigate('/integrations');
+          return;
+        }
+        
+        // Если прошло больше 5 минут - очищаем старую запись
+        sessionStorage.removeItem(usedKey);
       }
-      sessionStorage.setItem(usedKey, '1');
+
+      sessionStorage.setItem(usedKey, Date.now().toString());
       processedRef.current = true;
 
       try {
