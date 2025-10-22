@@ -51,10 +51,10 @@ export function useFitnessDataCache(userId: string | undefined) {
     return `${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}`;
   };
 
-  const fetchMetrics = useCallback(async (startDate: Date, endDate: Date): Promise<any[]> => {
+  const fetchMetrics = useCallback(async (startDate: Date, endDate: Date, source?: string): Promise<any[]> => {
     if (!userId) return [];
 
-    const cacheKey = getCacheKey(startDate, endDate);
+    const cacheKey = getCacheKey(startDate, endDate) + (source ? `_${source}` : '');
     
     // Check cache first
     const cached = cache.get(cacheKey);
@@ -66,7 +66,7 @@ export function useFitnessDataCache(userId: string | undefined) {
 
     // Fetch from database
     console.log('Fetching fresh data for', cacheKey);
-    const { data: metrics, error } = await supabase
+    let query = supabase
       .from('user_metrics')
       .select(`
         id,
@@ -83,6 +83,13 @@ export function useFitnessDataCache(userId: string | undefined) {
       .eq('is_active', true)
       .gte('metric_values.measurement_date', startDate.toISOString().split('T')[0])
       .lte('metric_values.measurement_date', endDate.toISOString().split('T')[0]);
+    
+    // Only filter by source if provided and not 'all'
+    if (source && source !== 'all') {
+      query = query.eq('source', source);
+    }
+    
+    const { data: metrics, error } = await query;
 
     if (error) {
       console.error('Error fetching metrics:', error);
@@ -159,11 +166,12 @@ export function useFitnessDataCache(userId: string | undefined) {
   const getMetrics = useCallback(async (
     startDate: Date,
     endDate: Date,
-    filter: 'today' | 'week' | 'month'
+    filter: 'today' | 'week' | 'month',
+    source?: string
   ): Promise<any[]> => {
     setLoading(true);
     try {
-      const metrics = await fetchMetrics(startDate, endDate);
+      const metrics = await fetchMetrics(startDate, endDate, source);
       
       // Trigger prefetch for adjacent periods (non-blocking)
       prefetchAdjacent(startDate, endDate, filter);

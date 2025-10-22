@@ -139,32 +139,8 @@ export default function FitnessData() {
       
       let metrics: any[];
 
-      // For "all" source, use unified metrics
-      if (selectedSource === 'all') {
-        const { data: unifiedMetrics, error } = await supabase
-          .rpc('get_unified_metrics', {
-            p_user_id: user?.id,
-            p_start_date: startDate.toISOString().split('T')[0],
-            p_end_date: endDate.toISOString().split('T')[0]
-          });
-
-        if (error) throw error;
-
-        // Convert unified metrics to the same format as regular metrics
-        metrics = (unifiedMetrics || []).map((um: any) => ({
-          metric_name: um.unified_metric_name,
-          metric_category: um.unified_category,
-          unit: um.unified_unit,
-          source: 'unified',
-          metric_values: [{
-            value: um.aggregated_value,
-            measurement_date: um.measurement_date
-          }]
-        }));
-      } else {
-        // Use cached metrics with prefetching for specific sources
-        metrics = await getMetrics(startDate, endDate, selectedFilter);
-      }
+      // Load metrics from all sources or specific source
+      metrics = await getMetrics(startDate, endDate, selectedFilter, selectedSource === 'all' ? undefined : selectedSource);
 
       // Process metrics to populate dashboard
       const processed = processMetrics(metrics);
@@ -340,6 +316,18 @@ export default function FitnessData() {
       }
     });
 
+    // Debug: log what metrics we have for recovery
+    if (selectedSource === 'all') {
+      console.log('🔍 [Recovery Debug] Available metrics:', {
+        'Recovery Score': metricValues['Recovery Score'],
+        'Training Readiness': metricValues['Training Readiness'],
+        'Body Battery': metricValues['Body Battery'],
+        'Movement Index': metricValues['Movement Index'],
+        'Sleep Efficiency': metricValues['Sleep Efficiency'],
+        'HRV RMSSD': metricValues['HRV RMSSD']
+      });
+    }
+
     // ========= UNIFIED RECOVERY SCORE ==========
     const getUnifiedRecovery = () => {
       if (selectedSource !== 'all') {
@@ -427,110 +415,90 @@ export default function FitnessData() {
         
         return null;
       } else {
-        // UNIFIED MODE: взвешенное усреднение всех доступных recovery метрик
-        const recoveryMetrics: Array<{value: number, source: string, weight: number, name: string}> = [];
+        // UNIFIED MODE: weighted averaging with one metric per tracker (best available)
+        const recoveryMetrics: Array<{value: number, source: string, weight: number, name: string, date?: string}> = [];
         
-        // Whoop Recovery Score
+        // Priority 1: Whoop Recovery Score
         if (metricValues['Recovery Score']) {
           const sources = metricValues['Recovery Score'].sources || [metricValues['Recovery Score']];
-          sources.forEach((s: any) => {
-            if (s.source?.toLowerCase() === 'whoop' || metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
-              recoveryMetrics.push({
-                value: s.value || metricValues['Recovery Score'].current,
-                source: 'Whoop',
-                weight: 1.0,
-                name: 'Recovery Score'
-              });
-            }
-          });
+          const whoopRecovery = sources.find((s: any) => s.source?.toLowerCase() === 'whoop');
+          if (whoopRecovery || metricValues['Recovery Score'].source?.toLowerCase() === 'whoop') {
+            recoveryMetrics.push({
+              value: whoopRecovery?.value || metricValues['Recovery Score'].current,
+              source: 'Whoop',
+              weight: 1.0,
+              name: 'Recovery',
+              date: whoopRecovery?.date || metricValues['Recovery Score'].date
+            });
+          }
         }
         
-        // Garmin Training Readiness
+        // Priority 2: Garmin - use ONLY the best available metric (no duplicates)
         if (metricValues['Training Readiness']) {
           recoveryMetrics.push({
             value: metricValues['Training Readiness'].current,
             source: 'Garmin',
             weight: 0.95,
-            name: 'Training Readiness'
+            name: 'Readiness',
+            date: metricValues['Training Readiness'].date
           });
-        }
-        
-        // Garmin Body Battery
-        if (metricValues['Body Battery']) {
+        } else if (metricValues['Body Battery']) {
           recoveryMetrics.push({
             value: metricValues['Body Battery'].current,
             source: 'Garmin',
             weight: 0.9,
-            name: 'Body Battery'
+            name: 'Battery',
+            date: metricValues['Body Battery'].date
+          });
+        } else if (metricValues['Sleep Efficiency']?.source?.toLowerCase() === 'garmin') {
+          recoveryMetrics.push({
+            value: metricValues['Sleep Efficiency'].current,
+            source: 'Garmin',
+            weight: 0.7,
+            name: 'Sleep',
+            date: metricValues['Sleep Efficiency'].date
           });
         }
         
-        // Ultrahuman Movement Index
-        if (metricValues['Movement Index']) {
-          const sources = metricValues['Movement Index'].sources || [metricValues['Movement Index']];
-          sources.forEach((s: any) => {
-            if (s.source?.toLowerCase() === 'ultrahuman' || metricValues['Movement Index'].source?.toLowerCase() === 'ultrahuman') {
-              recoveryMetrics.push({
-                value: s.value || metricValues['Movement Index'].current,
-                source: 'Ultrahuman',
-                weight: 0.85,
-                name: 'Movement Index'
-              });
-            }
+        // Priority 3: Ultrahuman - use ONLY the best available metric (no duplicates)
+        if (metricValues['Movement Index']?.source?.toLowerCase() === 'ultrahuman') {
+          recoveryMetrics.push({
+            value: metricValues['Movement Index'].current,
+            source: 'Ultrahuman',
+            weight: 0.85,
+            name: 'Movement',
+            date: metricValues['Movement Index'].date
           });
-        }
-        
-        // Garmin Sleep Efficiency (как fallback)
-        if (metricValues['Sleep Efficiency']) {
-          const sources = metricValues['Sleep Efficiency'].sources || [metricValues['Sleep Efficiency']];
-          sources.forEach((s: any) => {
-            if (s.source?.toLowerCase() === 'garmin' || metricValues['Sleep Efficiency'].source?.toLowerCase() === 'garmin') {
-              recoveryMetrics.push({
-                value: s.value || metricValues['Sleep Efficiency'].current,
-                source: 'Garmin',
-                weight: 0.7,
-                name: 'Sleep Efficiency'
-              });
-            }
-          });
-        }
-        
-        // Ultrahuman HRV (normalized)
-        if (metricValues['HRV RMSSD']) {
-          const sources = metricValues['HRV RMSSD'].sources || [metricValues['HRV RMSSD']];
-          sources.forEach((s: any) => {
-            if (s.source?.toLowerCase() === 'ultrahuman' || metricValues['HRV RMSSD'].source?.toLowerCase() === 'ultrahuman') {
-              const hrv = s.value || metricValues['HRV RMSSD'].current;
-              const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
-              recoveryMetrics.push({
-                value: normalized,
-                source: 'Ultrahuman',
-                weight: 0.6,
-                name: 'HRV (normalized)'
-              });
-            }
+        } else if (metricValues['HRV RMSSD']?.source?.toLowerCase() === 'ultrahuman') {
+          const hrv = metricValues['HRV RMSSD'].current;
+          const normalized = Math.min(100, Math.max(0, ((hrv - 30) / 70) * 100));
+          recoveryMetrics.push({
+            value: normalized,
+            source: 'Ultrahuman',
+            weight: 0.6,
+            name: 'HRV',
+            date: metricValues['HRV RMSSD'].date
           });
         }
         
         if (recoveryMetrics.length === 0) return null;
         
-        // Взвешенное среднее
+        // Weighted average
         const totalWeight = recoveryMetrics.reduce((sum, m) => sum + m.weight, 0);
         const weightedSum = recoveryMetrics.reduce((sum, m) => sum + (m.value * m.weight), 0);
         const unifiedValue = weightedSum / totalWeight;
         
-        // Создаем красивое описание источников
-        const sourcesDescription = recoveryMetrics
+        // Create brief description
+        const sourcesStr = recoveryMetrics
           .map(m => `${m.source} ${Math.round(m.value)}%`)
           .join(' + ');
         
         return {
           value: unifiedValue,
           source: 'Unified',
-          sourceName: sourcesDescription,
+          sourceName: sourcesStr,
           isNormalized: false,
-          sourceCount: recoveryMetrics.length,
-          details: recoveryMetrics
+          sourceCount: recoveryMetrics.length
         };
       }
     };
@@ -982,10 +950,28 @@ export default function FitnessData() {
           }}
         >
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-xl font-bold text-white">Recovery</h2>
+            <div>
+              <h2 className="text-xl font-bold text-white">
+                {selectedSource === 'all' ? 'Recovery Index' : 'Recovery'}
+              </h2>
+              {selectedSource === 'all' && data.recovery.score > 0 && (
+                <p className="text-white/60 text-xs mt-1">
+                  {(() => {
+                    const recoveryCard = data.cards.find(c => c.name === 'Recovery');
+                    if (recoveryCard?.subtitle) {
+                      // Extract source names from subtitle (format: "Whoop 89% + Ultrahuman 50% • Status")
+                      const sources = recoveryCard.subtitle.split(' • ')[0];
+                      return sources;
+                    }
+                    return 'Unified data';
+                  })()}
+                </p>
+              )}
+            </div>
             {selectedSource === 'all' && data.recovery.score > 0 && (
-              <div className="bg-white/10 px-3 py-1 rounded-full text-xs text-white backdrop-blur-sm">
-                Unified
+              <div className="bg-primary/10 backdrop-blur px-3 py-1 rounded-full text-xs text-white flex items-center gap-1">
+                <Activity className="w-3 h-3" />
+                {data.cards.find(c => c.name === 'Recovery')?.sourceCount || 1} sources
               </div>
             )}
           </div>
