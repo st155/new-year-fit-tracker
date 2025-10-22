@@ -1089,12 +1089,63 @@ async function syncWhoopData(
           }
         }
 
-        // Sleep Duration
+        // Sleep Duration - Calculate from actual sleep stages (REM + Light + Deep)
+        if (sleep.score?.stage_summary) {
+          const stages = sleep.score.stage_summary;
+          
+          // Calculate Total Sleep Time from sleep stages
+          const totalSleepMilli = 
+            (stages.total_rem_sleep_time_milli || 0) +
+            (stages.total_light_sleep_time_milli || 0) +
+            (stages.total_slow_wave_sleep_time_milli || 0);
+          
+          if (totalSleepMilli > 0) {
+            const metricId = await getOrCreateMetric(
+              supabase,
+              userId,
+              'Sleep Duration',
+              'sleep',
+              'hours',
+              'whoop'
+            );
+
+            const hours = totalSleepMilli / (1000 * 60 * 60);
+
+            const { error: sleepDurError } = await supabase.from('metric_values').upsert({
+              user_id: userId,
+              metric_id: metricId,
+              value: hours,
+              measurement_date: sleepDate,
+              external_id: `whoop_sleep_dur_${sleep.id}`,
+              source_data: { 
+                sleep_id: sleep.id, 
+                raw: sleep,
+                calculation: {
+                  rem_ms: stages.total_rem_sleep_time_milli,
+                  light_ms: stages.total_light_sleep_time_milli,
+                  deep_ms: stages.total_slow_wave_sleep_time_milli,
+                  total_sleep_ms: totalSleepMilli,
+                  time_in_bed_ms: stages.total_in_bed_time_milli
+                }
+              },
+            }, { onConflict: 'user_id,metric_id,external_id' });
+            
+            if (sleepDurError) {
+              console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError.message);
+              errors.push({ section: 'sleep_dur', error: sleepDurError.message });
+            } else {
+              console.log(`✅ Saved Sleep Duration ${hours.toFixed(2)}h (Total Sleep: ${totalSleepMilli}ms) for ${sleepDate}`);
+              counts.sleepDurSaved++;
+            }
+          }
+        }
+
+        // Time in Bed (separate metric from Sleep Duration)
         if (sleep.score?.stage_summary?.total_in_bed_time_milli) {
           const metricId = await getOrCreateMetric(
             supabase,
             userId,
-            'Sleep Duration',
+            'Time in Bed',
             'sleep',
             'hours',
             'whoop'
@@ -1102,20 +1153,19 @@ async function syncWhoopData(
 
           const hours = sleep.score.stage_summary.total_in_bed_time_milli / (1000 * 60 * 60);
 
-          const { error: sleepDurError } = await supabase.from('metric_values').upsert({
+          const { error: timeInBedError } = await supabase.from('metric_values').upsert({
             user_id: userId,
             metric_id: metricId,
             value: hours,
             measurement_date: sleepDate,
-            external_id: `whoop_sleep_dur_${sleep.id}`,
+            external_id: `whoop_time_in_bed_${sleep.id}`,
             source_data: { sleep_id: sleep.id, raw: sleep },
           }, { onConflict: 'user_id,metric_id,external_id' });
           
-          if (sleepDurError) {
-            console.error(`❌ Failed to save Sleep Duration for ${sleepDate}:`, sleepDurError.message);
-            errors.push({ section: 'sleep_dur', error: sleepDurError.message });
+          if (timeInBedError) {
+            console.error(`❌ Failed to save Time in Bed for ${sleepDate}:`, timeInBedError.message);
           } else {
-            counts.sleepDurSaved++;
+            console.log(`✅ Saved Time in Bed ${hours.toFixed(2)}h for ${sleepDate}`);
           }
         }
 
