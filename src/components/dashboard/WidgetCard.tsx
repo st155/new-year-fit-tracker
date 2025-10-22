@@ -95,12 +95,38 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
   const [data, setData] = useState<{
     value: number | string;
     unit: string;
     date: string;
     trend?: number;
   } | null>(null);
+
+  // Check if user has active Whoop token (for Whoop widgets only)
+  useEffect(() => {
+    if (!user || source.toLowerCase() !== 'whoop') {
+      setHasActiveToken(true); // Not a Whoop widget, no check needed
+      return;
+    }
+    
+    const checkToken = async () => {
+      const { data: token } = await supabase
+        .from('whoop_tokens')
+        .select('is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      setHasActiveToken(!!token);
+      
+      if (!token && data) {
+        console.log('⚠️ [WidgetCard] Showing cached Whoop data without active token');
+      }
+    };
+    
+    checkToken();
+  }, [user, source, data]);
 
   useEffect(() => {
     loadData();
@@ -259,7 +285,11 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const isDataStale = hoursOld > 48; // Красный: >48 часов
   const isWhoopSource = source.toLowerCase() === 'whoop';
   
+  // Проверка на кешированные данные без активного токена
+  const isCachedWithoutToken = isWhoopSource && hasActiveToken === false && data;
+  
   const getDataAgeMessage = () => {
+    if (isCachedWithoutToken) return 'Whoop не подключен. Показаны кешированные данные';
     if (hoursOld <= 24) return 'Данные актуальны';
     if (hoursOld <= 48) return `Данные не обновлялись ${Math.floor(hoursOld)} часов`;
     const daysOld = Math.floor(hoursOld / 24);
@@ -273,17 +303,17 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
+        borderColor: isCachedWithoutToken ? '#ef4444' : isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
       }}
     >
       <CardContent className="p-6">
-        {(isDataWarning || isDataStale) && isWhoopSource && (
+        {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="absolute top-2 right-2 flex gap-2">
                   <Badge 
-                    variant={isDataStale ? "destructive" : "outline"} 
+                    variant={isDataStale || isCachedWithoutToken ? "destructive" : "outline"} 
                     className="text-xs"
                     style={isDataWarning ? { 
                       backgroundColor: '#fef3c7', 
@@ -291,7 +321,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                       borderColor: '#eab308'
                     } : undefined}
                   >
-                    {isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
+                    {isCachedWithoutToken ? '❌ Кеш' : isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
                   </Badge>
                 </div>
               </TooltipTrigger>
@@ -410,37 +440,51 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
           )}
         </div>
 
-        {(isDataWarning || isDataStale) && isWhoopSource && (
+        {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
           <div className="mt-3 pt-3 border-t space-y-2">
-            <Button 
-              size="sm" 
-              variant="default" 
-              className="w-full text-xs"
-              onClick={syncWhoopData}
-              disabled={syncing}
-            >
-              {syncing ? (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                  Синхронизация...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Обновить Whoop
-                </>
-              )}
-            </Button>
-            {isDataStale && (
+            {isCachedWithoutToken ? (
               <Button 
                 size="sm" 
-                variant="outline" 
+                variant="destructive" 
                 className="w-full text-xs"
                 onClick={() => navigate('/integrations')}
               >
                 <AlertCircle className="h-3 w-3 mr-1" />
-                Переподключить
+                Подключить Whoop
               </Button>
+            ) : (
+              <>
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  className="w-full text-xs"
+                  onClick={syncWhoopData}
+                  disabled={syncing}
+                >
+                  {syncing ? (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      Синхронизация...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Обновить Whoop
+                    </>
+                  )}
+                </Button>
+                {isDataStale && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full text-xs"
+                    onClick={() => navigate('/integrations')}
+                  >
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Переподключить
+                  </Button>
+                )}
+              </>
             )}
           </div>
         )}

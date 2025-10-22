@@ -89,6 +89,16 @@ export function WhoopIntegration() {
         });
       } else {
         setConnection({ connected: false });
+        
+        // No token found - clear all Whoop caches to prevent showing stale data
+        console.log('⚠️ No active Whoop token - clearing cached data');
+        clearAllCaches();
+        
+        toast({
+          title: 'Whoop не подключен',
+          description: 'Кешированные данные очищены. Подключите Whoop для актуальных данных.',
+          variant: 'default',
+        });
       }
     } catch (error: any) {
       console.error('Connection check error:', error);

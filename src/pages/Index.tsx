@@ -10,6 +10,8 @@ import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { clearStaleWhoopCache } from '@/lib/cache-utils';
+import { supabase } from '@/integrations/supabase/client';
 import TrainerIndexPage from './TrainerIndexPage';
 
 const Index = () => {
@@ -18,18 +20,43 @@ const Index = () => {
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // 🧹 АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕШЕЙ при заходе на главную страницу
+  // 🧹 АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕШЕЙ и проверка токенов
   useEffect(() => {
-    console.log('🧹 [Index] Clearing stale caches on mount');
-    const cacheKeys = Object.keys(localStorage).filter(key => 
-      key.includes('widget_') || 
-      key.includes('fitness_') || 
-      key.includes('whoop_') ||
-      key.includes('cache')
-    );
-    cacheKeys.forEach(key => localStorage.removeItem(key));
-    console.log(`🧹 [Index] Cleared ${cacheKeys.length} cache keys`);
-  }, []); // Только при монтировании компонента
+    const checkTokensAndClearCache = async () => {
+      if (!user) return;
+      
+      console.log('🔍 [Index] Checking Whoop connection and cache freshness');
+      
+      // Check if user has active Whoop token
+      const { data: whoopToken } = await supabase
+        .from('whoop_tokens')
+        .select('is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (!whoopToken) {
+        console.log('⚠️ [Index] No active Whoop token - clearing Whoop caches');
+        // Clear all Whoop-related caches
+        ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
+          localStorage.removeItem(key);
+        });
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('whoop') || key.includes('fitness') || key.startsWith('progress_cache_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } else {
+        // Token exists - just clear stale data (>24h)
+        const clearedCount = clearStaleWhoopCache();
+        if (clearedCount > 0) {
+          console.log(`🧹 [Index] Cleared ${clearedCount} stale cache entries`);
+        }
+      }
+    };
+    
+    checkTokensAndClearCache();
+  }, [user]); // Re-check when user changes
 
   console.log('🏠 [Index] Render', {
     timestamp: new Date().toISOString(),
