@@ -244,7 +244,7 @@ export const fetchWidgetData = async (
     
     const { data: userMetrics, error: metricsError } = await supabase
       .from('user_metrics')
-      .select('id, metric_name, unit, source')
+      .select('id, metric_name, unit, source, created_at')
       .eq('user_id', userId)
       .ilike('source', source) // case-insensitive
       .in('metric_name', metricVariants)
@@ -261,10 +261,48 @@ export const fetchWidgetData = async (
     }
 
     const metricIds = userMetrics.map(m => m.id);
-    const unit = userMetrics[0].unit;
     
-    console.log('✅ [STEP 1] Found metric_ids:', metricIds);
-    console.log('📊 [STEP 1] Using unit:', unit);
+    console.log(`🔍 Found ${userMetrics.length} metric configs:`, metricIds);
+
+    // Для каждого metric_id находим последнюю дату данных
+    const metricDates = await Promise.all(
+      metricIds.map(async (id) => {
+        const { data } = await supabase
+          .from('metric_values')
+          .select('measurement_date')
+          .eq('metric_id', id)
+          .order('measurement_date', { ascending: false })
+          .limit(1);
+        
+        return {
+          metric_id: id,
+          last_date: data?.[0]?.measurement_date || null,
+          config_created: userMetrics.find(m => m.id === id)?.created_at
+        };
+      })
+    );
+
+    console.log('📅 Metric dates:', metricDates);
+
+    // Выбираем metric_id с самой свежей датой
+    const primaryMetric = metricDates.reduce((best, current) => {
+      if (!current.last_date) return best;
+      if (!best.last_date) return current;
+      
+      // Сравниваем даты
+      if (current.last_date > best.last_date) return current;
+      if (current.last_date === best.last_date) {
+        // Если даты равны - берем более новый конфиг
+        return current.config_created > best.config_created ? current : best;
+      }
+      return best;
+    }, metricDates[0]);
+
+    const primaryMetricId = primaryMetric.metric_id;
+    const unit = userMetrics.find(m => m.id === primaryMetricId)?.unit || userMetrics[0].unit;
+    
+    console.log(`✅ Selected primary metric_id: ${primaryMetricId} (last data: ${primaryMetric.last_date})`);
+    console.log('📊 Using unit:', unit);
 
     // ==================== ШАГ 2: Найти последние данные ====================
     const todayStr = new Date().toISOString().split('T')[0];
@@ -281,7 +319,7 @@ export const fetchWidgetData = async (
     const { data: metricValues, error: valuesError } = await supabase
       .from('metric_values')
       .select('*')
-      .in('metric_id', metricIds)
+      .eq('metric_id', primaryMetricId)
       .gte('measurement_date', sevenDaysAgoStr)
       .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
@@ -306,7 +344,7 @@ export const fetchWidgetData = async (
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('metric_values')
         .select('*')
-        .in('metric_id', metricIds)
+        .eq('metric_id', primaryMetricId)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(5);
@@ -333,6 +371,9 @@ export const fetchWidgetData = async (
     })));
 
     // ==================== ШАГ 3: Применить правила выбора ====================
+    const realMetricName = userMetrics.find(m => m.id === primaryMetricId)?.metric_name || metricName;
+    console.log('📛 Real metric name in DB:', realMetricName, '(requested:', metricName, ')');
+    
     let selectedRow: any = null;
 
     if (metricName === 'Steps') {
@@ -351,7 +392,7 @@ export const fetchWidgetData = async (
         );
         console.log('🚶 [Steps] Selected max for last day:', { date: lastDate, value: selectedRow.value });
       }
-    } else if (metricName === 'Workout Strain' || metricName === 'Day Strain') {
+    } else if (realMetricName === 'Workout Strain' || realMetricName === 'Day Strain') {
       // Strain: максимум за сегодня, иначе максимум за последний день с данными
       const todayStrain = candidateData.filter(r => r.measurement_date === todayStr);
       if (todayStrain.length > 0) {
@@ -367,7 +408,7 @@ export const fetchWidgetData = async (
         );
         console.log(`💪 [${metricName}] Selected max for last day:`, { date: lastDate, value: selectedRow.value });
       }
-    } else if (metricName === 'Max Heart Rate' || metricName === 'Max HR') {
+    } else if (realMetricName === 'Max Heart Rate' || realMetricName === 'Max HR') {
       // Max HR: максимум за сегодня, иначе максимум за последний день
       const todayHR = candidateData.filter(r => r.measurement_date === todayStr);
       if (todayHR.length > 0) {
@@ -382,6 +423,32 @@ export const fetchWidgetData = async (
           curr.value > max.value ? curr : max
         );
         console.log('❤️ [Max HR] Selected max for last day:', { date: lastDate, value: selectedRow.value });
+      }
+    } else if (realMetricName === 'Resting HR' || realMetricName === 'Resting Heart Rate') {
+      // Resting HR: минимальное значение за последний день с данными
+      const lastDate = candidateData[0].measurement_date;
+      const lastDayHR = candidateData.filter(r => r.measurement_date === lastDate);
+      selectedRow = lastDayHR.reduce((min, curr) => 
+        curr.value < min.value ? curr : min
+      );
+      console.log('💤 [Resting HR] Selected min for last day:', { 
+        date: lastDate, 
+        value: selectedRow.value 
+      });
+    } else if (realMetricName === 'Workout Calories' || realMetricName === 'Active Calories') {
+      // Workout Calories: только за дни с тренировками
+      const lastDate = candidateData[0].measurement_date;
+      const lastDayCalories = candidateData.filter(r => r.measurement_date === lastDate);
+      
+      if (lastDayCalories.length > 0) {
+        selectedRow = lastDayCalories[0];
+        console.log('🔥 [Workout Calories] Selected for last workout day:', { 
+          date: lastDate, 
+          value: selectedRow.value 
+        });
+      } else {
+        console.warn('⚠️ No workout calories found');
+        return null;
       }
     } else {
       // Все остальные метрики: просто последняя запись
@@ -410,7 +477,7 @@ export const fetchWidgetData = async (
     const { data: previousData } = await supabase
       .from('metric_values')
       .select('value')
-      .in('metric_id', metricIds)
+      .eq('metric_id', primaryMetricId)
       .eq('measurement_date', yesterdayStr)
       .order('created_at', { ascending: false })
       .limit(1)
