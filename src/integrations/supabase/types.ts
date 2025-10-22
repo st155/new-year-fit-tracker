@@ -2700,10 +2700,7 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
-      cleanup_old_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_or_get_metric: {
         Args: {
           p_metric_category: string
@@ -2783,14 +2780,8 @@ export type Database = {
         Args: { _challenge_id: string; _user_id: string }
         Returns: boolean
       }
-      is_trainer: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      sync_all_whoop_users: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_trainer: { Args: { _user_id: string }; Returns: boolean }
+      sync_all_whoop_users: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "trainer" | "admin"
