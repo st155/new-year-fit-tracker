@@ -136,6 +136,8 @@ export const METRIC_ALIASES: Record<string, { unifiedName: string; source?: stri
   'Readiness': { unifiedName: 'Training Readiness', source: 'garmin' },
   'Body Battery': { unifiedName: 'Body Battery', source: 'garmin' },
   'Dynamic Recovery': { unifiedName: 'Recovery Score', source: 'ultrahuman' },
+  'Workout Calories': { unifiedName: 'Active Calories' },
+  'Workout Cals': { unifiedName: 'Active Calories' },
 };
 
 // Получить конфигурацию для конкретной метрики и источника

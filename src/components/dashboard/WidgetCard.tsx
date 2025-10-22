@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw } from 'lucide-react';
 import { fetchWidgetData } from '@/hooks/useWidgets';
 import { useAuth } from '@/hooks/useAuth';
@@ -251,10 +252,19 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
   
-  // Проверка на устаревшие данные (старше 48 часов)
-  const isDataStale = data?.date && 
-    new Date().getTime() - new Date(data.date).getTime() > 48 * 60 * 60 * 1000;
+  // Проверка на устаревшие данные с двумя уровнями
+  const hoursOld = data?.date ? 
+    (new Date().getTime() - new Date(data.date).getTime()) / (1000 * 60 * 60) : 0;
+  const isDataWarning = hoursOld > 24 && hoursOld <= 48; // Желтый: 24-48 часов
+  const isDataStale = hoursOld > 48; // Красный: >48 часов
   const isWhoopSource = source.toLowerCase() === 'whoop';
+  
+  const getDataAgeMessage = () => {
+    if (hoursOld <= 24) return 'Данные актуальны';
+    if (hoursOld <= 48) return `Данные не обновлялись ${Math.floor(hoursOld)} часов`;
+    const daysOld = Math.floor(hoursOld / 24);
+    return `Данные не обновлялись ${daysOld} ${daysOld === 1 ? 'день' : 'дней'}`;
+  };
 
   return (
     <Card 
@@ -263,16 +273,33 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: isDataStale ? '#ef4444' : (trendColor || `${color}30`),
+        borderColor: isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
       }}
     >
       <CardContent className="p-6">
-        {isDataStale && isWhoopSource && (
-          <div className="absolute top-2 right-2 flex gap-2">
-            <Badge variant="destructive" className="text-xs">
-              ⚠️ Устарело
-            </Badge>
-          </div>
+        {(isDataWarning || isDataStale) && isWhoopSource && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Badge 
+                    variant={isDataStale ? "destructive" : "outline"} 
+                    className="text-xs"
+                    style={isDataWarning ? { 
+                      backgroundColor: '#fef3c7', 
+                      color: '#854d0e',
+                      borderColor: '#eab308'
+                    } : undefined}
+                  >
+                    {isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
+                  </Badge>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{getDataAgeMessage()}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         
         <div className="flex items-start justify-between mb-3">
@@ -383,7 +410,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
           )}
         </div>
 
-        {isDataStale && isWhoopSource && (
+        {(isDataWarning || isDataStale) && isWhoopSource && (
           <div className="mt-3 pt-3 border-t space-y-2">
             <Button 
               size="sm" 
@@ -404,15 +431,17 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 </>
               )}
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="w-full text-xs"
-              onClick={() => navigate('/integrations')}
-            >
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Переподключить
-            </Button>
+            {isDataStale && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full text-xs"
+                onClick={() => navigate('/integrations')}
+              >
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Переподключить
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
