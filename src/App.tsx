@@ -58,9 +58,11 @@ const queryClient = new QueryClient({
   },
 });
 
-// Main application component with authentication and routing
-const App = () => {
-  // Автоматическая очистка кешей раз в сутки
+// Internal component that renders inside QueryClientProvider
+const AppContent = () => {
+  console.log('🚀 [App] AppContent initialized, QueryClient available');
+  
+  // Автоматическая очистка кешей раз в сутки - теперь вызывается ПОСЛЕ QueryClientProvider
   useAutoCacheClear();
 
   useEffect(() => {
@@ -84,176 +86,183 @@ const App = () => {
   }, []);
 
   return (
-      <ErrorBoundary
-        onError={(error, errorInfo) => {
-          console.error('💥 [App] Global error caught:', {
-            error: error.message,
-            stack: error.stack,
-            componentStack: errorInfo.componentStack
-          });
-        }}
-      >
-        <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <BrowserRouter>
-            <AuthProvider>
-              <Suspense fallback={<PageLoader message="Loading..." />}>
-                  <Routes>
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/landing" element={<Landing />} />
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <RoleBasedRoute>
-                          <ModernAppLayout>
-                            <Index />
-                          </ModernAppLayout>
-                        </RoleBasedRoute>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                    <Route path="/progress" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Progress />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Goals />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/goals/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <GoalDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/body" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Body />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Challenges />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/challenges/:id" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <ChallengeDetail />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/habits" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Habits />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/feed" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Feed />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/fitness-data" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <FitnessData />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/leaderboard" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Leaderboard />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Profile />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/integrations" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <Integrations />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/medical-documents" element={
-                      <ProtectedRoute>
-                        <ModernAppLayout>
-                          <MedicalDocuments />
-                        </ModernAppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/trainer-dashboard" element={
-                      <ProtectedRoute>
-                        <TrainerOnlyRoute>
-                          <ModernAppLayout>
-                            <TrainerDashboard />
-                          </ModernAppLayout>
-                        </TrainerOnlyRoute>
-                      </ProtectedRoute>
-                    } />
-          {/* Test page only in development */}
-          {import.meta.env.DEV && (
-            <Route path="/trainer-test" element={<TrainerTestPage />} />
-          )}
-                    
-                    {/* OAuth callbacks */}
-                    <Route path="/terra-callback" element={<TerraCallback />} />
-          <Route path="/integrations/whoop/callback" element={
-            <ErrorBoundary
-              fallback={
-                <div className="min-h-screen flex items-center justify-center p-4">
-                  <div className="max-w-md w-full bg-card rounded-lg border border-border p-6">
-                    <h2 className="text-xl font-semibold mb-2">Ошибка подключения Whoop</h2>
-                    <p className="text-muted-foreground mb-4">
-                      Не удалось завершить подключение. Попробуйте снова.
-                    </p>
-                    <button
-                      onClick={() => window.location.href = '/integrations'}
-                      className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      Вернуться к интеграциям
-                    </button>
-                  </div>
-                </div>
-              }
-            >
-              <WhoopCallback />
-            </ErrorBoundary>
-          } />
-                    
-                    {/* Static pages */}
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <Sonner />
-                <InstallPrompt />
-                <UpdatePrompt />
-              </AuthProvider>
-            </BrowserRouter>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <BrowserRouter>
+        <AuthProvider>
+          <Suspense fallback={<PageLoader message="Loading..." />}>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/landing" element={<Landing />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <RoleBasedRoute>
+                    <ModernAppLayout>
+                      <Index />
+                    </ModernAppLayout>
+                  </RoleBasedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+              <Route path="/progress" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Progress />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/goals" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Goals />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/goals/:id" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <GoalDetail />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/body" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Body />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/challenges" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Challenges />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/challenges/:id" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <ChallengeDetail />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/habits" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Habits />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/feed" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Feed />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/fitness-data" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <FitnessData />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/leaderboard" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Leaderboard />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Profile />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/integrations" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <Integrations />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/medical-documents" element={
+                <ProtectedRoute>
+                  <ModernAppLayout>
+                    <MedicalDocuments />
+                  </ModernAppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/trainer-dashboard" element={
+                <ProtectedRoute>
+                  <TrainerOnlyRoute>
+                    <ModernAppLayout>
+                      <TrainerDashboard />
+                    </ModernAppLayout>
+                  </TrainerOnlyRoute>
+                </ProtectedRoute>
+              } />
+              {/* Test page only in development */}
+              {import.meta.env.DEV && (
+                <Route path="/trainer-test" element={<TrainerTestPage />} />
+              )}
+              
+              {/* OAuth callbacks */}
+              <Route path="/terra-callback" element={<TerraCallback />} />
+              <Route path="/integrations/whoop/callback" element={
+                <ErrorBoundary
+                  fallback={
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                      <div className="max-w-md w-full bg-card rounded-lg border border-border p-6">
+                        <h2 className="text-xl font-semibold mb-2">Ошибка подключения Whoop</h2>
+                        <p className="text-muted-foreground mb-4">
+                          Не удалось завершить подключение. Попробуйте снова.
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/integrations'}
+                          className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                        >
+                          Вернуться к интеграциям
+                        </button>
+                      </div>
+                    </div>
+                  }
+                >
+                  <WhoopCallback />
+                </ErrorBoundary>
+              } />
+              
+              {/* Static pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <Sonner />
+          <InstallPrompt />
+          <UpdatePrompt />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
+};
+
+// Main application component with authentication and routing
+const App = () => {
+  return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('💥 [App] Global error caught:', {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack
+        });
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
