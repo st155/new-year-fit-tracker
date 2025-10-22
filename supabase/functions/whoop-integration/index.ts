@@ -718,11 +718,11 @@ async function syncWhoopData(
                   user_id: userId,
                   metric_id: restingHrMetric,
                   value: recoveryData.score.resting_heart_rate,
-                  measurement_date: endLocal,
+                  measurement_date: recoveryDate,
                   external_id: `whoop_resting_hr_${cycle.id}`,
                   source_data: { cycle_id: cycle.id, raw: recoveryData.score },
                 }, { onConflict: 'user_id,metric_id,external_id' });
-                console.log(`✅ Saved Resting HR ${recoveryData.score.resting_heart_rate} bpm for ${endLocal}`);
+                console.log(`✅ Saved Resting HR ${recoveryData.score.resting_heart_rate} bpm for ${recoveryDate}`);
               }
 
               // HRV
@@ -734,11 +734,11 @@ async function syncWhoopData(
                   user_id: userId,
                   metric_id: hrvMetric,
                   value: recoveryData.score.hrv_rmssd_milli,
-                  measurement_date: endLocal,
+                  measurement_date: recoveryDate,
                   external_id: `whoop_hrv_${cycle.id}`,
                   source_data: { cycle_id: cycle.id, raw: recoveryData.score },
                 }, { onConflict: 'user_id,metric_id,external_id' });
-                console.log(`✅ Saved HRV ${recoveryData.score.hrv_rmssd_milli} ms for ${endLocal}`);
+                console.log(`✅ Saved HRV ${recoveryData.score.hrv_rmssd_milli} ms for ${recoveryDate}`);
               }
 
               // SpO2
@@ -750,11 +750,11 @@ async function syncWhoopData(
                   user_id: userId,
                   metric_id: spo2Metric,
                   value: recoveryData.score.spo2_percentage,
-                  measurement_date: endLocal,
+                  measurement_date: recoveryDate,
                   external_id: `whoop_spo2_${cycle.id}`,
                   source_data: { cycle_id: cycle.id, raw: recoveryData.score },
                 }, { onConflict: 'user_id,metric_id,external_id' });
-                console.log(`✅ Saved SpO2 ${recoveryData.score.spo2_percentage}% for ${endLocal}`);
+                console.log(`✅ Saved SpO2 ${recoveryData.score.spo2_percentage}% for ${recoveryDate}`);
               }
             } else {
               console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
