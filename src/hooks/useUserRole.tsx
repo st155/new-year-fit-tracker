@@ -9,45 +9,86 @@ export const useUserRole = () => {
 
   useEffect(() => {
     const checkRole = async () => {
+      console.log('🔍 [useUserRole] Starting role check', {
+        timestamp: new Date().toISOString(),
+        userId: user?.id,
+        userEmail: user?.email
+      });
+
       if (!user) {
+        console.log('⚠️ [useUserRole] No user found, setting role to null');
         setRole(null);
         setLoading(false);
         return;
       }
 
       try {
-        // Check both user_roles (permission) AND profiles.trainer_role (active status)
-        const { data: roles } = await supabase
+        const startTime = performance.now();
+
+        // Check user_roles table
+        const rolesStart = performance.now();
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .in('role', ['trainer', 'admin']);
+        const rolesTime = performance.now() - rolesStart;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trainer_role')
-          .eq('user_id', user.id)
-          .single();
-
-        console.log('🔐 Role check:', {
+        console.log('📊 [useUserRole] user_roles query result', {
           userId: user.id,
-          userRoles: roles?.map(r => r.role) || [],
-          profileTrainerRole: profile?.trainer_role,
-          hasRoleInUserRoles: roles && roles.length > 0,
-          finalIsTrainer: roles && roles.length > 0 && profile?.trainer_role
+          roles: roles?.map(r => r.role) || [],
+          error: rolesError,
+          queryTime: `${rolesTime.toFixed(2)}ms`
         });
 
-        // User is trainer only if: has role in user_roles AND trainer_role is enabled
-        if (roles && roles.length > 0 && profile?.trainer_role) {
-          setRole('trainer');
-        } else {
-          setRole('user');
+        // Check profiles table
+        const profileStart = performance.now();
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('trainer_role, username, full_name')
+          .eq('user_id', user.id)
+          .single();
+        const profileTime = performance.now() - profileStart;
+
+        console.log('👤 [useUserRole] profiles query result', {
+          userId: user.id,
+          trainerRole: profile?.trainer_role,
+          username: profile?.username,
+          error: profileError,
+          queryTime: `${profileTime.toFixed(2)}ms`
+        });
+
+        const hasRolePermission = roles && roles.length > 0;
+        const hasActiveTrainerRole = profile?.trainer_role === true;
+        const finalIsTrainer = hasRolePermission && hasActiveTrainerRole;
+
+        console.log('✅ [useUserRole] Role determination complete', {
+          userId: user.id,
+          hasRolePermission,
+          hasActiveTrainerRole,
+          finalIsTrainer,
+          computedRole: finalIsTrainer ? 'trainer' : 'user',
+          totalTime: `${(performance.now() - startTime).toFixed(2)}ms`
+        });
+
+        // Warning for inconsistent state
+        if (hasRolePermission && !hasActiveTrainerRole) {
+          console.warn('⚠️ [useUserRole] INCONSISTENT STATE: User has trainer role in user_roles but trainer_role=false in profiles');
         }
+        if (!hasRolePermission && hasActiveTrainerRole) {
+          console.warn('⚠️ [useUserRole] INCONSISTENT STATE: User has trainer_role=true in profiles but no role in user_roles');
+        }
+
+        setRole(finalIsTrainer ? 'trainer' : 'user');
       } catch (error) {
-        console.error('❌ Error checking role:', error);
+        console.error('❌ [useUserRole] Error checking role:', error);
         setRole('user');
       } finally {
         setLoading(false);
+        console.log('🏁 [useUserRole] Role check completed', { 
+          userId: user.id,
+          finalRole: role
+        });
       }
     };
 

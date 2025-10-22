@@ -84,8 +84,16 @@ const App = () => {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <ErrorBoundary
+        onError={(error, errorInfo) => {
+          console.error('💥 [App] Global error caught:', {
+            error: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack
+          });
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <BrowserRouter>
             <AuthProvider>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
@@ -43,6 +43,7 @@ function TrainerDashboardContent() {
   const { user } = useAuth();
   const { role, isTrainer, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { selectedClient, setSelectedClient } = useClientContext();
   const [clients, setClients] = useState<TrainerClient[]>([]);
@@ -52,16 +53,37 @@ function TrainerDashboardContent() {
   const [previousTab, setPreviousTab] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
 
+  console.log('👔 [TrainerDashboard] Render', {
+    timestamp: new Date().toISOString(),
+    pathname: location.pathname,
+    userId: user?.id,
+    role,
+    isTrainer,
+    roleLoading,
+    clientsCount: clients.length,
+    activeTab
+  });
+
   // Check trainer role and redirect if not a trainer
   useEffect(() => {
+    console.log('🔐 [TrainerDashboard] Access check effect', {
+      roleLoading,
+      isTrainer,
+      role
+    });
+
     if (!roleLoading && !isTrainer) {
-      console.log('🚫 Trainer access denied:', { 
-        userId: user?.id, 
+      console.error('🚫 [TrainerDashboard] ACCESS DENIED', { 
+        userId: user?.id,
+        email: user?.email,
         role, 
-        isTrainer 
+        isTrainer,
+        redirectingTo: '/profile'
       });
       toast.error('Доступ запрещен. Активируйте тренерскую роль в профиле.');
       navigate('/profile', { replace: true });
+    } else if (!roleLoading && isTrainer) {
+      console.log('✅ [TrainerDashboard] Access granted');
     }
   }, [isTrainer, roleLoading, navigate, user?.id, role]);
 
@@ -159,13 +181,17 @@ function TrainerDashboardContent() {
 
   // Show loading state while checking role
   if (roleLoading) {
-    return <PageLoader message="Проверка доступа..." />;
+    console.log('⏳ [TrainerDashboard] Loading role');
+    return <PageLoader message="Проверка доступа тренера..." />;
   }
 
   // Don't render if not a trainer (will redirect)
   if (!isTrainer) {
+    console.log('🚫 [TrainerDashboard] Not a trainer, rendering null during redirect');
     return null;
   }
+
+  console.log('✅ [TrainerDashboard] Rendering trainer dashboard');
 
   // Build breadcrumbs
   const breadcrumbs: Breadcrumb[] = [

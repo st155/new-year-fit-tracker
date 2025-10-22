@@ -14,9 +14,19 @@ import TrainerIndexPage from './TrainerIndexPage';
 
 const Index = () => {
   const { user } = useAuth();
-  const { isTrainer, loading: roleLoading } = useUserRole();
+  const { isTrainer, role, loading: roleLoading } = useUserRole();
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  console.log('🏠 [Index] Render', {
+    timestamp: new Date().toISOString(),
+    userId: user?.id,
+    isTrainer,
+    role,
+    roleLoading,
+    widgetsLoading: loading,
+    widgetsCount: widgets.length
+  });
 
   const handleRefresh = () => {
     refetch();
@@ -24,6 +34,7 @@ const Index = () => {
   };
 
   if (loading || roleLoading) {
+    console.log('⏳ [Index] Loading state', { loading, roleLoading });
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -43,8 +54,13 @@ const Index = () => {
 
   // If trainer - show AI-centric interface
   if (isTrainer) {
+    console.log('👔 [Index] Redirecting to TrainerIndexPage');
     return <TrainerIndexPage />;
   }
+
+  console.log('👤 [Index] Rendering user dashboard', {
+    widgetsCount: widgets.length
+  });
 
   return (
     <div className="min-h-screen bg-background p-6">
