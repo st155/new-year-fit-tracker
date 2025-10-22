@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getFallbackMetrics, convertMetricValue } from '@/lib/metric-mappings';
+import { getFallbackMetrics, convertMetricValue, METRIC_ALIASES } from '@/lib/metric-mappings';
+
+// Утилита для генерации вариантов написания источника (case-insensitive)
+const sourceVariants = (src: string): string[] => {
+  const lower = (src || '').toLowerCase();
+  const cap = lower.charAt(0).toUpperCase() + lower.slice(1);
+  const upper = lower.toUpperCase();
+  return Array.from(new Set([lower, cap, upper]));
+};
 
 export interface Widget {
   id: string;
@@ -227,13 +235,25 @@ export const fetchWidgetData = async (
     const sevenDaysAgoLocal = new Date(todayLocal.getTime() - 7 * 86400000);
     const sevenDaysAgo = sevenDaysAgoLocal.toISOString().split('T')[0];
 
+    // Генерируем варианты написания источника и метрики (case-insensitive)
+    const sources = sourceVariants(source);
+    const metricVariants = Array.from(new Set([
+      metricName,
+      METRIC_ALIASES[metricName]?.unifiedName
+    ].filter(Boolean) as string[]));
+
+    console.log(`🔍 [fetchWidgetData] Searching for ${metricName}/${source}`, {
+      sources,
+      metricVariants
+    });
+
     // JOIN запрос - получаем свежие данные независимо от unit или user_metrics.id
     const { data: latestRows, error: latestError } = await supabase
       .from('metric_values')
       .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
       .eq('user_id', userId)
-      .eq('user_metrics.metric_name', metricName)
-      .eq('user_metrics.source', source.toLowerCase())
+      .in('user_metrics.metric_name', metricVariants)
+      .in('user_metrics.source', sources)
       .gte('measurement_date', sevenDaysAgo)
       .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
@@ -243,6 +263,14 @@ export const fetchWidgetData = async (
     if (latestError) {
       console.error('Error fetching latest metric:', latestError);
       return null;
+    }
+
+    // 🔍 Диагностика: какие источники нашлись в базе
+    if (latestRows && latestRows.length > 0) {
+      const foundSources = Array.from(new Set(latestRows.map(r => (r.user_metrics as any).source)));
+      console.log(`✅ [fetchWidgetData] Found sources in DB:`, foundSources);
+    } else {
+      console.warn(`⚠️ [fetchWidgetData] No data found for ${metricName}/${source}`);
     }
 
     let latest: any = null;
@@ -315,7 +343,7 @@ export const fetchWidgetData = async (
           .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
           .eq('user_id', userId)
           .eq('user_metrics.metric_name', fallback)
-          .eq('user_metrics.source', source.toLowerCase())
+          .in('user_metrics.source', sources)
           .gte('measurement_date', sevenDaysAgo)
           .lte('measurement_date', todayStr)
           .order('measurement_date', { ascending: false })
@@ -348,7 +376,7 @@ export const fetchWidgetData = async (
       .from('metric_values')
       .select('id, value, created_at, user_metrics!inner(metric_name, source)')
       .eq('user_id', userId)
-      .eq('user_metrics.source', source.toLowerCase())
+      .in('user_metrics.source', sources)
       .eq('user_metrics.metric_name', actualMetricName)
       .eq('measurement_date', latest.measurement_date);
     
@@ -378,7 +406,7 @@ export const fetchWidgetData = async (
       .select('value, measurement_date, created_at, user_metrics!inner(metric_name, unit, source)')
       .eq('user_id', userId)
       .eq('user_metrics.metric_name', actualMetricName)
-      .eq('user_metrics.source', source.toLowerCase())
+      .in('user_metrics.source', sources)
       .eq('measurement_date', previousDate)
       .order('created_at', { ascending: false })
       .limit(1);

@@ -128,7 +128,10 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricGroupConfig> = {
 // Алиасы метрик для обратной совместимости
 export const METRIC_ALIASES: Record<string, { unifiedName: string; source?: string }> = {
   'Resting HR': { unifiedName: 'Resting Heart Rate' },
+  'Max HR': { unifiedName: 'Max Heart Rate' },
   'Day Strain': { unifiedName: 'Day Strain', source: 'whoop' },
+  'Daily Strain': { unifiedName: 'Day Strain', source: 'whoop' },
+  'Strain': { unifiedName: 'Day Strain', source: 'whoop' },
   'Recovery': { unifiedName: 'Recovery Score' },
   'Readiness': { unifiedName: 'Training Readiness', source: 'garmin' },
   'Body Battery': { unifiedName: 'Body Battery', source: 'garmin' },
