@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
+import { useAutoCacheClear } from "@/hooks/useAutoCacheClear";
 
 import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
@@ -58,6 +59,9 @@ const queryClient = new QueryClient({
 
 // Main application component with authentication and routing
 const App = () => {
+  // Автоматическая очистка кешей раз в сутки
+  useAutoCacheClear();
+
   useEffect(() => {
     if (import.meta.env.PROD) {
       try {
