@@ -427,7 +427,8 @@ async function refreshTokenIfNeeded(
       }
       
       // Если истёк давно - требуем переподключения
-      console.log(`❌ Token expired ${daysSinceExpiry} days ago and no refresh_token available for user ${userId}`);
+      console.error(`❌ Token expired ${daysSinceExpiry} days ago for user ${userId}`);
+      console.error('   No refresh_token available - reconnect required');
       await supabase
         .from('whoop_tokens')
         .update({ is_active: false })
@@ -435,8 +436,9 @@ async function refreshTokenIfNeeded(
       throw new Error('RECONNECT_REQUIRED');
     }
     
-    // Токен ещё действителен, используем его
-    console.log(`✅ Using existing long-lived token for user ${userId}, expires at ${expiresAt.toISOString()}`);
+    console.log(`⚠️ Using existing long-lived token for user ${userId}`);
+    console.log(`   Token expires: ${expiresAt.toISOString()}`);
+    console.log(`   Days until expiry: ${Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))}`);
     return token.access_token;
   }
   
@@ -475,7 +477,8 @@ async function refreshTokenIfNeeded(
           errorText.includes('invalid_request') ||
           errorText.includes('invalid_grant')) {
         
-        console.log('Deactivating token due to credential mismatch');
+        console.error('❌ Token refresh failed - credentials mismatch, deactivating token');
+        console.error('   User needs to reconnect Whoop account');
         await supabase
           .from('whoop_tokens')
           .update({ is_active: false })
@@ -529,7 +532,7 @@ async function syncWhoopData(
   whoopClientSecret: string
 ) {
   const syncStartTime = new Date().toISOString();
-  console.log(`🔄 [${syncStartTime}] Starting Whoop sync for user: ${userId}`);
+  console.log(`🔄 [${syncStartTime}] ===== Starting Whoop sync for user: ${userId} =====`);
 
   // Счетчики для summary
   const counts = {
@@ -557,12 +560,22 @@ async function syncWhoopData(
     .eq('is_active', true)
     .maybeSingle();
 
+  console.log(`📊 Token check:`, {
+    exists: !!token,
+    is_active: token?.is_active,
+    expires_at: token?.expires_at,
+    has_refresh: !!token?.refresh_token,
+    has_access: !!token?.access_token
+  });
+
   if (!token) {
+    console.error('❌ No active Whoop token found for user:', userId);
     throw new Error('No active Whoop connection found. Please reconnect your Whoop account.');
   }
 
   // Проверяем валидность токена (refresh_token опционален для Whoop v2)
   if (!token.access_token) {
+    console.error('❌ Token has no access_token, deactivating');
     await supabase
       .from('whoop_tokens')
       .update({ is_active: false })
@@ -572,7 +585,9 @@ async function syncWhoopData(
   }
 
   // Используем новую функцию refreshTokenIfNeeded
+  console.log('🔐 Refreshing token if needed...');
   const accessToken = await refreshTokenIfNeeded(supabase, userId, whoopClientId, whoopClientSecret);
+  console.log('✅ Access token ready');
 
   // Получаем данные за последние 7 дней
   const endDate = new Date();
@@ -583,18 +598,25 @@ async function syncWhoopData(
   const end = endDate.toISOString();
 
   console.log(`📅 Sync window: ${start} to ${end}`);
+  console.log(`📅 Local dates: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
 
   // ============ СИНХРОНИЗАЦИЯ ЦИКЛОВ (Recovery, Day Strain) ============
   try {
     console.log('📊 Fetching cycles...');
-    const cyclesResponse = await fetch(
-      `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const cyclesUrl = `https://api.prod.whoop.com/developer/v2/cycle?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=25`;
+    console.log('📊 Cycles API URL:', cyclesUrl);
+    
+    const cyclesResponse = await fetch(cyclesUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    console.log('📊 Cycles API Response:', {
+      status: cyclesResponse.status,
+      statusText: cyclesResponse.statusText,
+      ok: cyclesResponse.ok
+    });
 
     if (cyclesResponse.status === 429) {
       console.log('⚠️ Rate limited on cycles, waiting 2s...');
@@ -663,11 +685,14 @@ async function syncWhoopData(
 
           if (recoveryResponse.ok) {
             const recoveryData = await recoveryResponse.json();
-            console.log(`Recovery for cycle ${cycle.id} (${cycleDate}):`, {
+            console.log(`📈 Recovery for cycle ${cycle.id} (${cycleDate}):`, {
               state: recoveryData.score_state,
               score: recoveryData.score?.recovery_score,
               calibrating: recoveryData.user_calibrating,
-              endLocal
+              endLocal,
+              cycle_start: cycle.start,
+              cycle_end: cycle.end,
+              raw_recovery: recoveryData
             });
             
             // Recovery Score измеряется за ночь и применяется к дате пробуждения
@@ -688,7 +713,14 @@ async function syncWhoopData(
                 'whoop'
               );
 
-              const { error: recoveryError } = await supabase.from('metric_values').upsert({
+              console.log(`💾 Saving Recovery Score to DB:`, {
+                user_id: userId,
+                value: recoveryData.score.recovery_score,
+                measurement_date: recoveryDate,
+                external_id: `whoop_recovery_${cycle.id}`
+              });
+
+              const { data: savedRecovery, error: recoveryError } = await supabase.from('metric_values').upsert({
                 user_id: userId,
                 metric_id: metricId,
                 value: recoveryData.score.recovery_score,
@@ -699,13 +731,18 @@ async function syncWhoopData(
                   raw: recoveryData.score,
                   user_calibrating: recoveryData.user_calibrating 
                 },
-              }, { onConflict: 'user_id,metric_id,external_id' });
+              }, { onConflict: 'user_id,metric_id,external_id' }).select();
               
               if (recoveryError) {
-                console.error(`❌ Failed to save Recovery for ${recoveryDate}:`, recoveryError.message, recoveryError.code);
+                console.error(`❌ Failed to save Recovery for ${recoveryDate}:`, {
+                  error: recoveryError.message,
+                  code: recoveryError.code,
+                  details: recoveryError.details,
+                  hint: recoveryError.hint
+                });
                 errors.push({ section: 'recovery', error: `${recoveryError.code}: ${recoveryError.message}` });
               } else {
-                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${recoveryDate}`);
+                console.log(`✅ Saved Recovery ${recoveryData.score.recovery_score}% for ${recoveryDate}`, savedRecovery);
                 counts.recoveriesSaved++;
               }
 
@@ -759,9 +796,12 @@ async function syncWhoopData(
             } else {
               console.log(`❌ Recovery not scored for cycle ${cycle.id}, state: ${recoveryData.score_state}`);
             }
-          } else {
-            console.error(`Failed to fetch recovery for cycle ${cycle.id}: ${recoveryResponse.status}`);
-          }
+            } else {
+              console.error(`❌ Recovery API failed for cycle ${cycle.id}:`, {
+                status: recoveryResponse.status,
+                statusText: recoveryResponse.statusText
+              });
+            }
         } catch (error) {
           console.error(`Failed to fetch recovery for cycle ${cycle.id}:`, error);
         }
@@ -833,7 +873,11 @@ async function syncWhoopData(
       console.log(`⚠️ Cycles API returned non-OK status: ${cyclesResponse.status}`);
     }
   } catch (error: any) {
-    console.error('❌ Error in cycles section:', error.message);
+    console.error('❌ Error in cycles section:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     errors.push({ section: 'cycles', error: error.message });
   }
 

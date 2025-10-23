@@ -79,7 +79,26 @@ export function WhoopIntegration() {
         .eq('is_active', true)
         .maybeSingle();
 
+      console.log('🔍 Whoop token check:', {
+        exists: !!token,
+        is_active: token?.is_active,
+        expires_at: token?.expires_at,
+        last_sync: token?.last_sync_date,
+        has_refresh: !!token?.refresh_token
+      });
+
       if (token) {
+        const expiresAt = new Date(token.expires_at);
+        const now = new Date();
+        const isExpired = now >= expiresAt;
+        const daysUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        console.log('⏰ Token status:', {
+          isExpired,
+          daysUntilExpiry,
+          expiresAt: expiresAt.toISOString()
+        });
+
         setConnection({
           connected: true,
           connectedAt: token.created_at,
@@ -87,18 +106,27 @@ export function WhoopIntegration() {
           whoopUserId: token.whoop_user_id,
           isActive: token.is_active,
         });
+
+        // Show warning if token expired or expiring soon
+        if (isExpired) {
+          toast({
+            title: 'Токен Whoop истек',
+            description: `Токен истек ${Math.abs(daysUntilExpiry)} дней назад. Необходимо переподключение.`,
+            variant: 'destructive',
+          });
+        } else if (daysUntilExpiry <= 3) {
+          toast({
+            title: 'Токен Whoop скоро истечет',
+            description: `Токен истекает через ${daysUntilExpiry} дней. Рекомендуется переподключение.`,
+            variant: 'default',
+          });
+        }
       } else {
         setConnection({ connected: false });
         
         // No token found - clear all Whoop caches to prevent showing stale data
         console.log('⚠️ No active Whoop token - clearing cached data');
         clearAllCaches();
-        
-        toast({
-          title: 'Whoop не подключен',
-          description: 'Кешированные данные очищены. Подключите Whoop для актуальных данных.',
-          variant: 'default',
-        });
       }
     } catch (error: any) {
       console.error('Connection check error:', error);
@@ -181,14 +209,20 @@ export function WhoopIntegration() {
     console.log('Starting sync for user:', user.id);
     
     try {
+      console.log('🔄 Starting Whoop sync...');
+      const syncStart = Date.now();
+      
       const { data, error } = await supabase.functions.invoke('whoop-integration', {
         body: { action: 'sync' },
       });
 
+      const syncDuration = ((Date.now() - syncStart) / 1000).toFixed(2);
+      console.log(`✅ Sync completed in ${syncDuration}s`);
+
       if (error) {
         const errorMsg = (error as any)?.message || error;
         const statusCode = (error as any)?.status;
-        console.error('Sync error:', { statusCode, errorMsg });
+        console.error('❌ Sync error:', { statusCode, errorMsg, duration: syncDuration });
         
         // Если 401 или ошибка токена - переподключение
         if (statusCode === 401 || 
@@ -196,6 +230,7 @@ export function WhoopIntegration() {
             errorMsg?.includes('credentials have changed') ||
             errorMsg?.includes('No active Whoop connection')) {
           
+          console.log('🔄 Token issue detected, rechecking connection...');
           // Немедленно перепроверяем статус
           await checkConnection();
           
