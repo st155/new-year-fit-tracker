@@ -56,6 +56,7 @@ const PROVIDER_NAMES: Record<string, string> = {
 };
 
 const AVAILABLE_PROVIDERS = [
+  'WHOOP',
   'ULTRAHUMAN',
   'OURA',
   'GARMIN',
@@ -97,6 +98,30 @@ export function TerraIntegration() {
     
     setConnectingProvider(provider);
     try {
+      // Специальная обработка для Whoop через кастомный поддомен
+      if (provider === 'WHOOP') {
+        const redirectUrl = `${window.location.origin}/integrations?tab=connections`;
+        const whoopAuthUrl = `https://whoop.elite10.club/auth/whoop/oauth2?redirect_uri=${encodeURIComponent(redirectUrl)}&reference_id=${user.id}`;
+        
+        console.log('🔗 Whoop Terra OAuth URL:', whoopAuthUrl);
+        
+        const authWindow = window.open(whoopAuthUrl, '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+        if (authWindow) {
+          const checkClosed = setInterval(() => {
+            if (authWindow.closed) {
+              clearInterval(checkClosed);
+              setConnectingProvider(null);
+              setTimeout(() => checkStatus(), 2000);
+            }
+          }, 1000);
+        } else {
+          // Fallback - если popup заблокирован
+          window.location.href = whoopAuthUrl;
+        }
+        return;
+      }
+      
+      // Обычная логика для других провайдеров через Terra Widget
       const { data, error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'generate-widget-session' },
       });

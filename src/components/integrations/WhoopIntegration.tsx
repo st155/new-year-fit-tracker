@@ -366,6 +366,31 @@ export function WhoopIntegration() {
 
   return (
     <div className="space-y-6">
+      {/* Terra Integration Banner */}
+      {connection.connected && connection.isActive && (
+        <Alert>
+          <Zap className="h-4 w-4" />
+          <AlertTitle>Попробуйте новую интеграцию</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Теперь доступна интеграция Whoop через Terra — более стабильная работа и автоматические обновления.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                const tabParam = new URLSearchParams(window.location.search);
+                tabParam.set('tab', 'connections');
+                window.history.pushState({}, '', `${window.location.pathname}?${tabParam.toString()}`);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+            >
+              Перейти к Terra интеграции →
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Inactive token warning */}
       {connection.connected && !connection.isActive && (
         <Alert variant="destructive">
