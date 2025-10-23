@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
@@ -7,9 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
+import { FirstMeasurementDialog } from "@/components/goals/FirstMeasurementDialog";
 import { useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type FilterType = 'all' | 'personal' | 'challenges';
 
@@ -17,11 +19,38 @@ export default function Goals() {
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [showFirstMeasurement, setShowFirstMeasurement] = useState(false);
+  const [goalsNeedingBaseline, setGoalsNeedingBaseline] = useState<any[]>([]);
   
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = (searchParams.get('filter') as FilterType) || 'all';
   const [filter, setFilter] = useState<FilterType>(initialFilter);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Check for goals without baselines
+  useEffect(() => {
+    const checkBaselines = async () => {
+      if (!user || !goals || goals.length === 0) return;
+
+      const challengeGoals = goals.filter(g => !g.is_personal && g.challenge_id);
+      if (challengeGoals.length === 0) return;
+
+      const { data: baselines } = await supabase
+        .from('goal_baselines')
+        .select('goal_id')
+        .eq('user_id', user.id);
+
+      const baselineGoalIds = new Set(baselines?.map(b => b.goal_id) || []);
+      const needsBaseline = challengeGoals.filter(g => !baselineGoalIds.has(g.id));
+
+      if (needsBaseline.length > 0) {
+        setGoalsNeedingBaseline(needsBaseline);
+        setShowFirstMeasurement(true);
+      }
+    };
+
+    checkBaselines();
+  }, [user, goals]);
   
   const personalGoals = goals?.filter(g => g.is_personal) || [];
   const challengeGoals = goals?.filter(g => !g.is_personal) || [];
@@ -182,6 +211,16 @@ export default function Goals() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onGoalCreated={() => refetch()}
+      />
+
+      <FirstMeasurementDialog
+        goals={goalsNeedingBaseline}
+        open={showFirstMeasurement}
+        onClose={() => setShowFirstMeasurement(false)}
+        onComplete={() => {
+          refetch();
+          setGoalsNeedingBaseline([]);
+        }}
       />
     </div>
   );

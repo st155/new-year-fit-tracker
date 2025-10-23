@@ -16,6 +16,7 @@ import {
   type ParticipantScore 
 } from "@/lib/challenge-scoring-v2";
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
+import { toast } from "sonner";
 
 const Leaderboard = () => {
   const { user } = useAuth();
@@ -24,12 +25,30 @@ const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState<ParticipantScore[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [challengeId, setChallengeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchLeaderboard();
     }
   }, [user]);
+
+  // Show congratulations toast for high progress
+  useEffect(() => {
+    if (!loading && leaderboardData.length > 0 && challengeId) {
+      const userEntry = leaderboardData.find(item => item.userId === user?.id);
+      if (userEntry && userEntry.averageProgress >= 80) {
+        const storageKey = `congrats_${challengeId}_${Math.floor(userEntry.averageProgress / 10)}`;
+        if (!localStorage.getItem(storageKey)) {
+          toast.success("🎉 Невероятный прогресс! Продолжайте в том же духе!", {
+            description: `Вы прошли ${Math.round(userEntry.averageProgress)}% пути к своим целям!`,
+            duration: 5000,
+          });
+          localStorage.setItem(storageKey, 'true');
+        }
+      }
+    }
+  }, [loading, leaderboardData, user?.id, challengeId]);
 
   const fetchLeaderboard = async () => {
     try {
@@ -50,21 +69,23 @@ const Leaderboard = () => {
         `)
         .eq('user_id', user.id);
 
-      let challengeId = null;
+      let activeChallengeId = null;
       let challengeStartDate = null;
       if (participantData && participantData.length > 0) {
         const activeChallenge = participantData.find(p => 
           p.challenges && p.challenges.is_active
         );
-        challengeId = activeChallenge?.challenge_id;
+        activeChallengeId = activeChallenge?.challenge_id;
         challengeStartDate = activeChallenge?.challenges?.start_date;
       }
 
-      if (!challengeId || !challengeStartDate) {
+      if (!activeChallengeId || !challengeStartDate) {
         setLeaderboardData([]);
         setLoading(false);
         return;
       }
+
+      setChallengeId(activeChallengeId);
 
       // 2. Get all participants with baseline data
       const { data: allParticipants } = await supabase
@@ -82,7 +103,7 @@ const Leaderboard = () => {
             avatar_url
           )
         `)
-        .eq('challenge_id', challengeId);
+        .eq('challenge_id', activeChallengeId);
 
       if (!allParticipants || allParticipants.length === 0) {
         setLeaderboardData([]);
@@ -100,7 +121,7 @@ const Leaderboard = () => {
           .from('goals')
           .select('*')
           .eq('user_id', participant.user_id)
-          .eq('challenge_id', challengeId)
+          .eq('challenge_id', activeChallengeId)
           .eq('is_personal', false);
         
         if (!goals || goals.length === 0) {
@@ -339,6 +360,9 @@ const Leaderboard = () => {
                             {item.isUser && <span className="text-xs text-primary">(You)</span>}
                             {item.goalsProgress.length === 0 && (
                               <Badge variant="outline" className="text-xs">Нет целей</Badge>
+                            )}
+                            {item.goalsProgress.some(g => !g.baseline || g.baseline === 0) && (
+                              <Badge variant="destructive" className="text-xs">Нужны измерения</Badge>
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground space-y-1">
