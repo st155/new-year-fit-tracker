@@ -8,14 +8,20 @@ import { Trophy, Medal, Award, TrendingUp, TrendingDown, Minus } from "lucide-re
 import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from "@/lib/translations";
-import { calculateProgressScore } from "@/lib/challenge-scoring";
+import { 
+  calculateGoalProgress, 
+  calculateParticipantScore, 
+  isLowerBetterGoal,
+  type GoalProgress,
+  type ParticipantScore 
+} from "@/lib/challenge-scoring-v2";
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 
 const Leaderboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<ParticipantScore[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
 
@@ -87,129 +93,104 @@ const Leaderboard = () => {
       const now = new Date();
       const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-      // 3. Calculate points for each participant
+      // 3. Calculate points for each participant based on all their goals
       const leaderboardPromises = allParticipants.map(async (participant) => {
-        const [workoutsData, measurementsData, currentBodyData] = await Promise.all([
-          supabase
-            .from('workouts')
-            .select('id, calories_burned')
-            .eq('user_id', participant.user_id)
-            .gte('start_time', thirtyDaysAgo.toISOString()),
-          supabase
-            .from('measurements')
-            .select('value')
-            .eq('user_id', participant.user_id)
-            .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]),
-          supabase
-            .from('inbody_analyses')
-            .select('weight, percent_body_fat, skeletal_muscle_mass, test_date')
-            .eq('user_id', participant.user_id)
-            .order('test_date', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        ]);
-
-        const workouts = workoutsData.data || [];
-        const measurements = measurementsData.data || [];
-        const totalCalories = workouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
-
-        // Check if baseline exists
-        const hasBaseline = 
-          participant.baseline_body_fat && 
-          (participant.baseline_source === 'inbody' || participant.baseline_source === 'withings');
-
-        if (!hasBaseline) {
-          return {
-            user_id: participant.user_id,
-            username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
-            avatar_url: participant.profiles?.avatar_url,
-            points: 0,
-            hasBaseline: false,
-            workouts: workouts.length,
-            measurements: measurements.length,
-            isUser: participant.user_id === user.id,
-          };
-        }
-
-        const currentMetrics = currentBodyData.data || null;
-
-        if (!currentMetrics) {
-          // No current data - activity only
-          const activityOnly = calculateProgressScore(
-            {
-              body_fat_percentage: participant.baseline_body_fat,
-              weight: participant.baseline_weight,
-              muscle_mass: participant.baseline_muscle_mass,
-              measurement_date: participant.baseline_recorded_at,
-              source: participant.baseline_source as any,
-            },
-            {
-              body_fat_percentage: participant.baseline_body_fat,
-              weight: participant.baseline_weight,
-              muscle_mass: participant.baseline_muscle_mass,
-              measurement_date: new Date().toISOString(),
-              source: participant.baseline_source as any,
-            },
-            {
-              workouts: workouts.length,
-              totalCalories,
-              measurements: measurements.length,
-              bodyCompEntries: 0,
-            }
+        // Fetch all goals for this participant in the challenge
+        const { data: goals } = await supabase
+          .from('goals')
+          .select('*')
+          .eq('user_id', participant.user_id)
+          .eq('challenge_id', challengeId)
+          .eq('is_personal', false);
+        
+        if (!goals || goals.length === 0) {
+          return calculateParticipantScore(
+            [],
+            participant.user_id,
+            participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
+            participant.profiles?.avatar_url
           );
-
-          return {
-            user_id: participant.user_id,
-            username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
-            avatar_url: participant.profiles?.avatar_url,
-            points: activityOnly.totalPoints,
-            hasBaseline: true,
-            workouts: workouts.length,
-            measurements: measurements.length,
-            bodyFatStart: participant.baseline_body_fat,
-            bodyFatCurrent: participant.baseline_body_fat,
-            bodyFatImprovement: 0,
-            isUser: participant.user_id === user.id,
-          };
         }
-
-        // Calculate score using hybrid formula
-        const scoreBreakdown = calculateProgressScore(
-          {
-            body_fat_percentage: participant.baseline_body_fat,
-            weight: participant.baseline_weight,
-            muscle_mass: participant.baseline_muscle_mass,
-            measurement_date: participant.baseline_recorded_at,
-            source: participant.baseline_source as any,
-          },
-          {
-            body_fat_percentage: currentMetrics.percent_body_fat,
-            weight: currentMetrics.weight,
-            muscle_mass: currentMetrics.skeletal_muscle_mass,
-            measurement_date: currentMetrics.test_date,
-            source: 'inbody',
-          },
-          {
-            workouts: workouts.length,
-            totalCalories,
-            measurements: measurements.length,
-            bodyCompEntries: 1,
+        
+        // For each goal, calculate progress
+        const goalsProgressPromises = goals.map(async (goal) => {
+          // Get baseline
+          const { data: baseline } = await supabase
+            .from('goal_baselines')
+            .select('baseline_value')
+            .eq('goal_id', goal.id)
+            .eq('user_id', participant.user_id)
+            .maybeSingle();
+          
+          // Get latest measurement from user_metrics
+          const { data: metricData } = await supabase
+            .from('user_metrics')
+            .select('id')
+            .eq('user_id', participant.user_id)
+            .eq('metric_name', goal.goal_name)
+            .maybeSingle();
+          
+          let currentValue = baseline?.baseline_value || 0;
+          
+          if (metricData) {
+            const { data: latestValue } = await supabase
+              .from('metric_values')
+              .select('value')
+              .eq('metric_id', metricData.id)
+              .eq('user_id', participant.user_id)
+              .order('measurement_date', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            if (latestValue) {
+              currentValue = latestValue.value;
+            }
           }
+          
+          const baselineValue = baseline?.baseline_value || 0;
+          const targetValue = goal.target_value || 0;
+          
+          if (!baselineValue || !targetValue) {
+            return null;
+          }
+          
+          const isLowerBetter = isLowerBetterGoal(goal.goal_name, goal.goal_type);
+          
+          const progressPercent = calculateGoalProgress(
+            baselineValue,
+            currentValue,
+            targetValue,
+            isLowerBetter
+          );
+          
+          const goalProgress: GoalProgress = {
+            goalId: goal.id,
+            goalName: goal.goal_name,
+            goalType: goal.goal_type,
+            baseline: baselineValue,
+            current: currentValue,
+            target: targetValue,
+            progressPercent,
+            points: 0,
+            isCompleted: progressPercent >= 100,
+            isOverachieved: progressPercent > 100,
+          };
+          
+          return goalProgress;
+        });
+        
+        const goalsProgress = (await Promise.all(goalsProgressPromises))
+          .filter(Boolean) as GoalProgress[];
+        
+        const participantScore = calculateParticipantScore(
+          goalsProgress,
+          participant.user_id,
+          participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
+          participant.profiles?.avatar_url
         );
-
-        const fatImprovement = participant.baseline_body_fat - (currentMetrics.percent_body_fat || participant.baseline_body_fat);
-
+        
         return {
-          user_id: participant.user_id,
-          username: participant.profiles?.username || participant.profiles?.full_name || 'Anonymous',
-          avatar_url: participant.profiles?.avatar_url,
-          points: scoreBreakdown.totalPoints,
-          hasBaseline: true,
-          workouts: workouts.length,
-          measurements: measurements.length,
-          bodyFatStart: participant.baseline_body_fat,
-          bodyFatCurrent: currentMetrics.percent_body_fat || participant.baseline_body_fat,
-          bodyFatImprovement: fatImprovement,
+          ...participantScore,
           isUser: participant.user_id === user.id,
         };
       });
@@ -217,12 +198,7 @@ const Leaderboard = () => {
       const allResults = await Promise.all(leaderboardPromises);
       
       const sortedLeaderboard = allResults
-        .sort((a, b) => b.points - a.points)
-        .map((item, index) => ({
-          ...item,
-          rank: index + 1,
-          change: Math.floor(Math.random() * 5) - 2
-        }));
+        .sort((a, b) => b.totalPoints - a.totalPoints);
 
       setLeaderboardData(sortedLeaderboard);
     } catch (error) {
@@ -267,12 +243,12 @@ const Leaderboard = () => {
                       <Medal className="h-8 w-8" />
                     </div>
                     <Avatar className="h-16 w-16 border-4 border-gray-400">
-                      <AvatarImage src={leaderboardData[1].avatar_url} />
+                      <AvatarImage src={leaderboardData[1].avatarUrl} />
                       <AvatarFallback>{leaderboardData[1].username?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-bold">{leaderboardData[1].username}</div>
-                      <div className="text-2xl font-bold text-primary">{leaderboardData[1].points}</div>
+                      <div className="text-2xl font-bold text-primary">{leaderboardData[1].totalPoints}</div>
                       <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
                     </div>
                   </div>
@@ -287,12 +263,12 @@ const Leaderboard = () => {
                       <Trophy className="h-10 w-10" />
                     </div>
                     <Avatar className="h-20 w-20 border-4 border-yellow-500">
-                      <AvatarImage src={leaderboardData[0].avatar_url} />
+                      <AvatarImage src={leaderboardData[0].avatarUrl} />
                       <AvatarFallback>{leaderboardData[0].username?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-bold text-lg">{leaderboardData[0].username}</div>
-                      <div className="text-3xl font-bold text-primary">{leaderboardData[0].points}</div>
+                      <div className="text-3xl font-bold text-primary">{leaderboardData[0].totalPoints}</div>
                       <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
                     </div>
                   </div>
@@ -307,12 +283,12 @@ const Leaderboard = () => {
                       <Award className="h-8 w-8" />
                     </div>
                     <Avatar className="h-16 w-16 border-4 border-orange-500">
-                      <AvatarImage src={leaderboardData[2].avatar_url} />
+                      <AvatarImage src={leaderboardData[2].avatarUrl} />
                       <AvatarFallback>{leaderboardData[2].username?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-bold">{leaderboardData[2].username}</div>
-                      <div className="text-2xl font-bold text-primary">{leaderboardData[2].points}</div>
+                      <div className="text-2xl font-bold text-primary">{leaderboardData[2].totalPoints}</div>
                       <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
                     </div>
                   </div>
@@ -330,9 +306,9 @@ const Leaderboard = () => {
               <div className="space-y-2">
                 {leaderboardData.map((item, index) => (
                   <div 
-                    key={item.user_id}
+                    key={item.userId}
                     onClick={() => {
-                      setSelectedUserId(item.user_id);
+                      setSelectedUserId(item.userId);
                       setSelectedUserName(item.username);
                     }}
                     className={cn(
@@ -340,65 +316,52 @@ const Leaderboard = () => {
                       item.isUser ? "bg-primary/10 border-2 border-primary/30" : "bg-background/50"
                     )}
                   >
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full font-bold",
-                        index === 0 && "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white",
-                        index === 1 && "bg-gradient-to-br from-gray-300 to-gray-500 text-white",
-                        index === 2 && "bg-gradient-to-br from-orange-400 to-orange-600 text-white",
-                        index > 2 && "bg-muted text-muted-foreground"
-                      )}>
-                        {item.rank}
-                      </div>
-
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={item.avatar_url} />
-                        <AvatarFallback>{item.username?.[0]?.toUpperCase()}</AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1">
-                        <div className="font-semibold">
-                          {item.username}
-                          {item.isUser && <span className="ml-2 text-xs text-primary">(You)</span>}
-                          {!item.hasBaseline && (
-                            <Badge variant="outline" className="ml-2 text-xs">Нет baseline</Badge>
-                          )}
+                    <div className="flex items-center justify-between gap-4 flex-1">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full font-bold",
+                          index === 0 && "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white",
+                          index === 1 && "bg-gradient-to-br from-gray-300 to-gray-500 text-white",
+                          index === 2 && "bg-gradient-to-br from-orange-400 to-orange-600 text-white",
+                          index > 2 && "bg-muted text-muted-foreground"
+                        )}>
+                          {index + 1}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.workouts} workouts · {item.measurements} measurements
-                          {item.bodyFatImprovement !== undefined && item.bodyFatImprovement > 0 && (
-                            <span className="ml-2 text-success">
-                              • Жир: {item.bodyFatStart?.toFixed(1)}% → {item.bodyFatCurrent?.toFixed(1)}% 
-                              (-{item.bodyFatImprovement.toFixed(1)}%)
-                            </span>
-                          )}
+
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={item.avatarUrl} />
+                          <AvatarFallback>{item.username?.[0]?.toUpperCase()}</AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold flex items-center gap-2 flex-wrap">
+                            {item.username}
+                            {item.isUser && <span className="text-xs text-primary">(You)</span>}
+                            {item.goalsProgress.length === 0 && (
+                              <Badge variant="outline" className="text-xs">Нет целей</Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>
+                              {item.completedGoalsCount}/{item.goalsProgress.length} целей • 
+                              {item.averageProgress}% средний прогресс
+                            </div>
+                            {item.badges.length > 0 && (
+                              <div className="flex gap-1 flex-wrap mt-1">
+                                {item.badges.map(badge => (
+                                  <Badge key={badge} variant="secondary" className="text-xs py-0 px-1.5">
+                                    {badge}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-primary">{item.points}</div>
+                        <div className="text-2xl font-bold text-primary">{item.totalPoints}</div>
                         <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        {item.change > 0 && (
-                          <>
-                            <TrendingUp className="h-4 w-4 text-success" />
-                            <span className="text-xs text-success">+{item.change}</span>
-                          </>
-                        )}
-                        {item.change < 0 && (
-                          <>
-                            <TrendingDown className="h-4 w-4 text-destructive" />
-                            <span className="text-xs text-destructive">{item.change}</span>
-                          </>
-                        )}
-                        {item.change === 0 && (
-                          <>
-                            <Minus className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">0</span>
-                          </>
-                        )}
                       </div>
                     </div>
                   </div>

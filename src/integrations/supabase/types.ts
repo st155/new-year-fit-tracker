@@ -571,6 +571,7 @@ export type Database = {
       challenge_participants: {
         Row: {
           baseline_body_fat: number | null
+          baseline_goals: Json | null
           baseline_muscle_mass: number | null
           baseline_recorded_at: string | null
           baseline_source: string | null
@@ -582,6 +583,7 @@ export type Database = {
         }
         Insert: {
           baseline_body_fat?: number | null
+          baseline_goals?: Json | null
           baseline_muscle_mass?: number | null
           baseline_recorded_at?: string | null
           baseline_source?: string | null
@@ -593,6 +595,7 @@ export type Database = {
         }
         Update: {
           baseline_body_fat?: number | null
+          baseline_goals?: Json | null
           baseline_muscle_mass?: number | null
           baseline_recorded_at?: string | null
           baseline_source?: string | null
@@ -1116,6 +1119,51 @@ export type Database = {
             columns: ["habit_id"]
             isOneToOne: false
             referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_baselines: {
+        Row: {
+          baseline_value: number
+          created_at: string | null
+          goal_id: string | null
+          id: string
+          recorded_at: string | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          baseline_value: number
+          created_at?: string | null
+          goal_id?: string | null
+          id?: string
+          recorded_at?: string | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          baseline_value?: number
+          created_at?: string | null
+          goal_id?: string | null
+          id?: string
+          recorded_at?: string | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_baselines_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "goal_baselines_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
         ]
@@ -1713,6 +1761,13 @@ export type Database = {
           whoop_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "measurements_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
           {
             foreignKeyName: "measurements_goal_id_fkey"
             columns: ["goal_id"]
@@ -2660,6 +2715,38 @@ export type Database = {
       }
     }
     Views: {
+      challenge_progress: {
+        Row: {
+          baseline_recorded_at: string | null
+          baseline_source: string | null
+          baseline_value: number | null
+          challenge_id: string | null
+          current_value: number | null
+          goal_id: string | null
+          goal_name: string | null
+          goal_type: string | null
+          progress_percent: number | null
+          target_unit: string | null
+          target_value: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       client_unified_metrics: {
         Row: {
           measurement_date: string | null
