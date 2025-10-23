@@ -65,6 +65,7 @@ export function useHabits(userId?: string) {
           customData = {
             attempts: habitAttempts,
             current_attempt: currentAttempt,
+            start_date: currentAttempt?.start_date,
           };
         }
 
