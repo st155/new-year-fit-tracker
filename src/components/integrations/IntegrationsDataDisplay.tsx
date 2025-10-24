@@ -42,7 +42,6 @@ export function IntegrationsDataDisplay() {
       .channel('integrations-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'metric_values', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'terra_tokens', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'whoop_tokens', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -57,16 +56,9 @@ export function IntegrationsDataDisplay() {
         .eq('user_id', user!.id)
         .eq('is_active', true);
 
-      const { data: whoopTokens } = await supabase
-        .from('whoop_tokens')
-        .select('updated_at, is_active')
-        .eq('user_id', user!.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
       const providersList: ProviderData[] = [];
 
-      // Обработка Terra провайдеров (Garmin, Fitbit, etc.)
+      // Обработка Terra провайдеров (включая Whoop через Terra)
       if (terraTokens && terraTokens.length > 0) {
         for (const token of terraTokens) {
           const metrics = await fetchProviderMetrics(token.provider);
@@ -77,17 +69,6 @@ export function IntegrationsDataDisplay() {
             metrics,
           });
         }
-      }
-
-      // Обработка Whoop
-      if (whoopTokens) {
-        const metrics = await fetchProviderMetrics('WHOOP');
-        providersList.push({
-          provider: 'WHOOP',
-          connected: true,
-          lastSync: whoopTokens.updated_at,
-          metrics,
-        });
       }
 
       setProviders(providersList);

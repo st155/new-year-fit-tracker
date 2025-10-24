@@ -48,16 +48,7 @@ verify_jwt = false
 [functions.terra-webhook-test]
 verify_jwt = true
 
-[functions.whoop-oauth]
-verify_jwt = false
-
-[functions.whoop-integration]
-verify_jwt = false
-
 [functions.terra-sync-scheduler]
-verify_jwt = false
-
-[functions.whoop-webhook]
 verify_jwt = false
 
 [functions.inbody-ingest]

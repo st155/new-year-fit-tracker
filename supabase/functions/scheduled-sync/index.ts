@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
       .eq('is_active', true);
 
     let terraCount = 0;
-    let whoopCount = 0;
 
     if (terraError) {
       console.error('Error fetching Terra users:', terraError);
@@ -57,31 +56,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Sync all Whoop users
-    console.log('Starting Whoop sync for all users...');
-    try {
-      const { data: whoopResult, error: whoopError } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync-all-users' }
-      });
-      
-      if (whoopError) {
-        console.error('Whoop sync-all-users error:', whoopError);
-      } else {
-        whoopCount = whoopResult?.results?.length || 0;
-        console.log(`Whoop sync completed for ${whoopCount} users`);
-      }
-    } catch (error) {
-      console.error('Failed to invoke whoop-integration:', error);
-    }
-
-    console.log(`Scheduled sync completed. Terra: ${terraCount}, Whoop: ${whoopCount}`);
+    console.log(`Scheduled sync completed. Terra: ${terraCount} users`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Sync completed. Terra: ${terraCount}, Whoop: ${whoopCount}`,
+        message: `Synced ${terraCount} Terra users`,
         terraUsers: terraCount,
-        whoopUsers: whoopCount,
         timestamp: new Date().toISOString()
       }),
       { 

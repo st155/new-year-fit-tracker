@@ -239,12 +239,12 @@ await ErrorLogger.logFileUploadError(
 );
 ```
 
-#### Integration Errors (Whoop, Apple Health, etc.)
+#### Integration Errors (Terra, Apple Health, etc.)
 
 ```tsx
-await ErrorLogger.logWhoopError(
+await ErrorLogger.logTerraError(
   'Token refresh failed',
-  { tokenExpiry: '2024-01-01' }
+  { provider: 'WHOOP', tokenExpiry: '2024-01-01' }
 );
 
 await ErrorLogger.logAppleHealthError(
