@@ -4,7 +4,7 @@ export interface ErrorLogData {
   errorType: string;
   errorMessage: string;
   errorDetails?: any;
-  source: 'whoop' | 'apple_health' | 'garmin' | 'ui' | 'api' | 'file_upload' | 'general';
+  source: 'whoop' | 'apple_health' | 'garmin' | 'ui' | 'api' | 'file_upload' | 'general' | 'terra';
   stackTrace?: string;
   url?: string;
 }
@@ -70,12 +70,20 @@ export class ErrorLogger {
   }
 
   // Удобные методы для разных типов ошибок
+  
+  /**
+   * @deprecated Используйте logTerraError() - Whoop теперь работает через Terra API
+   */
   static async logWhoopError(errorMessage: string, errorDetails?: any, userId?: string): Promise<void> {
+    await this.logTerraError(errorMessage, errorDetails, userId);
+  }
+
+  static async logTerraError(errorMessage: string, errorDetails?: any, userId?: string): Promise<void> {
     await this.logError({
       errorType: 'integration_error',
       errorMessage,
       errorDetails,
-      source: 'whoop',
+      source: 'terra',
       stackTrace: new Error().stack
     }, userId);
   }
