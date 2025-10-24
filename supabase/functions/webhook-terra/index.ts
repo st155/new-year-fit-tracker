@@ -246,24 +246,77 @@ serve(async (req) => {
     if (['activity', 'body', 'daily', 'sleep', 'nutrition', 'athlete'].includes(payload.type)) {
       console.log(`🔄 Processing ${payload.type} webhook for user: ${payload.user?.user_id}`);
       
+      let processingError: Error | null = null;
+      
       try {
         await processTerraData(supabase, payload);
         console.log(`✅ ${payload.type} data processed successfully`);
       } catch (error) {
         console.error(`❌ Error processing ${payload.type} data:`, error);
+        processingError = error as Error;
+        
+        // Log failed webhook for retry
+        const { data: tokenData } = await supabase
+          .from('terra_tokens')
+          .select('user_id')
+          .eq('terra_user_id', payload.user.user_id)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (tokenData) {
+          await supabase.from('failed_webhook_processing').insert({
+            webhook_log_id: null,
+            user_id: tokenData.user_id,
+            provider: payload.user.provider?.toUpperCase() || 'UNKNOWN',
+            payload: payload,
+            error_message: error.message,
+            retry_count: 0,
+            next_retry_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // Retry in 2 minutes
+            status: 'pending',
+          });
+          console.log('📝 Logged failed webhook for retry');
+        }
       }
       
-      // Обновляем last_sync_date
-      if (payload.user?.user_id) {
-        const { error: updateError } = await supabase
+      // Обновляем last_sync_date и data freshness tracking
+      if (payload.user?.user_id && !processingError) {
+        const { data: tokenData } = await supabase
           .from('terra_tokens')
-          .update({ last_sync_date: new Date().toISOString() })
-          .eq('terra_user_id', payload.user.user_id);
+          .select('user_id, provider')
+          .eq('terra_user_id', payload.user.user_id)
+          .eq('is_active', true)
+          .maybeSingle();
         
-        if (updateError) {
-          console.error('❌ Error updating last_sync_date:', updateError);
-        } else {
-          console.log(`✅ Updated last_sync_date for user: ${payload.user.user_id}`);
+        if (tokenData) {
+          // Update last_sync_date
+          const { error: updateError } = await supabase
+            .from('terra_tokens')
+            .update({ last_sync_date: new Date().toISOString() })
+            .eq('terra_user_id', payload.user.user_id);
+          
+          if (updateError) {
+            console.error('❌ Error updating last_sync_date:', updateError);
+          } else {
+            console.log(`✅ Updated last_sync_date for user: ${payload.user.user_id}`);
+          }
+          
+          // Update data freshness tracking
+          const dataDate = payload.data?.[0]?.metadata?.start_time || payload.data?.[0]?.metadata?.end_time;
+          const receivedDate = dataDate ? new Date(dataDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+          
+          await supabase
+            .from('data_freshness_tracking')
+            .upsert({
+              user_id: tokenData.user_id,
+              provider: tokenData.provider,
+              data_type: payload.type,
+              last_received_at: new Date().toISOString(),
+              last_received_date: receivedDate,
+              consecutive_missing_days: 0,
+              alert_sent: false,
+            }, { onConflict: 'user_id,provider,data_type' });
+          
+          console.log(`✅ Updated data freshness tracking for ${payload.type}`);
         }
       }
     }
