@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Search, ChevronDown, AlertCircle, CheckCircle, Clock, Copy } from 'lucide-react';
+import { Search, ChevronDown, AlertCircle, CheckCircle, Clock, Copy, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TerraProviderDiagnosticsProps {
   provider: string;
@@ -24,11 +26,47 @@ export function TerraProviderDiagnostics({
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
   const [terraApiStatus, setTerraApiStatus] = useState<'ok' | 'timeout' | 'error'>('ok');
+  const [loadingStage, setLoadingStage] = useState<string>('');
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  const cancelRequest = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setLoading(false);
+    setLoadingStage('');
+    setElapsedTime(0);
+    toast({
+      title: 'Запрос отменён',
+      description: 'Диагностика прервана пользователем',
+    });
+  };
 
   const fetchDiagnostics = async () => {
     setLoading(true);
     setTerraApiStatus('ok');
+    setElapsedTime(0);
+    setLoadingStage('🔍 Запрос данных из Terra API...');
+    
+    // Start timer
+    const startTime = Date.now();
+    timerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsedTime(elapsed);
+      
+      // Update stage based on elapsed time
+      if (elapsed < 10) {
+        setLoadingStage('🔍 Запрос данных из Terra API...');
+      } else if (elapsed < 60) {
+        setLoadingStage('📊 Обработка данных...');
+      } else {
+        setLoadingStage('⏳ Ожидание ответа Terra API...');
+      }
+    }, 1000);
+    
     try {
       console.log('🔍 Fetching diagnostics for', provider);
       
@@ -44,6 +82,7 @@ export function TerraProviderDiagnostics({
         throw error;
       }
 
+      setLoadingStage('✅ Завершение...');
       console.log('✅ Diagnostics received:', data);
       setDiagnostics(data);
       
@@ -68,9 +107,24 @@ export function TerraProviderDiagnostics({
         });
       }
     } finally {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       setLoading(false);
+      setLoadingStage('');
+      setElapsedTime(0);
     }
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const copyToClipboard = () => {
     if (!diagnostics) return;
@@ -130,10 +184,56 @@ Terra User ID: ${diagnostics.terra_user_id}
         )}
 
         {loading && (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
+          <div className="space-y-4 py-4">
+            {/* Loading indicator with stage and timer */}
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div className="text-sm">
+                <p className="font-medium">{loadingStage}</p>
+                <p className="text-xs text-muted-foreground">
+                  Прошло времени: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                </p>
+              </div>
+            </div>
+            
+            {/* Progress bar after 10 seconds */}
+            {elapsedTime > 10 && (
+              <Progress 
+                value={Math.min((elapsedTime / 90) * 100, 95)} 
+                className="w-full"
+              />
+            )}
+            
+            {/* Warning after 30 seconds */}
+            {elapsedTime > 30 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Terra API отвечает медленно. Это нормально для первого запроса.
+                  Данные обновляются автоматически через webhook.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {/* Cancel button after 20 seconds */}
+            {elapsedTime > 20 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={cancelRequest}
+                className="w-full"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Отменить запрос
+              </Button>
+            )}
+            
+            {/* Skeleton loaders */}
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
           </div>
         )}
 
