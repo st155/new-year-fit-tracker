@@ -141,29 +141,16 @@ export function UnifiedMetricsView() {
         )
       `;
 
-      // Сначала пробуем получить данные только за сегодня (самые актуальные)
-      let { data: metricsData } = await supabase
+      // Всегда загружаем данные за последние 2 дня
+      const { data: metricsData } = await supabase
         .from('metric_values')
         .select(baseSelect)
         .eq('user_id', user!.id)
         .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
-        .eq('measurement_date', todayStr)
+        .gte('measurement_date', twoDaysAgoStr)
+        .lte('measurement_date', todayStr)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false });
-
-      // Если за сегодня нет данных, берём последние 2 дня
-      if (!metricsData || metricsData.length === 0) {
-        const res = await supabase
-          .from('metric_values')
-          .select(baseSelect)
-          .eq('user_id', user!.id)
-          .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
-          .gte('measurement_date', twoDaysAgoStr)
-          .lte('measurement_date', todayStr)
-          .order('measurement_date', { ascending: false })
-          .order('created_at', { ascending: false });
-        metricsData = res.data ?? [];
-      }
 
       // Функция для определения приоритета источников
       const getProviderPriority = (metricName: string, category: string): string[] => {
@@ -176,7 +163,7 @@ export function UnifiedMetricsView() {
 
       // Группируем по названию метрики и берём самую свежую по каждому источнику
       const metricsMap = new Map<string, UnifiedMetric>();
-      metricsData.forEach((item: any) => {
+      (metricsData || []).forEach((item: any) => {
         const metricName = item.user_metrics.metric_name;
         const source = item.user_metrics.source;
         if (!metricsMap.has(metricName)) {
@@ -193,6 +180,7 @@ export function UnifiedMetricsView() {
           (s) => s.source === getProviderDisplayName(source)
         );
         if (existingSourceIndex === -1) {
+          // Добавляем новый источник
           metric.sources.push({
             value: formatValue(item.value, metricName),
             unit: item.user_metrics.unit,
@@ -200,6 +188,24 @@ export function UnifiedMetricsView() {
             lastUpdate: item.measurement_date,
             color: getMetricColor(item.user_metrics.metric_category),
           });
+        } else {
+          // Проверяем, не свежее ли текущая запись
+          const existing = metric.sources[existingSourceIndex];
+          const existingDate = new Date(existing.lastUpdate);
+          const currentDate = new Date(item.measurement_date);
+          
+          if (currentDate > existingDate || 
+              (currentDate.getTime() === existingDate.getTime() && 
+               new Date(item.created_at) > new Date(existing.lastUpdate))) {
+            // Обновляем на более свежую
+            metric.sources[existingSourceIndex] = {
+              value: formatValue(item.value, metricName),
+              unit: item.user_metrics.unit,
+              source: getProviderDisplayName(source),
+              lastUpdate: item.measurement_date,
+              color: getMetricColor(item.user_metrics.metric_category),
+            };
+          }
         }
       });
 
