@@ -203,4 +203,6 @@ export const t = (key: string, params?: Record<string, any>): string => {
   return translations[key] || key;
 };
 
-export const useTranslation = () => ({ t });
+export function useTranslation() {
+  return { t };
+}

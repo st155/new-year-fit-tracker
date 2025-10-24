@@ -148,7 +148,7 @@ interface OuraSummary {
   };
 }
 
-export function useClientDetailData(clientUserId: string) {
+export function useClientDetailData(clientUserId?: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [healthData, setHealthData] = useState<HealthData[]>([]);
@@ -159,7 +159,11 @@ export function useClientDetailData(clientUserId: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    loadClientData();
+    if (clientUserId) {
+      loadClientData();
+    } else {
+      setLoading(false);
+    }
   }, [clientUserId]);
 
   const mergeHealthData = (summaryData: any[], unifiedData: any[]): HealthData[] => {

@@ -56,6 +56,12 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   };
 
   const processLeaderboardData = (data: any[]) => {
+    if (!data || data.length === 0) {
+      setLeaderboard([]);
+      setChallengeId(null);
+      return;
+    }
+
     // Get challenge ID from first entry
     setChallengeId(data[0].challenge_id);
 

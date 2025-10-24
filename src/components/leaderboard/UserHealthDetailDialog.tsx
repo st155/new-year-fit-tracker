@@ -21,10 +21,10 @@ export function UserHealthDetailDialog({
   open, 
   onClose 
 }: UserHealthDetailDialogProps) {
-  const { healthData, goals, loading, error } = useClientDetailData(userId || undefined);
-  const { current: currentBodyComp, history: bodyHistory } = useBodyComposition(userId || undefined);
-
   if (!userId) return null;
+
+  const { healthData, goals, loading, error } = useClientDetailData(userId);
+  const { current: currentBodyComp, history: bodyHistory } = useBodyComposition(userId);
 
   // Get latest health data
   const latestData = healthData?.[0] || null;
