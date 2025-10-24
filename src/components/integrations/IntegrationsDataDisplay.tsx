@@ -6,6 +6,8 @@ import { Activity, Heart, Flame, Moon, Wind, Footprints, Scale, Zap, RefreshCw }
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TerraProviderDiagnostics } from './TerraProviderDiagnostics';
+import { useToast } from '@/hooks/use-toast';
 
 interface MetricData {
   name: string;
@@ -22,12 +24,14 @@ interface ProviderData {
   connected: boolean;
   lastSync: string | null;
   metrics: MetricData[];
+  terraUserId?: string;
 }
 
 export function IntegrationsDataDisplay() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<ProviderData[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -52,7 +56,7 @@ export function IntegrationsDataDisplay() {
       // Получаем активные интеграции
       const { data: terraTokens } = await supabase
         .from('terra_tokens')
-        .select('provider, last_sync_date, is_active')
+        .select('provider, last_sync_date, is_active, terra_user_id')
         .eq('user_id', user!.id)
         .eq('is_active', true);
 
@@ -67,6 +71,7 @@ export function IntegrationsDataDisplay() {
             connected: true,
             lastSync: token.last_sync_date,
             metrics,
+            terraUserId: token.terra_user_id,
           });
         }
       }
@@ -300,6 +305,35 @@ export function IntegrationsDataDisplay() {
     return nameMap[provider.toUpperCase()] || provider;
   };
 
+  const handleSyncRequest = async (provider: string) => {
+    try {
+      toast({
+        title: 'Запуск синхронизации',
+        description: `Запрашиваем данные для ${getProviderDisplayName(provider)}...`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'sync' },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Синхронизация завершена',
+        description: 'Данные обновлены',
+      });
+
+      // Refresh data
+      await fetchIntegrationsData();
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка синхронизации',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -346,7 +380,16 @@ export function IntegrationsDataDisplay() {
             </div>
           </CardHeader>
 
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-6">
+            {/* Diagnostics Section */}
+            <TerraProviderDiagnostics
+              provider={provider.provider}
+              terraUserId={provider.terraUserId}
+              lastSync={provider.lastSync}
+              onSyncRequest={() => handleSyncRequest(provider.provider)}
+            />
+
+            {/* Metrics Display */}
             {provider.metrics.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 Пока нет данных от этого устройства

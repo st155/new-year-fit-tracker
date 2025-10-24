@@ -56,3 +56,6 @@ verify_jwt = true
 
 [functions.parse-inbody-pdf]
 verify_jwt = true
+
+[functions.terra-diagnostics]
+verify_jwt = true
