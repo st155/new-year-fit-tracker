@@ -98,10 +98,19 @@ export function TerraIntegration() {
     
     setConnectingProvider(provider);
     try {
-      // Все провайдеры, включая Whoop, подключаются через Terra Widget
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
+      console.log('🔗 Connecting to Terra for provider:', provider);
+      
+      // Создаем promise с timeout для защиты от долгих ответов
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 8000);
+      });
+      
+      const requestPromise = supabase.functions.invoke('terra-integration', {
         body: { action: 'generate-widget-session' },
       });
+      
+      // Гонка между запросом и timeout
+      const { data, error } = await Promise.race([requestPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('Widget error:', error);
@@ -112,26 +121,59 @@ export function TerraIntegration() {
         throw new Error('No widget URL received');
       }
 
+      console.log('✅ Widget URL received, opening window...');
+      
       // Открываем в новом окне для предотвращения релоада страницы
       const authWindow = window.open(data.url, '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
       if (authWindow) {
+        toast({
+          title: 'Окно авторизации открыто',
+          description: 'Завершите авторизацию в открывшемся окне',
+        });
+        
         const checkClosed = setInterval(() => {
           if (authWindow.closed) {
             clearInterval(checkClosed);
             setConnectingProvider(null);
+            console.log('🔄 Auth window closed, checking connection status...');
             setTimeout(() => checkStatus(), 2000);
           }
         }, 1000);
       } else {
         // Fallback - если popup заблокирован
+        console.log('⚠️ Popup blocked, redirecting...');
         window.location.href = data.url;
       }
     } catch (error: any) {
-      console.error('Widget load error:', error);
+      console.error('❌ Widget load error:', error);
+      
+      // Улучшенная обработка ошибок
+      let errorMessage = 'Не удалось подключить устройство';
+      let errorTitle = 'Ошибка подключения';
+      
+      if (error.message === 'Request timeout') {
+        errorTitle = 'Превышено время ожидания';
+        errorMessage = 'Сервер не ответил вовремя. Пожалуйста, попробуйте еще раз через несколько секунд.';
+      } else if (error.message?.includes('502') || error.message?.includes('Bad Gateway')) {
+        errorTitle = 'Сервер недоступен';
+        errorMessage = 'Временные проблемы с сервером. Попробуйте через 1-2 минуты.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: 'Ошибка подключения',
-        description: error.message || 'Не удалось подключить устройство',
+        title: errorTitle,
+        description: errorMessage,
         variant: 'destructive',
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => connectProvider(provider)}
+          >
+            Повторить
+          </Button>
+        ),
       });
       setConnectingProvider(null);
     }
