@@ -41,10 +41,8 @@ Deno.serve(async (req) => {
           
           const { data, error } = await supabase.functions.invoke('terra-integration', {
             body: {
-              action: 'sync-data'
-            },
-            headers: {
-              Authorization: `Bearer ${supabaseServiceKey}`
+              action: 'sync-data',
+              userId: user.user_id  // ✅ Передаём userId для cron-режима
             }
           });
           
