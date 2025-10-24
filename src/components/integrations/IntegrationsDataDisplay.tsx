@@ -301,8 +301,38 @@ export function IntegrationsDataDisplay() {
       OURA: 'Oura',
       POLAR: 'Polar',
       SUUNTO: 'Suunto',
+      ULTRAHUMAN: 'Ultrahuman',
     };
     return nameMap[provider.toUpperCase()] || provider;
+  };
+
+  const getDataFreshness = (lastSyncDate: string | null) => {
+    if (!lastSyncDate) return { color: 'muted', text: 'Ожидание данных', badge: 'outline' };
+    
+    const diff = Date.now() - new Date(lastSyncDate).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (minutes < 60) {
+      return { 
+        color: 'success', 
+        text: `${minutes} мин назад`,
+        badge: 'default'
+      };
+    }
+    if (hours < 24) {
+      return { 
+        color: 'warning', 
+        text: `${hours} ч назад`,
+        badge: 'secondary'
+      };
+    }
+    return { 
+      color: 'destructive', 
+      text: `${days} дн назад`,
+      badge: 'destructive'
+    };
   };
 
   const handleSyncRequest = async (provider: string) => {
@@ -366,11 +396,23 @@ export function IntegrationsDataDisplay() {
                 <Badge variant="outline" className="bg-success/10 text-success border-success/30">
                   Подключено
                 </Badge>
+                {(() => {
+                  const freshness = getDataFreshness(provider.lastSync);
+                  return (
+                    <Badge 
+                      variant={freshness.badge as any}
+                      className={freshness.color === 'success' ? 'bg-success/10 text-success border-success/30' : 
+                                freshness.color === 'warning' ? 'bg-warning/10 text-warning border-warning/30' : ''}
+                    >
+                      📊 {freshness.text}
+                    </Badge>
+                  );
+                })()}
               </div>
               <div className="flex items-center gap-3">
                 {provider.lastSync && (
                   <span className="text-sm text-muted-foreground">
-                    Последняя синхронизация: {new Date(provider.lastSync).toLocaleString('ru-RU')}
+                    {new Date(provider.lastSync).toLocaleString('ru-RU')}
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={fetchIntegrationsData}>

@@ -187,6 +187,43 @@ serve(async (req) => {
           
           let allData: any = { body: [], activity: [], daily: [], sleep: [], nutrition: [] };
           
+          // Helper function: fetch with timeout and retry
+          const fetchWithTimeout = async (url: string, options: any, timeoutMs = 10000, maxRetries = 2) => {
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+              
+              try {
+                const response = await fetch(url, {
+                  ...options,
+                  signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+              } catch (error: any) {
+                clearTimeout(timeoutId);
+                
+                if (error.name === 'AbortError') {
+                  const isLastAttempt = attempt === maxRetries;
+                  console.warn(`⏱️ Terra API timeout (${timeoutMs}ms) for ${url} - attempt ${attempt + 1}/${maxRetries + 1}`);
+                  
+                  if (isLastAttempt) {
+                    throw new Error(`Terra API timeout after ${maxRetries + 1} attempts`);
+                  }
+                  
+                  // Exponential backoff: 2s, 5s
+                  const delay = attempt === 0 ? 2000 : 5000;
+                  console.log(`🔄 Retrying in ${delay}ms...`);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  continue;
+                }
+                
+                throw error;
+              }
+            }
+            throw new Error('Max retries exceeded');
+          };
+          
           // Запрашиваем каждый тип данных отдельно
           for (const endpoint of endpoints) {
             const url = `${endpoint.url}?user_id=${token.terra_user_id}&start_date=${start}&end_date=${endDate}`;
@@ -194,27 +231,36 @@ serve(async (req) => {
             console.log(`📡 Fetching ${endpoint.type} from Terra API...`);
             console.log(`🔗 URL: ${url}`);
             
-            const syncResponse = await fetch(url, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'dev-id': terraDevId,
-                'x-api-key': terraApiKey,
-              },
-            });
+            try {
+              const syncResponse = await fetchWithTimeout(url, {
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                  'dev-id': terraDevId,
+                  'x-api-key': terraApiKey,
+                },
+              }, 10000, 2);
 
-            console.log(`📊 ${endpoint.type} response status:`, syncResponse.status);
+              console.log(`📊 ${endpoint.type} response status:`, syncResponse.status);
 
-            if (syncResponse.ok) {
-              const typeData = await syncResponse.json();
-              console.log(`📦 ${endpoint.type} data received:`, JSON.stringify(typeData, null, 2).substring(0, 500) + '...');
-              if (typeData.data && Array.isArray(typeData.data)) {
-                allData[endpoint.type] = typeData.data;
-                console.log(`✅ ${token.provider} ${endpoint.type}: ${typeData.data.length} records`);
+              if (syncResponse.ok) {
+                const typeData = await syncResponse.json();
+                console.log(`📦 ${endpoint.type} data received:`, JSON.stringify(typeData, null, 2).substring(0, 500) + '...');
+                if (typeData.data && Array.isArray(typeData.data)) {
+                  allData[endpoint.type] = typeData.data;
+                  console.log(`✅ ${token.provider} ${endpoint.type}: ${typeData.data.length} records`);
+                }
+              } else {
+                const errorText = await syncResponse.text();
+                console.error(`❌ Sync failed for ${token.provider} (${endpoint.type}):`, syncResponse.status, errorText.substring(0, 200));
               }
-            } else {
-              const errorText = await syncResponse.text();
-              console.error(`❌ Sync failed for ${token.provider} (${endpoint.type}):`, syncResponse.status, errorText.substring(0, 200));
+            } catch (error: any) {
+              if (error.message.includes('timeout')) {
+                console.error(`⏱️ Terra API timeout for ${endpoint.type}, skipping...`);
+                // Continue with other endpoints
+              } else {
+                console.error(`❌ Error fetching ${endpoint.type}:`, error.message);
+              }
             }
           }
 

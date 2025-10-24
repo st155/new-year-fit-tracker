@@ -23,10 +23,12 @@ export function TerraProviderDiagnostics({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [terraApiStatus, setTerraApiStatus] = useState<'ok' | 'timeout' | 'error'>('ok');
   const { toast } = useToast();
 
   const fetchDiagnostics = async () => {
     setLoading(true);
+    setTerraApiStatus('ok');
     try {
       console.log('🔍 Fetching diagnostics for', provider);
       
@@ -34,7 +36,13 @@ export function TerraProviderDiagnostics({
         body: { provider },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('timeout') || error.message?.includes('504')) {
+          setTerraApiStatus('timeout');
+          throw new Error('Terra API временно недоступен (timeout). Данные обновляются автоматически через webhook.');
+        }
+        throw error;
+      }
 
       console.log('✅ Diagnostics received:', data);
       setDiagnostics(data);
@@ -45,11 +53,20 @@ export function TerraProviderDiagnostics({
       });
     } catch (error: any) {
       console.error('❌ Diagnostics error:', error);
-      toast({
-        title: 'Ошибка диагностики',
-        description: error.message || 'Не удалось получить данные',
-        variant: 'destructive',
-      });
+      
+      if (terraApiStatus === 'timeout') {
+        toast({
+          title: 'Terra API недоступен',
+          description: 'Данные обновляются автоматически через webhook',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Ошибка диагностики',
+          description: error.message || 'Не удалось получить данные',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -122,6 +139,22 @@ Terra User ID: ${diagnostics.terra_user_id}
 
         {diagnostics && !loading && (
           <div className="space-y-4">
+            {/* Terra API Status Warning */}
+            {terraApiStatus === 'timeout' && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-warning mt-0.5" />
+                  <div className="flex-1 text-sm">
+                    <p className="font-medium mb-1">Terra API временно недоступен</p>
+                    <p className="text-xs text-muted-foreground">
+                      Данные обновляются автоматически через webhook в течение часа после синхронизации устройства.
+                      Последний webhook: {lastSync ? new Date(lastSync).toLocaleString('ru-RU') : 'Н/Д'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -234,10 +267,15 @@ Terra User ID: ${diagnostics.terra_user_id}
                 )}
 
                 <div className="mt-3 pt-3 border-t border-warning/20">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    💡 <strong>Совет:</strong> Whoop обычно отправляет данные за "сегодня" только на следующий день после закрытия дня в приложении.
-                  </p>
-                  {onSyncRequest && (
+                  <div className="text-xs space-y-2 mb-3">
+                    <p className="font-medium">💡 Как работают данные от устройств:</p>
+                    <div className="space-y-1 text-muted-foreground">
+                      <p><strong>📊 Daily метрики (Recovery, Strain):</strong> Отправляются на следующий день после закрытия дня в приложении (обычно 6:00-10:00)</p>
+                      <p><strong>😴 Sleep данные:</strong> Отправляются после завершения сна и синхронизации с приложением (через 30-90 мин после пробуждения)</p>
+                      <p><strong>🏃 Activity данные:</strong> Отправляются сразу после завершения и синхронизации тренировки (5-30 минут)</p>
+                    </div>
+                  </div>
+                  {onSyncRequest && terraApiStatus !== 'timeout' && (
                     <Button size="sm" variant="outline" onClick={onSyncRequest} className="mt-2">
                       🔄 Запросить синхронизацию
                     </Button>
