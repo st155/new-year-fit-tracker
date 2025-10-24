@@ -29,63 +29,23 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
       setLoading(true);
       setError(null);
 
-      // Query the optimized view
-      const { data, error: queryError } = await supabase
-        .from('challenge_leaderboard_v2')
+      // Query the optimized view directly
+      const { data: viewData, error: queryError } = await supabase
+        .from('challenge_leaderboard_v2' as any)
         .select('*')
         .order('total_points', { ascending: false })
         .limit(limit || 100);
-
+      
       if (queryError) throw queryError;
-
-      if (!data || data.length === 0) {
+      
+      if (!viewData || viewData.length === 0) {
         setLeaderboard([]);
         setChallengeId(null);
         setLoading(false);
         return;
       }
 
-      // Get challenge ID from first entry
-      setChallengeId(data[0].challenge_id);
-
-      // Enrich entries with badges and ranks
-      const enrichedData = data.map((entry, index) => {
-        const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
-          userId: entry.user_id,
-          username: entry.username || entry.full_name || 'Anonymous',
-          fullName: entry.full_name,
-          avatarUrl: entry.avatar_url,
-          totalPoints: entry.total_points || 0,
-          activeDays: entry.active_days || 0,
-          lastActivityDate: entry.last_activity_date,
-          streakDays: entry.streak_days || 0,
-          avgRecovery: Math.round(entry.avg_recovery || 0),
-          avgStrain: Math.round((entry.avg_strain || 0) * 10) / 10,
-          avgSleep: Math.round((entry.avg_sleep || 0) * 10) / 10,
-          avgSleepEfficiency: Math.round(entry.avg_sleep_efficiency || 0),
-          avgRestingHr: Math.round(entry.avg_resting_hr || 0),
-          avgHrv: Math.round(entry.avg_hrv || 0),
-          totalSteps: entry.total_steps || 0,
-          totalActiveCalories: entry.total_active_calories || 0,
-          totalGoals: entry.total_goals || 0,
-          goalsWithBaseline: entry.goals_with_baseline || 0,
-          trackableGoals: entry.trackable_goals || 0,
-          isUser: entry.user_id === user.id
-        };
-
-        return enrichLeaderboardEntry(baseEntry, index + 1);
-      });
-
-      // Re-sort after badge bonus
-      const sortedData = enrichedData.sort((a, b) => b.totalPoints - a.totalPoints);
-      
-      // Update ranks after re-sorting
-      const finalData = sortedData.map((entry, index) => ({
-        ...entry,
-        rank: index + 1
-      }));
-
-      setLeaderboard(finalData);
+      processLeaderboardData(viewData as any[]);
     } catch (err) {
       console.error('Error fetching leaderboard:', err);
       setError(err instanceof Error ? err.message : 'Failed to load leaderboard');
@@ -93,6 +53,50 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const processLeaderboardData = (data: any[]) => {
+    // Get challenge ID from first entry
+    setChallengeId(data[0].challenge_id);
+
+    // Enrich entries with badges and ranks
+    const enrichedData = data.map((entry: any, index: number) => {
+      const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
+        userId: entry.user_id,
+        username: entry.username || entry.full_name || 'Anonymous',
+        fullName: entry.full_name,
+        avatarUrl: entry.avatar_url,
+        totalPoints: entry.total_points || 0,
+        activeDays: entry.active_days || 0,
+        lastActivityDate: entry.last_activity_date,
+        streakDays: entry.streak_days || 0,
+        avgRecovery: Math.round(entry.avg_recovery || 0),
+        avgStrain: Math.round((entry.avg_strain || 0) * 10) / 10,
+        avgSleep: Math.round((entry.avg_sleep || 0) * 10) / 10,
+        avgSleepEfficiency: Math.round(entry.avg_sleep_efficiency || 0),
+        avgRestingHr: Math.round(entry.avg_resting_hr || 0),
+        avgHrv: Math.round(entry.avg_hrv || 0),
+        totalSteps: entry.total_steps || 0,
+        totalActiveCalories: entry.total_active_calories || 0,
+        totalGoals: 0,
+        goalsWithBaseline: 0,
+        trackableGoals: 0,
+        isUser: entry.user_id === user?.id
+      };
+
+      return enrichLeaderboardEntry(baseEntry, index + 1);
+    });
+
+    // Re-sort after badge bonus
+    const sortedData = enrichedData.sort((a, b) => b.totalPoints - a.totalPoints);
+    
+    // Update ranks after re-sorting
+    const finalData = sortedData.map((entry, index) => ({
+      ...entry,
+      rank: index + 1
+    }));
+
+    setLeaderboard(finalData);
   };
 
   useEffect(() => {

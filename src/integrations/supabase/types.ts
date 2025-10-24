@@ -2715,6 +2715,43 @@ export type Database = {
       }
     }
     Views: {
+      challenge_leaderboard_v2: {
+        Row: {
+          active_days: number | null
+          avatar_url: string | null
+          avg_hrv: number | null
+          avg_recovery: number | null
+          avg_resting_hr: number | null
+          avg_sleep: number | null
+          avg_sleep_efficiency: number | null
+          avg_strain: number | null
+          challenge_id: string | null
+          full_name: string | null
+          last_activity_date: string | null
+          streak_days: number | null
+          total_active_calories: number | null
+          total_points: number | null
+          total_steps: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       challenge_progress: {
         Row: {
           baseline_recorded_at: string | null
