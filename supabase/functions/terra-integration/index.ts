@@ -515,12 +515,12 @@ async function processTerraData(supabase: any, payload: any) {
                   }
                 }
 
-                // Workout Calories
+                // Workout Calories -> Active Calories для унификации
                 const calories = activity.calories_data?.total_burned_calories;
                 if (typeof calories === 'number') {
                   const { data: caloriesMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
-                    p_metric_name: 'Workout Calories',
+                    p_metric_name: 'Active Calories',
                     p_metric_category: 'workout',
                     p_unit: 'kcal',
                     p_source: source,
@@ -539,12 +539,12 @@ async function processTerraData(supabase: any, payload: any) {
                   }
                 }
 
-                // Workout Strain
+                // Workout Strain - используем Day Strain для совместимости с виджетами
                 const strain = activity.score?.strain ?? activity.strain_score ?? workout.strain_score;
                 if (typeof strain === 'number') {
                   const { data: strainMetricId } = await supabase.rpc('create_or_get_metric', {
                     p_user_id: userId,
-                    p_metric_name: 'Workout Strain',
+                    p_metric_name: 'Day Strain',
                     p_metric_category: 'workout',
                     p_unit: '',
                     p_source: source,
@@ -791,6 +791,8 @@ async function processTerraData(supabase: any, payload: any) {
           const dateStr = (daily.day_start || daily.start_time || daily.timestamp || daily.date || new Date().toISOString()).split('T')[0];
           const source = provider.toLowerCase();
 
+          let metricsInserted = 0;
+
           // Recovery Score
           const recovery = daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
           if (typeof recovery === 'number') {
@@ -814,6 +816,7 @@ async function processTerraData(supabase: any, payload: any) {
               });
               if (!recError) {
                 stats.insertedCounts.daily++;
+                metricsInserted++;
                 if (stats.sampleRecords.length < 3) {
                   stats.sampleRecords.push({ type: 'daily_recovery', date: dateStr, value: recovery });
                 }
@@ -824,46 +827,66 @@ async function processTerraData(supabase: any, payload: any) {
           }
 
           // Training Readiness (Garmin) / Body Battery
-          // Log available fields for debugging
           if (source === 'garmin') {
-            console.log('🔍 Garmin daily fields:', Object.keys(daily));
-            console.log('🔍 Checking Training Readiness/Body Battery:', {
-              training_readiness: daily.training_readiness,
-              readiness_score: daily.readiness_score,
-              training_readiness_score: daily.training_readiness_score,
-              body_battery: daily.body_battery,
-              body_battery_score: daily.body_battery?.score
-            });
-          }
-          
-          const trainingReadiness = 
-            daily.training_readiness ?? 
-            daily.readiness_score ?? 
-            daily.training_readiness_score ??
-            daily.body_battery?.score ??
-            daily.body_battery;
-            
-          if (typeof trainingReadiness === 'number') {
-            console.log(`✅ Found Training Readiness: ${trainingReadiness} for ${dateStr}`);
-            const { data: readinessMetricId } = await supabase.rpc('create_or_get_metric', {
-              p_user_id: userId,
-              p_metric_name: 'Training Readiness',
-              p_metric_category: 'recovery',
-              p_unit: '%',
-              p_source: source,
-            });
-            if (readinessMetricId) {
-              await supabase.from('metric_values').upsert({
-                user_id: userId,
-                metric_id: readinessMetricId,
-                value: trainingReadiness,
-                measurement_date: dateStr,
-                source_data: daily,
-                external_id: `terra_${provider}_readiness_${dateStr}`,
-              }, {
-                onConflict: 'user_id,metric_id,measurement_date,external_id',
+            const trainingReadiness = 
+              daily.training_readiness ?? 
+              daily.readiness_score ?? 
+              daily.training_readiness_score ??
+              daily.body_battery?.score ??
+              daily.body_battery;
+              
+            if (typeof trainingReadiness === 'number') {
+              console.log(`✅ Found Training Readiness: ${trainingReadiness} for ${dateStr}`);
+              const { data: readinessMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Training Readiness',
+                p_metric_category: 'recovery',
+                p_unit: '%',
+                p_source: source,
               });
-              stats.insertedCounts.daily++;
+              if (readinessMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: readinessMetricId,
+                  value: trainingReadiness,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_readiness_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                stats.insertedCounts.daily++;
+                metricsInserted++;
+              }
+            }
+          }
+
+          // Day Strain (Whoop) - ВАЖНО: используем "Day Strain", не "Workout Strain"
+          if (source === 'whoop') {
+            const dayStrain = daily.score?.strain ?? daily.strain ?? daily.day_strain;
+            if (typeof dayStrain === 'number') {
+              console.log(`✅ Found Day Strain: ${dayStrain} for ${dateStr}`);
+              const { data: strainMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Day Strain',
+                p_metric_category: 'workout',
+                p_unit: '',
+                p_source: source,
+              });
+              if (strainMetricId) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: strainMetricId,
+                  value: dayStrain,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_daystrain_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                stats.insertedCounts.daily++;
+                metricsInserted++;
+              }
             }
           }
 
@@ -888,6 +911,7 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              metricsInserted++;
             }
           }
 
@@ -912,30 +936,7 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
-            }
-          }
-
-          // Sleep Need Fulfillment
-          const sleepNeed = daily.sleep_need_fulfillment_percentage ?? daily.sleep?.need_fulfillment_percentage;
-          if (typeof sleepNeed === 'number') {
-            const { data: needMetricId } = await supabase.rpc('create_or_get_metric', {
-              p_user_id: userId,
-              p_metric_name: 'Sleep Need Fulfillment',
-              p_metric_category: 'sleep',
-              p_unit: '%',
-              p_source: source,
-            });
-            if (needMetricId) {
-              await supabase.from('metric_values').upsert({
-                user_id: userId,
-                metric_id: needMetricId,
-                value: sleepNeed,
-                measurement_date: dateStr,
-                source_data: daily,
-                external_id: `terra_${provider}_sleepneed_${dateStr}`,
-              }, {
-                onConflict: 'user_id,metric_id,measurement_date,external_id',
-              });
+              metricsInserted++;
             }
           }
 
@@ -960,101 +961,32 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              metricsInserted++;
             }
           }
 
-          // Ultrahuman Recovery Score (если есть)
-          if (source === 'ultrahuman') {
-            console.log('🔍 Ultrahuman daily fields:', Object.keys(daily));
-            console.log('🔍 Checking Ultrahuman Recovery:', {
-              recovery_score: daily.recovery_score,
-              movement_index: daily.movement_index,
-              ultrahuman_score: daily.ultrahuman_score,
-              readiness_score: daily.readiness_score
+          // Steps
+          const steps = daily.steps ?? daily.steps_data?.steps;
+          if (typeof steps === 'number') {
+            const { data: stepsMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Steps',
+              p_metric_category: 'activity',
+              p_unit: 'steps',
+              p_source: source,
             });
-            
-            const ultrahumanRecovery = 
-              daily.recovery_score ?? 
-              daily.ultrahuman_score ??
-              daily.readiness_score;
-              
-            if (typeof ultrahumanRecovery === 'number') {
-              console.log(`✅ Found Ultrahuman Recovery: ${ultrahumanRecovery} for ${dateStr}`);
-              const { data: uhRecMetricId } = await supabase.rpc('create_or_get_metric', {
-                p_user_id: userId,
-                p_metric_name: 'Ultrahuman Recovery',
-                p_metric_category: 'recovery',
-                p_unit: '%',
-                p_source: source,
+            if (stepsMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: stepsMetricId,
+                value: steps,
+                measurement_date: dateStr,
+                source_data: daily,
+                external_id: `terra_${provider}_steps_${dateStr}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
-              if (uhRecMetricId) {
-                await supabase.from('metric_values').upsert({
-                  user_id: userId,
-                  metric_id: uhRecMetricId,
-                  value: ultrahumanRecovery,
-                  measurement_date: dateStr,
-                  source_data: daily,
-                  external_id: `terra_${provider}_uh_recovery_${dateStr}`,
-                }, {
-                  onConflict: 'user_id,metric_id,measurement_date,external_id',
-                });
-                stats.insertedCounts.daily++;
-              }
-            }
-
-            // Movement Index (Ultrahuman Dynamic Recovery based on HRV)
-            const movementIndex = 
-              daily.movement_index ?? 
-              daily.recovery?.movement_index ??
-              daily.movement_score;
-              
-            if (typeof movementIndex === 'number') {
-              console.log(`✅ Found Ultrahuman Movement Index: ${movementIndex} for ${dateStr}`);
-              const { data: miMetricId } = await supabase.rpc('create_or_get_metric', {
-                p_user_id: userId,
-                p_metric_name: 'Movement Index',
-                p_metric_category: 'recovery',
-                p_unit: '%',
-                p_source: source,
-              });
-              if (miMetricId) {
-                await supabase.from('metric_values').upsert({
-                  user_id: userId,
-                  metric_id: miMetricId,
-                  value: movementIndex,
-                  measurement_date: dateStr,
-                  source_data: daily,
-                  external_id: `terra_${provider}_movement_index_${dateStr}`,
-                }, {
-                  onConflict: 'user_id,metric_id,measurement_date,external_id',
-                });
-                stats.insertedCounts.daily++;
-              }
-            }
-
-            // Body Battery (Garmin)
-            if (daily.body_battery !== undefined && daily.body_battery !== null) {
-              console.log(`✅ Found Garmin Body Battery: ${daily.body_battery} for ${dateStr}`);
-              const { data: bbMetricId } = await supabase.rpc('create_or_get_metric', {
-                p_user_id: userId,
-                p_metric_name: 'Body Battery',
-                p_metric_category: 'recovery',
-                p_unit: '%',
-                p_source: source,
-              });
-              if (bbMetricId) {
-                await supabase.from('metric_values').upsert({
-                  user_id: userId,
-                  metric_id: bbMetricId,
-                  value: daily.body_battery,
-                  measurement_date: dateStr,
-                  source_data: daily,
-                  external_id: `terra_${provider}_body_battery_${dateStr}`,
-                }, {
-                  onConflict: 'user_id,metric_id,measurement_date,external_id',
-                });
-                stats.insertedCounts.daily++;
-              }
+              metricsInserted++;
             }
           }
 
@@ -1079,6 +1011,7 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              metricsInserted++;
             }
           }
 
@@ -1103,8 +1036,11 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+              metricsInserted++;
             }
           }
+          
+          console.log(`✅ [${provider}] Daily metrics for ${dateStr}: ${metricsInserted} metrics saved`);
         } catch (e) {
           console.error('⚠️ Error processing daily item:', e);
         }

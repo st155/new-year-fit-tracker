@@ -305,14 +305,16 @@ export const fetchWidgetData = async (
     console.log('📊 Using unit:', unit);
 
     // ==================== ШАГ 2: Найти последние данные ====================
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    console.log('🔎 [STEP 2] Querying metric_values (last 7 days)...', { 
+    console.log('🔎 [STEP 2] Querying metric_values (last 7 days + tomorrow for timezone)...', { 
       from: sevenDaysAgoStr, 
-      to: todayStr,
+      to: tomorrowStr,
       todayStr 
     });
 
@@ -321,7 +323,7 @@ export const fetchWidgetData = async (
       .select('*')
       .eq('metric_id', primaryMetricId)
       .gte('measurement_date', sevenDaysAgoStr)
-      .lte('measurement_date', todayStr)
+      .lte('measurement_date', tomorrowStr)
       .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(100);

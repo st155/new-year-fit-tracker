@@ -129,15 +129,21 @@ export const METRIC_DISPLAY_CONFIG: Record<string, MetricGroupConfig> = {
 export const METRIC_ALIASES: Record<string, { unifiedName: string; source?: string }> = {
   'Resting HR': { unifiedName: 'Resting Heart Rate' },
   'Max HR': { unifiedName: 'Max Heart Rate' },
+  'Avg HR': { unifiedName: 'Average Heart Rate' },
   'Day Strain': { unifiedName: 'Day Strain', source: 'whoop' },
   'Daily Strain': { unifiedName: 'Day Strain', source: 'whoop' },
   'Strain': { unifiedName: 'Day Strain', source: 'whoop' },
+  'Workout Strain': { unifiedName: 'Day Strain' },
   'Recovery': { unifiedName: 'Recovery Score' },
   'Readiness': { unifiedName: 'Training Readiness', source: 'garmin' },
   'Body Battery': { unifiedName: 'Body Battery', source: 'garmin' },
   'Dynamic Recovery': { unifiedName: 'Recovery Score', source: 'ultrahuman' },
+  'Ultrahuman Recovery': { unifiedName: 'Recovery Score', source: 'ultrahuman' },
+  'Movement Index': { unifiedName: 'Recovery Score', source: 'ultrahuman' },
   'Workout Calories': { unifiedName: 'Active Calories' },
   'Workout Cals': { unifiedName: 'Active Calories' },
+  'Sleep HRV RMSSD': { unifiedName: 'HRV RMSSD' },
+  'Sleep Need Fulfillment': { unifiedName: 'Sleep Performance' },
 };
 
 // Получить конфигурацию для конкретной метрики и источника
