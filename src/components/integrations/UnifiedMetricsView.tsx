@@ -23,6 +23,8 @@ interface UnifiedMetric {
   activeSourceIndex: number;
 }
 
+const CACHE_VERSION = 'v2'; // Увеличиваем при изменении структуры данных
+
 export function UnifiedMetricsView() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -34,13 +36,13 @@ export function UnifiedMetricsView() {
   useEffect(() => {
     if (!user || !initialLoad) return;
 
-    const cacheKey = `unifiedMetricsCache:${user.id}`;
+    const cacheKey = `unifiedMetricsCache:${CACHE_VERSION}:${user.id}`;
     let hadCache = false;
     try {
       const raw = localStorage.getItem(cacheKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed?.data) {
+        if (parsed?.version === CACHE_VERSION && parsed?.data) {
           setMetrics(parsed.data);
           setInitialLoad(false);
           hadCache = true;
@@ -230,10 +232,10 @@ export function UnifiedMetricsView() {
 
       // Кэшируем для мгновенной последующей загрузки
       try {
-        const cacheKey = `unifiedMetricsCache:${user!.id}`;
+        const cacheKey = `unifiedMetricsCache:${CACHE_VERSION}:${user!.id}`;
         localStorage.setItem(
           cacheKey,
-          JSON.stringify({ ts: Date.now(), data: prioritizedMetrics })
+          JSON.stringify({ ts: Date.now(), version: CACHE_VERSION, data: prioritizedMetrics })
         );
       } catch (_e) {
         // ignore cache errors
