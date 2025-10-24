@@ -146,7 +146,7 @@ export function UnifiedMetricsView() {
         .from('metric_values')
         .select(baseSelect)
         .eq('user_id', user!.id)
-        .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
+        .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
         .eq('measurement_date', todayStr)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -157,7 +157,7 @@ export function UnifiedMetricsView() {
           .from('metric_values')
           .select(baseSelect)
           .eq('user_id', user!.id)
-          .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout'])
+          .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
           .gte('measurement_date', twoDaysAgoStr)
           .lte('measurement_date', todayStr)
           .order('measurement_date', { ascending: false })
