@@ -1040,6 +1040,45 @@ export type Database = {
         }
         Relationships: []
       }
+      data_freshness_tracking: {
+        Row: {
+          alert_sent: boolean | null
+          consecutive_missing_days: number | null
+          created_at: string | null
+          data_type: string
+          id: string
+          last_received_at: string
+          last_received_date: string
+          provider: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_sent?: boolean | null
+          consecutive_missing_days?: number | null
+          created_at?: string | null
+          data_type: string
+          id?: string
+          last_received_at: string
+          last_received_date: string
+          provider: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_sent?: boolean | null
+          consecutive_missing_days?: number | null
+          created_at?: string | null
+          data_type?: string
+          id?: string
+          last_received_at?: string
+          last_received_date?: string
+          provider?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
@@ -1078,6 +1117,59 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      failed_webhook_processing: {
+        Row: {
+          created_at: string | null
+          error_message: string
+          id: string
+          last_retry_at: string | null
+          next_retry_at: string | null
+          payload: Json
+          provider: string
+          retry_count: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          webhook_log_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message: string
+          id?: string
+          last_retry_at?: string | null
+          next_retry_at?: string | null
+          payload: Json
+          provider: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_log_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string
+          id?: string
+          last_retry_at?: string | null
+          next_retry_at?: string | null
+          payload?: Json
+          provider?: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_log_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "failed_webhook_processing_webhook_log_id_fkey"
+            columns: ["webhook_log_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fasting_windows: {
         Row: {
@@ -2020,6 +2112,57 @@ export type Database = {
         }
         Relationships: []
       }
+      terra_backfill_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          date_being_processed: string | null
+          end_date: string
+          error_message: string | null
+          id: string
+          processed_days: number | null
+          progress_percentage: number | null
+          provider: string
+          start_date: string
+          status: string | null
+          total_days: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          date_being_processed?: string | null
+          end_date: string
+          error_message?: string | null
+          id?: string
+          processed_days?: number | null
+          progress_percentage?: number | null
+          provider: string
+          start_date: string
+          status?: string | null
+          total_days?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          date_being_processed?: string | null
+          end_date?: string
+          error_message?: string | null
+          id?: string
+          processed_days?: number | null
+          progress_percentage?: number | null
+          provider?: string
+          start_date?: string
+          status?: string | null
+          total_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       terra_data_payloads: {
         Row: {
           created_at: string
@@ -2533,6 +2676,48 @@ export type Database = {
           user_id?: string | null
           webhook_type?: string
           whoop_user_id?: string | null
+        }
+        Relationships: []
+      }
+      webhook_retry_queue: {
+        Row: {
+          created_at: string | null
+          data_type: string
+          error_message: string | null
+          id: string
+          last_retry_at: string | null
+          missing_date: string
+          provider: string
+          retry_count: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_type: string
+          error_message?: string | null
+          id?: string
+          last_retry_at?: string | null
+          missing_date: string
+          provider: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_type?: string
+          error_message?: string | null
+          id?: string
+          last_retry_at?: string | null
+          missing_date?: string
+          provider?: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
