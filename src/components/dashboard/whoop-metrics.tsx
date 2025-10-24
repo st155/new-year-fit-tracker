@@ -87,12 +87,12 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       
       console.log('WhoopMetrics: Fetching data for date:', dateStr, 'user:', user.id);
       
-      // Получаем metric_id для whoop метрик
+      // Получаем metric_id для whoop метрик (Terra использует uppercase)
       const { data: whoopMetrics } = await supabase
         .from('user_metrics')
         .select('id')
         .eq('user_id', user.id)
-        .eq('source', 'whoop');
+        .eq('source', 'WHOOP');
 
       const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
       
@@ -159,12 +159,12 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
 
       if (!hasTodayRecovery && !syncAttempted) {
         try {
-          await supabase.functions.invoke('whoop-integration', { body: { action: 'sync' } });
+          await supabase.functions.invoke('terra-integration', { body: { action: 'sync-data' } });
           setSyncAttempted(true);
           // Дадим API немного времени и перечитаем
           setTimeout(() => fetchWhoopMetrics(), 1500);
         } catch (e) {
-          console.warn('Whoop sync failed or not available yet:', e);
+          console.warn('Terra Whoop sync failed or not available yet:', e);
         }
       }
 
@@ -199,12 +199,12 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           startDate = subDays(endDate, 7);
       }
 
-      // Получаем metric_id для whoop метрик
+      // Получаем metric_id для whoop метрик (Terra использует uppercase)
       const { data: whoopMetrics } = await supabase
         .from('user_metrics')
         .select('id')
         .eq('user_id', user.id)
-        .eq('source', 'whoop');
+        .eq('source', 'WHOOP');
 
       const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
       

@@ -25,18 +25,19 @@ const Index = () => {
     const checkTokensAndClearCache = async () => {
       if (!user) return;
       
-      console.log('🔍 [Index] Checking Whoop connection and cache freshness');
+      console.log('🔍 [Index] Checking Terra Whoop connection and cache freshness');
       
-      // Check if user has active Whoop token
-      const { data: whoopToken } = await supabase
-        .from('whoop_tokens')
+      // Check if user has active Terra token for Whoop
+      const { data: terraToken } = await supabase
+        .from('terra_tokens')
         .select('is_active')
         .eq('user_id', user.id)
+        .eq('provider', 'WHOOP')
         .eq('is_active', true)
         .maybeSingle();
       
-      if (!whoopToken) {
-        console.log('⚠️ [Index] No active Whoop token - clearing Whoop caches');
+      if (!terraToken) {
+        console.log('⚠️ [Index] No active Terra Whoop token - clearing Whoop caches');
         // Clear all Whoop-related caches
         ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
           localStorage.removeItem(key);

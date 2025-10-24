@@ -103,7 +103,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     trend?: number;
   } | null>(null);
 
-  // Check if user has active Whoop token (for Whoop widgets only)
+  // Check if user has active Terra token for Whoop (for Whoop widgets only)
   useEffect(() => {
     if (!user || source.toLowerCase() !== 'whoop') {
       setHasActiveToken(true); // Not a Whoop widget, no check needed
@@ -112,16 +112,17 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     
     const checkToken = async () => {
       const { data: token } = await supabase
-        .from('whoop_tokens')
+        .from('terra_tokens')
         .select('is_active')
         .eq('user_id', user.id)
+        .eq('provider', 'WHOOP')
         .eq('is_active', true)
         .maybeSingle();
       
       setHasActiveToken(!!token);
       
       if (!token && data) {
-        console.log('⚠️ [WidgetCard] Showing cached Whoop data without active token');
+        console.log('⚠️ [WidgetCard] Showing cached Whoop data without active Terra token');
       }
     };
     
@@ -159,18 +160,6 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     };
   }, [user?.id, metricName, source]);
 
-  // Слушаем событие обновления Whoop данных
-  useEffect(() => {
-    const handleWhoopUpdate = () => {
-      console.log(`🔄 [WidgetCard] Whoop data updated event, reloading ${metricName}/${source}`);
-      loadData();
-    };
-
-    window.addEventListener('whoop-data-updated', handleWhoopUpdate);
-    return () => {
-      window.removeEventListener('whoop-data-updated', handleWhoopUpdate);
-    };
-  }, [metricName, source]);
 
   // Слушаем глобальное событие принудительного обновления всех виджетов
   useEffect(() => {
@@ -211,8 +200,8 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
       localStorage.removeItem(`widget_${metricName}_${source}_${user.id}`);
       localStorage.removeItem(`latest_metrics_${user.id}`);
       
-      const { error } = await supabase.functions.invoke('whoop-integration', {
-        body: { action: 'sync', user_id: user.id }
+      const { error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'sync-data' }
       });
       
       if (error) throw error;
