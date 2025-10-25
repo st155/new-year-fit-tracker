@@ -1,124 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetricsView } from "@/contexts/MetricsViewContext";
 import { useLatestMetrics, useDeviceMetrics } from "@/hooks/metrics";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useMetricMapping } from "@/hooks/metrics/useMetricMapping";
 import { MetricsGridSkeleton } from "@/components/ui/dashboard-skeleton";
-import { cn } from "@/lib/utils";
+import { MetricCard } from "@/components/metrics";
+import { createMetricConfig, MetricKey } from "@/lib/metric-config";
 
-interface MetricConfig {
-  key: string;
-  title: string;
-  unit: string;
-  color: "body-fat" | "weight" | "vo2max" | "row" | "recovery" | "steps";
-  description: string;
-  category: string;
-}
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  unit?: string;
-  change?: string;
-  subtitle?: string;
-  color: "body-fat" | "weight" | "vo2max" | "row" | "recovery" | "steps";
-  source?: string;
-  sources?: string[];
-  onSourceChange?: (source: string) => void;
-}
-
-function MetricCard({ title, value, unit, change, subtitle, color, source, sources, onSourceChange, onClick }: MetricCardProps & { onClick?: () => void }) {
-  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
-  
-  const cssVarMap: Record<MetricCardProps['color'], string> = {
-    'body-fat': '--metric-body-fat',
-    'weight': '--metric-weight',
-    'vo2max': '--metric-vo2max',
-    'row': '--metric-row',
-    'recovery': '--success',
-    'steps': '--metric-steps',
-  };
-
-  const varName = cssVarMap[color];
-  const wrapperStyle = {
-    background: `linear-gradient(135deg, hsl(var(${varName}) / 0.5), hsl(var(${varName}) / 0.15) 35%, transparent)`,
-    boxShadow: `0 0 24px hsl(var(${varName}) / 0.35)`,
-  };
-
-  const handleSourceClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (sources && sources.length > 1 && onSourceChange) {
-      const nextIndex = (currentSourceIndex + 1) % sources.length;
-      setCurrentSourceIndex(nextIndex);
-      onSourceChange(sources[nextIndex]);
-    }
-  };
-
-  const displaySource = sources && sources.length > 0 ? sources[currentSourceIndex] : source;
-  const hasMultipleSources = sources && sources.length > 1;
-
-  return (
-    <div
-      className={cn(
-        'relative rounded-xl p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer'
-      )}
-      style={wrapperStyle}
-      onClick={onClick}
-    >
-      <Card className="relative overflow-hidden bg-card rounded-[0.9rem] border-0 h-full">
-        <CardContent className="p-4 relative z-10">
-          <div className="text-sm font-medium text-muted-foreground mb-2">
-            {title}
-          </div>
-          <div className="flex items-baseline gap-1 mb-2">
-            <span className="text-2xl font-bold text-foreground">
-              {value}
-            </span>
-            {unit && (
-              <span className="text-sm text-muted-foreground">
-                {unit}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {displaySource && (
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "text-xs capitalize cursor-pointer hover:bg-accent transition-colors",
-                    hasMultipleSources && "animate-pulse"
-                  )}
-                  onClick={handleSourceClick}
-                >
-                  {displaySource}
-                  {hasMultipleSources && ` (${currentSourceIndex + 1}/${sources.length})`}
-                </Badge>
-              )}
-              {subtitle && !displaySource && (
-                <span className="text-xs text-muted-foreground">
-                  {subtitle}
-                </span>
-              )}
-            </div>
-            {change && (
-              <Badge
-                variant={change.startsWith('-') ? 'destructive' : 'default'}
-                className="text-xs"
-              >
-                {change}
-              </Badge>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+// MetricCard is now imported from @/components/metrics
 
 export function MetricsGrid() {
   const navigate = useNavigate();
@@ -132,41 +23,14 @@ export function MetricsGrid() {
   // Device-specific metrics
   const { metrics: deviceMetrics, loading: deviceLoading } = useDeviceMetrics(user?.id, deviceFilter);
   
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "max_hr"]);
-  const [metrics, setMetrics] = useState<Record<string, any>>({
-    body_fat: { value: "—", change: null, source: null, sources: [] },
-    weight: { value: "—", change: null, source: null, sources: [] },
-    vo2max: { value: "—", records: 0, source: null, sources: [] },
-    row_2km: { value: "—", change: null, attempts: 0, source: null, sources: [] },
-    recovery: { value: "—", change: null, source: null, sources: [] },
-    steps: { value: "—", change: null, source: null, sources: [] },
-    max_hr: { value: "—", change: null, source: null, sources: [] },
-    day_strain: { value: "—", change: null, source: null, sources: [] }
-  });
+  // Metric configuration
+  const metricConfig = createMetricConfig(t);
+  
+  // Map metrics using centralized hook
+  const mappedMetrics = useMetricMapping(unifiedMetrics, deviceMetrics, viewMode, deviceFilter);
+  
+  const [selectedMetrics, setSelectedMetrics] = useState<MetricKey[]>(["body_fat", "weight", "recovery", "max_hr"]);
   const [loading, setLoading] = useState(true);
-  const [syncAttempted, setSyncAttempted] = useState(false);
-
-  const metricConfig: Record<string, MetricConfig> = {
-    body_fat: { key: "body_fat", title: t('metrics.bodyFat'), unit: t('metrics.units.percent'), color: "body-fat", description: "Body fat percentage", category: "body" },
-    weight: { key: "weight", title: t('metrics.weight'), unit: t('metrics.units.kg'), color: "weight", description: "Weight measurements", category: "body" },
-    vo2max: { key: "vo2max", title: t('metrics.vo2max'), unit: "ML/KG/MIN", color: "vo2max", description: "Cardiovascular fitness", category: "performance" },
-    row_2km: { key: "row_2km", title: "2KM ROW", unit: "MIN", color: "row", description: "Rowing performance", category: "performance" },
-    recovery: { key: "recovery", title: t('metrics.recovery'), unit: t('metrics.units.percent'), color: "recovery", description: "Daily recovery", category: "health" },
-    steps: { key: "steps", title: t('metrics.steps'), unit: t('metrics.units.steps'), color: "steps", description: "Step count", category: "health" },
-    max_hr: { key: "max_hr", title: "Max HR", unit: "BPM", color: "recovery", description: "Maximum heart rate", category: "health" },
-    day_strain: { key: "day_strain", title: "Day Strain", unit: "STRAIN", color: "vo2max", description: "Daily strain", category: "health" }
-  };
-
-  // Маппинг unified метрик к нашим ключам
-  const unifiedToLocalMapping: Record<string, string> = {
-    'Recovery Score': 'recovery',
-    'Weight': 'weight',
-    'Body Fat Percentage': 'body_fat',
-    'VO2Max': 'vo2max',
-    'Steps': 'steps',
-    'Max Heart Rate': 'max_hr',
-    'Day Strain': 'day_strain',
-  };
 
   useEffect(() => {
     if (!user) return;
@@ -184,168 +48,32 @@ export function MetricsGrid() {
     }
   }, [user]);
 
-  // Обновляем метрики в зависимости от режима просмотра
+  // Update loading state
   useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    if (viewMode === 'unified') {
-      // Unified mode - используем агрегированные данные
-      if (!unifiedLoading && Object.keys(unifiedMetrics).length > 0) {
-        const newMetrics: Record<string, any> = { ...metrics };
-
-        Object.entries(unifiedMetrics).forEach(([unifiedName, data]: any) => {
-          const localKey = unifiedToLocalMapping[unifiedName];
-          if (localKey && data) {
-            const rawValue = (data.aggregated_value ?? data.value);
-            
-            // Для Day Strain: если 0 - показываем "Нет данных"
-            let displayValue = '—';
-            if (rawValue != null && rawValue !== 0) {
-              displayValue = localKey === 'steps' 
-                ? Math.round(Number(rawValue)).toString() 
-                : Number(rawValue).toFixed(1);
-            } else if (localKey === 'recovery' && rawValue === 0) {
-              // Для Recovery Score: 0 тоже валидное значение
-              displayValue = '0.0';
-            }
-
-            const srcs = data.sources || (data.source ? [data.source] : []);
-            const measurementDate = data.measurement_date;
-
-            newMetrics[localKey] = {
-              value: displayValue,
-              source: srcs[0] || 'unified',
-              sources: srcs,
-              source_count: data.source_count || (srcs.length || 0),
-              source_values: data.source_values || {},
-              change: null,
-              date: measurementDate,
-            };
-          }
-        });
-
-        setMetrics(newMetrics);
-        setLoading(false);
-      } else if (!unifiedLoading) {
-        setLoading(false);
-      }
-    } else if (viewMode === 'by_device' && deviceFilter !== 'all') {
-      // Device mode - используем данные конкретного девайса
-      if (!deviceLoading) {
-        // Подготовим пустые значения
-        const newMetrics: Record<string, any> = {
-          body_fat: { value: '—', change: null, source: null, sources: [] },
-          weight: { value: '—', change: null, source: null, sources: [] },
-          vo2max: { value: '—', records: 0, source: null, sources: [] },
-          row_2km: { value: '—', change: null, attempts: 0, source: null, sources: [] },
-          recovery: { value: '—', change: null, source: null, sources: [] },
-          steps: { value: '—', change: null, source: null, sources: [] },
-          max_hr: { value: '—', change: null, source: null, sources: [] },
-          day_strain: { value: '—', change: null, source: null, sources: [] }
-        };
-
-        if (Object.keys(deviceMetrics).length > 0) {
-          // Приоритеты по названиям метрик для каждой карточки
-          const pickMetric = (names: string[]): any | null => {
-            // Найдём первую из указанных метрик; значения deviceMetrics уже самые свежие по имени
-            for (const n of names) {
-              const found = Object.entries(deviceMetrics).find(([metricName]) => metricName === n);
-              if (found) return found[1];
-            }
-            return null;
-          };
-
-          // Recovery: приоритетно Recovery Score -> Sleep Performance -> Sleep Efficiency
-          const recoveryMetric = pickMetric(['Recovery Score', 'Sleep Performance', 'Sleep Efficiency']);
-          if (recoveryMetric && typeof recoveryMetric.value === 'number') {
-            newMetrics.recovery = {
-              value: Math.round(recoveryMetric.value).toString(),
-              source: deviceFilter,
-              sources: [deviceFilter],
-              change: null,
-            };
-          }
-
-          // Weight: Weight | Body Mass
-          const weightMetric = pickMetric(['Weight', 'Body Mass', 'Body Weight', 'Weight (kg)', 'HKQuantityTypeIdentifierBodyMass']);
-          if (weightMetric && typeof weightMetric.value === 'number') {
-            newMetrics.weight = {
-              value: Number(weightMetric.value).toFixed(1),
-              source: deviceFilter,
-              sources: [deviceFilter],
-              change: null,
-            };
-          }
-
-          // Body Fat: Body Fat Percentage | Body Fat % | Fat Mass
-          const bodyFatMetric = pickMetric(['Body Fat Percentage', 'Body Fat %', 'Fat Mass', 'HKQuantityTypeIdentifierBodyFatPercentage']);
-          if (bodyFatMetric && typeof bodyFatMetric.value === 'number') {
-            newMetrics.body_fat = {
-              value: Number(bodyFatMetric.value).toFixed(1),
-              source: deviceFilter,
-              sources: [deviceFilter],
-              change: null,
-            };
-          }
-
-          // VO2Max
-          const vo2Metric = pickMetric(['VO2Max', 'VO2 Max']);
-          if (vo2Metric && typeof vo2Metric.value === 'number') {
-            newMetrics.vo2max = {
-              value: Number(vo2Metric.value).toFixed(1),
-              source: deviceFilter,
-              sources: [deviceFilter],
-              records: 0,
-            };
-          }
-
-          // Steps
-          const stepsMetric = pickMetric(['Steps', 'Step Count', 'HKQuantityTypeIdentifierStepCount']);
-          if (stepsMetric && typeof stepsMetric.value === 'number') {
-            newMetrics.steps = {
-              value: Math.round(stepsMetric.value).toLocaleString(),
-              source: deviceFilter,
-              sources: [deviceFilter],
-              change: null,
-            };
-          }
-        }
-
-        setMetrics(newMetrics);
-        setLoading(false);
-      }
+    if (unifiedLoading || deviceLoading) {
+      setLoading(true);
+    } else {
+      setLoading(false);
     }
-  }, [user, viewMode, deviceFilter, unifiedMetrics, deviceMetrics, unifiedLoading, deviceLoading]);
+  }, [user, unifiedLoading, deviceLoading]);
 
-  const handleMetricsChange = (newMetrics: string[]) => {
-    setSelectedMetrics(newMetrics);
-  };
-
-  if (loading || unifiedLoading || deviceLoading) {
+  if (loading) {
     return <MetricsGridSkeleton />;
   }
 
   return (
     <div className="relative">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
-        {selectedMetrics.map((metricKey, index) => {
+        {selectedMetrics.map((metricKey) => {
           const config = metricConfig[metricKey];
-          const data = metrics[metricKey];
+          const data = mappedMetrics[metricKey];
           
           if (!config || !data) return null;
-          
-          // Маппинг метрик на роуты
-          const routeMap: Record<string, string> = {
-            'body_fat': 'body_fat',
-            'weight': 'weight',
-            'vo2max': 'vo2max',
-            'row_2km': 'row_2km',
-            'recovery': 'recovery',
-            'steps': 'steps'
-          };
           
           return (
             <MetricCard
@@ -357,7 +85,7 @@ export function MetricsGrid() {
               source={data.source}
               sources={data.sources}
               color={config.color}
-              onClick={() => navigate(`/metric/${routeMap[metricKey] || metricKey}`)}
+              onClick={() => config.route && navigate(`/metric/${config.route}`)}
               onSourceChange={(newSource) => {
                 console.log(`Switched ${metricKey} to source: ${newSource}`);
               }}
