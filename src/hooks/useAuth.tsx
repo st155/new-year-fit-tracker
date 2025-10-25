@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { useQuery } from '@tanstack/react-query';
 
 interface AuthContextType {
   user: User | null;
@@ -231,10 +232,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * PRIMITIVE: Authentication hook with role helpers
+ * 
+ * Replaces: useUserRole (merged into this hook)
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context;
+  
+  // Get user role from profiles table
+  const { data: profile } = useQuery({
+    queryKey: ['profile', context.user?.id],
+    queryFn: async () => {
+      if (!context.user?.id) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', context.user.id)
+        .single();
+      
+      return data;
+    },
+    enabled: !!context.user?.id,
+    staleTime: 10 * 60 * 1000,
+  });
+  
+  const role = profile?.role ?? 'client';
+  
+  return {
+    ...context,
+    
+    // Role helpers
+    role,
+    isTrainer: role === 'trainer',
+    isAdmin: role === 'admin',
+    isClient: role === 'client' || !role,
+  };
 };
