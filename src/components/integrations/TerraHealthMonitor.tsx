@@ -84,10 +84,24 @@ export function TerraHealthMonitor() {
   useEffect(() => {
     checkConnectionHealth();
 
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(checkConnectionHealth, 30000);
+    // Realtime subscription for token changes only
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('terra-tokens-health')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'terra_tokens',
+        filter: `user_id=eq.${user.id}`
+      }, () => {
+        checkConnectionHealth();
+      })
+      .subscribe();
 
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const getStatusIcon = (status: string) => {

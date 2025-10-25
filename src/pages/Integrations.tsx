@@ -1,14 +1,22 @@
+import { useState, useCallback } from 'react';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
 import { UnifiedMetricsView } from '@/components/integrations/UnifiedMetricsView';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { SystemHealthIndicator } from '@/components/integrations/SystemHealthIndicator';
+import { AutoRefreshToggle } from '@/components/integrations/AutoRefreshToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export default function IntegrationsPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">
       <div className="flex items-start justify-between">
@@ -18,7 +26,10 @@ export default function IntegrationsPage() {
             Подключите ваши фитнес-устройства и приложения для автоматической синхронизации данных
           </p>
         </div>
-        <SystemHealthIndicator />
+        <div className="flex items-center gap-4">
+          <AutoRefreshToggle onRefresh={handleRefresh} />
+          <SystemHealthIndicator />
+        </div>
       </div>
 
       <Tabs defaultValue="connections" className="w-full">
@@ -30,19 +41,19 @@ export default function IntegrationsPage() {
         </TabsList>
         
         <TabsContent value="unified" className="mt-6">
-          <UnifiedMetricsView />
+          <UnifiedMetricsView key={`unified-${refreshKey}`} />
         </TabsContent>
         
         <TabsContent value="connections" className="mt-6 space-y-6">
-          <TerraIntegration />
+          <TerraIntegration key={`connections-${refreshKey}`} />
         </TabsContent>
         
         <TabsContent value="health" className="mt-6">
-          <TerraHealthMonitor />
+          <TerraHealthMonitor key={`health-${refreshKey}`} />
         </TabsContent>
         
         <TabsContent value="data" className="mt-6">
-          <IntegrationsDataDisplay />
+          <IntegrationsDataDisplay key={`data-${refreshKey}`} />
         </TabsContent>
       </Tabs>
     </div>

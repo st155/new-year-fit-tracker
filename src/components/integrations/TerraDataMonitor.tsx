@@ -56,8 +56,24 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000); // Refresh every 10 seconds
-    return () => clearInterval(interval);
+
+    // Realtime subscription only for backfill job progress
+    const channel = supabase
+      .channel(`backfill-progress-${provider}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'terra_backfill_jobs',
+        filter: `provider=eq.${provider}`
+      }, (payload) => {
+        // Update only backfill job state without full reload
+        setBackfillJob(payload.new);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [provider]);
 
   const startBackfill = async (daysAgo: number) => {

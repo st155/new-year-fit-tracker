@@ -40,15 +40,24 @@ export function IntegrationsDataDisplay() {
     }
   }, [user]);
 
-  // Реал-тайм обновление при появлении новых метрик/синхронизации
+  // Realtime updates only for token changes (connection/disconnection)
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel('integrations-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'metric_values', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'terra_tokens', filter: `user_id=eq.${user.id}` }, () => fetchIntegrationsData())
+      .channel('integrations-tokens-only')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'terra_tokens', 
+        filter: `user_id=eq.${user.id}` 
+      }, () => {
+        // Only reload when tokens change (rare event)
+        fetchIntegrationsData();
+      })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      supabase.removeChannel(channel); 
+    };
   }, [user]);
 
   const fetchIntegrationsData = async () => {
