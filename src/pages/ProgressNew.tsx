@@ -12,6 +12,8 @@ import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
+import { useMemo } from 'react';
 
 export default function ProgressNew() {
   const { user } = useAuth();
@@ -106,11 +108,12 @@ export default function ProgressNew() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {widgets.map((widget) => (
-              <WidgetCard
-                key={widget.id}
-                metricName={widget.metric_name}
-                source={widget.source}
-              />
+              <WidgetErrorBoundary key={widget.id} widgetName={widget.metric_name}>
+                <WidgetCard
+                  metricName={widget.metric_name}
+                  source={widget.source}
+                />
+              </WidgetErrorBoundary>
             ))}
           </div>
         )}

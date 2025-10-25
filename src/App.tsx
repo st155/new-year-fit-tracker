@@ -13,6 +13,8 @@ import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher, getPrefetcher } from "@/lib/prefetch-strategy";
+import { initWebVitals } from "@/lib/web-vitals";
+import { logger } from "@/lib/logger";
 
 import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
@@ -71,20 +73,21 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const { user } = useAuth();
 
-  // Initialize invalidation and prefetch strategies
+  // Initialize invalidation, prefetch strategies, and web vitals
   useEffect(() => {
     initInvalidator(queryClient);
     initPrefetcher(queryClient);
-    console.log('[App] Query strategies initialized');
+    initWebVitals();
+    logger.info('[App] Query strategies and web vitals initialized');
   }, []);
 
   // Prefetch critical data after login
   useEffect(() => {
     if (user) {
-      console.log('[App] User logged in, prefetching critical data');
+      logger.debug('[App] User logged in, prefetching critical data');
       const prefetcher = getPrefetcher();
       prefetcher.prefetchAfterLogin(user.id).catch(error => {
-        console.warn('[App] Prefetch after login failed:', error);
+        logger.warn('[App] Prefetch after login failed:', error);
       });
     }
   }, [user]);
@@ -255,7 +258,7 @@ const App = () => {
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {
-        console.error('💥 [App] Global error:', error.message, errorInfo.componentStack);
+        logger.error('[App] Global error', error, { componentStack: errorInfo.componentStack });
       }}
     >
       <QueryClientProvider client={queryClient}>

@@ -49,6 +49,7 @@ export function useAggregatedBodyMetrics(userId?: string): AggregatedBodyMetrics
   const withingsMetrics = useBodyMetricsFromWithings(userId);
   const manualMetrics = useBodyMetricsFromManual(userId);
 
+  // Memoize expensive computation
   return useMemo(() => {
     const metrics: AggregatedBodyMetrics = {};
 
@@ -83,7 +84,7 @@ export function useAggregatedBodyMetrics(userId?: string): AggregatedBodyMetrics
       metrics.muscleMass = manualMetrics.muscleMass;
     }
 
-    // InBody-only metrics
+    // InBody-only metrics (memoized separately for performance)
     if (inbodyMetrics?.bmr) metrics.bmr = inbodyMetrics.bmr;
     if (inbodyMetrics?.visceralFat) metrics.visceralFat = inbodyMetrics.visceralFat;
     if (inbodyMetrics?.bodyWater) metrics.bodyWater = inbodyMetrics.bodyWater;
