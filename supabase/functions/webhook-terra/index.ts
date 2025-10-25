@@ -1057,15 +1057,24 @@ async function processTerraData(supabase: any, payload: any) {
     }
     
     if (payload.type === 'daily') {
-      console.log('📊 Processing daily data');
+      console.log('📊 Processing daily data', {
+        provider,
+        dataLength: data.length,
+        firstItemKeys: data[0] ? Object.keys(data[0]) : [],
+        firstItemScores: data[0]?.scores,
+        firstItemStrainData: data[0]?.strain_data,
+        firstItemHeartRateData: data[0]?.heart_rate_data?.summary,
+        firstItemMetadata: data[0]?.metadata
+      });
+      
       for (const daily of data) {
         try {
           const dateStr = (daily.metadata?.start_time || daily.metadata?.end_time || daily.day_start || daily.start_time || daily.timestamp || daily.date || new Date().toISOString()).split('T')[0];
           const source = provider.toLowerCase();
           const externalIdBase = `terra_${provider}_daily_${dateStr}`;
 
-          // Recovery Score (%)
-          const recovery = daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
+          // Recovery Score (%) - включая Whoop формат (scores.recovery)
+          const recovery = daily.scores?.recovery ?? daily.recovery_score ?? daily.recovery?.score ?? daily.recovery_score_percentage ?? daily.recovery_percentage;
           if (typeof recovery === 'number') {
             const { data: recMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
@@ -1112,7 +1121,8 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
-          const sleepPerformance = daily.sleep_performance_percentage ?? daily.sleep?.performance_percentage;
+          // Sleep Performance (%) - включая Whoop формат (scores.sleep)
+          const sleepPerformance = daily.scores?.sleep ?? daily.sleep_performance_percentage ?? daily.sleep?.performance_percentage;
           if (typeof sleepPerformance === 'number') {
             const { data: perfMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
@@ -1282,6 +1292,31 @@ async function processTerraData(supabase: any, payload: any) {
               }, {
                 onConflict: 'user_id,metric_id,measurement_date,external_id',
               });
+            }
+          }
+          
+          // Day Strain - Whoop формат (strain_data.strain_level)
+          const dayStrain = daily.strain_data?.strain_level;
+          if (typeof dayStrain === 'number') {
+            const { data: strainMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Day Strain',
+              p_metric_category: 'activity',
+              p_unit: '',
+              p_source: source,
+            });
+            if (strainMetricId) {
+              await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: strainMetricId,
+                value: dayStrain,
+                measurement_date: dateStr,
+                external_id: `${externalIdBase}_strain`,
+                source_data: daily,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+              console.log(`✅ Saved Day Strain: ${dayStrain} for ${dateStr}`);
             }
           }
           
