@@ -33,13 +33,7 @@ verify_jwt = true
 [functions.send-trainer-broadcast]
 verify_jwt = true
 
-[functions.scheduled-sync]
-verify_jwt = false
-
 [functions.terra-integration]
-verify_jwt = false
-
-[functions.webhook]
 verify_jwt = false
 
 [functions.webhook-terra]

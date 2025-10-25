@@ -121,9 +121,9 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       setUploadStatus('processing');
 
       // Отправляем файл на обработку в Edge Function
-      console.log('Calling process-apple-health function...');
+      console.log('Calling apple-health-import function...');
       
-      const { data: processData, error: processError } = await supabase.functions.invoke('process-apple-health', {
+      const { data: processData, error: processError } = await supabase.functions.invoke('apple-health-import', {
         body: {
           userId: user?.id,
           filePath: uploadData.path

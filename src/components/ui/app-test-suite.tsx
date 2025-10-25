@@ -380,7 +380,7 @@ export function AppTestSuite() {
 
   const testAppleHealthFunction = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('process-apple-health', {
+      const { data, error } = await supabase.functions.invoke('apple-health-import', {
         body: {
           userId: user?.id,
           filePath: 'test/path'

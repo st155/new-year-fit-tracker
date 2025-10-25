@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
-import { IntegrationsCard } from "@/components/dashboard/integrations-card";
 import { DateNavigator } from "@/components/dashboard/DateNavigator";
 import { Button } from "@/components/ui/button";
 
@@ -1041,11 +1040,6 @@ export default function FitnessData() {
             <div className="text-white/70 text-xs">{card.subtitle}</div>
           </div>
         ))}
-      </div>
-
-      {/* Integrations Status - moved to bottom */}
-      <div className="mt-6">
-        <IntegrationsCard />
       </div>
     </div>
   );

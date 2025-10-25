@@ -4,7 +4,6 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useWidgets } from '@/hooks/useWidgets';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
-import { IntegrationsCard } from '@/components/dashboard/integrations-card';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -162,11 +161,6 @@ const Index = () => {
 
         {/* Habits Section */}
         <HabitsSection />
-
-        {/* Integrations Section */}
-        <div className="mt-8">
-          <IntegrationsCard />
-        </div>
 
         {/* Leaderboard Section */}
         <div className="mt-8">
