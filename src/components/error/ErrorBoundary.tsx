@@ -41,8 +41,27 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Log to console
-    console.error('Error Boundary caught an error:', error, errorInfo);
+    // Enhanced logging
+    console.error('💥 [ErrorBoundary] Caught error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    });
+
+    // Log to external service if available
+    if (typeof window !== 'undefined' && (window as any).ErrorLogger) {
+      try {
+        (window as any).ErrorLogger.logUIError(error, { 
+          componentStack: errorInfo.componentStack 
+        });
+      } catch (logError) {
+        console.error('Failed to log to ErrorLogger:', logError);
+      }
+    }
   }
 
   componentDidUpdate(prevProps: Props) {

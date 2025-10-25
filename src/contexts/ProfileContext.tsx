@@ -20,37 +20,78 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
+  console.log('🔧 [ProfileProvider] Initializing');
+  
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const fetchProfile = async () => {
+    console.log('👤 [ProfileProvider] Fetching profile', { 
+      userId: user?.id,
+      timestamp: new Date().toISOString() 
+    });
+
     if (!user) {
+      console.log('⚠️ [ProfileProvider] No user, skipping profile fetch');
       setProfile(null);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
+
+      const fetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
+      const { data, error: dbError } = await Promise.race([
+        fetchPromise,
+        timeoutPromise
+      ]) as any;
+
+      if (dbError) {
+        console.error('❌ [ProfileProvider] Database error:', dbError);
+        throw dbError;
+      }
+
+      console.log('✅ [ProfileProvider] Profile fetched successfully', { 
+        username: data?.username,
+        trainerRole: data?.trainer_role 
+      });
+      
       setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+      setError(null);
+    } catch (err) {
+      const error = err as Error;
+      console.error('💥 [ProfileProvider] Error fetching profile:', {
+        message: error.message,
+        stack: error.stack,
+        userId: user.id
+      });
+      
       setProfile(null);
+      setError(error);
     } finally {
       setLoading(false);
+      console.log('🏁 [ProfileProvider] Fetch completed');
     }
   };
 
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
+  if (error && !profile) {
+    console.warn('⚠️ [ProfileProvider] Rendering with error state, providing fallback');
+  }
 
   return (
     <ProfileContext.Provider value={{ profile, loading, refetch: fetchProfile }}>
@@ -61,8 +102,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 export function useProfile() {
   const context = useContext(ProfileContext);
+  
   if (context === undefined) {
-    throw new Error('useProfile must be used within a ProfileProvider');
+    console.error('💥 [useProfile] Called outside ProfileProvider! Returning fallback');
+    
+    // Return fallback instead of throwing
+    return {
+      profile: null,
+      loading: false,
+      refetch: async () => {
+        console.warn('⚠️ [useProfile] Fallback refetch called - ProfileProvider not available');
+      }
+    };
   }
+  
   return context;
 }

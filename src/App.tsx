@@ -59,7 +59,11 @@ const queryClient = new QueryClient({
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
-  console.log('🚀 [App] AppContent initialized, QueryClient available');
+  console.log('🚀 [App] AppContent initialized', {
+    timestamp: new Date().toISOString(),
+    url: window.location.href,
+    queryClientReady: true
+  });
   
   // Автоматическая очистка кешей раз в сутки - теперь вызывается ПОСЛЕ QueryClientProvider
   useAutoCacheClear();
@@ -226,13 +230,19 @@ const AppContent = () => {
 
 // Main application component with authentication and routing
 const App = () => {
+  console.log('🎯 [App] Main App component initializing', {
+    timestamp: new Date().toISOString(),
+    environment: import.meta.env.MODE
+  });
+  
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {
         console.error('💥 [App] Global error caught:', {
           error: error.message,
           stack: error.stack,
-          componentStack: errorInfo.componentStack
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString()
         });
       }}
     >

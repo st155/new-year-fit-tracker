@@ -9,6 +9,8 @@ interface ModernAppLayoutProps {
 }
 
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
+  console.log('🏗️ [ModernAppLayout] Rendering layout');
+  
   return (
     <ProfileProvider>
       <MetricsViewProvider>

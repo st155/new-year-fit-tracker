@@ -25,13 +25,23 @@ export const useUserRole = () => {
       try {
         const startTime = performance.now();
 
+        // Timeout for all queries
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Role check timeout')), 8000)
+        );
+
         // Check user_roles table
         const rolesStart = performance.now();
-        const { data: roles, error: rolesError } = await supabase
+        const rolesPromise = supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .in('role', ['trainer', 'admin']);
+
+        const { data: roles, error: rolesError } = await Promise.race([
+          rolesPromise,
+          timeoutPromise
+        ]) as any;
         const rolesTime = performance.now() - rolesStart;
 
         console.log('📊 [useUserRole] user_roles query result', {
@@ -43,11 +53,16 @@ export const useUserRole = () => {
 
         // Check profiles table
         const profileStart = performance.now();
-        const { data: profile, error: profileError } = await supabase
+        const profilePromise = supabase
           .from('profiles')
           .select('trainer_role, username, full_name')
           .eq('user_id', user.id)
           .single();
+
+        const { data: profile, error: profileError } = await Promise.race([
+          profilePromise,
+          timeoutPromise
+        ]) as any;
         const profileTime = performance.now() - profileStart;
 
         console.log('👤 [useUserRole] profiles query result', {

@@ -106,6 +106,15 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
                 <li>Если проблема повторяется, свяжитесь с поддержкой</li>
               </ul>
             </div>
+
+            {/* App state info for debugging */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="bg-muted/30 p-3 rounded-lg space-y-1 text-xs">
+                <div><strong>URL:</strong> {window.location.href}</div>
+                <div><strong>Time:</strong> {new Date().toISOString()}</div>
+                <div><strong>Online:</strong> {navigator.onLine ? 'Yes' : 'No'}</div>
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col sm:flex-row gap-3">

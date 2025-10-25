@@ -23,11 +23,36 @@ interface TopNavigationProps {
 }
 
 export const TopNavigation = memo(function TopNavigation({ userName, userRole }: TopNavigationProps) {
+  console.log('🧭 [TopNavigation] Rendering');
+  
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useProfile();
-  const { t } = useTranslation();
-  const { isTrainer } = useUserRole();
+  
+  // Safe hooks with fallbacks
+  let profile = null;
+  let isTrainer = false;
+  let t = (key: string) => key; // Fallback translation function
+  
+  try {
+    const profileData = useProfile();
+    profile = profileData?.profile;
+  } catch (error) {
+    console.error('💥 [TopNavigation] useProfile error:', error);
+  }
+  
+  try {
+    const translation = useTranslation();
+    t = translation.t;
+  } catch (error) {
+    console.error('💥 [TopNavigation] useTranslation error:', error);
+  }
+  
+  try {
+    const roleData = useUserRole();
+    isTrainer = roleData?.isTrainer ?? false;
+  } catch (error) {
+    console.error('💥 [TopNavigation] useUserRole error:', error);
+  }
 
   const userNavItems = [
     { type: 'home' as const, path: "/", label: 'Главная' },

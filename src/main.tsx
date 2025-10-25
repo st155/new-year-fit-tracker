@@ -12,12 +12,29 @@ if (!root) {
 
 // Global error logging to diagnose white screen
 window.addEventListener('error', (e) => {
-  console.error('Global error:', (e as ErrorEvent).error || (e as ErrorEvent).message, e);
+  console.error('💥 [Global] Uncaught error:', {
+    error: (e as ErrorEvent).error,
+    message: (e as ErrorEvent).message,
+    filename: (e as ErrorEvent).filename,
+    lineno: (e as ErrorEvent).lineno,
+    colno: (e as ErrorEvent).colno,
+    timestamp: new Date().toISOString()
+  });
 });
+
 window.addEventListener('unhandledrejection', (e) => {
-  console.error('Unhandled promise rejection:', (e as PromiseRejectionEvent).reason, e);
+  console.error('💥 [Global] Unhandled promise rejection:', {
+    reason: (e as PromiseRejectionEvent).reason,
+    promise: (e as PromiseRejectionEvent).promise,
+    timestamp: new Date().toISOString()
+  });
 });
-console.log('[Boot] main.tsx starting');
+
+console.log('🚀 [Boot] main.tsx starting', {
+  timestamp: new Date().toISOString(),
+  environment: import.meta.env.MODE,
+  url: window.location.href
+});
 
 createRoot(root).render(
   <StrictMode>
