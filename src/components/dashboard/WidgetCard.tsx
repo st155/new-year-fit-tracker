@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +90,7 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
-export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
+export const WidgetCard = memo(function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -220,14 +220,15 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     }
   };
 
-  const handleCardClick = async () => {
+  const handleCardClick = useCallback(async () => {
     if (!user) return;
     console.log(`🔄 [WidgetCard] Force refresh: ${metricName}/${source}`);
     await refetch();
-  };
+  }, [user, metricName, source, refetch]);
 
-  const Icon = getMetricIcon(metricName);
-  const color = getMetricColor(metricName);
+  // Мемоизация дорогих вычислений
+  const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
+  const color = useMemo(() => getMetricColor(metricName), [metricName]);
 
   if (loading) {
     return (
@@ -485,4 +486,11 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
       </CardContent>
     </Card>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison для оптимизации
+  return (
+    prevProps.metricName === nextProps.metricName &&
+    prevProps.source === nextProps.source &&
+    prevProps.refreshKey === nextProps.refreshKey
+  );
+});

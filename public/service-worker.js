@@ -1,7 +1,18 @@
-const CACHE_VERSION = 'v1.0.0';
-const STATIC_CACHE = `fitness-tracker-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `fitness-tracker-dynamic-${CACHE_VERSION}`;
-const IMAGE_CACHE = `fitness-tracker-images-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v2.0.0';
+const CACHE_NAMES = {
+  STATIC: `fitness-tracker-static-${CACHE_VERSION}`,
+  DYNAMIC: `fitness-tracker-dynamic-${CACHE_VERSION}`,
+  IMAGES: `fitness-tracker-images-${CACHE_VERSION}`,
+  API: `fitness-tracker-api-${CACHE_VERSION}`,
+};
+
+// Критические роуты для pre-cache
+const CRITICAL_ROUTES = [
+  '/',
+  '/progress',
+  '/goals',
+  '/habits',
+];
 
 // Статические ресурсы для кеширования при установке
 const STATIC_ASSETS = [
@@ -10,6 +21,7 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
+  ...CRITICAL_ROUTES,
 ];
 
 // Время жизни кеша (в миллисекундах)
@@ -22,9 +34,17 @@ const CACHE_LIFETIME = {
 // Установка Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .catch(() => {}) // Silent fail
+    Promise.all([
+      // Pre-cache static assets
+      caches.open(CACHE_NAMES.STATIC)
+        .then((cache) => cache.addAll(STATIC_ASSETS))
+        .catch(() => {}), // Silent fail
+      
+      // Pre-cache critical routes
+      caches.open(CACHE_NAMES.DYNAMIC)
+        .then((cache) => cache.addAll(CRITICAL_ROUTES))
+        .catch(() => {}),
+    ])
   );
   
   self.skipWaiting();
@@ -39,9 +59,7 @@ self.addEventListener('activate', (event) => {
           cacheNames
             .filter((cacheName) => {
               return cacheName.startsWith('fitness-tracker-') &&
-                     cacheName !== STATIC_CACHE &&
-                     cacheName !== DYNAMIC_CACHE &&
-                     cacheName !== IMAGE_CACHE;
+                     !Object.values(CACHE_NAMES).includes(cacheName);
             })
             .map((cacheName) => caches.delete(cacheName))
         );
@@ -160,8 +178,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ⚡ ИСКЛЮЧАЕМ Supabase REST/Realtime из кэширования
-  if (url.hostname.includes('supabase.co') || url.pathname.startsWith('/rest/v1/')) {
+  // ⚡ ИСКЛЮЧАЕМ Supabase REST/Realtime/Auth из кэширования
+  if (url.hostname.includes('supabase.co')) {
+    // НЕ кешировать realtime/auth вообще
+    if (url.pathname.includes('/realtime') || url.pathname.includes('/auth')) {
+      return;
+    }
+    
+    // Для REST API используем Stale-While-Revalidate с коротким временем
+    if (url.pathname.startsWith('/rest/v1/client_unified_metrics')) {
+      event.respondWith(
+        caches.open(CACHE_NAMES.API).then(async (cache) => {
+          const cachedResponse = await cache.match(request);
+          
+          const fetchPromise = fetch(request).then(response => {
+            if (response.ok) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          });
+          
+          // Вернуть кеш сразу, обновить в фоне
+          return cachedResponse || fetchPromise;
+        })
+      );
+      return;
+    }
+    
+    // Остальные Supabase запросы - network only
     return;
   }
 
@@ -180,18 +224,18 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.woff2')
   ) {
-    event.respondWith(strategies.cacheFirst(request, STATIC_CACHE));
+    event.respondWith(strategies.cacheFirst(request, CACHE_NAMES.STATIC));
     return;
   }
 
   // HTML страницы - Network First
   if (request.destination === 'document') {
-    event.respondWith(strategies.networkFirst(request, DYNAMIC_CACHE));
+    event.respondWith(strategies.networkFirst(request, CACHE_NAMES.DYNAMIC));
     return;
   }
 
   // Все остальное - Network First
-  event.respondWith(strategies.networkFirst(request, DYNAMIC_CACHE));
+  event.respondWith(strategies.networkFirst(request, CACHE_NAMES.DYNAMIC));
 });
 
 // Background Sync для оффлайн действий
@@ -261,7 +305,7 @@ self.addEventListener('message', (event) => {
   
   if (event.data.type === 'CACHE_URLS') {
     event.waitUntil(
-      caches.open(DYNAMIC_CACHE)
+      caches.open(CACHE_NAMES.DYNAMIC)
         .then((cache) => cache.addAll(event.data.urls))
     );
   }

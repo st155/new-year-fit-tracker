@@ -28,5 +28,42 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['lucide-react'],
     },
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-query': ['@tanstack/react-query'],
+            'vendor-ui': [
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-select',
+              '@radix-ui/react-toast',
+            ],
+            
+            // Heavy libs - separate chunks (lazy loaded)
+            'three': ['three', '@react-three/fiber', '@react-three/drei'],
+            'charts': ['recharts'],
+            'pdf': ['pdfjs-dist', 'pdf-lib'],
+            'animations': ['framer-motion'],
+            
+            // Utils
+            'utils': ['date-fns', 'clsx', 'tailwind-merge', 'zod'],
+          },
+        },
+      },
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: true,
+          pure_funcs: ['console.debug'],
+        },
+      },
+      sourcemap: mode === 'production' ? 'hidden' : true,
+      chunkSizeWarningLimit: 500,
+    },
   };
 });

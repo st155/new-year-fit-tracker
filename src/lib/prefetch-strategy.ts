@@ -18,13 +18,13 @@ export class PrefetchStrategy {
   constructor(private queryClient: QueryClient) {}
 
   /**
-   * Prefetch after login - critical data for dashboard
+   * Prefetch after login - critical data
    */
   async prefetchAfterLogin(userId: string) {
-    console.log('[Prefetch] Loading critical data for user:', userId);
-    
+    console.log('[Prefetch] Prefetching critical data after login');
+
     await Promise.all([
-      // Latest metrics for dashboard
+      // Dashboard metrics
       this.queryClient.prefetchQuery({
         queryKey: metricsQueryKeys.unified(userId),
         queryFn: async () => {
@@ -53,20 +53,11 @@ export class PrefetchStrategy {
         },
         staleTime: 10 * 60 * 1000,
       }),
-
-      // Leaderboard
-      this.queryClient.prefetchQuery({
-        queryKey: leaderboardQueryKeys.list(100),
-        queryFn: async () => {
-          const { data } = await supabase
-            .from('challenge_leaderboard_v2' as any)
-            .select('*')
-            .order('total_points', { ascending: false })
-            .limit(100);
-          return data || [];
-        },
-        staleTime: 1 * 60 * 1000,
-      }),
+      
+      // Prefetch routes (data only, не загружаем тяжелые библиотеки)
+      this.prefetchRoute(userId, '/progress'),
+      this.prefetchRoute(userId, '/body'),
+      this.prefetchRoute(userId, '/goals'),
     ]);
 
     console.log('[Prefetch] Critical data loaded');

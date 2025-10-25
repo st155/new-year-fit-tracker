@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -48,7 +48,15 @@ function BodySegment({
   const meshRef = useRef<THREE.Mesh>(null);
   const [pulsePhase, setPulsePhase] = useState(0);
 
-  useFrame((state) => {
+  // Мемоизация геометрии для производительности
+  const geometry = useMemo(() => {
+    return new THREE.CapsuleGeometry(args[0], args[1], args[2]);
+  }, [args[0], args[1], args[2]]);
+
+  useFrame((state, delta) => {
+    // Ограничить frame rate если рендер медленный
+    if (delta > 0.033) return; // Skip if frame took > 33ms (30fps)
+    
     if (meshRef.current && (isHovered || (percent && (percent < 90 || percent > 110)))) {
       setPulsePhase(state.clock.elapsedTime * 2);
       const scale = 1 + Math.sin(pulsePhase) * 0.05;
@@ -122,27 +130,31 @@ function Body3DModel({
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
   const [tooltipData, setTooltipData] = useState<SegmentTooltipData | null>(null);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    // Ограничить frame rate
+    if (delta > 0.033) return;
+    
     if (groupRef.current) {
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });
 
-  const handleSegmentHover = (name: string | null) => {
+  // Мемоизация сегментов для tooltip
+  const segmentMap = useMemo(() => ({
+    'Right Arm': { percent: segmentData.rightArmPercent, position: [0.4, 1.2, 0] as [number, number, number] },
+    'Left Arm': { percent: segmentData.leftArmPercent, position: [-0.4, 1.2, 0] as [number, number, number] },
+    'Trunk': { percent: segmentData.trunkPercent, position: [0, 0.8, 0] as [number, number, number] },
+    'Right Leg': { percent: segmentData.rightLegPercent, position: [0.15, -0.2, 0] as [number, number, number] },
+    'Left Leg': { percent: segmentData.leftLegPercent, position: [-0.15, -0.2, 0] as [number, number, number] },
+  }), [segmentData]);
+
+  const handleSegmentHover = useCallback((name: string | null) => {
     if (!interactive) return;
     
     setHoveredSegment(name);
     
     if (name && showTooltips) {
-      const segmentMap: Record<string, { percent: number | null; position: [number, number, number] }> = {
-        'Right Arm': { percent: segmentData.rightArmPercent, position: [0.4, 1.2, 0] },
-        'Left Arm': { percent: segmentData.leftArmPercent, position: [-0.4, 1.2, 0] },
-        'Trunk': { percent: segmentData.trunkPercent, position: [0, 0.8, 0] },
-        'Right Leg': { percent: segmentData.rightLegPercent, position: [0.15, -0.2, 0] },
-        'Left Leg': { percent: segmentData.leftLegPercent, position: [-0.15, -0.2, 0] },
-      };
-      
-      const segment = segmentMap[name];
+      const segment = segmentMap[name as keyof typeof segmentMap];
       if (segment) {
         setTooltipData({
           name,
@@ -153,7 +165,7 @@ function Body3DModel({
     } else {
       setTooltipData(null);
     }
-  };
+  }, [interactive, showTooltips, segmentMap]);
 
   return (
     <group ref={groupRef}>

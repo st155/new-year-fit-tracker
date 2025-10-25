@@ -5,6 +5,7 @@ import { BodyHistory } from "@/components/body/BodyHistory";
 import { ComparisonView } from "@/components/body/ComparisonView";
 import { InBodyUpload } from "@/components/body-composition/InBodyUpload";
 import { InBodyHistory } from "@/components/body-composition/InBodyHistory";
+import { Lazy3DModel } from "@/components/body-composition/Lazy3DModel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scale, History, GitCompare, FileText } from "lucide-react";
 import { useRef } from "react";
