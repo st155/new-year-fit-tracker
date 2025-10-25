@@ -21,49 +21,32 @@ const CACHE_LIFETIME = {
 
 // Установка Service Worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing Service Worker...');
-  
   event.waitUntil(
     caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .catch((error) => {
-        console.error('[SW] Failed to cache static assets:', error);
-      })
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .catch(() => {}) // Silent fail
   );
   
-  // Немедленно активируем новый SW
   self.skipWaiting();
 });
 
 // Активация Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker...');
-  
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              // Удаляем старые версии кеша
               return cacheName.startsWith('fitness-tracker-') &&
                      cacheName !== STATIC_CACHE &&
                      cacheName !== DYNAMIC_CACHE &&
                      cacheName !== IMAGE_CACHE;
             })
-            .map((cacheName) => {
-              console.log('[SW] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            })
+            .map((cacheName) => caches.delete(cacheName))
         );
       })
-      .then(() => {
-        // Берем контроль над всеми клиентами
-        return self.clients.claim();
-      })
+      .then(() => self.clients.claim())
   );
 });
 
@@ -86,7 +69,6 @@ const strategies = {
       
       return response;
     } catch (error) {
-      console.log('[SW] Network first failed, trying cache:', error.message);
       const cachedResponse = await caches.match(request);
       
       if (cachedResponse) {
@@ -180,8 +162,7 @@ self.addEventListener('fetch', (event) => {
 
   // ⚡ ИСКЛЮЧАЕМ Supabase REST/Realtime из кэширования
   if (url.hostname.includes('supabase.co') || url.pathname.startsWith('/rest/v1/')) {
-    console.log('⚡ [SW] Bypassing cache for Supabase:', url.pathname);
-    return; // Просто пропускаем без кэширования
+    return;
   }
 
   // Изображения - Stale While Revalidate
@@ -215,8 +196,6 @@ self.addEventListener('fetch', (event) => {
 
 // Background Sync для оффлайн действий
 self.addEventListener('sync', (event) => {
-  console.log('[SW] Background Sync:', event.tag);
-  
   if (event.tag === 'sync-measurements') {
     event.waitUntil(syncMeasurements());
   }
@@ -227,21 +206,15 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncMeasurements() {
-  // Реализация синхронизации измерений
-  console.log('[SW] Syncing measurements...');
   // TODO: Получить из IndexedDB и отправить на сервер
 }
 
 async function syncWorkouts() {
-  // Реализация синхронизации тренировок
-  console.log('[SW] Syncing workouts...');
   // TODO: Получить из IndexedDB и отправить на сервер
 }
 
 // Push уведомления
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received');
-  
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Fitness Tracker';
   const options = {
@@ -262,8 +235,6 @@ self.addEventListener('push', (event) => {
 
 // Обработка кликов по уведомлениям
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked');
-  
   event.notification.close();
   
   event.waitUntil(
@@ -273,22 +244,17 @@ self.addEventListener('notificationclick', (event) => {
 
 // Периодическая синхронизация (если поддерживается)
 self.addEventListener('periodicsync', (event) => {
-  console.log('[SW] Periodic Sync:', event.tag);
-  
   if (event.tag === 'update-fitness-data') {
     event.waitUntil(updateFitnessData());
   }
 });
 
 async function updateFitnessData() {
-  console.log('[SW] Updating fitness data in background...');
   // TODO: Проверить обновления от интеграций
 }
 
 // Обработка сообщений от клиентов
 self.addEventListener('message', (event) => {
-  console.log('[SW] Message received:', event.data);
-  
   if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }

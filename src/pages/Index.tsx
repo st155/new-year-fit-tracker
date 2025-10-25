@@ -19,33 +19,22 @@ const Index = () => {
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // 🧹 АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕШЕЙ и проверка токенов
+  // 🧹 ONE-TIME cache check and cleanup on mount
   useEffect(() => {
-    // Debounce для предотвращения множественных вызовов
     if (!user) return;
     
-    let cancelled = false;
-    const checkTokensAndClearCache = async () => {
-      if (cancelled) return;
-      
-      console.log('🔍 [Index] Checking Terra Whoop connection and cache freshness');
-      
+    const checkAndCleanCache = async () => {
       try {
-        // Check if user has active Terra token for Whoop
         const { data: terraToken } = await supabase
           .from('terra_tokens')
           .select('is_active')
           .eq('user_id', user.id)
           .eq('provider', 'WHOOP')
           .eq('is_active', true)
-          .abortSignal(AbortSignal.timeout(3000))
+          .abortSignal(AbortSignal.timeout(2000))
           .maybeSingle();
         
-        if (cancelled) return;
-        
         if (!terraToken) {
-          console.log('⚠️ [Index] No active Terra Whoop token - clearing Whoop caches');
-          // Clear all Whoop-related caches
           ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
             localStorage.removeItem(key);
           });
@@ -55,37 +44,15 @@ const Index = () => {
             }
           });
         } else {
-          // Token exists - just clear stale data (>24h)
-          const clearedCount = clearStaleWhoopCache();
-          if (clearedCount > 0) {
-            console.log(`🧹 [Index] Cleared ${clearedCount} stale cache entries`);
-          }
+          clearStaleWhoopCache();
         }
       } catch (error) {
-        if (!cancelled) {
-          console.warn('⚠️ [Index] Cache check failed (DB timeout):', error);
-        }
+        // Silent fail - cache cleanup is not critical
       }
     };
     
-    // Debounce delay
-    const timeoutId = setTimeout(checkTokensAndClearCache, 500);
-    
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [user]); // Re-check when user changes
-
-  console.log('🏠 [Index] Render', {
-    timestamp: new Date().toISOString(),
-    userId: user?.id,
-    isTrainer,
-    role,
-    roleLoading,
-    widgetsLoading: loading,
-    widgetsCount: widgets.length
-  });
+    checkAndCleanCache();
+  }, []); // Run once on mount
 
   const handleRefresh = () => {
     refetch();
@@ -93,7 +60,6 @@ const Index = () => {
   };
 
   if (loading || roleLoading) {
-    console.log('⏳ [Index] Loading state', { loading, roleLoading });
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -113,13 +79,8 @@ const Index = () => {
 
   // If trainer - show AI-centric interface
   if (isTrainer) {
-    console.log('👔 [Index] Redirecting to TrainerIndexPage');
     return <TrainerIndexPage />;
   }
-
-  console.log('👤 [Index] Rendering user dashboard', {
-    widgetsCount: widgets.length
-  });
 
   return (
     <div className="min-h-screen bg-background p-6">
