@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon } from 'lucide-react';
-import { fetchWidgetData } from '@/hooks/useWidgets';
+import { useWidgetDataQuery, widgetKeys } from '@/hooks/useWidgetsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface WidgetCardProps {
   metricName: string;
@@ -93,15 +94,16 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
-  const [data, setData] = useState<{
-    value: number | string;
-    unit: string;
-    date: string;
-    trend?: number;
-  } | null>(null);
+
+  // Use React Query for data fetching
+  const { 
+    data, 
+    isLoading: loading, 
+    refetch 
+  } = useWidgetDataQuery(user?.id, metricName, source);
 
   // Check if user has active Terra token for Whoop (for Whoop widgets only)
   useEffect(() => {
@@ -129,9 +131,12 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     checkToken();
   }, [user, source, data]);
 
+  // Refetch when refreshKey changes
   useEffect(() => {
-    loadData();
-  }, [metricName, source, user, refreshKey]);
+    if (refreshKey && refreshKey > 0) {
+      refetch();
+    }
+  }, [refreshKey, refetch]);
 
   // Realtime подписка на новые метрики
   useEffect(() => {
@@ -149,8 +154,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         },
         (payload) => {
           console.log('📊 New metric value inserted:', payload);
-          // Перезагружаем данные виджета
-          loadData();
+          // Invalidate query to trigger refetch
+          queryClient.invalidateQueries({ 
+            queryKey: widgetKeys.data(user.id, metricName, source) 
+          });
         }
       )
       .subscribe();
@@ -158,41 +165,20 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, metricName, source]);
-
+  }, [user?.id, metricName, source, queryClient]);
 
   // Слушаем глобальное событие принудительного обновления всех виджетов
   useEffect(() => {
     const handleHardRefetch = () => {
       console.log('📢 [WidgetCard] Received widgets-hard-refetch event');
-      loadData();
+      refetch();
     };
 
     window.addEventListener('widgets-hard-refetch', handleHardRefetch);
     return () => {
       window.removeEventListener('widgets-hard-refetch', handleHardRefetch);
     };
-  }, []);
-
-  const loadData = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    const result = await fetchWidgetData(user.id, metricName, source);
-    
-    const hoursOld = result?.date ? 
-      (new Date().getTime() - new Date(result.date).getTime()) / (1000 * 60 * 60) : 0;
-    
-    console.log(`📊 [WidgetCard] ${metricName}/${source}:`, {
-      value: result?.value,
-      date: result?.date,
-      hoursOld: Math.floor(hoursOld),
-      isFresh: hoursOld <= 24
-    });
-    
-    setData(result);
-    setLoading(false);
-  };
+  }, [refetch]);
 
   const syncWhoopData = async () => {
     if (!user) return;
@@ -201,16 +187,14 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     try {
       console.log('🔄 [WidgetCard] Starting Whoop sync from widget...');
       
-      // Clear all caches
-      localStorage.removeItem(`widgets_${user.id}`);
-      localStorage.removeItem(`widget_${metricName}_${source}_${user.id}`);
-      localStorage.removeItem(`latest_metrics_${user.id}`);
-      
       const { error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'sync-data' }
       });
       
       if (error) throw error;
+      
+      // Invalidate all widget queries
+      queryClient.invalidateQueries({ queryKey: widgetKeys.all });
       
       console.log('✅ Whoop sync completed');
       toast({
@@ -238,10 +222,8 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
 
   const handleCardClick = async () => {
     if (!user) return;
-    // Force refresh: clear cache and reload
-    localStorage.removeItem(`widget_${metricName}_${source}_${user.id}`);
     console.log(`🔄 [WidgetCard] Force refresh: ${metricName}/${source}`);
-    await loadData();
+    await refetch();
   };
 
   const Icon = getMetricIcon(metricName);

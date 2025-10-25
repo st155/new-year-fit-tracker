@@ -3,7 +3,7 @@ import { Flame, Moon, Zap, Scale, Heart, Footprints, Wind, Dumbbell, Activity, T
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useFitnessDataCache } from "@/hooks/useFitnessDataCache";
+import { useQuery } from "@tanstack/react-query";
 import { DateNavigator } from "@/components/dashboard/DateNavigator";
 import { Button } from "@/components/ui/button";
 
@@ -32,9 +32,7 @@ type SourceFilter = 'all' | 'whoop' | 'garmin' | 'ultrahuman';
 export default function FitnessData() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getMetrics, loading: cacheLoading } = useFitnessDataCache(user?.id);
   
-  const [loading, setLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<TimeFilter>('today');
   const [selectedSource, setSelectedSource] = useState<SourceFilter>('all');
   const [dateOffset, setDateOffset] = useState(0);
@@ -44,31 +42,86 @@ export default function FitnessData() {
     cards: []
   });
 
+  // Calculate date range based on filters
+  const calculateDateRange = (filter: TimeFilter, offset: number) => {
+    let startDate: Date;
+    let endDate: Date;
+    
+    switch (filter) {
+      case 'today':
+        const now = new Date();
+        const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + offset));
+        startDate = new Date(utcDate.setUTCHours(0, 0, 0, 0));
+        endDate = new Date(utcDate.setUTCHours(23, 59, 59, 999));
+        
+        if (selectedSource === 'whoop') {
+          startDate.setDate(startDate.getDate() - 1);
+        }
+        break;
+      case 'week':
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() + (offset * 7) - 7);
+        startDate = new Date(weekStart.setHours(0, 0, 0, 0));
+        endDate = new Date();
+        endDate.setDate(weekStart.getDate() + 7);
+        break;
+      case 'month':
+        const monthStart = new Date();
+        monthStart.setDate(monthStart.getDate() + (offset * 30) - 30);
+        startDate = new Date(monthStart.setHours(0, 0, 0, 0));
+        endDate = new Date();
+        endDate.setDate(monthStart.getDate() + 30);
+        break;
+    }
+    
+    return { startDate, endDate };
+  };
+
+  // Fetch metrics using React Query
+  const { data: metricsData, isLoading: loading } = useQuery({
+    queryKey: ['fitness-metrics', user?.id, selectedFilter, selectedSource, dateOffset],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { startDate, endDate } = calculateDateRange(selectedFilter, dateOffset);
+      
+      let query = supabase
+        .from('metric_values')
+        .select(`
+          *,
+          user_metrics!inner(metric_name, unit, source)
+        `)
+        .eq('user_id', user.id)
+        .gte('measurement_date', startDate.toISOString())
+        .lte('measurement_date', endDate.toISOString());
+      
+      if (selectedSource !== 'all') {
+        query = query.eq('user_metrics.source', selectedSource);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   useEffect(() => {
     if (user) {
       fetchChallengeGoals();
     }
   }, [user]);
 
+  // Process metrics when data changes
   useEffect(() => {
-    if (user && challengeGoals.length >= 0) {
-      fetchDashboardData();
+    if (metricsData) {
+      const processed = processMetrics(metricsData);
+      setData(processed);
     }
-  }, [user, challengeGoals, selectedFilter, dateOffset, selectedSource]);
+  }, [metricsData, challengeGoals]);
 
-  // Слушаем события обновления Whoop данных
-  useEffect(() => {
-    const handleWhoopUpdate = () => {
-      console.log('Whoop data updated, refreshing...');
-      fetchDashboardData();
-    };
-    
-    window.addEventListener('whoop-data-updated', handleWhoopUpdate);
-    
-    return () => {
-      window.removeEventListener('whoop-data-updated', handleWhoopUpdate);
-    };
-  }, [selectedSource, dateOffset]);
 
   const fetchChallengeGoals = async () => {
     try {
@@ -95,65 +148,6 @@ export default function FitnessData() {
     } catch (error) {
       console.error('Error fetching challenge goals:', error);
       setChallengeGoals([]);
-    }
-  };
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Calculate date range based on selected filter and offset
-      let startDate: Date;
-      let endDate: Date;
-      
-      switch (selectedFilter) {
-        case 'today':
-          // Используем UTC дату для синхронизации с базой данных
-          const now = new Date();
-          const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dateOffset));
-          startDate = new Date(utcDate.setUTCHours(0, 0, 0, 0));
-          endDate = new Date(utcDate.setUTCHours(23, 59, 59, 999));
-          
-          // For Whoop, extend range to include yesterday for Recovery Score
-          // (Whoop provides Recovery Score in the morning for the previous day)
-          if (selectedSource === 'whoop') {
-            startDate.setDate(startDate.getDate() - 1);
-          }
-          break;
-        case 'week':
-          const weekStart = new Date();
-          weekStart.setDate(weekStart.getDate() + (dateOffset * 7) - 7);
-          startDate = new Date(weekStart.setHours(0, 0, 0, 0));
-          endDate = new Date();
-          endDate.setDate(weekStart.getDate() + 7);
-          break;
-        case 'month':
-          const monthStart = new Date();
-          monthStart.setDate(monthStart.getDate() + (dateOffset * 30) - 30);
-          startDate = new Date(monthStart.setHours(0, 0, 0, 0));
-          endDate = new Date();
-          endDate.setDate(monthStart.getDate() + 30);
-          break;
-      }
-      
-      let metrics: any[];
-
-      // Load metrics from all sources or specific source
-      metrics = await getMetrics(startDate, endDate, selectedFilter, selectedSource === 'all' ? undefined : selectedSource);
-
-      // Process metrics to populate dashboard
-      const processed = processMetrics(metrics);
-      setData(processed);
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load data',
-        variant: 'destructive'
-      });
-      setLoading(false);
     }
   };
 

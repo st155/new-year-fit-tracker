@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useWidgetsQuery, widgetKeys } from '@/hooks/useWidgetsQuery';
 import { useWidgets } from '@/hooks/useWidgets';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
@@ -12,69 +13,52 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
-import { clearStaleWhoopCache } from '@/lib/cache-utils';
-import { supabase } from '@/integrations/supabase/client';
 import TrainerIndexPage from './TrainerIndexPage';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
   const { user } = useAuth();
   const { isTrainer, role, loading: roleLoading } = useUserRole();
-  const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
+  const queryClient = useQueryClient();
+  
+  // Use React Query hooks
+  const { data: widgets = [], isLoading: loading } = useWidgetsQuery(user?.id);
+  const { addWidget, removeWidget, reorderWidgets } = useWidgets(user?.id);
+  
   const [refreshKey, setRefreshKey] = useState(0);
   const [showOnlyRecent, setShowOnlyRecent] = useState(() => {
     return localStorage.getItem('show_only_recent') === 'true';
   });
   const [widgetAges, setWidgetAges] = useState<Record<string, number>>({});
 
-  // 🧹 ONE-TIME cache check and cleanup on mount
+  // 🧹 ONE-TIME cleanup of legacy localStorage on mount (migration to React Query)
   useEffect(() => {
     if (!user) return;
     
-    const checkAndCleanCache = async () => {
-      try {
-        // Clear old widget caches (>24 hours)
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('widget_') || key.startsWith('widgets_')) {
-            const timestamp = localStorage.getItem(key + '_timestamp');
-            if (timestamp && Date.now() - Number(timestamp) > 24 * 60 * 60 * 1000) {
-              localStorage.removeItem(key);
-              localStorage.removeItem(key + '_timestamp');
-              console.log('🧹 Cleared old cache:', key);
-            }
-          }
-        });
-
-        const { data: terraToken } = await supabase
-          .from('terra_tokens')
-          .select('is_active')
-          .eq('user_id', user.id)
-          .eq('provider', 'WHOOP')
-          .eq('is_active', true)
-          .abortSignal(AbortSignal.timeout(2000))
-          .maybeSingle();
-        
-        if (!terraToken) {
-          ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
-            localStorage.removeItem(key);
-          });
-          Object.keys(localStorage).forEach(key => {
-            if (key.includes('whoop') || key.includes('fitness') || key.startsWith('progress_cache_')) {
-              localStorage.removeItem(key);
-            }
-          });
-        } else {
-          clearStaleWhoopCache();
-        }
-      } catch (error) {
-        // Silent fail - cache cleanup is not critical
-      }
-    };
+    console.log('🧹 [Dashboard] Migrating to React Query - cleaning legacy cache...');
     
-    checkAndCleanCache();
+    // Clean ALL widget-related localStorage (we now use React Query exclusively)
+    let clearedCount = 0;
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('widget_') || 
+          key.startsWith('widgets_') ||
+          key.includes('whoop') || 
+          key.includes('fitness') || 
+          key.startsWith('progress_cache_')) {
+        localStorage.removeItem(key);
+        clearedCount++;
+        console.log(`🧹 Cleared legacy cache: ${key}`);
+      }
+    });
+
+    if (clearedCount > 0) {
+      console.log(`✅ Migrated to React Query: cleared ${clearedCount} legacy cache entries`);
+    }
   }, []); // Run once on mount
 
   const handleRefresh = () => {
-    refetch();
+    console.log('🔄 Manual refresh triggered');
+    queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     setRefreshKey(prev => prev + 1);
     setWidgetAges({}); // Clear ages on refresh
   };

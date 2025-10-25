@@ -11,7 +11,6 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
-import { useAutoCacheClear } from "@/hooks/useAutoCacheClear";
 
 import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
@@ -59,7 +58,8 @@ const queryClient = new QueryClient({
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
-  useAutoCacheClear();
+
+  // Daily cache invalidation removed - will be handled by React Query's built-in staleTime
 
   useEffect(() => {
     if (import.meta.env.PROD) {

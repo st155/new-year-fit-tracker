@@ -214,19 +214,6 @@ export const fetchWidgetData = async (
   source: string
 ): Promise<WidgetMetricData | null> => {
   console.log('🔍 [fetchWidgetData] Starting fetch:', { userId, metricName, source });
-  
-  // 🧹 Очистка кэшей
-  const cacheKeys = [
-    `widgets_${userId}`,
-    `widget_${metricName}_${source}_${userId}`,
-    `metric_${metricName}`,
-    `latest_metrics_${userId}`,
-  ];
-  
-  cacheKeys.forEach(key => {
-    localStorage.removeItem(key);
-    console.log('🧹 Cleared cache:', key);
-  });
 
   try {
     const fallbackMetrics = getFallbackMetrics(metricName, source);
