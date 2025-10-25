@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
 import { getWorkoutTypeName, getWorkoutIcon } from "@/lib/workout-types";
+import { ActivityReactions } from "./ActivityReactions";
+import { CelebrateButton } from "./CelebrateButton";
 
 interface ActivityCardProps {
   activity: {
@@ -420,9 +422,17 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
             {getFormattedDate()}
           </p>
           {renderEnhancedContent()}
+          
+          {/* Activity Reactions */}
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <ActivityReactions 
+              activityId={activity.id} 
+              userId={user?.id} 
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 self-start pt-2">
           <button
             onClick={handleLike}
             disabled={loading}
@@ -448,6 +458,10 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
               <span className="text-xs font-medium text-white">{commentCount}</span>
             </button>
           )}
+          <CelebrateButton 
+            activityId={activity.id} 
+            userId={user?.id} 
+          />
         </div>
       </div>
 

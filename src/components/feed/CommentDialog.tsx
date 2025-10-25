@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { QuickReplies } from "./QuickReplies";
 
 interface Comment {
   id: string;
@@ -94,8 +95,9 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
     }
   };
 
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) return;
+  const handleSubmitComment = async (commentText?: string) => {
+    const textToSubmit = commentText || newComment.trim();
+    if (!textToSubmit) return;
 
     try {
       setSubmitting(true);
@@ -115,7 +117,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
         .insert({
           activity_id: activityId,
           user_id: user.id,
-          comment_text: newComment.trim(),
+          comment_text: textToSubmit,
         });
 
       if (error) throw error;
@@ -138,6 +140,10 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleQuickReply = (message: string) => {
+    handleSubmitComment(message);
   };
 
   useEffect(() => {
@@ -198,7 +204,9 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
       </ScrollArea>
 
       <div className="sticky bottom-0 z-10 border-t border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-3 mt-2 -mx-4 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          <QuickReplies onReply={handleQuickReply} />
+          
           <Textarea
             placeholder="Напишите комментарий..."
             value={newComment}
@@ -212,7 +220,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
             }}
           />
           <Button
-            onClick={handleSubmitComment}
+            onClick={() => handleSubmitComment()}
             disabled={!newComment.trim() || submitting}
             size="default"
             className="w-full bg-primary hover:bg-primary/90"
