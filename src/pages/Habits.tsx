@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
+import { useGoalHabitSync } from "@/hooks/useGoalHabitSync";
 import { HabitMigrationButton } from "@/components/habits/HabitMigrationButton";
 import { HabitCard } from "@/components/habits/HabitCard";
 import { HabitStats } from "@/components/habits/HabitStats";
@@ -14,6 +15,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Habits() {
   const { user } = useAuth();
   const { habits, isLoading, refetch } = useHabits(user?.id);
+  
+  // Enable auto-logging for goal-habit integration
+  useGoalHabitSync(user?.id);
+  
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

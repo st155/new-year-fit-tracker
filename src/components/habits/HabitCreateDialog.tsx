@@ -24,10 +24,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
 import { DEFAULT_HABIT_TEMPLATES } from "@/lib/habit-templates";
+import { useGoals } from "@/hooks/useGoals";
 
 interface HabitCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  linkedGoalId?: string;
+  prefilledName?: string;
 }
 
 const categories = [
@@ -52,14 +55,16 @@ const habitTypes = [
   { value: "daily_measurement", label: "Daily Measurement", description: "Track daily values (e.g., pages read)", icon: "📊" },
 ];
 
-export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps) {
+export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName }: HabitCreateDialogProps) {
   const { user } = useAuth();
-  const [name, setName] = useState("");
+  const { personalGoals } = useGoals(user?.id);
+  const [name, setName] = useState(prefilledName || "");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("custom");
   const [frequency, setFrequency] = useState("daily");
   const [targetCount, setTargetCount] = useState(7);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | undefined>(linkedGoalId);
   
   // New fields for custom habits
   const [habitType, setHabitType] = useState("daily_check");
@@ -115,6 +120,7 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
         ai_motivation: aiMotivation,
         icon: template?.icon || null,
         color: template?.color || null,
+        linked_goal_id: selectedGoalId || null,
       };
 
       // Add type-specific fields
@@ -320,6 +326,27 @@ export function HabitCreateDialog({ open, onOpenChange }: HabitCreateDialogProps
               </div>
             </div>
           )}
+
+          {/* Goal Linking */}
+          <div className="space-y-2">
+            <Label htmlFor="linkedGoal">Связать с целью (опционально)</Label>
+            <Select value={selectedGoalId || "none"} onValueChange={(val) => setSelectedGoalId(val === "none" ? undefined : val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите цель" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Без цели</SelectItem>
+                {personalGoals?.map((goal) => (
+                  <SelectItem key={goal.id} value={goal.id}>
+                    {goal.goal_name} ({goal.target_value} {goal.target_unit})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              При выполнении привычки автоматически будет записан прогресс в цель
+            </p>
+          </div>
 
           {frequency === "weekly" && habitType === "daily_check" && (
             <div className="space-y-2">

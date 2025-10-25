@@ -2,10 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil, Lock, Trash2 } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Pencil, Lock, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "./QuickMeasurementDialog";
 import { GoalEditDialog } from "./GoalEditDialog";
+import { HabitCreateDialog } from "../habits/HabitCreateDialog";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -75,6 +76,7 @@ export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCar
   const [editOpen, setEditOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [habitDialogOpen, setHabitDialogOpen] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -161,14 +163,25 @@ export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCar
             {!readonly && (
               <div className="flex gap-1">
                 {goal.is_personal && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setHabitDialogOpen(true)}
+                      title="Создать привычку из цели"
+                    >
+                      <Repeat className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                      onClick={() => setDeleteDialogOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
                 <Button
                   size="icon"
@@ -319,6 +332,13 @@ export function GoalCard({ goal, onMeasurementAdded, readonly = false }: GoalCar
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <HabitCreateDialog
+            open={habitDialogOpen}
+            onOpenChange={setHabitDialogOpen}
+            linkedGoalId={goal.id}
+            prefilledName={`Привычка: ${goal.goal_name}`}
+          />
         </>
       )}
     </>

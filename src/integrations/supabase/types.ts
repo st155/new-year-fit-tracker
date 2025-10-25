@@ -1475,6 +1475,7 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          linked_goal_id: string | null
           measurement_unit: string | null
           name: string
           reminder_time: string | null
@@ -1496,6 +1497,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          linked_goal_id?: string | null
           measurement_unit?: string | null
           name: string
           reminder_time?: string | null
@@ -1517,6 +1519,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          linked_goal_id?: string | null
           measurement_unit?: string | null
           name?: string
           reminder_time?: string | null
@@ -1526,7 +1529,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habits_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "habits_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_records: {
         Row: {
