@@ -285,7 +285,17 @@ export const fetchWidgetData = async (
 
     console.log('📅 Metric dates:', metricDates);
 
-    // Выбираем metric_id с самой свежей датой
+    // Collect ALL valid metric_ids with data
+    const validMetricIds = metricDates
+      .filter(m => m.last_date !== null)
+      .map(m => m.metric_id);
+    
+    if (validMetricIds.length === 0) {
+      console.warn('⚠️ No valid metric_ids with data');
+      return null;
+    }
+
+    // Выбираем primary metric для unit
     const primaryMetric = metricDates.reduce((best, current) => {
       if (!current.last_date) return best;
       if (!best.last_date) return current;
@@ -302,12 +312,15 @@ export const fetchWidgetData = async (
     const primaryMetricId = primaryMetric.metric_id;
     const unit = userMetrics.find(m => m.id === primaryMetricId)?.unit || userMetrics[0].unit;
     
-    console.log(`✅ Selected primary metric_id: ${primaryMetricId} (last data: ${primaryMetric.last_date})`);
+    console.log(`✅ Using ${validMetricIds.length} metric_ids:`, validMetricIds);
+    console.log(`📊 Primary metric_id: ${primaryMetricId} (last data: ${primaryMetric.last_date})`);
     console.log('📊 Using unit:', unit);
 
     // ==================== ШАГ 2: Найти последние данные ====================
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    // Use local date for correct "today" comparison
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -322,12 +335,12 @@ export const fetchWidgetData = async (
     const { data: metricValues, error: valuesError } = await supabase
       .from('metric_values')
       .select('*')
-      .eq('metric_id', primaryMetricId)
+      .in('metric_id', validMetricIds)
       .gte('measurement_date', sevenDaysAgoStr)
       .lte('measurement_date', tomorrowStr)
       .order('measurement_date', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (valuesError) {
       console.error('❌ [STEP 2] Error querying metric_values:', valuesError);
@@ -347,10 +360,10 @@ export const fetchWidgetData = async (
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('metric_values')
         .select('*')
-        .eq('metric_id', primaryMetricId)
+        .in('metric_id', validMetricIds)
         .order('measurement_date', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
       if (fallbackError) {
         console.error('❌ [FALLBACK] Error:', fallbackError);

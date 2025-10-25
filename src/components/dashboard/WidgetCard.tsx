@@ -179,11 +179,17 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     
     setLoading(true);
     const result = await fetchWidgetData(user.id, metricName, source);
-    console.log(`📊 [WidgetCard] Loaded ${metricName}/${source}:`, {
+    
+    const hoursOld = result?.date ? 
+      (new Date().getTime() - new Date(result.date).getTime()) / (1000 * 60 * 60) : 0;
+    
+    console.log(`📊 [WidgetCard] ${metricName}/${source}:`, {
       value: result?.value,
       date: result?.date,
-      trend: result?.trend
+      hoursOld: Math.floor(hoursOld),
+      isFresh: hoursOld <= 24
     });
+    
     setData(result);
     setLoading(false);
   };
@@ -228,6 +234,14 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
     } finally {
       setSyncing(false);
     }
+  };
+
+  const handleCardClick = async () => {
+    if (!user) return;
+    // Force refresh: clear cache and reload
+    localStorage.removeItem(`widget_${metricName}_${source}_${user.id}`);
+    console.log(`🔄 [WidgetCard] Force refresh: ${metricName}/${source}`);
+    await loadData();
   };
 
   const Icon = getMetricIcon(metricName);
@@ -295,6 +309,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
+      onClick={handleCardClick}
       style={{
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',

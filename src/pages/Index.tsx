@@ -32,6 +32,18 @@ const Index = () => {
     
     const checkAndCleanCache = async () => {
       try {
+        // Clear old widget caches (>24 hours)
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('widget_') || key.startsWith('widgets_')) {
+            const timestamp = localStorage.getItem(key + '_timestamp');
+            if (timestamp && Date.now() - Number(timestamp) > 24 * 60 * 60 * 1000) {
+              localStorage.removeItem(key);
+              localStorage.removeItem(key + '_timestamp');
+              console.log('🧹 Cleared old cache:', key);
+            }
+          }
+        });
+
         const { data: terraToken } = await supabase
           .from('terra_tokens')
           .select('is_active')
