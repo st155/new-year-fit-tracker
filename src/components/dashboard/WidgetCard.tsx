@@ -288,22 +288,28 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
   
-  // Проверка на устаревшие данные с двумя уровнями
-  const hoursOld = data?.date ? 
-    (new Date().getTime() - new Date(data.date).getTime()) / (1000 * 60 * 60) : 0;
-  const isDataWarning = hoursOld > 24 && hoursOld <= 48; // Желтый: 24-48 часов
-  const isDataStale = hoursOld > 48; // Красный: >48 часов
+  // Проверка на устаревшие данные с двумя уровнями (на основе дней)
+  const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysDiff = (() => {
+    if (!data?.date) return 0;
+    const today = startOf(new Date());
+    const dataDay = startOf(new Date(data.date));
+    return Math.max(0, Math.floor((today.getTime() - dataDay.getTime()) / 86400000));
+  })();
+  const isDataWarning = daysDiff === 2; // Желтый: 2 дня
+  const isDataStale = daysDiff >= 3; // Красный: 3+ дней
   const isWhoopSource = source.toLowerCase() === 'whoop';
+  
+  console.log('[WidgetCard freshness]', { metricName, source, date: data.date, daysDiff });
   
   // Проверка на кешированные данные без активного токена
   const isCachedWithoutToken = isWhoopSource && hasActiveToken === false && data;
   
   const getDataAgeMessage = () => {
     if (isCachedWithoutToken) return 'Whoop не подключен. Показаны кешированные данные';
-    if (hoursOld <= 24) return 'Данные актуальны';
-    if (hoursOld <= 48) return `Данные не обновлялись ${Math.floor(hoursOld)} часов`;
-    const daysOld = Math.floor(hoursOld / 24);
-    return `Данные не обновлялись ${daysOld} ${daysOld === 1 ? 'день' : 'дней'}`;
+    if (daysDiff <= 1) return 'Данные актуальны';
+    if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
+    return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
   };
 
   return (
@@ -455,7 +461,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Подключить Whoop
               </Button>
-            ) : hoursOld > 168 ? (
+            ) : daysDiff > 7 ? (
               <Button 
                 size="sm" 
                 variant="outline" 
