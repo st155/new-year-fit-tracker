@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
 import { 
   useWidgetsQuery, 
   useAddWidgetMutation, 
@@ -24,8 +23,7 @@ import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
-  const { user } = useAuth();
-  const { isTrainer, role, loading: roleLoading } = useUserRole();
+  const { user, isTrainer, role } = useAuth();
   const queryClient = useQueryClient();
   
   // Use React Query hooks
@@ -127,7 +125,7 @@ const Index = () => {
 
   const hiddenCount = widgets.length - processedWidgets.length;
 
-  if (loading || roleLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">

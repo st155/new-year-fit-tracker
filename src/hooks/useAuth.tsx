@@ -243,33 +243,37 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   
-  // Get user role from profiles table
-  const { data: profile } = useQuery({
-    queryKey: ['profile', context.user?.id],
+  // Get user role from user_roles table
+  const { data: userRoles } = useQuery({
+    queryKey: ['user-roles', context.user?.id],
     queryFn: async () => {
-      if (!context.user?.id) return null;
+      if (!context.user?.id) return [];
       
       const { data } = await supabase
-        .from('profiles')
+        .from('user_roles')
         .select('role')
-        .eq('user_id', context.user.id)
-        .single();
+        .eq('user_id', context.user.id);
       
-      return data;
+      return data || [];
     },
     enabled: !!context.user?.id,
     staleTime: 10 * 60 * 1000,
   });
   
-  const role = profile?.role ?? 'client';
+  // Get highest priority role
+  const roles = userRoles?.map(r => r.role) || [];
+  const role = roles.includes('admin') ? 'admin' : 
+               roles.includes('trainer') ? 'trainer' : 
+               'client';
   
   return {
     ...context,
     
     // Role helpers
     role,
-    isTrainer: role === 'trainer',
-    isAdmin: role === 'admin',
-    isClient: role === 'client' || !role,
+    roles,
+    isTrainer: roles.includes('trainer') || roles.includes('admin'),
+    isAdmin: roles.includes('admin'),
+    isClient: !roles.includes('trainer') && !roles.includes('admin'),
   };
 };
