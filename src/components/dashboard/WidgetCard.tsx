@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon } from 'lucide-react';
 import { fetchWidgetData } from '@/hooks/useWidgets';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -245,7 +245,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
 
   if (!data) {
     return (
-      <Card className="overflow-hidden border-border/40">
+      <Card 
+        className="overflow-hidden border-border/40 cursor-pointer hover:bg-accent/50 hover:shadow-lg transition-all hover:scale-[1.02]"
+        onClick={() => navigate('/integrations')}
+      >
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
@@ -258,7 +261,11 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
             </div>
             <Icon className="h-5 w-5 opacity-40" style={{ color }} />
           </div>
-          <p className="text-sm text-muted-foreground">Нет данных</p>
+          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
+          <p className="text-xs text-primary/70 flex items-center gap-1">
+            <LinkIcon className="h-3 w-3" />
+            Нажмите для подключения
+          </p>
         </CardContent>
       </Card>
     );
@@ -425,7 +432,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 size="sm" 
                 variant="destructive" 
                 className="w-full text-xs"
-                onClick={() => navigate('/integrations')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/integrations');
+                }}
               >
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Подключить Whoop
@@ -435,7 +445,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 size="sm" 
                 variant="outline" 
                 className="w-full text-xs"
-                onClick={() => navigate('/integrations')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/integrations');
+                }}
               >
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Переподключить
@@ -445,7 +458,10 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 size="sm" 
                 variant="default" 
                 className="w-full text-xs"
-                onClick={syncWhoopData}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  syncWhoopData();
+                }}
                 disabled={syncing}
               >
                 {syncing ? (

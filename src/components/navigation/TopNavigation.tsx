@@ -123,7 +123,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/integrations')}>
+              <DropdownMenuItem onClick={() => navigate('/integrations')} className="cursor-pointer flex items-center gap-2">
+                <Settings className="h-4 w-4" />
                 <span>{t('navigation.integrations')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/profile')}>
