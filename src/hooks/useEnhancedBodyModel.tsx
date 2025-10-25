@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useInBodyAnalyses } from '@/hooks/useInBodyAnalyses';
-import { useLatestUnifiedMetrics } from '@/hooks/useLatestUnifiedMetrics';
+import { useLatestMetrics } from '@/hooks/metrics';
 import { synthesizeSegmentalData, type SegmentalData } from '@/lib/body-synthesis';
 import { differenceInDays } from 'date-fns';
 
@@ -46,7 +46,7 @@ export function useEnhancedBodyModel(userId?: string, targetDate?: Date): Enhanc
   const actualUserId = userId || user?.id;
   
   const { data: inbodyAnalyses = [], isLoading: inbodyLoading } = useInBodyAnalyses(actualUserId);
-  const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestUnifiedMetrics();
+  const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestMetrics(actualUserId);
 
   const enhancedData = useMemo(() => {
     // Default empty state

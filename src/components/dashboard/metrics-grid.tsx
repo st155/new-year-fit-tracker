@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { useMetricsView } from "@/contexts/MetricsViewContext";
-import { useLatestUnifiedMetrics } from "@/hooks/useLatestUnifiedMetrics";
-import { useDeviceMetrics } from "@/hooks/useDeviceMetrics";
+import { useLatestMetrics, useDeviceMetrics } from "@/hooks/metrics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MetricsGridSkeleton } from "@/components/ui/dashboard-skeleton";
@@ -128,10 +127,10 @@ export function MetricsGrid() {
   const { viewMode, deviceFilter } = useMetricsView();
   
   // Unified metrics
-  const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestUnifiedMetrics();
+  const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestMetrics(user?.id);
   
   // Device-specific metrics
-  const { metrics: deviceMetrics, loading: deviceLoading } = useDeviceMetrics(deviceFilter);
+  const { metrics: deviceMetrics, loading: deviceLoading } = useDeviceMetrics(user?.id, deviceFilter);
   
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["body_fat", "weight", "recovery", "max_hr"]);
   const [metrics, setMetrics] = useState<Record<string, any>>({

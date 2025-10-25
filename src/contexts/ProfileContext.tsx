@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useProfileQuery } from '@/hooks/core/useProfileQuery';
 
 interface Profile {
   user_id: string;
@@ -21,58 +21,14 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data: profile, isLoading: loading, refetch: queryRefetch } = useProfileQuery(user?.id);
 
-  const fetchProfile = async () => {
-    if (!user) {
-      setProfile(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    try {
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      );
-
-      const fetchPromise = supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      const { data, error: dbError } = await Promise.race([
-        fetchPromise,
-        timeoutPromise
-      ]) as any;
-
-      if (dbError) {
-        throw dbError;
-      }
-      
-      setProfile(data);
-      setError(null);
-    } catch (err) {
-      const error = err as Error;
-      if (import.meta.env.DEV) {
-        console.error('💥 [ProfileProvider] Error:', error.message);
-      }
-      setProfile(null);
-      setError(error);
-    } finally {
-      setLoading(false);
-    }
+  const refetch = async () => {
+    await queryRefetch();
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, [user]);
-
   return (
-    <ProfileContext.Provider value={{ profile, loading, refetch: fetchProfile }}>
+    <ProfileContext.Provider value={{ profile: profile || null, loading, refetch }}>
       {children}
     </ProfileContext.Provider>
   );

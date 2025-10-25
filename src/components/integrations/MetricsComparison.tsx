@@ -1,4 +1,4 @@
-import { useUnifiedMetrics } from '@/hooks/useUnifiedMetrics';
+import { useUnifiedMetricsQuery } from '@/hooks/metrics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,17 +7,21 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
 
 export function MetricsComparison() {
+  const { user } = useAuth();
   const [selectedMetric, setSelectedMetric] = useState<string>('');
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - 30);
   
-  const { metrics, loading } = useUnifiedMetrics(
-    undefined, 
-    selectedMetric || undefined,
-    startDate,
-    new Date()
+  const { data: metrics = [], isLoading: loading } = useUnifiedMetricsQuery(
+    user?.id, 
+    {
+      metricName: selectedMetric || undefined,
+      startDate,
+      endDate: new Date()
+    }
   );
 
   // Получаем уникальные метрики
