@@ -44,6 +44,56 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
           return a.activity_subtype === filterType;
         });
         
+        // Special handling for workouts - load from workouts table
+        if (filterType === 'workout') {
+          const { data: workouts, error: workoutsError } = await supabase
+            .from('workouts')
+            .select('*')
+            .order('start_time', { ascending: false })
+            .limit(PAGE_SIZE * 2);
+          
+          if (!workoutsError && workouts) {
+            // Transform workouts into activity_feed format
+            const workoutActivities = workouts.map(w => ({
+              id: `workout_${w.id}`,
+              user_id: w.user_id,
+              action_type: 'workout',
+              action_text: `${w.workout_type || 'Workout'} • ${w.duration_minutes || 0} min`,
+              created_at: w.created_at,
+              updated_at: w.updated_at || w.created_at,
+              activity_subtype: 'workout',
+              is_milestone: false,
+              milestone_type: null,
+              metadata: {
+                workout_id: w.id,
+                workout_type: w.workout_type,
+                duration_minutes: w.duration_minutes,
+                calories_burned: w.calories_burned,
+                heart_rate_avg: w.heart_rate_avg,
+                heart_rate_max: w.heart_rate_max,
+                distance_km: w.distance_km,
+                source: w.source,
+              },
+              aggregated_data: {
+                calories: w.calories_burned,
+                duration: w.duration_minutes,
+                hr_avg: w.heart_rate_avg,
+                hr_max: w.heart_rate_max,
+                distance: w.distance_km,
+                workout_type: w.workout_type,
+              },
+              source_table: 'workouts',
+              source_id: w.id,
+              measurement_date: w.start_time?.split('T')[0] || null,
+            }));
+            
+            // Merge with existing activities and sort by created_at
+            filtered = [...workoutActivities, ...filtered]
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .slice(0, PAGE_SIZE);
+          }
+        }
+        
         // Step 2: de-duplicate aggregated daily entries (sleep, steps)
         if (filterType === 'sleep_recovery' || filterType === 'daily_steps') {
           const map = new Map<string, any>();

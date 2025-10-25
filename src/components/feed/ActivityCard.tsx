@@ -9,6 +9,7 @@ import { CommentDialog } from "./CommentDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
+import { getWorkoutTypeName, getWorkoutIcon } from "@/lib/workout-types";
 
 interface ActivityCardProps {
   activity: {
@@ -180,9 +181,11 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       return { icon: Footprints, color: '#FBBF24' }; // Yellow
     }
     
-    // Workout
+    // Workout - with emoji based on type
     if (subtype === 'workout' || actionText.includes('workout') || actionText.includes('тренир')) {
-      return { icon: Dumbbell, color: '#84CC16' }; // Lime
+      const workoutType = activity.metadata?.workout_type || activity.aggregated_data?.workout_type;
+      const emoji = getWorkoutIcon(workoutType);
+      return { icon: Dumbbell, color: '#84CC16', emoji }; // Lime
     }
     
     // Habits
@@ -251,14 +254,22 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       return `${steps.toLocaleString()} steps`;
     }
     
-    // Workout - show strain and calories
+    // Workout - show type, duration, calories, HR
     if (subtype === 'workout') {
-      const strain = aggregated.strain;
-      const calories = aggregated.calories;
+      const metadata = activity.metadata || {};
+      const agg = aggregated;
       
-      let text = 'Workout';
-      if (strain) text += ` • ${strain} strain`;
+      const workoutType = getWorkoutTypeName(metadata.workout_type || agg.workout_type);
+      const duration = metadata.duration_minutes || agg.duration;
+      const calories = metadata.calories_burned || agg.calories;
+      const hrAvg = metadata.heart_rate_avg || agg.hr_avg;
+      const distance = metadata.distance_km || agg.distance;
+      
+      let text = workoutType;
+      if (duration) text += ` • ${Math.round(duration)} min`;
       if (calories) text += ` • ${Math.round(calories)} kcal`;
+      if (hrAvg) text += ` • ${Math.round(hrAvg)} bpm`;
+      if (distance) text += ` • ${distance.toFixed(1)} km`;
       
       return text;
     }
@@ -307,6 +318,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const renderEnhancedContent = () => {
     const subtype = activity.activity_subtype;
     const aggregated = activity.aggregated_data || {};
+    const metadata = activity.metadata || {};
     
     // Steps with progress bar
     if (subtype === 'daily_steps') {
@@ -320,6 +332,37 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
             <span>Goal: 10,000</span>
             <span>{progress.toFixed(0)}%</span>
           </div>
+        </div>
+      );
+    }
+    
+    // Workout stats
+    if (subtype === 'workout') {
+      const duration = metadata.duration_minutes || aggregated.duration;
+      const calories = metadata.calories_burned || aggregated.calories;
+      const hrAvg = metadata.heart_rate_avg || aggregated.hr_avg;
+      const hrMax = metadata.heart_rate_max || aggregated.hr_max;
+      
+      return (
+        <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] text-white/80">
+          {duration && (
+            <div className="flex flex-col items-center p-1 bg-white/5 rounded">
+              <Timer className="h-3 w-3 mb-0.5" />
+              <span>{Math.round(duration)}m</span>
+            </div>
+          )}
+          {calories && (
+            <div className="flex flex-col items-center p-1 bg-white/5 rounded">
+              <Flame className="h-3 w-3 mb-0.5" />
+              <span>{Math.round(calories)}</span>
+            </div>
+          )}
+          {hrAvg && (
+            <div className="flex flex-col items-center p-1 bg-white/5 rounded">
+              <Heart className="h-3 w-3 mb-0.5" />
+              <span>{Math.round(hrAvg)}</span>
+            </div>
+          )}
         </div>
       );
     }
@@ -349,13 +392,21 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       
       <div className="flex items-center gap-3">
         <div
-          className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center"
+          className="h-10 w-10 shrink-0 rounded-full border-[3px] flex items-center justify-center relative"
           style={{
             borderColor: borderStyle.color,
             background: `linear-gradient(135deg, ${iconColor}22, ${iconColor}44)`,
           }}
         >
-          <ActivityIcon className="h-5 w-5" style={{ color: iconColor }} />
+          {/* Show workout emoji if available */}
+          {activity.activity_subtype === 'workout' && getActivityIconAndColor().emoji && (
+            <span className="absolute text-lg z-10">
+              {getActivityIconAndColor().emoji}
+            </span>
+          )}
+          {!getActivityIconAndColor().emoji && (
+            <ActivityIcon className="h-5 w-5" style={{ color: iconColor }} />
+          )}
         </div>
         
         <div className="flex-1 min-w-0">
