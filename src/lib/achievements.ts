@@ -223,3 +223,206 @@ export const getCategoryName = (category: AchievementCategory): string => {
     case 'elite': return 'Elite';
   }
 };
+
+// Calculate user achievements based on metrics
+export async function calculateUserAchievements(
+  userId: string,
+  userMetrics?: {
+    streakDays: number;
+    totalWorkouts: number;
+    totalCalories: number;
+    avgRecovery: number;
+    currentWeight?: number;
+    startWeight?: number;
+    bodyFat?: number;
+    pullUps?: number;
+    vo2Max?: number;
+  }
+): Promise<Achievement[]> {
+  const achievements = [...ACHIEVEMENTS];
+  
+  if (!userMetrics) return achievements;
+
+  // Check streak achievements
+  if (userMetrics.streakDays >= 7) {
+    const idx = achievements.findIndex(a => a.id === 'streak_7');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.streakDays,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  if (userMetrics.streakDays >= 30) {
+    const idx = achievements.findIndex(a => a.id === 'streak_30');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.streakDays,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  if (userMetrics.streakDays >= 100) {
+    const idx = achievements.findIndex(a => a.id === 'streak_100');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.streakDays,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  // Check workout achievements
+  if (userMetrics.totalWorkouts >= 10) {
+    const idx = achievements.findIndex(a => a.id === 'workouts_10');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.totalWorkouts,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  if (userMetrics.totalWorkouts >= 50) {
+    const idx = achievements.findIndex(a => a.id === 'workouts_50');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.totalWorkouts,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  if (userMetrics.totalWorkouts >= 100) {
+    const idx = achievements.findIndex(a => a.id === 'workouts_100');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.totalWorkouts,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  // Check weight loss achievements
+  if (userMetrics.startWeight && userMetrics.currentWeight) {
+    const weightLost = userMetrics.startWeight - userMetrics.currentWeight;
+    
+    if (weightLost >= 5) {
+      const idx = achievements.findIndex(a => a.id === 'weight_lost_5');
+      if (idx >= 0) {
+        achievements[idx] = {
+          ...achievements[idx],
+          unlocked: true,
+          progress: Math.round(weightLost),
+          unlockedAt: new Date().toISOString()
+        };
+      }
+    }
+
+    if (weightLost >= 10) {
+      const idx = achievements.findIndex(a => a.id === 'weight_lost_10');
+      if (idx >= 0) {
+        achievements[idx] = {
+          ...achievements[idx],
+          unlocked: true,
+          progress: Math.round(weightLost),
+          unlockedAt: new Date().toISOString()
+        };
+      }
+    }
+  }
+
+  // Check body fat achievements
+  if (userMetrics.bodyFat) {
+    if (userMetrics.bodyFat <= 15) {
+      const idx = achievements.findIndex(a => a.id === 'bodyfat_15');
+      if (idx >= 0) {
+        achievements[idx] = {
+          ...achievements[idx],
+          unlocked: true,
+          progress: Math.round(userMetrics.bodyFat),
+          unlockedAt: new Date().toISOString()
+        };
+      }
+    }
+
+    if (userMetrics.bodyFat <= 10) {
+      const idx = achievements.findIndex(a => a.id === 'bodyfat_10');
+      if (idx >= 0) {
+        achievements[idx] = {
+          ...achievements[idx],
+          unlocked: true,
+          progress: Math.round(userMetrics.bodyFat),
+          unlockedAt: new Date().toISOString()
+        };
+      }
+    }
+  }
+
+  // Check elite achievements
+  if (userMetrics.pullUps && userMetrics.pullUps >= 20) {
+    const idx = achievements.findIndex(a => a.id === 'pullups_20');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.pullUps,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  if (userMetrics.vo2Max && userMetrics.vo2Max >= 50) {
+    const idx = achievements.findIndex(a => a.id === 'vo2max_50');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: Math.round(userMetrics.vo2Max),
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  // Check recovery achievement (7 days with 90+ recovery)
+  if (userMetrics.avgRecovery >= 90) {
+    const idx = achievements.findIndex(a => a.id === 'recovery_perfect_week');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: 7,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  // Check calorie achievement
+  if (userMetrics.totalCalories >= 10000) {
+    const idx = achievements.findIndex(a => a.id === 'calories_10k');
+    if (idx >= 0) {
+      achievements[idx] = {
+        ...achievements[idx],
+        unlocked: true,
+        progress: userMetrics.totalCalories,
+        unlockedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  return achievements;
+}

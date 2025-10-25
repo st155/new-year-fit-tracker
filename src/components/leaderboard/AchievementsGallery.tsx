@@ -21,26 +21,35 @@ export function AchievementsGallery() {
   const loadAchievements = async () => {
     if (!user) return;
 
-    // Load unlocked achievements from DB
-    const { data: unlockedData } = await supabase
-      .from('user_achievements')
-      .select('achievement_id, unlocked_at, progress')
-      .eq('user_id', user.id);
+    try {
+      // Load unlocked achievements from DB
+      const { data: unlockedData, error } = await supabase
+        .from('user_achievements' as any)
+        .select('achievement_id, unlocked_at, progress')
+        .eq('user_id', user.id);
 
-    if (unlockedData) {
-      const updated = ACHIEVEMENTS.map(achievement => {
-        const unlocked = unlockedData.find(u => u.achievement_id === achievement.id);
-        if (unlocked) {
-          return {
-            ...achievement,
-            unlocked: true,
-            unlockedAt: unlocked.unlocked_at,
-            progress: unlocked.progress || achievement.requirement
-          };
-        }
-        return achievement;
-      });
-      setAchievements(updated);
+      if (error) {
+        console.error('Error loading achievements:', error);
+        return;
+      }
+
+      if (unlockedData && Array.isArray(unlockedData)) {
+        const updated = ACHIEVEMENTS.map(achievement => {
+          const unlocked = (unlockedData as any[]).find((u: any) => u.achievement_id === achievement.id);
+          if (unlocked) {
+            return {
+              ...achievement,
+              unlocked: true,
+              unlockedAt: unlocked.unlocked_at,
+              progress: unlocked.progress || achievement.requirement
+            };
+          }
+          return achievement;
+        });
+        setAchievements(updated);
+      }
+    } catch (error) {
+      console.error('Failed to load achievements:', error);
     }
   };
 

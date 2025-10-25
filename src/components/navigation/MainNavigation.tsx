@@ -77,6 +77,12 @@ const navigationItems: NavigationItemExtended[] = [
     description: "descriptions.progress",
   },
   {
+    title: "Leaderboard",
+    href: "/leaderboard",
+    iconType: "stats",
+    description: "Top performers & achievements",
+  },
+  {
     title: "Goals",
     href: "/goals",
     iconType: "stats",

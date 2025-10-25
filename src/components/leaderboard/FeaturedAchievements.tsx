@@ -24,7 +24,7 @@ export function FeaturedAchievements() {
 
   const loadRecentAchievements = async () => {
     const { data } = await supabase
-      .from('user_achievements')
+      .from('user_achievements' as any)
       .select(`
         user_id,
         achievement_id,
