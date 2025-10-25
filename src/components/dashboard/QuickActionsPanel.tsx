@@ -37,7 +37,7 @@ export const QuickActionsPanel = () => {
         navigate('/habits');
         setIsOpen(false);
       },
-      color: 'text-green-500'
+      color: 'text-success'
     },
     {
       icon: Dumbbell,
@@ -46,7 +46,7 @@ export const QuickActionsPanel = () => {
         navigate('/fitness-data');
         setIsOpen(false);
       },
-      color: 'text-blue-500'
+      color: 'text-accent'
     },
     {
       icon: Camera,
@@ -55,7 +55,7 @@ export const QuickActionsPanel = () => {
         setShowPhotoUpload(true);
         setIsOpen(false);
       },
-      color: 'text-purple-500'
+      color: 'text-secondary'
     }
   ];
 

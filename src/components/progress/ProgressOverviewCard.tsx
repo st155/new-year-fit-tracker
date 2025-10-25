@@ -54,31 +54,31 @@ export const ProgressOverviewCard = ({
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs">
+            <div className="flex items-center gap-1 text-success text-xs">
               <Trophy className="h-3 w-3" />
               Completed
             </div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-2xl font-bold text-success">
               {completedGoals}
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-xs">
+            <div className="flex items-center gap-1 text-accent text-xs">
               <TrendingUp className="h-3 w-3" />
               In Progress
             </div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold text-accent">
               {inProgressGoals}
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-xs">
+            <div className="flex items-center gap-1 text-[hsl(var(--gold))] text-xs">
               <Zap className="h-3 w-3" />
               Points
             </div>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+            <div className="text-2xl font-bold text-[hsl(var(--gold))]">
               {totalPoints}
             </div>
             <div className="text-xs text-muted-foreground">

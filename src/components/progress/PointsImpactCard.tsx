@@ -30,11 +30,11 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
       case 'high':
-        return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       case 'medium':
-        return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20';
+        return 'bg-[hsl(var(--gold))]/10 text-[hsl(var(--gold))] border-[hsl(var(--gold))]/20';
       case 'low':
-        return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20';
+        return 'bg-success/10 text-success border-success/20';
     }
   };
 
@@ -42,16 +42,16 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-yellow-500" />
+          <Zap className="h-5 w-5 text-[hsl(var(--gold))]" />
           Points Impact Calculator
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary Card */}
-        <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-[hsl(var(--gold))]/10 to-secondary/10 border border-[hsl(var(--gold))]/20">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Potential Gain</span>
-            <Badge className="bg-yellow-500 text-black">
+            <Badge className="bg-[hsl(var(--gold))] text-black">
               +{totalPotentialGain} points
             </Badge>
           </div>
@@ -91,7 +91,7 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
                       <Badge className={getPriorityColor(goal.priority)}>
                         {goal.priority}
                       </Badge>
-                      <div className="text-xs font-semibold text-yellow-600 dark:text-yellow-400">
+                      <div className="text-xs font-semibold text-[hsl(var(--gold))]">
                         +{potentialGain}
                       </div>
                     </div>
@@ -118,7 +118,7 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
               <span className="font-medium">What If Scenario</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              If you complete these 3 goals, you'll gain <span className="font-semibold text-yellow-600 dark:text-yellow-400">+{totalPotentialGain} points</span>
+              If you complete these 3 goals, you'll gain <span className="font-semibold text-[hsl(var(--gold))]">+{totalPotentialGain} points</span>
               {nextRankPoints - totalPotentialGain <= 0 
                 ? ' and overtake your next competitor! 🔥'
                 : ` and need ${nextRankPoints - totalPotentialGain} more to reach rank #${currentRank - 1}.`

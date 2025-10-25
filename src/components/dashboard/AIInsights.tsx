@@ -137,24 +137,24 @@ export const AIInsights = () => {
   const getIcon = (type: AIInsight['type']) => {
     switch (type) {
       case 'highlight':
-        return <Sparkles className="h-5 w-5 text-yellow-500" />;
+        return <Sparkles className="h-5 w-5 text-primary" />;
       case 'action_required':
-        return <AlertCircle className="h-5 w-5 text-orange-500" />;
+        return <AlertCircle className="h-5 w-5 text-destructive" />;
       case 'recommendation':
-        return <TrendingUp className="h-5 w-5 text-blue-500" />;
+        return <TrendingUp className="h-5 w-5 text-accent" />;
       case 'achievement':
-        return <Trophy className="h-5 w-5 text-green-500" />;
+        return <Trophy className="h-5 w-5 text-success" />;
     }
   };
 
   const getPriorityColor = (priority: AIInsight['priority']) => {
     switch (priority) {
       case 'high':
-        return 'border-l-orange-500';
+        return 'border-l-destructive';
       case 'medium':
-        return 'border-l-blue-500';
+        return 'border-l-accent';
       case 'low':
-        return 'border-l-green-500';
+        return 'border-l-success';
     }
   };
 

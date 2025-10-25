@@ -17,18 +17,18 @@ interface DisciplineRadialChartProps {
 
 export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProps) => {
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-green-500';
-    if (progress >= 50) return 'bg-blue-500';
-    if (progress >= 25) return 'bg-yellow-500';
-    return 'bg-orange-500';
+    if (progress >= 80) return 'bg-success';
+    if (progress >= 50) return 'bg-accent';
+    if (progress >= 25) return 'bg-[hsl(var(--gold))]';
+    return 'bg-destructive';
   };
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="h-3 w-3 text-green-500" />;
+        return <TrendingUp className="h-3 w-3 text-success" />;
       case 'down':
-        return <TrendingDown className="h-3 w-3 text-red-500" />;
+        return <TrendingDown className="h-3 w-3 text-destructive" />;
       case 'stable':
         return <Minus className="h-3 w-3 text-muted-foreground" />;
     }
@@ -68,8 +68,8 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
                 <div className="flex items-center gap-2">
                   {getTrendIcon(discipline.trend)}
                   <span className={`text-xs ${
-                    discipline.trend === 'up' ? 'text-green-500' :
-                    discipline.trend === 'down' ? 'text-red-500' :
+                    discipline.trend === 'up' ? 'text-success' :
+                    discipline.trend === 'down' ? 'text-destructive' :
                     'text-muted-foreground'
                   }`}>
                     {discipline.trend === 'up' ? '+' : discipline.trend === 'down' ? '-' : ''}
