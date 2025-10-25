@@ -69,17 +69,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Internal component that renders inside QueryClientProvider
-const AppContent = () => {
+// Component that uses auth - must be inside AuthProvider
+const AppRoutes = () => {
   const { user } = useAuth();
-
-  // Initialize invalidation, prefetch strategies, and web vitals
-  useEffect(() => {
-    initInvalidator(queryClient);
-    initPrefetcher(queryClient);
-    initWebVitals();
-    logger.info('[App] Query strategies and web vitals initialized');
-  }, []);
 
   // Prefetch critical data after login
   useEffect(() => {
@@ -92,33 +84,9 @@ const AppContent = () => {
     }
   }, [user]);
 
-  // Service worker registration
-  useEffect(() => {
-    if (import.meta.env.PROD) {
-      try {
-        registerServiceWorker();
-      } catch (error) {
-        console.error('Service worker registration failed:', error);
-      }
-    } else {
-      // Dev-защита: отключаем любые SW и чистим кеши
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => {
-          regs.forEach(r => r.unregister());
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-      }
-    }
-  }, []);
-
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <BrowserRouter>
-        <AuthProvider>
-          <Suspense fallback={<PageLoader message="Loading..." />}>
-            <Routes>
+    <Suspense fallback={<PageLoader message="Loading..." />}>
+      <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/" element={
@@ -243,10 +211,49 @@ const AppContent = () => {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Sonner />
+            <InstallPrompt />
+            <UpdatePrompt />
           </Suspense>
-          <Sonner />
-          <InstallPrompt />
-          <UpdatePrompt />
+  );
+};
+
+// Internal component that renders inside QueryClientProvider
+const AppContent = () => {
+  // Initialize invalidation, prefetch strategies, and web vitals
+  useEffect(() => {
+    initInvalidator(queryClient);
+    initPrefetcher(queryClient);
+    initWebVitals();
+    logger.info('[App] Query strategies and web vitals initialized');
+  }, []);
+
+  // Service worker registration
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      try {
+        registerServiceWorker();
+      } catch (error) {
+        console.error('Service worker registration failed:', error);
+      }
+    } else {
+      // Dev-защита: отключаем любые SW и чистим кеши
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => r.unregister());
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      }
+    }
+  }, []);
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
