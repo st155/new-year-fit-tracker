@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useBodyComposition } from "@/hooks/useBodyComposition";
+import { useBodyComposition } from "@/hooks/composite/data/useBodyComposition";
 import { CurrentMetrics } from "@/components/body/CurrentMetrics";
 import { BodyHistory } from "@/components/body/BodyHistory";
 import { ComparisonView } from "@/components/body/ComparisonView";
@@ -12,8 +12,28 @@ import { useRef } from "react";
 
 export default function Body() {
   const { user } = useAuth();
-  const { current, history, isLoading } = useBodyComposition(user?.id);
+  const { bodyData, trends, isLoading } = useBodyComposition({
+    dateRange: {
+      start: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    }
+  });
   const inbodyHistoryRef = useRef<{ refresh: () => void }>(null);
+
+  // Transform for legacy components
+  const current = bodyData ? {
+    weight: bodyData.weight,
+    body_fat_percentage: bodyData.bodyFat,
+    skeletal_muscle_mass: bodyData.muscleMass,
+    measurement_date: bodyData.measurementDate,
+  } : null;
+
+  const history = Object.values(trends.weight || []).map((_, idx) => ({
+    weight: trends.weight[idx]?.value || 0,
+    body_fat_percentage: trends.bodyFat[idx]?.value || 0,
+    skeletal_muscle_mass: trends.muscleMass[idx]?.value || 0,
+    measurement_date: trends.weight[idx]?.date || '',
+  }));
 
   return (
     <div className="container py-6 space-y-6">
