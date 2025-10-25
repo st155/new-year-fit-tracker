@@ -6,6 +6,8 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
+import { AIInsights } from '@/components/dashboard/AIInsights';
+import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -175,6 +177,9 @@ const Index = () => {
           </div>
         )}
 
+        {/* AI Insights */}
+        <AIInsights />
+
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
@@ -209,6 +214,9 @@ const Index = () => {
           <Leaderboard />
         </div>
       </div>
+
+      {/* Quick Actions Panel */}
+      <QuickActionsPanel />
     </div>
   );
 };
