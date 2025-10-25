@@ -1,8 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Widget } from './useWidgets';
-import { fetchWidgetData } from './useWidgets';
+
+export interface Widget {
+  id: string;
+  user_id: string;
+  metric_name: string;
+  source: string;
+  position: number;
+  is_visible: boolean;
+  created_at?: string;
+}
 
 // Structured query keys for React Query
 export const widgetKeys = {
@@ -77,6 +85,8 @@ export function useWidgetsQuery(userId: string | undefined) {
 
 /**
  * Hook for fetching data for a specific widget
+ * Note: This is a placeholder - actual widget data fetching
+ * should be implemented based on the metric type
  */
 export function useWidgetDataQuery(
   userId: string | undefined,
@@ -86,7 +96,10 @@ export function useWidgetDataQuery(
 ) {
   return useQuery({
     queryKey: widgetKeys.data(userId!, metricName, source),
-    queryFn: () => fetchWidgetData(userId!, metricName, source),
+    queryFn: async () => {
+      // Placeholder - implement based on your metric data structure
+      return null;
+    },
     enabled: !!userId && enabled,
     staleTime: 2 * 60 * 1000, // 2 minutes for metric data
     gcTime: 5 * 60 * 1000,

@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Plus, Trash2, GripVertical } from 'lucide-react';
-import { Widget } from '@/hooks/useWidgets';
+import { Widget } from '@/hooks/useWidgetsQuery';
 import {
   Select,
   SelectContent,

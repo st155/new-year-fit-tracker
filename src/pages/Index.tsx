@@ -1,8 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useWidgetsQuery, widgetKeys } from '@/hooks/useWidgetsQuery';
-import { useWidgets } from '@/hooks/useWidgets';
+import { 
+  useWidgetsQuery, 
+  useAddWidgetMutation, 
+  useRemoveWidgetMutation, 
+  useReorderWidgetsMutation,
+  widgetKeys,
+  type Widget 
+} from '@/hooks/useWidgetsQuery';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -23,7 +29,25 @@ const Index = () => {
   
   // Use React Query hooks
   const { data: widgets = [], isLoading: loading } = useWidgetsQuery(user?.id);
-  const { addWidget, removeWidget, reorderWidgets } = useWidgets(user?.id);
+  const addWidgetMutation = useAddWidgetMutation();
+  const removeWidgetMutation = useRemoveWidgetMutation();
+  const reorderWidgetsMutation = useReorderWidgetsMutation();
+  
+  const addWidget = (metricName: string, source: string) => {
+    if (!user?.id) return;
+    const position = widgets.length;
+    addWidgetMutation.mutate({ userId: user.id, metricName, source, position });
+  };
+
+  const removeWidget = (widgetId: string) => {
+    if (!user?.id) return;
+    removeWidgetMutation.mutate({ userId: user.id, widgetId });
+  };
+
+  const reorderWidgets = (newOrder: Widget[]) => {
+    if (!user?.id) return;
+    reorderWidgetsMutation.mutate({ userId: user.id, widgets: newOrder });
+  };
   
   const [refreshKey, setRefreshKey] = useState(0);
   const [showOnlyRecent, setShowOnlyRecent] = useState(() => {

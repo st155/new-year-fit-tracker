@@ -1,5 +1,12 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useWidgets } from '@/hooks/useWidgets';
+import { 
+  useWidgetsQuery, 
+  useAddWidgetMutation, 
+  useRemoveWidgetMutation, 
+  useReorderWidgetsMutation,
+  widgetKeys 
+} from '@/hooks/useWidgetsQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,7 +15,31 @@ import { RefreshCw } from 'lucide-react';
 
 export default function ProgressNew() {
   const { user } = useAuth();
-  const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
+  const { data: widgets = [], isLoading: loading } = useWidgetsQuery(user?.id);
+  const addWidgetMutation = useAddWidgetMutation();
+  const removeWidgetMutation = useRemoveWidgetMutation();
+  const reorderWidgetsMutation = useReorderWidgetsMutation();
+  const queryClient = useQueryClient();
+
+  const addWidget = (metricName: string, source: string) => {
+    if (!user?.id) return;
+    const position = widgets.length;
+    addWidgetMutation.mutate({ userId: user.id, metricName, source, position });
+  };
+
+  const removeWidget = (widgetId: string) => {
+    if (!user?.id) return;
+    removeWidgetMutation.mutate({ userId: user.id, widgetId });
+  };
+
+  const reorderWidgets = (newOrder: any[]) => {
+    if (!user?.id) return;
+    reorderWidgetsMutation.mutate({ userId: user.id, widgets: newOrder });
+  };
+
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: widgetKeys.list(user?.id!) });
+  };
 
   if (loading) {
     return (

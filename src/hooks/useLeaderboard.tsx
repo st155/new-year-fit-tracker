@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/lib/challenge-scoring-v3';
+import { useAuth } from './useAuth';
+import { useLeaderboardQuery } from './core/useLeaderboardQuery';
 
 interface UseLeaderboardOptions {
   limit?: number;
@@ -13,110 +13,27 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   const { user } = useAuth();
   const { limit, autoRefresh = false, refreshInterval = 30000 } = options;
   
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const { 
+    data: leaderboard = [], 
+    isLoading: loading, 
+    error: queryError,
+    refetch 
+  } = useLeaderboardQuery(user?.id, { limit });
 
-  const fetchLeaderboard = async () => {
-    try {
-      if (!user) {
-        setLeaderboard([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      // Query the optimized view directly
-      const { data: viewData, error: queryError } = await supabase
-        .from('challenge_leaderboard_v2' as any)
-        .select('*')
-        .order('total_points', { ascending: false })
-        .limit(limit || 100);
-      
-      if (queryError) throw queryError;
-      
-      if (!viewData || viewData.length === 0) {
-        setLeaderboard([]);
-        setChallengeId(null);
-        setLoading(false);
-        return;
-      }
-
-      processLeaderboardData(viewData as any[]);
-    } catch (err) {
-      console.error('Error fetching leaderboard:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load leaderboard');
-      setLeaderboard([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const processLeaderboardData = (data: any[]) => {
-    if (!data || data.length === 0) {
-      setLeaderboard([]);
-      setChallengeId(null);
-      return;
-    }
-
-    // Get challenge ID from first entry
-    setChallengeId(data[0].challenge_id);
-
-    // Enrich entries with badges and ranks
-    const enrichedData = data.map((entry: any, index: number) => {
-      const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
-        userId: entry.user_id,
-        username: entry.username || entry.full_name || 'Anonymous',
-        fullName: entry.full_name,
-        avatarUrl: entry.avatar_url,
-        totalPoints: entry.total_points || 0,
-        activeDays: entry.active_days || 0,
-        lastActivityDate: entry.last_activity_date,
-        streakDays: entry.streak_days || 0,
-        avgRecovery: Math.round(entry.avg_recovery || 0),
-        avgStrain: Math.round((entry.avg_strain || 0) * 10) / 10,
-        avgSleep: Math.round((entry.avg_sleep || 0) * 10) / 10,
-        avgSleepEfficiency: Math.round(entry.avg_sleep_efficiency || 0),
-        avgRestingHr: Math.round(entry.avg_resting_hr || 0),
-        avgHrv: Math.round(entry.avg_hrv || 0),
-        totalSteps: entry.total_steps || 0,
-        totalActiveCalories: entry.total_active_calories || 0,
-        totalGoals: 0,
-        goalsWithBaseline: 0,
-        trackableGoals: 0,
-        isUser: entry.user_id === user?.id
-      };
-
-      return enrichLeaderboardEntry(baseEntry, index + 1);
-    });
-
-    // Re-sort after badge bonus
-    const sortedData = enrichedData.sort((a, b) => b.totalPoints - a.totalPoints);
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!autoRefresh) return;
     
-    // Update ranks after re-sorting
-    const finalData = sortedData.map((entry, index) => ({
-      ...entry,
-      rank: index + 1
-    }));
+    const interval = setInterval(() => refetch(), refreshInterval);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, refetch]);
 
-    setLeaderboard(finalData);
-  };
-
+  // Subscribe to real-time metric updates
   useEffect(() => {
-    fetchLeaderboard();
+    if (!user || leaderboard.length === 0) return;
 
-    if (autoRefresh) {
-      const interval = setInterval(fetchLeaderboard, refreshInterval);
-      return () => clearInterval(interval);
-    }
-  }, [user, limit, autoRefresh, refreshInterval]);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!challengeId || !user) return;
+    const challengeId = leaderboard[0]?.userId;
+    console.log('[Leaderboard] Setting up real-time subscription for challenge:', challengeId);
 
     const channel = supabase
       .channel(`leaderboard_${challengeId}`)
@@ -130,23 +47,24 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
         },
         () => {
           console.log('[Leaderboard] Metrics updated, refreshing...');
-          fetchLeaderboard();
+          refetch();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('[Leaderboard] Cleaning up subscription');
       supabase.removeChannel(channel);
     };
-  }, [challengeId, user]);
+  }, [user, leaderboard, refetch]);
 
   return {
     leaderboard,
     loading,
-    error,
-    challengeId,
-    refresh: fetchLeaderboard,
+    error: queryError?.message || null,
+    challengeId: leaderboard[0]?.userId || null,
+    refresh: refetch,
     userEntry: leaderboard.find(entry => entry.isUser),
-    topThree: leaderboard.slice(0, 3)
+    topThree: leaderboard.slice(0, 3),
   };
 }
