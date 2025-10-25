@@ -6,7 +6,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
-import { AIInsights } from '@/components/dashboard/AIInsights';
+import { CompactAIInsights } from '@/components/dashboard/CompactAIInsights';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -177,8 +177,8 @@ const Index = () => {
           </div>
         )}
 
-        {/* AI Insights */}
-        <AIInsights />
+        {/* AI Insights - Compact Ticker */}
+        <CompactAIInsights />
 
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
