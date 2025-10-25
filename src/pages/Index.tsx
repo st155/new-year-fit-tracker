@@ -21,41 +21,60 @@ const Index = () => {
 
   // 🧹 АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕШЕЙ и проверка токенов
   useEffect(() => {
+    // Debounce для предотвращения множественных вызовов
+    if (!user) return;
+    
+    let cancelled = false;
     const checkTokensAndClearCache = async () => {
-      if (!user) return;
+      if (cancelled) return;
       
       console.log('🔍 [Index] Checking Terra Whoop connection and cache freshness');
       
-      // Check if user has active Terra token for Whoop
-      const { data: terraToken } = await supabase
-        .from('terra_tokens')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .eq('provider', 'WHOOP')
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      if (!terraToken) {
-        console.log('⚠️ [Index] No active Terra Whoop token - clearing Whoop caches');
-        // Clear all Whoop-related caches
-        ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
-          localStorage.removeItem(key);
-        });
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('whoop') || key.includes('fitness') || key.startsWith('progress_cache_')) {
+      try {
+        // Check if user has active Terra token for Whoop
+        const { data: terraToken } = await supabase
+          .from('terra_tokens')
+          .select('is_active')
+          .eq('user_id', user.id)
+          .eq('provider', 'WHOOP')
+          .eq('is_active', true)
+          .abortSignal(AbortSignal.timeout(3000))
+          .maybeSingle();
+        
+        if (cancelled) return;
+        
+        if (!terraToken) {
+          console.log('⚠️ [Index] No active Terra Whoop token - clearing Whoop caches');
+          // Clear all Whoop-related caches
+          ['fitness_metrics_cache', 'fitness_data_cache_whoop', 'fitness_data_cache'].forEach(key => {
             localStorage.removeItem(key);
+          });
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('whoop') || key.includes('fitness') || key.startsWith('progress_cache_')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } else {
+          // Token exists - just clear stale data (>24h)
+          const clearedCount = clearStaleWhoopCache();
+          if (clearedCount > 0) {
+            console.log(`🧹 [Index] Cleared ${clearedCount} stale cache entries`);
           }
-        });
-      } else {
-        // Token exists - just clear stale data (>24h)
-        const clearedCount = clearStaleWhoopCache();
-        if (clearedCount > 0) {
-          console.log(`🧹 [Index] Cleared ${clearedCount} stale cache entries`);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('⚠️ [Index] Cache check failed (DB timeout):', error);
         }
       }
     };
     
-    checkTokensAndClearCache();
+    // Debounce delay
+    const timeoutId = setTimeout(checkTokensAndClearCache, 500);
+    
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [user]); // Re-check when user changes
 
   console.log('🏠 [Index] Render', {

@@ -37,16 +37,34 @@ serve(async (req) => {
 
     let user: any;
 
-    // Если передан userId (от cron-задачи), используем его напрямую
+    // 🔒 SECURITY: Conditional JWT verification based on request type
+    // - Cron mode: Allow if requestUserId is provided (internal calls only)
+    // - User mode: Require valid JWT token
+    
     if (requestUserId) {
+      // Cron mode: internal automated sync
+      // NOTE: This should only be called by trusted internal services
       console.log('🔐 Using userId from request (cron mode):', requestUserId);
       user = { id: requestUserId };
+      
+      // Additional security: validate that this is likely a cron call
+      // by checking if it's a sync action
+      if (action !== 'sync-data') {
+        console.error('❌ requestUserId provided but action is not sync-data');
+        throw new Error('Invalid request: requestUserId only allowed for sync-data');
+      }
     } else {
-      // Обычный режим - получаем пользователя из JWT
+      // User mode: require authentication via JWT
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
         console.error('❌ No authorization header provided');
-        throw new Error('Missing authorization header');
+        return new Response(
+          JSON.stringify({ error: 'Missing authorization header' }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
 
       console.log('🔐 Authenticating user via JWT...');
@@ -56,7 +74,13 @@ serve(async (req) => {
 
       if (authError || !authUser) {
         console.error('❌ Authentication failed:', authError);
-        throw new Error('Unauthorized');
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
 
       user = authUser;

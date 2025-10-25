@@ -159,28 +159,69 @@ export function TerraIntegration() {
         console.warn('Failed to save pending connection:', e);
       }
       
-      // Улучшенная обработка ошибок
+      // Улучшенная обработка ошибок с детальной диагностикой
       let errorMessage = 'Не удалось подключить устройство';
       let errorTitle = 'Ошибка подключения';
+      let showSupabaseStatus = false;
       
       if (error.message === 'Request timeout') {
         errorTitle = 'Превышено время ожидания';
         errorMessage = 'Сервер не ответил вовремя. Пожалуйста, попробуйте еще раз через несколько секунд.';
+        showSupabaseStatus = true;
       } else if (error.message?.includes('502') || error.message?.includes('Bad Gateway')) {
-        errorTitle = 'Сервер недоступен (502)';
-        errorMessage = 'Временные проблемы с Supabase/Cloudflare. Это известная проблема, попробуйте через 2-5 минут. Ваши данные из ' + PROVIDER_NAMES[provider] + ' продолжат синхронизироваться автоматически.';
+        errorTitle = 'Сервер недоступен (502 Bad Gateway)';
+        errorMessage = `Временные проблемы с инфраструктурой Supabase/Cloudflare. 
+        
+🔄 Что происходит:
+• База данных временно недоступна из-за таймаутов
+• Это известная проблема, обычно решается за 2-5 минут
+• Ваши данные из ${PROVIDER_NAMES[provider]} продолжат синхронизироваться через webhooks в фоне
+
+💡 Что делать:
+• Подождите 2-5 минут и попробуйте снова
+• Проверьте статус Supabase ниже
+• Если проблема сохраняется >10 минут, обратитесь в поддержку`;
+        showSupabaseStatus = true;
       } else if (error.message?.includes('Internal server error') || 
                  error.message?.includes('500') ||
-                 error.message?.includes('Cloudflare')) {
+                 error.message?.includes('Cloudflare') ||
+                 error.message?.includes('Connection terminated') ||
+                 error.message?.includes('timeout')) {
         errorTitle = 'Временная проблема сервера (500)';
-        errorMessage = 'База данных временно недоступна из-за проблем Supabase. Попробуйте через 2-5 минут. Webhooks продолжат работать в фоне.';
+        errorMessage = `База данных временно недоступна.
+
+🔄 Автоматические механизмы:
+• Webhooks продолжают работать в фоне
+• Данные синхронизируются автоматически
+• Retry механизм (3 попытки) активен
+
+⏰ Рекомендуемые действия:
+• Подождите 2-5 минут
+• Проверьте status.supabase.com
+• Попробуйте снова через несколько минут`;
+        showSupabaseStatus = true;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       toast({
         title: errorTitle,
-        description: errorMessage,
+        description: (
+          <div className="space-y-2">
+            <div className="whitespace-pre-line">{errorMessage}</div>
+            {showSupabaseStatus && (
+              <a 
+                href="https://status.supabase.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-2"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Проверить статус Supabase
+              </a>
+            )}
+          </div>
+        ),
         variant: 'destructive',
         action: (
           <Button 
