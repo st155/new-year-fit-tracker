@@ -1995,11 +1995,13 @@ export type Database = {
       metric_mappings: {
         Row: {
           aggregation_method: string
+          conflict_resolution_strategy: string | null
           created_at: string
           device_mappings: Json
           id: string
           is_active: boolean
           priority_order: string[] | null
+          source_priorities: Json | null
           unified_metric_category: string
           unified_metric_name: string
           unified_unit: string
@@ -2007,11 +2009,13 @@ export type Database = {
         }
         Insert: {
           aggregation_method?: string
+          conflict_resolution_strategy?: string | null
           created_at?: string
           device_mappings?: Json
           id?: string
           is_active?: boolean
           priority_order?: string[] | null
+          source_priorities?: Json | null
           unified_metric_category: string
           unified_metric_name: string
           unified_unit: string
@@ -2019,11 +2023,13 @@ export type Database = {
         }
         Update: {
           aggregation_method?: string
+          conflict_resolution_strategy?: string | null
           created_at?: string
           device_mappings?: Json
           id?: string
           is_active?: boolean
           priority_order?: string[] | null
+          source_priorities?: Json | null
           unified_metric_category?: string
           unified_metric_name?: string
           unified_unit?: string
@@ -2033,9 +2039,13 @@ export type Database = {
       }
       metric_values: {
         Row: {
+          confidence_factors: Json | null
+          confidence_score: number | null
+          conflict_resolution_method: string | null
           created_at: string
           external_id: string | null
           id: string
+          is_outlier: boolean | null
           measurement_date: string
           metric_id: string
           notes: string | null
@@ -2045,9 +2055,13 @@ export type Database = {
           value: number
         }
         Insert: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          conflict_resolution_method?: string | null
           created_at?: string
           external_id?: string | null
           id?: string
+          is_outlier?: boolean | null
           measurement_date?: string
           metric_id: string
           notes?: string | null
@@ -2057,9 +2071,13 @@ export type Database = {
           value: number
         }
         Update: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          conflict_resolution_method?: string | null
           created_at?: string
           external_id?: string | null
           id?: string
+          is_outlier?: boolean | null
           measurement_date?: string
           metric_id?: string
           notes?: string | null

@@ -89,6 +89,61 @@ export class DateTimeService {
       d1.getDate() === d2.getDate()
     );
   }
+
+  /**
+   * Phase 7: Enhanced timezone utilities
+   */
+
+  /**
+   * Parse ISO date with timezone awareness
+   */
+  static parseWithTimezone(isoString: string): Date {
+    return parseISO(isoString);
+  }
+
+  /**
+   * Format date for display in user timezone
+   */
+  static formatForDisplay(date: Date | string, formatStr: string = 'PPP'): string {
+    const parsed = typeof date === 'string' ? parseISO(date) : date;
+    return parsed.toLocaleDateString();
+  }
+
+  /**
+   * Check if measurement is from today (user timezone)
+   */
+  static isToday(measurementDate: string): boolean {
+    const parsed = parseISO(measurementDate);
+    const today = new Date();
+    
+    return (
+      parsed.getFullYear() === today.getFullYear() &&
+      parsed.getMonth() === today.getMonth() &&
+      parsed.getDate() === today.getDate()
+    );
+  }
+
+  /**
+   * Format day key for grouping (YYYY-MM-DD)
+   */
+  static formatDayKey(date: Date | string): string {
+    const parsed = typeof date === 'string' ? parseISO(date) : date;
+    return parsed.toISOString().split('T')[0];
+  }
+
+  /**
+   * Get date range for queries (last N days) - inclusive
+   */
+  static getDateRangeForQuery(days: number): { start: string; end: string } {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    
+    return {
+      start: this.formatDayKey(start),
+      end: this.formatDayKey(end),
+    };
+  }
 }
 
 // Convenient exports

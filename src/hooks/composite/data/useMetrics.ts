@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuth } from '@/hooks/useAuth';
 import type { DateRange } from '@/types/metrics';
+import { UnifiedDataFetcherV2, type MetricWithConfidence } from '@/lib/data-quality';
 
 /**
  * COMPOSITE: Unified metrics hook
@@ -25,6 +26,8 @@ interface UseMetricsOptions {
   metricTypes?: string[];
   dateRange?: DateRange;
   enabled?: boolean;
+  minConfidence?: number;    // NEW: Filter by minimum confidence
+  withQuality?: boolean;      // NEW: Return MetricWithConfidence
 }
 
 export interface MetricData {
@@ -41,14 +44,29 @@ export interface MetricData {
 export function useMetrics(options: UseMetricsOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { metricTypes, dateRange, enabled = true } = options;
+  const { metricTypes, dateRange, enabled = true, minConfidence = 0, withQuality = false } = options;
+  const fetcher = new UnifiedDataFetcherV2(supabase);
 
-  // ===== Latest Metrics =====
+  // ===== Latest Metrics (with quality if requested) =====
   const latest = useQuery({
-    queryKey: queryKeys.metrics.latest(user?.id ?? '', metricTypes ?? []),
+    queryKey: [...queryKeys.metrics.latest(user?.id ?? '', metricTypes ?? []), 'with-quality', withQuality],
     queryFn: async () => {
       if (!user?.id) return [];
 
+      if (withQuality) {
+        // Use enhanced fetcher with confidence scoring
+        const metricsWithConfidence = await fetcher.getLatestUnifiedMetrics(
+          user.id,
+          metricTypes
+        );
+        
+        // Filter by min confidence
+        return minConfidence > 0
+          ? metricsWithConfidence.filter(m => m.confidence >= minConfidence)
+          : metricsWithConfidence;
+      }
+
+      // Original path without confidence
       let query = supabase
         .from('client_unified_metrics')
         .select('*')
@@ -113,13 +131,34 @@ export function useMetrics(options: UseMetricsOptions = {}) {
 
   // ===== Helper: Get specific metric =====
   const getMetric = (metricName: string): MetricData | undefined => {
-    return latest.data?.find(m => m.metric_name === metricName);
+    if (!latest.data) return undefined;
+    
+    if (withQuality) {
+      const metricWithQuality = (latest.data as MetricWithConfidence[]).find(
+        m => m.metric.metric_name === metricName
+      );
+      if (!metricWithQuality) return undefined;
+      
+      // Convert to MetricData format
+      return {
+        user_id: metricWithQuality.metric.user_id,
+        metric_name: metricWithQuality.metric.metric_name,
+        value: metricWithQuality.metric.value,
+        measurement_date: metricWithQuality.metric.measurement_date,
+        source: metricWithQuality.metric.source as string,
+        unit: metricWithQuality.metric.unit,
+        priority: metricWithQuality.metric.priority || 0,
+        created_at: metricWithQuality.metric.created_at,
+      };
+    }
+    
+    return (latest.data as any[])?.find((m: any) => m.metric_name === metricName);
   };
 
   // ===== Helper: Get metric history =====
   const getMetricHistory = (metricName: string): MetricData[] => {
     if (!history.data) return [];
-    return history.data.filter(m => m.metric_name === metricName);
+    return (history.data as any[]).filter((m: any) => m.metric_name === metricName);
   };
 
   // ===== Mutation: Add metric =====
@@ -142,6 +181,17 @@ export function useMetrics(options: UseMetricsOptions = {}) {
     },
   });
 
+  // ===== NEW: Quality helpers =====
+  const getMetricWithQuality = (metricName: string): MetricWithConfidence | undefined => {
+    if (!withQuality) return undefined;
+    return (latest.data as MetricWithConfidence[])?.find(m => m.metric.metric_name === metricName);
+  };
+
+  const hasGoodQuality = (metricName: string): boolean => {
+    const metric = getMetricWithQuality(metricName);
+    return metric ? metric.confidence >= 70 : false;
+  };
+
   return {
     // Data
     latest: latest.data ?? [],
@@ -158,6 +208,16 @@ export function useMetrics(options: UseMetricsOptions = {}) {
     // Helpers
     getMetric,
     getMetricHistory,
+    
+    // NEW: Quality helpers
+    getMetricWithQuality,
+    hasGoodQuality,
+    qualitySummary: withQuality ? (latest.data as MetricWithConfidence[])?.map(m => ({
+      metricName: m.metric.metric_name,
+      confidence: m.confidence,
+      source: m.metric.source,
+      factors: m.factors,
+    })) : undefined,
     
     // Mutations
     addMetric: addMetricMutation.mutate,
