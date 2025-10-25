@@ -9,6 +9,7 @@ import {
   widgetKeys,
   type Widget 
 } from '@/hooks/useWidgetsQuery';
+import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -28,7 +29,16 @@ const Index = () => {
   const queryClient = useQueryClient();
   
   // Use React Query hooks
-  const { data: widgets = [], isLoading: loading } = useWidgetsQuery(user?.id);
+  const { data: widgets = [], isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
+  
+  // ✅ Batch fetch для всех метрик виджетов (1 SQL запрос вместо 8)
+  const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
+    user?.id,
+    widgets
+  );
+  
+  const loading = widgetsLoading || metricsLoading;
+  
   const addWidgetMutation = useAddWidgetMutation();
   const removeWidgetMutation = useRemoveWidgetMutation();
   const reorderWidgetsMutation = useReorderWidgetsMutation();
@@ -49,7 +59,6 @@ const Index = () => {
     reorderWidgetsMutation.mutate({ userId: user.id, widgets: newOrder });
   };
   
-  const [refreshKey, setRefreshKey] = useState(0);
   const [showOnlyRecent, setShowOnlyRecent] = useState(() => {
     return localStorage.getItem('show_only_recent') === 'true';
   });
@@ -83,7 +92,7 @@ const Index = () => {
   const handleRefresh = () => {
     console.log('🔄 Manual refresh triggered');
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
-    setRefreshKey(prev => prev + 1);
+    queryClient.invalidateQueries({ queryKey: ['metrics'] });
     setWidgetAges({}); // Clear ages on refresh
   };
 
@@ -218,9 +227,8 @@ const Index = () => {
             {processedWidgets.map((widget) => (
               <WidgetCard
                 key={widget.id}
-                metricName={widget.metric_name}
-                source={widget.source}
-                refreshKey={refreshKey}
+                widget={widget}
+                data={widgetsData?.get(`${widget.metric_name}-${widget.source}`)}
               />
             ))}
           </div>

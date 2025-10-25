@@ -54,13 +54,9 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: mode === 'production',
-          drop_debugger: true,
-          pure_funcs: ['console.debug'],
-        },
+      minify: 'esbuild',
+      esbuildOptions: {
+        drop: mode === 'production' ? ['console', 'debugger'] : [],
       },
       sourcemap: mode === 'production' ? 'hidden' : true,
       chunkSizeWarningLimit: 500,

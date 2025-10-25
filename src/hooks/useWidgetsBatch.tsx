@@ -27,18 +27,19 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
       
       if (!data) return new Map();
 
-      // Группируем по metric_name + source
+      // Группируем по metric_name + source (берем только ПЕРВОЕ = последнее по дате)
       const grouped = new Map<string, any>();
       
       data.forEach(metric => {
         const key = `${metric.metric_name}-${metric.source}`;
         if (!grouped.has(key)) {
-          // Берем только последнее значение для каждой метрики
+          // Берем только первое (самое свежее) значение для каждой метрики+источника
           grouped.set(key, {
             value: metric.value,
             unit: metric.unit,
-            date: metric.measurement_date,
-            trend: undefined, // Тренд будем вычислять отдельно
+            measurement_date: metric.measurement_date,
+            source: metric.source,
+            trend: undefined, // TODO: Calculate trend from historical data
           });
         }
       });

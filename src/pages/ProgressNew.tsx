@@ -6,6 +6,7 @@ import {
   useReorderWidgetsMutation,
   widgetKeys 
 } from '@/hooks/useWidgetsQuery';
+import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
 import { useQueryClient } from '@tanstack/react-query';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
@@ -17,7 +18,16 @@ import { useMemo } from 'react';
 
 export default function ProgressNew() {
   const { user } = useAuth();
-  const { data: widgets = [], isLoading: loading } = useWidgetsQuery(user?.id);
+  const { data: widgets = [], isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
+  
+  // ✅ Batch fetch для всех метрик виджетов
+  const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
+    user?.id,
+    widgets
+  );
+  
+  const loading = widgetsLoading || metricsLoading;
+  
   const addWidgetMutation = useAddWidgetMutation();
   const removeWidgetMutation = useRemoveWidgetMutation();
   const reorderWidgetsMutation = useReorderWidgetsMutation();
@@ -40,7 +50,8 @@ export default function ProgressNew() {
   };
 
   const refetch = () => {
-    queryClient.invalidateQueries({ queryKey: widgetKeys.list(user?.id!) });
+    queryClient.invalidateQueries({ queryKey: widgetKeys.all });
+    queryClient.invalidateQueries({ queryKey: ['metrics'] });
   };
 
   if (loading) {
@@ -110,8 +121,8 @@ export default function ProgressNew() {
             {widgets.map((widget) => (
               <WidgetErrorBoundary key={widget.id} widgetName={widget.metric_name}>
                 <WidgetCard
-                  metricName={widget.metric_name}
-                  source={widget.source}
+                  widget={widget}
+                  data={widgetsData?.get(`${widget.metric_name}-${widget.source}`)}
                 />
               </WidgetErrorBoundary>
             ))}

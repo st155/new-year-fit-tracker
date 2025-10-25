@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon } from 'lucide-react';
-import { useWidgetDataQuery, widgetKeys } from '@/hooks/useWidgetsQuery';
+import { widgetKeys, type Widget } from '@/hooks/useWidgetsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,9 +13,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface WidgetCardProps {
-  metricName: string;
-  source: string;
-  refreshKey?: number;
+  widget: Widget;
+  data?: {
+    value: number;
+    unit: string;
+    measurement_date: string;
+    source: string;
+    trend?: number;
+  };
 }
 
 const getMetricIcon = (metricName: string) => {
@@ -90,20 +95,16 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
-export const WidgetCard = memo(function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) {
+export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
-
-  // Use React Query for data fetching
-  const { 
-    data, 
-    isLoading: loading, 
-    refetch 
-  } = useWidgetDataQuery(user?.id, metricName, source);
+  
+  const metricName = widget.metric_name;
+  const source = widget.source;
 
   // Check if user has active Terra token for Whoop (for Whoop widgets only)
   useEffect(() => {
@@ -131,55 +132,6 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
     checkToken();
   }, [user, source, data]);
 
-  // Refetch when refreshKey changes
-  useEffect(() => {
-    if (refreshKey && refreshKey > 0) {
-      refetch();
-    }
-  }, [refreshKey, refetch]);
-
-  // Realtime подписка на новые метрики
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`metric-updates-${user.id}-${metricName}-${source}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'metric_values',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('📊 New metric value inserted:', payload);
-          // Invalidate query to trigger refetch
-          queryClient.invalidateQueries({ 
-            queryKey: widgetKeys.data(user.id, metricName, source) 
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, metricName, source, queryClient]);
-
-  // Слушаем глобальное событие принудительного обновления всех виджетов
-  useEffect(() => {
-    const handleHardRefetch = () => {
-      console.log('📢 [WidgetCard] Received widgets-hard-refetch event');
-      refetch();
-    };
-
-    window.addEventListener('widgets-hard-refetch', handleHardRefetch);
-    return () => {
-      window.removeEventListener('widgets-hard-refetch', handleHardRefetch);
-    };
-  }, [refetch]);
-
   const syncWhoopData = async () => {
     if (!user) return;
     
@@ -195,18 +147,13 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
       
       // Invalidate all widget queries
       queryClient.invalidateQueries({ queryKey: widgetKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['metrics'] });
       
       console.log('✅ Whoop sync completed');
       toast({
         title: 'Синхронизация запущена',
         description: 'Whoop данные обновляются...',
       });
-      
-      // Dispatch global refetch event for all widgets
-      setTimeout(() => {
-        console.log('📢 Dispatching widgets-hard-refetch event');
-        window.dispatchEvent(new Event('widgets-hard-refetch'));
-      }, 2000);
       
     } catch (error: any) {
       console.error('❌ Whoop sync failed:', error);
@@ -220,25 +167,15 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
     }
   };
 
-  const handleCardClick = useCallback(async () => {
-    if (!user) return;
-    console.log(`🔄 [WidgetCard] Force refresh: ${metricName}/${source}`);
-    await refetch();
-  }, [user, metricName, source, refetch]);
+  const handleCardClick = useCallback(() => {
+    // Trigger refresh через React Query invalidation
+    queryClient.invalidateQueries({ queryKey: widgetKeys.all });
+    queryClient.invalidateQueries({ queryKey: ['metrics'] });
+  }, [queryClient]);
 
   // Мемоизация дорогих вычислений
   const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
   const color = useMemo(() => getMetricColor(metricName), [metricName]);
-
-  if (loading) {
-    return (
-      <Card className="overflow-hidden border-border/40 hover:shadow-lg transition-all">
-        <CardContent className="p-6">
-          <Skeleton className="h-20 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (!data) {
     return (
@@ -274,16 +211,16 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
   // Проверка на устаревшие данные с двумя уровнями (на основе дней)
   const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const daysDiff = (() => {
-    if (!data?.date) return 0;
+    if (!data?.measurement_date) return 0;
     const today = startOf(new Date());
-    const dataDay = startOf(new Date(data.date));
+    const dataDay = startOf(new Date(data.measurement_date));
     return Math.max(0, Math.floor((today.getTime() - dataDay.getTime()) / 86400000));
   })();
   const isDataWarning = daysDiff === 2; // Желтый: 2 дня
   const isDataStale = daysDiff >= 3; // Красный: 3+ дней
   const isWhoopSource = source.toLowerCase() === 'whoop';
   
-  console.log('[WidgetCard freshness]', { metricName, source, date: data.date, daysDiff });
+  console.log('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
   // Проверка на кешированные данные без активного токена
   const isCachedWithoutToken = isWhoopSource && hasActiveToken === false && data;
@@ -360,7 +297,7 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
           <div className="flex items-center gap-2">
             {(() => {
               const now = new Date();
-              const dataDate = new Date(data.date);
+              const dataDate = new Date(data.measurement_date);
               const daysDiff = Math.floor((now.getTime() - dataDate.getTime()) / (1000 * 60 * 60 * 24));
               
               const isSleepMetric = metricName.toLowerCase().includes('sleep');
@@ -489,8 +426,8 @@ export const WidgetCard = memo(function WidgetCard({ metricName, source, refresh
 }, (prevProps, nextProps) => {
   // Custom comparison для оптимизации
   return (
-    prevProps.metricName === nextProps.metricName &&
-    prevProps.source === nextProps.source &&
-    prevProps.refreshKey === nextProps.refreshKey
+    prevProps.widget.id === nextProps.widget.id &&
+    prevProps.data?.value === nextProps.data?.value &&
+    prevProps.data?.measurement_date === nextProps.data?.measurement_date
   );
 });
