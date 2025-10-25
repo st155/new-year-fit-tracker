@@ -6,23 +6,33 @@ export const useLatestUnifiedMetrics = () => {
   
   const { metrics, loading, error } = useUnifiedMetrics(user?.id);
   
-  // Group by metric_name and get latest value
+  // Group by metric_name and get latest value (prioritize by priority, then date, then created_at)
   const latestMetrics = metrics.reduce((acc, metric) => {
     const existing = acc[metric.metric_name];
     
     if (!existing) {
       acc[metric.metric_name] = metric;
     } else {
-      const existingDate = new Date(existing.measurement_date);
-      const currentDate = new Date(metric.measurement_date);
+      // Priority comparison (lower priority = better, e.g., Whoop=1 is better than Garmin=6)
+      const existingPriority = existing.priority || 999;
+      const currentPriority = metric.priority || 999;
       
-      // Если даты одинаковые - выбираем по created_at (самую свежую запись)
-      if (existingDate.getTime() === currentDate.getTime()) {
-        if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
-          acc[metric.metric_name] = metric;
-        }
-      } else if (currentDate > existingDate) {
+      if (currentPriority < existingPriority) {
+        // Current metric has better priority
         acc[metric.metric_name] = metric;
+      } else if (currentPriority === existingPriority) {
+        // Same priority - compare dates
+        const existingDate = new Date(existing.measurement_date);
+        const currentDate = new Date(metric.measurement_date);
+        
+        if (currentDate > existingDate) {
+          acc[metric.metric_name] = metric;
+        } else if (existingDate.getTime() === currentDate.getTime()) {
+          // Same date - choose most recent by created_at
+          if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
+            acc[metric.metric_name] = metric;
+          }
+        }
       }
     }
     

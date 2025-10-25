@@ -595,12 +595,14 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (avgHrMetricId) {
-                    await supabase.from('metric_values').insert({
+                    await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: avgHrMetricId,
                       value: avgHr,
                       measurement_date: measurementDate,
                       external_id: `terra_${provider}_avghr_${workout.start_time}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
                   }
                 }
@@ -616,12 +618,14 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (maxHrMetricId) {
-                    await supabase.from('metric_values').insert({
+                    await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: maxHrMetricId,
                       value: maxHr,
                       measurement_date: measurementDate,
                       external_id: `terra_${provider}_maxhr_${workout.start_time}`,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
                   }
                 }
@@ -637,13 +641,15 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (caloriesMetricId) {
-                    await supabase.from('metric_values').insert({
+                    await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: caloriesMetricId,
                       value: calories,
                       measurement_date: measurementDate,
                       external_id: externalId,
                       source_data: activity,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
                   }
                 }
@@ -659,13 +665,15 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (strainMetricId) {
-                    await supabase.from('metric_values').insert({
+                    await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: strainMetricId,
                       value: strain,
                       measurement_date: measurementDate,
                       external_id: externalId,
                       source_data: activity,
+                    }, {
+                      onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
                   }
                 }

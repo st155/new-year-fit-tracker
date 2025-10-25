@@ -7,7 +7,7 @@ export const useDeviceMetrics = (deviceFilter: DeviceFilter) => {
   
   const { metrics, loading, error, refetch } = useUnifiedMetrics(user?.id);
   
-  // Filter by device and get latest value for each metric
+  // Filter by device and get latest value for each metric (prioritize by priority, then date, then created_at)
   const deviceMetrics = metrics
     .filter(m => deviceFilter === 'all' || m.source.toLowerCase() === deviceFilter.toLowerCase())
     .reduce((acc, metric) => {
@@ -16,16 +16,26 @@ export const useDeviceMetrics = (deviceFilter: DeviceFilter) => {
       if (!existing) {
         acc[metric.metric_name] = metric;
       } else {
-        const existingDate = new Date(existing.measurement_date);
-        const currentDate = new Date(metric.measurement_date);
+        // Priority comparison (lower priority = better, e.g., Whoop=1 is better than Garmin=6)
+        const existingPriority = existing.priority || 999;
+        const currentPriority = metric.priority || 999;
         
-        // Если даты одинаковые - выбираем по created_at (самую свежую запись)
-        if (existingDate.getTime() === currentDate.getTime()) {
-          if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
-            acc[metric.metric_name] = metric;
-          }
-        } else if (currentDate > existingDate) {
+        if (currentPriority < existingPriority) {
+          // Current metric has better priority
           acc[metric.metric_name] = metric;
+        } else if (currentPriority === existingPriority) {
+          // Same priority - compare dates
+          const existingDate = new Date(existing.measurement_date);
+          const currentDate = new Date(metric.measurement_date);
+          
+          if (currentDate > existingDate) {
+            acc[metric.metric_name] = metric;
+          } else if (existingDate.getTime() === currentDate.getTime()) {
+            // Same date - choose most recent by created_at
+            if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
+              acc[metric.metric_name] = metric;
+            }
+          }
         }
       }
       

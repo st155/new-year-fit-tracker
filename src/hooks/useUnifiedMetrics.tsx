@@ -49,7 +49,10 @@ export const useUnifiedMetrics = (userId: string | undefined, metricName?: strin
         query = query.lte('measurement_date', endDate.toISOString().split('T')[0]);
       }
 
-      const { data, error: queryError } = await query.order('measurement_date', { ascending: false });
+      const { data, error: queryError } = await query
+        .order('priority', { ascending: true })
+        .order('measurement_date', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (queryError) throw queryError;
       setMetrics(data || []);
