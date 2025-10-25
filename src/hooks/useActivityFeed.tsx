@@ -15,6 +15,7 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
       const { data: activities, error: activitiesError } = await supabase
         .from("activity_feed")
         .select("*")
+        .order("measurement_date", { ascending: false })
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -98,9 +99,7 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
         if (filterType === 'sleep_recovery' || filterType === 'daily_steps') {
           const map = new Map<string, any>();
           for (const a of filtered) {
-            const dateKey =
-              a.measurement_date ??
-              (a.created_at ? new Date(a.created_at).toISOString().slice(0, 10) : '');
+            const dateKey = a.measurement_date ?? '';
             const key = `${a.user_id}|${dateKey}|${filterType}`;
             const prev = map.get(key);
             if (!prev || new Date(a.created_at) > new Date(prev.created_at)) {

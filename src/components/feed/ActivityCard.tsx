@@ -20,6 +20,7 @@ interface ActivityCardProps {
     action_type: string;
     action_text: string;
     created_at: string;
+    measurement_date?: string | null;
     metadata?: any;
     activity_subtype?: string;
     aggregated_data?: any;
@@ -292,7 +293,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   
   const getFormattedDate = () => {
     try {
-      const dateStr = activity.metadata?.measurement_date || activity.created_at;
+      const dateStr = activity.measurement_date || activity.created_at;
       const date = new Date(dateStr);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
