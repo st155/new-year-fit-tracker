@@ -147,6 +147,18 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('❌ Widget load error:', error);
       
+      // Сохраняем попытку подключения в localStorage для retry
+      try {
+        localStorage.setItem('pending_terra_connection', JSON.stringify({
+          userId: user?.id,
+          timestamp: Date.now(),
+          provider
+        }));
+        console.log('💾 Saved pending connection to localStorage');
+      } catch (e) {
+        console.warn('Failed to save pending connection:', e);
+      }
+      
       // Улучшенная обработка ошибок
       let errorMessage = 'Не удалось подключить устройство';
       let errorTitle = 'Ошибка подключения';
@@ -155,8 +167,13 @@ export function TerraIntegration() {
         errorTitle = 'Превышено время ожидания';
         errorMessage = 'Сервер не ответил вовремя. Пожалуйста, попробуйте еще раз через несколько секунд.';
       } else if (error.message?.includes('502') || error.message?.includes('Bad Gateway')) {
-        errorTitle = 'Сервер недоступен';
-        errorMessage = 'Временные проблемы с сервером. Попробуйте через 1-2 минуты.';
+        errorTitle = 'Сервер недоступен (502)';
+        errorMessage = 'Временные проблемы с Supabase/Cloudflare. Это известная проблема, попробуйте через 2-5 минут. Ваши данные из ' + PROVIDER_NAMES[provider] + ' продолжат синхронизироваться автоматически.';
+      } else if (error.message?.includes('Internal server error') || 
+                 error.message?.includes('500') ||
+                 error.message?.includes('Cloudflare')) {
+        errorTitle = 'Временная проблема сервера (500)';
+        errorMessage = 'База данных временно недоступна из-за проблем Supabase. Попробуйте через 2-5 минут. Webhooks продолжат работать в фоне.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -183,11 +200,35 @@ export function TerraIntegration() {
     if (!user) return;
     
     try {
-      const { data: tokens } = await supabase
-        .from('terra_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true);
+      // Retry механизм для проверки статуса
+      let tokens = null;
+      let lastError = null;
+      
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const { data, error } = await supabase
+            .from('terra_tokens')
+            .select('provider, created_at, last_sync_date')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .abortSignal(AbortSignal.timeout(5000));
+
+          if (error) throw error;
+          tokens = data;
+          break;
+        } catch (e: any) {
+          lastError = e;
+          if (attempt < 2) {
+            console.warn(`⚠️ Retry checkStatus ${attempt + 1}/3...`);
+            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          }
+        }
+      }
+
+      if (lastError && !tokens) {
+        console.error('Status check failed after retries:', lastError);
+        throw lastError;
+      }
 
       const providers: TerraProvider[] = (tokens || []).map(t => ({
         name: t.provider,

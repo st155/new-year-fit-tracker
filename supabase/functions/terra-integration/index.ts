@@ -146,11 +146,28 @@ serve(async (req) => {
     if (action === 'sync-data') {
       console.log('🔄 Starting data sync for user:', user.id);
       
-      const { data: tokens, error: tokensError } = await supabase
-        .from('terra_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true);
+      // Retry механизм для запросов к БД
+      const fetchTokensWithRetry = async (maxRetries = 3) => {
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            const { data, error } = await supabase
+              .from('terra_tokens')
+              .select('id, user_id, provider, terra_user_id, is_active, last_sync_date, created_at')
+              .eq('user_id', user.id)
+              .eq('is_active', true)
+              .abortSignal(AbortSignal.timeout(5000)); // 5s timeout
+            
+            if (error) throw error;
+            return { data, error: null };
+          } catch (e) {
+            if (i === maxRetries - 1) throw e;
+            console.warn(`⚠️ DB retry ${i + 1}/${maxRetries} after error:`, e);
+            await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Exponential backoff
+          }
+        }
+      };
+
+      const { data: tokens, error: tokensError } = await fetchTokensWithRetry();
 
       console.log('📊 Terra tokens found:', tokens?.length || 0);
 
