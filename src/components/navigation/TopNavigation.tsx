@@ -8,6 +8,7 @@ import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
 import { useUserRole } from "@/hooks/useUserRole";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   
   const navigate = useNavigate();
   const location = useLocation();
+  const prefetch = usePrefetch();
   
   // Safe hooks with fallbacks
   let profile = null;
@@ -166,6 +168,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                 } else {
                   navigate(item.path);
                 }
+              }}
+              onMouseEnter={() => {
+                // Prefetch route data on hover
+                prefetch.route(item.path);
               }}
               className={cn(
                 "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",

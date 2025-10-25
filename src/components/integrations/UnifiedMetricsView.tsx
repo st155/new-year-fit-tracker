@@ -23,7 +23,7 @@ interface UnifiedMetric {
   activeSourceIndex: number;
 }
 
-const CACHE_VERSION = 'v2'; // Увеличиваем при изменении структуры данных
+const CACHE_VERSION = 'v3'; // Increment on structure changes - no localStorage for data
 
 export function UnifiedMetricsView() {
   const { user } = useAuth();
@@ -32,28 +32,12 @@ export function UnifiedMetricsView() {
   const [metrics, setMetrics] = useState<UnifiedMetric[]>([]);
   const [viewMode, setViewMode] = useState<'unified' | 'all'>('unified');
 
-  // Показываем skeleton только при первой загрузке
+  // Fetch on mount (React Query handles caching)
   useEffect(() => {
     if (!user || !initialLoad) return;
 
-    const cacheKey = `unifiedMetricsCache:${CACHE_VERSION}:${user.id}`;
-    let hadCache = false;
-    try {
-      const raw = localStorage.getItem(cacheKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.version === CACHE_VERSION && parsed?.data) {
-          setMetrics(parsed.data);
-          setInitialLoad(false);
-          hadCache = true;
-        }
-      }
-    } catch (_e) {
-      // ignore cache errors
-    }
-
-    fetchUnifiedMetrics(!hadCache).then(() => {
-      if (!hadCache) setInitialLoad(false);
+    fetchUnifiedMetrics(true).then(() => {
+      setInitialLoad(false);
     });
   }, [user, initialLoad]);
 
@@ -229,17 +213,7 @@ export function UnifiedMetricsView() {
       });
       
       setMetrics(prioritizedMetrics);
-
-      // Кэшируем для мгновенной последующей загрузки
-      try {
-        const cacheKey = `unifiedMetricsCache:${CACHE_VERSION}:${user!.id}`;
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({ ts: Date.now(), version: CACHE_VERSION, data: prioritizedMetrics })
-        );
-      } catch (_e) {
-        // ignore cache errors
-      }
+      // React Query handles caching - no localStorage needed
     } catch (error) {
       console.error('Error fetching unified metrics:', error);
     } finally {

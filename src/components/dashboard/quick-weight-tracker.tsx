@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { todayDateString } from "@/lib/datetime-utils";
 
 interface WeightData {
   weight: number;
@@ -121,7 +122,7 @@ export function QuickWeightTracker() {
     }
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayDateString();
       
       // Проверяем, есть ли запись за сегодня
       const { data: existingData } = await supabase

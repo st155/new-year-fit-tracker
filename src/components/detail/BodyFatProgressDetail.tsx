@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, addDays, isToday, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
+import { formatForDB } from '@/lib/datetime-utils';
 interface BodyFatData {
   date: string;
   bodyFat: number;
@@ -88,8 +89,8 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         .from('inbody_analyses')
         .select('test_date, percent_body_fat')
         .eq('user_id', user.id)
-        .gte('test_date', startDate.toISOString())
-        .lte('test_date', endDate.toISOString())
+        .gte('test_date', formatForDB(startDate))
+        .lte('test_date', formatForDB(endDate))
         .order('test_date', { ascending: true });
 
       // 2. Withings данные

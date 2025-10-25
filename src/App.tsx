@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ModernAppLayout } from "@/components/layout/ModernAppLayout";
 import { PageLoader } from "@/components/ui/page-loader";
@@ -11,6 +11,8 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { registerServiceWorker } from "@/lib/pwa-utils";
+import { initInvalidator } from "@/lib/query-invalidation";
+import { initPrefetcher, getPrefetcher } from "@/lib/prefetch-strategy";
 
 import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
@@ -49,18 +51,45 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
+      staleTime: 2 * 60 * 1000,        // 2 minutes
+      gcTime: 10 * 60 * 1000,          // 10 minutes
+      refetchOnWindowFocus: true,      // ✅ Refresh on tab focus
+      refetchOnReconnect: true,        // Refresh on network restore
+      retry: 3,                        // 3 retry attempts
+      retryDelay: (attemptIndex) => 
+        Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      networkMode: 'offlineFirst',     // Work from cache if offline
+    },
+    mutations: {
+      retry: 1,                        // 1 retry for mutations
+      networkMode: 'online',           // Don't execute offline
     },
   },
 });
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
+  const { user } = useAuth();
 
-  // Daily cache invalidation removed - will be handled by React Query's built-in staleTime
+  // Initialize invalidation and prefetch strategies
+  useEffect(() => {
+    initInvalidator(queryClient);
+    initPrefetcher(queryClient);
+    console.log('[App] Query strategies initialized');
+  }, []);
 
+  // Prefetch critical data after login
+  useEffect(() => {
+    if (user) {
+      console.log('[App] User logged in, prefetching critical data');
+      const prefetcher = getPrefetcher();
+      prefetcher.prefetchAfterLogin(user.id).catch(error => {
+        console.warn('[App] Prefetch after login failed:', error);
+      });
+    }
+  }, [user]);
+
+  // Service worker registration
   useEffect(() => {
     if (import.meta.env.PROD) {
       try {

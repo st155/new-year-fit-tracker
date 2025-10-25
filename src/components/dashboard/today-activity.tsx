@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dumbbell, Activity, Clock, Flame, Heart, TrendingUp, Footprints } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { todayDateString } from "@/lib/datetime-utils";
 
 interface TodayWorkout {
   id: string;
@@ -38,9 +39,7 @@ export function TodayActivity() {
 
       try {
         const now = new Date();
-        // Используем текущую дату в UTC, чтобы синхронизироваться с базой данных
-        const utcNow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-        const utcToday = utcNow.toISOString().split('T')[0];
+        const utcToday = todayDateString();
         
         // Загружаем тренировки за последние 24 часа
         const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -58,9 +57,9 @@ export function TodayActivity() {
         }
 
         // Загружаем тренировки из Whoop (metric_values)
-        const yesterdayDate = new Date(utcNow);
-        yesterdayDate.setUTCDate(utcNow.getUTCDate() - 1);
-        const yesterday = yesterdayDate.toISOString().split('T')[0];
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
 
         let whoopMetricsFinal: any[] = [];
         const { data: whoopToday, error: whoopError } = await supabase
@@ -90,7 +89,7 @@ export function TodayActivity() {
               user_metrics!inner(metric_name, metric_category, source)
             `)
             .eq('user_id', user.id)
-            .eq('measurement_date', yesterday)
+            .eq('measurement_date', yesterdayStr)
             .eq('user_metrics.metric_category', 'workout')
             .eq('user_metrics.source', 'whoop')
             .eq('user_metrics.metric_name', 'Workout Strain');
