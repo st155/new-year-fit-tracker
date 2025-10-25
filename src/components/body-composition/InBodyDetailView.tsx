@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { User, Bell, Activity, Dumbbell, Heart } from "lucide-react";
 import { MetricCard } from "./MetricCard";
@@ -7,6 +8,8 @@ import { HumanBodyModel } from "./HumanBodyModel";
 import { InBodyAIChat } from "./InBodyAIChat";
 import { InBodyProgressChart } from "./InBodyProgressChart";
 import { InBodyInsights } from "./InBodyInsights";
+import { BodyDataSourceIndicator } from "./BodyDataSourceIndicator";
+import { BodyModelTimeline } from "./BodyModelTimeline";
 import { Button } from "@/components/ui/button";
 import {
   calculateMetricChange,
@@ -18,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInBodyAnalyses } from "@/hooks/useInBodyAnalyses";
 import { useAuth } from "@/hooks/useAuth";
+import { useEnhancedBodyModel } from "@/hooks/useEnhancedBodyModel";
 
 interface InBodyAnalysis {
   id: string;
@@ -50,6 +54,10 @@ interface InBodyDetailViewProps {
 export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBodyDetailViewProps) {
   const { user } = useAuth();
   const { data: allAnalyses = [] } = useInBodyAnalyses(user?.id);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  
+  // Get enhanced body model data
+  const enhancedData = useEnhancedBodyModel(user?.id, selectedDate);
   
   const weightChange = calculateMetricChange(analysis.weight, previousAnalysis?.weight ?? null);
   const smmChange = calculateMetricChange(analysis.skeletal_muscle_mass, previousAnalysis?.skeletal_muscle_mass ?? null);
@@ -59,13 +67,18 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   const bodyFatStatus = getBodyFatStatus(analysis.percent_body_fat);
   const visceralFatStatus = getVisceralFatStatus(analysis.visceral_fat_area);
 
-  const segmentData = {
-    rightArmPercent: analysis.right_arm_percent,
-    leftArmPercent: analysis.left_arm_percent,
-    trunkPercent: analysis.trunk_percent,
-    rightLegPercent: analysis.right_leg_percent,
-    leftLegPercent: analysis.left_leg_percent,
-  };
+  // Use enhanced segmental data if viewing current analysis
+  const segmentData = selectedDate 
+    ? enhancedData.segmental.data 
+    : {
+        rightArmPercent: analysis.right_arm_percent,
+        leftArmPercent: analysis.left_arm_percent,
+        trunkPercent: analysis.trunk_percent,
+        rightLegPercent: analysis.right_leg_percent,
+        leftLegPercent: analysis.left_leg_percent,
+      };
+
+  const inbodyDates = allAnalyses.map(a => new Date(a.test_date));
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-6 space-y-6">
@@ -146,15 +159,42 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
         />
       </div>
 
+      {/* Timeline - show if multiple scans */}
+      {inbodyDates.length > 1 && (
+        <BodyModelTimeline
+          inbodyDates={inbodyDates}
+          onDateChange={setSelectedDate}
+          currentDate={selectedDate}
+        />
+      )}
+
       {/* 3D Body Model & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 3D Model */}
         <div className="lg:col-span-2 inbody-card overflow-hidden">
-          <div className="p-4 border-b border-white/10">
-            <h2 className="text-lg font-semibold metric-glow">SEGMENTAL ANALYSIS</h2>
-            <p className="text-xs text-muted-foreground mt-1">Muscle mass distribution</p>
+          <div className="p-4 border-b border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold metric-glow">SEGMENTAL ANALYSIS</h2>
+                <p className="text-xs text-muted-foreground mt-1">Muscle mass distribution</p>
+              </div>
+            </div>
+            
+            {/* Data Source Indicator */}
+            <BodyDataSourceIndicator
+              source={enhancedData.segmental.source}
+              confidence={enhancedData.confidence}
+              lastInBodyDate={enhancedData.lastInBodyDate}
+              lastUpdated={enhancedData.segmental.lastUpdated}
+              weightSource={enhancedData.overall.weight.source}
+              bodyFatSource={enhancedData.overall.bodyFat.source}
+            />
           </div>
-          <HumanBodyModel segmentData={segmentData} />
+          <HumanBodyModel 
+            segmentData={segmentData} 
+            interactive={true}
+            showTooltips={true}
+          />
           
           {/* Segment Details */}
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/10">
