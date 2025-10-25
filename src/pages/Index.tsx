@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWidgets } from '@/hooks/useWidgets';
@@ -8,6 +8,7 @@ import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
 import { clearStaleWhoopCache } from '@/lib/cache-utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,10 @@ const Index = () => {
   const { isTrainer, role, loading: roleLoading } = useUserRole();
   const { widgets, loading, addWidget, removeWidget, reorderWidgets, refetch } = useWidgets(user?.id);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showOnlyRecent, setShowOnlyRecent] = useState(() => {
+    return localStorage.getItem('show_only_recent') === 'true';
+  });
+  const [widgetAges, setWidgetAges] = useState<Record<string, number>>({});
 
   // 🧹 ONE-TIME cache check and cleanup on mount
   useEffect(() => {
@@ -57,7 +62,39 @@ const Index = () => {
   const handleRefresh = () => {
     refetch();
     setRefreshKey(prev => prev + 1);
+    setWidgetAges({}); // Clear ages on refresh
   };
+
+  // Filter and sort widgets
+  const processedWidgets = useMemo(() => {
+    const now = Date.now();
+    
+    // Sort by data freshness first (fresh data < 24h first), then by position
+    const sorted = [...widgets].sort((a, b) => {
+      const aAge = widgetAges[a.id] || 0;
+      const bAge = widgetAges[b.id] || 0;
+      
+      const aFresh = aAge < 24;
+      const bFresh = bAge < 24;
+      
+      if (aFresh && !bFresh) return -1;
+      if (bFresh && !aFresh) return 1;
+      
+      return a.position - b.position;
+    });
+    
+    // Filter if needed
+    if (showOnlyRecent) {
+      return sorted.filter(widget => {
+        const age = widgetAges[widget.id];
+        return !age || age <= 72; // Show if no age data or <= 3 days
+      });
+    }
+    
+    return sorted;
+  }, [widgets, widgetAges, showOnlyRecent]);
+
+  const hiddenCount = widgets.length - processedWidgets.length;
 
   if (loading || roleLoading) {
     return (
@@ -95,6 +132,16 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
+              <Switch
+                checked={showOnlyRecent}
+                onCheckedChange={(checked) => {
+                  setShowOnlyRecent(checked);
+                  localStorage.setItem('show_only_recent', String(checked));
+                }}
+              />
+              <span className="text-sm text-muted-foreground">Только актуальные</span>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -113,6 +160,21 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Hidden widgets message */}
+        {showOnlyRecent && hiddenCount > 0 && (
+          <div className="text-sm text-muted-foreground text-center py-2">
+            Скрыто {hiddenCount} неактивных виджетов{' '}
+            <Button 
+              variant="link" 
+              size="sm"
+              className="h-auto p-0 text-sm"
+              onClick={() => setShowOnlyRecent(false)}
+            >
+              Показать все
+            </Button>
+          </div>
+        )}
+
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
@@ -128,7 +190,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {widgets.map((widget) => (
+            {processedWidgets.map((widget) => (
               <WidgetCard
                 key={widget.id}
                 metricName={widget.metric_name}
@@ -139,7 +201,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* Habits Section */}
+        {/* Habits Section - MOVED ABOVE LEADERBOARD */}
         <HabitsSection />
 
         {/* Leaderboard Section */}

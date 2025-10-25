@@ -31,6 +31,7 @@ const DEFAULT_WIDGETS = [
   { metric_name: 'Day Strain', source: 'whoop' },
   { metric_name: 'Sleep Duration', source: 'whoop' },
   { metric_name: 'Steps', source: 'garmin' },
+  { metric_name: 'Steps', source: 'ultrahuman' }, // Second Steps for comparison
   { metric_name: 'Training Readiness', source: 'garmin' },
   { metric_name: 'Sleep Efficiency', source: 'garmin' },
   { metric_name: 'HRV RMSSD', source: 'ultrahuman' },

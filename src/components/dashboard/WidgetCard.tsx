@@ -349,57 +349,46 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
           <div className="flex items-center gap-2">
             {(() => {
               const now = new Date();
-              const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-              const todayStr = todayLocal.toISOString().split('T')[0];
-              const isToday = data.date === todayStr;
-              const daysDiff = Math.floor(
-                (new Date().getTime() - new Date(data.date).getTime()) / (1000 * 60 * 60 * 24)
-              );
+              const dataDate = new Date(data.date);
+              const daysDiff = Math.floor((now.getTime() - dataDate.getTime()) / (1000 * 60 * 60 * 24));
+              
+              const isSleepMetric = metricName.toLowerCase().includes('sleep');
+              const isRecoveryScore = metricName === 'Recovery Score';
               const isWorkoutMetric = metricName.toLowerCase().includes('workout') || 
                                      metricName.toLowerCase().includes('strain');
-              const isRecoveryScore = metricName === 'Recovery Score';
               
-              // Recovery Score: показывать "Сегодня" если данные за вчерашнюю ночь (но получены сегодня)
-              if (isRecoveryScore) {
-                const dataDate = new Date(data.date);
-                const daysDiff = Math.floor((now.getTime() - dataDate.getTime()) / (1000 * 60 * 60 * 24));
-                
-                // Если Recovery за вчерашнюю ночь (но получен сегодня) → "Сегодня"
-                if (daysDiff === 0 || daysDiff === 1) {
-                  return <span className="text-muted-foreground">Сегодня</span>;
-                } else {
-                  return (
-                    <>
-                      <span className="text-muted-foreground">
-                        {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
-                      </span>
-                      {daysDiff > 1 && (
-                        <span className="text-xs text-yellow-600 font-medium">
-                          ({daysDiff} дн. назад)
-                        </span>
-                      )}
-                    </>
-                  );
-                }
+              // Recovery Score: если данные за вчера/сегодня → "Сегодня"
+              if (isRecoveryScore && daysDiff <= 1) {
+                return <span className="text-muted-foreground">Сегодня</span>;
               }
               
-              // Для остальных метрик - стандартная логика
-              if (isToday) {
+              // Sleep: если данные за сегодня → "Сегодня"
+              if (isSleepMetric && daysDiff === 0) {
                 return <span className="text-muted-foreground">Сегодня</span>;
-              } else if (isWorkoutMetric && daysDiff > 1) {
+              }
+              
+              // Workout метрики: "Последняя: [дата]" если > 1 дня
+              if (isWorkoutMetric && daysDiff > 1) {
                 return (
                   <>
                     <span className="text-muted-foreground">Последняя:</span>
                     <span className="text-muted-foreground">
-                      {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                     </span>
                   </>
                 );
+              }
+              
+              // Остальные метрики: "Сегодня" / "Вчера" / дата
+              if (daysDiff === 0) {
+                return <span className="text-muted-foreground">Сегодня</span>;
+              } else if (daysDiff === 1) {
+                return <span className="text-muted-foreground">Вчера</span>;
               } else {
                 return (
                   <>
                     <span className="text-muted-foreground">
-                      {new Date(data.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                     </span>
                     {daysDiff > 1 && (
                       <span className="text-xs text-yellow-600 font-medium">
@@ -430,7 +419,7 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
         </div>
 
         {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
-          <div className="mt-3 pt-3 border-t space-y-2">
+          <div className="mt-3 pt-3 border-t">
             {isCachedWithoutToken ? (
               <Button 
                 size="sm" 
@@ -441,39 +430,36 @@ export function WidgetCard({ metricName, source, refreshKey }: WidgetCardProps) 
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Подключить Whoop
               </Button>
+            ) : hoursOld > 168 ? (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full text-xs"
+                onClick={() => navigate('/integrations')}
+              >
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Переподключить
+              </Button>
             ) : (
-              <>
-                <Button 
-                  size="sm" 
-                  variant="default" 
-                  className="w-full text-xs"
-                  onClick={syncWhoopData}
-                  disabled={syncing}
-                >
-                  {syncing ? (
-                    <>
-                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                      Синхронизация...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      Обновить Whoop
-                    </>
-                  )}
-                </Button>
-                {isDataStale && (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="w-full text-xs"
-                    onClick={() => navigate('/integrations')}
-                  >
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    Переподключить
-                  </Button>
+              <Button 
+                size="sm" 
+                variant="default" 
+                className="w-full text-xs"
+                onClick={syncWhoopData}
+                disabled={syncing}
+              >
+                {syncing ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                    Синхронизация...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Обновить Whoop
+                  </>
                 )}
-              </>
+              </Button>
             )}
           </div>
         )}
