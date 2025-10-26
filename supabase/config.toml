@@ -59,3 +59,9 @@ verify_jwt = true
 
 [functions.terra-retry-processor]
 verify_jwt = false
+
+[functions.job-worker]
+verify_jwt = false
+
+[functions.recalculate-confidence]
+verify_jwt = true

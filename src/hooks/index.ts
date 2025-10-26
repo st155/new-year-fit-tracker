@@ -27,6 +27,10 @@ export {
   type Body3DModel
 } from './composite/data/useBodyComposition';
 
+// Data Quality hooks
+export { useDataQuality } from './useDataQuality';
+export { useConfidenceRecalculation } from './useConfidenceRecalculation';
+
 // Keep existing hooks that are not deprecated
 export { useLatestMetrics, useDeviceMetrics, type DeviceFilter } from './metrics/useLatestMetrics';
 export { useLatestMetric } from './metrics/useLatestMetric';

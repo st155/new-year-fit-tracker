@@ -2094,6 +2094,51 @@ export type Database = {
         }
         Relationships: []
       }
+      metric_confidence_cache: {
+        Row: {
+          confidence_score: number
+          created_at: string | null
+          cross_validation: number
+          data_freshness: number
+          id: string
+          measurement_date: string
+          measurement_frequency: number
+          metric_name: string
+          source: string
+          source_reliability: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string | null
+          cross_validation: number
+          data_freshness: number
+          id?: string
+          measurement_date: string
+          measurement_frequency: number
+          metric_name: string
+          source: string
+          source_reliability: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string | null
+          cross_validation?: number
+          data_freshness?: number
+          id?: string
+          measurement_date?: string
+          measurement_frequency?: number
+          metric_name?: string
+          source?: string
+          source_reliability?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       metric_mappings: {
         Row: {
           aggregation_method: string
@@ -3207,7 +3252,10 @@ export type Database = {
       }
       client_unified_metrics: {
         Row: {
+          confidence_score: number | null
+          created_at: string | null
           measurement_date: string | null
+          metric_category: string | null
           metric_name: string | null
           priority: number | null
           source: string | null
