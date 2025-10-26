@@ -10,6 +10,7 @@ import { PageLoader } from "@/components/ui/page-loader";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
+import { RecoveryBar } from "@/components/pwa/RecoveryBar";
 import { registerServiceWorker } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher, getPrefetcher } from "@/lib/prefetch-strategy";
@@ -49,6 +50,7 @@ const TerraCallback = lazy(() => import("./pages/TerraCallback"));
 
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Health = lazy(() => import("./pages/Health"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -219,11 +221,13 @@ const AppRoutes = () => {
               
               {/* Static pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/health" element={<Health />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Sonner />
             <InstallPrompt />
             <UpdatePrompt />
+            <RecoveryBar />
           </Suspense>
   );
 };
@@ -238,16 +242,18 @@ const AppContent = () => {
     logger.info('[App] Query strategies and web vitals initialized');
   }, []);
 
-  // Service worker registration
+  // Service worker registration - DISABLED temporarily to fix black screen
   useEffect(() => {
-    if (import.meta.env.PROD) {
+    const DISABLE_SW = true; // Feature flag to disable SW in production
+    
+    if (import.meta.env.PROD && !DISABLE_SW) {
       try {
         registerServiceWorker();
       } catch (error) {
         console.error('Service worker registration failed:', error);
       }
     } else {
-      // Dev-защита: отключаем любые SW и чистим кеши
+      // Unregister SW and clear caches (dev + DISABLE_SW)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => {
           regs.forEach(r => r.unregister());
