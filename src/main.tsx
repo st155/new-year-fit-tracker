@@ -48,9 +48,7 @@ async function importWithRetry<T>(
   }
 }
 
-// Cache busting mechanism
-const BUST = sessionStorage.getItem('boot_bust') ?? String(Date.now());
-sessionStorage.setItem('boot_bust', BUST);
+// Cache busting removed - Vite doesn't support variable paths in dev mode
 
 // Pre-check: verify module availability
 async function preCheckModule() {
@@ -108,12 +106,6 @@ async function performRecovery() {
   
   // Wait a bit for cleanup
   await new Promise(resolve => setTimeout(resolve, 200));
-  
-  // Update bust parameter
-  const newBust = String(Date.now());
-  sessionStorage.setItem('boot_bust', newBust);
-  
-  return newBust;
 }
 
 // Dynamic import with error handling
@@ -125,7 +117,7 @@ async function performRecovery() {
     await preCheckModule();
     
     const { default: App } = await importWithRetry(
-      () => import(`./App.tsx?b=${BUST}`)
+      () => import('./App.tsx')
     );
     
     console.log('✅ [Boot] App imported successfully, mounting React...');
@@ -165,12 +157,12 @@ async function performRecovery() {
         sessionStorage.setItem('__boot_recovered', '1');
         
         try {
-          const newBust = await performRecovery();
+          await performRecovery();
           
-          // Retry import with new bust parameter
+          // Retry import after recovery
           console.log('🔄 [Boot] Retrying import after recovery...');
           const { default: App } = await importWithRetry(
-            () => import(`./App.tsx?b=${newBust}`)
+            () => import('./App.tsx')
           );
           
           console.log('✅ [Boot] App imported successfully after recovery!');
