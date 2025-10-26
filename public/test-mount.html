@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal React Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #00ffff;
+      font-family: monospace;
+    }
+    #root {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .status {
+      margin: 10px 0;
+      padding: 10px 20px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+    }
+    .ok { color: #44ff44; }
+    .fail { color: #ff4444; }
+    a {
+      color: #00ffff;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script>
+    // Ultra-minimal React test without any dependencies
+    console.log('🧪 [Test] Starting minimal mount test...');
+    
+    window.__test_errors = [];
+    
+    window.onerror = function(msg, url, line, col, error) {
+      var errMsg = msg + ' at ' + url + ':' + line;
+      window.__test_errors.push(errMsg);
+      console.error('💥 [Test] Error:', errMsg, error);
+    };
+    
+    window.onunhandledrejection = function(e) {
+      var errMsg = 'Promise rejection: ' + (e.reason || 'unknown');
+      window.__test_errors.push(errMsg);
+      console.error('💥 [Test] Rejection:', e.reason);
+    };
+    
+    // Try to load React from CDN as fallback test
+    var reactScript = document.createElement('script');
+    reactScript.crossOrigin = 'anonymous';
+    reactScript.src = 'https://unpkg.com/react@18/umd/react.production.min.js';
+    reactScript.onload = function() {
+      console.log('✅ [Test] React loaded from CDN');
+      
+      var reactDomScript = document.createElement('script');
+      reactDomScript.crossOrigin = 'anonymous';
+      reactDomScript.src = 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js';
+      reactDomScript.onload = function() {
+        console.log('✅ [Test] ReactDOM loaded from CDN');
+        
+        try {
+          var root = document.getElementById('root');
+          var ReactDOM = window.ReactDOM;
+          var React = window.React;
+          
+          var TestApp = React.createElement('div', { style: { padding: '20px' } },
+            React.createElement('h1', { style: { fontSize: '48px', margin: '20px 0' } }, '✅ React CDN Mount OK'),
+            React.createElement('p', { className: 'status ok' }, 'React and ReactDOM loaded successfully from CDN'),
+            React.createElement('p', { style: { opacity: 0.7 } }, 'This means your browser can load and run React.'),
+            React.createElement('p', { style: { opacity: 0.7 } }, 'If your main app fails, the issue is likely in bundled modules or CSP.'),
+            React.createElement('div', { style: { marginTop: '40px' } },
+              React.createElement('a', { href: '/' }, '← Back to App'),
+              React.createElement('a', { href: '/health-check.html' }, 'Health Check'),
+              React.createElement('a', { href: '/__debug' }, 'Debug Route')
+            )
+          );
+          
+          ReactDOM.createRoot(root).render(TestApp);
+          console.log('✅ [Test] React app rendered successfully via CDN');
+        } catch (error) {
+          console.error('💥 [Test] Failed to render:', error);
+          document.getElementById('root').innerHTML = 
+            '<h1 class="fail">❌ React Mount Failed</h1>' +
+            '<p class="status fail">Error: ' + error.message + '</p>' +
+            '<p>Check console for details</p>';
+        }
+      };
+      
+      reactDomScript.onerror = function() {
+        console.error('💥 [Test] Failed to load ReactDOM from CDN');
+        document.getElementById('root').innerHTML = 
+          '<h1 class="fail">❌ CDN Load Failed</h1>' +
+          '<p class="status fail">Could not load ReactDOM from unpkg.com</p>' +
+          '<p>This might indicate a network/CSP issue blocking external scripts</p>';
+      };
+      
+      document.head.appendChild(reactDomScript);
+    };
+    
+    reactScript.onerror = function() {
+      console.error('💥 [Test] Failed to load React from CDN');
+      document.getElementById('root').innerHTML = 
+        '<h1 class="fail">❌ CDN Load Failed</h1>' +
+        '<p class="status fail">Could not load React from unpkg.com</p>' +
+        '<p>This might indicate a network/CSP issue blocking external scripts</p>' +
+        '<div style="margin-top: 20px;"><a href="/">← Back to App</a></div>';
+    };
+    
+    document.head.appendChild(reactScript);
+    
+    // Fallback if nothing loads
+    setTimeout(function() {
+      if (!window.React && !window.ReactDOM) {
+        console.error('💥 [Test] No React loaded after 5 seconds');
+        var root = document.getElementById('root');
+        if (!root.innerHTML) {
+          root.innerHTML = 
+            '<h1 class="fail">❌ Timeout</h1>' +
+            '<p class="status fail">Scripts did not load within 5 seconds</p>' +
+            '<p>Possible CSP blocking or network issue</p>' +
+            '<div style="margin-top: 20px;">' +
+            '<a href="/?recover=1">Run Recovery</a> | ' +
+            '<a href="/health-check.html">Health Check</a>' +
+            '</div>';
+        }
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
