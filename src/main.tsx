@@ -32,3 +32,9 @@ createRoot(root).render(
     <App />
   </StrictMode>
 );
+
+// Signal that React has successfully mounted
+if (typeof window !== 'undefined') {
+  (window as any).__react_mounted__ = true;
+  console.log('✅ [Boot] React mounted successfully');
+}

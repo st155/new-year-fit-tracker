@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elite10 - Static Health Check</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { color: #00ffff; margin-bottom: 30px; }
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #00ffff;
+      font-size: 18px;
+    }
+    .status { 
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .status.ok { background: #00ff00; color: #000; }
+    .status.fail { background: #ff0000; color: #fff; }
+    .status.warn { background: #ffaa00; color: #000; }
+    pre {
+      background: #000;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    button {
+      background: #00ffff;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 5px;
+    }
+    button:hover { opacity: 0.8; }
+    .loader {
+      border: 3px solid #333;
+      border-top: 3px solid #00ffff;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🏥 Elite10 Static Health Check</h1>
+  <p>This page runs outside React to diagnose boot issues.</p>
+  
+  <div class="section">
+    <h2>Service Worker</h2>
+    <div id="sw-status">Checking...</div>
+  </div>
+  
+  <div class="section">
+    <h2>Cache Storage</h2>
+    <div id="cache-status">Checking...</div>
+  </div>
+  
+  <div class="section">
+    <h2>Manifest</h2>
+    <div id="manifest-status">Checking...</div>
+  </div>
+  
+  <div class="section">
+    <h2>Supabase Connectivity (d.elite10.club)</h2>
+    <div id="supabase-status"><span class="loader"></span>Testing...</div>
+  </div>
+  
+  <div style="margin-top: 30px;">
+    <button onclick="location.href='/'">← Back to App</button>
+    <button onclick="location.href='/?recover=1'">🔄 Run Recovery</button>
+    <button onclick="location.reload()">🔃 Reload</button>
+  </div>
+
+  <script>
+    (async function() {
+      // 1. Service Worker Check
+      const swDiv = document.getElementById('sw-status');
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        const controller = navigator.serviceWorker.controller;
+        if (regs.length > 0 || controller) {
+          swDiv.innerHTML = `<span class="status warn">REGISTERED</span> Found ${regs.length} registration(s). Controller: ${controller ? 'YES' : 'NO'}`;
+        } else {
+          swDiv.innerHTML = `<span class="status ok">NOT REGISTERED</span> (Good - SW disabled)`;
+        }
+      } else {
+        swDiv.innerHTML = `<span class="status fail">NOT SUPPORTED</span>`;
+      }
+      
+      // 2. Cache Check
+      const cacheDiv = document.getElementById('cache-status');
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        if (keys.length > 0) {
+          cacheDiv.innerHTML = `<span class="status warn">FOUND</span> ${keys.length} cache(s):<pre>${keys.join('\n')}</pre>`;
+        } else {
+          cacheDiv.innerHTML = `<span class="status ok">EMPTY</span> No caches present`;
+        }
+      } else {
+        cacheDiv.innerHTML = `<span class="status fail">NOT SUPPORTED</span>`;
+      }
+      
+      // 3. Manifest Check
+      const manifestDiv = document.getElementById('manifest-status');
+      try {
+        const res = await fetch('/manifest.json');
+        if (res.ok) {
+          const data = await res.json();
+          manifestDiv.innerHTML = `<span class="status ok">OK</span> Name: ${data.name || 'N/A'}`;
+        } else {
+          manifestDiv.innerHTML = `<span class="status fail">FAILED</span> HTTP ${res.status}`;
+        }
+      } catch (err) {
+        manifestDiv.innerHTML = `<span class="status fail">ERROR</span> ${err.message}`;
+      }
+      
+      // 4. Supabase Check
+      const supabaseDiv = document.getElementById('supabase-status');
+      const SUPABASE_URL = 'https://d.elite10.club';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVleWttbXptZ3V6anBwZHVkdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTAwNjEsImV4cCI6MjA3NDAyNjA2MX0.nSc_MFoU6rAsyw0c8Mv-BD0MPuGAsuDXUckvMUyYX94';
+      
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeout);
+        
+        if (res.ok || res.status === 404) {
+          supabaseDiv.innerHTML = `<span class="status ok">CONNECTED</span> HTTP ${res.status} - Custom domain working!<br><small>URL: ${SUPABASE_URL}</small>`;
+        } else {
+          supabaseDiv.innerHTML = `<span class="status warn">PARTIAL</span> HTTP ${res.status}<br><small>${SUPABASE_URL}</small>`;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          supabaseDiv.innerHTML = `<span class="status fail">TIMEOUT</span> Request took >10s<br><small>${err.message}</small>`;
+        } else {
+          supabaseDiv.innerHTML = `<span class="status fail">ERROR</span> ${err.message}<br><small>Check CORS/CSP/Network</small>`;
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

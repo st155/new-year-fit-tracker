@@ -21,6 +21,9 @@ import Auth from "./pages/Auth";
 import { RoleBasedRoute } from "@/components/RoleBasedRoute";
 import { TrainerOnlyRoute } from "@/components/TrainerOnlyRoute";
 
+// Debug page - direct import (no lazy loading)
+import DebugPage from "./pages/DebugPage";
+
 // Critical pages - load immediately
 const Landing = lazy(() => import("./pages/Landing"));
 
@@ -90,6 +93,9 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader message="Loading..." />}>
       <Routes>
+              {/* Debug route - no auth, no lazy, no providers */}
+              <Route path="/__debug" element={<DebugPage />} />
+              
               <Route path="/auth" element={<Auth />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/" element={

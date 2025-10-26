@@ -49,7 +49,54 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- Boot Debug Overlay -->
+    <div id="boot-debug-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:#fff; z-index:999999; padding:20px; box-sizing:border-box; overflow:auto; font-family:monospace;">
+      <h2 style="color:#ff4444;">⚠️ App Failed to Mount</h2>
+      <p>React didn't mount within 4 seconds. Check console for errors.</p>
+      <div id="boot-errors" style="margin:15px 0; padding:10px; background:#222; border-left:3px solid #ff4444; max-height:200px; overflow:auto;"></div>
+      <button onclick="location.href='/?recover=1'" style="margin:5px; padding:10px 20px; background:#ff4444; border:none; color:#fff; cursor:pointer; border-radius:4px;">Run Recovery</button>
+      <button onclick="location.href='/health-check.html'" style="margin:5px; padding:10px 20px; background:#4444ff; border:none; color:#fff; cursor:pointer; border-radius:4px;">Static Health Check</button>
+      <button onclick="location.reload()" style="margin:5px; padding:10px 20px; background:#666; border:none; color:#fff; cursor:pointer; border-radius:4px;">Reload</button>
+    </div>
+    
     <script>
+      // Boot debug system
+      (function() {
+        window.__react_mounted__ = false;
+        window.__lastErrors = [];
+        
+        // Capture all errors before React loads
+        window.onerror = function(msg, url, line, col, error) {
+          var errMsg = msg + ' at ' + url + ':' + line + ':' + col;
+          window.__lastErrors.push(errMsg);
+          console.error('💥 [Boot] Error:', errMsg, error);
+        };
+        
+        window.onunhandledrejection = function(e) {
+          var errMsg = 'Unhandled promise rejection: ' + (e.reason || 'unknown');
+          window.__lastErrors.push(errMsg);
+          console.error('💥 [Boot] Promise rejection:', e.reason);
+        };
+        
+        // Check if React mounted after 4 seconds
+        setTimeout(function() {
+          if (!window.__react_mounted__) {
+            console.error('💥 [Boot] React failed to mount in 4 seconds');
+            var overlay = document.getElementById('boot-debug-overlay');
+            var errorsDiv = document.getElementById('boot-errors');
+            
+            if (window.__lastErrors.length > 0) {
+              errorsDiv.innerHTML = '<strong>Errors:</strong><br>' + window.__lastErrors.join('<br>');
+            } else {
+              errorsDiv.innerHTML = '<em>No JavaScript errors captured. Possible CSP/network issue.</em>';
+            }
+            
+            overlay.style.display = 'block';
+          }
+        }, 4000);
+      })();
+      
       // Emergency pre-boot recovery and dev purge
       (function () {
         var params = new URLSearchParams(location.search);
