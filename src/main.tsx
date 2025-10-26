@@ -9,6 +9,33 @@ if (!root) {
   throw new Error("Root element not found");
 }
 
+// Pre-boot: Clear SW and caches on dev domains (before any imports)
+const isDevHost = location.hostname.endsWith('.lovableproject.com') || location.hostname === 'localhost';
+(async () => {
+  if (isDevHost && 'serviceWorker' in navigator && navigator.serviceWorker.controller && !sessionStorage.getItem('__sw_cleared_once')) {
+    console.log('🧹 [Boot] Clearing SW on dev domain...');
+    sessionStorage.setItem('__sw_cleared_once', '1');
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+      console.log('✅ [Boot] SW unregistered');
+    } catch (err) {
+      console.warn('⚠️ [Boot] Failed to unregister SW:', err);
+    }
+    if ('caches' in window) {
+      try {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+        console.log('✅ [Boot] Caches cleared');
+      } catch (err) {
+        console.warn('⚠️ [Boot] Failed to clear caches:', err);
+      }
+    }
+    location.reload();
+    await new Promise(() => {}); // stop further execution
+  }
+})();
+
 // Global error logging
 window.addEventListener('error', (e) => {
   console.error('💥 [Global] Uncaught error:', (e as ErrorEvent).error);
@@ -159,9 +186,18 @@ async function boot() {
     console.timeEnd('boot');
     
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     console.error('💥 [Boot] First import failed:', err);
     
-    // Try recovery once
+    // If this is a module fetch error, do recovery and reload
+    if (errorMessage.includes('Failed to fetch dynamically imported module')) {
+      console.log('🔄 [Boot] Module fetch error detected, performing recovery...');
+      await performRecovery();
+      location.reload();
+      return;
+    }
+    
+    // Try recovery once for other errors
     const alreadyRecovered = sessionStorage.getItem('__boot_recovered') === '1';
     
     if (!alreadyRecovered) {
@@ -192,8 +228,8 @@ async function boot() {
     
     // Show fallback UI
     console.log('🛑 [Boot] Showing fallback error UI');
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    createRoot(root).render(<BootError message={errorMessage} />);
+    const fallbackMessage = err instanceof Error ? err.message : String(err);
+    createRoot(root).render(<BootError message={fallbackMessage} />);
     (window as any).__react_mounted__ = true;
     console.timeEnd('boot');
   }

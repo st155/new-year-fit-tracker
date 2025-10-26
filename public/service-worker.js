@@ -173,6 +173,9 @@ self.addEventListener('fetch', (event) => {
   // Skip Vite dev/HMR requests
   if (url.pathname.startsWith('/@vite') ||
       url.pathname.startsWith('/@react-refresh') ||
+      url.pathname.startsWith('/@id/') ||
+      url.pathname.startsWith('/node_modules/.vite/') ||
+      url.pathname.startsWith('/vite/') ||
       url.pathname.startsWith('/src/') ||
       url.pathname.includes('__vite')) {
     return;
@@ -211,7 +214,7 @@ self.addEventListener('fetch', (event) => {
 
   // Изображения - Stale While Revalidate
   if (request.destination === 'image') {
-    event.respondWith(strategies.staleWhileRevalidate(request, IMAGE_CACHE));
+    event.respondWith(strategies.staleWhileRevalidate(request, CACHE_NAMES.IMAGES));
     return;
   }
 
