@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,41 +11,58 @@ import { RoleBasedRoute } from "@/components/RoleBasedRoute";
 import { TrainerOnlyRoute } from "@/components/TrainerOnlyRoute";
 import { getPrefetcher } from "@/lib/prefetch-strategy";
 import { logger } from "@/lib/logger";
+import { lazySafe } from "@/lib/lazy-safe";
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
 
-// Critical pages - load on demand
-const Landing = lazy(() => import("@/pages/Landing"));
+// Sync imports for all pages
+import LandingSync from "@/pages/Landing";
+import IndexSync from "@/pages/Index";
+import ProgressSync from "@/pages/Progress";
+import GoalsSync from "@/pages/Goals";
+import GoalDetailSync from "@/pages/GoalDetail";
+import BodySync from "@/pages/Body";
+import ChallengesSync from "@/pages/Challenges";
+import ChallengeDetailSync from "@/pages/ChallengeDetail";
+import HabitsSync from "@/pages/Habits";
+import FeedSync from "@/pages/Feed";
+import FitnessDataSync from "@/pages/FitnessData";
+import LeaderboardSync from "@/pages/Leaderboard";
+import ProfileSync from "@/pages/Profile";
+import IntegrationsSync from "@/pages/Integrations";
+import MedicalDocumentsSync from "@/pages/MedicalDocuments";
+import TrainerDashboardSync from "@/pages/TrainerDashboard";
+import TrainerTestPageSync from "@/pages/TrainerTestPage";
+import AdminSync from "@/pages/Admin";
+import TerraCallbackSync from "@/pages/TerraCallback";
+import PrivacyPolicySync from "@/pages/PrivacyPolicy";
+import HealthSync from "@/pages/Health";
+import NotFoundSync from "@/pages/NotFound";
 
-// Primary pages
-const Index = lazy(() => import("@/pages/Index"));
-const Progress = lazy(() => import("@/pages/Progress"));
-const Goals = lazy(() => import("@/pages/Goals"));
-const GoalDetail = lazy(() => import("@/pages/GoalDetail"));
-const Body = lazy(() => import("@/pages/Body"));
-const Challenges = lazy(() => import("@/pages/Challenges"));
-const ChallengeDetail = lazy(() => import("@/pages/ChallengeDetail"));
-const Habits = lazy(() => import("@/pages/Habits"));
-const Feed = lazy(() => import("@/pages/Feed"));
-const FitnessData = lazy(() => import("@/pages/FitnessData"));
-const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
-
-// Secondary pages
-const Profile = lazy(() => import("@/pages/Profile"));
-const Integrations = lazy(() => import("@/pages/Integrations"));
-const MedicalDocuments = lazy(() => import("@/pages/MedicalDocuments"));
-const TrainerDashboard = lazy(() => import("@/pages/TrainerDashboard"));
-const TrainerTestPage = lazy(() => import("@/pages/TrainerTestPage"));
-const Admin = lazy(() => import("@/pages/Admin"));
-
-// OAuth callbacks
-const TerraCallback = lazy(() => import("@/pages/TerraCallback"));
-
-// Static pages
-const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const Health = lazy(() => import("@/pages/Health"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+// Safe lazy wrappers (bypass lazy on dev/preview)
+const Landing = lazySafe(LandingSync, () => import("@/pages/Landing"));
+const Index = lazySafe(IndexSync, () => import("@/pages/Index"));
+const Progress = lazySafe(ProgressSync, () => import("@/pages/Progress"));
+const Goals = lazySafe(GoalsSync, () => import("@/pages/Goals"));
+const GoalDetail = lazySafe(GoalDetailSync, () => import("@/pages/GoalDetail"));
+const Body = lazySafe(BodySync, () => import("@/pages/Body"));
+const Challenges = lazySafe(ChallengesSync, () => import("@/pages/Challenges"));
+const ChallengeDetail = lazySafe(ChallengeDetailSync, () => import("@/pages/ChallengeDetail"));
+const Habits = lazySafe(HabitsSync, () => import("@/pages/Habits"));
+const Feed = lazySafe(FeedSync, () => import("@/pages/Feed"));
+const FitnessData = lazySafe(FitnessDataSync, () => import("@/pages/FitnessData"));
+const Leaderboard = lazySafe(LeaderboardSync, () => import("@/pages/Leaderboard"));
+const Profile = lazySafe(ProfileSync, () => import("@/pages/Profile"));
+const Integrations = lazySafe(IntegrationsSync, () => import("@/pages/Integrations"));
+const MedicalDocuments = lazySafe(MedicalDocumentsSync, () => import("@/pages/MedicalDocuments"));
+const TrainerDashboard = lazySafe(TrainerDashboardSync, () => import("@/pages/TrainerDashboard"));
+const TrainerTestPage = lazySafe(TrainerTestPageSync, () => import("@/pages/TrainerTestPage"));
+const Admin = lazySafe(AdminSync, () => import("@/pages/Admin"));
+const TerraCallback = lazySafe(TerraCallbackSync, () => import("@/pages/TerraCallback"));
+const PrivacyPolicy = lazySafe(PrivacyPolicySync, () => import("@/pages/PrivacyPolicy"));
+const Health = lazySafe(HealthSync, () => import("@/pages/Health"));
+const NotFound = lazySafe(NotFoundSync, () => import("@/pages/NotFound"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();

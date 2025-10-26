@@ -1,5 +1,6 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import App from "./App";
 import "./index.css";
 import "./index-inbody-styles.css";
 
@@ -606,107 +607,27 @@ function BootError({ message }: { message: string }) {
   );
 }
 
-// Two-phase safe boot: shell first, then dynamic App import
+// Simplified boot: static imports, no dynamic loading phase
 async function boot() {
   console.time('boot');
-  console.log('🚀 [Boot] Starting application...');
+  console.log('🚀 [Boot] Starting application (static imports)...');
   
   const reactRoot = createRoot(root);
   
   try {
-    // Phase 1: Immediately mount minimal shell
-    console.log('🎨 [Boot] Phase 1: Mounting shell...');
-    reactRoot.render(
-      <div style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        background: '#0b0b0b',
-        color: '#6ee7b7',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: '18px'
-      }}>
-        Loading application...
-      </div>
-    );
-    
-    (window as any).__react_mounted__ = true;
-    console.log('✅ [Boot] Shell mounted, React marked as mounted');
-    
-    // Pre-check (non-blocking)
+    // Pre-check (non-blocking, for diagnostics)
     preCheckModuleSafe();
     
-    // Phase 2: Dynamic import with 3 strategies
-    console.log('📦 [Boot] Phase 2: Importing App module...');
-    
-    const isDev = window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
-    const strategies = [
-      { name: 'absolute', url: '/src/App.tsx' },
-      { name: 'absolute-cachebust', url: `/src/App.tsx?t=${Date.now()}` },
-      { name: 'relative', url: './App.tsx' }
-    ];
-    
-    let App;
-    let lastError;
-    
-    for (const strategy of strategies) {
-      try {
-        console.time(`import-${strategy.name}`);
-        console.log(`🔄 Strategy: ${strategy.name} (${strategy.url})`);
-        
-        App = await Promise.race([
-          import(/* @vite-ignore */ strategy.url).then(module => module.default),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout after 8s`)), 8000)
-          )
-        ]) as any;
-        
-        console.timeEnd(`import-${strategy.name}`);
-        console.log(`✅ Success with ${strategy.name}`);
-        break;
-      } catch (err) {
-        console.timeEnd(`import-${strategy.name}`);
-        console.warn(`❌ ${strategy.name} failed:`, err);
-        lastError = err;
-      }
-    }
-    
-    // Blob fallback (dev only) if all strategies failed
-    if (!App && isDev) {
-      try {
-        console.log('🔄 [Boot] Attempting blob fallback...');
-        const blobRes = await fetch(`/src/App.tsx?diag=${Date.now()}`, { cache: 'no-cache' });
-        const code = await blobRes.text();
-        
-        if (!blobRes.ok || blobRes.headers.get('content-type')?.includes('text/html')) {
-          throw new Error(`Blob fetch failed: ${blobRes.status}`);
-        }
-        
-        const blobUrl = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
-        const module = await import(/* @vite-ignore */ blobUrl);
-        App = module.default;
-        URL.revokeObjectURL(blobUrl);
-        
-        console.log('✅ [Boot] Blob fallback succeeded!');
-      } catch (blobErr) {
-        console.error('❌ [Boot] Blob fallback failed:', blobErr);
-        (window as any).__bootDiag = (window as any).__bootDiag || {};
-        (window as any).__bootDiag.blobImportError = blobErr instanceof Error ? blobErr.message : String(blobErr);
-      }
-    }
-    
-    if (!App) {
-      throw new Error(`All import strategies failed. Last error: ${lastError}`);
-    }
-    
-    console.log('🎨 [Boot] Rendering full App...');
+    // Render App directly (statically imported)
+    console.log('🎨 [Boot] Rendering App...');
     reactRoot.render(
       <StrictMode>
         <App />
       </StrictMode>
     );
     
-    console.log('✅ [Boot] Full app rendered successfully');
+    (window as any).__react_mounted__ = true;
+    console.log('✅ [Boot] App rendered successfully');
     console.timeEnd('boot');
     
   } catch (err) {

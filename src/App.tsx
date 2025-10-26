@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -10,9 +10,7 @@ import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher } from "@/lib/prefetch-strategy";
 import { initWebVitals } from "@/lib/web-vitals";
 import { logger } from "@/lib/logger";
-
-// Lazy load the entire routing module to reduce initial bundle
-const AppRoutes = lazy(() => import("./app/AppRoutes").then(m => ({ default: m.AppRoutes })));
+import { AppRoutes } from "./app/AppRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
