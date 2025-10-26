@@ -11,7 +11,11 @@ export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
 
   // Wait for both auth and roles to load
   if (loading || rolesLoading) {
-    return <PageLoader message="Проверка роли..." />;
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'monospace',fontSize:'16px',background:'#000',color:'#ff0'}}>
+        <div>🔄 Checking role... (RoleBasedRoute)</div>
+      </div>
+    );
   }
 
   // If trainer/admin, redirect to trainer dashboard

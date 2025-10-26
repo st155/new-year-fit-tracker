@@ -19,7 +19,7 @@ import DebugPage from "@/pages/DebugPage";
 import SmokeHome from "@/pages/SmokeHome";
 
 // 🔥 ROUTE_SMOKE: Temporarily route / to SmokeHome (bypass all auth/layout)
-const ROUTE_SMOKE = false;
+const ROUTE_SMOKE = true;
 
 // Sync imports for all pages
 import LandingSync from "@/pages/Landing";
@@ -107,6 +107,18 @@ export const AppRoutes = () => {
             </ProtectedRoute>
           )
         } />
+        
+        {/* /app route - full stack for diagnosis */}
+        <Route path="/app" element={
+          <ProtectedRoute>
+            <RoleBasedRoute>
+              <ModernAppLayout>
+                <Index />
+              </ModernAppLayout>
+            </RoleBasedRoute>
+          </ProtectedRoute>
+        } />
+        
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="/progress" element={
           <ProtectedRoute>

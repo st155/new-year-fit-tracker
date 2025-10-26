@@ -8,8 +8,21 @@ interface ModernAppLayoutProps {
   children: ReactNode;
 }
 
+// 🔥 LAYOUT_SAFE_MODE: Bypass all providers/navigation for diagnosis
+const LAYOUT_SAFE_MODE = true;
+
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
-  console.log('🏗️ [ModernAppLayout] Rendering layout');
+  console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');
+  
+  if (LAYOUT_SAFE_MODE) {
+    return (
+      <div className="min-h-screen flex flex-col w-full bg-background">
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
   
   return (
     <SafeProfileProvider>
