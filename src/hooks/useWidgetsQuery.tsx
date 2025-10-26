@@ -46,6 +46,8 @@ export function useWidgetsQuery(userId: string | undefined) {
   return useQuery({
     queryKey: widgetKeys.list(userId!),
     queryFn: async () => {
+      console.log('🔍 [useWidgetsQuery] Fetching widgets for user:', userId);
+      
       const { data, error } = await supabase
         .from('dashboard_widgets')
         .select('*')
@@ -53,10 +55,17 @@ export function useWidgetsQuery(userId: string | undefined) {
         .eq('is_visible', true)
         .order('position');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [useWidgetsQuery] Error fetching widgets:', error);
+        throw error;
+      }
+
+      console.log('✅ [useWidgetsQuery] Fetched widgets:', data?.length || 0);
 
       // If no widgets exist, create defaults
       if (!data || data.length === 0) {
+        console.log('📝 [useWidgetsQuery] No widgets found, creating defaults...');
+        
         const widgetsToCreate = DEFAULT_WIDGETS.map((w, index) => ({
           user_id: userId!,
           metric_name: w.metric_name,
@@ -70,16 +79,24 @@ export function useWidgetsQuery(userId: string | undefined) {
           .insert(widgetsToCreate)
           .select();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('❌ [useWidgetsQuery] Error creating default widgets:', insertError);
+          throw insertError;
+        }
+        
+        console.log('✅ [useWidgetsQuery] Created default widgets:', newWidgets?.length || 0);
         return newWidgets as Widget[];
       }
 
       return data as Widget[];
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - widgets config rarely changes
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: 1000,
+    placeholderData: [],
   });
 }
 

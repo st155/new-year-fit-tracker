@@ -10,7 +10,7 @@ interface DashboardData {
 async function fetchAllDashboardData(userId: string): Promise<DashboardData> {
   // Fetch widgets напрямую из Supabase без типизации
   const { data: widgets } = await supabase
-    .from('user_widgets' as any)
+    .from('dashboard_widgets')
     .select('*')
     .eq('user_id', userId)
     .order('position', { ascending: true });

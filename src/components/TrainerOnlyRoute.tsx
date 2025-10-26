@@ -7,10 +7,11 @@ interface TrainerOnlyRouteProps {
 }
 
 export const TrainerOnlyRoute = ({ children }: TrainerOnlyRouteProps) => {
-  const { isTrainer, loading } = useAuth();
+  const { isTrainer, loading, rolesLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Wait for both auth and roles to load
+  if (loading || rolesLoading) {
     return <PageLoader message="Проверка доступа тренера..." />;
   }
 

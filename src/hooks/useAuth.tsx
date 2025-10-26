@@ -244,20 +244,29 @@ export const useAuth = () => {
   }
   
   // Get user role from user_roles table
-  const { data: userRoles } = useQuery({
+  const { data: userRoles, isLoading: rolesLoading } = useQuery({
     queryKey: ['user-roles', context.user?.id],
     queryFn: async () => {
       if (!context.user?.id) return [];
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', context.user.id);
+      
+      // On error, return empty array (default to client role)
+      if (error) {
+        console.warn('⚠️ [useAuth] Failed to fetch roles:', error);
+        return [];
+      }
       
       return data || [];
     },
     enabled: !!context.user?.id,
     staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 2,
+    retryDelay: 1000,
   });
   
   // Get highest priority role
@@ -272,6 +281,7 @@ export const useAuth = () => {
     // Role helpers
     role,
     roles,
+    rolesLoading,
     isTrainer: roles.includes('trainer') || roles.includes('admin'),
     isAdmin: roles.includes('admin'),
     isClient: !roles.includes('trainer') && !roles.includes('admin'),

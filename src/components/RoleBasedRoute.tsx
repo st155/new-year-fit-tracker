@@ -7,12 +7,14 @@ interface RoleBasedRouteProps {
 }
 
 export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
-  const { isTrainer, loading } = useAuth();
+  const { isTrainer, loading, rolesLoading } = useAuth();
 
-  if (loading) {
+  // Wait for both auth and roles to load
+  if (loading || rolesLoading) {
     return <PageLoader message="Проверка роли..." />;
   }
 
+  // If trainer/admin, redirect to trainer dashboard
   if (isTrainer) {
     return <Navigate to="/trainer-dashboard" replace />;
   }

@@ -24,17 +24,35 @@ import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
-  const { user, isTrainer, role } = useAuth();
+  const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
   const queryClient = useQueryClient();
+  
+  console.log('🏠 [Index] Render state:', { 
+    userId: user?.id, 
+    isTrainer, 
+    role, 
+    authLoading,
+    rolesLoading
+  });
   
   // Use React Query hooks
   const { data: widgets = [], isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
+  
+  console.log('📊 [Index] Widgets state:', { 
+    widgetsCount: widgets.length, 
+    widgetsLoading 
+  });
   
   // ✅ Batch fetch для всех метрик виджетов (1 SQL запрос вместо 8)
   const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
     user?.id,
     widgets
   );
+  
+  console.log('📈 [Index] Metrics state:', { 
+    metricsDataSize: widgetsData?.size, 
+    metricsLoading 
+  });
   
   const loading = widgetsLoading || metricsLoading;
   
@@ -148,7 +166,21 @@ const Index = () => {
 
   const hiddenCount = widgets.length - processedWidgets.length;
 
+  // Wait for auth to load first
+  if (authLoading || rolesLoading) {
+    console.log('⏳ [Index] Waiting for auth/roles...');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Загрузка профиля...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
+    console.log('⏳ [Index] Waiting for widgets/metrics...');
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
@@ -168,8 +200,11 @@ const Index = () => {
 
   // If trainer - show AI-centric interface
   if (isTrainer) {
+    console.log('👨‍🏫 [Index] Redirecting to trainer dashboard...');
     return <TrainerIndexPage />;
   }
+  
+  console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
 
   return (
     <div className="min-h-screen bg-background p-6">
