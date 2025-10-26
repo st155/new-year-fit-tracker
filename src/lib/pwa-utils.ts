@@ -289,18 +289,40 @@ function hashString(str: string): string {
 
 /**
  * Проверка новой версии приложения
- * Проверяет index.html на изменения и предлагает обновление
+ * Проверяет index.html на изменения и уведомляет пользователя
  */
 export function setupVersionCheck() {
   const VERSION_KEY = 'app-version-hash';
   const CHECK_COOLDOWN_KEY = 'app-version-check-time';
+  const COLD_START_KEY = 'app-cold-start-time';
   const COOLDOWN_MS = 60000; // Проверять не чаще раза в минуту
+  const COLD_START_DELAY_MS = 90000; // Не проверять в течение 90 секунд после холодного старта
+  
+  // Записываем время холодного старта
+  if (!sessionStorage.getItem(COLD_START_KEY)) {
+    sessionStorage.setItem(COLD_START_KEY, Date.now().toString());
+  }
+  
+  // Не работаем на dev-хостах
+  const isDev = window.location.hostname.includes('.lovableproject.com') || 
+                window.location.hostname === 'localhost';
+  
+  if (isDev) {
+    console.log('✅ [Version] Version check disabled on dev host');
+    return;
+  }
   
   async function checkVersion() {
     try {
       // Cooldown для избежания частых проверок
       const lastCheck = localStorage.getItem(CHECK_COOLDOWN_KEY);
       if (lastCheck && (Date.now() - parseInt(lastCheck)) < COOLDOWN_MS) {
+        return;
+      }
+      
+      // Не проверяем в течение 90 секунд после холодного старта
+      const coldStartTime = sessionStorage.getItem(COLD_START_KEY);
+      if (coldStartTime && (Date.now() - parseInt(coldStartTime)) < COLD_START_DELAY_MS) {
         return;
       }
       
@@ -321,17 +343,14 @@ export function setupVersionCheck() {
       if (cachedHash && cachedHash !== currentHash) {
         console.log('🆕 [Version] New version detected!');
         
-        // Новая версия обнаружена
-        const shouldReload = confirm(
-          'Доступна новая версия приложения. Обновить сейчас?'
-        );
+        // Диспатчим событие вместо confirm
+        const updateEvent = new CustomEvent('app-update-available', {
+          detail: { currentHash, cachedHash }
+        });
+        window.dispatchEvent(updateEvent);
         
-        if (shouldReload) {
-          localStorage.setItem(VERSION_KEY, currentHash);
-          // Очищаем все кэши перед перезагрузкой
-          await clearAllCaches();
-          window.location.reload();
-        }
+        // Сохраняем новый хэш для следующей проверки
+        localStorage.setItem(VERSION_KEY, currentHash);
       } else if (!cachedHash) {
         // Первый запуск - сохраняем текущую версию
         localStorage.setItem(VERSION_KEY, currentHash);

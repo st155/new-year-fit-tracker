@@ -12,15 +12,34 @@ export function UpdatePrompt() {
       setShowUpdate(true);
     };
 
+    // Listen for both SW updates and app version updates
     window.addEventListener('sw-update-available', handleUpdateAvailable);
+    window.addEventListener('app-update-available', handleUpdateAvailable);
 
     return () => {
       window.removeEventListener('sw-update-available', handleUpdateAvailable);
+      window.removeEventListener('app-update-available', handleUpdateAvailable);
     };
   }, []);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    // For app updates, clear caches and reload
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      } catch (err) {
+        console.warn('Failed to clear caches:', err);
+      }
+    }
+    
+    // Try to update service worker if available
     updateServiceWorker();
+    
+    // Reload after a short delay to ensure SW update propagates
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
   };
 
   if (!showUpdate) {

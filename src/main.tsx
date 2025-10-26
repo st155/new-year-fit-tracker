@@ -48,13 +48,84 @@ async function importWithRetry<T>(
   }
 }
 
+// Cache busting mechanism
+const BUST = sessionStorage.getItem('boot_bust') ?? String(Date.now());
+sessionStorage.setItem('boot_bust', BUST);
+
+// Pre-check: verify module availability
+async function preCheckModule() {
+  try {
+    const response = await fetch('/src/App.tsx', { cache: 'no-cache' });
+    if (!response.ok) {
+      const msg = `/src/App.tsx вернул статус ${response.status} — подозрение на кэш/прокси/CSP`;
+      console.error('⚠️ [Boot]', msg);
+      if ((window as any).__lastErrors) {
+        (window as any).__lastErrors.push(msg);
+      }
+      return false;
+    }
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      const msg = '/src/App.tsx вернул HTML вместо модуля — подозрение на кэш/прокси';
+      console.error('⚠️ [Boot]', msg);
+      if ((window as any).__lastErrors) {
+        (window as any).__lastErrors.push(msg);
+      }
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('⚠️ [Boot] Pre-check failed:', err);
+    return true; // Don't block boot on pre-check failure
+  }
+}
+
+// Smart recovery: clear caches and unregister SW
+async function performRecovery() {
+  console.log('🔧 [Boot] Performing recovery...');
+  
+  // Unregister all service workers
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(r => r.unregister()));
+      console.log('✅ [Boot] Service Workers unregistered');
+    } catch (err) {
+      console.warn('⚠️ [Boot] Failed to unregister SW:', err);
+    }
+  }
+  
+  // Clear all caches
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      console.log('✅ [Boot] Caches cleared');
+    } catch (err) {
+      console.warn('⚠️ [Boot] Failed to clear caches:', err);
+    }
+  }
+  
+  // Wait a bit for cleanup
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // Update bust parameter
+  const newBust = String(Date.now());
+  sessionStorage.setItem('boot_bust', newBust);
+  
+  return newBust;
+}
+
 // Dynamic import with error handling
 (async () => {
   try {
     console.log('🚀 [Boot] Starting dynamic import of App...');
     
+    // Pre-check module availability
+    await preCheckModule();
+    
     const { default: App } = await importWithRetry(
-      () => import("./App.tsx")
+      () => import(`./App.tsx?b=${BUST}`)
     );
     
     console.log('✅ [Boot] App imported successfully, mounting React...');
@@ -79,22 +150,49 @@ async function importWithRetry<T>(
         ? `${error.name}: ${error.message}\n${error.stack}` 
         : String(error);
       (window as any).__lastErrors.push(`Import/Mount error: ${errorMsg}`);
+      (window as any).__lastErrors.push('Не удалось загрузить модуль /src/App.tsx (возможно, кэш/прокси)');
     }
     
-    // Handle cache-related errors with automatic reload
+    // Handle cache-related errors with smart, one-time recovery
     if (error instanceof TypeError && 
         (error.message.includes('Failed to fetch') || 
          error.message.includes('dynamically imported module'))) {
-      console.warn('🔄 [Boot] Cache issue detected, prompting reload...');
       
-      const shouldReload = confirm(
-        'Обнаружена новая версия приложения. Перезагрузить страницу для обновления?'
-      );
+      const isFirstFailure = sessionStorage.getItem('__boot_recovered') !== '1';
       
-      if (shouldReload) {
-        // Force reload, bypassing cache
-        window.location.reload();
-        return;
+      if (isFirstFailure) {
+        console.warn('🔄 [Boot] First failure detected, attempting automatic recovery...');
+        sessionStorage.setItem('__boot_recovered', '1');
+        
+        try {
+          const newBust = await performRecovery();
+          
+          // Retry import with new bust parameter
+          console.log('🔄 [Boot] Retrying import after recovery...');
+          const { default: App } = await importWithRetry(
+            () => import(`./App.tsx?b=${newBust}`)
+          );
+          
+          console.log('✅ [Boot] App imported successfully after recovery!');
+          
+          createRoot(root).render(
+            <StrictMode>
+              <App />
+            </StrictMode>
+          );
+
+          if (typeof window !== 'undefined') {
+            (window as any).__react_mounted__ = true;
+            console.log('✅ [Boot] React mounted successfully after recovery');
+          }
+          
+          return; // Success!
+        } catch (recoveryError) {
+          console.error('💥 [Boot] Recovery failed:', recoveryError);
+          // Fall through to show overlay
+        }
+      } else {
+        console.error('💥 [Boot] Repeated failure detected, showing overlay without recovery');
       }
     }
     
