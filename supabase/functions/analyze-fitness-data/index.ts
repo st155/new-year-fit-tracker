@@ -1,52 +1,53 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { corsHeaders } from '../_shared/cors.ts';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
+import { Logger } from '../_shared/monitoring.ts';
+import { withRateLimit } from '../_shared/rate-limiting.ts';
+import { EdgeFunctionError, ErrorCode } from '../_shared/error-handling.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const logger = new Logger('analyze-fitness-data');
+
   try {
-    console.log('Starting fitness data analysis...');
-    
     const { imageUrl, userId, goalId, measurementDate, specializedAnalysis } = await req.json();
     
     if (!imageUrl || !userId) {
-      return new Response(JSON.stringify({ error: 'Missing imageUrl or userId' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Проверяем валидность URL изображения
-    if (imageUrl === 'test-url' || !imageUrl.startsWith('http')) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid image URL provided',
-          message: 'Please provide a valid image URL starting with http or https'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      throw new EdgeFunctionError(
+        ErrorCode.VALIDATION_ERROR,
+        'Missing imageUrl or userId',
+        400
       );
     }
 
-    console.log('Analyzing image:', imageUrl);
-    console.log('For user:', userId);
+    // Validate image URL
+    if (imageUrl === 'test-url' || !imageUrl.startsWith('http')) {
+      throw new EdgeFunctionError(
+        ErrorCode.VALIDATION_ERROR,
+        'Invalid image URL. Please provide a valid URL starting with http or https',
+        400
+      );
+    }
 
-    // Создаем Supabase клиент
+    // Rate limiting: 100 requests/minute per user
+    await withRateLimit(userId, 100, 60);
+
+    await logger.info('Starting fitness data analysis', { 
+      imageUrl, 
+      userId, 
+      specializedAnalysis 
+    });
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Создаем специализированный промпт в зависимости от типа анализа
+    // Build specialized prompt
     let analysisPrompt;
     
     if (specializedAnalysis === 'vo2max') {
@@ -90,7 +91,6 @@ serve(async (req) => {
 Если скриншот не из Whoop или нет кардиометрик, верни пустой extractedData.
 `;
     } else {
-      // Стандартный промпт для общего анализа фитнес-данных
       analysisPrompt = `
 Проанализируй это изображение скриншота фитнес-трекера или приложения здоровья. 
 Извлеки следующие данные, если они есть на изображении:
@@ -132,68 +132,37 @@ serve(async (req) => {
 `;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: analysisPrompt },
-              { 
-                type: 'image_url', 
-                image_url: { 
-                  url: imageUrl,
-                  detail: 'high'
-                } 
-              }
-            ]
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.1
-      }),
+    // Use Lovable AI with Gemini 2.5 Pro for vision
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    
+    const aiResponse = await aiClient.complete({
+      messages: [
+        {
+          role: 'user',
+          content: analysisPrompt + `\n\nImage URL: ${imageUrl}`
+        }
+      ],
+      temperature: 0.1,
+      maxTokens: 1000
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      
-      // Более детальная обработка ошибок OpenAI
-      if (errorText.includes('insufficient_quota')) {
-        throw new Error('OpenAI API quota exceeded. Please check your billing details.');
-      } else if (errorText.includes('invalid_api_key')) {
-        throw new Error('Invalid OpenAI API key. Please check your configuration.');
-      } else {
-        throw new Error(`OpenAI API error: ${errorText}`);
-      }
-    }
+    const analysisText = aiResponse.content;
+    await logger.info('AI analysis completed', { provider: aiResponse.provider });
 
-    const aiResponse = await response.json();
-    console.log('AI Response:', aiResponse);
-    
-    const analysisText = aiResponse.choices[0].message.content;
-    console.log('Analysis text:', analysisText);
-    
-    // Парсим JSON ответ от ChatGPT
+    // Parse JSON response
     let analysisData;
     try {
-      // Очищаем ответ от markdown если есть
       const cleanedResponse = analysisText.replace(/```json\n?|\n?```/g, '').trim();
       analysisData = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse analysis result');
+      await logger.error('Failed to parse AI response', { error: parseError });
+      throw new EdgeFunctionError(
+        ErrorCode.INTERNAL_ERROR,
+        'Failed to parse analysis result'
+      );
     }
 
-    console.log('Parsed analysis data:', analysisData);
-
-    // Если данные низкого качества или пусты, возвращаем результат без сохранения
+    // Return early if low quality or no data
     if (analysisData.dataQuality === 'low' || !analysisData.extractedData || analysisData.extractedData.length === 0) {
       return new Response(JSON.stringify({
         success: true,
@@ -205,32 +174,29 @@ serve(async (req) => {
       });
     }
 
-    // Получаем цели пользователя для сопоставления
+    // Get user goals for matching
     const { data: userGoals, error: goalsError } = await supabase
       .from('goals')
       .select('*')
       .eq('user_id', userId);
 
     if (goalsError) {
-      console.error('Error fetching user goals:', goalsError);
+      await logger.error('Error fetching user goals', { error: goalsError });
     }
 
-    console.log('User goals:', userGoals);
-
-    // Сохраняем извлеченные данные как измерения
+    // Save extracted data as measurements
     const savedMeasurements = [];
     const savedMetrics = [];
     
     for (const dataPoint of analysisData.extractedData) {
       if (dataPoint.confidence < 0.6) {
-        console.log(`Skipping low confidence data: ${dataPoint.metric} (${dataPoint.confidence})`);
+        await logger.info(`Skipping low confidence data: ${dataPoint.metric} (${dataPoint.confidence})`);
         continue;
       }
 
-      // Определяем категорию метрики
       const metricCategory = categorizeMetric(dataPoint.metric);
       
-      // Автоматически создаем или получаем метрику в системе
+      // Create or get metric
       const { data: metricData, error: metricError } = await supabase
         .rpc('create_or_get_metric', {
           p_user_id: userId,
@@ -241,13 +207,13 @@ serve(async (req) => {
         });
 
       if (metricError) {
-        console.error('Error creating/getting metric:', metricError);
+        await logger.error('Error creating/getting metric', { error: metricError });
         continue;
       }
 
       const metricId = metricData;
 
-      // Сохраняем значение метрики в metric_values
+      // Save metric value
       const { data: metricValue, error: metricValueError } = await supabase
         .from('metric_values')
         .insert({
@@ -268,9 +234,8 @@ serve(async (req) => {
         .single();
 
       if (metricValueError) {
-        console.error('Error saving metric value:', metricValueError);
+        await logger.error('Error saving metric value', { error: metricValueError });
       } else {
-        console.log('Saved metric value:', metricValue);
         savedMetrics.push({
           ...dataPoint,
           metricId,
@@ -279,7 +244,7 @@ serve(async (req) => {
         });
       }
 
-      // Ищем подходящую цель по названию метрики для measurements таблицы
+      // Match to goal and save in measurements table
       let matchingGoal = null;
       
       if (userGoals) {
@@ -297,7 +262,6 @@ serve(async (req) => {
         });
       }
 
-      // Если есть подходящая цель, сохраняем также в measurements
       if (matchingGoal) {
         try {
           const { data: measurement, error: measurementError } = await supabase
@@ -315,10 +279,7 @@ serve(async (req) => {
             .select()
             .single();
 
-          if (measurementError) {
-            console.error('Error saving measurement:', measurementError);
-          } else {
-            console.log('Saved measurement:', measurement);
+          if (!measurementError) {
             savedMeasurements.push({
               ...dataPoint,
               measurementId: measurement?.id,
@@ -326,12 +287,12 @@ serve(async (req) => {
             });
           }
         } catch (saveError) {
-          console.error('Error saving measurement:', saveError);
+          await logger.error('Error saving measurement', { error: saveError });
         }
       }
     }
 
-    // Обновляем композицию тела если есть соответствующие данные
+    // Update body composition if relevant data exists
     const bodyCompositionData = analysisData.extractedData.filter((d: any) => 
       ['вес', 'процент жира', 'мышечная масса'].some(metric => 
         d.metric.toLowerCase().includes(metric)
@@ -347,29 +308,22 @@ serve(async (req) => {
 
       bodyCompositionData.forEach((data: any) => {
         const metric = data.metric.toLowerCase();
-        if (metric.includes('вес')) {
-          bodyData.weight = data.value;
-        } else if (metric.includes('жир')) {
-          bodyData.body_fat_percentage = data.value;
-        } else if (metric.includes('мышечная')) {
-          bodyData.muscle_mass = data.value;
-        }
+        if (metric.includes('вес')) bodyData.weight = data.value;
+        else if (metric.includes('жир')) bodyData.body_fat_percentage = data.value;
+        else if (metric.includes('мышечная')) bodyData.muscle_mass = data.value;
       });
 
       try {
-        const { error: bodyError } = await supabase
-          .from('body_composition')
-          .insert(bodyData);
-
-        if (bodyError) {
-          console.error('Error saving body composition:', bodyError);
-        } else {
-          console.log('Saved body composition data');
-        }
+        await supabase.from('body_composition').insert(bodyData);
       } catch (bodyError) {
-        console.error('Error saving body composition:', bodyError);
+        await logger.error('Error saving body composition', { error: bodyError });
       }
     }
+
+    await logger.info('Analysis completed successfully', {
+      savedMeasurements: savedMeasurements.length,
+      savedMetrics: savedMetrics.length
+    });
 
     return new Response(JSON.stringify({
       success: true,
@@ -380,6 +334,40 @@ serve(async (req) => {
       message: `Сохранено ${savedMeasurements.length} измерений для целей и ${savedMetrics.length} общих метрик из ${analysisData.extractedData.length} найденных показателей`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    await logger.error('Error in analyze-fitness-data', { error });
+    
+    // Handle known errors
+    if (error instanceof EdgeFunctionError) {
+      return new Response(JSON.stringify({ 
+        error: error.message,
+        code: error.code,
+        success: false
+      }), {
+        status: error.statusCode,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Handle generic errors
+    let errorMessage = 'Internal server error';
+    if (error?.message?.includes('quota')) {
+      errorMessage = 'AI quota exceeded. Please contact support.';
+    } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+      errorMessage = 'Network error. Please try again later.';
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error?.message || 'Unknown error',
+      success: false
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
 });
 
 function categorizeMetric(metricName: string): string {
@@ -409,27 +397,3 @@ function categorizeMetric(metricName: string): string {
   
   return 'fitness'; // default category
 }
-
-  } catch (error: any) {
-    console.error('Error in analyze-fitness-data function:', error);
-    
-    // Более понятные сообщения об ошибках для пользователя
-    let errorMessage = 'Internal server error';
-    if (error?.message?.includes('quota')) {
-      errorMessage = 'OpenAI API quota exceeded. Please contact support.';
-    } else if (error?.message?.includes('api_key')) {
-      errorMessage = 'API configuration error. Please contact support.';
-    } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
-      errorMessage = 'Network error. Please try again later.';
-    }
-    
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: error?.message || 'Unknown error',
-      success: false
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-});

@@ -1,24 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
+import { Logger } from '../_shared/monitoring.ts';
+import { EdgeFunctionError, ErrorCode } from '../_shared/error-handling.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const logger = new Logger('analyze-medical-document');
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -129,46 +125,36 @@ Organize clearly for easy reference.`;
 Provide a clear, structured summary.`;
     }
 
-    // Call Lovable AI for analysis
-    console.log('Calling Lovable AI for document analysis...');
+    // Call Lovable AI for analysis with vision
+    await logger.info('Starting document analysis', { 
+      documentId, 
+      documentType: document.document_type 
+    });
     
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { 
-                type: 'image_url',
-                image_url: { url: dataUrl }
-              }
-            ]
-          }
-        ]
-      })
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiResponse = await aiClient.complete({
+      messages: [
+        {
+          role: 'user',
+          content: `${prompt}\n\nAnalyze this document image: ${dataUrl}`
+        }
+      ],
+      maxTokens: 2000
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI analysis failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const summary = aiData.choices?.[0]?.message?.content;
+    const summary = aiResponse.content;
 
     if (!summary) {
-      throw new Error('No analysis generated');
+      throw new EdgeFunctionError(
+        ErrorCode.EXTERNAL_API_ERROR,
+        'No analysis generated'
+      );
     }
 
-    console.log('AI analysis completed successfully');
+    await logger.info('AI analysis completed successfully', { 
+      provider: aiResponse.provider,
+      documentType: document.document_type
+    });
 
     // Extract structured data based on document type
     let extractedData: any = {};

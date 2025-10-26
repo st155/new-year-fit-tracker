@@ -1,24 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
+import { Logger } from '../_shared/monitoring.ts';
+import { EdgeFunctionError, ErrorCode } from '../_shared/error-handling.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const logger = new Logger('compare-medical-documents');
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -78,39 +74,34 @@ Please provide:
 
 Format the response in clear, organized sections with specific metrics and values.`;
 
-    console.log('Calling Lovable AI for comparison analysis...');
+    await logger.info('Starting document comparison', { 
+      userId: user.id, 
+      documentCount: documentIds.length 
+    });
     
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      })
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiResponse = await aiClient.complete({
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI comparison failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const comparisonAnalysis = aiData.choices?.[0]?.message?.content;
+    const comparisonAnalysis = aiResponse.content;
 
     if (!comparisonAnalysis) {
-      throw new Error('No comparison analysis generated');
+      throw new EdgeFunctionError(
+        ErrorCode.EXTERNAL_API_ERROR,
+        'No comparison analysis generated'
+      );
     }
 
-    console.log('Comparison analysis completed successfully');
+    await logger.info('Comparison analysis completed successfully', { 
+      provider: aiResponse.provider,
+      documentsCompared: documents.length
+    });
 
     // Update the first document with comparison results
     const comparisonResult = {

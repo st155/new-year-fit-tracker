@@ -1,24 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
+import { Logger } from '../_shared/monitoring.ts';
+import { EdgeFunctionError, ErrorCode } from '../_shared/error-handling.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const logger = new Logger('ask-about-inbody');
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -94,54 +90,31 @@ serve(async (req) => {
 
 Отвечай на русском языке, структурировано. Используй эмодзи для наглядности.`;
 
-    console.log('Calling Lovable AI for question...');
+    await logger.info('Processing InBody question', { analysisId, userId: user.id });
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { 
-            role: 'user', 
-            content: `Данные InBody:\n${JSON.stringify(contextData, null, 2)}\n\nВопрос: ${question}` 
-          },
-        ],
-      }),
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiResponse = await aiClient.complete({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: `Данные InBody:\n${JSON.stringify(contextData, null, 2)}\n\nВопрос: ${question}` 
+        },
+      ]
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Превышен лимит запросов к AI. Попробуйте позже.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Требуется пополнение баланса AI. Обратитесь к администратору.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const answer = aiData.choices?.[0]?.message?.content;
+    const answer = aiResponse.content;
 
     if (!answer) {
-      throw new Error('No answer returned from AI');
+      throw new EdgeFunctionError(
+        ErrorCode.EXTERNAL_API_ERROR,
+        'No answer returned from AI'
+      );
     }
 
-    console.log('AI answer completed successfully');
+    await logger.info('AI answer completed successfully', { 
+      provider: aiResponse.provider 
+    });
 
     return new Response(
       JSON.stringify({ answer }),
