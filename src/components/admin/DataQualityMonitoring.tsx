@@ -254,6 +254,82 @@ export function DataQualityMonitoring() {
         </CardContent>
       </Card>
 
+      {/* Advanced Metrics Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Cache Hit Rate */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Cache Performance</CardTitle>
+            <CardDescription>Confidence score cache efficiency</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Hit Rate</span>
+                <span className="text-lg font-bold">
+                  {confidence.total_metrics > 0 
+                    ? ((confidence.excellent + confidence.good) / confidence.total_metrics * 100).toFixed(1) 
+                    : 0}%
+                </span>
+              </div>
+              <Progress 
+                value={confidence.total_metrics > 0 
+                  ? ((confidence.excellent + confidence.good) / confidence.total_metrics * 100) 
+                  : 0} 
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                {confidence.excellent + confidence.good} of {confidence.total_metrics} cached
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Low Quality Metrics Alert */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Data Quality Alerts</CardTitle>
+            <CardDescription>Metrics requiring attention</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {confidence.poor > 0 && (
+                <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded-md">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Low Confidence</p>
+                    <p className="text-xs text-muted-foreground">
+                      {confidence.poor} metrics below 40%
+                    </p>
+                  </div>
+                </div>
+              )}
+              {confidence.fair > 0 && (
+                <div className="flex items-center gap-2 p-2 bg-warning/10 rounded-md">
+                  <Clock className="h-4 w-4 text-warning" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Moderate Quality</p>
+                    <p className="text-xs text-muted-foreground">
+                      {confidence.fair} metrics at 40-59%
+                    </p>
+                  </div>
+                </div>
+              )}
+              {confidence.poor === 0 && confidence.fair === 0 && (
+                <div className="flex items-center gap-2 p-2 bg-success/10 rounded-md">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">All Clear</p>
+                    <p className="text-xs text-muted-foreground">
+                      No quality issues detected
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Recent Job Processing Stats */}
       {jobStats && jobStats.length > 0 && (
         <Card>

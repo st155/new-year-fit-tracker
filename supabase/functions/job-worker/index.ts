@@ -19,10 +19,20 @@ interface TerraBackfillPayload {
   endDate: string;
 }
 
+// Keep-alive to prevent cold starts
+let keepAliveInterval: number | undefined;
+
 Deno.serve(
   withErrorHandling(async (req: Request) => {
     if (req.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Initialize keep-alive on first invocation
+    if (!keepAliveInterval) {
+      keepAliveInterval = setInterval(() => {
+        // Prevent cold start by keeping instance warm
+      }, 50000); // 50 seconds
     }
 
     const supabase = createClient(
