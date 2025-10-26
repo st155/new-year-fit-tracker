@@ -31,12 +31,31 @@ window.addEventListener('unhandledrejection', (e) => {
 //   startPerformanceMonitoring();
 // }
 
+// Retry logic for dynamic imports (handles cache issues)
+async function importWithRetry<T>(
+  importFn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T> {
+  try {
+    return await importFn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    
+    console.warn(`⚠️ [Boot] Import failed, retrying (${retries} attempts left)...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return importWithRetry(importFn, retries - 1, delay * 2);
+  }
+}
+
 // Dynamic import with error handling
 (async () => {
   try {
     console.log('🚀 [Boot] Starting dynamic import of App...');
     
-    const { default: App } = await import("./App.tsx");
+    const { default: App } = await importWithRetry(
+      () => import("./App.tsx")
+    );
     
     console.log('✅ [Boot] App imported successfully, mounting React...');
     
@@ -60,6 +79,23 @@ window.addEventListener('unhandledrejection', (e) => {
         ? `${error.name}: ${error.message}\n${error.stack}` 
         : String(error);
       (window as any).__lastErrors.push(`Import/Mount error: ${errorMsg}`);
+    }
+    
+    // Handle cache-related errors with automatic reload
+    if (error instanceof TypeError && 
+        (error.message.includes('Failed to fetch') || 
+         error.message.includes('dynamically imported module'))) {
+      console.warn('🔄 [Boot] Cache issue detected, prompting reload...');
+      
+      const shouldReload = confirm(
+        'Обнаружена новая версия приложения. Перезагрузить страницу для обновления?'
+      );
+      
+      if (shouldReload) {
+        // Force reload, bypassing cache
+        window.location.reload();
+        return;
+      }
     }
     
     // Show debug overlay if available
