@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      mode === 'development' && componentTagger(),
+      // mode === 'development' && componentTagger(), // Disabled - causes import failures
     ].filter(Boolean),
     resolve: {
       alias: {
