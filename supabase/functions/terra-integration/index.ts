@@ -382,11 +382,24 @@ serve(async (req) => {
 
     // Отключить провайдера
     if (action === 'disconnect') {
-      await supabase
+      console.log('🔌 Disconnecting provider:', { userId: user.id, provider });
+      
+      const { error: disconnectError } = await supabase
         .from('terra_tokens')
-        .update({ is_active: false })
+        .update({ 
+          is_active: false,
+          last_sync_date: null,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', user.id)
         .eq('provider', provider);
+
+      if (disconnectError) {
+        console.error('❌ Failed to disconnect provider:', disconnectError);
+        throw disconnectError;
+      }
+
+      console.log('✅ Successfully disconnected provider:', provider);
 
       return new Response(
         JSON.stringify({ success: true }),

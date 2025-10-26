@@ -247,13 +247,11 @@ export function TerraIntegration() {
       
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          // Считаем токен активным если is_active=true ИЛИ есть недавняя синхронизация (последние 7 дней)
-          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
           const { data, error } = await supabase
             .from('terra_tokens')
             .select('provider, created_at, last_sync_date, is_active')
             .eq('user_id', user.id)
-            .or(`is_active.eq.true,last_sync_date.gte.${sevenDaysAgo}`)
+            .eq('is_active', true)
             .abortSignal(AbortSignal.timeout(5000));
 
           if (error) throw error;
@@ -334,6 +332,13 @@ export function TerraIntegration() {
   const disconnectProvider = async (provider: string) => {
     if (!user) return;
 
+    // Оптимистичное обновление UI - сразу убираем провайдера из списка
+    const previousStatus = status;
+    setStatus(prev => ({
+      ...prev,
+      providers: prev.providers.filter(p => p.name !== provider)
+    }));
+
     try {
       const { error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'disconnect', provider },
@@ -341,14 +346,27 @@ export function TerraIntegration() {
 
       if (error) throw error;
 
+      // Очищаем кэши
+      localStorage.removeItem('fitness_metrics_cache');
+      
+      // Инвалидируем связанные запросы
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['metric-values'] });
+
       toast({
         title: 'Устройство отключено',
         description: `${PROVIDER_NAMES[provider]} успешно отключен`,
       });
 
+      // Обновляем статус
       await checkStatus();
     } catch (error: any) {
       console.error('Disconnect error:', error);
+      
+      // Откатываем оптимистичное обновление при ошибке
+      setStatus(previousStatus);
+      
       toast({
         title: 'Ошибка отключения',
         description: error.message,
