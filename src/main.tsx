@@ -69,6 +69,30 @@ async function preCheckModuleSafe() {
     console.group('🔍 [Pre-check] Analyzing App.tsx');
     
     const ts = Date.now();
+    
+    // Probe different URL variants
+    console.log('🔬 Probing App.tsx URL variants...');
+    const variants = [
+      `/src/App.tsx?import`,
+      `/src/App.tsx?import&t=${ts}`,
+      `/src/App.tsx?t=${ts}`
+    ];
+    
+    for (const url of variants) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        const type = res.headers.get('content-type') || 'unknown';
+        const len = res.headers.get('content-length') || 'unknown';
+        console.log(`${url} → ${res.status} ${type} (${len} bytes)`);
+        if (type.includes('text/html')) {
+          console.warn(`❌ RED FLAG: ${url} returned HTML!`);
+        }
+      } catch (err) {
+        console.warn(`❌ RED FLAG: ${url} → ${(err as Error).message}`);
+      }
+    }
+    
+    // Standard check
     const res = await fetch(`/src/App.tsx?precheck=1&ts=${ts}`, {
       cache: 'no-cache'
     });
@@ -153,24 +177,54 @@ async function collectDiagnostics(error: unknown) {
   };
   
   try {
-    // Check App.tsx
-    const appRes = await fetch(`/src/App.tsx?diag=${Date.now()}`, { cache: 'no-cache' });
+    const ts = Date.now();
+    
+    // Probe App.tsx import variants
+    diag.appImportProbe = [];
+    const variants = [
+      `/src/App.tsx?import`,
+      `/src/App.tsx?import&t=${ts}`,
+      `/src/App.tsx?t=${ts}`
+    ];
+    
+    for (const url of variants) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        const body = await res.text();
+        diag.appImportProbe.push({
+          url,
+          status: res.status,
+          contentType: res.headers.get('content-type'),
+          contentLength: res.headers.get('content-length'),
+          preview: body.substring(0, 300)
+        });
+      } catch (err) {
+        diag.appImportProbe.push({
+          url,
+          error: (err as Error).message
+        });
+      }
+    }
+    
+    // Check standard App.tsx
+    const appRes = await fetch(`/src/App.tsx?diag=${ts}`, { cache: 'no-cache' });
+    const appBody = await appRes.text();
     diag.appModule = {
       status: appRes.status,
       contentType: appRes.headers.get('content-type'),
       contentLength: appRes.headers.get('content-length'),
-      preview: (await appRes.text()).substring(0, 400)
+      preview: appBody.substring(0, 400)
     };
     
-    // Parse and check dependencies
+    // Parse and check dependencies from FULL body
     const depRegex = /from\s+["']([^"']*\/node_modules\/\.vite\/deps\/[^"']+)["']/g;
-    const deps = [...diag.appModule.preview.matchAll(depRegex)].map((m: any) => m[1]);
+    const deps = [...appBody.matchAll(depRegex)].map((m: any) => m[1]);
     const uniqueDeps = [...new Set(deps)];
     
     diag.dependencies = [];
     for (const depUrl of uniqueDeps) {
       try {
-        const depRes = await fetch(`${depUrl}${depUrl.includes('?') ? '&' : '?'}ts=${Date.now()}`, {
+        const depRes = await fetch(`${depUrl}${depUrl.includes('?') ? '&' : '?'}ts=${ts}`, {
           method: 'HEAD',
           cache: 'no-cache'
         });
@@ -260,6 +314,24 @@ function BootError({ message }: { message: string }) {
     }
   };
   
+  // Show import probe summary if available
+  const probeSummary = diagnostics?.appImportProbe ? (
+    <div style={{ 
+      marginTop: '1rem', 
+      padding: '1rem', 
+      background: 'rgba(0, 0, 0, 0.3)', 
+      borderRadius: '8px',
+      fontSize: '12px'
+    }}>
+      <strong>Import Probe Results:</strong>
+      {diagnostics.appImportProbe.map((p: any, i: number) => (
+        <div key={i} style={{ marginTop: '0.5rem' }}>
+          {p.url}: {p.error || `${p.status} ${p.contentType}`}
+        </div>
+      ))}
+    </div>
+  ) : null;
+  
   return (
     <div
       style={{
@@ -293,7 +365,7 @@ function BootError({ message }: { message: string }) {
           style={{
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word',
-            marginBottom: '2rem',
+            marginBottom: '1rem',
             padding: '1rem',
             background: 'rgba(0, 0, 0, 0.3)',
             borderRadius: '8px',
@@ -304,6 +376,7 @@ function BootError({ message }: { message: string }) {
         >
           {message}
         </pre>
+        {probeSummary}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button
             onClick={performRecovery}
@@ -415,27 +488,42 @@ async function boot() {
     // Pre-check (non-blocking)
     preCheckModuleSafe();
     
-    // Phase 2: Dynamic import with timeout and retry
+    // Phase 2: Dynamic import with 3 strategies
     console.log('📦 [Boot] Phase 2: Importing App module...');
     
-    const importWithTimeout = (cacheBust = false) => {
-      const url = cacheBust ? `./App.tsx?v=${Date.now()}` : './App.tsx';
-      console.log(`Attempting import: ${url}`);
-      
-      return Promise.race([
-        import(/* @vite-ignore */ url).then(module => module.default),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('App import timeout (8 seconds)')), 8000)
-        )
-      ]);
-    };
+    const strategies = [
+      { name: 'absolute', url: '/src/App.tsx' },
+      { name: 'absolute-cachebust', url: `/src/App.tsx?t=${Date.now()}` },
+      { name: 'relative', url: './App.tsx' }
+    ];
     
     let App;
-    try {
-      App = await importWithTimeout(false) as any;
-    } catch (firstError) {
-      console.warn('⚠️ [Boot] First import attempt failed, retrying with cache-bust...', firstError);
-      App = await importWithTimeout(true) as any;
+    let lastError;
+    
+    for (const strategy of strategies) {
+      try {
+        console.time(`import-${strategy.name}`);
+        console.log(`🔄 Strategy: ${strategy.name} (${strategy.url})`);
+        
+        App = await Promise.race([
+          import(/* @vite-ignore */ strategy.url).then(module => module.default),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout after 8s`)), 8000)
+          )
+        ]) as any;
+        
+        console.timeEnd(`import-${strategy.name}`);
+        console.log(`✅ Success with ${strategy.name}`);
+        break;
+      } catch (err) {
+        console.timeEnd(`import-${strategy.name}`);
+        console.warn(`❌ ${strategy.name} failed:`, err);
+        lastError = err;
+      }
+    }
+    
+    if (!App) {
+      throw new Error(`All import strategies failed. Last error: ${lastError}`);
     }
     
     console.log('🎨 [Boot] Rendering full App...');
