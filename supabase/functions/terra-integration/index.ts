@@ -91,8 +91,30 @@ serve(async (req) => {
     // Generate Widget Session (for iframe embedding)
     if (action === 'generate-widget-session') {
       console.log('🔗 Generating widget session...');
-      const authSuccessUrl = `${req.headers.get('origin')}/integrations`;
-      const authFailureUrl = `${req.headers.get('origin')}/integrations`;
+      
+      // Безопасное определение origin для redirect URL
+      const referer = req.headers.get('referer') || '';
+      const originHeader = req.headers.get('origin') || '';
+      
+      let baseOrigin = originHeader;
+      if (!baseOrigin && referer) {
+        try {
+          baseOrigin = new URL(referer).origin;
+        } catch (e) {
+          console.warn('⚠️ Failed to parse referer:', referer);
+        }
+      }
+      
+      // Fallback к production URL если не можем определить origin
+      if (!baseOrigin) {
+        baseOrigin = 'https://elite10.club';
+        console.log('⚠️ Using fallback origin:', baseOrigin);
+      }
+      
+      console.log('🌐 Origin detected:', { originHeader, referer, baseOrigin });
+      
+      const authSuccessUrl = `${baseOrigin}/integrations`;
+      const authFailureUrl = `${baseOrigin}/integrations`;
       
       console.log('🔄 Calling Terra Widget API...');
       const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {

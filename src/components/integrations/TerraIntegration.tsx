@@ -97,42 +97,98 @@ export function TerraIntegration() {
     if (!user) return;
     
     setConnectingProvider(provider);
+    
+    console.log('🔗 Connecting to Terra for provider:', provider);
+    
+    // Определяем платформу для выбора стратегии открытия окна
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = isIOS || /Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
+    console.log('📱 Platform:', { isIOS, isMobile });
+    
+    // КРИТИЧНО: открываем popup СИНХРОННО (до любых await) чтобы избежать блокировки браузером
+    let popup: Window | null = null;
+    if (!isIOS) {
+      popup = window.open('', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+      if (popup) {
+        try {
+          popup.document.write(`
+            <html>
+              <head><title>Подключение Terra...</title></head>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5;">
+                <div style="text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                  <h2 style="color: #333; margin: 0 0 8px 0;">Открываем Terra...</h2>
+                  <p style="color: #666; margin: 0;">Подождите несколько секунд</p>
+                </div>
+              </body>
+            </html>
+          `);
+        } catch (e) {
+          console.warn('⚠️ Could not write to popup (cross-origin?)', e);
+        }
+      }
+      console.log(popup ? '✅ Popup opened successfully' : '❌ Popup was blocked');
+    }
+    
     try {
-      console.log('🔗 Connecting to Terra for provider:', provider);
+      // Функция с ретраями и таймаутом
+      const fetchWithRetry = async (retries = 1) => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            console.log(`🔄 Attempt ${attempt + 1}/${retries + 1}`);
+            
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Request timeout')), 15000);
+            });
+            
+            const requestPromise = supabase.functions.invoke('terra-integration', {
+              body: { action: 'generate-widget-session' },
+            });
+            
+            const result = await Promise.race([requestPromise, timeoutPromise]) as any;
+            
+            if (result.error) throw result.error;
+            if (!result.data?.url) throw new Error('No widget URL received');
+            
+            return result.data;
+          } catch (err) {
+            if (attempt === retries) throw err;
+            console.log(`⚠️ Attempt ${attempt + 1} failed, retrying in 1.5s...`);
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+        }
+      };
       
-      // Создаем promise с timeout для защиты от долгих ответов
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 8000);
-      });
+      const data = await fetchWithRetry(1);
+      const url = data.url;
       
-      const requestPromise = supabase.functions.invoke('terra-integration', {
-        body: { action: 'generate-widget-session' },
-      });
+      console.log('✅ Widget URL received:', url.substring(0, 50) + '...');
       
-      // Гонка между запросом и timeout
-      const { data, error } = await Promise.race([requestPromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error('Widget error:', error);
-        throw error;
-      }
-      if (!data?.url) {
-        console.error('No widget URL in response:', data);
-        throw new Error('No widget URL received');
-      }
-
-      console.log('✅ Widget URL received, opening window...');
-      
-      // Открываем в новом окне для предотвращения релоада страницы
-      const authWindow = window.open(data.url, '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
-      if (authWindow) {
+      // Стратегия открытия зависит от платформы
+      if (isIOS) {
+        // iOS: редирект в той же вкладке (попапы работают плохо)
+        console.log('📱 iOS detected, redirecting in same tab...');
+        toast({
+          title: 'Открываем Terra...',
+          description: 'Сейчас произойдет переход на страницу авторизации',
+        });
+        setTimeout(() => {
+          window.location.assign(url);
+        }, 500);
+      } else if (popup && !popup.closed) {
+        // Desktop/Android: используем уже открытый popup
+        console.log('🪟 Redirecting popup to Terra URL...');
+        popup.location.replace(url);
+        
         toast({
           title: 'Окно авторизации открыто',
           description: 'Завершите авторизацию в открывшемся окне',
         });
         
+        // Отслеживаем закрытие окна
         const checkClosed = setInterval(() => {
-          if (authWindow.closed) {
+          if (popup!.closed) {
             clearInterval(checkClosed);
             setConnectingProvider(null);
             console.log('🔄 Auth window closed, checking connection status...');
@@ -140,12 +196,24 @@ export function TerraIntegration() {
           }
         }, 1000);
       } else {
-        // Fallback - если popup заблокирован
-        console.log('⚠️ Popup blocked, redirecting...');
-        window.location.href = data.url;
+        // Fallback: попап был заблокирован, редиректим в той же вкладке
+        console.log('⚠️ Popup blocked, fallback to same-tab redirect');
+        toast({
+          title: 'Открываем Terra...',
+          description: 'Попап заблокирован браузером, открываем в этой вкладке',
+        });
+        setTimeout(() => {
+          window.location.assign(url);
+        }, 500);
       }
     } catch (error: any) {
       console.error('❌ Widget load error:', error);
+      
+      // Закрываем попап если он был открыт
+      if (popup && !popup.closed) {
+        popup.close();
+        console.log('🔒 Closed popup due to error');
+      }
       
       // Сохраняем попытку подключения в localStorage для retry
       try {
