@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Copy, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface HealthCheck {
   name: string;
@@ -100,6 +101,15 @@ export default function Health() {
     location.href = url;
   };
 
+  const handleCopyRecoveryLink = () => {
+    const recoveryUrl = `${location.origin}/?recover=1`;
+    navigator.clipboard.writeText(recoveryUrl).then(() => {
+      toast.success('Ссылка восстановления скопирована');
+    }).catch(() => {
+      toast.error('Не удалось скопировать ссылку');
+    });
+  };
+
   const StatusIcon = ({ status }: { status: HealthCheck['status'] }) => {
     switch (status) {
       case 'ok':
@@ -127,11 +137,36 @@ export default function Health() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={runHealthChecks}>Re-run</Button>
-            <Button variant="default" onClick={handleRunRecovery}>Run Recovery now</Button>
+            <Button variant="default" onClick={handleRunRecovery}>Запустить восстановление</Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">Tip: open /?recover=1 to force pre-boot cleanup.</p>
       </div>
+
+      <Card className="mb-6 border-primary/20 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="text-lg">🔧 Восстановление системы</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Если приложение не загружается (чёрный экран), используйте ссылку восстановления для полной очистки кэшей и Service Worker:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleCopyRecoveryLink} className="gap-2">
+              <Copy className="h-4 w-4" />
+              Скопировать ссылку восстановления
+            </Button>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <a href="/?recover=1" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+                Открыть /?recover=1
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Также работают: <code className="text-xs bg-muted px-1 rounded">/recover</code>, <code className="text-xs bg-muted px-1 rounded">/recover1</code>
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="space-y-4">
         {checks.map((check, index) => (

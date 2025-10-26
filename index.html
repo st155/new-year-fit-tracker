@@ -53,7 +53,11 @@
       // Emergency pre-boot recovery and dev purge
       (function () {
         var params = new URLSearchParams(location.search);
-        var shouldRecover = params.get('recover') === '1' || localStorage.getItem('recoverOnce') === '1';
+        var hasQueryParam = params.get('recover') === '1' || params.has('recover');
+        var hasRecoverPath = /\/(recover|recover1)(\/|$)/i.test(location.pathname);
+        var hasRecoverHash = /recover=?(1|true)?/i.test(location.hash);
+        var hasLocalFlag = localStorage.getItem('recoverOnce') === '1';
+        var shouldRecover = hasQueryParam || hasRecoverPath || hasRecoverHash || hasLocalFlag;
         var isDevHost = location.hostname === 'localhost' || location.hostname.endsWith('.lovableproject.com');
 
         function purgeAll() {
