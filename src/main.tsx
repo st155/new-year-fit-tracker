@@ -1,6 +1,5 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from './App.tsx';
 import "./index.css";
 import "./index-inbody-styles.css";
 
@@ -171,36 +170,70 @@ function BootError({ message }: { message: string }) {
   );
 }
 
-// Safe boot with dynamic import and recovery
+// Two-phase safe boot: shell first, then dynamic App import
 async function boot() {
   console.time('boot');
   console.log('🚀 [Boot] Starting application...');
   
+  const reactRoot = createRoot(root);
+  
   try {
-    // Pre-check (non-blocking, doesn't block boot)
+    // Phase 1: Immediately mount minimal shell
+    console.log('🎨 [Boot] Phase 1: Mounting shell...');
+    reactRoot.render(
+      <div style={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        background: '#0b0b0b',
+        color: '#6ee7b7',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '18px'
+      }}>
+        Loading application...
+      </div>
+    );
+    
+    (window as any).__react_mounted__ = true;
+    console.log('✅ [Boot] Shell mounted, React marked as mounted');
+    
+    // Pre-check (non-blocking)
     preCheckModuleSafe();
     
-    // Try to import App with timeout
-    console.log('📦 [Boot] Mounting App component (static import)...');
+    // Phase 2: Dynamic import with timeout
+    console.log('📦 [Boot] Phase 2: Importing App module...');
     
-    console.log('🎨 [Boot] Rendering App...');
-    createRoot(root).render(
+    const importWithTimeout = () => {
+      return Promise.race([
+        import('./App.tsx').then(module => module.default),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('App import timeout (8 seconds)')), 8000)
+        )
+      ]);
+    };
+    
+    const App = await importWithTimeout() as any;
+    
+    console.log('🎨 [Boot] Rendering full App...');
+    reactRoot.render(
       <StrictMode>
         <App />
       </StrictMode>
     );
     
-    (window as any).__react_mounted__ = true;
-    console.log('✅ [Boot] React mounted successfully');
+    console.log('✅ [Boot] Full app rendered successfully');
     console.timeEnd('boot');
     
   } catch (err) {
-    console.error('💥 [Boot] App mount failed:', err);
+    console.error('💥 [Boot] App load/mount failed:', err);
     
-    // Show fallback UI
+    // Show fallback UI with detailed error
     console.log('🛑 [Boot] Showing fallback error UI');
-    const fallbackMessage = err instanceof Error ? err.message : String(err);
-    createRoot(root).render(<BootError message={fallbackMessage} />);
+    const errorMessage = err instanceof Error 
+      ? `${err.message}\n\nCheck console for details. This may be caused by:\n- Network issues loading modules\n- CSP blocking resources\n- Service Worker conflicts`
+      : String(err);
+    
+    reactRoot.render(<BootError message={errorMessage} />);
     (window as any).__react_mounted__ = true;
     console.timeEnd('boot');
   }
@@ -209,20 +242,23 @@ async function boot() {
 // Start boot process
 boot();
 
-// Watchdog: If React doesn't mount in 5 seconds, show error UI
+// Watchdog: Backup check (shell should mount immediately now)
 setTimeout(() => {
   if (!(window as any).__react_mounted__) {
-    console.error('💥 [Boot] React failed to mount in 5 seconds');
+    console.error('💥 [Boot] Shell failed to mount in 3 seconds (critical)');
     const diagnosis = [
-      'React did not mount within timeout.',
+      'Critical: Even shell failed to mount.',
       'Possible causes:',
-      '- Network issues loading modules',
-      '- CSP blocking resources',
-      '- Service Worker conflicts',
+      '- React libraries blocked by CSP',
+      '- Severe JavaScript errors',
+      '- Browser compatibility issues',
       'Check console for specific errors above.'
     ].join('\n');
     
-    createRoot(root).render(<BootError message={diagnosis} />);
-    (window as any).__react_mounted__ = true;
+    const fallbackRoot = document.getElementById('root');
+    if (fallbackRoot) {
+      createRoot(fallbackRoot).render(<BootError message={diagnosis} />);
+      (window as any).__react_mounted__ = true;
+    }
   }
-}, 5000);
+}, 3000);
