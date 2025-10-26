@@ -103,6 +103,10 @@ export function TerraIntegration() {
     
     setConnectingProvider(provider);
     
+    // Store provider in sessionStorage before opening widget
+    sessionStorage.setItem('terra_last_provider', provider);
+    console.log('📝 Stored provider in sessionStorage:', provider);
+    
     console.log('🔗 Connecting to Terra for provider:', provider);
     
     // Определяем платформу для выбора стратегии открытия окна
@@ -197,7 +201,10 @@ export function TerraIntegration() {
             clearInterval(checkClosed);
             setConnectingProvider(null);
             console.log('🔄 Auth window closed, checking connection status...');
+            // Auto-refresh status after widget closes
             setTimeout(() => checkStatus(), 2000);
+            setTimeout(() => checkStatus(), 5000);
+            setTimeout(() => checkStatus(), 15000);
           }
         }, 1000);
       } else {

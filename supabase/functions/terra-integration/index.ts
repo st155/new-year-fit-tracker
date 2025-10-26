@@ -92,29 +92,11 @@ serve(async (req) => {
     if (action === 'generate-widget-session') {
       console.log('🔗 Generating widget session...');
       
-      // Безопасное определение origin для redirect URL
-      const referer = req.headers.get('referer') || '';
-      const originHeader = req.headers.get('origin') || '';
+      // Always use production URL for redirect (Terra callback)
+      const redirectUrl = 'https://elite10.club/terra-callback';
       
-      let baseOrigin = originHeader;
-      if (!baseOrigin && referer) {
-        try {
-          baseOrigin = new URL(referer).origin;
-        } catch (e) {
-          console.warn('⚠️ Failed to parse referer:', referer);
-        }
-      }
-      
-      // Fallback к production URL если не можем определить origin
-      if (!baseOrigin) {
-        baseOrigin = 'https://elite10.club';
-        console.log('⚠️ Using fallback origin:', baseOrigin);
-      }
-      
-      console.log('🌐 Origin detected:', { originHeader, referer, baseOrigin });
-      
-      const authSuccessUrl = `${baseOrigin}/integrations`;
-      const authFailureUrl = `${baseOrigin}/integrations`;
+      console.log('🌐 Using production redirect URL:', redirectUrl);
+      console.log('📋 Reference ID:', user.id);
       
       console.log('🔄 Calling Terra Widget API...');
       const response = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
@@ -129,8 +111,8 @@ serve(async (req) => {
           reference_id: user.id,
           providers: 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR',
           language: 'en',
-          auth_success_redirect_url: authSuccessUrl,
-          auth_failure_redirect_url: authFailureUrl,
+          auth_success_redirect_url: redirectUrl,
+          auth_failure_redirect_url: redirectUrl,
         }),
       });
 

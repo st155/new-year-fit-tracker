@@ -420,6 +420,13 @@ Deno.serve(
 
             if (nullToken) {
               // Обновляем terra_user_id и last_sync_date
+              console.log('🔗 Linking terra_user_id from data webhook...', {
+                tokenId: nullToken.id,
+                userId: nullToken.user_id,
+                provider,
+                terraUserId: payload.user.user_id
+              });
+              
               await supabase
                 .from('terra_tokens')
                 .update({
@@ -429,11 +436,14 @@ Deno.serve(
                 })
                 .eq('id', nullToken.id);
 
+              console.log('✅ Successfully linked terra_user_id from data webhook');
               logger.info('Updated terra_user_id from data webhook', {
                 terraUserId: payload.user.user_id,
                 provider,
                 type: payload.type
               });
+            } else {
+              console.log('⚠️ No pending token found for provider:', provider);
             }
           }
         }

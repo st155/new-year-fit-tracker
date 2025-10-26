@@ -32,7 +32,26 @@ export default function TerraCallback() {
       const errorParam = searchParams.get('error') || searchParams.get('message');
       const reference = searchParams.get('reference') || searchParams.get('reference_id');
       const terraUserId = searchParams.get('user') || searchParams.get('user_id') || searchParams.get('terra_user_id');
-      const providerParam = (searchParams.get('provider') || searchParams.get('source') || 'WHOOP').toUpperCase();
+      
+      // Determine provider from URL params or sessionStorage
+      let providerParam = searchParams.get('provider') || searchParams.get('source') || searchParams.get('resource');
+      
+      if (!providerParam) {
+        // Try to get from sessionStorage
+        providerParam = sessionStorage.getItem('terra_last_provider');
+        console.log('📝 Retrieved provider from sessionStorage:', providerParam);
+      }
+      
+      if (!providerParam) {
+        console.error('❌ No provider detected in URL or sessionStorage');
+        setStatus('error');
+        setMessage('Не удалось определить устройство. Попробуйте подключить еще раз.');
+        setTimeout(() => navigate('/integrations'), 3000);
+        return;
+      }
+      
+      providerParam = providerParam.toUpperCase();
+      console.log('✅ Provider detected:', providerParam);
 
       console.log('Terra callback:', { success, statusParam, errorParam, reference, terraUserId, providerParam });
 
@@ -117,39 +136,68 @@ export default function TerraCallback() {
           const { data: userRes } = await supabase.auth.getUser();
           const uid = userRes.user?.id;
           
-          if (uid) {
-            setStatus('processing');
-            setMessage(`Сохраняем подключение ${PROVIDER_NAMES[providerParam] || providerParam}...`);
+            if (uid) {
+              setStatus('processing');
+              setMessage(`Сохраняем подключение ${PROVIDER_NAMES[providerParam] || providerParam}...`);
 
-            const { data: existing } = await supabase
-              .from('terra_tokens')
-              .select('id')
-              .eq('user_id', uid)
-              .eq('provider', providerParam)
-              .maybeSingle();
+              const { data: existing } = await supabase
+                .from('terra_tokens')
+                .select('id')
+                .eq('user_id', uid)
+                .eq('provider', providerParam)
+                .maybeSingle();
 
-            if (existing?.id) {
-              await supabase.from('terra_tokens').update({
-                is_active: true,
-                updated_at: new Date().toISOString(),
-              }).eq('id', existing.id);
-            } else {
-              // Создаем новую запись без terra_user_id (он придет позже через webhook)
-              await supabase.from('terra_tokens').insert({
-                user_id: uid,
-                provider: providerParam,
-                is_active: true,
-                terra_user_id: null, // Будет обновлен через webhook
-                last_sync_date: null, // Будет обновлен при получении данных
-              });
+              if (existing?.id) {
+                await supabase.from('terra_tokens').update({
+                  is_active: true,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', existing.id);
+              } else {
+                // Создаем новую запись без terra_user_id (он придет позже через webhook)
+                await supabase.from('terra_tokens').insert({
+                  user_id: uid,
+                  provider: providerParam,
+                  terra_user_id: null, // Will be filled by webhook
+                  is_active: true,
+                  last_sync_date: null, // Will be filled after first sync
+                });
+              }
+
+              setStatus('success');
+              setMessage(`${PROVIDER_NAMES[providerParam] || providerParam} подключён! Ожидаем данные от Terra...`);
+
+              // Poll for active token for 15 seconds
+              let pollAttempts = 0;
+              const maxPollAttempts = 15;
+              const pollInterval = setInterval(async () => {
+                pollAttempts++;
+                
+                const { data: tokenCheck } = await supabase
+                  .from('terra_tokens')
+                  .select('terra_user_id')
+                  .eq('user_id', uid)
+                  .eq('provider', providerParam)
+                  .eq('is_active', true)
+                  .single();
+                
+                if (tokenCheck?.terra_user_id || pollAttempts >= maxPollAttempts) {
+                  clearInterval(pollInterval);
+                  
+                  // Clear sessionStorage
+                  sessionStorage.removeItem('terra_last_provider');
+                  
+                  // Redirect after poll completes
+                  setTimeout(() => {
+                    navigate('/integrations');
+                  }, 1000);
+                }
+              }, 1000);
+
+              return;
             }
-            
-            console.log('Terra token created/updated successfully', { provider: providerParam });
-            setMessage(`${PROVIDER_NAMES[providerParam] || providerParam} подключён! Ожидаем данные от Terra...`);
+          } catch (e) {
+            console.error('Error creating terra token:', e);
           }
-        } catch (e) {
-          console.error('Error creating terra token:', e);
-        }
         
         setStatus('success');
         setMessage('Устройство успешно подключено! Запускаем синхронизацию данных...');
