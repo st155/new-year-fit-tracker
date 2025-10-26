@@ -60,6 +60,19 @@ document.addEventListener('securitypolicyviolation', (e) => {
   });
 });
 
+// Helper: Try to actually import a module
+async function probeModuleImport(url: string, timeoutMs = 6000): Promise<{ url: string; ok: boolean; error?: string }> {
+  try {
+    await Promise.race([
+      import(/* @vite-ignore */ `${url}${url.includes('?') ? '&' : '?'}ts=${Date.now()}`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+    ]);
+    return { url, ok: true };
+  } catch (err) {
+    return { url, ok: false, error: (err as Error).message };
+  }
+}
+
 // Enhanced pre-check with dependency analysis
 async function preCheckModuleSafe() {
   const isDev = window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
@@ -116,7 +129,7 @@ async function preCheckModuleSafe() {
       console.warn('❌ RED FLAG: App.tsx returned HTML instead of JavaScript!');
     }
     
-    // Parse Vite dependencies
+    // Parse Vite node_modules dependencies
     const depRegex = /from\s+["']([^"']*\/node_modules\/\.vite\/deps\/[^"']+)["']/g;
     const deps = [...body.matchAll(depRegex)].map(m => m[1]);
     const uniqueDeps = [...new Set(deps)];
@@ -143,6 +156,39 @@ async function preCheckModuleSafe() {
         }
       } catch (err) {
         console.warn(`❌ RED FLAG: ${depUrl} → ${(err as Error).message}`);
+      }
+    }
+    
+    // Parse local src/* dependencies
+    const srcDepRegex = /(?:from|import)\s*\(\s*["']([^"']*\/src\/[^"']+\.(?:t|j)sx?)["']\s*\)|from\s+["']([^"']*\/src\/[^"']+\.(?:t|j)sx?)["']/g;
+    const srcMatches = [...body.matchAll(srcDepRegex)];
+    const srcDeps = srcMatches.map(m => m[1] || m[2]).filter(Boolean);
+    const uniqueSrcDeps = [...new Set(srcDeps)];
+    
+    if (uniqueSrcDeps.length > 0) {
+      console.log(`\n🔍 Found ${uniqueSrcDeps.length} local src/* dependencies`);
+      
+      for (const srcUrl of uniqueSrcDeps) {
+        try {
+          const srcRes = await fetch(`${srcUrl}${srcUrl.includes('?') ? '&' : '?'}ts=${Date.now()}`, {
+            cache: 'no-cache'
+          });
+          
+          const srcStatus = srcRes.status;
+          const srcType = srcRes.headers.get('content-type') || 'unknown';
+          const srcBody = await srcRes.text();
+          const preview = srcBody.substring(0, 200);
+          
+          if (srcStatus >= 400) {
+            console.warn(`❌ RED FLAG: ${srcUrl} → ${srcStatus}`);
+          } else if (srcType.includes('text/html') || preview.trim().startsWith('<!DOCTYPE') || preview.trim().startsWith('<html')) {
+            console.warn(`❌ RED FLAG: ${srcUrl} → HTML response instead of JS!`);
+          } else {
+            console.log(`✅ ${srcUrl.split('/').pop()} → ${srcStatus}`);
+          }
+        } catch (err) {
+          console.warn(`❌ RED FLAG: ${srcUrl} → ${(err as Error).message}`);
+        }
       }
     }
     
@@ -216,7 +262,7 @@ async function collectDiagnostics(error: unknown) {
       preview: appBody.substring(0, 400)
     };
     
-    // Parse and check dependencies from FULL body
+    // Parse and check node_modules dependencies from FULL body
     const depRegex = /from\s+["']([^"']*\/node_modules\/\.vite\/deps\/[^"']+)["']/g;
     const deps = [...appBody.matchAll(depRegex)].map((m: any) => m[1]);
     const uniqueDeps = [...new Set(deps)];
@@ -238,6 +284,70 @@ async function collectDiagnostics(error: unknown) {
           url: depUrl,
           error: (err as Error).message
         });
+      }
+    }
+    
+    // Parse and check local src/* dependencies
+    const srcDepRegex = /(?:from|import)\s*\(\s*["']([^"']*\/src\/[^"']+\.(?:t|j)sx?)["']\s*\)|from\s+["']([^"']*\/src\/[^"']+\.(?:t|j)sx?)["']/g;
+    const srcMatches = [...appBody.matchAll(srcDepRegex)];
+    const srcDeps = srcMatches.map((m: any) => m[1] || m[2]).filter(Boolean);
+    const uniqueSrcDeps = [...new Set(srcDeps)];
+    
+    diag.srcDeps = [];
+    diag.srcImportProbes = [];
+    
+    if (uniqueSrcDeps.length > 0) {
+      console.log(`🔍 Checking ${uniqueSrcDeps.length} local src/* dependencies...`);
+      
+      // Fetch and analyze each src module
+      for (const srcUrl of uniqueSrcDeps) {
+        try {
+          const srcRes = await fetch(`${srcUrl}${srcUrl.includes('?') ? '&' : '?'}ts=${ts}`, {
+            cache: 'no-cache'
+          });
+          
+          const srcStatus = srcRes.status;
+          const srcType = srcRes.headers.get('content-type') || 'unknown';
+          const srcBody = await srcRes.text();
+          const preview = srcBody.substring(0, 300);
+          
+          const redFlag = srcStatus >= 400 || 
+                         srcType.includes('text/html') || 
+                         preview.trim().startsWith('<!DOCTYPE') || 
+                         preview.trim().startsWith('<html');
+          
+          diag.srcDeps.push({
+            url: srcUrl,
+            status: srcStatus,
+            contentType: srcType,
+            contentLength: srcRes.headers.get('content-length'),
+            preview,
+            redFlag
+          });
+          
+          if (redFlag) {
+            console.warn(`❌ RED FLAG: ${srcUrl} → ${srcStatus} ${srcType}`);
+          }
+        } catch (err) {
+          diag.srcDeps.push({
+            url: srcUrl,
+            error: (err as Error).message,
+            redFlag: true
+          });
+        }
+      }
+      
+      // Attempt real dynamic import for each src module
+      console.log('🔬 Probing real module imports...');
+      for (const srcUrl of uniqueSrcDeps) {
+        const probeResult = await probeModuleImport(srcUrl, 6000);
+        diag.srcImportProbes.push(probeResult);
+        
+        if (!probeResult.ok) {
+          console.warn(`❌ Import failed: ${srcUrl} → ${probeResult.error}`);
+        } else {
+          console.log(`✅ Import OK: ${srcUrl}`);
+        }
       }
     }
   } catch (err) {
@@ -314,21 +424,59 @@ function BootError({ message }: { message: string }) {
     }
   };
   
-  // Show import probe summary if available
-  const probeSummary = diagnostics?.appImportProbe ? (
+  // Show diagnostic summaries if available
+  const diagSummary = diagnostics ? (
     <div style={{ 
       marginTop: '1rem', 
       padding: '1rem', 
       background: 'rgba(0, 0, 0, 0.3)', 
       borderRadius: '8px',
-      fontSize: '12px'
+      fontSize: '12px',
+      maxHeight: '300px',
+      overflow: 'auto'
     }}>
-      <strong>Import Probe Results:</strong>
-      {diagnostics.appImportProbe.map((p: any, i: number) => (
-        <div key={i} style={{ marginTop: '0.5rem' }}>
-          {p.url}: {p.error || `${p.status} ${p.contentType}`}
-        </div>
-      ))}
+      {diagnostics.appImportProbe && (
+        <>
+          <strong>App.tsx Import Probes:</strong>
+          {diagnostics.appImportProbe.map((p: any, i: number) => (
+            <div key={i} style={{ marginTop: '0.5rem' }}>
+              {p.url}: {p.error || `${p.status} ${p.contentType}`}
+            </div>
+          ))}
+        </>
+      )}
+      
+      {diagnostics.srcDeps && diagnostics.srcDeps.length > 0 && (
+        <>
+          <div style={{ marginTop: '1rem' }}>
+            <strong>Local src/* Dependencies ({diagnostics.srcDeps.length}):</strong>
+          </div>
+          {diagnostics.srcDeps.map((dep: any, i: number) => (
+            <div key={i} style={{ 
+              marginTop: '0.5rem',
+              color: dep.redFlag ? '#fca5a5' : '#86efac'
+            }}>
+              {dep.redFlag && '🚨 '}{dep.url.split('/').pop()}: {dep.error || `${dep.status} ${dep.contentType}`}
+            </div>
+          ))}
+        </>
+      )}
+      
+      {diagnostics.srcImportProbes && diagnostics.srcImportProbes.length > 0 && (
+        <>
+          <div style={{ marginTop: '1rem' }}>
+            <strong>Real Import Probes:</strong>
+          </div>
+          {diagnostics.srcImportProbes.map((probe: any, i: number) => (
+            <div key={i} style={{ 
+              marginTop: '0.5rem',
+              color: probe.ok ? '#86efac' : '#fca5a5'
+            }}>
+              {probe.ok ? '✅' : '❌'} {probe.url.split('/').pop()}{!probe.ok && `: ${probe.error}`}
+            </div>
+          ))}
+        </>
+      )}
     </div>
   ) : null;
   
@@ -376,7 +524,7 @@ function BootError({ message }: { message: string }) {
         >
           {message}
         </pre>
-        {probeSummary}
+        {diagSummary}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button
             onClick={performRecovery}
@@ -491,6 +639,7 @@ async function boot() {
     // Phase 2: Dynamic import with 3 strategies
     console.log('📦 [Boot] Phase 2: Importing App module...');
     
+    const isDev = window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
     const strategies = [
       { name: 'absolute', url: '/src/App.tsx' },
       { name: 'absolute-cachebust', url: `/src/App.tsx?t=${Date.now()}` },
@@ -519,6 +668,30 @@ async function boot() {
         console.timeEnd(`import-${strategy.name}`);
         console.warn(`❌ ${strategy.name} failed:`, err);
         lastError = err;
+      }
+    }
+    
+    // Blob fallback (dev only) if all strategies failed
+    if (!App && isDev) {
+      try {
+        console.log('🔄 [Boot] Attempting blob fallback...');
+        const blobRes = await fetch(`/src/App.tsx?diag=${Date.now()}`, { cache: 'no-cache' });
+        const code = await blobRes.text();
+        
+        if (!blobRes.ok || blobRes.headers.get('content-type')?.includes('text/html')) {
+          throw new Error(`Blob fetch failed: ${blobRes.status}`);
+        }
+        
+        const blobUrl = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+        const module = await import(/* @vite-ignore */ blobUrl);
+        App = module.default;
+        URL.revokeObjectURL(blobUrl);
+        
+        console.log('✅ [Boot] Blob fallback succeeded!');
+      } catch (blobErr) {
+        console.error('❌ [Boot] Blob fallback failed:', blobErr);
+        (window as any).__bootDiag = (window as any).__bootDiag || {};
+        (window as any).__bootDiag.blobImportError = blobErr instanceof Error ? blobErr.message : String(blobErr);
       }
     }
     
