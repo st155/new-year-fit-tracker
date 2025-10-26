@@ -83,8 +83,53 @@ export function DataQualityMonitoring() {
     ? (webhooks.completed / webhooks.total_webhooks) * 100
     : 100;
 
+  // Check if confidence cache is empty (critical issue)
+  const cacheIsEmpty = confidence.total_metrics === 0;
+  const needsInitialization = cacheIsEmpty && !isEnqueuing;
+
   return (
     <div className="space-y-6">
+      {/* Critical Alert: Empty Confidence Cache */}
+      {needsInitialization && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+              <div className="flex-1">
+                <CardTitle className="text-destructive">Action Required: Initialize Data Quality System</CardTitle>
+                <CardDescription className="mt-2">
+                  The confidence cache is empty. Click "Initialize Data Quality" below to populate confidence scores 
+                  for all metrics. This will enable data quality indicators, conflict resolution, and source prioritization.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleEnqueueCalculations}
+              disabled={isEnqueuing}
+              size="lg"
+              className="w-full"
+            >
+              {isEnqueuing ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Initializing...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Initialize Data Quality System
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              This will create background jobs to calculate confidence scores for all metrics (typically 2-3 minutes)
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
