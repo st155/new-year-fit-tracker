@@ -15,6 +15,7 @@ import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { CompactAIInsights } from '@/components/dashboard/CompactAIInsights';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+import { DataQualitySummary } from '@/components/dashboard/DataQualitySummary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -206,6 +207,9 @@ const Index = () => {
 
         {/* AI Insights - Compact Ticker */}
         <CompactAIInsights />
+
+        {/* Data Quality Summary */}
+        <DataQualitySummary />
 
         {/* Widgets Grid */}
         {widgets.length === 0 ? (

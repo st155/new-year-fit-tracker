@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { DataQualityBadge } from '@/components/data-quality';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -20,6 +21,13 @@ interface WidgetCardProps {
     measurement_date: string;
     source: string;
     trend?: number;
+    confidence?: number;
+    factors?: {
+      sourceReliability: number;
+      dataFreshness: number;
+      measurementFrequency: number;
+      crossValidation: number;
+    };
   };
 }
 
@@ -244,11 +252,22 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
       }}
     >
       <CardContent className="p-6">
-        {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute top-2 right-2 flex gap-2">
+          {/* Data Quality Badge - show if confidence < 80 */}
+          {data?.confidence !== undefined && data.confidence < 80 && (
+            <DataQualityBadge
+              confidence={data.confidence}
+              factors={data.factors}
+              metricName={metricName}
+              userId={user?.id}
+            />
+          )}
+          
+          {/* Freshness Badge */}
+          {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Badge 
                     variant={isDataStale || isCachedWithoutToken ? "destructive" : "outline"} 
                     className="text-xs"
@@ -260,14 +279,14 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
                   >
                     {isCachedWithoutToken ? '❌ Кеш' : isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
                   </Badge>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{getDataAgeMessage()}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getDataAgeMessage()}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
