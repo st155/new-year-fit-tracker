@@ -273,3 +273,109 @@ export async function getStorageQuota() {
     percentage: estimate.quota ? ((estimate.usage || 0) / estimate.quota) * 100 : 0,
   };
 }
+
+/**
+ * Simple hash function for version checking
+ */
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString(36);
+}
+
+/**
+ * Проверка новой версии приложения
+ * Проверяет index.html на изменения и предлагает обновление
+ */
+export function setupVersionCheck() {
+  const VERSION_KEY = 'app-version-hash';
+  const CHECK_COOLDOWN_KEY = 'app-version-check-time';
+  const COOLDOWN_MS = 60000; // Проверять не чаще раза в минуту
+  
+  async function checkVersion() {
+    try {
+      // Cooldown для избежания частых проверок
+      const lastCheck = localStorage.getItem(CHECK_COOLDOWN_KEY);
+      if (lastCheck && (Date.now() - parseInt(lastCheck)) < COOLDOWN_MS) {
+        return;
+      }
+      
+      localStorage.setItem(CHECK_COOLDOWN_KEY, Date.now().toString());
+      
+      // Fetch index.html с обходом кэша
+      const response = await fetch('/', { 
+        cache: 'no-cache',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      
+      if (!response.ok) return;
+      
+      const html = await response.text();
+      const currentHash = hashString(html);
+      const cachedHash = localStorage.getItem(VERSION_KEY);
+      
+      if (cachedHash && cachedHash !== currentHash) {
+        console.log('🆕 [Version] New version detected!');
+        
+        // Новая версия обнаружена
+        const shouldReload = confirm(
+          'Доступна новая версия приложения. Обновить сейчас?'
+        );
+        
+        if (shouldReload) {
+          localStorage.setItem(VERSION_KEY, currentHash);
+          // Очищаем все кэши перед перезагрузкой
+          await clearAllCaches();
+          window.location.reload();
+        }
+      } else if (!cachedHash) {
+        // Первый запуск - сохраняем текущую версию
+        localStorage.setItem(VERSION_KEY, currentHash);
+        console.log('✅ [Version] Initial version saved');
+      }
+    } catch (error) {
+      console.error('⚠️ [Version] Failed to check version:', error);
+    }
+  }
+  
+  // Проверяем при возвращении на страницу
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkVersion();
+    }
+  });
+  
+  // Проверяем при фокусе окна
+  window.addEventListener('focus', () => {
+    checkVersion();
+  });
+  
+  console.log('✅ [Version] Version check listener setup complete');
+}
+
+/**
+ * Принудительная проверка версии (для ручного вызова)
+ */
+export async function forceVersionCheck(): Promise<boolean> {
+  try {
+    const response = await fetch('/', { 
+      cache: 'no-cache',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    
+    if (!response.ok) return false;
+    
+    const html = await response.text();
+    const currentHash = hashString(html);
+    const cachedHash = localStorage.getItem('app-version-hash');
+    
+    return cachedHash !== null && cachedHash !== currentHash;
+  } catch (error) {
+    console.error('Failed to check version:', error);
+    return false;
+  }
+}

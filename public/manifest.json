@@ -1,13 +1,14 @@
 {
   "name": "Elite10 - Профессиональный Фитнес Трекер",
   "short_name": "Elite10",
+  "version": "1.0.20251026",
   "description": "Профессиональный трекер фитнеса с интеграциями Whoop, Garmin, Withings, Ultrahuman и Apple Health",
   "theme_color": "#00ffff",
   "background_color": "#10121A",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/?v=20251026",
   "icons": [
     {
       "src": "/icon-512x512.png",

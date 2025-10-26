@@ -11,7 +11,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { RecoveryBar } from "@/components/pwa/RecoveryBar";
-import { registerServiceWorker } from "@/lib/pwa-utils";
+import { registerServiceWorker, setupVersionCheck } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher, getPrefetcher } from "@/lib/prefetch-strategy";
 import { initWebVitals } from "@/lib/web-vitals";
@@ -244,7 +244,8 @@ const AppContent = () => {
     initInvalidator(queryClient);
     initPrefetcher(queryClient);
     initWebVitals();
-    logger.info('[App] Query strategies and web vitals initialized');
+    setupVersionCheck(); // Auto-detect new app versions
+    logger.info('[App] Query strategies, web vitals, and version check initialized');
   }, []);
 
   // Service worker registration - DISABLED temporarily to fix black screen
