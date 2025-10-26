@@ -20,6 +20,7 @@ export default function Health() {
     { name: 'Caches', status: 'loading' },
     { name: 'Supabase Auth', status: 'loading' },
     { name: 'Supabase Database', status: 'loading' },
+    { name: 'Supabase URL', status: 'loading' },
   ]);
 
   useEffect(() => {
@@ -91,6 +92,15 @@ export default function Health() {
     } catch (error: any) {
       newChecks.push({ name: 'Supabase Database', status: 'error', message: error.message });
     }
+
+    // Check 6: Supabase URL
+    const supabaseUrl = (supabase as any).supabaseUrl || 'Unknown';
+    newChecks.push({
+      name: 'Supabase URL',
+      status: 'ok',
+      message: supabaseUrl,
+      data: supabaseUrl.includes('d.elite10.club') ? '✅ Custom domain' : '⚠️ Standard domain'
+    });
 
     setChecks(newChecks);
   };
