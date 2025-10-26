@@ -247,11 +247,13 @@ export function TerraIntegration() {
       
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
+          // Считаем токен активным если is_active=true ИЛИ есть недавняя синхронизация (последние 7 дней)
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
           const { data, error } = await supabase
             .from('terra_tokens')
-            .select('provider, created_at, last_sync_date')
+            .select('provider, created_at, last_sync_date, is_active')
             .eq('user_id', user.id)
-            .eq('is_active', true)
+            .or(`is_active.eq.true,last_sync_date.gte.${sevenDaysAgo}`)
             .abortSignal(AbortSignal.timeout(5000));
 
           if (error) throw error;

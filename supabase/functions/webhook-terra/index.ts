@@ -342,6 +342,23 @@ Deno.serve(
     const dataWebhookTypes = ['activity', 'body', 'sleep', 'daily', 'nutrition', 'athlete'];
 
     if (dataWebhookTypes.includes(payload.type)) {
+      // Обновляем last_sync_date для токена при получении данных
+      if (payload.user?.user_id) {
+        await supabase
+          .from('terra_tokens')
+          .update({ 
+            last_sync_date: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('terra_user_id', payload.user.user_id)
+          .eq('is_active', true);
+        
+        logger.info('Updated last_sync_date for terra token', {
+          terraUserId: payload.user.user_id,
+          type: payload.type
+        });
+      }
+
       const jobQueue = new JobQueue();
 
       const job = await jobQueue.enqueue(
