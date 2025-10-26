@@ -99,6 +99,45 @@ export default function TerraCallback() {
         searchParams.get('widget_success') === 'true';
 
       if (widgetSuccess) {
+        // Создаем запись в terra_tokens сразу же
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: userRes } = await supabase.auth.getUser();
+          const uid = userRes.user?.id;
+          
+          if (uid) {
+            setStatus('processing');
+            setMessage('Подтверждаем подключение...');
+
+            const { data: existing } = await supabase
+              .from('terra_tokens')
+              .select('id')
+              .eq('user_id', uid)
+              .eq('provider', providerParam)
+              .maybeSingle();
+
+            if (existing?.id) {
+              await supabase.from('terra_tokens').update({
+                is_active: true,
+                updated_at: new Date().toISOString(),
+              }).eq('id', existing.id);
+            } else {
+              // Создаем новую запись без terra_user_id (он придет позже через webhook)
+              await supabase.from('terra_tokens').insert({
+                user_id: uid,
+                provider: providerParam,
+                is_active: true,
+                terra_user_id: null, // Будет обновлен через webhook
+                last_sync_date: null, // Будет обновлен при получении данных
+              });
+            }
+            
+            console.log('Terra token created/updated successfully');
+          }
+        } catch (e) {
+          console.error('Error creating terra token:', e);
+        }
+        
         setStatus('success');
         setMessage('Устройство успешно подключено! Запускаем синхронизацию данных...');
         

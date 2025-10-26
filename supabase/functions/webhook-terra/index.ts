@@ -342,21 +342,61 @@ Deno.serve(
     const dataWebhookTypes = ['activity', 'body', 'sleep', 'daily', 'nutrition', 'athlete'];
 
     if (dataWebhookTypes.includes(payload.type)) {
-      // Обновляем last_sync_date для токена при получении данных
+      // Обновляем last_sync_date и terra_user_id (если он еще null) при получении данных
       if (payload.user?.user_id) {
-        await supabase
+        const { data: existingToken } = await supabase
           .from('terra_tokens')
-          .update({ 
-            last_sync_date: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .select('terra_user_id')
           .eq('terra_user_id', payload.user.user_id)
-          .eq('is_active', true);
-        
-        logger.info('Updated last_sync_date for terra token', {
-          terraUserId: payload.user.user_id,
-          type: payload.type
-        });
+          .eq('is_active', true)
+          .maybeSingle();
+
+        // Если токен найден, обновляем last_sync_date
+        if (existingToken) {
+          await supabase
+            .from('terra_tokens')
+            .update({ 
+              last_sync_date: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('terra_user_id', payload.user.user_id)
+            .eq('is_active', true);
+          
+          logger.info('Updated last_sync_date for terra token', {
+            terraUserId: payload.user.user_id,
+            type: payload.type
+          });
+        } else {
+          // Токен с terra_user_id не найден - ищем токен с null terra_user_id для провайдера
+          const provider = payload.user.provider?.toUpperCase();
+          if (provider) {
+            const { data: nullToken } = await supabase
+              .from('terra_tokens')
+              .select('id, user_id')
+              .eq('provider', provider)
+              .eq('is_active', true)
+              .is('terra_user_id', null)
+              .maybeSingle();
+
+            if (nullToken) {
+              // Обновляем terra_user_id и last_sync_date
+              await supabase
+                .from('terra_tokens')
+                .update({
+                  terra_user_id: payload.user.user_id,
+                  last_sync_date: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', nullToken.id);
+
+              logger.info('Updated terra_user_id from data webhook', {
+                terraUserId: payload.user.user_id,
+                provider,
+                type: payload.type
+              });
+            }
+          }
+        }
       }
 
       const jobQueue = new JobQueue();

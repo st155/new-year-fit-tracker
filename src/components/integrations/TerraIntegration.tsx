@@ -18,13 +18,18 @@ import {
   Moon,
   TrendingUp,
   Watch,
-  ExternalLink
+  ExternalLink,
+  Clock
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface TerraProvider {
   name: string;
   connectedAt: string;
   lastSync?: string;
+  terraUserId?: string | null;
 }
 
 interface TerraStatus {
@@ -317,7 +322,7 @@ export function TerraIntegration() {
         try {
           const { data, error } = await supabase
             .from('terra_tokens')
-            .select('provider, created_at, last_sync_date, is_active')
+            .select('provider, created_at, last_sync_date, is_active, terra_user_id')
             .eq('user_id', user.id)
             .eq('is_active', true)
             .abortSignal(AbortSignal.timeout(5000));
@@ -343,6 +348,7 @@ export function TerraIntegration() {
         name: t.provider,
         connectedAt: t.created_at,
         lastSync: t.last_sync_date,
+        terraUserId: t.terra_user_id,
       }));
 
       setStatus({
@@ -354,6 +360,26 @@ export function TerraIntegration() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getConnectionStatus = (provider: TerraProvider) => {
+    if (!provider.terraUserId) {
+      return { variant: 'secondary' as const, text: 'Ожидание данных...' };
+    }
+    
+    if (!provider.lastSync) {
+      return { variant: 'secondary' as const, text: 'Ожидание первой синхронизации' };
+    }
+    
+    const hoursSinceSync = (Date.now() - new Date(provider.lastSync).getTime()) / 3600000;
+    
+    if (hoursSinceSync < 24) {
+      return { variant: 'success' as const, text: 'Синхронизировано' };
+    }
+    if (hoursSinceSync < 72) {
+      return { variant: 'outline' as const, text: 'Требует синхронизации' };
+    }
+    return { variant: 'destructive' as const, text: 'Устарело' };
   };
 
   const syncData = async () => {
@@ -490,18 +516,22 @@ export function TerraIntegration() {
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="h-5 w-5" />
-                      <div>
-                        <p className="font-medium">{PROVIDER_NAMES[provider.name]}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{PROVIDER_NAMES[provider.name]}</p>
+                          <Badge variant={getConnectionStatus(provider).variant}>
+                            {getConnectionStatus(provider).text}
+                          </Badge>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Подключен {new Date(provider.connectedAt).toLocaleDateString('ru-RU')}
                         </p>
                         {provider.lastSync && (
                           <p className="text-xs text-muted-foreground">
-                            Последняя синхронизация: {new Date(provider.lastSync).toLocaleString('ru-RU', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit'
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {formatDistanceToNow(new Date(provider.lastSync), { 
+                              addSuffix: true, 
+                              locale: ru 
                             })}
                           </p>
                         )}
