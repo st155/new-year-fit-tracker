@@ -5,12 +5,11 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const disableFastRefresh = process.env.VITE_DISABLE_REACT_REFRESH === 'true';
-  
   return {
     server: {
       host: "::",
       port: 8080,
+      hmr: false,
     },
     plugins: [
       react(),

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./index-inbody-styles.css";
+import App from "./App.tsx";
 // Temporarily disabled for debugging
 // import { startPerformanceMonitoring } from "./lib/performance-monitor";
 
@@ -108,93 +109,18 @@ async function performRecovery() {
   await new Promise(resolve => setTimeout(resolve, 200));
 }
 
-// Dynamic import with error handling
-(async () => {
-  try {
-    console.log('🚀 [Boot] Starting dynamic import of App...');
-    
-    // Pre-check module availability
-    await preCheckModule();
-    
-    const { default: App } = await importWithRetry(
-      () => import('./App.tsx')
-    );
-    
-    console.log('✅ [Boot] App imported successfully, mounting React...');
-    
-    createRoot(root).render(
-      <StrictMode>
-        <App />
-      </StrictMode>
-    );
+// Static import and immediate mount (dev-stable)
+console.time('boot');
+console.log('🚀 [Boot] Mounting React App...');
+createRoot(root).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
 
-    // Signal that React has successfully mounted
-    if (typeof window !== 'undefined') {
-      (window as any).__react_mounted__ = true;
-      console.log('✅ [Boot] React mounted successfully');
-    }
-  } catch (error) {
-    console.error('💥 [Boot] Failed to import or mount App:', error);
-    
-    // Store error for debug overlay
-    if ((window as any).__lastErrors) {
-      const errorMsg = error instanceof Error 
-        ? `${error.name}: ${error.message}\n${error.stack}` 
-        : String(error);
-      (window as any).__lastErrors.push(`Import/Mount error: ${errorMsg}`);
-      (window as any).__lastErrors.push('Не удалось загрузить модуль /src/App.tsx (возможно, кэш/прокси)');
-    }
-    
-    // Handle cache-related errors with smart, one-time recovery
-    if (error instanceof TypeError && 
-        (error.message.includes('Failed to fetch') || 
-         error.message.includes('dynamically imported module'))) {
-      
-      const isFirstFailure = sessionStorage.getItem('__boot_recovered') !== '1';
-      
-      if (isFirstFailure) {
-        console.warn('🔄 [Boot] First failure detected, attempting automatic recovery...');
-        sessionStorage.setItem('__boot_recovered', '1');
-        
-        try {
-          await performRecovery();
-          
-          // Retry import after recovery
-          console.log('🔄 [Boot] Retrying import after recovery...');
-          const { default: App } = await importWithRetry(
-            () => import('./App.tsx')
-          );
-          
-          console.log('✅ [Boot] App imported successfully after recovery!');
-          
-          createRoot(root).render(
-            <StrictMode>
-              <App />
-            </StrictMode>
-          );
-
-          if (typeof window !== 'undefined') {
-            (window as any).__react_mounted__ = true;
-            console.log('✅ [Boot] React mounted successfully after recovery');
-          }
-          
-          return; // Success!
-        } catch (recoveryError) {
-          console.error('💥 [Boot] Recovery failed:', recoveryError);
-          // Fall through to show overlay
-        }
-      } else {
-        console.error('💥 [Boot] Repeated failure detected, showing overlay without recovery');
-      }
-    }
-    
-    // Show debug overlay if available
-    const overlay = document.getElementById('boot-debug-overlay');
-    if (overlay) {
-      overlay.style.display = 'block';
-      console.log('🔍 [Boot] Debug overlay shown');
-    }
-    
-    throw error;
-  }
-})();
+// Signal that React has successfully mounted
+if (typeof window !== 'undefined') {
+  (window as any).__react_mounted__ = true;
+  console.log('✅ [Boot] React mounted successfully');
+}
+console.timeEnd('boot');
