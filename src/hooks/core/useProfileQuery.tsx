@@ -16,7 +16,14 @@ export function useProfileQuery(userId: string | undefined) {
         .eq('user_id', userId!)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        // Handle "not found" gracefully - return null instead of throwing
+        if (error.code === 'PGRST116' || error.message?.includes('406')) {
+          console.warn('⚠️ [useProfileQuery] Profile not found for user:', userId);
+          return null;
+        }
+        throw error;
+      }
       return data;
     },
     enabled: !!userId,

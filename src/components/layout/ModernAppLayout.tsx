@@ -1,6 +1,6 @@
 import { ReactNode, memo } from "react";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
-import { ProfileProvider } from "@/contexts/ProfileContext";
+import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
 import { OnboardingTutorial } from "@/components/tutorial/OnboardingTutorial";
 
@@ -12,7 +12,7 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
   console.log('🏗️ [ModernAppLayout] Rendering layout');
   
   return (
-    <ProfileProvider>
+    <SafeProfileProvider>
       <MetricsViewProvider>
         <div className="min-h-screen flex flex-col w-full bg-background">
           <TopNavigation />
@@ -22,6 +22,6 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
           <OnboardingTutorial />
         </div>
       </MetricsViewProvider>
-    </ProfileProvider>
+    </SafeProfileProvider>
   );
 });

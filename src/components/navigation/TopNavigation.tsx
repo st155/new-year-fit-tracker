@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import {
   DropdownMenu,
@@ -50,10 +50,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   }
   
   try {
-    const roleData = useUserRole();
-    isTrainer = roleData?.isTrainer ?? false;
+    const authData = useAuth();
+    isTrainer = authData?.isTrainer ?? false;
   } catch (error) {
-    console.error('💥 [TopNavigation] useUserRole error:', error);
+    console.error('💥 [TopNavigation] useAuth error:', error);
   }
 
   const userNavItems = [

@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
 import { PageLoader } from '@/components/ui/page-loader';
 
 interface RoleBasedRouteProps {
@@ -7,13 +7,13 @@ interface RoleBasedRouteProps {
 }
 
 export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
-  const { role, loading } = useUserRole();
+  const { isTrainer, loading } = useAuth();
 
   if (loading) {
     return <PageLoader message="Проверка роли..." />;
   }
 
-  if (role === 'trainer') {
+  if (isTrainer) {
     return <Navigate to="/trainer-dashboard" replace />;
   }
 
