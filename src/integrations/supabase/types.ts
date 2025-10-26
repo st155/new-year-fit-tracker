@@ -407,6 +407,51 @@ export type Database = {
           },
         ]
       }
+      background_jobs: {
+        Row: {
+          attempts: number | null
+          completed_at: string | null
+          created_at: string | null
+          error: string | null
+          id: string
+          max_attempts: number | null
+          payload: Json
+          result: Json | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          attempts?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload: Json
+          result?: Json | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          type: string
+        }
+        Update: {
+          attempts?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload?: Json
+          result?: Json | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
       body_composition: {
         Row: {
           body_fat_percentage: number | null
@@ -1111,6 +1156,42 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_function_logs: {
+        Row: {
+          duration_ms: number | null
+          function_name: string
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          request_id: string | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          duration_ms?: number | null
+          function_name: string
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          request_id?: string | null
+          timestamp: string
+          user_id?: string | null
+        }
+        Update: {
+          duration_ms?: number | null
+          function_name?: string
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          request_id?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
@@ -1623,6 +1704,27 @@ export type Database = {
           unit?: string | null
           user_id?: string
           value?: number
+        }
+        Relationships: []
+      }
+      idempotency_keys: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          result: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          result: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          result?: Json
         }
         Relationships: []
       }
@@ -2342,6 +2444,45 @@ export type Database = {
           reference_id?: string | null
           state?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      terra_webhooks_raw: {
+        Row: {
+          created_at: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          processed_count: number | null
+          provider: string
+          status: string
+          type: string
+          user_id: string
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          processed_count?: number | null
+          provider: string
+          status?: string
+          type: string
+          user_id: string
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processed_count?: number | null
+          provider?: string
+          status?: string
+          type?: string
+          user_id?: string
+          webhook_id?: string | null
         }
         Relationships: []
       }
@@ -3104,7 +3245,11 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      cleanup_background_jobs: { Args: never; Returns: undefined }
+      cleanup_edge_function_logs: { Args: never; Returns: undefined }
+      cleanup_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cleanup_terra_webhooks: { Args: never; Returns: undefined }
       create_or_get_metric: {
         Args: {
           p_metric_category: string
