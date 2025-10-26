@@ -141,12 +141,47 @@ graph TB
 - Cold start: 60-300ms
 - Query time (latest metrics): 500-2000ms
 - Cache miss rate: ~30%
+- Bundle size: Unknown (~800KB estimated)
 
 ### After Optimization
 - Cold start: < 50ms (with keep-alive)
 - Query time (latest metrics): 10-50ms (50x faster)
 - Cache hit rate: > 95%
 - Rate limit overhead: < 5ms
+- Bundle size: **Measure with commands below**
+
+### How to Measure Bundle Size
+
+```bash
+# 1. Build production bundle
+npm run build
+
+# 2. Generate bundle visualization
+npx vite-bundle-visualizer
+
+# This will:
+# - Open interactive treemap in browser
+# - Show compressed/uncompressed sizes
+# - Identify largest dependencies
+# - Highlight optimization opportunities
+```
+
+**What to Check**:
+- ✅ Total compressed size < 200KB (initial load)
+- ✅ Vendor chunks properly split
+- ✅ Heavy libraries (three.js, recharts, pdf.js) lazy loaded
+- ✅ No duplicate dependencies
+- ⚠️ If total > 300KB, review lazy loading strategy
+
+**Expected Output**:
+```
+dist/assets/index-[hash].js         ~50-80KB  (main bundle)
+dist/assets/vendor-react-[hash].js  ~40-60KB  (React core)
+dist/assets/vendor-ui-[hash].js     ~30-50KB  (Radix UI)
+dist/assets/three-[hash].js         ~100KB+   (lazy loaded)
+dist/assets/charts-[hash].js        ~50-70KB  (lazy loaded)
+dist/assets/pdf-[hash].js           ~80KB+    (lazy loaded)
+```
 
 ## Usage Guide
 
