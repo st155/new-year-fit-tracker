@@ -16,12 +16,14 @@ import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { CompactAIInsights } from '@/components/dashboard/CompactAIInsights';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { DataQualitySummary } from '@/components/dashboard/DataQualitySummary';
+import { GlobalTicker } from '@/components/ui/global-ticker';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
 import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAutoSync } from '@/hooks/useAutoSync';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -59,6 +61,9 @@ const Index = () => {
   const addWidgetMutation = useAddWidgetMutation();
   const removeWidgetMutation = useRemoveWidgetMutation();
   const reorderWidgetsMutation = useReorderWidgetsMutation();
+  
+  // Auto-sync for fresh data
+  const { syncAllData, isSyncing } = useAutoSync(user?.id);
   
   const addWidget = (metricName: string, source: string) => {
     if (!user?.id) return;
@@ -107,8 +112,9 @@ const Index = () => {
     }
   }, []); // Run once on mount
 
-  const handleRefresh = () => {
-    console.log('🔄 Manual refresh triggered');
+  const handleRefresh = async () => {
+    console.log('🔄 Manual refresh triggered - syncing all sources');
+    await syncAllData(); // Trigger real sync
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
     setWidgetAges({}); // Clear ages on refresh
@@ -209,6 +215,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Global Ticker at the top */}
+        <GlobalTicker />
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -244,9 +253,10 @@ const Index = () => {
               size="sm"
               onClick={handleRefresh}
               className="gap-2"
+              disabled={isSyncing}
             >
-              <RefreshCw className="h-4 w-4" />
-              Обновить
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Синхронизация...' : 'Обновить всё'}
             </Button>
             <WidgetSettings
               widgets={widgets}
@@ -292,7 +302,7 @@ const Index = () => {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-4">
             {processedWidgets.map((widget) => (
               <WidgetCard
                 key={widget.id}

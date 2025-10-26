@@ -233,7 +233,6 @@ const AppRoutes = () => {
             <Sonner />
             <InstallPrompt />
             <UpdatePrompt />
-            <RecoveryBar />
           </Suspense>
   );
 };

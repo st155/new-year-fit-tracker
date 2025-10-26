@@ -251,8 +251,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
         borderColor: isCachedWithoutToken ? '#ef4444' : isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
       }}
     >
-      <CardContent className="p-6">
-        <div className="absolute top-2 right-2 flex gap-2">
+      <CardContent className="p-3 sm:p-6">
+        <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex gap-1 sm:gap-2">
           {/* Data Quality Badge - show if confidence < 80 */}
           {data?.confidence !== undefined && data.confidence < 80 && (
             <DataQualityBadge
@@ -288,31 +288,31 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
           )}
         </div>
         
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground mb-1">
+            <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
               {metricName}
             </p>
-            <p className="text-xs text-muted-foreground/60">
+            <p className="text-[10px] sm:text-xs text-muted-foreground/60">
               {getSourceDisplayName(source)}
             </p>
           </div>
-          <Icon className="h-5 w-5" style={{ color }} />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
         </div>
 
-        <div className="flex items-baseline gap-2 mb-3">
-          <Icon className="h-6 w-6" style={{ color }} />
-          <span className="text-3xl font-bold" style={{ color }}>
+        <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <Icon className="h-4 w-4 sm:h-6 sm:w-6" style={{ color }} />
+          <span className="text-xl sm:text-3xl font-bold" style={{ color }}>
             {formatValue(data.value, metricName, data.unit)}
           </span>
           {data.unit && (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {data.unit}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between text-[10px] sm:text-xs">
           <div className="flex items-center gap-2">
             {(() => {
               const now = new Date();
@@ -370,23 +370,24 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
           
           {hasTrend && (
             <div 
-              className="flex items-center gap-1 font-medium"
+              className="flex items-center gap-0.5 sm:gap-1 font-medium"
               style={{ color: trendColor }}
             >
               {data.trend! > 0 ? (
-                <TrendingUp className="h-3 w-3" />
+                <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               ) : data.trend! < 0 ? (
-                <TrendingDown className="h-3 w-3" />
+                <TrendingDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               ) : (
-                <Minus className="h-3 w-3" />
+                <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               )}
-              <span>{Math.abs(data.trend!).toFixed(1)}%</span>
+              <span className="hidden sm:inline">{Math.abs(data.trend!).toFixed(1)}%</span>
+              <span className="sm:hidden">{Math.abs(data.trend!).toFixed(0)}%</span>
             </div>
           )}
         </div>
 
         {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
-          <div className="mt-3 pt-3 border-t">
+          <div className="mt-2 pt-2 sm:mt-3 sm:pt-3 border-t">
             {isCachedWithoutToken ? (
               <Button 
                 size="sm" 
