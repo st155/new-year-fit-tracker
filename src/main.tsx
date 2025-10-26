@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import App from './App.tsx';
 import "./index.css";
 import "./index-inbody-styles.css";
 
@@ -180,12 +181,7 @@ async function boot() {
     preCheckModuleSafe();
     
     // Try to import App with timeout
-    console.log('📦 [Boot] Importing App module...');
-    const importApp = Promise.race([
-      import('./App.tsx'),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Import timeout')), 10000)),
-    ]) as Promise<{ default: React.ComponentType }>;
-    const { default: App } = await importApp;
+    console.log('📦 [Boot] Mounting App component (static import)...');
     
     console.log('🎨 [Boot] Rendering App...');
     createRoot(root).render(
@@ -199,63 +195,7 @@ async function boot() {
     console.timeEnd('boot');
     
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('💥 [Boot] First import failed:', err);
-    
-    // If this is a module fetch error or timeout, check if we should auto-recover
-    if (errorMessage.includes('Import timeout') || errorMessage.includes('Failed to fetch dynamically imported module')) {
-      const attempts = Number(sessionStorage.getItem('__auto_recover_attempts') || '0');
-      const lastTs = Number(sessionStorage.getItem('__auto_recover_ts') || '0');
-      const now = Date.now();
-      const thrashing = now - lastTs < 5000;
-      
-      if (attempts >= 2 || thrashing) {
-        sessionStorage.setItem('__auto_recovery_disabled', '1');
-        console.warn('🛑 [Boot] Auto-recovery disabled. attempts=', attempts, 'thrashing=', thrashing);
-        createRoot(root).render(
-          <BootError message="Auto-recovery stopped after multiple attempts. Check console logs or try Reload/Run Recovery once manually." />
-        );
-        (window as any).__react_mounted__ = true;
-        console.timeEnd('boot');
-        return;
-      }
-      
-      sessionStorage.setItem('__auto_recover_attempts', String(attempts + 1));
-      sessionStorage.setItem('__auto_recover_ts', String(now));
-      console.log('🔄 [Boot] Import issue detected, performing recovery (attempt', attempts + 1, ')...');
-      await performRecovery();
-      location.reload();
-      return;
-    }
-    
-    // Try recovery once for other errors
-    const alreadyRecovered = sessionStorage.getItem('__boot_recovered') === '1';
-    
-    if (!alreadyRecovered) {
-      console.log('🔄 [Boot] Attempting recovery...');
-      sessionStorage.setItem('__boot_recovered', '1');
-      
-      try {
-        await performRecovery();
-        
-        console.log('📦 [Boot] Retrying App import after recovery...');
-        const { default: App } = await import('./App.tsx');
-        
-        createRoot(root).render(
-          <StrictMode>
-            <App />
-          </StrictMode>
-        );
-        
-        (window as any).__react_mounted__ = true;
-        console.log('✅ [Boot] React mounted successfully after recovery');
-        console.timeEnd('boot');
-        return;
-        
-      } catch (err2) {
-        console.error('💥 [Boot] Import failed after recovery:', err2);
-      }
-    }
+    console.error('💥 [Boot] App mount failed:', err);
     
     // Show fallback UI
     console.log('🛑 [Boot] Showing fallback error UI');
