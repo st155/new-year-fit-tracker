@@ -12,7 +12,8 @@ if (!root) {
 // Pre-boot: Clear SW and caches on dev domains (before any imports)
 const isDevHost = location.hostname.endsWith('.lovableproject.com') || location.hostname === 'localhost';
 (async () => {
-  if (isDevHost && 'serviceWorker' in navigator && navigator.serviceWorker.controller && !sessionStorage.getItem('__sw_cleared_once')) {
+  const autoRecoveryDisabled = sessionStorage.getItem('__auto_recovery_disabled');
+  if (isDevHost && !autoRecoveryDisabled && 'serviceWorker' in navigator && navigator.serviceWorker.controller && !sessionStorage.getItem('__sw_cleared_once')) {
     console.log('🧹 [Boot] Clearing SW on dev domain...');
     sessionStorage.setItem('__sw_cleared_once', '1');
     try {
@@ -133,6 +134,9 @@ function BootError({ message }: { message: string }) {
       <div style={{ display: 'flex', gap: '12px' }}>
         <button
           onClick={async () => {
+            const attempts = Number(sessionStorage.getItem('__auto_recover_attempts') || '0');
+            sessionStorage.setItem('__auto_recover_attempts', String(attempts + 1));
+            sessionStorage.setItem('__auto_recover_ts', String(Date.now()));
             await performRecovery();
             window.location.reload();
           }}
@@ -179,7 +183,7 @@ async function boot() {
     console.log('📦 [Boot] Importing App module...');
     const importApp = Promise.race([
       import('./App.tsx'),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Import timeout')), 4000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Import timeout')), 10000)),
     ]) as Promise<{ default: React.ComponentType }>;
     const { default: App } = await importApp;
     
@@ -198,9 +202,27 @@ async function boot() {
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error('💥 [Boot] First import failed:', err);
     
-    // If this is a module fetch error or timeout, do recovery and reload
+    // If this is a module fetch error or timeout, check if we should auto-recover
     if (errorMessage.includes('Import timeout') || errorMessage.includes('Failed to fetch dynamically imported module')) {
-      console.log('🔄 [Boot] Import issue detected, performing recovery...');
+      const attempts = Number(sessionStorage.getItem('__auto_recover_attempts') || '0');
+      const lastTs = Number(sessionStorage.getItem('__auto_recover_ts') || '0');
+      const now = Date.now();
+      const thrashing = now - lastTs < 5000;
+      
+      if (attempts >= 2 || thrashing) {
+        sessionStorage.setItem('__auto_recovery_disabled', '1');
+        console.warn('🛑 [Boot] Auto-recovery disabled. attempts=', attempts, 'thrashing=', thrashing);
+        createRoot(root).render(
+          <BootError message="Auto-recovery stopped after multiple attempts. Check console logs or try Reload/Run Recovery once manually." />
+        );
+        (window as any).__react_mounted__ = true;
+        console.timeEnd('boot');
+        return;
+      }
+      
+      sessionStorage.setItem('__auto_recover_attempts', String(attempts + 1));
+      sessionStorage.setItem('__auto_recover_ts', String(now));
+      console.log('🔄 [Boot] Import issue detected, performing recovery (attempt', attempts + 1, ')...');
       await performRecovery();
       location.reload();
       return;
