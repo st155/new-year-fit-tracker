@@ -12,9 +12,14 @@ import { TrainerOnlyRoute } from "@/components/TrainerOnlyRoute";
 import { getPrefetcher } from "@/lib/prefetch-strategy";
 import { logger } from "@/lib/logger";
 import { lazySafe } from "@/lib/lazy-safe";
+import { DevDebugBar } from "@/components/dev/DevDebugBar";
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
+import SmokeHome from "@/pages/SmokeHome";
+
+// 🔥 ROUTE_SMOKE: Temporarily route / to SmokeHome (bypass all auth/layout)
+const ROUTE_SMOKE = false;
 
 // Sync imports for all pages
 import LandingSync from "@/pages/Landing";
@@ -84,16 +89,23 @@ export const AppRoutes = () => {
         {/* Debug route - no auth, no lazy, no providers */}
         <Route path="/__debug" element={<DebugPage />} />
         
+        {/* Smoke test route - minimal component */}
+        <Route path="/__smoke" element={<SmokeHome />} />
+        
         <Route path="/auth" element={<Auth />} />
         <Route path="/landing" element={<Landing />} />
+        
+        {/* Home route - conditional smoke mode */}
         <Route path="/" element={
-          <ProtectedRoute>
-            <RoleBasedRoute>
-              <ModernAppLayout>
-                <Index />
-              </ModernAppLayout>
-            </RoleBasedRoute>
-          </ProtectedRoute>
+          ROUTE_SMOKE ? <SmokeHome /> : (
+            <ProtectedRoute>
+              <RoleBasedRoute>
+                <ModernAppLayout>
+                  <Index />
+                </ModernAppLayout>
+              </RoleBasedRoute>
+            </ProtectedRoute>
+          )
         } />
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="/progress" element={
@@ -218,6 +230,7 @@ export const AppRoutes = () => {
         <Route path="/health" element={<Health />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <DevDebugBar />
       <Sonner />
       <InstallPrompt />
       <UpdatePrompt />

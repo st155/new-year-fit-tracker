@@ -4,6 +4,9 @@ import App from "./App";
 import "./index.css";
 import "./index-inbody-styles.css";
 
+// 🚨 SMOKE MODE: Render minimal component to test React mounting
+const SMOKE_MODE = false;
+
 const root = document.getElementById("root");
 
 if (!root) {
@@ -589,6 +592,60 @@ async function boot() {
   try {
     // Pre-check (non-blocking, for diagnostics)
     preCheckModuleSafe();
+    
+    // 🚨 SMOKE MODE: Render minimal test component
+    if (SMOKE_MODE) {
+      console.log('🔥 [SMOKE MODE] Rendering minimal test component');
+      reactRoot.render(
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0a0a0a',
+          color: '#00ff00',
+          fontFamily: 'monospace',
+          padding: '40px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ fontSize: '64px', margin: '20px 0' }}>✅ React Mounted</h1>
+          <p style={{ fontSize: '18px', marginBottom: '10px' }}>
+            SMOKE_MODE is ON. Basic rendering works.
+          </p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>
+            Time: {new Date().toLocaleTimeString()}
+          </p>
+          <p style={{ fontSize: '14px', opacity: 0.6, marginTop: '10px' }}>
+            Path: {window.location.pathname}
+          </p>
+          <div style={{ marginTop: '40px', display: 'flex', gap: '20px' }}>
+            <a href="/__debug" style={{ 
+              color: '#00ffff', 
+              textDecoration: 'underline',
+              fontSize: '16px'
+            }}>→ Debug Page</a>
+            <button onClick={() => {
+              window.location.href = '/?disable_smoke=1';
+            }} style={{
+              background: '#ff4444',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}>
+              Disable Smoke & Reload
+            </button>
+          </div>
+        </div>
+      );
+      (window as any).__react_mounted__ = true;
+      console.log('✅ [Boot] Smoke component rendered successfully');
+      console.timeEnd('boot');
+      return;
+    }
     
     // Render App directly (statically imported)
     console.log('🎨 [Boot] Rendering App...');
