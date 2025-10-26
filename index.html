@@ -50,21 +50,39 @@
   <body>
     <div id="root"></div>
     <script>
-      // Pre-boot SW/cache purge for dev/preview to avoid stale SW causing white screen
+      // Emergency pre-boot recovery and dev purge
       (function () {
-        const isDevHost = location.hostname === 'localhost' || location.hostname.endsWith('.lovableproject.com');
-        if (isDevHost) {
+        var params = new URLSearchParams(location.search);
+        var shouldRecover = params.get('recover') === '1' || localStorage.getItem('recoverOnce') === '1';
+        var isDevHost = location.hostname === 'localhost' || location.hostname.endsWith('.lovableproject.com');
+
+        function purgeAll() {
           try {
             if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (r) { r.unregister(); });
+              });
+              if (navigator.serviceWorker.controller) {
+                try { navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' }); } catch (_) {}
+              }
             }
             if ('caches' in window) {
-              caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+              caches.keys().then(function (keys) { keys.forEach(function (k) { caches.delete(k); }); });
             }
-            console.log('[Boot] Pre-boot purge done');
+            localStorage.removeItem('recoverOnce');
+            console.log('[Boot] Purge done');
           } catch (e) {
-            console.warn('[Boot] Pre-boot purge failed', e);
+            console.warn('[Boot] Purge failed', e);
           }
+        }
+
+        if (shouldRecover || isDevHost) {
+          purgeAll();
+        }
+
+        if (shouldRecover) {
+          var url = location.origin + location.pathname + location.hash;
+          location.replace(url);
         }
       })();
     </script>
