@@ -15,22 +15,38 @@ const MetricsViewContext = createContext<MetricsViewContextType | undefined>(und
 
 export function MetricsViewProvider({ children }: { children: ReactNode }) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem('metrics_view_mode');
-    return (saved as ViewMode) || 'unified';
+    try {
+      const saved = localStorage.getItem('metrics_view_mode');
+      return (saved as ViewMode) || 'unified';
+    } catch {
+      return 'unified';
+    }
   });
   
   const [deviceFilter, setDeviceFilter] = useState<DeviceFilter>(() => {
-    const saved = localStorage.getItem('metrics_device_filter');
-    return (saved as DeviceFilter) || 'all';
+    try {
+      const saved = localStorage.getItem('metrics_device_filter');
+      return (saved as DeviceFilter) || 'all';
+    } catch {
+      return 'all';
+    }
   });
 
   // Сохраняем в localStorage при изменении
   useEffect(() => {
-    localStorage.setItem('metrics_view_mode', viewMode);
+    try {
+      localStorage.setItem('metrics_view_mode', viewMode);
+    } catch (error) {
+      console.warn('[MetricsView] Failed to save view mode:', error);
+    }
   }, [viewMode]);
 
   useEffect(() => {
-    localStorage.setItem('metrics_device_filter', deviceFilter);
+    try {
+      localStorage.setItem('metrics_device_filter', deviceFilter);
+    } catch (error) {
+      console.warn('[MetricsView] Failed to save device filter:', error);
+    }
   }, [deviceFilter]);
 
   const toggleViewMode = () => {

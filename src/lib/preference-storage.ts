@@ -22,8 +22,12 @@ export class PreferenceStorage {
    * Clear ALL localStorage (use on logout)
    */
   static clearAll(): void {
-    console.log('[PreferenceStorage] Clearing all preferences');
-    localStorage.clear();
+    try {
+      console.log('[PreferenceStorage] Clearing all preferences');
+      localStorage.clear();
+    } catch (error) {
+      console.warn('[PreferenceStorage] Failed to clear:', error);
+    }
   }
 
   /**
@@ -55,14 +59,22 @@ export class PreferenceStorage {
    * Remove preference
    */
   static remove(key: string): void {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('[PreferenceStorage] Failed to remove:', key, error);
+    }
   }
 
   /**
    * Check if key exists
    */
   static has(key: string): boolean {
-    return localStorage.getItem(key) !== null;
+    try {
+      return localStorage.getItem(key) !== null;
+    } catch {
+      return false;
+    }
   }
 }
 
