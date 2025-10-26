@@ -3265,6 +3265,41 @@ export type Database = {
         }
         Relationships: []
       }
+      data_quality_trends: {
+        Row: {
+          avg_confidence: number | null
+          date: string | null
+          excellent_count: number | null
+          fair_count: number | null
+          good_count: number | null
+          metric_name: string | null
+          metrics_count: number | null
+          poor_count: number | null
+        }
+        Relationships: []
+      }
+      edge_function_performance: {
+        Row: {
+          date: string | null
+          errors: number | null
+          first_invocation: string | null
+          function_name: string | null
+          invocations: number | null
+          last_invocation: string | null
+        }
+        Relationships: []
+      }
+      job_processing_stats: {
+        Row: {
+          avg_duration_seconds: number | null
+          count: number | null
+          date: string | null
+          job_type: string | null
+          max_duration_seconds: number | null
+          status: string | null
+        }
+        Relationships: []
+      }
       trainer_client_summary: {
         Row: {
           active_goals_count: number | null
@@ -3287,6 +3322,15 @@ export type Database = {
           },
         ]
       }
+      webhook_processing_stats: {
+        Row: {
+          avg_processing_seconds: number | null
+          count: number | null
+          date: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       aggregate_daily_health_data: {
@@ -3307,6 +3351,12 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      enqueue_initial_confidence_calculations: {
+        Args: never
+        Returns: {
+          jobs_created: number
+        }[]
       }
       get_client_detailed_data: {
         Args: { p_client_id: string; p_days?: number }
@@ -3330,6 +3380,7 @@ export type Database = {
           unified_unit: string
         }[]
       }
+      get_monitoring_dashboard_data: { Args: never; Returns: Json }
       get_trainer_clients_summary: {
         Args: { p_trainer_id?: string }
         Returns: {
@@ -3378,6 +3429,12 @@ export type Database = {
         Returns: boolean
       }
       is_trainer: { Args: { _user_id: string }; Returns: boolean }
+      retry_failed_jobs: {
+        Args: { p_job_type?: string }
+        Returns: {
+          retried_count: number
+        }[]
+      }
       sync_all_whoop_users: { Args: never; Returns: undefined }
     }
     Enums: {
