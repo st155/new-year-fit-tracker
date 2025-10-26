@@ -61,6 +61,7 @@ const Index = () => {
   const [showOnlyRecent, setShowOnlyRecent] = useState(() => {
     return localStorage.getItem('show_only_recent') === 'true';
   });
+  const [showOnlyHighQuality, setShowOnlyHighQuality] = useState(false);
   const [widgetAges, setWidgetAges] = useState<Record<string, number>>({});
 
   // 🧹 ONE-TIME cleanup of legacy localStorage on mount (migration to React Query)
@@ -94,13 +95,24 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
     setWidgetAges({}); // Clear ages on refresh
   };
+  
+  // Create widgetsDataMap for easy lookup
+  const widgetsDataMap = useMemo(() => {
+    const map = new Map();
+    if (widgetsData) {
+      widgetsData.forEach(data => {
+        map.set(`${data.metricName}-${data.source}`, data);
+      });
+    }
+    return map;
+  }, [widgetsData]);
 
   // Filter and sort widgets
   const processedWidgets = useMemo(() => {
     const now = Date.now();
     
     // Sort by data freshness first (fresh data < 24h first), then by position
-    const sorted = [...widgets].sort((a, b) => {
+    let sorted = [...widgets].sort((a, b) => {
       const aAge = widgetAges[a.id] || 0;
       const bAge = widgetAges[b.id] || 0;
       
@@ -113,16 +125,26 @@ const Index = () => {
       return a.position - b.position;
     });
     
-    // Filter if needed
+    // Apply recency filter if enabled
     if (showOnlyRecent) {
-      return sorted.filter(widget => {
+      sorted = sorted.filter(widget => {
         const age = widgetAges[widget.id];
         return !age || age <= 72; // Show if no age data or <= 3 days
       });
     }
     
+    // Apply quality filter if enabled
+    if (showOnlyHighQuality) {
+      sorted = sorted.filter(widget => {
+        const data = widgetsDataMap.get(`${widget.metric_name}-${widget.source}`);
+        if (!data) return false;
+        // Show only if confidence >= 60% or if no confidence data (assume good)
+        return !data.confidence || data.confidence >= 60;
+      });
+    }
+    
     return sorted;
-  }, [widgets, widgetAges, showOnlyRecent]);
+  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, widgetsDataMap]);
 
   const hiddenCount = widgets.length - processedWidgets.length;
 
@@ -162,15 +184,25 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
-              <Switch
-                checked={showOnlyRecent}
-                onCheckedChange={(checked) => {
-                  setShowOnlyRecent(checked);
-                  localStorage.setItem('show_only_recent', String(checked));
-                }}
-              />
-              <span className="text-sm text-muted-foreground">Только актуальные</span>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
+                <Switch
+                  checked={showOnlyRecent}
+                  onCheckedChange={(checked) => {
+                    setShowOnlyRecent(checked);
+                    localStorage.setItem('show_only_recent', String(checked));
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">Только актуальные</span>
+              </div>
+              
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
+                <Switch
+                  checked={showOnlyHighQuality}
+                  onCheckedChange={setShowOnlyHighQuality}
+                />
+                <span className="text-sm text-muted-foreground">Качественные (≥60%)</span>
+              </div>
             </div>
             <Button
               variant="outline"

@@ -4,15 +4,19 @@ import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MetricData } from "@/hooks/useAggregatedBodyMetrics";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { DataQualityBadge } from "@/components/data-quality";
+import type { MetricWithConfidence } from "@/lib/data-quality";
 
 interface BodyMetricCardProps {
   title: string;
   icon?: React.ReactNode;
   data?: MetricData;
   onClick?: () => void;
+  qualityData?: MetricWithConfidence | null;
+  userId?: string;
 }
 
-export function BodyMetricCard({ title, icon, data, onClick }: BodyMetricCardProps) {
+export function BodyMetricCard({ title, icon, data, onClick, qualityData, userId }: BodyMetricCardProps) {
   if (!data) {
     return (
       <Card className={cn("relative overflow-hidden", onClick && "cursor-pointer hover:shadow-lg transition-shadow")}>
@@ -93,7 +97,17 @@ export function BodyMetricCard({ title, icon, data, onClick }: BodyMetricCardPro
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon && <div className="text-muted-foreground">{icon}</div>}
+        <div className="flex items-center gap-2">
+          {qualityData && qualityData.confidence < 80 && (
+            <DataQualityBadge
+              confidence={qualityData.confidence}
+              factors={qualityData.factors}
+              metricName={title}
+              userId={userId}
+            />
+          )}
+          {icon && <div className="text-muted-foreground">{icon}</div>}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-baseline gap-2">

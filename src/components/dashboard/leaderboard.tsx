@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Trophy, Medal, Award, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,25 +30,26 @@ export function Leaderboard() {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div 
-        className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
-        onClick={() => navigate('/leaderboard')}
-      >
-        <div className="flex items-center gap-2">
-          <Award className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            {t('leaderboard.team')} {t('leaderboard.title')}
-          </h3>
+    <TooltipProvider>
+      <div className="space-y-4 animate-fade-in">
+        <div 
+          className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
+          onClick={() => navigate('/leaderboard')}
+        >
+          <div className="flex items-center gap-2">
+            <Award className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+              {t('leaderboard.team')} {t('leaderboard.title')}
+            </h3>
+          </div>
+          <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+            {t('navigation.selectPage')} →
+          </span>
         </div>
-        <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-          {t('navigation.selectPage')} →
-        </span>
-      </div>
 
-      <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm hover:border-accent/30 transition-all duration-500">
-        <CardContent className="p-4">
-          <div className="space-y-2 stagger-fade-in">
+        <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm hover:border-accent/30 transition-all duration-500">
+          <CardContent className="p-4">
+            <div className="space-y-2 stagger-fade-in">
             {leaderboard.slice(0, 5).map((item, index) => (
               <div 
                 key={item.userId}
@@ -85,13 +87,25 @@ export function Leaderboard() {
                   </Avatar>
 
                   <div className="flex flex-col">
-                    <span className={cn(
-                      "text-sm font-semibold transition-colors",
-                      item.isUser ? "text-primary" : "text-foreground"
-                    )}>
-                      {item.username}
-                      {item.isUser && <span className="ml-1.5 text-xs text-primary/70">(You)</span>}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        "text-sm font-semibold transition-colors",
+                        item.isUser ? "text-primary" : "text-foreground"
+                      )}>
+                        {item.username}
+                        {item.isUser && <span className="ml-1.5 text-xs text-primary/70">(You)</span>}
+                      </span>
+                      {item.activeDays >= 3 && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Active tracker - reliable data</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {item.activeDays} {t('leaderboard.activeDays')} • {item.streakDays > 0 ? `🔥${item.streakDays}` : ''}
                     </span>
@@ -126,13 +140,14 @@ export function Leaderboard() {
         </CardContent>
       </Card>
 
-      {/* User Stats Dialog */}
-      <UserHealthDetailDialog
-        userId={selectedUserId}
-        userName={selectedUserName}
-        open={!!selectedUserId}
-        onClose={() => setSelectedUserId(null)}
-      />
-    </div>
+        {/* User Stats Dialog */}
+        <UserHealthDetailDialog
+          userId={selectedUserId}
+          userName={selectedUserName}
+          open={!!selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      </div>
+    </TooltipProvider>
   );
 }

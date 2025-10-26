@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Scale, Activity, Zap, Flame, Droplet, FileText, Dumbbell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAggregatedBodyMetrics } from "@/hooks/useAggregatedBodyMetrics";
+import { useDataQuality } from "@/hooks/useDataQuality";
 import { BodyMetricCard } from "./BodyMetricCard";
 import { SegmentalAnalysis } from "./SegmentalAnalysis";
 
@@ -13,6 +14,7 @@ interface CurrentMetricsProps {
 export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
   const { user } = useAuth();
   const metrics = useAggregatedBodyMetrics(user?.id);
+  const { getMetricWithQuality } = useDataQuality();
 
   if (isLoading) {
     return (
@@ -48,21 +50,29 @@ export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
           title="Weight"
           icon={<Scale className="h-4 w-4" />}
           data={metrics.weight}
+          qualityData={getMetricWithQuality('Weight')}
+          userId={user?.id}
         />
         <BodyMetricCard
           title="Body Fat %"
           icon={<Activity className="h-4 w-4" />}
           data={metrics.bodyFat}
+          qualityData={getMetricWithQuality('Body Fat %')}
+          userId={user?.id}
         />
         <BodyMetricCard
           title="Muscle Mass"
           icon={<Zap className="h-4 w-4" />}
           data={metrics.muscleMass}
+          qualityData={getMetricWithQuality('Skeletal Muscle Mass')}
+          userId={user?.id}
         />
         <BodyMetricCard
           title="BMR"
           icon={<Flame className="h-4 w-4" />}
           data={metrics.bmr}
+          qualityData={getMetricWithQuality('BMR')}
+          userId={user?.id}
         />
       </div>
 

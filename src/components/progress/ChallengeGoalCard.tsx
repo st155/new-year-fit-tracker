@@ -8,6 +8,9 @@ import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { cn, formatTimeDisplay, isTimeUnit } from "@/lib/utils";
+import { useAuth } from '@/hooks/useAuth';
+import { useDataQuality } from '@/hooks/useDataQuality';
+import { DataQualityBadge } from '@/components/data-quality';
 
 interface ChallengeGoalCardProps {
   goal: ChallengeGoal;
@@ -37,11 +40,25 @@ const getGoalIcon = (goalName: string, goalType: string) => {
   if (nameLower.includes('жим') || nameLower.includes('bench')) return Dumbbell;
   if (nameLower.includes('вес') || nameLower.includes('weight')) return Scale;
   if (nameLower.includes('жир') || nameLower.includes('fat')) return Flame;
-  if (nameLower.includes('vo2') || nameLower.includes('во2')) return Zap;
+  if (nameLower.includes('во2') || nameLower.includes('vo2')) return Zap;
   if (nameLower.includes('бег') || nameLower.includes('run')) return Activity;
   if (nameLower.includes('планк') || nameLower.includes('plank')) return Activity;
   
   return goalTypeIcons[goalType] || Target;
+};
+
+// Helper: Map goal name to metric name for quality tracking
+const getMetricNameFromGoal = (goalName: string): string | null => {
+  const name = goalName.toLowerCase();
+  if (name.includes('вес') || name.includes('weight')) return 'Weight';
+  if (name.includes('жир') || name.includes('fat') || name.includes('body fat')) return 'Body Fat %';
+  if (name.includes('мышц') || name.includes('muscle')) return 'Skeletal Muscle Mass';
+  if (name.includes('vo2') || name.includes('во2')) return 'VO2 Max';
+  if (name.includes('bmr') || name.includes('калор')) return 'BMR';
+  if (name.includes('шаг') || name.includes('step')) return 'Steps';
+  if (name.includes('сон') || name.includes('sleep')) return 'Sleep Duration';
+  if (name.includes('пульс') || name.includes('heart')) return 'Heart Rate';
+  return null;
 };
 
 const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
@@ -57,8 +74,14 @@ const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
 };
 
 export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCardProps) {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  
+  // Get data quality for this goal's metric
+  const { getMetricWithQuality } = useDataQuality();
+  const metricName = getMetricNameFromGoal(goal.goal_name);
+  const metricWithQuality = metricName ? getMetricWithQuality(metricName) : null;
   
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
@@ -106,19 +129,29 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
         <div className={`h-1 bg-gradient-to-r ${theme.gradient}`} />
         
         <CardContent className="p-5 relative">
-          {/* Trend Indicator - Top Right Corner */}
-          {goal.trend !== 'stable' && (
-            <div 
-              className="absolute top-4 right-4 flex items-center gap-1"
-              style={{ color: getTrendColor() }}
-            >
-              {goal.trend === 'up' ? (
-                <TrendingUp className="h-4 w-4" />
-              ) : (
-                <TrendingDown className="h-4 w-4" />
-              )}
-            </div>
-          )}
+          {/* Trend Indicator and Quality Badge - Top Right Corner */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            {metricWithQuality && metricWithQuality.confidence < 80 && (
+              <DataQualityBadge
+                confidence={metricWithQuality.confidence}
+                factors={metricWithQuality.factors}
+                metricName={metricName!}
+                userId={user?.id}
+              />
+            )}
+            {goal.trend !== 'stable' && (
+              <div 
+                className="flex items-center gap-1"
+                style={{ color: getTrendColor() }}
+              >
+                {goal.trend === 'up' ? (
+                  <TrendingUp className="h-4 w-4" />
+                ) : (
+                  <TrendingDown className="h-4 w-4" />
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Icon - Centered */}
           <div className="flex justify-center mb-2">
