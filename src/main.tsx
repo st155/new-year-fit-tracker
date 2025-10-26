@@ -51,26 +51,31 @@ window.addEventListener('unhandledrejection', (e) => {
   }
 });
 
-// Pre-check: verify module availability
-async function preCheckModule() {
-  try {
-    const response = await fetch('/src/App.tsx', { cache: 'no-cache' });
-    if (!response.ok) {
-      const msg = `/src/App.tsx returned status ${response.status}`;
-      console.error('⚠️ [Boot]', msg);
-      return false;
+// CSP violation logging
+document.addEventListener('securitypolicyviolation', (e) => {
+  console.error('🚫 [Global] CSP violation:', {
+    blockedURI: (e as any).blockedURI,
+    directive: (e as any).effectiveDirective,
+  });
+});
+
+// Pre-check: verify module availability (non-blocking with timeout)
+function preCheckModuleSafe(timeoutMs = 1500) {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('precheck timeout')), timeoutMs)
+  );
+  return Promise.race([
+    fetch('/src/App.tsx', { cache: 'no-cache' }),
+    timeout,
+  ])
+  .then((res) => {
+    if (res instanceof Response) {
+      if (!res.ok) throw new Error(`/src/App.tsx status ${res.status}`);
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('text/html')) throw new Error('returned HTML');
     }
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) {
-      const msg = '/src/App.tsx returned HTML instead of module';
-      console.error('⚠️ [Boot]', msg);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('⚠️ [Boot] Pre-check failed:', err);
-    return true; // Don't block boot on pre-check failure
-  }
+  })
+  .catch((e) => console.warn('⚠️ [Boot] precheck warning:', e));
 }
 
 // Smart recovery: clear caches and unregister SW
@@ -167,12 +172,16 @@ async function boot() {
   console.log('🚀 [Boot] Starting application...');
   
   try {
-    // Pre-check (non-blocking)
-    await preCheckModule();
+    // Pre-check (non-blocking, doesn't block boot)
+    preCheckModuleSafe();
     
-    // Try to import App
+    // Try to import App with timeout
     console.log('📦 [Boot] Importing App module...');
-    const { default: App } = await import('./App.tsx');
+    const importApp = Promise.race([
+      import('./App.tsx'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Import timeout')), 4000)),
+    ]) as Promise<{ default: React.ComponentType }>;
+    const { default: App } = await importApp;
     
     console.log('🎨 [Boot] Rendering App...');
     createRoot(root).render(
@@ -189,9 +198,9 @@ async function boot() {
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error('💥 [Boot] First import failed:', err);
     
-    // If this is a module fetch error, do recovery and reload
-    if (errorMessage.includes('Failed to fetch dynamically imported module')) {
-      console.log('🔄 [Boot] Module fetch error detected, performing recovery...');
+    // If this is a module fetch error or timeout, do recovery and reload
+    if (errorMessage.includes('Import timeout') || errorMessage.includes('Failed to fetch dynamically imported module')) {
+      console.log('🔄 [Boot] Import issue detected, performing recovery...');
       await performRecovery();
       location.reload();
       return;
