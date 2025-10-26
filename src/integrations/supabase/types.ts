@@ -452,6 +452,53 @@ export type Database = {
         }
         Relationships: []
       }
+      background_jobs_dlq: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          error: string | null
+          failed_at: string | null
+          id: string
+          original_job_id: string | null
+          payload: Json
+          retried: boolean | null
+          retry_scheduled_at: string | null
+          type: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          error?: string | null
+          failed_at?: string | null
+          id?: string
+          original_job_id?: string | null
+          payload: Json
+          retried?: boolean | null
+          retry_scheduled_at?: string | null
+          type: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          error?: string | null
+          failed_at?: string | null
+          id?: string
+          original_job_id?: string | null
+          payload?: Json
+          retried?: boolean | null
+          retry_scheduled_at?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "background_jobs_dlq_original_job_id_fkey"
+            columns: ["original_job_id"]
+            isOneToOne: false
+            referencedRelation: "background_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_composition: {
         Row: {
           body_fat_percentage: number | null
@@ -2285,6 +2332,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          key: string
+          window_start: string | null
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          key: string
+          window_start?: string | null
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          key?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action_type: string
@@ -3300,6 +3368,19 @@ export type Database = {
         }
         Relationships: []
       }
+      latest_unified_metrics: {
+        Row: {
+          created_at: string | null
+          measurement_date: string | null
+          metric_name: string | null
+          priority: number | null
+          source: string | null
+          unit: string | null
+          user_id: string | null
+          value: number | null
+        }
+        Relationships: []
+      }
       trainer_client_summary: {
         Row: {
           active_goals_count: number | null
@@ -3337,10 +3418,19 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      check_rate_limit: {
+        Args: {
+          p_key: string
+          p_max_requests: number
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       cleanup_background_jobs: { Args: never; Returns: undefined }
       cleanup_edge_function_logs: { Args: never; Returns: undefined }
       cleanup_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       cleanup_terra_webhooks: { Args: never; Returns: undefined }
       create_or_get_metric: {
         Args: {
