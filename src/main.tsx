@@ -10,34 +10,6 @@ if (!root) {
   throw new Error("Root element not found");
 }
 
-// Pre-boot: Clear SW and caches on dev domains (before any imports)
-const isDevHost = location.hostname.endsWith('.lovableproject.com') || location.hostname === 'localhost';
-(async () => {
-  const autoRecoveryDisabled = sessionStorage.getItem('__auto_recovery_disabled');
-  if (isDevHost && !autoRecoveryDisabled && 'serviceWorker' in navigator && navigator.serviceWorker.controller && !sessionStorage.getItem('__sw_cleared_once')) {
-    console.log('🧹 [Boot] Clearing SW on dev domain...');
-    sessionStorage.setItem('__sw_cleared_once', '1');
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister()));
-      console.log('✅ [Boot] SW unregistered');
-    } catch (err) {
-      console.warn('⚠️ [Boot] Failed to unregister SW:', err);
-    }
-    if ('caches' in window) {
-      try {
-        const names = await caches.keys();
-        await Promise.all(names.map(n => caches.delete(n)));
-        console.log('✅ [Boot] Caches cleared');
-      } catch (err) {
-        console.warn('⚠️ [Boot] Failed to clear caches:', err);
-      }
-    }
-    location.reload();
-    await new Promise(() => {}); // stop further execution
-  }
-})();
-
 // Global error logging
 window.addEventListener('error', (e) => {
   console.error('💥 [Global] Uncaught error:', (e as ErrorEvent).error);
@@ -687,24 +659,3 @@ window.addEventListener('load', () => {
 
 // Start boot process
 boot();
-
-// Watchdog: Backup check (shell should mount immediately now)
-setTimeout(() => {
-  if (!(window as any).__react_mounted__) {
-    console.error('💥 [Boot] Shell failed to mount in 3 seconds (critical)');
-    const diagnosis = [
-      'Critical: Even shell failed to mount.',
-      'Possible causes:',
-      '- React libraries blocked by CSP',
-      '- Severe JavaScript errors',
-      '- Browser compatibility issues',
-      'Check console for specific errors above.'
-    ].join('\n');
-    
-    const fallbackRoot = document.getElementById('root');
-    if (fallbackRoot) {
-      createRoot(fallbackRoot).render(<BootError message={diagnosis} />);
-      (window as any).__react_mounted__ = true;
-    }
-  }
-}, 3000);
