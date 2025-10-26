@@ -7,6 +7,18 @@ import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
 
 type Status = 'processing' | 'success' | 'error';
 
+const PROVIDER_NAMES: Record<string, string> = {
+  WHOOP: 'Whoop',
+  GARMIN: 'Garmin',
+  FITBIT: 'Fitbit',
+  OURA: 'Oura Ring',
+  WITHINGS: 'Withings',
+  POLAR: 'Polar',
+  SUUNTO: 'Suunto',
+  PELOTON: 'Peloton',
+  ULTRAHUMAN: 'Ultrahuman',
+};
+
 export default function TerraCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -107,7 +119,7 @@ export default function TerraCallback() {
           
           if (uid) {
             setStatus('processing');
-            setMessage('Подтверждаем подключение...');
+            setMessage(`Сохраняем подключение ${PROVIDER_NAMES[providerParam] || providerParam}...`);
 
             const { data: existing } = await supabase
               .from('terra_tokens')
@@ -132,7 +144,8 @@ export default function TerraCallback() {
               });
             }
             
-            console.log('Terra token created/updated successfully');
+            console.log('Terra token created/updated successfully', { provider: providerParam });
+            setMessage(`${PROVIDER_NAMES[providerParam] || providerParam} подключён! Ожидаем данные от Terra...`);
           }
         } catch (e) {
           console.error('Error creating terra token:', e);

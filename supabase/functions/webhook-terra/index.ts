@@ -189,47 +189,87 @@ Deno.serve(
       });
 
       const { reference_id, user: terraUser } = payload;
-      if (!terraUser || !reference_id) {
+      if (!terraUser) {
         throw new EdgeFunctionError(
           ErrorCode.VALIDATION_ERROR,
-          'Missing user or reference_id in auth webhook',
+          'Missing user in auth webhook',
           400
         );
       }
 
       const provider = terraUser.provider?.toUpperCase();
+      const terraUserId = terraUser.user_id;
 
-      // Check if token already exists
+      // Найти пользователя по reference_id (если есть) ИЛИ по terra_user_id=null + provider
+      let appUserId = reference_id;
+      
+      if (!appUserId) {
+        // Ищем токен без terra_user_id (создан из TerraCallback)
+        const { data: pendingToken } = await supabase
+          .from('terra_tokens')
+          .select('user_id')
+          .eq('provider', provider)
+          .is('terra_user_id', null)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        appUserId = pendingToken?.user_id;
+        logger.info('Found pending token for provider', { provider, appUserId });
+      }
+
+      if (!appUserId) {
+        logger.warn('No user found for auth webhook', { terraUserId, provider });
+        // Всё равно создаём terra_users запись для будущей связки
+        await supabase.from('terra_users').upsert({
+          user_id: terraUserId,
+          provider: provider,
+          reference_id: null,
+          granted_scopes: terraUser.scopes || null,
+          state: terraUser.active ? 'active' : 'inactive',
+          created_at: terraUser.created_at || new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+        
+        return new Response(JSON.stringify({ success: true, type: 'auth', note: 'User not linked yet' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Обновляем/создаём токен с правильным terra_user_id
       const { data: existing } = await supabase
         .from('terra_tokens')
         .select('id')
-        .eq('user_id', reference_id)
+        .eq('user_id', appUserId)
         .eq('provider', provider)
         .maybeSingle();
 
       const tokenData = {
-        user_id: reference_id,
-        terra_user_id: terraUser.user_id,
+        user_id: appUserId,
+        terra_user_id: terraUserId,
         provider,
         is_active: true,
         last_sync_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
       };
 
       if (existing?.id) {
         await supabase.from('terra_tokens').update(tokenData).eq('id', existing.id);
-        logger.info('Updated terra_tokens');
+        logger.info('Updated terra_tokens with terra_user_id', { appUserId, terraUserId });
       } else {
-        await supabase.from('terra_tokens').insert(tokenData);
-        logger.info('Inserted new terra_tokens');
+        await supabase.from('terra_tokens').insert({
+          ...tokenData,
+          created_at: new Date().toISOString(),
+        });
+        logger.info('Inserted new terra_tokens', { appUserId, terraUserId });
       }
 
       // Create/update terra_users record
       const terraUserData = {
-        user_id: terraUser.user_id,
+        user_id: terraUserId,
         provider: provider,
-        reference_id: reference_id,
+        reference_id: appUserId,
         granted_scopes: terraUser.scopes || null,
         state: terraUser.active ? 'active' : 'inactive',
         created_at: terraUser.created_at || new Date().toISOString(),
@@ -247,7 +287,7 @@ Deno.serve(
         await supabase.functions.invoke('terra-integration', {
           body: {
             action: 'sync-data',
-            userId: reference_id,
+            userId: appUserId,
             provider: provider
           }
         });

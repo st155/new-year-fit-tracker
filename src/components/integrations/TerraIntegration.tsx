@@ -364,7 +364,7 @@ export function TerraIntegration() {
 
   const getConnectionStatus = (provider: TerraProvider) => {
     if (!provider.terraUserId) {
-      return { variant: 'secondary' as const, text: 'Ожидание данных...' };
+      return { variant: 'secondary' as const, text: 'Ожидание данных от Terra...' };
     }
     
     if (!provider.lastSync) {

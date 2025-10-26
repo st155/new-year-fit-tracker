@@ -2567,10 +2567,10 @@ export type Database = {
           payload: Json
           processed_at: string | null
           processed_count: number | null
-          provider: string
+          provider: string | null
           status: string
           type: string
-          user_id: string
+          user_id: string | null
           webhook_id: string | null
         }
         Insert: {
@@ -2579,10 +2579,10 @@ export type Database = {
           payload: Json
           processed_at?: string | null
           processed_count?: number | null
-          provider: string
+          provider?: string | null
           status?: string
           type: string
-          user_id: string
+          user_id?: string | null
           webhook_id?: string | null
         }
         Update: {
@@ -2591,10 +2591,10 @@ export type Database = {
           payload?: Json
           processed_at?: string | null
           processed_count?: number | null
-          provider?: string
+          provider?: string | null
           status?: string
           type?: string
-          user_id?: string
+          user_id?: string | null
           webhook_id?: string | null
         }
         Relationships: []
