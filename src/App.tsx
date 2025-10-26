@@ -24,20 +24,11 @@ import { TrainerOnlyRoute } from "@/components/TrainerOnlyRoute";
 // Debug page - direct import (no lazy loading)
 import DebugPage from "./pages/DebugPage";
 
-// Eager imports for critical pages on dev/preview hosts
-import IndexEager from "./pages/Index";
-import LandingEager from "./pages/Landing";
-import NotFoundEager from "./pages/NotFound";
-
-// Detect dev/preview environment
-const isDevHost = typeof window !== 'undefined' && 
-  (location.hostname.endsWith('.lovableproject.com') || location.hostname === 'localhost');
-
-// Critical pages - use eager loading on dev hosts, lazy on production
-const Landing = isDevHost ? LandingEager : lazy(() => import("./pages/Landing"));
+// Critical pages - load on demand
+const Landing = lazy(() => import("./pages/Landing"));
 
 // Primary pages
-const Index = isDevHost ? IndexEager : lazy(() => import("./pages/Index"));
+const Index = lazy(() => import("./pages/Index"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Goals = lazy(() => import("./pages/Goals"));
 const GoalDetail = lazy(() => import("./pages/GoalDetail"));
@@ -63,7 +54,7 @@ const TerraCallback = lazy(() => import("./pages/TerraCallback"));
 // Static pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Health = lazy(() => import("./pages/Health"));
-const NotFound = isDevHost ? NotFoundEager : lazy(() => import("./pages/NotFound"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -248,13 +239,16 @@ const AppRoutes = () => {
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
-  // Initialize invalidation, prefetch strategies, and web vitals
+  // Initialize invalidation, prefetch strategies, and web vitals (deferred to not block render)
   useEffect(() => {
-    initInvalidator(queryClient);
-    initPrefetcher(queryClient);
-    initWebVitals();
-    setupVersionCheck(); // Auto-detect new app versions
-    logger.info('[App] Query strategies, web vitals, and version check initialized');
+    const timer = setTimeout(() => {
+      initInvalidator(queryClient);
+      initPrefetcher(queryClient);
+      initWebVitals();
+      setupVersionCheck(); // Auto-detect new app versions
+      logger.info('[App] Query strategies, web vitals, and version check initialized');
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Service worker registration - DISABLED temporarily to fix black screen

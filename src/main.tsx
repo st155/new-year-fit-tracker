@@ -208,3 +208,21 @@ async function boot() {
 
 // Start boot process
 boot();
+
+// Watchdog: If React doesn't mount in 5 seconds, show error UI
+setTimeout(() => {
+  if (!(window as any).__react_mounted__) {
+    console.error('💥 [Boot] React failed to mount in 5 seconds');
+    const diagnosis = [
+      'React did not mount within timeout.',
+      'Possible causes:',
+      '- Network issues loading modules',
+      '- CSP blocking resources',
+      '- Service Worker conflicts',
+      'Check console for specific errors above.'
+    ].join('\n');
+    
+    createRoot(root).render(<BootError message={diagnosis} />);
+    (window as any).__react_mounted__ = true;
+  }
+}, 5000);
