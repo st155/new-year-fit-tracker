@@ -350,16 +350,20 @@ serve(async (req) => {
             }
           }
           
-          // Update last_sync_date только если были успешно сохранены данные
+          // Update last_sync_date ALWAYS after sync (even if no new data)
           const totalSaved = Object.values(totalStats.insertedCounts).reduce((a, b) => a + b, 0);
-          if (totalSaved > 0 || totalStats.hadAnyData) {
-            await supabase
-              .from('terra_tokens')
-              .update({ last_sync_date: new Date().toISOString() })
-              .eq('id', token.id);
-            console.log(`✅ Updated last_sync_date for ${token.provider}, saved ${totalSaved} records`);
-          } else {
-            console.log(`⚠️ No records saved for ${token.provider}, not updating last_sync_date`);
+          await supabase
+            .from('terra_tokens')
+            .update({ 
+              last_sync_date: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', token.id);
+          
+          console.log(`✅ Updated last_sync_date for ${token.provider}, saved ${totalSaved} records`);
+          
+          if (totalSaved === 0 && !totalStats.hadAnyData) {
+            console.log(`ℹ️ No new data from ${token.provider}, but sync timestamp updated`);
           }
           
           if (totalStats.errors.length > 0) {

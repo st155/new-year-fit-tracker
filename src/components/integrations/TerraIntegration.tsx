@@ -375,17 +375,27 @@ export function TerraIntegration() {
     }
     
     if (!provider.lastSync) {
-      return { variant: 'secondary' as const, text: 'Ожидание первой синхронизации' };
+      return { variant: 'secondary' as const, text: 'Подключено, ожидание данных' };
     }
     
-    const hoursSinceSync = (Date.now() - new Date(provider.lastSync).getTime()) / 3600000;
+    const minutesSinceSync = (Date.now() - new Date(provider.lastSync).getTime()) / 60000;
     
-    if (hoursSinceSync < 24) {
+    // Свежие данные (< 5 минут)
+    if (minutesSinceSync < 5) {
+      return { variant: 'success' as const, text: 'Только что синхронизировано' };
+    }
+    
+    // Последние 24 часа
+    if (minutesSinceSync < 1440) {
       return { variant: 'success' as const, text: 'Синхронизировано' };
     }
-    if (hoursSinceSync < 72) {
+    
+    // 1-3 дня
+    if (minutesSinceSync < 4320) {
       return { variant: 'outline' as const, text: 'Требует синхронизации' };
     }
+    
+    // > 3 дней
     return { variant: 'destructive' as const, text: 'Устарело' };
   };
 
