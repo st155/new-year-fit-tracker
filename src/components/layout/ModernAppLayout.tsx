@@ -9,7 +9,7 @@ interface ModernAppLayoutProps {
 }
 
 // 🔥 LAYOUT_SAFE_MODE: Bypass all providers/navigation for diagnosis
-const LAYOUT_SAFE_MODE = true;
+const LAYOUT_SAFE_MODE = false;
 
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
   console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');

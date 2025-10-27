@@ -11,11 +11,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'monospace',fontSize:'16px',background:'#000',color:'#0f0'}}>
-        <div>🔄 Auth loading... (ProtectedRoute)</div>
-      </div>
-    );
+    return <AuthLoadingSkeleton />;
   }
 
   if (!user) {
