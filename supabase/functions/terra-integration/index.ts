@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { writeToUnifiedMetrics } from '../_shared/unified-metrics-writer.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -596,6 +597,16 @@ async function processTerraData(supabase: any, payload: any) {
                     if (metricError) {
                       console.error('❌ Error upserting avg HR metric:', metricError);
                       stats.errors.push(`Avg HR metric upsert: ${metricError.message}`);
+                    } else {
+                      // Write to unified metrics
+                      await writeToUnifiedMetrics(supabase, {
+                        userId,
+                        metricName: 'Average Heart Rate',
+                        source: provider,
+                        value: avgHr,
+                        unit: 'bpm',
+                        measurementDate,
+                      });
                     }
                   }
                 }
@@ -611,7 +622,7 @@ async function processTerraData(supabase: any, payload: any) {
                     p_source: source,
                   });
                   if (maxHrMetricId) {
-                    await supabase.from('metric_values').upsert({
+                    const { error: maxHrError } = await supabase.from('metric_values').upsert({
                       user_id: userId,
                       metric_id: maxHrMetricId,
                       value: maxHr,
@@ -620,6 +631,18 @@ async function processTerraData(supabase: any, payload: any) {
                     }, {
                       onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
+                    
+                    if (!maxHrError) {
+                      // Write to unified metrics
+                      await writeToUnifiedMetrics(supabase, {
+                        userId,
+                        metricName: 'Max Heart Rate',
+                        source: provider,
+                        value: maxHr,
+                        unit: 'bpm',
+                        measurementDate,
+                      });
+                    }
                   }
                 }
 
@@ -928,6 +951,16 @@ async function processTerraData(supabase: any, payload: any) {
                 if (stats.sampleRecords.length < 3) {
                   stats.sampleRecords.push({ type: 'daily_recovery', date: dateStr, value: recovery });
                 }
+                
+                // Write to unified metrics
+                await writeToUnifiedMetrics(supabase, {
+                  userId,
+                  metricName: 'Recovery Score',
+                  source: provider,
+                  value: recovery,
+                  unit: '%',
+                  measurementDate: dateStr,
+                });
               } else {
                 stats.errors.push(`Recovery metric: ${recError.message}`);
               }
@@ -982,7 +1015,7 @@ async function processTerraData(supabase: any, payload: any) {
                 p_source: source,
               });
               if (strainMetricId) {
-                await supabase.from('metric_values').upsert({
+                const { error: strainError } = await supabase.from('metric_values').upsert({
                   user_id: userId,
                   metric_id: strainMetricId,
                   value: dayStrain,
@@ -992,8 +1025,21 @@ async function processTerraData(supabase: any, payload: any) {
                 }, {
                   onConflict: 'user_id,metric_id,measurement_date,external_id',
                 });
-                stats.insertedCounts.daily++;
-                metricsInserted++;
+                
+                if (!strainError) {
+                  stats.insertedCounts.daily++;
+                  metricsInserted++;
+                  
+                  // Write to unified metrics
+                  await writeToUnifiedMetrics(supabase, {
+                    userId,
+                    metricName: 'Day Strain',
+                    source: provider,
+                    value: dayStrain,
+                    unit: '',
+                    measurementDate: dateStr,
+                  });
+                }
               }
             }
           }
