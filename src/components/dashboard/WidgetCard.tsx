@@ -112,7 +112,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
   
   const metricName = widget.metric_name;
-  const source = widget.source;
+  // Prefer actual data source if provided by smart batch, fallback to widget's configured source
+  const source = data?.source || widget.source;
 
   // Check if user has active Terra token for Whoop (for Whoop widgets only)
   useEffect(() => {

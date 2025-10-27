@@ -8,7 +8,8 @@ import {
   widgetKeys,
   type Widget 
 } from '@/hooks/useWidgetsQuery';
-import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
+// import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
+import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -45,14 +46,14 @@ const Index = () => {
     widgetsLoading 
   });
   
-  // ✅ Batch fetch для всех метрик виджетов (1 SQL запрос вместо 8)
-  const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
+  // ✅ Smart auto-source batch for freshest values across all providers
+  const { data: smartData, ages, isLoading: metricsLoading } = useSmartWidgetsData(
     user?.id,
     widgets
   );
   
   console.log('📈 [Index] Metrics state:', { 
-    metricsDataSize: widgetsData?.size, 
+    metricsDataSize: smartData?.size, 
     metricsLoading 
   });
   
@@ -126,8 +127,8 @@ const Index = () => {
     
     // Sort by data freshness first (fresh data < 24h first), then by position
     let sorted = [...widgets].sort((a, b) => {
-      const aAge = widgetAges[a.id] || 0;
-      const bAge = widgetAges[b.id] || 0;
+      const aAge = ages.get(a.id) ?? 0; // hours
+      const bAge = ages.get(b.id) ?? 0;
       
       const aFresh = aAge < 24;
       const bFresh = bAge < 24;
@@ -141,23 +142,23 @@ const Index = () => {
     // Apply recency filter if enabled
     if (showOnlyRecent) {
       sorted = sorted.filter(widget => {
-        const age = widgetAges[widget.id];
-        return !age || age <= 72; // Show if no age data or <= 3 days
+        const age = ages.get(widget.id);
+        return age === undefined || age <= 72; // hours <= 72 (3 days)
       });
     }
     
     // Apply quality filter if enabled
     if (showOnlyHighQuality) {
       sorted = sorted.filter(widget => {
-        const data = widgetsData?.get(`${widget.metric_name}-${widget.source}`);
+        const data = smartData?.get(widget.id);
         if (!data) return false;
         // Show only if confidence >= 60% or if no confidence data (assume good)
-        return !data.confidence || data.confidence >= 60;
+        return data.confidence === undefined || data.confidence >= 60;
       });
     }
     
     return sorted;
-  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, widgetsData]);
+  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, smartData]);
 
   const hiddenCount = widgets.length - processedWidgets.length;
 
@@ -296,7 +297,7 @@ const Index = () => {
               <WidgetCard
                 key={widget.id}
                 widget={widget}
-                data={widgetsData?.get(`${widget.metric_name}-${widget.source}`)}
+                data={smartData?.get(widget.id)}
               />
             ))}
           </div>

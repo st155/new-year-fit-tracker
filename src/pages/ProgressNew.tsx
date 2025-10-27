@@ -6,7 +6,8 @@ import {
   useReorderWidgetsMutation,
   widgetKeys 
 } from '@/hooks/useWidgetsQuery';
-import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
+// import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
+import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { useQueryClient } from '@tanstack/react-query';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
@@ -20,8 +21,8 @@ export default function ProgressNew() {
   const { user } = useAuth();
   const { data: widgets = [], isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
   
-  // ✅ Batch fetch для всех метрик виджетов
-  const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
+  // ✅ Smart auto-source batch для всех метрик виджетов
+  const { data: smartData, isLoading: metricsLoading } = useSmartWidgetsData(
     user?.id,
     widgets
   );
@@ -122,7 +123,7 @@ export default function ProgressNew() {
               <WidgetErrorBoundary key={widget.id} widgetName={widget.metric_name}>
                 <WidgetCard
                   widget={widget}
-                  data={widgetsData?.get(`${widget.metric_name}-${widget.source}`)}
+                  data={smartData?.get(widget.id)}
                 />
               </WidgetErrorBoundary>
             ))}
