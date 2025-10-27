@@ -285,11 +285,11 @@ async function processTerraWebhookData(
       }
 
       // Day Strain
-      if (daily.scores?.strain !== undefined && daily.scores.strain !== null) {
+      if (daily.strain_data?.strain_level !== undefined && daily.strain_data.strain_level !== null) {
         metricsToInsert.push({
           metric_name: 'Day Strain',
           category: 'activity',
-          value: daily.scores.strain,
+          value: daily.strain_data.strain_level,
           measurement_date: date,
           source: provider,
           external_id: `terra_${provider}_strain_${date}`,
