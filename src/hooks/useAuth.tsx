@@ -243,7 +243,9 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   
-  // Get user role from user_roles table
+  const [forceLoaded, setForceLoaded] = useState(false);
+  
+  // Get user role from user_roles table with graceful fallback
   const { data: userRoles, isLoading: rolesLoading } = useQuery({
     queryKey: ['user-roles', context.user?.id],
     queryFn: async () => {
@@ -254,23 +256,44 @@ export const useAuth = () => {
         .select('role')
         .eq('user_id', context.user.id);
       
-      // On error, return empty array (default to client role)
+      // On error, return default client role
       if (error) {
         console.warn('⚠️ [useAuth] Failed to fetch roles:', error);
-        return [];
+        return [{ role: 'client' }];
       }
       
-      return data || [];
+      // If no roles found, return default client role
+      if (!data || data.length === 0) {
+        console.warn('⚠️ [useAuth] No roles found, using default');
+        return [{ role: 'client' }];
+      }
+      
+      return data;
     },
     enabled: !!context.user?.id,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 1,
+    retryDelay: 500,
   });
   
-  // Get highest priority role
-  const roles = userRoles?.map(r => r.role) || [];
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (context.user?.id && rolesLoading) {
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ [useAuth] Roles loading timeout, forcing default role');
+        setForceLoaded(true);
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [context.user?.id, rolesLoading]);
+  
+  // Use effective loading state with timeout
+  const effectiveRolesLoading = rolesLoading && !forceLoaded;
+  
+  // Get highest priority role with fallback
+  const roles = userRoles?.map(r => r.role) || ['client'];
   const role = roles.includes('admin') ? 'admin' : 
                roles.includes('trainer') ? 'trainer' : 
                'client';
@@ -281,7 +304,7 @@ export const useAuth = () => {
     // Role helpers
     role,
     roles,
-    rolesLoading,
+    rolesLoading: effectiveRolesLoading,
     isTrainer: roles.includes('trainer') || roles.includes('admin'),
     isAdmin: roles.includes('admin'),
     isClient: !roles.includes('trainer') && !roles.includes('admin'),
