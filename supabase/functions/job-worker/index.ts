@@ -370,11 +370,19 @@ async function batchInsertMetrics(
     external_id: m.external_id,
   })).filter(v => v.metric_id);
 
+  // Remove duplicates within batch (keep last)
+  const uniqueValues = new Map();
+  valuesToInsert.forEach(v => {
+    const key = `${v.user_id}_${v.metric_id}_${v.measurement_date}`;
+    uniqueValues.set(key, v);
+  });
+  const finalValues = Array.from(uniqueValues.values());
+
   // Batch upsert metric values
-  if (valuesToInsert.length > 0) {
+  if (finalValues.length > 0) {
     const { error: upsertError } = await supabase
       .from('metric_values')
-      .upsert(valuesToInsert, {
+      .upsert(finalValues, {
         onConflict: 'user_id,metric_id,measurement_date',
         ignoreDuplicates: false,
       });
@@ -382,14 +390,14 @@ async function batchInsertMetrics(
     if (upsertError) {
       console.error('Failed to insert metrics:', {
         error: upsertError,
-        count: valuesToInsert.length,
-        sample: valuesToInsert[0],
+        count: finalValues.length,
+        sample: finalValues[0],
       });
       throw upsertError;
     }
   }
 
-  return valuesToInsert.length;
+  return finalValues.length;
 }
 
 function getUnitForMetric(metricName: string): string {

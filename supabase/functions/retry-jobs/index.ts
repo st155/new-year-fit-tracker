@@ -11,7 +11,19 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
 
-  const { job_type = 'webhook_processing' } = await req.json();
+  let job_type = 'webhook_processing';
+  try {
+    const body = await req.text();
+    if (body) {
+      const parsed = JSON.parse(body);
+      if (parsed && typeof parsed.job_type === 'string') {
+        job_type = parsed.job_type;
+      }
+    }
+  } catch (e) {
+    // No body or invalid JSON, use default
+    console.log('Using default job_type:', job_type);
+  }
 
   // First, select failed jobs that can be retried
   const { data: failedJobs, error: selectError } = await supabase
@@ -53,7 +65,7 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Reset failed jobs to pending
+  // Reset failed jobs to pending (schedule immediately)
   const { data, error } = await supabase
     .from('background_jobs')
     .update({

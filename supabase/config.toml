@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.retry-jobs]
 verify_jwt = false
+
+[functions.reset-stuck-jobs]
+verify_jwt = false
