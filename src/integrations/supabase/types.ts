@@ -2866,6 +2866,72 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_metrics: {
+        Row: {
+          confidence_factors: Json | null
+          confidence_score: number | null
+          created_at: string | null
+          external_id: string | null
+          id: string
+          is_outlier: boolean | null
+          measurement_date: string
+          metric_category: string
+          metric_name: string
+          notes: string | null
+          photo_url: string | null
+          priority: number
+          provider: string | null
+          source: string
+          source_data: Json | null
+          unit: string
+          updated_at: string | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          is_outlier?: boolean | null
+          measurement_date: string
+          metric_category: string
+          metric_name: string
+          notes?: string | null
+          photo_url?: string | null
+          priority?: number
+          provider?: string | null
+          source: string
+          source_data?: Json | null
+          unit: string
+          updated_at?: string | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          is_outlier?: boolean | null
+          measurement_date?: string
+          metric_category?: string
+          metric_name?: string
+          notes?: string | null
+          photo_url?: string | null
+          priority?: number
+          provider?: string | null
+          source?: string
+          source_data?: Json | null
+          unit?: string
+          updated_at?: string | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
