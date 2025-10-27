@@ -160,7 +160,7 @@ async function processTerraWebhookData(
               category: 'workout',
               value: activity.calories_data.total_burned_calories,
               measurement_date: workoutDate,
-              source: 'terra',
+              source: provider,
               external_id: `${workoutId}_calories`,
               user_id,
             });
@@ -172,7 +172,7 @@ async function processTerraWebhookData(
               category: 'workout',
               value: activity.distance_data.distance_meters / 1000,
               measurement_date: workoutDate,
-              source: 'terra',
+              source: provider,
               external_id: `${workoutId}_distance`,
               user_id,
             });
@@ -186,7 +186,7 @@ async function processTerraWebhookData(
           category: 'activity',
           value: activity.distance_data.steps,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_steps_${date}`,
           user_id,
         });
@@ -204,7 +204,7 @@ async function processTerraWebhookData(
           category: 'body',
           value: body.body_mass_kg,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_weight_${date}`,
           user_id,
         });
@@ -216,7 +216,7 @@ async function processTerraWebhookData(
           category: 'body',
           value: body.body_fat_percentage,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_bodyfat_${date}`,
           user_id,
         });
@@ -235,7 +235,7 @@ async function processTerraWebhookData(
           category: 'sleep',
           value: sleepHours,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_sleep_${date}`,
           user_id,
         });
@@ -253,7 +253,7 @@ async function processTerraWebhookData(
           category: 'activity',
           value: daily.distance_data.steps,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_daily_steps_${date}`,
           user_id,
         });
@@ -265,8 +265,101 @@ async function processTerraWebhookData(
           category: 'activity',
           value: daily.calories_data.total_burned_calories,
           measurement_date: date,
-          source: 'terra',
+          source: provider,
           external_id: `terra_${provider}_daily_calories_${date}`,
+          user_id,
+        });
+      }
+
+      // Recovery Score
+      if (daily.scores?.recovery !== undefined && daily.scores.recovery !== null) {
+        metricsToInsert.push({
+          metric_name: 'Recovery Score',
+          category: 'recovery',
+          value: daily.scores.recovery,
+          measurement_date: date,
+          source: provider,
+          external_id: `terra_${provider}_recovery_${date}`,
+          user_id,
+        });
+      }
+
+      // Day Strain
+      if (daily.scores?.strain !== undefined && daily.scores.strain !== null) {
+        metricsToInsert.push({
+          metric_name: 'Day Strain',
+          category: 'activity',
+          value: daily.scores.strain,
+          measurement_date: date,
+          source: provider,
+          external_id: `terra_${provider}_strain_${date}`,
+          user_id,
+        });
+      }
+
+      // Heart Rate metrics
+      if (daily.heart_rate_data?.summary) {
+        const hrSummary = daily.heart_rate_data.summary;
+
+        if (hrSummary.max_hr_bpm !== undefined && hrSummary.max_hr_bpm !== null) {
+          metricsToInsert.push({
+            metric_name: 'Max Heart Rate',
+            category: 'heart_rate',
+            value: hrSummary.max_hr_bpm,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_max_hr_${date}`,
+            user_id,
+          });
+        }
+
+        if (hrSummary.resting_hr_bpm !== undefined && hrSummary.resting_hr_bpm !== null) {
+          metricsToInsert.push({
+            metric_name: 'Resting Heart Rate',
+            category: 'heart_rate',
+            value: hrSummary.resting_hr_bpm,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_resting_hr_${date}`,
+            user_id,
+          });
+        }
+
+        if (hrSummary.avg_hr_bpm !== undefined && hrSummary.avg_hr_bpm !== null) {
+          metricsToInsert.push({
+            metric_name: 'Average Heart Rate',
+            category: 'heart_rate',
+            value: hrSummary.avg_hr_bpm,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_avg_hr_${date}`,
+            user_id,
+          });
+        }
+      }
+
+      // HRV RMSSD
+      if (daily.heart_rate_data?.summary?.hrv_data?.rmssd !== undefined) {
+        metricsToInsert.push({
+          metric_name: 'HRV RMSSD',
+          category: 'heart_rate',
+          value: daily.heart_rate_data.summary.hrv_data.rmssd,
+          measurement_date: date,
+          source: provider,
+          external_id: `terra_${provider}_hrv_${date}`,
+          user_id,
+        });
+      }
+
+      // VO2Max
+      if (daily.vo2max_ml_per_min_per_kg !== undefined && daily.vo2max_ml_per_min_per_kg !== null) {
+        metricsToInsert.push({
+          metric_name: 'VO2Max',
+          category: 'fitness',
+          value: daily.vo2max_ml_per_min_per_kg,
+          measurement_date: date,
+          source: provider,
+          external_id: `terra_${provider}_vo2max_${date}`,
           user_id,
         });
       }
@@ -410,6 +503,13 @@ function getUnitForMetric(metricName: string): string {
     'Active Calories': 'kcal',
     'Workout Calories': 'kcal',
     'Heart Rate': 'bpm',
+    'Recovery Score': '%',
+    'Day Strain': 'score',
+    'Max Heart Rate': 'bpm',
+    'Resting Heart Rate': 'bpm',
+    'Average Heart Rate': 'bpm',
+    'HRV RMSSD': 'ms',
+    'VO2Max': 'ml/kg/min',
   };
   return unitMap[metricName] || 'unit';
 }
