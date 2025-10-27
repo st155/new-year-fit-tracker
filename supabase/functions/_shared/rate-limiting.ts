@@ -37,9 +37,9 @@ export class RateLimiter {
 
     // Get or create rate limit record
     const { data, error } = await this.supabase
-      .from('api_rate_limits')
+      .from('rate_limits')
       .select('*')
-      .eq('identifier', key)
+      .eq('key', key)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -56,13 +56,12 @@ export class RateLimiter {
         // Reset window
         currentCount = 1;
         await this.supabase
-          .from('api_rate_limits')
+          .from('rate_limits')
           .update({
             count: 1,
             window_start: new Date(now).toISOString(),
-            updated_at: new Date().toISOString(),
           })
-          .eq('identifier', key);
+          .eq('key', key);
       } else {
         // Increment count
         currentCount = data.count + 1;
@@ -81,12 +80,11 @@ export class RateLimiter {
         }
 
         await this.supabase
-          .from('api_rate_limits')
+          .from('rate_limits')
           .update({ 
             count: currentCount,
-            updated_at: new Date().toISOString(),
           })
-          .eq('identifier', key);
+          .eq('key', key);
 
         resetAt = new Date(windowStartTime + config.windowMs);
       }
@@ -94,9 +92,9 @@ export class RateLimiter {
       // Create new record
       currentCount = 1;
       await this.supabase
-        .from('api_rate_limits')
+        .from('rate_limits')
         .insert({
-          identifier: key,
+          key: key,
           count: 1,
           window_start: new Date(now).toISOString(),
         });

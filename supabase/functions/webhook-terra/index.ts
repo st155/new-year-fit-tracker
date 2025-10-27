@@ -123,13 +123,22 @@ Deno.serve(
       );
     }
 
-    // Rate limiting
+    // Rate limiting with fallback
     const identifier = payload.user?.user_id || 'anonymous';
-    await withRateLimit({
-      maxRequests: 100,
-      windowMs: 60000, // 1 minute
-      keyPrefix: 'terra_webhook',
-    })(req, identifier);
+    try {
+      await withRateLimit({
+        maxRequests: 100,
+        windowMs: 60000, // 1 minute
+        keyPrefix: 'terra_webhook',
+      })(req, identifier);
+    } catch (e) {
+      logger.error('Rate limiting failed, continuing with webhook processing', {
+        error: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+        identifier,
+      });
+      // Don't stop webhook processing if rate limiting fails
+    }
 
     // Store raw webhook for debugging and replay
     let rawWebhookStored = false;
