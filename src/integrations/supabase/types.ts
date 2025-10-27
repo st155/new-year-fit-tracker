@@ -3510,6 +3510,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_rate_limit: {
+        Args: {
+          p_key: string
+          p_max_requests: number
+          p_window_ms: number
+          p_window_start: string
+        }
+        Returns: Json
+      }
       is_challenge_participant: {
         Args: { _challenge_id: string; _user_id: string }
         Returns: boolean
