@@ -123,342 +123,76 @@ Deno.serve(
       );
     }
 
-    // Rate limiting with fallback
-    const identifier = payload.user?.user_id || 'anonymous';
-    try {
-      await withRateLimit({
-        maxRequests: 100,
-        windowMs: 60000, // 1 minute
-        keyPrefix: 'terra_webhook',
-      })(req, identifier);
-    } catch (e) {
-      logger.error('Rate limiting failed, continuing with webhook processing', {
-        error: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-        identifier,
-      });
-      // Don't stop webhook processing if rate limiting fails
-    }
-
-    // Store raw webhook for debugging and replay
-    let rawWebhookStored = false;
-    try {
-      const { error: insertError } = await supabase.from('terra_webhooks_raw').insert({
-        webhook_id: webhookId,
-        type: payload.type,
-        user_id: payload.user?.user_id,
-        provider: payload.user?.provider,
-        payload: payload,
-        status: 'pending',
-      });
-
-      if (insertError) {
-        logger.error('Failed to store raw webhook', {
-          error: insertError.message,
-          code: insertError.code,
-          details: insertError.details,
-          webhookId,
-          type: payload.type,
-        });
-      } else {
-        rawWebhookStored = true;
-        logger.info('Raw webhook stored', { webhookId, type: payload.type });
-      }
-    } catch (e) {
-      logger.error('Exception storing raw webhook', {
-        error: e instanceof Error ? e.message : String(e),
-        webhookId,
-        type: payload.type,
-      });
-    }
-
-    // Log webhook receipt in background (non-blocking)
-    let userId = null;
-    if (payload.user?.user_id) {
-      try {
-        const { data: tokenData, error } = await withTimeout(
-          supabase
-            .from('terra_tokens')
-            .select('user_id')
-            .eq('terra_user_id', payload.user.user_id)
-            .eq('is_active', true)
-            .maybeSingle(),
-          2000 // 2 second timeout
-        );
-        if (error) {
-          logger.warn('Failed to fetch user_id for webhook_logs', { 
-            error: error.message,
-            terraUserId: payload.user.user_id 
-          });
-        }
-        userId = tokenData?.user_id || null;
-      } catch (e) {
-        logger.warn('Timeout fetching user_id for webhook_logs', { 
-          error: e instanceof Error ? e.message : String(e) 
-        });
-      }
-    }
-
-    // Insert webhook_logs in background (don't block main flow)
-    EdgeRuntime.waitUntil(
-      supabase.from('webhook_logs').insert({
-        webhook_type: 'terra',
-        event_type: payload.type,
-        terra_user_id: payload.user?.user_id || null,
-        user_id: userId,
-        payload: payload,
-        status: 'received',
-        created_at: new Date().toISOString()
-      }).then(({ error }) => {
-        if (error) {
-          logger.warn('Failed to insert webhook_logs', { 
-            error: error.message,
-            webhookId,
-            type: payload.type 
-          });
-        }
-      })
-    );
-
-    // Handle healthcheck - quick response
-    if (payload.type === 'healthcheck') {
-      logger.info('Healthcheck received');
-      const response = { success: true, status: 'healthy', message: 'Webhook is healthy' };
-      await idempotency.storeResult(webhookId, response);
-
-      return new Response(
-        JSON.stringify(response),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Handle auth webhook - quick processing
-    if (payload.type === 'auth') {
-      logger.info('Auth webhook received', {
-        userId: payload.user?.user_id,
-        provider: payload.user?.provider,
-        referenceId: payload.reference_id,
-      });
-
-      const { reference_id, user: terraUser } = payload;
-      if (!terraUser) {
-        throw new EdgeFunctionError(
-          ErrorCode.VALIDATION_ERROR,
-          'Missing user in auth webhook',
-          400
-        );
-      }
-
-      const provider = terraUser.provider?.toUpperCase();
-      const terraUserId = terraUser.user_id;
-
-      // Найти пользователя по reference_id (если есть) ИЛИ по terra_user_id=null + provider
-      let appUserId = reference_id;
-      
-      if (!appUserId) {
-        // Ищем токен без terra_user_id (создан из TerraCallback)
-        const { data: pendingToken } = await supabase
-          .from('terra_tokens')
-          .select('user_id')
-          .eq('provider', provider)
-          .is('terra_user_id', null)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        appUserId = pendingToken?.user_id;
-        logger.info('Found pending token for provider', { provider, appUserId });
-      }
-
-      if (!appUserId) {
-        logger.warn('No user found for auth webhook', { terraUserId, provider });
-        // Всё равно создаём terra_users запись для будущей связки
-        await supabase.from('terra_users').upsert({
-          user_id: terraUserId,
-          provider: provider,
-          reference_id: null,
-          granted_scopes: terraUser.scopes || null,
-          state: terraUser.active ? 'active' : 'inactive',
-          created_at: terraUser.created_at || new Date().toISOString(),
-        }, { onConflict: 'user_id' });
-        
-        return new Response(JSON.stringify({ success: true, type: 'auth', note: 'User not linked yet' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Atomic upsert of terra_tokens (single DB operation)
-      try {
-        const { error: upsertError } = await withTimeout(
-          supabase.from('terra_tokens').upsert({
-            user_id: appUserId,
-            terra_user_id: terraUserId,
-            provider,
-            is_active: true,
-            last_sync_date: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id,provider',
-            ignoreDuplicates: false
-          }),
-          3000 // 3 second timeout
-        );
-
-        if (upsertError) {
-          logger.error('Failed to upsert terra_tokens', {
-            error: upsertError.message,
-            code: upsertError.code,
-            details: upsertError.details,
-            appUserId,
-            terraUserId,
-            provider
-          });
-        } else {
-          logger.info('Upserted terra_tokens', { appUserId, terraUserId, provider });
-        }
-      } catch (e) {
-        logger.error('Exception upserting terra_tokens', {
-          error: e instanceof Error ? e.message : String(e),
-          stack: e instanceof Error ? e.stack : undefined,
-          appUserId,
-          terraUserId,
-          provider
-        });
-      }
-
-      // Create/update terra_users record
-      const terraUserData = {
-        user_id: terraUserId,
-        provider: provider,
-        reference_id: appUserId,
-        granted_scopes: terraUser.scopes || null,
-        state: terraUser.active ? 'active' : 'inactive',
-        created_at: terraUser.created_at || new Date().toISOString(),
-      };
-
-      await supabase
-        .from('terra_users')
-        .upsert(terraUserData, { onConflict: 'user_id' });
-
-      logger.info('Updated terra_users');
-
-      // Trigger initial sync in background
-      logger.info('Triggering initial sync for newly connected device');
-      try {
-        await supabase.functions.invoke('terra-integration', {
-          body: {
-            action: 'sync-data',
-            userId: appUserId,
-            provider: provider
-          }
-        });
-        logger.info('Initial sync triggered successfully');
-      } catch (e) {
-        logger.error('Error triggering initial sync', e);
-      }
-
-      // Update webhook status
-      await supabase
-        .from('terra_webhooks_raw')
-        .update({ status: 'completed', processed_at: new Date().toISOString() })
-        .eq('webhook_id', webhookId);
-
-      const response = { success: true, type: 'auth' };
-      await idempotency.storeResult(webhookId, response);
-
-      return new Response(
-        JSON.stringify(response),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Handle user_reauth webhook - when user reconnects and gets new user_id
-    if (payload.type === 'user_reauth') {
-      const { old_user, new_user } = payload;
-      if (!old_user || !new_user) {
-        throw new EdgeFunctionError(
-          ErrorCode.VALIDATION_ERROR,
-          'Missing old_user or new_user in reauth webhook',
-          400
-        );
-      }
-
-      const provider = new_user.provider?.toUpperCase();
-
-      logger.info('User reauth received', {
-        oldUserId: old_user.user_id,
-        newUserId: new_user.user_id,
-        provider,
-        referenceId: new_user.reference_id
-      });
-
-      // Update terra_user_id in terra_tokens
-      await supabase
-        .from('terra_tokens')
-        .update({
-          terra_user_id: new_user.user_id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', new_user.reference_id)
-        .eq('provider', provider);
-
-      // Update terra_users
-      const terraUserData = {
-        user_id: new_user.user_id,
-        provider: provider,
-        reference_id: new_user.reference_id,
-        granted_scopes: new_user.scopes || null,
-        state: new_user.active ? 'active' : 'inactive',
-        created_at: new Date().toISOString(),
-      };
-
-      await supabase
-        .from('terra_users')
-        .upsert(terraUserData, { onConflict: 'user_id' });
-
-      logger.info('Updated tokens and users for reauth');
-
-      // Update webhook status
-      await supabase
-        .from('terra_webhooks_raw')
-        .update({ status: 'completed', processed_at: new Date().toISOString() })
-        .eq('webhook_id', webhookId);
-
-      const response = { success: true, type: 'user_reauth' };
-      await idempotency.storeResult(webhookId, response);
-
-      return new Response(
-        JSON.stringify(response),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // For data webhooks (activity, body, sleep, daily, nutrition, athlete), enqueue for background processing
+    // For data webhooks (activity, body, sleep, daily, nutrition, athlete), respond immediately
     const dataWebhookTypes = ['activity', 'body', 'sleep', 'daily', 'nutrition', 'athlete'];
 
     if (dataWebhookTypes.includes(payload.type)) {
-      // Update terra_tokens with last_sync_date (non-blocking, fire-and-forget)
-      if (payload.user?.user_id && payload.user?.provider) {
-        const provider = payload.user.provider.toUpperCase();
-        const terraUserId = payload.user.user_id;
-        
-        // Fire-and-forget update in background
-        EdgeRuntime.waitUntil(
-          (async () => {
+      const response = {
+        success: true,
+        queued: true,
+        webhookId,
+        type: payload.type,
+      };
+
+      // Store idempotency result
+      await idempotency.storeResult(webhookId, response);
+
+      // Process everything in background
+      EdgeRuntime.waitUntil(
+        (async () => {
+          const startTime = Date.now();
+          
+          // Store raw webhook
+          try {
+            const { error: insertError } = await supabase.from('terra_webhooks_raw').insert({
+              webhook_id: webhookId,
+              type: payload.type,
+              user_id: payload.user?.user_id,
+              provider: payload.user?.provider,
+              payload: payload,
+              status: 'pending',
+            });
+
+            if (insertError) {
+              logger.error('Failed to store raw webhook', {
+                error: insertError.message,
+                webhookId,
+              });
+            } else {
+              logger.info('Raw webhook stored', { 
+                webhookId, 
+                type: payload.type,
+                duration_ms: Date.now() - startTime 
+              });
+            }
+          } catch (e) {
+            logger.error('Exception storing raw webhook', {
+              error: e instanceof Error ? e.message : String(e),
+              webhookId,
+            });
+          }
+
+          // Rate limiting (soft check, doesn't block)
+          const identifier = payload.user?.user_id || 'anonymous';
+          try {
+            await withRateLimit({
+              maxRequests: 100,
+              windowMs: 60000,
+              keyPrefix: 'terra_webhook',
+            })(req, identifier);
+          } catch (e) {
+            logger.error('Rate limiting failed', {
+              error: e instanceof Error ? e.message : String(e),
+              identifier,
+            });
+          }
+
+          // Update terra_tokens with last_sync_date
+          if (payload.user?.user_id && payload.user?.provider) {
+            const provider = payload.user.provider.toUpperCase();
+            const terraUserId = payload.user.user_id;
+            
             try {
-              // Try to update by terra_user_id first
               const { data: updated, error: updateError } = await withTimeout(
                 supabase
                   .from('terra_tokens')
@@ -478,8 +212,8 @@ Deno.serve(
                   terraUserId 
                 });
               } else if (!updated || updated.length === 0) {
-                // No token found with terra_user_id, try linking by provider
-                const { data: nullToken, error: selectError } = await withTimeout(
+                // Try linking by provider
+                const { data: nullToken } = await withTimeout(
                   supabase
                     .from('terra_tokens')
                     .select('id, user_id')
@@ -490,7 +224,7 @@ Deno.serve(
                   2000
                 );
 
-                if (!selectError && nullToken) {
+                if (nullToken) {
                   logger.info('Linking terra_user_id from data webhook', {
                     userId: nullToken.user_id,
                     provider,
@@ -510,71 +244,98 @@ Deno.serve(
                   );
                 }
               } else {
-                logger.info('Updated last_sync_date', { terraUserId, type: payload.type });
+                logger.info('Updated last_sync_date', { 
+                  terraUserId, 
+                  type: payload.type,
+                  duration_ms: Date.now() - startTime
+                });
               }
             } catch (e) {
               logger.warn('Background terra_tokens update failed', {
                 error: e instanceof Error ? e.message : String(e),
                 terraUserId,
-                provider
               });
             }
-          })()
-        );
-      }
+          }
 
-      const jobQueue = new JobQueue();
+          // Enqueue job for processing
+          try {
+            const jobQueue = new JobQueue();
+            const job = await jobQueue.enqueue(
+              JobType.WEBHOOK_PROCESSING,
+              {
+                webhookId,
+                payload,
+              },
+              {
+                maxAttempts: 3,
+              }
+            );
 
-      const job = await jobQueue.enqueue(
-        JobType.WEBHOOK_PROCESSING,
-        {
-          webhookId,
-          payload,
-        },
-        {
-          maxAttempts: 3,
-        }
+            logger.info('Webhook processing enqueued', {
+              webhookId,
+              type: payload.type,
+              jobId: job.id,
+              duration_ms: Date.now() - startTime
+            });
+
+            // Update webhook status
+            await supabase
+              .from('terra_webhooks_raw')
+              .update({ 
+                status: 'enqueued', 
+                job_id: job.id 
+              })
+              .eq('webhook_id', webhookId);
+
+            // Trigger job-worker
+            supabase.functions.invoke('job-worker').catch((e: Error) => {
+              logger.warn('Failed to trigger job-worker', { error: e.message });
+            });
+          } catch (e) {
+            logger.error('Failed to enqueue job', {
+              error: e instanceof Error ? e.message : String(e),
+              webhookId,
+            });
+          }
+
+          // Log webhook receipt
+          let userId = null;
+          if (payload.user?.user_id) {
+            try {
+              const { data: tokenData } = await withTimeout(
+                supabase
+                  .from('terra_tokens')
+                  .select('user_id')
+                  .eq('terra_user_id', payload.user.user_id)
+                  .eq('is_active', true)
+                  .maybeSingle(),
+                2000
+              );
+              userId = tokenData?.user_id || null;
+            } catch (e) {
+              // Ignore
+            }
+          }
+
+          await supabase.from('webhook_logs').insert({
+            webhook_type: 'terra',
+            event_type: payload.type,
+            terra_user_id: payload.user?.user_id || null,
+            user_id: userId,
+            payload: payload,
+            status: 'received',
+            created_at: new Date().toISOString()
+          });
+
+          logger.info('Background processing completed', {
+            webhookId,
+            total_duration_ms: Date.now() - startTime
+          });
+        })()
       );
 
-      logger.info('Webhook processing enqueued', {
-        webhookId,
-        type: payload.type,
-        jobId: job.id,
-      });
-
-      // Update webhook status with job_id
-      if (rawWebhookStored) {
-        try {
-          await supabase
-            .from('terra_webhooks_raw')
-            .update({ 
-              status: 'enqueued', 
-              job_id: job.id 
-            })
-            .eq('webhook_id', webhookId);
-        } catch (e) {
-          logger.warn('Failed to update webhook status', { webhookId, error: String(e) });
-        }
-      }
-
-      // Trigger job-worker immediately (non-blocking)
-      try {
-        supabase.functions.invoke('job-worker').catch((e: Error) => {
-          logger.warn('Failed to trigger job-worker', { error: e.message });
-        });
-      } catch (e) {
-        logger.warn('Error invoking job-worker', { error: String(e) });
-      }
-
-      const response = {
-        success: true,
-        queued: true,
-        jobId: job.id,
-        type: payload.type,
-      };
-
-      await idempotency.storeResult(webhookId, response);
-
+      // Return immediate response to Terra
       return new Response(
         JSON.stringify(response),
         {
@@ -583,6 +344,92 @@ Deno.serve(
         }
       );
     }
+
+    // For non-data webhooks (auth, healthcheck, reauth), keep synchronous processing
+    // Rate limiting with fallback
+    const identifier = payload.user?.user_id || 'anonymous';
+    try {
+      await withRateLimit({
+        maxRequests: 100,
+        windowMs: 60000,
+        keyPrefix: 'terra_webhook',
+      })(req, identifier);
+    } catch (e) {
+      logger.error('Rate limiting failed, continuing', {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    // Store raw webhook
+    let rawWebhookStored = false;
+    try {
+      const { error: insertError } = await supabase.from('terra_webhooks_raw').insert({
+        webhook_id: webhookId,
+        type: payload.type,
+        user_id: payload.user?.user_id,
+        provider: payload.user?.provider,
+        payload: payload,
+        status: 'pending',
+      });
+
+      if (insertError) {
+        logger.error('Failed to store raw webhook', {
+          error: insertError.message,
+          webhookId,
+        });
+      } else {
+        rawWebhookStored = true;
+        logger.info('Raw webhook stored', { webhookId, type: payload.type });
+      }
+    } catch (e) {
+      logger.error('Exception storing raw webhook', {
+        error: e instanceof Error ? e.message : String(e),
+        webhookId,
+      });
+    }
+
+    // Log webhook receipt
+    let userId = null;
+    if (payload.user?.user_id) {
+      try {
+        const { data: tokenData } = await withTimeout(
+          supabase
+            .from('terra_tokens')
+            .select('user_id')
+            .eq('terra_user_id', payload.user.user_id)
+            .eq('is_active', true)
+            .maybeSingle(),
+          2000
+        );
+        userId = tokenData?.user_id || null;
+      } catch (e) {
+        logger.warn('Timeout fetching user_id for webhook_logs', { 
+          error: e instanceof Error ? e.message : String(e) 
+        });
+      }
+    }
+
+    EdgeRuntime.waitUntil(
+      supabase.from('webhook_logs').insert({
+        webhook_type: 'terra',
+        event_type: payload.type,
+        terra_user_id: payload.user?.user_id || null,
+        user_id: userId,
+        payload: payload,
+        status: 'received',
+        created_at: new Date().toISOString()
+      }).then(({ error }) => {
+        if (error) {
+          logger.warn('Failed to insert webhook_logs', { 
+            error: error.message,
+            webhookId,
+          });
+        }
+      })
+    );
+
+    // Handle healthcheck
+    if (payload.type === 'healthcheck') {
 
     // Unknown webhook type
     logger.warn('Unhandled webhook type', { type: payload.type });

@@ -375,7 +375,7 @@ async function batchInsertMetrics(
     const { error: upsertError } = await supabase
       .from('metric_values')
       .upsert(valuesToInsert, {
-        onConflict: 'user_id,metric_id,measurement_date,external_id',
+        onConflict: 'user_id,metric_id,measurement_date',
         ignoreDuplicates: false,
       });
 
