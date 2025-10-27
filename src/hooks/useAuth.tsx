@@ -23,13 +23,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let sessionTimeout: NodeJS.Timeout;
+    
+    console.log('🔐 [AuthProvider] Initializing...');
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state change:', event, session?.user?.email);
+        console.log('🔐 [AuthProvider] Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -60,31 +63,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Safety timeout: if getSession hangs > 8 seconds, force loading=false
+    sessionTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('⚠️ [AuthProvider] Session check timeout, forcing ready state');
+        setLoading(false);
+      }
+    }, 8000);
+
     // THEN check for existing session with error handling
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (!mounted) return;
         
+        clearTimeout(sessionTimeout);
+        
         if (error) {
-          console.error('❌ Session check error:', error);
+          console.error('❌ [AuthProvider] Session check error:', error);
           setLoading(false);
           return;
         }
         
-        console.log('Initial session check:', session?.user?.email);
+        console.log('✅ [AuthProvider] Initial session check:', session?.user?.email || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       })
       .catch((error) => {
         if (!mounted) return;
-        console.error('❌ Session check failed:', error);
+        clearTimeout(sessionTimeout);
+        console.error('❌ [AuthProvider] Session check failed:', error);
         setLoading(false);
       });
 
     return () => {
       mounted = false;
+      clearTimeout(sessionTimeout);
       subscription.unsubscribe();
+      console.log('🔐 [AuthProvider] Cleanup');
     };
   }, []); // Empty dependency array - auth state listener should only run once
 
@@ -239,8 +255,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    if (import.meta.env.DEV) {
+      console.error('💥 [useAuth] Called outside AuthProvider!');
+    }
+    // Return safe defaults to prevent white screen
+    return {
+      user: null,
+      session: null,
+      loading: false,
+      signUp: async () => ({ error: new Error('Auth not initialized') }),
+      signIn: async () => ({ error: new Error('Auth not initialized') }),
+      signInWithGoogle: async () => ({ error: new Error('Auth not initialized') }),
+      signOut: async () => ({ error: new Error('Auth not initialized') }),
+      role: 'client' as const,
+      roles: ['client'] as const,
+      rolesLoading: false,
+      isTrainer: false,
+      isAdmin: false,
+      isClient: true,
+    };
   }
   
   const [forceLoaded, setForceLoaded] = useState(false);

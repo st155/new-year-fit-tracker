@@ -68,8 +68,20 @@ export function MetricsViewProvider({ children }: { children: ReactNode }) {
 
 export function useMetricsView() {
   const context = useContext(MetricsViewContext);
+  
   if (context === undefined) {
-    throw new Error('useMetricsView must be used within a MetricsViewProvider');
+    if (import.meta.env.DEV) {
+      console.error('💥 [useMetricsView] Called outside MetricsViewProvider!');
+    }
+    // Return safe defaults instead of throwing
+    return {
+      viewMode: 'unified' as ViewMode,
+      setViewMode: () => {},
+      deviceFilter: 'all' as DeviceFilter,
+      setDeviceFilter: () => {},
+      toggleViewMode: () => {},
+    };
   }
+  
   return context;
 }
