@@ -34,8 +34,26 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
         return new Map();
       }
 
-      // Собираем все уникальные метрики
-      const metricNames = [...new Set(widgets.map(w => w.metric_name))];
+      // Metric name aliases for backward compatibility
+      const METRIC_ALIASES: Record<string, string[]> = {
+        'Resting HR': ['Resting Heart Rate'],
+        'Resting Heart Rate': ['Resting HR'],
+        'Workout Calories': ['Active Calories'],
+        'Active Calories': ['Workout Calories'],
+        'Workout Strain': ['Day Strain'],
+        'Day Strain': ['Workout Strain'],
+      };
+
+      // Собираем все уникальные метрики + их алиасы
+      const metricNamesSet = new Set<string>();
+      widgets.forEach(w => {
+        metricNamesSet.add(w.metric_name);
+        const aliases = METRIC_ALIASES[w.metric_name];
+        if (aliases) {
+          aliases.forEach(alias => metricNamesSet.add(alias));
+        }
+      });
+      const metricNames = Array.from(metricNamesSet);
       
       // Create timeout promise (8 seconds)
       const timeoutPromise = new Promise((_, reject) => 
@@ -80,24 +98,31 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
         
         metricsResult.data.forEach((metric: any) => {
           const key = `${metric.metric_name}-${metric.source}`;
-          if (!grouped.has(key)) {
-            const confidence = confidenceMap.get(key);
-            
-            grouped.set(key, {
-              value: metric.value,
-              unit: metric.unit,
-              measurement_date: metric.measurement_date,
-              source: metric.source,
-              trend: undefined,
-              confidence: confidence?.confidence_score,
-              factors: confidence ? {
-                sourceReliability: confidence.source_reliability,
-                dataFreshness: confidence.data_freshness,
-                measurementFrequency: confidence.measurement_frequency,
-                crossValidation: confidence.cross_validation,
-              } : undefined,
-            });
-          }
+          
+          // Also create entries for aliases
+          const aliases = METRIC_ALIASES[metric.metric_name] || [];
+          const keysToSet = [key, ...aliases.map(alias => `${alias}-${metric.source}`)];
+          
+          keysToSet.forEach(k => {
+            if (!grouped.has(k)) {
+              const confidence = confidenceMap.get(key);
+              
+              grouped.set(k, {
+                value: metric.value,
+                unit: metric.unit,
+                measurement_date: metric.measurement_date,
+                source: metric.source,
+                trend: undefined,
+                confidence: confidence?.confidence_score,
+                factors: confidence ? {
+                  sourceReliability: confidence.source_reliability,
+                  dataFreshness: confidence.data_freshness,
+                  measurementFrequency: confidence.measurement_frequency,
+                  crossValidation: confidence.cross_validation,
+                } : undefined,
+              });
+            }
+          });
         });
         
         return grouped;
