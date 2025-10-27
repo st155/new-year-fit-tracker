@@ -132,14 +132,36 @@ Deno.serve(
     })(req, identifier);
 
     // Store raw webhook for debugging and replay
-    await supabase.from('terra_webhooks_raw').insert({
-      webhook_id: webhookId,
-      type: payload.type,
-      user_id: payload.user?.user_id,
-      provider: payload.user?.provider,
-      payload: payload,
-      status: 'pending',
-    });
+    let rawWebhookStored = false;
+    try {
+      const { error: insertError } = await supabase.from('terra_webhooks_raw').insert({
+        webhook_id: webhookId,
+        type: payload.type,
+        user_id: payload.user?.user_id,
+        provider: payload.user?.provider,
+        payload: payload,
+        status: 'pending',
+      });
+
+      if (insertError) {
+        logger.error('Failed to store raw webhook', {
+          error: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          webhookId,
+          type: payload.type,
+        });
+      } else {
+        rawWebhookStored = true;
+        logger.info('Raw webhook stored', { webhookId, type: payload.type });
+      }
+    } catch (e) {
+      logger.error('Exception storing raw webhook', {
+        error: e instanceof Error ? e.message : String(e),
+        webhookId,
+        type: payload.type,
+      });
+    }
 
     // Log webhook receipt
     let userId = null;
@@ -162,8 +184,6 @@ Deno.serve(
       status: 'received',
       created_at: new Date().toISOString()
     });
-
-    logger.info('Raw webhook stored', { webhookId, type: payload.type });
 
     // Handle healthcheck - quick response
     if (payload.type === 'healthcheck') {

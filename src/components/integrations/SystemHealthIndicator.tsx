@@ -128,9 +128,9 @@ export function SystemHealthIndicator() {
       case 'operational':
         return 'Работает';
       case 'degraded':
-        return 'Замедлена';
+        return 'Замедлено';
       case 'down':
-        return 'Недоступна';
+        return 'Недоступно';
       case 'checking':
         return 'Проверка...';
     }
@@ -139,13 +139,26 @@ export function SystemHealthIndicator() {
   const getStatusColor = (status: ServiceStatus) => {
     switch (status) {
       case 'operational':
-        return 'bg-green-500';
+        return 'bg-green-600 border border-green-700';
       case 'degraded':
-        return 'bg-yellow-500';
+        return 'bg-orange-500 border border-orange-600';
       case 'down':
-        return 'bg-red-500';
+        return 'bg-red-600 border border-red-700';
       case 'checking':
-        return 'bg-gray-400 animate-pulse';
+        return 'bg-muted border border-border animate-pulse';
+    }
+  };
+
+  const getStatusBadgeVariant = (status: ServiceStatus): 'default' | 'destructive' | 'secondary' => {
+    switch (status) {
+      case 'operational':
+        return 'default';
+      case 'degraded':
+        return 'secondary';
+      case 'down':
+        return 'destructive';
+      default:
+        return 'secondary';
     }
   };
 
@@ -179,38 +192,38 @@ export function SystemHealthIndicator() {
 
           <div className="space-y-3">
             {/* Supabase Status */}
-            <div className="flex items-center justify-between p-2 border rounded-lg">
-              <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-3 p-3 border rounded-lg">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
                 {getStatusIcon(health.supabase)}
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium">Supabase</div>
-                  <div className="text-xs text-muted-foreground">
-                    База данных & Auth
+                  <div className="text-xs text-muted-foreground truncate" title="База данных & Авторизация">
+                    БД & Авторизация
                   </div>
                 </div>
               </div>
               <Badge
-                variant={health.supabase === 'operational' ? 'default' : 'destructive'}
-                className={health.supabase === 'degraded' ? 'bg-yellow-500' : ''}
+                variant={getStatusBadgeVariant(health.supabase)}
+                className="shrink-0 text-xs"
               >
                 {getStatusText(health.supabase)}
               </Badge>
             </div>
 
             {/* Terra Status */}
-            <div className="flex items-center justify-between p-2 border rounded-lg">
-              <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-3 p-3 border rounded-lg">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
                 {getStatusIcon(health.terra)}
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium">Terra API</div>
-                  <div className="text-xs text-muted-foreground">
-                    Интеграции с устройствами
+                  <div className="text-xs text-muted-foreground truncate" title="Интеграции с устройствами">
+                    Устройства
                   </div>
                 </div>
               </div>
               <Badge
-                variant={health.terra === 'operational' ? 'default' : 'destructive'}
-                className={health.terra === 'degraded' ? 'bg-yellow-500' : ''}
+                variant={getStatusBadgeVariant(health.terra)}
+                className="shrink-0 text-xs"
               >
                 {getStatusText(health.terra)}
               </Badge>

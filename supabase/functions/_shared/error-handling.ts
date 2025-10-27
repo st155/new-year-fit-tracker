@@ -51,8 +51,26 @@ export async function handleError(
   error: unknown,
   requestId?: string
 ): Promise<Response> {
-  // Log error
-  await logError(error, { requestId });
+  // Serialize error for logging
+  let errorDetails: any;
+  if (error instanceof Error) {
+    errorDetails = {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  } else if (typeof error === 'object' && error !== null) {
+    try {
+      errorDetails = JSON.parse(JSON.stringify(error));
+    } catch {
+      errorDetails = { error: String(error) };
+    }
+  } else {
+    errorDetails = { error: String(error) };
+  }
+
+  // Log error with serialized details
+  await logError(errorDetails, { requestId });
 
   // Convert to EdgeFunctionError
   let edgeError: EdgeFunctionError;
@@ -64,13 +82,14 @@ export async function handleError(
       ErrorCode.INTERNAL_ERROR,
       error.message,
       500,
-      { stack: error.stack }
+      { stack: error.stack, name: error.name }
     );
   } else {
     edgeError = new EdgeFunctionError(
       ErrorCode.INTERNAL_ERROR,
-      'An unknown error occurred',
-      500
+      typeof error === 'string' ? error : 'An unknown error occurred',
+      500,
+      errorDetails
     );
   }
 

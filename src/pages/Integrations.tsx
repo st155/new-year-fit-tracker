@@ -10,7 +10,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Clock } from 'lucide-react';
+
+// Helper to format relative time
+const getRelativeTime = (date: string | null): { text: string; color: string } => {
+  if (!date) return { text: 'Никогда', color: 'text-red-500' };
+  
+  const now = new Date();
+  const syncDate = new Date(date);
+  const diffMs = now.getTime() - syncDate.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  
+  let text = '';
+  let color = 'text-green-600';
+  
+  if (diffHours < 1) {
+    text = 'менее часа назад';
+    color = 'text-green-600';
+  } else if (diffHours < 24) {
+    text = `${diffHours}ч назад`;
+    color = 'text-yellow-600';
+  } else if (diffDays === 1) {
+    text = 'вчера';
+    color = 'text-orange-600';
+  } else {
+    text = `${diffDays}д назад`;
+    color = 'text-red-600';
+  }
+  
+  return { text, color };
+};
 
 export default function IntegrationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -64,23 +94,44 @@ export default function IntegrationsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {diagnosticData.map((token, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 border rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={token.is_active ? "success" : "outline"}>
-                      {token.provider}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      terra_user_id: {token.terra_user_id || 'null (ожидание)'}
-                    </span>
+              {diagnosticData.map((token, idx) => {
+                const relativeTime = getRelativeTime(token.last_sync_date);
+                const shortId = token.terra_user_id 
+                  ? token.terra_user_id.substring(0, 8) + '...' 
+                  : 'null';
+                
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={token.is_active ? "default" : "outline"}>
+                        {token.provider}
+                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <span 
+                          className="text-xs font-mono text-muted-foreground cursor-help" 
+                          title={token.terra_user_id || 'Ожидание подключения'}
+                        >
+                          ID: {shortId}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className={`text-xs font-medium ${relativeTime.color}`}>
+                            {relativeTime.text}
+                          </span>
+                          {token.last_sync_date && (
+                            <span 
+                              className="text-xs text-muted-foreground cursor-help"
+                              title={new Date(token.last_sync_date).toLocaleString('ru-RU')}
+                            >
+                              ({new Date(token.last_sync_date).toLocaleDateString('ru-RU')})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {token.last_sync_date 
-                      ? `Синхронизация: ${new Date(token.last_sync_date).toLocaleString('ru-RU')}`
-                      : 'Не синхронизировано'}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
