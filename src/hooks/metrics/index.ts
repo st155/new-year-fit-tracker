@@ -6,3 +6,5 @@ export { useLatestMetric } from './useLatestMetric';
 export { useMetricMapping } from './useMetricMapping';
 export { useSystemStatus } from './useSystemStatus';
 export { useSmartWidgetsData } from './useSmartWidgetsData';
+export type { SmartWidgetData } from './useSmartWidgetsData';
+export { useMetricsRealtime } from './useMetricsRealtime';

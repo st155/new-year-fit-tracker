@@ -25,6 +25,7 @@ import { RefreshCw } from 'lucide-react';
 import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAutoSync } from '@/hooks/useAutoSync';
+import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -65,6 +66,9 @@ const Index = () => {
   
   // Auto-sync for fresh data
   const { syncAllData, isSyncing } = useAutoSync(user?.id);
+  
+  // Real-time subscription for metrics updates
+  useMetricsRealtime(!!user?.id);
   
   const addWidget = (metricName: string, source: string) => {
     if (!user?.id) return;

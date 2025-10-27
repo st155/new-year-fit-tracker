@@ -6,7 +6,16 @@ export const METRIC_ALIASES: Record<string, string[]> = {
   'Workout Calories': ['Active Calories'],
   'Active Calories': ['Workout Calories'],
   'Workout Strain': ['Day Strain'],
-  'Day Strain': ['Workout Strain'],
+  'Day Strain': ['Workout Strain', 'Strain'],
+  'Strain': ['Day Strain', 'Workout Strain'],
+  'Recovery Score': ['Recovery', 'RecoveryScore'],
+  'Recovery': ['Recovery Score', 'RecoveryScore'],
+  'RecoveryScore': ['Recovery Score', 'Recovery'],
+  'Max Heart Rate': ['HR Max', 'Max HR', 'Heart Rate Max', 'Maximum Heart Rate'],
+  'HR Max': ['Max Heart Rate', 'Max HR', 'Heart Rate Max'],
+  'Max HR': ['Max Heart Rate', 'HR Max', 'Heart Rate Max'],
+  'Heart Rate Max': ['Max Heart Rate', 'Max HR', 'HR Max'],
+  'Maximum Heart Rate': ['Max Heart Rate', 'Max HR', 'HR Max'],
 };
 
 // Helper to get all acceptable names for a metric including itself

@@ -110,6 +110,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   
   const metricName = widget.metric_name;
   // Prefer actual data source if provided by smart batch, fallback to widget's configured source
@@ -146,7 +147,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
     
     setSyncing(true);
     try {
-      console.log('🔄 [WidgetCard] Starting Whoop sync from widget...');
+      console.log('🔄 [WidgetCard] Starting data sync from widget...');
       
       const { error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'sync-data' }
@@ -158,23 +159,72 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
       queryClient.invalidateQueries({ queryKey: widgetKeys.all });
       queryClient.invalidateQueries({ queryKey: ['metrics'] });
       
-      console.log('✅ Whoop sync completed');
+      console.log('✅ Data sync completed, starting polling...');
       toast({
         title: 'Синхронизация запущена',
-        description: 'Whoop данные обновляются...',
+        description: 'Данные обновляются...',
       });
       
+      // Start polling for 60 seconds (check every 4 seconds)
+      const targetMetrics = ['Day Strain', 'Workout Strain', 'Strain', 'Recovery Score', 'Recovery', 'Max Heart Rate', 'HR Max'];
+      const isTargetMetric = targetMetrics.some(m => metricName.includes(m));
+      
+      if (isTargetMetric) {
+        let pollCount = 0;
+        const maxPolls = 15; // 15 * 4s = 60s
+        const today = new Date().toISOString().split('T')[0];
+        
+        const interval = setInterval(async () => {
+          pollCount++;
+          console.log(`🔄 [WidgetCard] Polling attempt ${pollCount}/${maxPolls} for ${metricName}`);
+          
+          // Invalidate queries to trigger refetch
+          await queryClient.invalidateQueries({ queryKey: [...widgetKeys.all, 'smart-batch'] });
+          
+          // Check if we have today's data
+          const hasToday = data?.measurement_date === today;
+          
+          if (hasToday || pollCount >= maxPolls) {
+            if (interval) clearInterval(interval);
+            setPollingInterval(null);
+            setSyncing(false);
+            
+            if (hasToday) {
+              console.log(`✅ [WidgetCard] Fresh data received for ${metricName}`);
+              toast({
+                title: 'Данные обновлены',
+                description: `${metricName} успешно синхронизирован`,
+              });
+            } else {
+              console.log(`⏱️ [WidgetCard] Polling timeout for ${metricName}`);
+            }
+          }
+        }, 4000);
+        
+        setPollingInterval(interval);
+      } else {
+        setSyncing(false);
+      }
+      
     } catch (error: any) {
-      console.error('❌ Whoop sync failed:', error);
+      console.error('❌ Data sync failed:', error);
       toast({
         title: 'Ошибка синхронизации',
         description: error.message,
         variant: 'destructive',
       });
-    } finally {
       setSyncing(false);
     }
   };
+  
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const handleCardClick = useCallback(() => {
     // Trigger refresh через React Query invalidation
@@ -294,9 +344,18 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
             <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
               {metricName}
             </p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground/60">
-              {getSourceDisplayName(source)}
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground/60 cursor-help">
+                    {getSourceDisplayName(source)}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Источник: {getSourceDisplayName(source)} (автовыбор)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
         </div>
@@ -434,7 +493,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
                 ) : (
                   <>
                     <RefreshCw className="h-3 w-3 mr-1" />
-                    Обновить Whoop
+                    Обновить данные
                   </>
                 )}
               </Button>

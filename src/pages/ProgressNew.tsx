@@ -8,6 +8,7 @@ import {
 } from '@/hooks/useWidgetsQuery';
 // import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
 import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
+import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 import { useQueryClient } from '@tanstack/react-query';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
@@ -33,6 +34,9 @@ export default function ProgressNew() {
   const removeWidgetMutation = useRemoveWidgetMutation();
   const reorderWidgetsMutation = useReorderWidgetsMutation();
   const queryClient = useQueryClient();
+  
+  // Real-time subscription for metrics updates
+  useMetricsRealtime(!!user?.id);
 
   const addWidget = (metricName: string, source: string) => {
     if (!user?.id) return;

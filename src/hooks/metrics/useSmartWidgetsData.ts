@@ -48,9 +48,9 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
       }
       const metricNames = Array.from(metricNamesSet);
 
-      // Time window: last 7 days
+      // Time window: last 14 days (expanded for better coverage)
       const now = new Date();
-      const fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const fromDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
       const from = fromDate.toISOString().split('T')[0];
 
       // Single query: all needed fields, all sources
@@ -83,6 +83,33 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
           if (!acceptable.has(row.metric_name)) continue;
           if (isBetter(row, best)) best = row;
         }
+        
+        // Fallback for Max Heart Rate from daily_health_summary
+        if (!best && acceptable.has('Max Heart Rate')) {
+          const today = new Date().toISOString().split('T')[0];
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const { data: summaryData } = await supabase
+            .from('daily_health_summary')
+            .select('heart_rate_max, date')
+            .eq('user_id', userId)
+            .in('date', [today, yesterday])
+            .order('date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (summaryData && summaryData.heart_rate_max) {
+            best = {
+              value: summaryData.heart_rate_max,
+              unit: 'bpm',
+              measurement_date: summaryData.date,
+              source: 'terra',
+              created_at: new Date().toISOString(),
+              priority: 50,
+            };
+          }
+        }
+        
         if (best) {
           result.set(w.id, {
             value: Number(best.value),
