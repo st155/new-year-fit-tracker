@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'react-router-dom';
+import { getPrefetcher } from '@/lib/prefetch-strategy';
 
 export function DevDebugBar() {
   if (!import.meta.env.DEV) return null;
@@ -10,6 +11,7 @@ export function DevDebugBar() {
     loading: 'error',
     rolesLoading: 'error',
     isTrainer: 'error',
+    prefetcherReady: 'error',
     timestamp: new Date().toLocaleTimeString()
   };
 
@@ -28,6 +30,13 @@ export function DevDebugBar() {
     debugInfo.isTrainer = String(isTrainer);
   } catch (e) {
     console.error('[DevDebugBar] useAuth failed:', e);
+  }
+
+  try {
+    getPrefetcher();
+    debugInfo.prefetcherReady = 'true';
+  } catch (e) {
+    debugInfo.prefetcherReady = 'false';
   }
 
   return (
@@ -53,6 +62,7 @@ export function DevDebugBar() {
       <span>Loading: <strong>{debugInfo.loading}</strong></span>
       <span>RolesLoading: <strong>{debugInfo.rolesLoading}</strong></span>
       <span>IsTrainer: <strong>{debugInfo.isTrainer}</strong></span>
+      <span>Prefetcher: <strong>{debugInfo.prefetcherReady}</strong></span>
       <span>Time: <strong>{debugInfo.timestamp}</strong></span>
     </div>
   );

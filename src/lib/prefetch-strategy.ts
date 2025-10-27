@@ -168,16 +168,36 @@ export class PrefetchStrategy {
   }
 }
 
-// Singleton instance
+/**
+ * No-op prefetcher for cases when real prefetcher isn't ready yet
+ */
+class NoopPrefetcher {
+  async prefetchAfterLogin(userId: string) {
+    // No-op: silently skip prefetch
+  }
+
+  async prefetchRoute(userId: string, route: string) {
+    // No-op: silently skip prefetch
+  }
+}
+
+// Singleton instances
 let prefetcher: PrefetchStrategy | null = null;
+const noopPrefetcher = new NoopPrefetcher();
+let warnedAboutNoop = false;
 
 export function initPrefetcher(queryClient: QueryClient) {
   prefetcher = new PrefetchStrategy(queryClient);
+  console.log('[Prefetch] Strategy initialized');
 }
 
-export function getPrefetcher(): PrefetchStrategy {
+export function getPrefetcher(): PrefetchStrategy | NoopPrefetcher {
   if (!prefetcher) {
-    throw new Error('PrefetchStrategy not initialized. Call initPrefetcher() first.');
+    if (!warnedAboutNoop) {
+      console.warn('[Prefetch] Using NOOP prefetcher (not initialized yet)');
+      warnedAboutNoop = true;
+    }
+    return noopPrefetcher as any;
   }
   return prefetcher;
 }

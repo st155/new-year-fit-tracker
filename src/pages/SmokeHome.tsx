@@ -20,6 +20,13 @@ export default function SmokeHome() {
         Time: {new Date().toLocaleTimeString()}
       </p>
       <div style={{ marginTop: '40px' }}>
+        <a href="/app" style={{ 
+          color: '#10b981', 
+          textDecoration: 'underline', 
+          margin: '0 10px',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }}>→ Open App (/app)</a>
         <a href="/__debug" style={{ 
           color: '#3b82f6', 
           textDecoration: 'underline', 
