@@ -41,13 +41,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`✅ Webhook ${webhookId} marked for reprocessing`);
+    // Create a job in background_jobs for job-worker to process
+    const { data: job, error: jobError } = await supabase
+      .from('background_jobs')
+      .insert({
+        type: 'webhook_processing',
+        payload: {
+          webhookId: webhook.id,
+          type: webhook.type,
+          userId: webhook.user_id
+        },
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (jobError) {
+      console.error('Failed to create job:', jobError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to enqueue job: ' + jobError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`✅ Webhook ${webhookId} marked for reprocessing, job ${job.id} created`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Webhook marked for reprocessing',
-        webhook 
+        message: 'Webhook queued for reprocessing',
+        webhook,
+        jobId: job.id
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
