@@ -27,64 +27,93 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
   return useQuery({
     queryKey: [...widgetKeys.all, 'batch', userId, widgets.map(w => w.id)],
     queryFn: async () => {
-      if (!userId || widgets.length === 0) return new Map();
+      console.time('[useWidgetsBatch] Fetch');
+      
+      if (!userId || widgets.length === 0) {
+        console.timeEnd('[useWidgetsBatch] Fetch');
+        return new Map();
+      }
 
       // Собираем все уникальные метрики
       const metricNames = [...new Set(widgets.map(w => w.metric_name))];
       
-      // ОДИН SQL запрос для всех виджетов + JOIN confidence cache
-      const { data: metricsData } = await supabase
-        .from('client_unified_metrics')
-        .select('*')
-        .eq('user_id', userId)
-        .in('metric_name', metricNames)
-        .order('measurement_date', { ascending: false });
+      // Create timeout promise (8 seconds)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 8000)
+      );
       
-      if (!metricsData) return new Map();
+      try {
+        // ОПТИМИЗАЦИЯ: Выбираем только нужные поля и фильтруем сразу
+        const metricsPromise = supabase
+          .from('client_unified_metrics')
+          .select('metric_name, source, value, unit, measurement_date')
+          .eq('user_id', userId)
+          .in('metric_name', metricNames)
+          .order('measurement_date', { ascending: false })
+          .limit(metricNames.length * 10); // Ограничиваем результат
+        
+        const confidencePromise = supabase
+          .from('metric_confidence_cache')
+          .select('metric_name, source, confidence_score, source_reliability, data_freshness, measurement_frequency, cross_validation')
+          .eq('user_id', userId)
+          .in('metric_name', metricNames);
+        
+        // Race against timeout
+        const [metricsResult, confidenceResult] = await Promise.race([
+          Promise.all([metricsPromise, confidencePromise]),
+          timeoutPromise
+        ]) as any;
+        
+        console.timeEnd('[useWidgetsBatch] Fetch');
+        
+        if (!metricsResult.data) return new Map();
 
-      // Fetch confidence data in one query
-      const { data: confidenceData } = await supabase
-        .from('metric_confidence_cache')
-        .select('*')
-        .eq('user_id', userId)
-        .in('metric_name', metricNames);
-      
-      // Create confidence lookup map
-      const confidenceMap = new Map<string, any>();
-      confidenceData?.forEach(c => {
-        const key = `${c.metric_name}-${c.source}`;
-        confidenceMap.set(key, c);
-      });
+        // Create confidence lookup map
+        const confidenceMap = new Map<string, any>();
+        confidenceResult.data?.forEach((c: any) => {
+          const key = `${c.metric_name}-${c.source}`;
+          confidenceMap.set(key, c);
+        });
 
-      // Группируем по metric_name + source (берем только ПЕРВОЕ = последнее по дате)
-      const grouped = new Map<string, WidgetData>();
-      
-      metricsData.forEach(metric => {
-        const key = `${metric.metric_name}-${metric.source}`;
-        if (!grouped.has(key)) {
-          const confidence = confidenceMap.get(key);
-          
-          // Берем только первое (самое свежее) значение для каждой метрики+источника
-          grouped.set(key, {
-            value: metric.value,
-            unit: metric.unit,
-            measurement_date: metric.measurement_date,
-            source: metric.source,
-            trend: undefined, // TODO: Calculate trend from historical data
-            confidence: confidence?.confidence_score,
-            factors: confidence ? {
-              sourceReliability: confidence.source_reliability,
-              dataFreshness: confidence.data_freshness,
-              measurementFrequency: confidence.measurement_frequency,
-              crossValidation: confidence.cross_validation,
-            } : undefined,
-          });
+        // Группируем по metric_name + source (берем только ПЕРВОЕ = последнее по дате)
+        const grouped = new Map<string, WidgetData>();
+        
+        metricsResult.data.forEach((metric: any) => {
+          const key = `${metric.metric_name}-${metric.source}`;
+          if (!grouped.has(key)) {
+            const confidence = confidenceMap.get(key);
+            
+            grouped.set(key, {
+              value: metric.value,
+              unit: metric.unit,
+              measurement_date: metric.measurement_date,
+              source: metric.source,
+              trend: undefined,
+              confidence: confidence?.confidence_score,
+              factors: confidence ? {
+                sourceReliability: confidence.source_reliability,
+                dataFreshness: confidence.data_freshness,
+                measurementFrequency: confidence.measurement_frequency,
+                crossValidation: confidence.cross_validation,
+              } : undefined,
+            });
+          }
+        });
+        
+        return grouped;
+      } catch (error) {
+        console.timeEnd('[useWidgetsBatch] Fetch');
+        if (error instanceof Error && error.message === 'Query timeout') {
+          console.warn('⚠️ [useWidgetsBatch] Query timeout - returning partial data');
+          return new Map(); // Return empty map on timeout
         }
-      });
-      
-      return grouped;
+        throw error;
+      }
     },
     staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
+    retryDelay: 500,
     enabled: !!userId && widgets.length > 0,
   });
 }

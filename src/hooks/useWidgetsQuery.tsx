@@ -42,10 +42,12 @@ const DEFAULT_WIDGETS = [
  */
 export function useWidgetsQuery(userId: string | undefined) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useQuery({
     queryKey: widgetKeys.list(userId!),
     queryFn: async () => {
+      console.time('[useWidgetsQuery] Fetch');
       console.log('🔍 [useWidgetsQuery] Fetching widgets for user:', userId);
       
       const { data, error } = await supabase
@@ -57,12 +59,13 @@ export function useWidgetsQuery(userId: string | undefined) {
 
       if (error) {
         console.error('❌ [useWidgetsQuery] Error fetching widgets:', error);
+        console.timeEnd('[useWidgetsQuery] Fetch');
         throw error;
       }
 
       console.log('✅ [useWidgetsQuery] Fetched widgets:', data?.length || 0);
 
-      // If no widgets exist, create defaults
+      // If no widgets exist, try to create defaults
       if (!data || data.length === 0) {
         console.log('📝 [useWidgetsQuery] No widgets found, creating defaults...');
         
@@ -81,21 +84,31 @@ export function useWidgetsQuery(userId: string | undefined) {
 
         if (insertError) {
           console.error('❌ [useWidgetsQuery] Error creating default widgets:', insertError);
-          throw insertError;
+          console.timeEnd('[useWidgetsQuery] Fetch');
+          
+          // Don't throw - return empty array and show user-friendly message
+          toast({
+            title: 'Виджеты не найдены',
+            description: 'Добавьте виджеты вручную через настройки дашборда',
+            variant: 'default',
+          });
+          return [];
         }
         
         console.log('✅ [useWidgetsQuery] Created default widgets:', newWidgets?.length || 0);
+        console.timeEnd('[useWidgetsQuery] Fetch');
         return newWidgets as Widget[];
       }
 
+      console.timeEnd('[useWidgetsQuery] Fetch');
       return data as Widget[];
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 1,
+    retryDelay: 500,
     placeholderData: [],
   });
 }
