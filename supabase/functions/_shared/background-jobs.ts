@@ -67,7 +67,7 @@ export class JobQueue {
         type,
         payload,
         max_attempts: options?.maxAttempts || 3,
-        scheduled_at: options?.scheduledAt?.toISOString(),
+        scheduled_at: (options?.scheduledAt || new Date()).toISOString(),
       })
       .select()
       .single();
@@ -88,12 +88,12 @@ export class JobQueue {
   async dequeue(type?: JobType): Promise<Job | null> {
     const now = new Date().toISOString();
 
-    // Find next job
+    // Find next job (include NULL scheduled_at)
     let query = this.supabase
       .from('background_jobs')
       .select('*')
       .eq('status', JobStatus.PENDING)
-      .lte('scheduled_at', now)
+      .or(`scheduled_at.is.null,scheduled_at.lte.${now}`)
       .order('created_at', { ascending: true })
       .limit(1);
 

@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
+import { useSystemStatus } from '@/hooks/metrics/useSystemStatus';
 
 type ServiceStatus = 'operational' | 'degraded' | 'down' | 'checking';
 
@@ -31,6 +32,7 @@ export function SystemHealthIndicator() {
     lastCheck: new Date(),
   });
   const [isOpen, setIsOpen] = useState(false);
+  const { data: systemStatus } = useSystemStatus();
 
   const checkHealth = async () => {
     const newHealth: SystemHealth = {
@@ -62,46 +64,35 @@ export function SystemHealthIndicator() {
       }
     }
 
-    // Check Terra API (simple HEAD request)
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      const response = await fetch('https://api.tryterra.co/v2/auth/generateAuthURL', {
-        method: 'HEAD',
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok || response.status === 405) {
-        // 405 Method Not Allowed is expected for HEAD - API is up
-        newHealth.terra = 'operational';
-      } else if (response.status >= 500) {
-        newHealth.terra = 'down';
-      } else {
-        newHealth.terra = 'degraded';
+    // Check Terra based on actual data flow
+    let terraStatus: ServiceStatus = 'operational';
+    if (systemStatus) {
+      const { webhooksLast1h, pendingJobs, lastProcessedTime } = systemStatus;
+      
+      // No webhooks = devices not sending data
+      if (webhooksLast1h === 0) {
+        terraStatus = 'degraded';
       }
-    } catch (error: any) {
-      console.error('Terra health check error:', error);
-      if (error.name === 'AbortError') {
-        newHealth.terra = 'degraded';
-      } else {
-        newHealth.terra = 'down';
+      // Queue is stalled
+      else if (pendingJobs > 5) {
+        terraStatus = 'degraded';
+      }
+      // Last processing was too long ago
+      else if (lastProcessedTime) {
+        const hoursSince = (Date.now() - new Date(lastProcessedTime).getTime()) / (1000 * 60 * 60);
+        if (hoursSince > 2) terraStatus = 'degraded';
       }
     }
+    newHealth.terra = terraStatus;
 
     setHealth(newHealth);
   };
 
   useEffect(() => {
     checkHealth();
-
-    // Auto-refresh every 30 seconds
     const interval = setInterval(checkHealth, 30000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [systemStatus]);
 
   const getOverallStatus = (): ServiceStatus => {
     if (health.supabase === 'down' || health.terra === 'down') return 'down';
@@ -128,12 +119,33 @@ export function SystemHealthIndicator() {
       case 'operational':
         return 'Работает';
       case 'degraded':
-        return 'Замедлено';
+        return 'Проблемы';
       case 'down':
         return 'Недоступно';
       case 'checking':
         return 'Проверка...';
     }
+  };
+
+  const getTerraDescription = (): string => {
+    if (!systemStatus) return 'Проверка...';
+    
+    const { webhooksLast1h, pendingJobs, lastProcessedTime } = systemStatus;
+    
+    if (webhooksLast1h === 0) {
+      return 'Нет данных от устройств за час. Проверьте подключения.';
+    }
+    if (pendingJobs > 5) {
+      return `Застой в очереди: ${pendingJobs} задач`;
+    }
+    if (lastProcessedTime) {
+      const minutes = Math.floor((Date.now() - new Date(lastProcessedTime).getTime()) / (1000 * 60));
+      if (minutes < 60) {
+        return `Обработано ${minutes} мин назад`;
+      }
+      return `Обработано ${Math.floor(minutes / 60)}ч назад`;
+    }
+    return 'Данные обрабатываются нормально';
   };
 
   const getStatusColor = (status: ServiceStatus) => {
@@ -192,41 +204,50 @@ export function SystemHealthIndicator() {
 
           <div className="space-y-3">
             {/* Supabase Status */}
-            <div className="flex items-start justify-between gap-3 p-3 border rounded-lg">
-              <div className="flex items-start gap-2 flex-1 min-w-0">
-                {getStatusIcon(health.supabase)}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">Supabase</div>
-                  <div className="text-xs text-muted-foreground truncate" title="База данных & Авторизация">
-                    БД & Авторизация
-                  </div>
+            <div className="flex flex-col gap-2 p-3 rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(health.supabase)}
+                  <p className="text-sm font-medium">БД & Авторизация</p>
                 </div>
+                <Badge 
+                  variant={getStatusBadgeVariant(health.supabase)}
+                  className="text-xs border"
+                >
+                  {getStatusText(health.supabase)}
+                </Badge>
               </div>
-              <Badge
-                variant={getStatusBadgeVariant(health.supabase)}
-                className="shrink-0 text-xs"
-              >
-                {getStatusText(health.supabase)}
-              </Badge>
+              <p className="text-xs text-muted-foreground">
+                {health.supabase === 'operational' 
+                  ? 'База данных работает стабильно' 
+                  : 'Проблемы с подключением к БД'}
+              </p>
             </div>
 
             {/* Terra Status */}
-            <div className="flex items-start justify-between gap-3 p-3 border rounded-lg">
-              <div className="flex items-start gap-2 flex-1 min-w-0">
-                {getStatusIcon(health.terra)}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">Terra API</div>
-                  <div className="text-xs text-muted-foreground truncate" title="Интеграции с устройствами">
-                    Устройства
-                  </div>
+            <div className="flex flex-col gap-2 p-3 rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(health.terra)}
+                  <p className="text-sm font-medium">Устройства (Terra API)</p>
                 </div>
+                <Badge 
+                  variant={getStatusBadgeVariant(health.terra)}
+                  className="text-xs border"
+                >
+                  {getStatusText(health.terra)}
+                </Badge>
               </div>
-              <Badge
-                variant={getStatusBadgeVariant(health.terra)}
-                className="shrink-0 text-xs"
-              >
-                {getStatusText(health.terra)}
-              </Badge>
+              <p className="text-xs text-muted-foreground">
+                {getTerraDescription()}
+              </p>
+              {systemStatus && (
+                <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                  <span>Вебхуки 1ч: {systemStatus.webhooksLast1h}</span>
+                  <span>Очередь: {systemStatus.pendingJobs}</span>
+                  <span>Обработка: {systemStatus.processingJobs}</span>
+                </div>
+              )}
             </div>
           </div>
 

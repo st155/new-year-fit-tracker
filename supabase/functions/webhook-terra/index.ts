@@ -488,6 +488,30 @@ Deno.serve(
         jobId: job.id,
       });
 
+      // Update webhook status with job_id
+      if (rawWebhookStored) {
+        try {
+          await supabase
+            .from('terra_webhooks_raw')
+            .update({ 
+              status: 'enqueued', 
+              job_id: job.id 
+            })
+            .eq('webhook_id', webhookId);
+        } catch (e) {
+          logger.warn('Failed to update webhook status', { webhookId, error: String(e) });
+        }
+      }
+
+      // Trigger job-worker immediately (non-blocking)
+      try {
+        supabase.functions.invoke('job-worker').catch((e: Error) => {
+          logger.warn('Failed to trigger job-worker', { error: e.message });
+        });
+      } catch (e) {
+        logger.warn('Error invoking job-worker', { error: String(e) });
+      }
+
       const response = {
         success: true,
         queued: true,

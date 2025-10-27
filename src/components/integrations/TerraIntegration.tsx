@@ -410,14 +410,25 @@ export function TerraIntegration() {
 
       if (error) throw error;
 
+      // Trigger job-worker immediately
+      try {
+        await supabase.functions.invoke('job-worker');
+      } catch (e) {
+        console.warn('Failed to trigger job-worker:', e);
+      }
+
       console.log('✅ Sync result:', data);
 
       toast({
-        title: 'Синхронизация завершена',
-        description: data?.message || 'Данные успешно обновлены',
+        title: 'Синхронизация запущена',
+        description: 'Данные обновляются в фоновом режиме',
       });
 
-      setTimeout(checkStatus, 2000);
+      setTimeout(() => {
+        checkStatus();
+        queryClient.invalidateQueries({ queryKey: ['metrics'] });
+        queryClient.invalidateQueries({ queryKey: ['system-status'] });
+      }, 3000);
       
       // Очистка всех кэшей метрик
       localStorage.removeItem('fitness_metrics_cache');

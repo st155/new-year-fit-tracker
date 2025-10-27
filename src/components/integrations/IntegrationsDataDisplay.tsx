@@ -358,13 +358,22 @@ export function IntegrationsDataDisplay() {
 
       if (error) throw error;
 
+      // Trigger job-worker immediately
+      try {
+        await supabase.functions.invoke('job-worker');
+      } catch (e) {
+        console.warn('Failed to trigger job-worker:', e);
+      }
+
       toast({
-        title: 'Синхронизация завершена',
-        description: 'Данные обновлены',
+        title: 'Синхронизация запущена',
+        description: 'Данные обновляются в фоне',
       });
 
-      // Refresh data
-      await fetchIntegrationsData();
+      // Refetch after delay
+      setTimeout(() => {
+        fetchIntegrationsData();
+      }, 3000);
     } catch (error: any) {
       toast({
         title: 'Ошибка синхронизации',
