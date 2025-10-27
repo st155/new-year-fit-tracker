@@ -430,6 +430,23 @@ Deno.serve(
 
     // Handle healthcheck
     if (payload.type === 'healthcheck') {
+      logger.info('Healthcheck received');
+      
+      const response = {
+        success: true,
+        message: 'ok',
+      };
+
+      await idempotency.storeResult(webhookId, response);
+
+      return new Response(
+        JSON.stringify(response),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // Unknown webhook type
     logger.warn('Unhandled webhook type', { type: payload.type });
