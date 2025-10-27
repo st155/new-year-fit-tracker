@@ -38,7 +38,7 @@ export function useUnifiedMetricsQuery(
     }),
     queryFn: async () => {
       let query = supabase
-        .from('client_unified_metrics')
+        .from('unified_metrics')
         .select('*')
         .eq('user_id', userId!);
 
@@ -56,8 +56,9 @@ export function useUnifiedMetricsQuery(
 
       const { data, error } = await query
         .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .order('priority', { ascending: true });
+        .order('priority', { ascending: true })
+        .order('confidence_score', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as UnifiedMetric[];

@@ -24,7 +24,7 @@ async function fetchAllDashboardData(userId: string): Promise<DashboardData> {
   
   // ОДИН SQL запрос для всех метрик
   const { data: metrics } = await supabase
-    .from('client_unified_metrics')
+    .from('unified_metrics')
     .select('*')
     .eq('user_id', userId)
     .in('metric_name', metricNames)

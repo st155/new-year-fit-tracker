@@ -43,7 +43,7 @@ export async function captureBaseline(userId: string, challengeId: string): Prom
 
     // 3. Try Withings (unified metrics)
     const { data: withingsData } = await supabase
-      .from('client_unified_metrics')
+      .from('unified_metrics')
       .select('value, unit, measurement_date, metric_name')
       .eq('user_id', userId)
       .eq('source', 'withings')

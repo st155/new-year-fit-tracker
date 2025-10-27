@@ -26,7 +26,7 @@ import { SubscriptionManager } from '@/lib/realtime/subscription-manager';
  */
 
 type RealtimeTable = 
-  | 'client_unified_metrics'
+  | 'unified_metrics'
   | 'user_metrics'
   | 'goals'
   | 'challenges'
@@ -98,7 +98,7 @@ export function useRealtimeSubscription({
  */
 export function useMetricsRealtime(enabled = true) {
   return useRealtimeSubscription({
-    table: 'client_unified_metrics',
+    table: 'unified_metrics',
     events: ['INSERT', 'UPDATE'],
     enabled,
   });

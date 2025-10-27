@@ -14,7 +14,7 @@ import { queryKeys } from '@/lib/query-keys';
 
 type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 type RealtimeTable = 
-  | 'client_unified_metrics'
+  | 'unified_metrics'
   | 'user_metrics'
   | 'goals'
   | 'challenges'
@@ -103,8 +103,8 @@ export class SubscriptionManager {
     console.log(`[SubscriptionManager] Invalidating queries for: ${table}`);
     
     switch (table) {
+      case 'unified_metrics':
       case 'user_metrics':
-      case 'client_unified_metrics':
         this.queryClient.invalidateQueries({
           queryKey: queryKeys.metrics.all,
         });

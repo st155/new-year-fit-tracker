@@ -82,7 +82,7 @@ export async function syncAllSources(userId: string): Promise<SyncResult[]> {
  */
 export async function shouldSync(userId: string): Promise<boolean> {
   const { data: metrics } = await supabase
-    .from('client_unified_metrics')
+    .from('unified_metrics')
     .select('measurement_date')
     .eq('user_id', userId)
     .order('measurement_date', { ascending: false })

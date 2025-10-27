@@ -55,14 +55,15 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
 
       // Single query: all needed fields, all sources
       const { data, error } = await supabase
-        .from('client_unified_metrics')
+        .from('unified_metrics')
         .select('metric_name, source, value, unit, measurement_date, created_at, priority, confidence_score')
         .eq('user_id', userId)
         .in('metric_name', metricNames)
         .gte('measurement_date', from)
         .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .order('priority', { ascending: true });
+        .order('priority', { ascending: true })
+        .order('confidence_score', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       const rows = data || [];

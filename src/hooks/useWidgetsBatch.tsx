@@ -63,7 +63,7 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
       try {
         // ОПТИМИЗАЦИЯ: Выбираем только нужные поля и фильтруем сразу
         const metricsPromise = supabase
-          .from('client_unified_metrics')
+          .from('unified_metrics')
           .select('metric_name, source, value, unit, measurement_date')
           .eq('user_id', userId)
           .in('metric_name', metricNames)

@@ -20,7 +20,7 @@ export class UnifiedDataFetcherV2 {
   ): Promise<MetricWithConfidence[]> {
     // Fetch RAW data from all sources
     let query = this.supabase
-      .from('client_unified_metrics')
+      .from('unified_metrics')
       .select('*')
       .eq('user_id', userId);
 
@@ -98,7 +98,7 @@ export class UnifiedDataFetcherV2 {
     dateRange: { start: string; end: string }
   ): Promise<MetricWithConfidence[]> {
     const { data: rawData, error } = await this.supabase
-      .from('client_unified_metrics')
+      .from('unified_metrics')
       .select('*')
       .eq('user_id', userId)
       .eq('metric_name', metricName)

@@ -247,7 +247,7 @@ serve(async (req) => {
         
         // Load recent metrics
         const { data: recentMetrics } = await supabaseClient
-          .from('client_unified_metrics')
+          .from('unified_metrics')
           .select('*')
           .eq('user_id', contextClientId)
           .order('measurement_date', { ascending: false })
@@ -420,7 +420,7 @@ serve(async (req) => {
         
         // Get recent unified metrics for this client
         const { data: recentMetrics } = await supabaseClient
-          .from('client_unified_metrics')
+          .from('unified_metrics')
           .select('*')
           .eq('user_id', clientId)
           .order('measurement_date', { ascending: false })

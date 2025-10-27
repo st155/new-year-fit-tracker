@@ -29,7 +29,7 @@ export class PrefetchStrategy {
         queryKey: metricsQueryKeys.unified(userId),
         queryFn: async () => {
           const { data } = await supabase
-            .from('client_unified_metrics')
+            .from('unified_metrics')
             .select('*')
             .eq('user_id', userId)
             .order('priority', { ascending: true })
@@ -92,7 +92,7 @@ export class PrefetchStrategy {
       queryKey: metricsQueryKeys.filtered(userId, { startDate: start }),
       queryFn: async () => {
         const { data } = await supabase
-          .from('client_unified_metrics')
+          .from('unified_metrics')
           .select('*')
           .eq('user_id', userId)
           .gte('measurement_date', start)

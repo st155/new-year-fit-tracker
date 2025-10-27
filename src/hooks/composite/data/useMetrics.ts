@@ -66,9 +66,9 @@ export function useMetrics(options: UseMetricsOptions = {}) {
           : metricsWithConfidence;
       }
 
-      // Original path without confidence
+      // Direct query to unified_metrics
       let query = supabase
-        .from('client_unified_metrics')
+        .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id);
 
@@ -77,9 +77,10 @@ export function useMetrics(options: UseMetricsOptions = {}) {
       }
 
       const { data, error } = await query
-        .order('priority', { ascending: true })
+        .order('metric_name')
         .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('priority', { ascending: true })
+        .order('confidence_score', { ascending: false });
 
       if (error) throw error;
 
@@ -103,7 +104,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
       if (!user?.id) return [];
 
       let query = supabase
-        .from('client_unified_metrics')
+        .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id);
 
@@ -119,6 +120,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
 
       const { data, error } = await query
         .order('measurement_date', { ascending: false })
+        .order('priority', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -165,7 +167,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
   const addMetricMutation = useMutation({
     mutationFn: async (metric: Partial<MetricData>) => {
       const { data, error } = await supabase
-        .from('client_unified_metrics')
+        .from('unified_metrics')
         .insert(metric as any)
         .select()
         .single();

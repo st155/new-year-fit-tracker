@@ -414,74 +414,40 @@ async function batchInsertMetrics(
   userId: string,
   metricsData: any[]
 ): Promise<number> {
-  // First, ensure all metrics exist
-  const uniqueMetrics = Array.from(
-    new Set(metricsData.map(m => JSON.stringify({
-      name: m.metric_name,
-      category: m.category,
-      source: m.source
-    })))
-  ).map(s => JSON.parse(s));
-
-  for (const metric of uniqueMetrics) {
-    const { data: existing } = await supabase
-      .from('user_metrics')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('metric_name', metric.name)
-      .eq('source', metric.source)
-      .maybeSingle();
-
-    if (!existing) {
-      await supabase.from('user_metrics').insert({
-        user_id: userId,
-        metric_name: metric.name,
-        metric_category: metric.category,
-        unit: getUnitForMetric(metric.name),
-        source: metric.source,
-      });
-    }
-  }
-
-  // Get metric IDs
-  const { data: metrics } = await supabase
-    .from('user_metrics')
-    .select('id, metric_name, source')
-    .eq('user_id', userId)
-    .in('metric_name', uniqueMetrics.map(m => m.name));
-
-  const metricMap = new Map(
-    metrics?.map(m => [`${m.metric_name}_${m.source}`, m.id]) || []
-  );
-
-  // Prepare metric values for batch insert
+  // Direct insert to unified_metrics (simplified!)
   const valuesToInsert = metricsData.map(m => ({
     user_id: userId,
-    metric_id: metricMap.get(`${m.metric_name}_${m.source}`),
+    metric_name: m.metric_name,
+    metric_category: m.category || getCategoryForMetric(m.metric_name),
     value: m.value,
+    unit: getUnitForMetric(m.metric_name),
     measurement_date: m.measurement_date,
+    source: m.source,
+    provider: m.source, // For Terra
     external_id: m.external_id,
-  })).filter(v => v.metric_id);
+    priority: getPriorityForSource(m.source),
+    confidence_score: 50, // Will be recalculated by confidence job
+  }));
 
-  // Remove duplicates within batch (keep last)
+  // Deduplicate within batch (keep last)
   const uniqueValues = new Map();
   valuesToInsert.forEach(v => {
-    const key = `${v.user_id}_${v.metric_id}_${v.measurement_date}`;
+    const key = `${v.user_id}_${v.metric_name}_${v.measurement_date}_${v.source}`;
     uniqueValues.set(key, v);
   });
   const finalValues = Array.from(uniqueValues.values());
 
-  // Batch upsert metric values
+  // Batch upsert to unified_metrics
   if (finalValues.length > 0) {
     const { error: upsertError } = await supabase
-      .from('metric_values')
+      .from('unified_metrics')
       .upsert(finalValues, {
-        onConflict: 'user_id,metric_id,measurement_date',
+        onConflict: 'user_id,metric_name,measurement_date,source',
         ignoreDuplicates: false,
       });
 
     if (upsertError) {
-      console.error('Failed to insert metrics:', {
+      console.error('Failed to insert unified metrics:', {
         error: upsertError,
         count: finalValues.length,
         sample: finalValues[0],
@@ -491,6 +457,40 @@ async function batchInsertMetrics(
   }
 
   return finalValues.length;
+}
+
+function getPriorityForSource(source: string): number {
+  const priorityMap: Record<string, number> = {
+    'inbody': 1,
+    'withings': 2,
+    'whoop': 3,
+    'apple_health': 4,
+    'terra': 5,
+    'manual': 6,
+  };
+  return priorityMap[source.toLowerCase()] || 10;
+}
+
+function getCategoryForMetric(metricName: string): string {
+  if (metricName.includes('Weight') || metricName.includes('Fat') || metricName.includes('Muscle')) {
+    return 'body_composition';
+  }
+  if (metricName.includes('Heart') || metricName.includes('HRV')) {
+    return 'cardiovascular';
+  }
+  if (metricName.includes('Sleep')) {
+    return 'sleep';
+  }
+  if (metricName.includes('Recovery') || metricName.includes('Strain')) {
+    return 'recovery';
+  }
+  if (metricName.includes('Steps') || metricName.includes('Distance') || metricName.includes('Calories')) {
+    return 'activity';
+  }
+  if (metricName.includes('VO2')) {
+    return 'fitness';
+  }
+  return 'other';
 }
 
 function getUnitForMetric(metricName: string): string {

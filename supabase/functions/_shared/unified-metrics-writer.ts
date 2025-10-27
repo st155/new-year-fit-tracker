@@ -42,7 +42,7 @@ function getMetricCategory(metricName: string): string {
 }
 
 /**
- * Write metric to client_unified_metrics table
+ * Write metric to unified_metrics table
  * This ensures data is available for the new dashboard architecture
  */
 export async function writeToUnifiedMetrics(
@@ -62,22 +62,23 @@ export async function writeToUnifiedMetrics(
     const priority = getProviderPriority(source);
     const category = getMetricCategory(metricName);
 
-    // Upsert to client_unified_metrics
+    // Upsert to unified_metrics
     const { error } = await supabase
-      .from('client_unified_metrics')
+      .from('unified_metrics')
       .upsert({
         user_id: userId,
         metric_name: metricName,
+        metric_category: category,
         source: source.toLowerCase(),
+        provider: source.toLowerCase(),
         value,
         unit,
         measurement_date: measurementDate,
         priority,
-        metric_category: category,
+        confidence_score: 50,
         created_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,metric_name,source,measurement_date',
-        ignoreDuplicates: false,
+        onConflict: 'user_id,metric_name,measurement_date,source',
       });
 
     if (error) {
@@ -94,7 +95,7 @@ export async function writeToUnifiedMetrics(
 }
 
 /**
- * Batch write multiple metrics to client_unified_metrics
+ * Batch write multiple metrics to unified_metrics
  */
 export async function batchWriteToUnifiedMetrics(
   supabase: SupabaseClient,

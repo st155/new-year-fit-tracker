@@ -24,7 +24,7 @@ export function useMetricsRealtime(enabled: boolean = true) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'client_unified_metrics',
+          table: 'unified_metrics',
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
