@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useMemo } from 'react';
 
 export default function ProgressNew() {
@@ -38,10 +39,9 @@ export default function ProgressNew() {
   // Real-time subscription for metrics updates
   useMetricsRealtime(!!user?.id);
 
-  const addWidget = (metricName: string, source: string) => {
+  const addWidget = (metricName: string) => {
     if (!user?.id) return;
-    const position = widgets.length;
-    addWidgetMutation.mutate({ userId: user.id, metricName, source, position });
+    addWidgetMutation.mutate({ userId: user.id, metricName });
   };
 
   const removeWidget = (widgetId: string) => {

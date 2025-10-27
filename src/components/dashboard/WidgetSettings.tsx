@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Settings, Plus, Trash2, Info } from 'lucide-react';
 import { Widget } from '@/hooks/useWidgetsQuery';
 import {
   Select,
@@ -18,66 +18,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface WidgetSettingsProps {
   widgets: Widget[];
-  onAdd: (metricName: string, source: string) => void;
+  onAdd: (metricName: string) => void;
   onRemove: (widgetId: string) => void;
   onReorder: (newOrder: Widget[]) => void;
 }
 
+// Available metrics (source is selected automatically)
 const AVAILABLE_METRICS = [
-  { name: 'Steps', sources: ['ultrahuman', 'garmin'] },
-  { name: 'Day Strain', sources: ['whoop'] },
-  { name: 'Workout Strain', sources: ['whoop'] },
-  { name: 'Recovery Score', sources: ['whoop'] },
-  { name: 'Sleep Duration', sources: ['whoop', 'garmin'] },
-  { name: 'Sleep Performance', sources: ['whoop'] },
-  { name: 'Sleep Efficiency', sources: ['whoop', 'garmin'] },
-  { name: 'Weight', sources: ['inbody', 'withings', 'manual'] },
-  { name: 'Body Fat Percentage', sources: ['inbody', 'withings', 'manual'] },
-  { name: 'Muscle Mass', sources: ['inbody', 'manual'] },
-  { name: 'BMR', sources: ['inbody'] },
-  { name: 'Visceral Fat', sources: ['inbody'] },
-  { name: 'Body Water', sources: ['inbody'] },
-  { name: 'HRV (rMSSD)', sources: ['whoop'] },
-  { name: 'Resting HR', sources: ['whoop'] },
-  { name: 'Workout Calories', sources: ['whoop'] },
-  { name: 'Average Heart Rate', sources: ['whoop', 'garmin'] },
-  { name: 'Max Heart Rate', sources: ['whoop', 'garmin'] },
-  { name: 'VO2Max', sources: ['garmin'] },
+  'Steps',
+  'Active Calories',
+  'Sleep Duration',
+  'Resting Heart Rate',
+  'Recovery Score',
+  'Day Strain',
+  'Max Heart Rate',
+  'Weight',
+  'Body Fat Percentage',
+  'HRV RMSSD',
+  'Sleep Efficiency',
+  'Training Readiness',
+  'VO2Max',
+  'Muscle Mass',
+  'Workout Calories',
+  'Sleep Performance',
+  'Average Heart Rate',
+  'BMR',
+  'Visceral Fat',
+  'Body Water',
 ];
 
-export function WidgetSettings({
-  widgets,
-  onAdd,
-  onRemove,
+export function WidgetSettings({ 
+  widgets, 
+  onAdd, 
+  onRemove, 
+  onReorder 
 }: WidgetSettingsProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState('');
-  const [selectedSource, setSelectedSource] = useState('');
+  const [open, setOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<string>('');
+  const { toast } = useToast();
 
   const handleAdd = () => {
-    if (selectedMetric && selectedSource) {
-      onAdd(selectedMetric, selectedSource);
-      setSelectedMetric('');
-      setSelectedSource('');
+    if (!selectedMetric) return;
+
+    // Check if widget already exists
+    const exists = widgets.some(w => w.metric_name === selectedMetric);
+    if (exists) {
+      toast({
+        title: 'Виджет уже добавлен',
+        description: `Метрика "${selectedMetric}" уже есть на дашборде`,
+        variant: 'destructive',
+      });
+      return;
     }
+
+    if (widgets.length >= 20) {
+      toast({
+        title: 'Достигнут лимит',
+        description: 'Максимум 20 виджетов на дашборде',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    onAdd(selectedMetric);
+    setSelectedMetric('');
   };
 
-  const availableSources = AVAILABLE_METRICS.find(
-    m => m.name === selectedMetric
-  )?.sources || [];
-
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Settings className="h-4 w-4" />
           Настроить виджеты
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-background/95 backdrop-blur-xl border-border/50">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Настройка виджетов</DialogTitle>
           <DialogDescription>
@@ -90,56 +109,39 @@ export function WidgetSettings({
           <div className="border rounded-lg p-4 space-y-4">
             <h3 className="font-medium">Добавить виджет</h3>
             
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Метрика
-                </label>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Метрика</label>
                 <Select value={selectedMetric} onValueChange={setSelectedMetric}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите метрику" />
                   </SelectTrigger>
                   <SelectContent>
-                    {AVAILABLE_METRICS.map(metric => (
-                      <SelectItem key={metric.name} value={metric.name}>
-                        {metric.name}
+                    {AVAILABLE_METRICS.map((metric) => (
+                      <SelectItem key={metric} value={metric}>
+                        {metric}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Источник
-                </label>
-                <Select 
-                  value={selectedSource} 
-                  onValueChange={setSelectedSource}
-                  disabled={!selectedMetric}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите источник" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableSources.map(source => (
-                      <SelectItem key={source} value={source}>
-                        {source.charAt(0).toUpperCase() + source.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted p-3 rounded-md">
+                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>
+                  Источник данных выбирается автоматически из всех подключенных устройств
+                </span>
               </div>
+
+              <Button 
+                onClick={handleAdd} 
+                disabled={!selectedMetric || widgets.length >= 20}
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить виджет
+              </Button>
             </div>
-
-            <Button 
-              onClick={handleAdd} 
-              disabled={!selectedMetric || !selectedSource || widgets.length >= 20}
-              className="w-full gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Добавить виджет
-            </Button>
 
             {widgets.length >= 20 && (
               <p className="text-sm text-destructive">
@@ -156,38 +158,30 @@ export function WidgetSettings({
             
             {widgets.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Нет виджетов
+                Нет виджетов. Добавьте первый виджет выше.
               </p>
             ) : (
               <div className="space-y-2">
                 {widgets.map((widget, index) => (
                   <div
                     key={widget.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
                   >
-                    <div className="flex items-center gap-3">
-                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                      <div>
-                        <p className="font-medium text-sm">{widget.metric_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {widget.source.charAt(0).toUpperCase() + widget.source.slice(1)}
-                        </p>
-                      </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{widget.metric_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Позиция: {index + 1}
+                      </p>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        #{index + 1}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(widget.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemove(widget.id)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>

@@ -6,7 +6,6 @@ export interface Widget {
   id: string;
   user_id: string;
   metric_name: string;
-  source: string;
   position: number;
   is_visible: boolean;
   created_at?: string;
@@ -17,24 +16,25 @@ export const widgetKeys = {
   all: ['widgets'] as const,
   lists: () => [...widgetKeys.all, 'list'] as const,
   list: (userId: string) => [...widgetKeys.lists(), userId] as const,
-  data: (userId: string, metricName: string, source: string) => 
-    [...widgetKeys.list(userId), 'data', metricName, source] as const,
+  data: (userId: string, metricName: string) => 
+    [...widgetKeys.list(userId), 'data', metricName] as const,
 };
 
+// Default widgets - source is selected dynamically by useSmartWidgetsData
 const DEFAULT_WIDGETS = [
-  { metric_name: 'Recovery Score', source: 'whoop' },
-  { metric_name: 'Day Strain', source: 'whoop' },
-  { metric_name: 'Sleep Duration', source: 'whoop' },
-  { metric_name: 'Steps', source: 'garmin' },
-  { metric_name: 'Steps', source: 'ultrahuman' },
-  { metric_name: 'Training Readiness', source: 'garmin' },
-  { metric_name: 'Sleep Efficiency', source: 'garmin' },
-  { metric_name: 'HRV RMSSD', source: 'ultrahuman' },
-  { metric_name: 'VO2Max', source: 'garmin' },
-  { metric_name: 'Weight', source: 'withings' },
-  { metric_name: 'Body Fat Percentage', source: 'withings' },
-  { metric_name: 'Max Heart Rate', source: 'garmin' },
-  { metric_name: 'Resting Heart Rate', source: 'whoop' },
+  { metric_name: 'Recovery Score' },
+  { metric_name: 'Day Strain' },
+  { metric_name: 'Sleep Duration' },
+  { metric_name: 'Steps' },
+  { metric_name: 'Active Calories' },
+  { metric_name: 'Training Readiness' },
+  { metric_name: 'Sleep Efficiency' },
+  { metric_name: 'HRV RMSSD' },
+  { metric_name: 'VO2Max' },
+  { metric_name: 'Weight' },
+  { metric_name: 'Body Fat Percentage' },
+  { metric_name: 'Max Heart Rate' },
+  { metric_name: 'Resting Heart Rate' },
 ];
 
 /**
@@ -72,7 +72,6 @@ export function useWidgetsQuery(userId: string | undefined) {
         const widgetsToCreate = DEFAULT_WIDGETS.map((w, index) => ({
           user_id: userId!,
           metric_name: w.metric_name,
-          source: w.source,
           position: index,
           is_visible: true,
         }));
@@ -115,23 +114,21 @@ export function useWidgetsQuery(userId: string | undefined) {
 
 /**
  * Hook for fetching data for a specific widget
- * Note: This is a placeholder - actual widget data fetching
- * should be implemented based on the metric type
+ * Note: This is a placeholder - use useSmartWidgetsData instead
  */
 export function useWidgetDataQuery(
   userId: string | undefined,
   metricName: string,
-  source: string,
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: widgetKeys.data(userId!, metricName, source),
+    queryKey: widgetKeys.data(userId!, metricName),
     queryFn: async () => {
-      // Placeholder - implement based on your metric data structure
+      // Placeholder - use useSmartWidgetsData for actual data
       return null;
     },
     enabled: !!userId && enabled,
-    staleTime: 2 * 60 * 1000, // 2 minutes for metric data
+    staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 2,
@@ -139,31 +136,34 @@ export function useWidgetDataQuery(
 }
 
 /**
- * Mutation for adding a new widget
+ * Mutation for adding a new widget (source is selected automatically)
  */
 export function useAddWidgetMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      metricName, 
-      source, 
-      position 
-    }: { 
+    mutationFn: async ({ userId, metricName }: { 
       userId: string; 
-      metricName: string; 
-      source: string; 
-      position: number 
+      metricName: string;
     }) => {
+      const { data: existingWidgets } = await supabase
+        .from('dashboard_widgets')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1);
+
+      const nextPosition = existingWidgets && existingWidgets.length > 0
+        ? existingWidgets[0].position + 1
+        : 0;
+
       const { data, error } = await supabase
         .from('dashboard_widgets')
         .insert({
           user_id: userId,
           metric_name: metricName,
-          source: source,
-          position: position,
+          position: nextPosition,
           is_visible: true,
         })
         .select()
@@ -176,13 +176,13 @@ export function useAddWidgetMutation() {
       queryClient.invalidateQueries({ queryKey: widgetKeys.list(variables.userId) });
       toast({
         title: 'Виджет добавлен',
-        description: `${variables.metricName} (${variables.source})`,
+        description: variables.metricName,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: 'Ошибка',
-        description: 'Не удалось добавить виджет',
+        description: error.message || 'Не удалось добавить виджет',
         variant: 'destructive',
       });
     },

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWidgetsQuery } from '@/hooks/useWidgetsQuery';
-import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
+import { useSmartWidgetsData } from '@/hooks/metrics';
 import { useHabits } from '@/hooks/useHabits';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useMetricsRealtime } from '@/hooks/composite/realtime/useRealtimeSubscription';
@@ -10,7 +10,7 @@ import { useMetricsRealtime } from '@/hooks/composite/realtime/useRealtimeSubscr
  * FEATURE: Dashboard page data orchestration
  * 
  * Combines:
- * - Widgets + metrics batch fetching
+ * - Widgets + smart metrics batch fetching
  * - Habits
  * - Challenges
  * - Realtime subscriptions
@@ -31,7 +31,7 @@ export function useDashboard(options?: DashboardOptions) {
 
   // ===== Parallel data fetching =====
   const { data: widgetConfigs, isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
-  const { data: widgetsData, isLoading: metricsLoading } = useWidgetsBatch(
+  const { data: widgetsData, ages, isLoading: metricsLoading } = useSmartWidgetsData(
     user?.id, 
     widgetConfigs ?? []
   );
@@ -44,17 +44,19 @@ export function useDashboard(options?: DashboardOptions) {
 
   // ===== Combine data =====
   const dashboardData = useMemo(() => {
-    // Map widgets to include data
+    // Map widgets to include data from smart batch (no source needed - auto-selected)
     const widgets = (widgetConfigs ?? []).map(widget => {
-      const key = `${widget.metric_name}-${widget.source}`;
-      const data = widgetsData?.get(key);
+      const data = widgetsData.get(widget.id);
+      const age = ages.get(widget.id) ?? 0;
       
       return {
         ...widget,
         value: data?.value,
         unit: data?.unit,
         date: data?.measurement_date,
-        trend: data?.trend,
+        source: data?.source,
+        confidence: data?.confidence,
+        age,
       };
     });
 
@@ -63,7 +65,7 @@ export function useDashboard(options?: DashboardOptions) {
       habits: habitsData ?? [],
       challenges: challenges ?? [],
     };
-  }, [widgetConfigs, widgetsData, habitsData, challenges]);
+  }, [widgetConfigs, widgetsData, ages, habitsData, challenges]);
 
   // ===== Stats =====
   const stats = useMemo(() => {

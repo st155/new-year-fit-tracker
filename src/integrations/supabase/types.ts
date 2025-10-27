@@ -1138,7 +1138,6 @@ export type Database = {
           is_visible: boolean
           metric_name: string
           position: number
-          source: string
           updated_at: string
           user_id: string
         }
@@ -1148,7 +1147,6 @@ export type Database = {
           is_visible?: boolean
           metric_name: string
           position?: number
-          source: string
           updated_at?: string
           user_id: string
         }
@@ -1158,7 +1156,6 @@ export type Database = {
           is_visible?: boolean
           metric_name?: string
           position?: number
-          source?: string
           updated_at?: string
           user_id?: string
         }

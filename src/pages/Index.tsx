@@ -26,6 +26,8 @@ import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAutoSync } from '@/hooks/useAutoSync';
 import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -70,10 +72,9 @@ const Index = () => {
   // Real-time subscription for metrics updates
   useMetricsRealtime(!!user?.id);
   
-  const addWidget = (metricName: string, source: string) => {
+  const addWidget = (metricName: string) => {
     if (!user?.id) return;
-    const position = widgets.length;
-    addWidgetMutation.mutate({ userId: user.id, metricName, source, position });
+    addWidgetMutation.mutate({ userId: user.id, metricName });
   };
 
   const removeWidget = (widgetId: string) => {

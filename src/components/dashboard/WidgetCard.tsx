@@ -113,41 +113,32 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   
   const metricName = widget.metric_name;
-  // Prefer actual data source if provided by smart batch, fallback to widget's configured source
-  const source = data?.source || widget.source;
+  const source = data?.source || 'unknown';
 
-  // Check if user has active Terra token for Whoop (for Whoop widgets only)
+  // Check if user has active Terra tokens for data syncing
   useEffect(() => {
-    if (!user || source.toLowerCase() !== 'whoop') {
-      setHasActiveToken(true); // Not a Whoop widget, no check needed
-      return;
-    }
+    if (!user) return;
     
     const checkToken = async () => {
       const { data: token } = await supabase
         .from('terra_tokens')
         .select('is_active')
         .eq('user_id', user.id)
-        .eq('provider', 'WHOOP')
         .eq('is_active', true)
         .maybeSingle();
       
       setHasActiveToken(!!token);
-      
-      if (!token && data) {
-        console.log('⚠️ [WidgetCard] Showing cached Whoop data without active Terra token');
-      }
     };
     
     checkToken();
-  }, [user, source, data]);
+  }, [user]);
 
-  const syncWhoopData = async () => {
+  const syncAllData = async () => {
     if (!user) return;
     
     setSyncing(true);
     try {
-      console.log('🔄 [WidgetCard] Starting data sync from widget...');
+      console.log('🔄 [WidgetCard] Starting data sync for all sources...');
       
       const { error } = await supabase.functions.invoke('terra-integration', {
         body: { action: 'sync-data' }
@@ -481,7 +472,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
                 className="w-full text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  syncWhoopData();
+                  syncAllData();
                 }}
                 disabled={syncing}
               >
