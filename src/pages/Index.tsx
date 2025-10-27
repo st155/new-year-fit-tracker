@@ -120,17 +120,6 @@ const Index = () => {
     setWidgetAges({}); // Clear ages on refresh
   };
   
-  // Create widgetsDataMap for easy lookup
-  const widgetsDataMap = useMemo(() => {
-    const map = new Map();
-    if (widgetsData) {
-      widgetsData.forEach(data => {
-        map.set(`${data.metricName}-${data.source}`, data);
-      });
-    }
-    return map;
-  }, [widgetsData]);
-
   // Filter and sort widgets
   const processedWidgets = useMemo(() => {
     const now = Date.now();
@@ -160,7 +149,7 @@ const Index = () => {
     // Apply quality filter if enabled
     if (showOnlyHighQuality) {
       sorted = sorted.filter(widget => {
-        const data = widgetsDataMap.get(`${widget.metric_name}-${widget.source}`);
+        const data = widgetsData?.get(`${widget.metric_name}-${widget.source}`);
         if (!data) return false;
         // Show only if confidence >= 60% or if no confidence data (assume good)
         return !data.confidence || data.confidence >= 60;
@@ -168,7 +157,7 @@ const Index = () => {
     }
     
     return sorted;
-  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, widgetsDataMap]);
+  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, widgetsData]);
 
   const hiddenCount = widgets.length - processedWidgets.length;
 
