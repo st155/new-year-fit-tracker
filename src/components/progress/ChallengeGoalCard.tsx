@@ -166,15 +166,22 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           {/* Progress Bar - СРАЗУ ПОСЛЕ ИКОНКИ */}
           <div className="mb-2">
             <Progress 
-              value={goal.progress_percentage ?? 0} 
+              value={Math.min(goal.progress_percentage ?? 0, 100)} 
               autoColor={true} 
-              className="h-2"
+              className={cn(
+                "h-2",
+                goal.progress_percentage > 100 && "animate-pulse"
+              )}
             />
             <div className="flex items-center justify-between mt-1">
               <span className="text-xs text-muted-foreground">
                 {goal.progress_percentage === 0 
                   ? (goal.current_value === 0 ? "Нужен первый замер" : "0% выполнено")
-                  : `${goal.progress_percentage.toFixed(0)}% выполнено`
+                  : goal.progress_percentage >= 100
+                    ? `${goal.progress_percentage.toFixed(0)}% выполнено ${
+                        goal.progress_percentage > 100 ? '⚡' : '✓'
+                      }`
+                    : `${goal.progress_percentage.toFixed(0)}% выполнено`
                 }
               </span>
               {goal.trend !== 'stable' && (
@@ -190,12 +197,17 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             {goal.goal_name}
           </h3>
 
-          {/* Badges - Centered, ТОЛЬКО ОДИН badge */}
-          <div className="flex items-center justify-center mb-2.5">
+          {/* Badges - Centered */}
+          <div className="flex items-center justify-center gap-2 mb-2.5">
             {goal.is_personal ? (
               <Badge variant="outline" className="text-xs">Личная</Badge>
             ) : (
               <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
+            )}
+            {goal.progress_percentage > 100 && (
+              <Badge variant="success" className="text-xs">
+                Перевыполнено!
+              </Badge>
             )}
           </div>
 

@@ -24,6 +24,7 @@ const progressVariants = cva(
 // Function to determine color based on value
 const getProgressVariant = (value: number | null | undefined): "success" | "warning" | "danger" => {
   if (!value) return "danger";
+  if (value > 100) return "success"; // Overachievement = green
   if (value >= 65) return "success";
   if (value >= 35) return "warning";
   return "danger";

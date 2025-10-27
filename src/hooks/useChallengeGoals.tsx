@@ -245,16 +245,14 @@ export function useChallengeGoals(userId?: string) {
             progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
           }
         } else {
-          // Higher is better (duration, strength, reps)
-          if (currentValue >= targetValue) {
-            progress = 100;
-          } else if (baselineValue && baselineValue < targetValue && baselineValue !== currentValue) {
+          // Higher is better (duration, strength, reps) - allow >100% for overachievement
+          if (baselineValue && baselineValue < targetValue && baselineValue !== currentValue) {
             const totalRange = targetValue - baselineValue;
             const progressMade = currentValue - baselineValue;
-            progress = Math.max(0, Math.min(100, (progressMade / totalRange) * 100));
+            progress = Math.max(0, (progressMade / totalRange) * 100);
           } else {
-            // Fallback when no baseline: show simple ratio (10/16 = 62.5%)
-            progress = Math.max(0, Math.min(100, (currentValue / targetValue) * 100));
+            // Fallback when no baseline: show simple ratio (70/50 = 140%)
+            progress = Math.max(0, (currentValue / targetValue) * 100);
           }
         }
 
