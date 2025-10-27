@@ -172,27 +172,53 @@ Deno.serve(
       });
     }
 
-    // Log webhook receipt
+    // Log webhook receipt in background (non-blocking)
     let userId = null;
     if (payload.user?.user_id) {
-      const { data: tokenData } = await supabase
-        .from('terra_tokens')
-        .select('user_id')
-        .eq('terra_user_id', payload.user.user_id)
-        .eq('is_active', true)
-        .maybeSingle();
-      userId = tokenData?.user_id || null;
+      try {
+        const { data: tokenData, error } = await withTimeout(
+          supabase
+            .from('terra_tokens')
+            .select('user_id')
+            .eq('terra_user_id', payload.user.user_id)
+            .eq('is_active', true)
+            .maybeSingle(),
+          2000 // 2 second timeout
+        );
+        if (error) {
+          logger.warn('Failed to fetch user_id for webhook_logs', { 
+            error: error.message,
+            terraUserId: payload.user.user_id 
+          });
+        }
+        userId = tokenData?.user_id || null;
+      } catch (e) {
+        logger.warn('Timeout fetching user_id for webhook_logs', { 
+          error: e instanceof Error ? e.message : String(e) 
+        });
+      }
     }
 
-    await supabase.from('webhook_logs').insert({
-      webhook_type: 'terra',
-      event_type: payload.type,
-      terra_user_id: payload.user?.user_id || null,
-      user_id: userId,
-      payload: payload,
-      status: 'received',
-      created_at: new Date().toISOString()
-    });
+    // Insert webhook_logs in background (don't block main flow)
+    EdgeRuntime.waitUntil(
+      supabase.from('webhook_logs').insert({
+        webhook_type: 'terra',
+        event_type: payload.type,
+        terra_user_id: payload.user?.user_id || null,
+        user_id: userId,
+        payload: payload,
+        status: 'received',
+        created_at: new Date().toISOString()
+      }).then(({ error }) => {
+        if (error) {
+          logger.warn('Failed to insert webhook_logs', { 
+            error: error.message,
+            webhookId,
+            type: payload.type 
+          });
+        }
+      })
+    );
 
     // Handle healthcheck - quick response
     if (payload.type === 'healthcheck') {
@@ -266,32 +292,44 @@ Deno.serve(
         });
       }
 
-      // Обновляем/создаём токен с правильным terra_user_id
-      const { data: existing } = await supabase
-        .from('terra_tokens')
-        .select('id')
-        .eq('user_id', appUserId)
-        .eq('provider', provider)
-        .maybeSingle();
+      // Atomic upsert of terra_tokens (single DB operation)
+      try {
+        const { error: upsertError } = await withTimeout(
+          supabase.from('terra_tokens').upsert({
+            user_id: appUserId,
+            terra_user_id: terraUserId,
+            provider,
+            is_active: true,
+            last_sync_date: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id,provider',
+            ignoreDuplicates: false
+          }),
+          3000 // 3 second timeout
+        );
 
-      const tokenData = {
-        user_id: appUserId,
-        terra_user_id: terraUserId,
-        provider,
-        is_active: true,
-        last_sync_date: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existing?.id) {
-        await supabase.from('terra_tokens').update(tokenData).eq('id', existing.id);
-        logger.info('Updated terra_tokens with terra_user_id', { appUserId, terraUserId });
-      } else {
-        await supabase.from('terra_tokens').insert({
-          ...tokenData,
-          created_at: new Date().toISOString(),
+        if (upsertError) {
+          logger.error('Failed to upsert terra_tokens', {
+            error: upsertError.message,
+            code: upsertError.code,
+            details: upsertError.details,
+            appUserId,
+            terraUserId,
+            provider
+          });
+        } else {
+          logger.info('Upserted terra_tokens', { appUserId, terraUserId, provider });
+        }
+      } catch (e) {
+        logger.error('Exception upserting terra_tokens', {
+          error: e instanceof Error ? e.message : String(e),
+          stack: e instanceof Error ? e.stack : undefined,
+          appUserId,
+          terraUserId,
+          provider
         });
-        logger.info('Inserted new terra_tokens', { appUserId, terraUserId });
       }
 
       // Create/update terra_users record
@@ -411,71 +449,78 @@ Deno.serve(
     const dataWebhookTypes = ['activity', 'body', 'sleep', 'daily', 'nutrition', 'athlete'];
 
     if (dataWebhookTypes.includes(payload.type)) {
-      // Обновляем last_sync_date и terra_user_id (если он еще null) при получении данных
-      if (payload.user?.user_id) {
-        const { data: existingToken } = await supabase
-          .from('terra_tokens')
-          .select('terra_user_id')
-          .eq('terra_user_id', payload.user.user_id)
-          .eq('is_active', true)
-          .maybeSingle();
+      // Update terra_tokens with last_sync_date (non-blocking, fire-and-forget)
+      if (payload.user?.user_id && payload.user?.provider) {
+        const provider = payload.user.provider.toUpperCase();
+        const terraUserId = payload.user.user_id;
+        
+        // Fire-and-forget update in background
+        EdgeRuntime.waitUntil(
+          (async () => {
+            try {
+              // Try to update by terra_user_id first
+              const { data: updated, error: updateError } = await withTimeout(
+                supabase
+                  .from('terra_tokens')
+                  .update({ 
+                    last_sync_date: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('terra_user_id', terraUserId)
+                  .eq('is_active', true)
+                  .select('id'),
+                2000
+              );
 
-        // Если токен найден, обновляем last_sync_date
-        if (existingToken) {
-          await supabase
-            .from('terra_tokens')
-            .update({ 
-              last_sync_date: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('terra_user_id', payload.user.user_id)
-            .eq('is_active', true);
-          
-          logger.info('Updated last_sync_date for terra token', {
-            terraUserId: payload.user.user_id,
-            type: payload.type
-          });
-        } else {
-          // Токен с terra_user_id не найден - ищем токен с null terra_user_id для провайдера
-          const provider = payload.user.provider?.toUpperCase();
-          if (provider) {
-            const { data: nullToken } = await supabase
-              .from('terra_tokens')
-              .select('id, user_id')
-              .eq('provider', provider)
-              .eq('is_active', true)
-              .is('terra_user_id', null)
-              .maybeSingle();
+              if (updateError) {
+                logger.warn('Failed to update last_sync_date', { 
+                  error: updateError.message,
+                  terraUserId 
+                });
+              } else if (!updated || updated.length === 0) {
+                // No token found with terra_user_id, try linking by provider
+                const { data: nullToken, error: selectError } = await withTimeout(
+                  supabase
+                    .from('terra_tokens')
+                    .select('id, user_id')
+                    .eq('provider', provider)
+                    .eq('is_active', true)
+                    .is('terra_user_id', null)
+                    .maybeSingle(),
+                  2000
+                );
 
-            if (nullToken) {
-              // Обновляем terra_user_id и last_sync_date
-              console.log('🔗 Linking terra_user_id from data webhook...', {
-                tokenId: nullToken.id,
-                userId: nullToken.user_id,
-                provider,
-                terraUserId: payload.user.user_id
+                if (!selectError && nullToken) {
+                  logger.info('Linking terra_user_id from data webhook', {
+                    userId: nullToken.user_id,
+                    provider,
+                    terraUserId
+                  });
+                  
+                  await withTimeout(
+                    supabase
+                      .from('terra_tokens')
+                      .update({
+                        terra_user_id: terraUserId,
+                        last_sync_date: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                      })
+                      .eq('id', nullToken.id),
+                    2000
+                  );
+                }
+              } else {
+                logger.info('Updated last_sync_date', { terraUserId, type: payload.type });
+              }
+            } catch (e) {
+              logger.warn('Background terra_tokens update failed', {
+                error: e instanceof Error ? e.message : String(e),
+                terraUserId,
+                provider
               });
-              
-              await supabase
-                .from('terra_tokens')
-                .update({
-                  terra_user_id: payload.user.user_id,
-                  last_sync_date: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', nullToken.id);
-
-              console.log('✅ Successfully linked terra_user_id from data webhook');
-              logger.info('Updated terra_user_id from data webhook', {
-                terraUserId: payload.user.user_id,
-                provider,
-                type: payload.type
-              });
-            } else {
-              console.log('⚠️ No pending token found for provider:', provider);
             }
-          }
-        }
+          })()
+        );
       }
 
       const jobQueue = new JobQueue();
@@ -640,4 +685,12 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
     result |= a[i] ^ b[i];
   }
   return result === 0;
+}
+
+// Timeout wrapper for database operations
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`Operation timeout after ${timeoutMs}ms`)), timeoutMs)
+  );
+  return Promise.race([promise, timeout]);
 }

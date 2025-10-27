@@ -24,7 +24,7 @@ export class RateLimiter {
   }
 
   /**
-   * Check rate limit
+   * Check rate limit using atomic increment
    * Returns remaining requests or throws error
    */
   async checkLimit(
@@ -33,77 +33,49 @@ export class RateLimiter {
   ): Promise<{ remaining: number; resetAt: Date }> {
     const key = `${config.keyPrefix || 'ratelimit'}:${identifier}`;
     const now = Date.now();
-    const windowStart = now - config.windowMs;
 
-    // Get or create rate limit record
-    const { data, error } = await this.supabase
-      .from('rate_limits')
-      .select('*')
-      .eq('key', key)
-      .single();
+    try {
+      // Use atomic RPC function for rate limiting
+      const { data, error } = await this.supabase.rpc('increment_rate_limit', {
+        p_key: key,
+        p_window_start: new Date(now).toISOString(),
+        p_max_requests: config.maxRequests,
+        p_window_ms: config.windowMs
+      });
 
-    if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('Rate limit RPC error:', error);
+        throw error;
+      }
+
+      const result = data as { exceeded: boolean; count: number; remaining?: number; reset_at: string };
+
+      if (result.exceeded) {
+        throw new EdgeFunctionError(
+          ErrorCode.RATE_LIMIT_EXCEEDED,
+          `Rate limit exceeded. Max ${config.maxRequests} requests per ${config.windowMs}ms`,
+          429,
+          {
+            maxRequests: config.maxRequests,
+            windowMs: config.windowMs,
+            resetAt: result.reset_at,
+          }
+        );
+      }
+
+      return {
+        remaining: result.remaining || 0,
+        resetAt: new Date(result.reset_at),
+      };
+    } catch (error) {
+      // If it's already an EdgeFunctionError, rethrow it
+      if (error instanceof EdgeFunctionError) {
+        throw error;
+      }
+      // For other errors, log and rethrow
+      console.error('Rate limit check failed:', error);
       throw error;
     }
-
-    let currentCount = 0;
-    let resetAt = new Date(now + config.windowMs);
-
-    if (data) {
-      // Check if window expired
-      const windowStartTime = new Date(data.window_start).getTime();
-      if (windowStartTime < windowStart) {
-        // Reset window
-        currentCount = 1;
-        await this.supabase
-          .from('rate_limits')
-          .update({
-            count: 1,
-            window_start: new Date(now).toISOString(),
-          })
-          .eq('key', key);
-      } else {
-        // Increment count
-        currentCount = data.count + 1;
-        
-        if (currentCount > config.maxRequests) {
-          throw new EdgeFunctionError(
-            ErrorCode.RATE_LIMIT_EXCEEDED,
-            `Rate limit exceeded. Max ${config.maxRequests} requests per ${config.windowMs}ms`,
-            429,
-            {
-              maxRequests: config.maxRequests,
-              windowMs: config.windowMs,
-              resetAt: new Date(windowStartTime + config.windowMs).toISOString(),
-            }
-          );
-        }
-
-        await this.supabase
-          .from('rate_limits')
-          .update({ 
-            count: currentCount,
-          })
-          .eq('key', key);
-
-        resetAt = new Date(windowStartTime + config.windowMs);
-      }
-    } else {
-      // Create new record
-      currentCount = 1;
-      await this.supabase
-        .from('rate_limits')
-        .insert({
-          key: key,
-          count: 1,
-          window_start: new Date(now).toISOString(),
-        });
-    }
-
-    return {
-      remaining: config.maxRequests - currentCount,
-      resetAt,
-    };
   }
 }
 
