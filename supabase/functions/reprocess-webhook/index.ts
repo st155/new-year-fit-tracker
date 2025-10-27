@@ -42,14 +42,14 @@ Deno.serve(async (req) => {
     }
 
     // Create a job in background_jobs for job-worker to process
+    // Pass the full webhook payload structure that job-worker expects
     const { data: job, error: jobError } = await supabase
       .from('background_jobs')
       .insert({
         type: 'webhook_processing',
         payload: {
           webhookId: webhook.id,
-          type: webhook.type,
-          userId: webhook.user_id
+          payload: webhook.payload // Pass the full Terra webhook payload
         },
         status: 'pending'
       })
