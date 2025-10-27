@@ -31,13 +31,16 @@ const queryClient = new QueryClient({
   },
 });
 
+// Initialize prefetcher synchronously to avoid "not initialized" errors
+initPrefetcher(queryClient);
+
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
-  // Initialize invalidation, prefetch strategies, and web vitals (deferred to not block render)
+  // Initialize invalidation, web vitals (deferred to not block render)
+  // Note: prefetcher is initialized synchronously at module level
   useEffect(() => {
     const timer = setTimeout(() => {
       initInvalidator(queryClient);
-      initPrefetcher(queryClient);
       initWebVitals();
       setupVersionCheck(); // Auto-detect new app versions
       logger.info('[App] Query strategies, web vitals, and version check initialized');

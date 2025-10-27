@@ -74,12 +74,16 @@ export const AppRoutes = () => {
 
   // Prefetch critical data after login
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+    
+    try {
       logger.debug('[AppRoutes] User logged in, prefetching critical data');
       const prefetcher = getPrefetcher();
       prefetcher.prefetchAfterLogin(user.id).catch(error => {
         logger.warn('[AppRoutes] Prefetch after login failed:', error);
       });
+    } catch (error) {
+      logger.warn('[AppRoutes] Prefetcher not ready, skipping prefetch:', error);
     }
   }, [user]);
 
