@@ -6,6 +6,7 @@ import {
   CheckCircle2, 
   Dumbbell, 
   Camera,
+  Link,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,6 +57,15 @@ export const QuickActionsPanel = () => {
         setIsOpen(false);
       },
       color: 'text-secondary'
+    },
+    {
+      icon: Link,
+      label: 'Интеграции',
+      onClick: () => {
+        navigate('/integrations');
+        setIsOpen(false);
+      },
+      color: 'text-purple-500'
     }
   ];
 

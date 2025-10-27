@@ -108,114 +108,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [syncing, setSyncing] = useState(false);
-  const [hasActiveToken, setHasActiveToken] = useState<boolean | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   
   const metricName = widget.metric_name;
   const source = data?.source || 'unknown';
 
-  // Check if user has active Terra tokens for data syncing
-  useEffect(() => {
-    if (!user) return;
-    
-    const checkToken = async () => {
-      const { data: token } = await supabase
-        .from('terra_tokens')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      setHasActiveToken(!!token);
-    };
-    
-    checkToken();
-  }, [user]);
-
-  const syncAllData = async () => {
-    if (!user) return;
-    
-    setSyncing(true);
-    try {
-      console.log('🔄 [WidgetCard] Starting data sync for all sources...');
-      
-      const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'sync-data' }
-      });
-      
-      if (error) throw error;
-      
-      // Invalidate all widget queries
-      queryClient.invalidateQueries({ queryKey: widgetKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['metrics'] });
-      
-      console.log('✅ Data sync completed, starting polling...');
-      toast({
-        title: 'Синхронизация запущена',
-        description: 'Данные обновляются...',
-      });
-      
-      // Start polling for 60 seconds (check every 4 seconds)
-      const targetMetrics = ['Day Strain', 'Workout Strain', 'Strain', 'Recovery Score', 'Recovery', 'Max Heart Rate', 'HR Max'];
-      const isTargetMetric = targetMetrics.some(m => metricName.includes(m));
-      
-      if (isTargetMetric) {
-        let pollCount = 0;
-        const maxPolls = 15; // 15 * 4s = 60s
-        const today = new Date().toISOString().split('T')[0];
-        
-        const interval = setInterval(async () => {
-          pollCount++;
-          console.log(`🔄 [WidgetCard] Polling attempt ${pollCount}/${maxPolls} for ${metricName}`);
-          
-          // Invalidate queries to trigger refetch
-          await queryClient.invalidateQueries({ queryKey: [...widgetKeys.all, 'smart-batch'] });
-          
-          // Check if we have today's data
-          const hasToday = data?.measurement_date === today;
-          
-          if (hasToday || pollCount >= maxPolls) {
-            if (interval) clearInterval(interval);
-            setPollingInterval(null);
-            setSyncing(false);
-            
-            if (hasToday) {
-              console.log(`✅ [WidgetCard] Fresh data received for ${metricName}`);
-              toast({
-                title: 'Данные обновлены',
-                description: `${metricName} успешно синхронизирован`,
-              });
-            } else {
-              console.log(`⏱️ [WidgetCard] Polling timeout for ${metricName}`);
-            }
-          }
-        }, 4000);
-        
-        setPollingInterval(interval);
-      } else {
-        setSyncing(false);
-      }
-      
-    } catch (error: any) {
-      console.error('❌ Data sync failed:', error);
-      toast({
-        title: 'Ошибка синхронизации',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setSyncing(false);
-    }
-  };
-  
-  // Cleanup polling interval on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
 
   const handleCardClick = useCallback(() => {
     // Trigger refresh через React Query invalidation
@@ -272,11 +168,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   
   console.log('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
-  // Проверка на кешированные данные без активного токена
-  const isCachedWithoutToken = isWhoopSource && hasActiveToken === false && data;
-  
   const getDataAgeMessage = () => {
-    if (isCachedWithoutToken) return 'Whoop не подключен. Показаны кешированные данные';
     if (daysDiff <= 1) return 'Данные актуальны';
     if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
     return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
@@ -290,7 +182,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: isCachedWithoutToken ? '#ef4444' : isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
+        borderColor: isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
       }}
     >
       <CardContent className="p-3 sm:p-6">
@@ -306,12 +198,12 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
           )}
           
           {/* Freshness Badge */}
-          {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
+          {(isDataWarning || isDataStale) && isWhoopSource && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge 
-                    variant={isDataStale || isCachedWithoutToken ? "destructive" : "outline"} 
+                    variant={isDataStale ? "destructive" : "outline"} 
                     className="text-xs"
                     style={isDataWarning ? { 
                       backgroundColor: '#fef3c7', 
@@ -319,7 +211,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
                       borderColor: '#eab308'
                     } : undefined}
                   >
-                    {isCachedWithoutToken ? '❌ Кеш' : isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
+                    {isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -437,60 +329,6 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
           )}
         </div>
 
-        {(isDataWarning || isDataStale || isCachedWithoutToken) && isWhoopSource && (
-          <div className="mt-2 pt-2 sm:mt-3 sm:pt-3 border-t">
-            {isCachedWithoutToken ? (
-              <Button 
-                size="sm" 
-                variant="destructive" 
-                className="w-full text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate('/integrations');
-                }}
-              >
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Подключить Whoop
-              </Button>
-            ) : daysDiff > 7 ? (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate('/integrations');
-                }}
-              >
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Переподключить
-              </Button>
-            ) : (
-              <Button 
-                size="sm" 
-                variant="default" 
-                className="w-full text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  syncAllData();
-                }}
-                disabled={syncing}
-              >
-                {syncing ? (
-                  <>
-                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                    Синхронизация...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Обновить данные
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        )}
       </CardContent>
     </Card>
   );
