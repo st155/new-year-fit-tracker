@@ -66,6 +66,8 @@ export class JobQueue {
       .insert({
         type,
         payload,
+        status: 'pending',
+        attempts: 0,
         max_attempts: options?.maxAttempts || 3,
         scheduled_at: (options?.scheduledAt || new Date()).toISOString(),
       })
@@ -103,7 +105,13 @@ export class JobQueue {
 
     const { data: jobs } = await query;
 
-    if (!jobs || jobs.length === 0) return null;
+    if (!jobs || jobs.length === 0) {
+      await this.logger.info('No jobs to process', {
+        type: type || 'any',
+        now,
+      });
+      return null;
+    }
 
     const job = jobs[0];
 
@@ -113,7 +121,7 @@ export class JobQueue {
       .update({
         status: JobStatus.PROCESSING,
         started_at: new Date().toISOString(),
-        attempts: job.attempts + 1,
+        attempts: (job.attempts ?? 0) + 1,
       })
       .eq('id', job.id)
       .eq('status', JobStatus.PENDING) // Prevent race condition

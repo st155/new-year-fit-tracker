@@ -16,18 +16,21 @@ function deduplicateByPriority<T extends {
       return acc;
     }
 
-    const existingPriority = existing.priority || 999;
-    const currentPriority = metric.priority || 999;
+    // Prioritize by date first (fresher is better)
+    const existingDate = new Date(existing.measurement_date);
+    const currentDate = new Date(metric.measurement_date);
     
-    if (currentPriority < existingPriority) {
+    if (currentDate > existingDate) {
       acc[metric.metric_name] = metric;
-    } else if (currentPriority === existingPriority) {
-      const existingDate = new Date(existing.measurement_date);
-      const currentDate = new Date(metric.measurement_date);
+    } else if (existingDate.getTime() === currentDate.getTime()) {
+      // Same date: use priority as tiebreaker
+      const existingPriority = existing.priority || 999;
+      const currentPriority = metric.priority || 999;
       
-      if (currentDate > existingDate) {
+      if (currentPriority < existingPriority) {
         acc[metric.metric_name] = metric;
-      } else if (existingDate.getTime() === currentDate.getTime()) {
+      } else if (currentPriority === existingPriority) {
+        // Same priority: use created_at as final tiebreaker
         if (new Date(metric.created_at || 0) > new Date(existing.created_at || 0)) {
           acc[metric.metric_name] = metric;
         }

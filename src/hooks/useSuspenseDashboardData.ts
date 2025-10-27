@@ -30,14 +30,29 @@ async function fetchAllDashboardData(userId: string): Promise<DashboardData> {
     .in('metric_name', metricNames)
     .order('measurement_date', { ascending: false });
 
-  // Группируем метрики по metric_name (берем последнюю для каждой)
+  // Группируем метрики по metric_name (берем самую свежую по дате)
   const latestMetrics = new Map<string, any>();
   
   if (metrics) {
     metrics.forEach(metric => {
-      const key = `${metric.metric_name}-${metric.source}`;
-      if (!latestMetrics.has(key)) {
+      const key = metric.metric_name;
+      const existing = latestMetrics.get(key);
+      
+      if (!existing) {
         latestMetrics.set(key, metric);
+      } else {
+        // Prioritize by date (fresher is better)
+        const existingDate = new Date(existing.measurement_date);
+        const currentDate = new Date(metric.measurement_date);
+        
+        if (currentDate > existingDate) {
+          latestMetrics.set(key, metric);
+        } else if (existingDate.getTime() === currentDate.getTime()) {
+          // Same date: use priority as tiebreaker
+          if ((metric.priority || 999) < (existing.priority || 999)) {
+            latestMetrics.set(key, metric);
+          }
+        }
       }
     });
   }

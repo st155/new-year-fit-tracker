@@ -55,9 +55,9 @@ export function useUnifiedMetricsQuery(
       }
 
       const { data, error } = await query
-        .order('priority', { ascending: true })
         .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('priority', { ascending: true });
 
       if (error) throw error;
       return data as UnifiedMetric[];

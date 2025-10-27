@@ -75,7 +75,15 @@ Deno.serve(
       }
     }
 
-    logger.info('Job worker completed', { processed, failed });
+    if (processed === 0 && failed === 0) {
+      logger.warn('Job worker completed with no jobs processed', { 
+        processed, 
+        failed,
+        message: 'Queue might be empty or all jobs are scheduled for later'
+      });
+    } else {
+      logger.info('Job worker completed', { processed, failed });
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -364,12 +372,21 @@ async function batchInsertMetrics(
 
   // Batch upsert metric values
   if (valuesToInsert.length > 0) {
-    await supabase
+    const { error: upsertError } = await supabase
       .from('metric_values')
       .upsert(valuesToInsert, {
         onConflict: 'external_id',
         ignoreDuplicates: false,
       });
+
+    if (upsertError) {
+      console.error('Failed to insert metrics:', {
+        error: upsertError,
+        count: valuesToInsert.length,
+        sample: valuesToInsert[0],
+      });
+      throw upsertError;
+    }
   }
 
   return valuesToInsert.length;

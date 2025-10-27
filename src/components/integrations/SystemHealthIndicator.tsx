@@ -130,14 +130,25 @@ export function SystemHealthIndicator() {
   const getTerraDescription = (): string => {
     if (!systemStatus) return 'Проверка...';
     
-    const { webhooksLast1h, pendingJobs, lastProcessedTime } = systemStatus;
+    const { webhooksLast1h, pendingJobs, processingJobs, lastProcessedTime } = systemStatus;
+    
+    // Critical: Queue is stalled while webhooks are coming
+    if (webhooksLast1h > 0 && pendingJobs > 5) {
+      return `⚠️ Очередь застопорилась: ${pendingJobs} задач ожидают обработки. Вебхуки приходят, но не обрабатываются.`;
+    }
     
     if (webhooksLast1h === 0) {
       return 'Нет данных от устройств за час. Проверьте подключения.';
     }
+    
     if (pendingJobs > 5) {
       return `Застой в очереди: ${pendingJobs} задач`;
     }
+    
+    if (processingJobs > 0) {
+      return `Обрабатывается: ${processingJobs} задач`;
+    }
+    
     if (lastProcessedTime) {
       const minutes = Math.floor((Date.now() - new Date(lastProcessedTime).getTime()) / (1000 * 60));
       if (minutes < 60) {
@@ -145,6 +156,7 @@ export function SystemHealthIndicator() {
       }
       return `Обработано ${Math.floor(minutes / 60)}ч назад`;
     }
+    
     return 'Данные обрабатываются нормально';
   };
 
