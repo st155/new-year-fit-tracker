@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { widgetKeys } from '@/hooks/useWidgetsQuery';
+import { queryKeys } from '@/lib/query-keys';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
@@ -30,9 +30,16 @@ export function useMetricsRealtime(enabled: boolean = true) {
         (payload) => {
           console.log('🔴 [MetricsRealtime] New metric inserted:', payload.new);
           
-          // Invalidate smart widgets data to trigger refetch
-          queryClient.invalidateQueries({ queryKey: [...widgetKeys.all, 'smart-batch'] });
-          queryClient.invalidateQueries({ queryKey: ['metrics'] });
+          // Invalidate ALL metrics queries to ensure fresh data
+          queryClient.invalidateQueries({ queryKey: queryKeys.metrics.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.widgets.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+          
+          // Force refetch immediately
+          queryClient.refetchQueries({ 
+            queryKey: queryKeys.metrics.all,
+            type: 'active' 
+          });
         }
       )
       .subscribe((status) => {

@@ -105,11 +105,21 @@ export class SubscriptionManager {
     switch (table) {
       case 'unified_metrics':
       case 'user_metrics':
+        // Invalidate all metrics-related queries
         this.queryClient.invalidateQueries({
           queryKey: queryKeys.metrics.all,
         });
         this.queryClient.invalidateQueries({
           queryKey: queryKeys.widgets.all,
+        });
+        this.queryClient.invalidateQueries({
+          queryKey: queryKeys.activities.all,
+        });
+        
+        // Force immediate refetch of active queries
+        this.queryClient.refetchQueries({
+          queryKey: queryKeys.metrics.all,
+          type: 'active',
         });
         break;
       
