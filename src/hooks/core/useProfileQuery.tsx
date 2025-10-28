@@ -19,17 +19,24 @@ export function useProfileQuery(userId: string | undefined) {
       if (error) {
         // Handle "not found" gracefully - return null instead of throwing
         if (error.code === 'PGRST116' || error.message?.includes('406')) {
-          console.warn('⚠️ [useProfileQuery] Profile not found for user:', userId);
+          if (import.meta.env.DEV) {
+            console.warn('⚠️ [useProfileQuery] Profile not found for user:', userId);
+          }
           return null;
         }
         
         // Handle RLS permission denied (403)
         if (error.code === '42501' || error.message?.includes('permission denied')) {
-          console.error('🔒 [useProfileQuery] Permission denied for user:', userId);
+          if (import.meta.env.DEV) {
+            console.error('🔒 [useProfileQuery] Permission denied for user:', userId);
+          }
           return null;
         }
         
-        console.error('❌ [useProfileQuery] Error loading profile:', error);
+        // Log other errors only in dev
+        if (import.meta.env.DEV) {
+          console.error('❌ [useProfileQuery] Error loading profile:', error);
+        }
         throw error;
       }
       return data;

@@ -22,11 +22,8 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   
-  console.log('👤 [ProfileProvider] Rendering with user:', user?.id);
-  
   // ✅ Don't load profile until user is loaded
   if (!user) {
-    console.log('⏳ [ProfileProvider] Waiting for user...');
     return (
       <ProfileContext.Provider value={{ profile: null, loading: true, refetch: async () => {} }}>
         {children}
@@ -36,11 +33,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   
   const { data: profile, isLoading: loading, refetch: queryRefetch, error } = useProfileQuery(user.id);
   
-  if (error) {
+  if (error && import.meta.env.DEV) {
     console.error('💥 [ProfileProvider] Query error:', error);
   }
-  
-  console.log('📊 [ProfileProvider] Profile loaded:', { profile, loading });
 
   const refetch = async () => {
     await queryRefetch();

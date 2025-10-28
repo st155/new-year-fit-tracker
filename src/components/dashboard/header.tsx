@@ -52,13 +52,15 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
         .from('profiles')
         .select('trainer_role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.trainer_role) {
         setIsTrainer(true);
       }
     } catch (error) {
-      console.error('Error checking trainer role:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error checking trainer role:', error);
+      }
     }
   };
 

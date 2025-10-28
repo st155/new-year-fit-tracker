@@ -11,7 +11,7 @@ export function useChallengeDetail(challengeId?: string) {
         .from("challenges")
         .select("*")
         .eq("id", challengeId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
