@@ -32,6 +32,7 @@ import BodySync from "@/pages/Body";
 import ChallengesSync from "@/pages/Challenges";
 import ChallengeDetailSync from "@/pages/ChallengeDetail";
 import HabitsSync from "@/pages/Habits";
+import HabitDetailSync from "@/pages/HabitDetail";
 import FeedSync from "@/pages/Feed";
 import FitnessDataSync from "@/pages/FitnessData";
 import LeaderboardSync from "@/pages/Leaderboard";
@@ -56,6 +57,7 @@ const Body = lazySafe(BodySync, () => import("@/pages/Body"));
 const Challenges = lazySafe(ChallengesSync, () => import("@/pages/Challenges"));
 const ChallengeDetail = lazySafe(ChallengeDetailSync, () => import("@/pages/ChallengeDetail"));
 const Habits = lazySafe(HabitsSync, () => import("@/pages/Habits"));
+const HabitDetail = lazySafe(HabitDetailSync, () => import("@/pages/HabitDetail"));
 const Feed = lazySafe(FeedSync, () => import("@/pages/Feed"));
 const FitnessData = lazySafe(FitnessDataSync, () => import("@/pages/FitnessData"));
 const Leaderboard = lazySafe(LeaderboardSync, () => import("@/pages/Leaderboard"));
@@ -160,6 +162,13 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <Habits />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/habits/:id" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <HabitDetail />
             </ModernAppLayout>
           </ProtectedRoute>
         } />

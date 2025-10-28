@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Flame, TrendingUp } from "lucide-react";
+import { Check, Flame, TrendingUp, Trophy, Star, Zap } from "lucide-react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { DurationCounter } from "./DurationCounter";
 import { NumericCounter } from "./NumericCounter";
 import { DailyMeasurement } from "./DailyMeasurement";
@@ -56,9 +58,11 @@ interface HabitCardProps {
 }
 
 export function HabitCard({ habit, onCompleted }: HabitCardProps) {
+  const navigate = useNavigate();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const [milestoneType, setMilestoneType] = useState<'completion' | 'milestone' | 'streak'>('completion');
 
   // Route to custom habit cards based on type
   if (habit.habit_type === "duration_counter") {
@@ -93,10 +97,37 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
 
       if (error) throw error;
 
-      setCelebrate(true);
-      setTimeout(() => setCelebrate(false), 100);
-      
-      toast.success("Привычка выполнена! 🎉");
+      // Check for milestones
+      const newStreak = (habit.stats?.current_streak || 0) + 1;
+      const milestones = [7, 30, 100, 365];
+      const achievedMilestone = milestones.find(m => newStreak === m);
+
+      if (achievedMilestone) {
+        setMilestoneType('milestone');
+        setCelebrate(true);
+        setTimeout(() => setCelebrate(false), 100);
+
+        const messages = {
+          7: "Отличное начало! 7 дней подряд! 🎉",
+          30: "Целый месяц! Вы молодец! 🎊",
+          100: "Невероятно! 100 дней подряд! 🏆",
+          365: "ГОД БЕЗ ПРОПУСКОВ! ЛЕГЕНДА! 🌟"
+        };
+        
+        toast.success(messages[achievedMilestone as keyof typeof messages]);
+      } else if (newStreak > 1 && newStreak % 5 === 0) {
+        // Mini celebration every 5 days
+        setMilestoneType('streak');
+        setCelebrate(true);
+        setTimeout(() => setCelebrate(false), 100);
+        toast.success(`${newStreak} дней подряд! 🔥`);
+      } else {
+        setMilestoneType('completion');
+        setCelebrate(true);
+        setTimeout(() => setCelebrate(false), 100);
+        toast.success("Привычка выполнена! 🎉");
+      }
+
       onCompleted();
     } catch (error) {
       console.error("Error completing habit:", error);
@@ -144,9 +175,12 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
 
   return (
     <>
-      <HabitCelebration trigger={celebrate} type="completion" />
+      <HabitCelebration trigger={celebrate} type={milestoneType} />
       
-      <div className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-6`}>
+      <div 
+        className={`glass-habit-card ${cardClass} p-6 group relative overflow-hidden space-y-6 cursor-pointer`}
+        onClick={() => navigate(`/habits/${habit.id}`)}
+      >
         <div className="absolute top-4 right-4">
           <HabitOptionsMenu
             onEdit={() => setShowEditDialog(true)}
@@ -237,7 +271,10 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
 
       {/* Action Button */}
       <Button
-        onClick={handleComplete}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleComplete();
+        }}
         disabled={isCompleting || habit.completed_today}
         className={`w-full relative overflow-hidden group/btn ${
           habit.completed_today 

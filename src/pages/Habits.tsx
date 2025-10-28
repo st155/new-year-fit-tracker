@@ -8,10 +8,11 @@ import { HabitStats } from "@/components/habits/HabitStats";
 import { HabitCreateDialog } from "@/components/habits/HabitCreateDialog";
 import { HabitsOverviewChart } from "@/components/habits/HabitsOverviewChart";
 import { HabitProgressChart } from "@/components/habits/HabitProgressChart";
+import { HabitCalendarHeatmap } from "@/components/habits/HabitCalendarHeatmap";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Target, LayoutGrid, List, Clock } from "lucide-react";
+import { Plus, Target, LayoutGrid, List, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHabitProgress } from "@/hooks/useHabitProgress";
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
@@ -244,7 +245,7 @@ export default function Habits() {
               </TabsList>
             </Tabs>
 
-            {/* Cards/Charts Toggle */}
+            {/* Cards/Charts/Calendar Toggle */}
             <TabsList className="glass-card border-white/10">
               <TabsTrigger value="cards">
                 <LayoutGrid className="h-4 w-4 mr-2" />
@@ -253,6 +254,10 @@ export default function Habits() {
               <TabsTrigger value="charts">
                 <List className="h-4 w-4 mr-2" />
                 Графики
+              </TabsTrigger>
+              <TabsTrigger value="calendar">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Календарь
               </TabsTrigger>
             </TabsList>
           </div>
@@ -300,6 +305,16 @@ export default function Habits() {
                 </p>
               </div>
             )}
+          </TabsContent>
+
+          {/* Calendar View */}
+          <TabsContent value="calendar" className="mt-0">
+            <div className="glass-card border-white/10 p-6">
+              <HabitCalendarHeatmap 
+                userId={user?.id}
+                habitIds={selectedCategory === 'all' ? undefined : displayHabits.map(h => h.id)}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       )}
