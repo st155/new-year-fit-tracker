@@ -2,7 +2,7 @@ import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbb
 import { cn } from "@/lib/utils";
 
 interface CustomNavigationIconProps {
-  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body' | 'habits';
+  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body' | 'habits' | 'leaderboard';
   isActive?: boolean;
   className?: string;
 }
@@ -83,6 +83,12 @@ const iconConfig = {
   habits: { 
     icon: Sparkles, 
     gradient: 'from-amber-400 to-yellow-500',
+    glow: 'drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]',
+    activeGlow: 'drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]'
+  },
+  leaderboard: { 
+    icon: Trophy, 
+    gradient: 'from-yellow-400 to-amber-500',
     glow: 'drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]',
     activeGlow: 'drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]'
   },

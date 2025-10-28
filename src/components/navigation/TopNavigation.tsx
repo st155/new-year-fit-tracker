@@ -60,11 +60,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'home' as const, path: "/", label: 'Главная' },
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
+    { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
     { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
     { type: 'activity' as const, path: "/body", label: 'Тело' },
     { type: 'habits' as const, path: "/habits", label: 'Привычки' },
-    { type: 'feed' as const, path: "/feed", label: 'Лента' },
-    { type: 'data' as const, path: "/fitness-data", label: 'Данные' },
   ];
 
   const trainerNavItems = [
@@ -95,8 +94,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Logo */}
+        <div className="flex items-center gap-3 min-w-[120px]">
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
@@ -105,7 +105,46 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Navigation - Center */}
+        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 justify-center px-4">
+          {navItems.map((item) => (
+            <Button
+              key={item.path}
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (item.path === '/trainer-dashboard') {
+                  navigate('/trainer-dashboard?tab=overview');
+                } else {
+                  navigate(item.path);
+                }
+              }}
+              onMouseEnter={() => {
+                prefetch.route(item.path);
+              }}
+              className={cn(
+                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",
+                isActive(item.path) && "bg-accent/30"
+              )}
+            >
+              <div className="transition-all duration-300 hover:animate-bounce">
+                <CustomNavigationIcon 
+                  type={item.type} 
+                  isActive={isActive(item.path)}
+                />
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium transition-colors",
+                isActive(item.path) ? "text-primary" : "text-muted-foreground"
+              )}>
+                {item.label}
+              </span>
+            </Button>
+          ))}
+        </nav>
+
+        {/* Settings & Profile - Right */}
+        <div className="flex items-center gap-2 min-w-[120px] justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -153,46 +192,6 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             </Avatar>
           </Button>
         </div>
-      </div>
-
-      <div className="flex items-center justify-center px-4 py-3 border-b border-border/20">
-        <nav className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
-          {navItems.map((item) => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (item.path === '/trainer-dashboard') {
-                  navigate('/trainer-dashboard?tab=overview');
-                } else {
-                  navigate(item.path);
-                }
-              }}
-              onMouseEnter={() => {
-                // Prefetch route data on hover
-                prefetch.route(item.path);
-              }}
-              className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",
-                isActive(item.path) && "bg-accent/30"
-              )}
-            >
-              <div className="transition-all duration-300 hover:animate-bounce">
-                <CustomNavigationIcon 
-                  type={item.type} 
-                  isActive={isActive(item.path)}
-                />
-              </div>
-              <span className={cn(
-                "text-[10px] font-medium transition-colors",
-                isActive(item.path) ? "text-primary" : "text-muted-foreground"
-              )}>
-                {item.label}
-              </span>
-            </Button>
-          ))}
-        </nav>
       </div>
     </header>
   );
