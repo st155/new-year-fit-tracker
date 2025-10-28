@@ -204,10 +204,6 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               );
             })}
           </div>
-
-          <p className="text-xs text-muted-foreground/60 mt-3 text-center">
-            Нажмите для обновления
-          </p>
         </CardContent>
       </Card>
     );
