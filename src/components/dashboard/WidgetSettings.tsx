@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Settings, Plus, Trash2, Info } from 'lucide-react';
 import { Widget } from '@/hooks/useWidgetsQuery';
 import {
@@ -19,6 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { widgetKeys } from '@/hooks/useWidgetsQuery';
 
 interface WidgetSettingsProps {
   widgets: Widget[];
@@ -60,6 +64,38 @@ export function WidgetSettings({
   const [open, setOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const updateDisplayModeMutation = useMutation({
+    mutationFn: async ({ widgetId, mode }: { widgetId: string; mode: 'single' | 'multi' }) => {
+      const { error } = await supabase
+        .from('dashboard_widgets')
+        .update({ display_mode: mode })
+        .eq('id', widgetId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: widgetKeys.all });
+      toast({
+        title: 'Режим обновлен',
+        description: 'Настройки виджета сохранены',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить настройки виджета',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDisplayModeChange = (widgetId: string, isMulti: boolean) => {
+    updateDisplayModeMutation.mutate({
+      widgetId,
+      mode: isMulti ? 'multi' : 'single',
+    });
+  };
 
   const handleAdd = () => {
     if (!selectedMetric) return;
@@ -165,23 +201,36 @@ export function WidgetSettings({
                 {widgets.map((widget, index) => (
                   <div
                     key={widget.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                    className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{widget.metric_name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{widget.metric_name}</p>
                       <p className="text-xs text-muted-foreground">
                         Позиция: {index + 1}
                       </p>
                     </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemove(widget.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          Все источники
+                        </span>
+                        <Switch
+                          checked={widget.display_mode === 'multi'}
+                          onCheckedChange={(checked) => handleDisplayModeChange(widget.id, checked)}
+                          disabled={updateDisplayModeMutation.isPending}
+                        />
+                      </div>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemove(widget.id)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

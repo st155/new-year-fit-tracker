@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataQualityBadge } from '@/components/data-quality';
+import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -29,6 +30,7 @@ interface WidgetCardProps {
       crossValidation: number;
     };
   };
+  multiSourceData?: MultiSourceWidgetData;
 }
 
 const getMetricIcon = (metricName: string) => {
@@ -103,7 +105,7 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
-export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardProps) {
+export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -111,6 +113,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
   
   const metricName = widget.metric_name;
   const source = data?.source || 'unknown';
+  const isMultiMode = widget.display_mode === 'multi' && multiSourceData;
 
 
   const handleCardClick = useCallback(() => {
@@ -173,6 +176,84 @@ export const WidgetCard = memo(function WidgetCard({ widget, data }: WidgetCardP
     if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
     return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
   };
+
+  // Multi-source display component
+  if (isMultiMode && multiSourceData.sources.length > 0) {
+    const Icon = getMetricIcon(metricName);
+    const color = getMetricColor(metricName);
+    
+    return (
+      <Card 
+        className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
+        onClick={handleCardClick}
+        style={{
+          background: `linear-gradient(135deg, ${color}08, transparent)`,
+          borderWidth: '2px',
+          borderStyle: 'solid',
+          borderColor: `${color}30`,
+        }}
+      >
+        <CardContent className="p-3 sm:p-6">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground mb-1">
+                {metricName}
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                {multiSourceData.sources.length} {multiSourceData.sources.length === 1 ? 'источник' : 'источника'}
+              </p>
+            </div>
+            <Icon className="h-5 w-5" style={{ color }} />
+          </div>
+
+          <div className="space-y-2">
+            {multiSourceData.sources.map((src, idx) => {
+              const daysDiff = Math.floor(src.age_hours / 24);
+              const isStale = daysDiff >= 3;
+              const isWarning = daysDiff === 2;
+              
+              return (
+                <div 
+                  key={idx} 
+                  className="flex items-center justify-between p-2 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                  style={{
+                    borderLeft: `3px solid ${color}`,
+                  }}
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <Icon className="h-4 w-4" style={{ color }} />
+                    <span className="text-lg font-semibold" style={{ color }}>
+                      {formatValue(src.value, metricName, src.unit)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{src.unit}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {getSourceDisplayName(src.source)}
+                    </Badge>
+                    {src.age_hours < 24 ? (
+                      <span className="text-xs text-muted-foreground">{src.age_hours}ч</span>
+                    ) : (
+                      <span 
+                        className={`text-xs ${isStale ? 'text-destructive' : isWarning ? 'text-yellow-600' : 'text-muted-foreground'}`}
+                      >
+                        {Math.floor(src.age_hours / 24)}д
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-muted-foreground/60 mt-3 text-center">
+            Нажмите для обновления
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card 

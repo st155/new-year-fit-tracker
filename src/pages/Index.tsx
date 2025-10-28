@@ -10,6 +10,7 @@ import {
 } from '@/hooks/useWidgetsQuery';
 // import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
 import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
+import { useMultiSourceWidgetsData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -49,18 +50,36 @@ const Index = () => {
     widgetsLoading 
   });
   
-  // ✅ Smart auto-source batch for freshest values across all providers
-  const { data: smartData, ages, isLoading: metricsLoading } = useSmartWidgetsData(
+  // Separate widgets by display mode
+  const singleWidgets = useMemo(() => 
+    widgets.filter(w => w.display_mode !== 'multi'), 
+    [widgets]
+  );
+  const multiWidgets = useMemo(() => 
+    widgets.filter(w => w.display_mode === 'multi'), 
+    [widgets]
+  );
+  
+  // ✅ Smart auto-source batch for single-mode widgets
+  const { data: smartData, ages, isLoading: singleMetricsLoading } = useSmartWidgetsData(
     user?.id,
-    widgets
+    singleWidgets
+  );
+  
+  // ✅ Multi-source batch for multi-mode widgets
+  const { data: multiData, isLoading: multiMetricsLoading } = useMultiSourceWidgetsData(
+    user?.id,
+    multiWidgets
   );
   
   console.log('📈 [Index] Metrics state:', { 
-    metricsDataSize: smartData?.size, 
-    metricsLoading 
+    singleDataSize: smartData?.size,
+    multiDataSize: multiData?.size, 
+    singleMetricsLoading,
+    multiMetricsLoading
   });
   
-  const loading = widgetsLoading || metricsLoading;
+  const loading = widgetsLoading || singleMetricsLoading || multiMetricsLoading;
   
   const addWidgetMutation = useAddWidgetMutation();
   const removeWidgetMutation = useRemoveWidgetMutation();
@@ -298,13 +317,20 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-4">
-            {processedWidgets.map((widget) => (
-              <WidgetCard
-                key={widget.id}
-                widget={widget}
-                data={smartData?.get(widget.id)}
-              />
-            ))}
+            {processedWidgets.map((widget) => {
+              const isSingleMode = widget.display_mode !== 'multi';
+              const singleData = isSingleMode ? smartData?.get(widget.id) : undefined;
+              const multiSourceData = !isSingleMode ? multiData?.get(widget.id) : undefined;
+              
+              return (
+                <WidgetCard
+                  key={widget.id}
+                  widget={widget}
+                  data={singleData}
+                  multiSourceData={multiSourceData}
+                />
+              );
+            })}
           </div>
         )}
 

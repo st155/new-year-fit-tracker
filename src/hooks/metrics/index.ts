@@ -7,4 +7,6 @@ export { useMetricMapping } from './useMetricMapping';
 export { useSystemStatus } from './useSystemStatus';
 export { useSmartWidgetsData } from './useSmartWidgetsData';
 export type { SmartWidgetData } from './useSmartWidgetsData';
+export { useMultiSourceWidgetsData } from './useMultiSourceWidgetsData';
+export type { MultiSourceWidgetData, SourceData } from './useMultiSourceWidgetsData';
 export { useMetricsRealtime } from './useMetricsRealtime';

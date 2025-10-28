@@ -8,6 +8,7 @@ export interface Widget {
   metric_name: string;
   position: number;
   is_visible: boolean;
+  display_mode?: 'single' | 'multi';
   created_at?: string;
 }
 

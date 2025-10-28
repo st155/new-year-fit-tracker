@@ -1134,6 +1134,7 @@ export type Database = {
       dashboard_widgets: {
         Row: {
           created_at: string
+          display_mode: string | null
           id: string
           is_visible: boolean
           metric_name: string
@@ -1143,6 +1144,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_mode?: string | null
           id?: string
           is_visible?: boolean
           metric_name: string
@@ -1152,6 +1154,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_mode?: string | null
           id?: string
           is_visible?: boolean
           metric_name?: string
