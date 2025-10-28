@@ -327,7 +327,9 @@ const Index = () => {
         )}
 
         {/* Habits Section - MOVED ABOVE LEADERBOARD */}
-        <HabitsSection />
+        <ErrorBoundary>
+          <HabitsSection />
+        </ErrorBoundary>
 
         {/* Leaderboard Section */}
         <div className="mt-8">

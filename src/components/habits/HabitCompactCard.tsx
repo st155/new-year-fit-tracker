@@ -13,6 +13,16 @@ interface HabitCompactCardProps {
 }
 
 export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
+  // Debug logging
+  console.log('🎯 [HabitCompactCard] Rendering:', {
+    id: habit.id,
+    name: habit.name,
+    type: habit.habit_type,
+    start_date: habit.start_date,
+    completed_today: habit.completed_today,
+    custom_data: habit.custom_data,
+  });
+
   const [elapsedTime, setElapsedTime] = useState<{
     days: number;
     hours: number;
@@ -29,9 +39,16 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
 
   // Update elapsed time for duration counters
   useEffect(() => {
-    if (habit.habit_type === "duration_counter" && habit.custom_data?.start_date) {
+    if (habit.habit_type === "duration_counter" && habit.start_date) {
+      const start = new Date(habit.start_date);
+      
+      // Protection against Invalid Date
+      if (isNaN(start.getTime())) {
+        console.error('❌ [HabitCompactCard] Invalid start_date:', habit.start_date, 'for habit:', habit.id);
+        return;
+      }
+      
       const updateElapsed = () => {
-        const start = new Date(habit.custom_data.start_date);
         const now = new Date();
         const diff = now.getTime() - start.getTime();
         const minutes = Math.floor(diff / 60000);
