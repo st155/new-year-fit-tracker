@@ -17,6 +17,7 @@ import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DataQualityWidget } from '@/components/dashboard/DataQualityWidget';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Plug } from 'lucide-react';
@@ -204,6 +205,11 @@ const Index = () => {
             </Button>
           </div>
         </div>
+
+        {/* Data Quality Visualization */}
+        <ErrorBoundary>
+          <DataQualityWidget />
+        </ErrorBoundary>
 
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
