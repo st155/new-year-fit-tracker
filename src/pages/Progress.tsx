@@ -1,16 +1,22 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeGoals } from '@/hooks/useChallengeGoals';
 import { ChallengeGoalCard } from '@/components/progress/ChallengeGoalCard';
-import { ProgressOverviewCard } from '@/components/progress/ProgressOverviewCard';
+import { CompactProgressSummary } from '@/components/progress/CompactProgressSummary';
 import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialChart';
 import { BaselineComparisonCard } from '@/components/progress/BaselineComparisonCard';
 import { PointsImpactCard } from '@/components/progress/PointsImpactCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy } from 'lucide-react';
+import { RefreshCw, Trophy, BarChart3 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function Progress() {
   const { user } = useAuth();
@@ -133,14 +139,14 @@ export default function Progress() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-7xl mx-auto space-y-3">
+        {/* Compact Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Прогресс</h1>
-            <p className="text-muted-foreground mt-1">
-              Ваши цели из челленджей
+            <h1 className="text-2xl font-bold">Прогресс</h1>
+            <p className="text-xs text-muted-foreground">
+              {goals?.length || 0} {goals?.length === 1 ? 'цель' : 'целей'} из челленджей
             </p>
           </div>
           
@@ -172,24 +178,42 @@ export default function Progress() {
           </div>
         ) : (
           <>
-            {/* Progress Overview */}
-            <ProgressOverviewCard {...overviewStats} />
+            {/* Compact Progress Summary */}
+            <CompactProgressSummary {...overviewStats} />
 
-            {/* Analytics Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <DisciplineRadialChart disciplines={disciplineData} />
-              <PointsImpactCard {...pointsData} />
-            </div>
-
-            {/* Baseline Comparison */}
-            {baselineData.length > 0 && (
-              <BaselineComparisonCard data={baselineData} />
-            )}
+            {/* Collapsible Analytics */}
+            <Accordion type="multiple" className="space-y-2">
+              <AccordionItem value="analytics" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Аналитика и статистика</span>
+                    <span className="text-xs text-muted-foreground">
+                      (дисциплины, очки, базовая линия)
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 pb-4">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <DisciplineRadialChart disciplines={disciplineData} />
+                      <PointsImpactCard {...pointsData} />
+                    </div>
+                    
+                    {baselineData.length > 0 && (
+                      <BaselineComparisonCard data={baselineData} />
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             {/* Goals Grid */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">All Goals</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <h3 className="text-sm font-semibold mb-2 text-muted-foreground">
+                Все цели ({goals.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {goals.map((goal) => (
                   <ChallengeGoalCard
                     key={goal.id}
