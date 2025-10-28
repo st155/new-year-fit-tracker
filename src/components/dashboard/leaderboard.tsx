@@ -43,7 +43,7 @@ export function Leaderboard() {
             </h3>
           </div>
           <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-            {t('navigation.selectPage')} →
+            {t('leaderboard.viewFull')} →
           </span>
         </div>
 
