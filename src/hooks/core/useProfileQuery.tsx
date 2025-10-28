@@ -22,11 +22,20 @@ export function useProfileQuery(userId: string | undefined) {
           console.warn('⚠️ [useProfileQuery] Profile not found for user:', userId);
           return null;
         }
+        
+        // Handle RLS permission denied (403)
+        if (error.code === '42501' || error.message?.includes('permission denied')) {
+          console.error('🔒 [useProfileQuery] Permission denied for user:', userId);
+          return null;
+        }
+        
+        console.error('❌ [useProfileQuery] Error loading profile:', error);
         throw error;
       }
       return data;
     },
     enabled: !!userId,
+    throwOnError: false, // ✅ Don't throw error during rendering
     staleTime: 10 * 60 * 1000, // Profile rarely changes
     gcTime: 30 * 60 * 1000,
     retry: 2,
