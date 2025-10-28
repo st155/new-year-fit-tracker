@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,9 @@ import { FastingTracker } from "./FastingTracker";
 import { HabitOptionsMenu } from "./HabitOptionsMenu";
 import { HabitEditDialog } from "./HabitEditDialog";
 import { HabitCelebration } from "./HabitCelebration";
+import { HabitSparkline } from "./HabitSparkline";
+import { useHabitProgress } from "@/hooks/useHabitProgress";
+import { subDays } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -125,6 +128,20 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
   const cardClass = getHabitCardClass(sentiment);
   const circleClass = getNeonCircleClass(sentiment);
 
+  // Fetch last 7 days for sparkline
+  const last7Days = useMemo(() => {
+    const end = new Date();
+    const start = subDays(end, 7);
+    return { start, end };
+  }, []);
+
+  const { data: progressData } = useHabitProgress(habit.id, last7Days);
+
+  const sparklineData = useMemo(() => {
+    if (!progressData) return [];
+    return progressData.map(d => d.completed ? 1 : 0);
+  }, [progressData]);
+
   return (
     <>
       <HabitCelebration trigger={celebrate} type="completion" />
@@ -203,6 +220,18 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Sparkline */}
+      {sparklineData.length > 0 && (
+        <div className="flex justify-center mb-4">
+          <HabitSparkline 
+            data={sparklineData}
+            height={30}
+            width={120}
+            color={`hsl(var(--habit-${sentiment === 'negative' ? 'negative' : sentiment === 'positive' ? 'positive' : 'neutral'}))`}
+          />
         </div>
       )}
 

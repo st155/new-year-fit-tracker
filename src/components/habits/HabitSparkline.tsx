@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
+
 interface HabitSparklineProps {
-  data: number[];
+  data: number[]; // Array of 0s and 1s
   height?: number;
   width?: number;
   color?: string;
@@ -7,53 +9,40 @@ interface HabitSparklineProps {
 
 export function HabitSparkline({ 
   data, 
-  height = 40, 
-  width = 100,
-  color = 'hsl(var(--primary))'
+  height = 30, 
+  width = 120,
+  color = 'hsl(var(--habit-positive))'
 }: HabitSparklineProps) {
-  if (!data || data.length === 0) return null;
+  const points = useMemo(() => {
+    if (data.length === 0) return [];
+    
+    const spacing = width / (data.length - 1 || 1);
+    const barWidth = Math.max(1, spacing * 0.6);
+    
+    return data.map((value, i) => {
+      const x = i * spacing;
+      const barHeight = value > 0 ? height * 0.8 : height * 0.2;
+      const y = height - barHeight;
+      return { x, y: y + 2, height: barHeight - 2, value };
+    });
+  }, [data, height, width]);
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  
-  const points = data.map((value, index) => {
-    const x = (index / (data.length - 1)) * width;
-    const y = height - ((value - min) / range) * height;
-    return `${x},${y}`;
-  }).join(' ');
+  if (data.length === 0) return null;
 
   return (
-    <svg 
-      width={width} 
-      height={height} 
-      className="overflow-visible"
-      style={{ filter: `drop-shadow(0 0 4px ${color})` }}
-    >
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.8"
-      />
-      {/* Dots at each point */}
-      {data.map((value, index) => {
-        const x = (index / (data.length - 1)) * width;
-        const y = height - ((value - min) / range) * height;
-        return (
-          <circle
-            key={index}
-            cx={x}
-            cy={y}
-            r="2"
-            fill={color}
-            opacity="0.6"
-          />
-        );
-      })}
+    <svg width={width} height={height} className="habit-sparkline">
+      {points.map((point, i) => (
+        <rect
+          key={i}
+          x={point.x}
+          y={point.y}
+          width={width / (data.length * 1.2)}
+          height={point.height}
+          fill={point.value > 0 ? color : 'hsl(var(--muted))'}
+          opacity={point.value > 0 ? 0.9 : 0.3}
+          rx={1}
+        />
+      ))}
     </svg>
   );
 }
