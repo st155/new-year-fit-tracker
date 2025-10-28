@@ -19,8 +19,8 @@ import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Plug } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAutoSync } from '@/hooks/useAutoSync';
@@ -31,6 +31,7 @@ import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   console.log('🏠 [Index] Render state:', { 
     userId: user?.id, 
@@ -104,85 +105,18 @@ const Index = () => {
     reorderWidgetsMutation.mutate({ userId: user.id, widgets: newOrder });
   };
   
-  const [showOnlyRecent, setShowOnlyRecent] = useState(() => {
-    return localStorage.getItem('show_only_recent') === 'true';
-  });
-  const [showOnlyHighQuality, setShowOnlyHighQuality] = useState(false);
-  const [widgetAges, setWidgetAges] = useState<Record<string, number>>({});
-
-  // 🧹 ONE-TIME cleanup of legacy localStorage on mount (migration to React Query)
-  useEffect(() => {
-    if (!user) return;
-    
-    console.log('🧹 [Dashboard] Migrating to React Query - cleaning legacy cache...');
-    
-    // Clean ALL widget-related localStorage (we now use React Query exclusively)
-    let clearedCount = 0;
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('widget_') || 
-          key.startsWith('widgets_') ||
-          key.includes('whoop') || 
-          key.includes('fitness') || 
-          key.startsWith('progress_cache_')) {
-        localStorage.removeItem(key);
-        clearedCount++;
-        console.log(`🧹 Cleared legacy cache: ${key}`);
-      }
-    });
-
-    if (clearedCount > 0) {
-      console.log(`✅ Migrated to React Query: cleared ${clearedCount} legacy cache entries`);
-    }
-  }, []); // Run once on mount
 
   const handleRefresh = async () => {
     console.log('🔄 Manual refresh triggered - syncing all sources');
     await syncAllData(); // Trigger real sync
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
-    setWidgetAges({}); // Clear ages on refresh
   };
   
-  // Filter and sort widgets
+  // Sort widgets by position
   const processedWidgets = useMemo(() => {
-    const now = Date.now();
-    
-    // Sort by data freshness first (fresh data < 24h first), then by position
-    let sorted = [...widgets].sort((a, b) => {
-      const aAge = ages.get(a.id) ?? 0; // hours
-      const bAge = ages.get(b.id) ?? 0;
-      
-      const aFresh = aAge < 24;
-      const bFresh = bAge < 24;
-      
-      if (aFresh && !bFresh) return -1;
-      if (bFresh && !aFresh) return 1;
-      
-      return a.position - b.position;
-    });
-    
-    // Apply recency filter if enabled
-    if (showOnlyRecent) {
-      sorted = sorted.filter(widget => {
-        const age = ages.get(widget.id);
-        return age === undefined || age <= 72; // hours <= 72 (3 days)
-      });
-    }
-    
-    // Apply quality filter if enabled
-    if (showOnlyHighQuality) {
-      sorted = sorted.filter(widget => {
-        const data = smartData?.get(widget.id);
-        if (!data) return false;
-        // Show only if confidence >= 60% or if no confidence data (assume good)
-        return data.confidence === undefined || data.confidence >= 60;
-      });
-    }
-    
-    return sorted;
-  }, [widgets, widgetAges, showOnlyRecent, showOnlyHighQuality, smartData]);
-
-  const hiddenCount = widgets.length - processedWidgets.length;
+    return [...widgets].sort((a, b) => a.position - b.position);
+  }, [widgets]);
 
   // Wait for auth to load first
   if (authLoading || rolesLoading) {
@@ -230,69 +164,46 @@ const Index = () => {
         {/* Compact Dashboard Header with AI Insights + Quality */}
         <DashboardHeader />
         
-        {/* Controls Bar - More compact */}
+        {/* Controls Bar - Compact */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Left: Title */}
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Мои метрики</h1>
           </div>
           
-          {/* Right: Filters + Actions */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Filters */}
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-background">
-              <Switch
-                checked={showOnlyRecent}
-                onCheckedChange={(checked) => {
-                  setShowOnlyRecent(checked);
-                  localStorage.setItem('show_only_recent', String(checked));
-                }}
-              />
-              <span className="text-xs text-muted-foreground">Актуальные</span>
-            </div>
-            
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-background">
-              <Switch
-                checked={showOnlyHighQuality}
-                onCheckedChange={setShowOnlyHighQuality}
-              />
-              <span className="text-xs text-muted-foreground">≥60%</span>
-            </div>
-
-            {/* Actions */}
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
+            {/* Refresh Button - Icon only */}
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={handleRefresh}
-              className="gap-1.5 h-8"
               disabled={isSyncing}
+              title="Обновить данные"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="text-xs">{isSyncing ? 'Sync...' : 'Обновить'}</span>
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
             </Button>
+            
+            {/* Widget Settings */}
             <WidgetSettings
               widgets={widgets}
               onAdd={addWidget}
               onRemove={removeWidget}
               onReorder={reorderWidgets}
             />
-          </div>
-        </div>
-
-        {/* Hidden widgets message */}
-        {showOnlyRecent && hiddenCount > 0 && (
-          <div className="text-xs text-muted-foreground text-center py-1">
-            Скрыто {hiddenCount} неактивных{' '}
-            <Button 
-              variant="link" 
-              size="sm"
-              className="h-auto p-0 text-xs"
-              onClick={() => setShowOnlyRecent(false)}
+            
+            {/* Integrations Button */}
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => navigate('/fitness-data?tab=connections')}
+              className="gap-2"
             >
-              Показать все
+              <Plug className="h-4 w-4" />
+              <span>Интеграции</span>
             </Button>
           </div>
-        )}
+        </div>
 
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
