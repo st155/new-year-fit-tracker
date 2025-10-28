@@ -42,14 +42,26 @@ export function BodyHistory({ history, isLoading }: BodyHistoryProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {history.map((entry) => (
-              <TableRow key={entry.id}>
+            {history.map((entry, idx) => (
+              <TableRow key={entry.id || `entry-${idx}`}>
                 <TableCell>
-                  {new Date(entry.measurement_date).toLocaleDateString()}
+                  {entry.measurement_date 
+                    ? new Date(entry.measurement_date).toLocaleDateString()
+                    : "-"}
                 </TableCell>
-                <TableCell>{entry.weight || "-"}</TableCell>
-                <TableCell>{entry.body_fat_percentage || "-"}</TableCell>
-                <TableCell>{entry.muscle_mass || "-"}</TableCell>
+                <TableCell>
+                  {typeof entry.weight === 'number' ? entry.weight : "-"}
+                </TableCell>
+                <TableCell>
+                  {typeof entry.body_fat_percentage === 'number' 
+                    ? entry.body_fat_percentage 
+                    : "-"}
+                </TableCell>
+                <TableCell>
+                  {typeof entry.skeletal_muscle_mass === 'number' 
+                    ? entry.skeletal_muscle_mass 
+                    : "-"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

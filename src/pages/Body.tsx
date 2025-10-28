@@ -40,12 +40,19 @@ export default function Body() {
     measurement_date: bodyData.measurementDate,
   } : null;
 
-  const history = Object.values(trends.weight || []).map((_, idx) => ({
-    weight: trends.weight[idx]?.value || 0,
-    body_fat_percentage: trends.bodyFat[idx]?.value || 0,
-    skeletal_muscle_mass: trends.muscleMass[idx]?.value || 0,
-    measurement_date: trends.weight[idx]?.date || '',
-  }));
+  const history = Object.values(trends.weight || [])
+    .map((_, idx) => ({
+      weight: trends.weight[idx]?.value,
+      body_fat_percentage: trends.bodyFat[idx]?.value,
+      skeletal_muscle_mass: trends.muscleMass[idx]?.value,
+      measurement_date: trends.weight[idx]?.date || '',
+    }))
+    .filter(entry => 
+      entry.measurement_date && 
+      (typeof entry.weight === 'number' || 
+       typeof entry.body_fat_percentage === 'number' || 
+       typeof entry.skeletal_muscle_mass === 'number')
+    );
 
   return (
     <div className="container py-6 space-y-6">

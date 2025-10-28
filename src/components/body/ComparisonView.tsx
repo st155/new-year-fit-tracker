@@ -24,6 +24,21 @@ export function ComparisonView({ history, isLoading }: ComparisonViewProps) {
   const latest = history[0];
   const oldest = history[history.length - 1];
 
+  // Check if we have valid data
+  if (!latest || !oldest || 
+      typeof latest.weight !== 'number' || 
+      typeof oldest.weight !== 'number' ||
+      typeof latest.body_fat_percentage !== 'number' || 
+      typeof oldest.body_fat_percentage !== 'number') {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Insufficient data for comparison. Please ensure measurements include weight and body fat percentage.
+        </CardContent>
+      </Card>
+    );
+  }
+
   const weightChange = latest.weight - oldest.weight;
   const fatChange = latest.body_fat_percentage - oldest.body_fat_percentage;
 
