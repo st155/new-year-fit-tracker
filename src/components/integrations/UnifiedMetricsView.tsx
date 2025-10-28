@@ -49,7 +49,7 @@ export function UnifiedMetricsView() {
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'metric_values', 
+        table: 'unified_metrics', 
         filter: `user_id=eq.${user.id}` 
       }, () => {
         // Обновляем данные в фоне без показа loading
@@ -115,24 +115,12 @@ export function UnifiedMetricsView() {
       const todayStr = today.toISOString().split('T')[0];
       const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0];
 
-      const baseSelect = `
-        value,
-        measurement_date,
-        created_at,
-        user_metrics!inner(
-          metric_name,
-          unit,
-          source,
-          metric_category
-        )
-      `;
-
-      // Всегда загружаем данные за последние 2 дня
+      // Всегда загружаем данные за последние 2 дня из unified_metrics
       const { data: metricsData } = await supabase
-        .from('metric_values')
-        .select(baseSelect)
+        .from('unified_metrics')
+        .select('metric_name, value, unit, measurement_date, source, metric_category, created_at')
         .eq('user_id', user!.id)
-        .in('user_metrics.metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
+        .in('metric_category', ['recovery', 'body', 'cardio', 'sleep', 'workout', 'activity', 'heart_rate'])
         .gte('measurement_date', twoDaysAgoStr)
         .lte('measurement_date', todayStr)
         .order('measurement_date', { ascending: false })
@@ -150,14 +138,14 @@ export function UnifiedMetricsView() {
       // Группируем по названию метрики и берём самую свежую по каждому источнику
       const metricsMap = new Map<string, UnifiedMetric>();
       (metricsData || []).forEach((item: any) => {
-        const metricName = item.user_metrics.metric_name;
-        const source = item.user_metrics.source;
+        const metricName = item.metric_name; // direct field from unified_metrics
+        const source = item.source;
         if (!metricsMap.has(metricName)) {
           metricsMap.set(metricName, {
             name: metricName,
             sources: [],
-            icon: getMetricIcon(metricName, item.user_metrics.metric_category),
-            category: item.user_metrics.metric_category,
+            icon: getMetricIcon(metricName, item.metric_category),
+            category: item.metric_category,
             activeSourceIndex: 0,
           });
         }
@@ -169,10 +157,10 @@ export function UnifiedMetricsView() {
           // Добавляем новый источник
           metric.sources.push({
             value: formatValue(item.value, metricName),
-            unit: item.user_metrics.unit,
+            unit: item.unit,
             source: getProviderDisplayName(source),
             lastUpdate: item.measurement_date,
-            color: getMetricColor(item.user_metrics.metric_category),
+            color: getMetricColor(item.metric_category),
           });
         } else {
           // Проверяем, не свежее ли текущая запись
@@ -186,10 +174,10 @@ export function UnifiedMetricsView() {
             // Обновляем на более свежую
             metric.sources[existingSourceIndex] = {
               value: formatValue(item.value, metricName),
-              unit: item.user_metrics.unit,
+              unit: item.unit,
               source: getProviderDisplayName(source),
               lastUpdate: item.measurement_date,
-              color: getMetricColor(item.user_metrics.metric_category),
+              color: getMetricColor(item.metric_category),
             };
           }
         }

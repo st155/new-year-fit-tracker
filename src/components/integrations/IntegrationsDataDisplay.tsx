@@ -114,22 +114,12 @@ export function IntegrationsDataDisplay() {
     const todayStr = today.toISOString().split('T')[0];
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    // Получаем последние метрики для провайдера за последние 7 дней
+    // Получаем последние метрики для провайдера за последние 7 дней из unified_metrics
     const { data: metricsData } = await supabase
-      .from('metric_values')
-      .select(`
-        value,
-        measurement_date,
-        created_at,
-        user_metrics!inner(
-          metric_name,
-          unit,
-          source,
-          metric_category
-        )
-      `)
+      .from('unified_metrics')
+      .select('metric_name, value, unit, measurement_date, source, metric_category, created_at')
       .eq('user_id', user!.id)
-      .eq('user_metrics.source', provider.toLowerCase())
+      .eq('source', provider) // provider already uppercase in terra_tokens
       .gte('measurement_date', sevenDaysAgoStr)
       .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
@@ -190,9 +180,9 @@ export function IntegrationsDataDisplay() {
     const metricsMap = new Map<string, MetricData>();
 
     metricsData.forEach((item: any) => {
-      const rawMetricName = item.user_metrics.metric_name;
+      const rawMetricName = item.metric_name; // direct field from unified_metrics
       const metricName = normalizeMetricName(rawMetricName); // Нормализуем название
-      const normalizedUnit = normalizeUnit(metricName, item.user_metrics.unit);
+      const normalizedUnit = normalizeUnit(metricName, item.unit);
       
       // Пропускаем метрики, которые ошибочно помечены как whoop (Weight и Height от Withings)
       if (provider === 'WHOOP' && (metricName === 'Weight' || metricName === 'Height' || metricName === 'Вес' || metricName === 'Рост')) {
@@ -200,7 +190,7 @@ export function IntegrationsDataDisplay() {
       }
       
       // Берем только правильную единицу измерения
-      if (item.user_metrics.unit !== normalizedUnit) {
+      if (item.unit !== normalizedUnit) {
         return; // Пропускаем дубликаты с неправильными единицами
       }
       
@@ -211,8 +201,8 @@ export function IntegrationsDataDisplay() {
           value: formatValue(item.value, metricName),
           unit: normalizedUnit,
           source: provider,
-          icon: getMetricIcon(metricName, item.user_metrics.metric_category),
-          color: getMetricColor(item.user_metrics.metric_category),
+          icon: getMetricIcon(metricName, item.metric_category),
+          color: getMetricColor(item.metric_category),
           lastUpdate: new Date(item.measurement_date).toLocaleDateString('ru-RU'),
         });
       }
@@ -222,34 +212,24 @@ export function IntegrationsDataDisplay() {
     // так как события могут приходить не по порядку и перезаписывать более поздние значения
     try {
       const { data: stepsToday } = await supabase
-        .from('metric_values')
-        .select(`
-          value,
-          measurement_date,
-          created_at,
-          user_metrics!inner(
-            metric_name,
-            unit,
-            source,
-            metric_category
-          )
-        `)
+        .from('unified_metrics')
+        .select('value, measurement_date, created_at, unit, metric_category')
         .eq('user_id', user!.id)
-        .eq('user_metrics.source', provider.toLowerCase())
-        .eq('user_metrics.metric_name', 'Steps')
+        .eq('source', provider)
+        .eq('metric_name', 'Steps')
         .eq('measurement_date', todayStr)
         .order('value', { ascending: false })
         .limit(1);
 
       if (stepsToday && stepsToday.length > 0) {
-        const s: any = stepsToday[0];
+        const s = stepsToday[0];
         metricsMap.set('Steps', {
           name: 'Steps',
           value: formatValue(s.value, 'Steps'),
-          unit: s.user_metrics.unit,
+          unit: s.unit,
           source: provider,
-          icon: getMetricIcon('Steps', s.user_metrics.metric_category),
-          color: getMetricColor(s.user_metrics.metric_category),
+          icon: getMetricIcon('Steps', s.metric_category),
+          color: getMetricColor(s.metric_category),
           lastUpdate: new Date(s.measurement_date).toLocaleDateString('ru-RU'),
         });
       }
