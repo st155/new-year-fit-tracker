@@ -126,59 +126,17 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
   const color = useMemo(() => getMetricColor(metricName), [metricName]);
 
-  if (!data) {
-    return (
-      <Card 
-        className="overflow-hidden border-border/40 cursor-pointer hover:bg-accent/50 hover:shadow-lg transition-all hover:scale-[1.02]"
-        onClick={() => navigate('/integrations')}
-      >
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground mb-1">
-                {metricName}
-              </p>
-              <p className="text-xs text-muted-foreground/60">
-                {getSourceDisplayName(source)}
-              </p>
-            </div>
-            <Icon className="h-5 w-5 opacity-40" style={{ color }} />
-          </div>
-          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
-          <p className="text-xs text-primary/70 flex items-center gap-1">
-            <LinkIcon className="h-3 w-3" />
-            Нажмите для подключения
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Debug logging
+  console.log('[WidgetCard]', {
+    metric: metricName,
+    displayMode: widget.display_mode,
+    hasData: !!data,
+    hasMultiSourceData: !!multiSourceData,
+    multiSourceCount: multiSourceData?.sources?.length
+  });
 
-  const hasTrend = data.trend !== undefined && !isNaN(data.trend);
-  const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
-  
-  // Проверка на устаревшие данные с двумя уровнями (на основе дней)
-  const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const daysDiff = (() => {
-    if (!data?.measurement_date) return 0;
-    const today = startOf(new Date());
-    const dataDay = startOf(new Date(data.measurement_date));
-    return Math.max(0, Math.floor((today.getTime() - dataDay.getTime()) / 86400000));
-  })();
-  const isDataWarning = daysDiff === 2; // Желтый: 2 дня
-  const isDataStale = daysDiff >= 3; // Красный: 3+ дней
-  const isWhoopSource = source.toLowerCase() === 'whoop';
-  
-  console.log('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
-  
-  const getDataAgeMessage = () => {
-    if (daysDiff <= 1) return 'Данные актуальны';
-    if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
-    return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
-  };
-
-  // Multi-source display component
-  if (isMultiMode && multiSourceData.sources.length > 0) {
+  // СНАЧАЛА проверяем multi-mode с данными
+  if (isMultiMode && multiSourceData?.sources && multiSourceData.sources.length > 0) {
     const Icon = getMetricIcon(metricName);
     const color = getMetricColor(metricName);
     
@@ -254,6 +212,87 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
       </Card>
     );
   }
+
+  // Multi-mode без данных
+  if (isMultiMode && (!multiSourceData || !multiSourceData.sources || multiSourceData.sources.length === 0)) {
+    return (
+      <Card 
+        className="overflow-hidden border-border/40 cursor-pointer hover:bg-accent/50 hover:shadow-lg transition-all hover:scale-[1.02]"
+        onClick={() => navigate('/integrations')}
+      >
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                {metricName}
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                Мульти-режим
+              </p>
+            </div>
+            <Icon className="h-5 w-5 opacity-40" style={{ color }} />
+          </div>
+          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
+          <p className="text-xs text-primary/70 flex items-center gap-1">
+            <LinkIcon className="h-3 w-3" />
+            Нажмите для подключения
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ПОТОМ проверяем single-mode без данных
+  if (!data) {
+    return (
+      <Card 
+        className="overflow-hidden border-border/40 cursor-pointer hover:bg-accent/50 hover:shadow-lg transition-all hover:scale-[1.02]"
+        onClick={() => navigate('/integrations')}
+      >
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                {metricName}
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                {getSourceDisplayName(source)}
+              </p>
+            </div>
+            <Icon className="h-5 w-5 opacity-40" style={{ color }} />
+          </div>
+          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
+          <p className="text-xs text-primary/70 flex items-center gap-1">
+            <LinkIcon className="h-3 w-3" />
+            Нажмите для подключения
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const hasTrend = data.trend !== undefined && !isNaN(data.trend);
+  const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
+  
+  // Проверка на устаревшие данные с двумя уровнями (на основе дней)
+  const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysDiff = (() => {
+    if (!data?.measurement_date) return 0;
+    const today = startOf(new Date());
+    const dataDay = startOf(new Date(data.measurement_date));
+    return Math.max(0, Math.floor((today.getTime() - dataDay.getTime()) / 86400000));
+  })();
+  const isDataWarning = daysDiff === 2; // Желтый: 2 дня
+  const isDataStale = daysDiff >= 3; // Красный: 3+ дней
+  const isWhoopSource = source.toLowerCase() === 'whoop';
+  
+  console.log('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
+  
+  const getDataAgeMessage = () => {
+    if (daysDiff <= 1) return 'Данные актуальны';
+    if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
+    return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
+  };
 
   return (
     <Card 
