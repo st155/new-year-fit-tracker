@@ -40,18 +40,36 @@ export default function Body() {
     measurement_date: bodyData.measurementDate,
   } : null;
 
-  const history = Object.values(trends.weight || [])
-    .map((_, idx) => ({
-      weight: trends.weight[idx]?.value,
-      body_fat_percentage: trends.bodyFat[idx]?.value,
-      skeletal_muscle_mass: trends.muscleMass[idx]?.value,
-      measurement_date: trends.weight[idx]?.date || '',
-    }))
-    .filter(entry => 
-      entry.measurement_date && 
-      (typeof entry.weight === 'number' || 
-       typeof entry.body_fat_percentage === 'number' || 
-       typeof entry.skeletal_muscle_mass === 'number')
+  // Safe history construction - handle null/undefined trends
+  const weightSeries = trends?.weight ?? [];
+  const bodyFatSeries = trends?.bodyFat ?? [];
+  const muscleSeries = trends?.muscleMass ?? [];
+
+  // Choose base series for iteration: weight -> bodyFat -> muscleMass
+  const baseSeries =
+    weightSeries.length ? weightSeries :
+    (bodyFatSeries.length ? bodyFatSeries : muscleSeries);
+
+  const history = baseSeries
+    .map((_, idx) => {
+      const w = weightSeries[idx];
+      const bf = bodyFatSeries[idx];
+      const mm = muscleSeries[idx];
+
+      return {
+        weight: typeof w?.value === 'number' ? w.value : undefined,
+        body_fat_percentage: typeof bf?.value === 'number' ? bf.value : undefined,
+        skeletal_muscle_mass: typeof mm?.value === 'number' ? mm.value : undefined,
+        measurement_date: (w?.date || bf?.date || mm?.date) ?? '',
+      };
+    })
+    .filter(entry =>
+      entry.measurement_date &&
+      (
+        typeof entry.weight === 'number' ||
+        typeof entry.body_fat_percentage === 'number' ||
+        typeof entry.skeletal_muscle_mass === 'number'
+      )
     );
 
   return (
