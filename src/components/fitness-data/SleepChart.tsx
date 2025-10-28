@@ -15,6 +15,17 @@ interface SleepChartProps {
 }
 
 export function SleepChart({ data }: SleepChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sleep Analysis</CardTitle>
+          <CardDescription>Нет данных для отображения</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   const latestScore = data[data.length - 1]?.score;
   const averageTotal = data.reduce((sum, d) => sum + (d.total || 0), 0) / data.length;
 

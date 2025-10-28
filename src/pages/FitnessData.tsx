@@ -272,7 +272,9 @@ export default function FitnessData() {
     return <PageLoader message="Загрузка фитнес-данных..." />;
   }
 
-  const latestRecovery = processedMetrics.recovery[processedMetrics.recovery.length - 1];
+  const latestRecovery = processedMetrics.recovery.length > 0 
+    ? processedMetrics.recovery[processedMetrics.recovery.length - 1] 
+    : null;
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">
@@ -367,7 +369,7 @@ export default function FitnessData() {
           </div>
 
           {/* Hero Recovery Score */}
-          {latestRecovery && (
+          {latestRecovery && latestRecovery.value && (
             <RecoveryScoreChart
               score={latestRecovery.value}
               history={processedMetrics.recovery}

@@ -62,6 +62,13 @@ All colors MUST be HSL.
     --sidebar-border: 0 0% 100% / 0.1;
     --sidebar-ring: 180 100% 50%;
     
+    /* Chart colors */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 280 60% 50%;
+    
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(180, 100%, 50%), hsl(271, 76%, 53%));
     --gradient-secondary: linear-gradient(135deg, hsl(349, 100%, 60%), hsl(14, 100%, 57%));

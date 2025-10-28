@@ -8,6 +8,17 @@ interface HeartRateChartProps {
 }
 
 export function HeartRateChart({ data, restingHR, maxHR }: HeartRateChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Heart Rate</CardTitle>
+          <CardDescription>Нет данных для отображения</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

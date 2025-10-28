@@ -10,10 +10,10 @@ interface RecoveryScoreChartProps {
 }
 
 export function RecoveryScoreChart({ score, trend = 0, history = [] }: RecoveryScoreChartProps) {
-  const getColor = (value: number) => {
-    if (value >= 70) return 'from-green-400 to-emerald-500';
-    if (value >= 40) return 'from-yellow-400 to-orange-500';
-    return 'from-orange-500 to-red-500';
+  const getGradientColors = (value: number) => {
+    if (value >= 70) return { start: '#4ade80', end: '#10b981' }; // green-400 → emerald-500
+    if (value >= 40) return { start: '#facc15', end: '#f97316' }; // yellow-400 → orange-500
+    return { start: '#f97316', end: '#ef4444' }; // orange-500 → red-500
   };
 
   const getTextColor = (value: number) => {
@@ -21,6 +21,8 @@ export function RecoveryScoreChart({ score, trend = 0, history = [] }: RecoveryS
     if (value >= 40) return 'text-yellow-500';
     return 'text-red-500';
   };
+
+  const gradientColors = getGradientColors(score);
 
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
@@ -61,8 +63,8 @@ export function RecoveryScoreChart({ score, trend = 0, history = [] }: RecoveryS
               />
               <defs>
                 <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" className={`${getColor(score).split(' ')[0].replace('from-', 'text-')}`} stopOpacity="1" />
-                  <stop offset="100%" className={`${getColor(score).split(' ')[1].replace('to-', 'text-')}`} stopOpacity="1" />
+                  <stop offset="0%" stopColor={gradientColors.start} stopOpacity="1" />
+                  <stop offset="100%" stopColor={gradientColors.end} stopOpacity="1" />
                 </linearGradient>
               </defs>
             </svg>

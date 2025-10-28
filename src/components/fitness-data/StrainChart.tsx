@@ -6,6 +6,17 @@ interface StrainChartProps {
 }
 
 export function StrainChart({ data }: StrainChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Day Strain</CardTitle>
+          <CardDescription>Нет данных для отображения</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   const getStrainColor = (value: number) => {
     if (value < 10) return 'hsl(var(--chart-1))'; // Low - blue
     if (value < 14) return 'hsl(var(--chart-2))'; // Moderate - green

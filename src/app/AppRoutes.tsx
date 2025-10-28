@@ -13,6 +13,7 @@ import { getPrefetcher } from "@/lib/prefetch-strategy";
 import { logger } from "@/lib/logger";
 import { lazySafe } from "@/lib/lazy-safe";
 import { DevDebugBar } from "@/components/dev/DevDebugBar";
+import { AsyncErrorBoundary } from "@/components/error/AsyncErrorBoundary";
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
@@ -172,7 +173,11 @@ export const AppRoutes = () => {
         <Route path="/fitness-data" element={
           <ProtectedRoute>
             <ModernAppLayout>
-              <FitnessData />
+              <AsyncErrorBoundary 
+                errorFallback={<div className="p-8 text-center">Ошибка загрузки страницы Фитнес дата</div>}
+              >
+                <FitnessData />
+              </AsyncErrorBoundary>
             </ModernAppLayout>
           </ProtectedRoute>
         } />
