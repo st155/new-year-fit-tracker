@@ -40,10 +40,10 @@ export function useMultiSourceWidgetsData(
       }
       const metricNames = Array.from(metricNamesSet);
 
-      // Time window: last 7 days for multi-source comparison
+      // Time window: last 24 hours for current data only
       const now = new Date();
-      const fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const from = fromDate.toISOString().split('T')[0];
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const from = yesterday.toISOString();
 
       // Query all metrics from all sources
       const { data, error } = await supabase
@@ -75,10 +75,10 @@ export function useMultiSourceWidgetsData(
           if (!existing) {
             sourceMap.set(row.source, row);
           } else {
-            // Keep the newest
-            const existingDate = new Date(existing.measurement_date).getTime();
-            const rowDate = new Date(row.measurement_date).getTime();
-            if (rowDate > existingDate) {
+            // Keep the newest by created_at (when data was synced)
+            const existingCreated = new Date(existing.created_at).getTime();
+            const rowCreated = new Date(row.created_at).getTime();
+            if (rowCreated > existingCreated) {
               sourceMap.set(row.source, row);
             }
           }
@@ -112,8 +112,8 @@ export function useMultiSourceWidgetsData(
 
         if (sourceMap.size > 0) {
           const sources: SourceData[] = Array.from(sourceMap.values()).map(row => {
-            const day = new Date(row.measurement_date);
-            const hours = Math.max(0, Math.floor((Date.now() - day.getTime()) / (1000 * 60 * 60)));
+            const syncTime = new Date(row.created_at);
+            const hours = Math.max(0, Math.floor((Date.now() - syncTime.getTime()) / (1000 * 60 * 60)));
             
             return {
               value: Number(row.value),
@@ -125,12 +125,9 @@ export function useMultiSourceWidgetsData(
             };
           });
 
-          // Sort by priority (if available) and measurement date
+          // Sort by data freshness (sync time)
           sources.sort((a, b) => {
-            const aDate = new Date(a.measurement_date).getTime();
-            const bDate = new Date(b.measurement_date).getTime();
-            if (aDate !== bDate) return bDate - aDate; // newest first
-            return 0;
+            return a.age_hours - b.age_hours; // freshest first
           });
 
           const primarySource = sources[0]?.source;
