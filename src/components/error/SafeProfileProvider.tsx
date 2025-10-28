@@ -14,16 +14,6 @@ interface SafeProfileProviderProps {
 export function SafeProfileProvider({ children }: SafeProfileProviderProps) {
   return (
     <ErrorBoundary
-      fallback={
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="max-w-md w-full">
-            <MiniErrorFallback
-              error={new Error('Failed to load profile context')}
-              resetError={() => window.location.reload()}
-            />
-          </div>
-        </div>
-      }
       onError={(error, errorInfo) => {
         console.error('💥 [SafeProfileProvider] Profile context error:', {
           error: error.message,

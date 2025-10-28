@@ -112,9 +112,15 @@ export function CustomNavigationIcon({ type, isActive = false, className }: Cust
     'from-red-400 to-pink-500': { from: '#f87171', to: '#ec4899' },
     'from-fuchsia-400 to-violet-500': { from: '#e879f9', to: '#8b5cf6' },
     'from-amber-400 to-yellow-500': { from: '#fbbf24', to: '#eab308' },
+    'from-yellow-400 to-amber-500': { from: '#facc15', to: '#f59e0b' },
   };
   
-  const colors = gradientColors[config.gradient];
+  const colors = gradientColors[config.gradient] ?? { from: '#a3a3a3', to: '#737373' };
+  
+  if (!gradientColors[config.gradient] && import.meta.env.DEV) {
+    console.warn('[CustomNavigationIcon] Missing gradient mapping:', config.gradient);
+  }
+  
   const iconColor = isActive ? colors.from : colors.to;
   
   return (
