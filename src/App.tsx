@@ -56,7 +56,7 @@ const AppContent = () => {
       try {
         registerServiceWorker();
       } catch (error) {
-        console.error('Service worker registration failed:', error);
+        logger.error('Service worker registration failed', error);
       }
     } else {
       // Unregister SW and clear caches (dev + DISABLE_SW)

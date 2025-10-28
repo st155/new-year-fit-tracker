@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InBodyParser, InBodyData } from '@/lib/inbody-parser';
+import { logger } from '@/lib/logger';
 
 export function useInBodyParser() {
   const [data, setData] = useState<InBodyData | null>(null);
@@ -17,6 +18,7 @@ export function useInBodyParser() {
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('InBody parser error', err);
       setError(errorMessage);
       throw err;
     } finally {

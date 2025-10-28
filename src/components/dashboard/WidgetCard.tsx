@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataQualityBadge } from '@/components/data-quality';
 import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
+import { logger } from '@/lib/logger';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -127,7 +128,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const color = useMemo(() => getMetricColor(metricName), [metricName]);
 
   // Debug logging
-  console.log('[WidgetCard]', {
+  logger.debug('[WidgetCard]', {
     metric: metricName,
     displayMode: widget.display_mode,
     hasData: !!data,
@@ -282,7 +283,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const isDataStale = daysDiff >= 3; // Красный: 3+ дней
   const isWhoopSource = source.toLowerCase() === 'whoop';
   
-  console.log('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
+  logger.debug('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
   const getDataAgeMessage = () => {
     if (daysDiff <= 1) return 'Данные актуальны';

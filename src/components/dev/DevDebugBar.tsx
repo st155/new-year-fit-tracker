@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'react-router-dom';
 import { getPrefetcher } from '@/lib/prefetch-strategy';
+import { logger } from '@/lib/logger';
 
 export function DevDebugBar() {
   if (!import.meta.env.DEV) return null;
@@ -19,7 +20,7 @@ export function DevDebugBar() {
     const location = useLocation();
     debugInfo.route = location.pathname;
   } catch (e) {
-    console.error('[DevDebugBar] useLocation failed:', e);
+    logger.error('[DevDebugBar] useLocation failed', e);
   }
 
   try {
@@ -29,7 +30,7 @@ export function DevDebugBar() {
     debugInfo.rolesLoading = String(rolesLoading);
     debugInfo.isTrainer = String(isTrainer);
   } catch (e) {
-    console.error('[DevDebugBar] useAuth failed:', e);
+    logger.error('[DevDebugBar] useAuth failed', e);
   }
 
   try {

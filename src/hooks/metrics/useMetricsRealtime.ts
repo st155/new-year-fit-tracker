@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 /**
  * Real-time subscription for client_unified_metrics updates
@@ -15,7 +16,7 @@ export function useMetricsRealtime(enabled: boolean = true) {
   useEffect(() => {
     if (!enabled || !user?.id) return;
 
-    console.log('🔴 [MetricsRealtime] Setting up subscription for user:', user.id);
+    logger.debug('[MetricsRealtime] Setting up subscription', { userId: user.id });
 
     const channel = supabase
       .channel(`metrics_realtime_${user.id}`)
@@ -28,7 +29,7 @@ export function useMetricsRealtime(enabled: boolean = true) {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('🔴 [MetricsRealtime] New metric inserted:', payload.new);
+          logger.debug('[MetricsRealtime] New metric inserted', { metric: payload.new });
           
           // Invalidate ALL metrics queries to ensure fresh data
           queryClient.invalidateQueries({ queryKey: queryKeys.metrics.all });
@@ -43,11 +44,11 @@ export function useMetricsRealtime(enabled: boolean = true) {
         }
       )
       .subscribe((status) => {
-        console.log('🔴 [MetricsRealtime] Subscription status:', status);
+        logger.debug('[MetricsRealtime] Subscription status', { status });
       });
 
     return () => {
-      console.log('🔴 [MetricsRealtime] Cleaning up subscription');
+      logger.debug('[MetricsRealtime] Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, [enabled, user?.id, queryClient]);

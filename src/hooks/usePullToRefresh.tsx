@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -31,7 +32,7 @@ export function usePullToRefresh({
         });
       }
     } catch (error) {
-      console.error('Pull to refresh error:', error);
+      logger.error('Pull to refresh error', error);
       
       if (showToast) {
         toast({
