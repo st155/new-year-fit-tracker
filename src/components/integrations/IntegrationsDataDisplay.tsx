@@ -6,8 +6,6 @@ import { Activity, Heart, Flame, Moon, Wind, Footprints, Scale, Zap, RefreshCw }
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TerraProviderDiagnostics } from './TerraProviderDiagnostics';
-import { TerraDataMonitor } from './TerraDataMonitor';
 import { useToast } from '@/hooks/use-toast';
 
 interface MetricData {
@@ -421,21 +419,7 @@ export function IntegrationsDataDisplay() {
             </div>
           </CardHeader>
 
-          <CardContent className="pt-6 space-y-6">
-            {/* Data Monitor Section */}
-            <TerraDataMonitor
-              provider={provider.provider}
-              terraUserId={provider.terraUserId}
-            />
-            
-            {/* Diagnostics Section */}
-            <TerraProviderDiagnostics
-              provider={provider.provider}
-              terraUserId={provider.terraUserId}
-              lastSync={provider.lastSync}
-              onSyncRequest={() => handleSyncRequest(provider.provider)}
-            />
-
+          <CardContent className="pt-6">
             {/* Metrics Display */}
             {provider.metrics.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">

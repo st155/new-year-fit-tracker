@@ -73,7 +73,7 @@ export default function FitnessData() {
         .order('measurement_date', { ascending: true });
 
       if (sourceFilter !== 'all') {
-        query = query.eq('source', sourceFilter);
+        query = query.ilike('source', sourceFilter);
       }
 
       const { data, error } = await query;
@@ -104,24 +104,25 @@ export default function FitnessData() {
     }, {} as Record<string, typeof metricsData>);
 
     // Process Recovery
-    if (grouped['recovery_score']) {
-      metrics.recovery = grouped['recovery_score'].map(m => ({
+    if (grouped['Recovery Score']) {
+      metrics.recovery = grouped['Recovery Score'].map(m => ({
         value: m.value,
         date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
       }));
     }
 
     // Process Strain
-    if (grouped['day_strain']) {
-      metrics.strain = grouped['day_strain'].map(m => ({
+    if (grouped['Day Strain']) {
+      metrics.strain = grouped['Day Strain'].map(m => ({
         value: m.value,
         date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
       }));
     }
 
-    // Process Heart Rate
-    if (grouped['heart_rate']) {
-      metrics.heartRate = grouped['heart_rate'].map(m => ({
+    // Process Heart Rate - try both possible names
+    const heartRateData = grouped['Average Heart Rate'] || grouped['Heart Rate'] || grouped['Resting Heart Rate'];
+    if (heartRateData) {
+      metrics.heartRate = heartRateData.map(m => ({
         value: m.value,
         date: format(new Date(m.measurement_date), 'HH:mm', { locale: ru }),
       }));
@@ -130,7 +131,8 @@ export default function FitnessData() {
     // Process Sleep
     const sleepDates = new Set<string>();
     metricsData.forEach(m => {
-      if (m.metric_name.includes('sleep')) {
+      const name = m.metric_name.toLowerCase();
+      if (name.includes('sleep')) {
         sleepDates.add(m.measurement_date.split('T')[0]);
       }
     });
@@ -142,12 +144,11 @@ export default function FitnessData() {
       };
 
       dayMetrics.forEach(m => {
-        if (m.metric_name === 'sleep_deep') sleepData.deep = m.value;
-        if (m.metric_name === 'sleep_light') sleepData.light = m.value;
-        if (m.metric_name === 'sleep_rem') sleepData.rem = m.value;
-        if (m.metric_name === 'sleep_awake') sleepData.awake = m.value;
-        if (m.metric_name === 'sleep_duration') sleepData.total = m.value;
-        if (m.metric_name === 'sleep_score') sleepData.score = m.value;
+        if (m.metric_name === 'Deep Sleep Duration') sleepData.deep = m.value;
+        if (m.metric_name === 'Light Sleep Duration') sleepData.light = m.value;
+        if (m.metric_name === 'REM Sleep Duration') sleepData.rem = m.value;
+        if (m.metric_name === 'Sleep Duration') sleepData.total = m.value;
+        if (m.metric_name === 'Sleep Performance' || m.metric_name === 'Sleep Efficiency') sleepData.score = m.value;
       });
 
       if (Object.keys(sleepData).length > 1) {
@@ -162,7 +163,7 @@ export default function FitnessData() {
     });
 
     // Recovery card
-    const recovery = latestMetrics.find(m => m.name === 'recovery_score');
+    const recovery = latestMetrics.find(m => m.name === 'Recovery Score');
     if (recovery) {
       metrics.cards.push({
         name: 'Recovery',
@@ -176,7 +177,7 @@ export default function FitnessData() {
     }
 
     // Strain card
-    const strain = latestMetrics.find(m => m.name === 'day_strain');
+    const strain = latestMetrics.find(m => m.name === 'Day Strain');
     if (strain) {
       metrics.cards.push({
         name: 'Day Strain',
@@ -188,8 +189,12 @@ export default function FitnessData() {
       });
     }
 
-    // Heart Rate card
-    const hr = latestMetrics.find(m => m.name === 'heart_rate');
+    // Heart Rate card - try multiple names
+    const hr = latestMetrics.find(m => 
+      m.name === 'Average Heart Rate' || 
+      m.name === 'Heart Rate' || 
+      m.name === 'Resting Heart Rate'
+    );
     if (hr) {
       const age = new Date().getTime() - new Date(hr.latest.measurement_date).getTime();
       metrics.cards.push({
@@ -205,12 +210,15 @@ export default function FitnessData() {
     }
 
     // Sleep card
-    const sleep = latestMetrics.find(m => m.name === 'sleep_score');
+    const sleep = latestMetrics.find(m => 
+      m.name === 'Sleep Performance' || 
+      m.name === 'Sleep Efficiency'
+    );
     if (sleep) {
       metrics.cards.push({
         name: 'Sleep Score',
         value: Math.round(sleep.latest.value),
-        unit: '/100',
+        unit: sleep.latest.unit === '%' ? '%' : '/100',
         icon: Moon,
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
         source: sleep.latest.source,
@@ -219,7 +227,7 @@ export default function FitnessData() {
     }
 
     // Steps card
-    const steps = latestMetrics.find(m => m.name === 'steps');
+    const steps = latestMetrics.find(m => m.name === 'Steps');
     if (steps) {
       metrics.cards.push({
         name: 'Steps',
@@ -232,7 +240,10 @@ export default function FitnessData() {
     }
 
     // Calories card
-    const calories = latestMetrics.find(m => m.name === 'calories_burned');
+    const calories = latestMetrics.find(m => 
+      m.name === 'Active Calories' || 
+      m.name === 'Workout Calories'
+    );
     if (calories) {
       metrics.cards.push({
         name: 'Calories',
