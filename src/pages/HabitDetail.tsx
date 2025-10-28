@@ -6,20 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Flame, TrendingUp, Calendar, Target, Download } from 'lucide-react';
+import { ArrowLeft, Flame, TrendingUp, Calendar, Target, Download, FileText } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { HabitProgressChart } from '@/components/habits/HabitProgressChart';
 import { HabitCalendarHeatmap } from '@/components/habits/HabitCalendarHeatmap';
 import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils';
 import { toast } from 'sonner';
+import { exportHabitToPDF } from '@/lib/exporters/pdf-exporter';
 
 export default function HabitDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { habits, isLoading } = useHabits(user?.id);
+  const [isExporting, setIsExporting] = useState(false);
 
   const habit = useMemo(() => {
     return habits?.find(h => h.id === id);
@@ -91,7 +93,7 @@ export default function HabitDetail() {
     return maxStreak;
   }, [progressData]);
 
-  const handleExport = () => {
+  const handleExportCSV = () => {
     if (!progressData) return;
     
     // Create CSV content
@@ -114,7 +116,28 @@ export default function HabitDetail() {
     link.download = `habit-${habit.name}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     
-    toast.success('Данные экспортированы');
+    toast.success('CSV экспортирован');
+  };
+
+  const handleExportPDF = async () => {
+    if (!progressData || !habit.stats) return;
+    
+    setIsExporting(true);
+    try {
+      await exportHabitToPDF({
+        name: habit.name,
+        description: habit.description || undefined,
+        stats: habit.stats,
+        progressData,
+        longestStreak,
+      });
+      toast.success('PDF отчет создан');
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      toast.error('Ошибка при создании PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -146,14 +169,25 @@ export default function HabitDetail() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          className="glass-card border-white/20"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Экспорт CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            className="glass-card border-white/20"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="glass-card border-white/20"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            {isExporting ? 'Создание...' : 'PDF Отчет'}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

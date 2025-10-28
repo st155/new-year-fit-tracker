@@ -42,22 +42,25 @@ function sendToAnalytics(metric: Metric) {
     });
   }
 
-  // Send to custom analytics endpoint
+  // Send to Edge Function in production
   if (!import.meta.env.DEV) {
-    fetch('/api/analytics/web-vitals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: metric.name,
-        value: metric.value,
-        rating: metric.rating,
-        timestamp: Date.now(),
-        url: window.location.href,
-      }),
-      keepalive: true,
-    }).catch((error) => {
-      logger.warn('Failed to send web vitals', { error });
-    });
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (supabaseUrl) {
+      fetch(`${supabaseUrl}/functions/v1/analytics-vitals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: metric.name,
+          value: metric.value,
+          rating: metric.rating,
+          timestamp: Date.now(),
+          url: window.location.href,
+        }),
+        keepalive: true,
+      }).catch((error) => {
+        logger.warn('Failed to send web vitals', { error });
+      });
+    }
   }
 }
 

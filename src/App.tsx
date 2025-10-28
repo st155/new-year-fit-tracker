@@ -9,6 +9,7 @@ import { registerServiceWorker, setupVersionCheck } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher } from "@/lib/prefetch-strategy";
 import { initWebVitals } from "@/lib/web-vitals";
+import { initSentry } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { AppRoutes } from "./app/AppRoutes";
 
@@ -36,14 +37,15 @@ initPrefetcher(queryClient);
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
-  // Initialize invalidation, web vitals (deferred to not block render)
+  // Initialize invalidation, web vitals, sentry (deferred to not block render)
   // Note: prefetcher is initialized synchronously at module level
   useEffect(() => {
     const timer = setTimeout(() => {
       initInvalidator(queryClient);
       initWebVitals();
+      initSentry();
       setupVersionCheck(); // Auto-detect new app versions
-      logger.info('[App] Query strategies, web vitals, and version check initialized');
+      logger.info('[App] Query strategies, monitoring, and version check initialized');
     }, 100);
     return () => clearTimeout(timer);
   }, []);

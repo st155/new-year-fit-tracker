@@ -108,12 +108,14 @@ class Logger {
   }
 
   private sendToErrorTracking(message: string, error: Error, context?: LogContext) {
-    // TODO: Integrate with error tracking (e.g., Sentry)
-    // Example:
-    // Sentry.captureException(error, {
-    //   level: 'error',
-    //   extra: { message, ...context },
-    // });
+    // Send to Sentry if available
+    if (!this.isDev && typeof window !== 'undefined') {
+      import('./sentry').then(({ sentry }) => {
+        sentry.captureException(error, { message, ...context });
+      }).catch(() => {
+        // Sentry not available, ignore
+      });
+    }
   }
 }
 
