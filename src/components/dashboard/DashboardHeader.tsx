@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useDataQuality } from '@/hooks/useDataQuality';
-import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, RefreshCw } from 'lucide-react';
-import { CompactQualityBadges } from './CompactQualityBadges';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Sparkles } from 'lucide-react';
 
 interface AIInsight {
   emoji: string;
@@ -15,12 +10,6 @@ interface AIInsight {
 
 export function DashboardHeader() {
   const { user } = useAuth();
-  const { 
-    averageConfidence, 
-    metricsByQuality, 
-    isLoading: qualityLoading 
-  } = useDataQuality();
-  const { recalculate, isRecalculating } = useConfidenceRecalculation();
   const [insights, setInsights] = useState<AIInsight[]>([]);
 
   useEffect(() => {
@@ -88,15 +77,6 @@ export function DashboardHeader() {
           });
         }
 
-        // Data quality insight
-        if (!qualityLoading && averageConfidence > 0) {
-          const qualityEmoji = averageConfidence >= 80 ? '🎯' : averageConfidence >= 60 ? '💪' : '📈';
-          const qualityText = averageConfidence >= 80 ? 'отличное' : averageConfidence >= 60 ? 'хорошее' : 'можно улучшить';
-          generatedInsights.push({
-            emoji: qualityEmoji,
-            message: `Качество данных: ${averageConfidence.toFixed(0)}% - ${qualityText}`
-          });
-        }
 
         // Weekly achievement
         if (metricsData.data && metricsData.data.length >= 10) {
@@ -121,17 +101,7 @@ export function DashboardHeader() {
     };
 
     fetchInsights();
-  }, [user, qualityLoading, averageConfidence]);
-
-  const handleRecalculate = () => {
-    if (!user?.id) return;
-    recalculate({ user_id: user.id });
-  };
-
-  const totalMetrics = Object.values(metricsByQuality).reduce(
-    (sum, metrics) => sum + metrics.length, 
-    0
-  );
+  }, [user]);
 
   return (
     <div className="space-y-3">
@@ -151,47 +121,6 @@ export function DashboardHeader() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Quality Mini-Widgets + Overall Score */}
-      {!qualityLoading && totalMetrics > 0 && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 rounded-lg">
-          <div className="flex-1 space-y-2">
-            {/* Quality Badges */}
-            <CompactQualityBadges
-              excellent={metricsByQuality.excellent.length}
-              good={metricsByQuality.good.length}
-              fair={metricsByQuality.fair.length}
-              poor={metricsByQuality.poor.length}
-              total={totalMetrics}
-            />
-            
-            {/* Overall Score */}
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                Качество данных:
-              </span>
-              <div className="flex-1 max-w-xs">
-                <Progress value={averageConfidence} className="h-1.5" />
-              </div>
-              <span className="text-sm font-bold text-primary whitespace-nowrap">
-                {averageConfidence.toFixed(0)}%
-              </span>
-            </div>
-          </div>
-
-          {/* Recalculate Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRecalculate}
-            disabled={isRecalculating}
-            className="gap-2 shrink-0"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
-            <span className="text-xs">Пересчитать</span>
-          </Button>
         </div>
       )}
     </div>
