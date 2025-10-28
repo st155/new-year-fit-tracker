@@ -3,17 +3,57 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles } from "lucide-react";
-import { generateDailyChallenges, type DailyChallenge } from "@/lib/daily-challenges";
+import { generateDailyChallenges, updateChallengeProgress, type DailyChallenge } from "@/lib/daily-challenges";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useTodayMetrics } from "@/hooks/metrics/useTodayMetrics";
 
 export function DailyChallenges() {
+  const { user } = useAuth();
+  const { metrics: todayMetrics, loading } = useTodayMetrics(user?.id);
   const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
 
   useEffect(() => {
-    // Generate daily challenges
-    const dailyChallenges = generateDailyChallenges();
-    setChallenges(dailyChallenges);
-  }, []);
+    // Generate base challenges
+    const baseChallenges = generateDailyChallenges();
+    
+    // Update with real data
+    const updatedChallenges = baseChallenges.map(challenge => {
+      let currentValue = 0;
+      
+      switch (challenge.type) {
+        case 'steps':
+          currentValue = todayMetrics.steps;
+          break;
+        case 'workout':
+          currentValue = todayMetrics.workouts;
+          break;
+        case 'sleep':
+          currentValue = todayMetrics.sleepHours;
+          break;
+        case 'strain':
+          currentValue = todayMetrics.strain;
+          break;
+        case 'recovery':
+          currentValue = todayMetrics.recovery;
+          break;
+      }
+      
+      return updateChallengeProgress(challenge, currentValue);
+    });
+    
+    setChallenges(updatedChallenges);
+  }, [todayMetrics]);
+
+  if (loading) {
+    return (
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Loading challenges...
+        </CardContent>
+      </Card>
+    );
+  }
 
   const completedCount = challenges.filter(c => c.completed).length;
   const totalPoints = challenges.reduce((sum, c) => sum + (c.completed ? c.pointsReward : 0), 0);

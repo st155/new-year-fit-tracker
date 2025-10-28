@@ -10,3 +10,5 @@ export type { SmartWidgetData } from './useSmartWidgetsData';
 export { useMultiSourceWidgetsData } from './useMultiSourceWidgetsData';
 export type { MultiSourceWidgetData, SourceData } from './useMultiSourceWidgetsData';
 export { useMetricsRealtime } from './useMetricsRealtime';
+export { useTodayMetrics } from './useTodayMetrics';
+export type { TodayMetrics } from './useTodayMetrics';
