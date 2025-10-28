@@ -15,10 +15,8 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsSection } from '@/components/dashboard/HabitsSection';
-import { CompactAIInsights } from '@/components/dashboard/CompactAIInsights';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
-import { DataQualitySummary } from '@/components/dashboard/DataQualitySummary';
-import { GlobalTicker } from '@/components/ui/global-ticker';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -228,49 +226,49 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Global Ticker at the top */}
-        <GlobalTicker />
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Compact Dashboard Header with AI Insights + Quality */}
+        <DashboardHeader />
         
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Controls Bar - More compact */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Left: Title */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Мои метрики</h1>
-            <p className="text-muted-foreground mt-1">
-              Настройте виджеты для отображения важных показателей
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">Мои метрики</h1>
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
-                <Switch
-                  checked={showOnlyRecent}
-                  onCheckedChange={(checked) => {
-                    setShowOnlyRecent(checked);
-                    localStorage.setItem('show_only_recent', String(checked));
-                  }}
-                />
-                <span className="text-sm text-muted-foreground">Только актуальные</span>
-              </div>
-              
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background">
-                <Switch
-                  checked={showOnlyHighQuality}
-                  onCheckedChange={setShowOnlyHighQuality}
-                />
-                <span className="text-sm text-muted-foreground">Качественные (≥60%)</span>
-              </div>
+          {/* Right: Filters + Actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Filters */}
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-background">
+              <Switch
+                checked={showOnlyRecent}
+                onCheckedChange={(checked) => {
+                  setShowOnlyRecent(checked);
+                  localStorage.setItem('show_only_recent', String(checked));
+                }}
+              />
+              <span className="text-xs text-muted-foreground">Актуальные</span>
             </div>
+            
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-border bg-background">
+              <Switch
+                checked={showOnlyHighQuality}
+                onCheckedChange={setShowOnlyHighQuality}
+              />
+              <span className="text-xs text-muted-foreground">≥60%</span>
+            </div>
+
+            {/* Actions */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              className="gap-2"
+              className="gap-1.5 h-8"
               disabled={isSyncing}
             >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Синхронизация...' : 'Обновить всё'}
+              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="text-xs">{isSyncing ? 'Sync...' : 'Обновить'}</span>
             </Button>
             <WidgetSettings
               widgets={widgets}
@@ -283,24 +281,18 @@ const Index = () => {
 
         {/* Hidden widgets message */}
         {showOnlyRecent && hiddenCount > 0 && (
-          <div className="text-sm text-muted-foreground text-center py-2">
-            Скрыто {hiddenCount} неактивных виджетов{' '}
+          <div className="text-xs text-muted-foreground text-center py-1">
+            Скрыто {hiddenCount} неактивных{' '}
             <Button 
               variant="link" 
               size="sm"
-              className="h-auto p-0 text-sm"
+              className="h-auto p-0 text-xs"
               onClick={() => setShowOnlyRecent(false)}
             >
               Показать все
             </Button>
           </div>
         )}
-
-        {/* AI Insights - Compact Ticker */}
-        <CompactAIInsights />
-
-        {/* Data Quality Summary */}
-        <DataQualitySummary />
 
         {/* Widgets Grid */}
         {widgets.length === 0 ? (
