@@ -21,9 +21,16 @@ import { useTranslation } from "@/lib/translations";
 
 export function OnboardingTutorial() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  
+  // Don't show on auth or public routes
+  const publicRoutes = ['/auth', '/landing', '/privacy-policy', '/terms'];
+  if (publicRoutes.some(route => location.pathname.startsWith(route))) {
+    return null;
+  }
+  
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
