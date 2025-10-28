@@ -1,17 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, TrendingUp, Zap, Trophy } from "lucide-react";
 import { generateDailyChallenges, updateChallengeProgress, type DailyChallenge } from "@/lib/daily-challenges";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useTodayMetrics } from "@/hooks/metrics/useTodayMetrics";
+import { useChallengeHistory } from "@/hooks/metrics/useChallengeHistory";
+import { useMetricsRealtime } from "@/hooks/metrics/useMetricsRealtime";
+import { ChallengeCelebration } from "./ChallengeCelebration";
 
 export function DailyChallenges() {
   const { user } = useAuth();
   const { metrics: todayMetrics, loading } = useTodayMetrics(user?.id);
+  const stats = useChallengeHistory(user?.id);
   const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
+  const [celebrationChallenge, setCelebrationChallenge] = useState<DailyChallenge | null>(null);
+  const prevChallengesRef = useRef<DailyChallenge[]>([]);
+
+  // Enable real-time updates
+  useMetricsRealtime(true);
 
   useEffect(() => {
     // Generate base challenges
@@ -42,6 +51,17 @@ export function DailyChallenges() {
       return updateChallengeProgress(challenge, currentValue);
     });
     
+    // Detect newly completed challenges
+    const newlyCompleted = updatedChallenges.find((c, idx) => {
+      const prev = prevChallengesRef.current[idx];
+      return c.completed && prev && !prev.completed;
+    });
+    
+    if (newlyCompleted) {
+      setCelebrationChallenge(newlyCompleted);
+    }
+    
+    prevChallengesRef.current = updatedChallenges;
     setChallenges(updatedChallenges);
   }, [todayMetrics]);
 
@@ -59,8 +79,14 @@ export function DailyChallenges() {
   const totalPoints = challenges.reduce((sum, c) => sum + (c.completed ? c.pointsReward : 0), 0);
 
   return (
-    <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
-      <CardHeader>
+    <>
+      <ChallengeCelebration 
+        challenge={celebrationChallenge}
+        onComplete={() => setCelebrationChallenge(null)}
+      />
+      
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-yellow-500" />
@@ -70,8 +96,48 @@ export function DailyChallenges() {
             {completedCount} / {challenges.length}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Challenge Statistics Section */}
+          {stats.weeklyCompletionRate > 0 && (
+            <div className="p-4 bg-muted/30 rounded-lg border space-y-3">
+              <div className="text-sm font-semibold text-muted-foreground">
+                📊 Challenge Statistics
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <TrendingUp className="h-3 w-3" />
+                    Weekly
+                  </div>
+                  <div className="text-lg font-bold text-primary">
+                    {stats.weeklyCompletionRate}%
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <Trophy className="h-3 w-3" />
+                    Points
+                  </div>
+                  <div className="text-lg font-bold text-primary">
+                    {stats.totalPointsEarned}
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-1">
+                    <Zap className="h-3 w-3" />
+                    Streak
+                  </div>
+                  <div className="text-lg font-bold text-primary">
+                    {stats.currentStreak}d
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         {challenges.map((challenge) => {
           const progress = Math.min(100, (challenge.currentValue / challenge.targetValue) * 100);
           
@@ -134,7 +200,8 @@ export function DailyChallenges() {
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }

@@ -12,3 +12,5 @@ export type { MultiSourceWidgetData, SourceData } from './useMultiSourceWidgetsD
 export { useMetricsRealtime } from './useMetricsRealtime';
 export { useTodayMetrics } from './useTodayMetrics';
 export type { TodayMetrics } from './useTodayMetrics';
+export { useChallengeHistory } from './useChallengeHistory';
+export type { ChallengeStats } from './useChallengeHistory';
