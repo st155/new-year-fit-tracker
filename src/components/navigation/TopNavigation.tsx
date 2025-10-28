@@ -64,6 +64,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
     { type: 'activity' as const, path: "/body", label: 'Тело' },
     { type: 'habits' as const, path: "/habits", label: 'Привычки' },
+    { type: 'connections' as const, path: "/fitness-data", label: 'Фитнес дата' },
   ];
 
   const trainerNavItems = [
@@ -164,9 +165,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/integrations')} className="cursor-pointer flex items-center gap-2">
+              <DropdownMenuItem onClick={() => navigate('/fitness-data')} className="cursor-pointer flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                <span>{t('navigation.integrations')}</span>
+                <span>Фитнес дата</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <span>{t('navigation.profile')}</span>

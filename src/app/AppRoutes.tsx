@@ -190,13 +190,7 @@ export const AppRoutes = () => {
             </ModernAppLayout>
           </ProtectedRoute>
         } />
-        <Route path="/integrations" element={
-          <ProtectedRoute>
-            <ModernAppLayout>
-              <Integrations />
-            </ModernAppLayout>
-          </ProtectedRoute>
-        } />
+        <Route path="/integrations" element={<Navigate to="/fitness-data" replace />} />
         <Route path="/medical-documents" element={
           <ProtectedRoute>
             <ModernAppLayout>
