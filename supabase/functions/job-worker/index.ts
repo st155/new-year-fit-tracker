@@ -198,6 +198,7 @@ async function processTerraWebhookData(
     for (const body of data) {
       const date = body.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
 
+      // Standard Terra format (Garmin, WHOOP, etc.)
       if (body.body_mass_kg) {
         metricsToInsert.push({
           metric_name: 'Weight',
@@ -220,6 +221,51 @@ async function processTerraWebhookData(
           external_id: `terra_${provider}_bodyfat_${date}`,
           user_id,
         });
+      }
+
+      // Withings format (measurements_data.measurements[])
+      if (body.measurements_data?.measurements) {
+        for (const measurement of body.measurements_data.measurements) {
+          const measurementDate = measurement.measurement_time?.split('T')[0] || date;
+          const measurementTime = measurement.measurement_time || `${date}T00:00:00Z`;
+          const uniqueId = `terra_${provider}_${measurementDate}_${measurementTime.replace(/[:.]/g, '')}`;
+
+          if (measurement.weight_kg) {
+            metricsToInsert.push({
+              metric_name: 'Weight',
+              category: 'body',
+              value: measurement.weight_kg,
+              measurement_date: measurementDate,
+              source: provider,
+              external_id: `${uniqueId}_weight`,
+              user_id,
+            });
+          }
+
+          if (measurement.bodyfat_percentage) {
+            metricsToInsert.push({
+              metric_name: 'Body Fat Percentage',
+              category: 'body',
+              value: measurement.bodyfat_percentage,
+              measurement_date: measurementDate,
+              source: provider,
+              external_id: `${uniqueId}_bodyfat`,
+              user_id,
+            });
+          }
+
+          if (measurement.muscle_mass_g) {
+            metricsToInsert.push({
+              metric_name: 'Muscle Mass',
+              category: 'body',
+              value: measurement.muscle_mass_g / 1000, // Convert to kg
+              measurement_date: measurementDate,
+              source: provider,
+              external_id: `${uniqueId}_muscle`,
+              user_id,
+            });
+          }
+        }
       }
     }
   }

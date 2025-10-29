@@ -30,45 +30,29 @@ export function useBodyMetricsFromWithings(userId?: string): WithingsMetrics | n
     queryFn: async () => {
       if (!userId) return { weight: [], bodyFat: [] };
 
-      // Fetch Withings weight data
-      const { data: weightMetric } = await supabase
-        .from('user_metrics')
-        .select('id')
+      // Fetch from unified_metrics (fresh Terra data)
+      const { data: unifiedData, error } = await supabase
+        .from('unified_metrics')
+        .select('metric_name, value, measurement_date, unit')
         .eq('user_id', userId)
-        .eq('metric_name', 'Weight')
         .eq('source', 'withings')
-        .maybeSingle();
+        .in('metric_name', ['Weight', 'Body Fat Percentage'])
+        .order('measurement_date', { ascending: false })
+        .limit(60); // Get more to ensure we have enough for both metrics
 
-      // Fetch Withings body fat data
-      const { data: bodyFatMetric } = await supabase
-        .from('user_metrics')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('metric_name', 'Body Fat Percentage')
-        .eq('source', 'withings')
-        .maybeSingle();
+      if (error) throw error;
 
-      const weight = weightMetric
-        ? await supabase
-            .from('metric_values')
-            .select('value, measurement_date')
-            .eq('metric_id', weightMetric.id)
-            .order('measurement_date', { ascending: false })
-            .limit(30)
-        : { data: [] };
-
-      const bodyFat = bodyFatMetric
-        ? await supabase
-            .from('metric_values')
-            .select('value, measurement_date')
-            .eq('metric_id', bodyFatMetric.id)
-            .order('measurement_date', { ascending: false })
-            .limit(30)
-        : { data: [] };
+      // Group by metric
+      const weightData = (unifiedData || [])
+        .filter(m => m.metric_name === 'Weight')
+        .slice(0, 30);
+      const bodyFatData = (unifiedData || [])
+        .filter(m => m.metric_name === 'Body Fat Percentage')
+        .slice(0, 30);
 
       return {
-        weight: weight.data || [],
-        bodyFat: bodyFat.data || [],
+        weight: weightData,
+        bodyFat: bodyFatData,
       };
     },
     enabled: !!userId,
@@ -85,27 +69,30 @@ export function useBodyMetricsFromWithings(userId?: string): WithingsMetrics | n
       const trendData = calculateTrend(withingsData.weight);
       metrics.weight = {
         value: withingsData.weight[0].value,
-        unit: 'kg',
+        unit: withingsData.weight[0].unit || 'kg',
         source: 'withings',
         date: withingsData.weight[0].measurement_date,
         ...trendData,
-        sparklineData: withingsData.weight.map(d => ({ 
-          date: d.measurement_date, 
-          value: d.value 
-        })),
+        sparklineData: withingsData.weight
+          .slice(0, 7)
+          .reverse()
+          .map(d => ({ 
+            date: d.measurement_date, 
+            value: d.value 
+          })),
       };
     }
 
     // Body Fat
     if (withingsData?.bodyFat?.[0]) {
-      const sortedHistory = [...withingsData.bodyFat].sort((a, b) => 
+      const sortedHistory = [...withingsData.bodyFat].slice(0, 7).sort((a, b) => 
         new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime()
       );
-      const trendData = calculateTrend(sortedHistory.slice().reverse());
+      const trendData = calculateTrend([...withingsData.bodyFat]);
       
       metrics.bodyFat = {
         value: withingsData.bodyFat[0].value,
-        unit: '%',
+        unit: withingsData.bodyFat[0].unit || '%',
         source: 'withings',
         date: withingsData.bodyFat[0].measurement_date,
         ...trendData,
