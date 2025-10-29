@@ -35,7 +35,7 @@ export function useBodyMetricsFromWithings(userId?: string): WithingsMetrics | n
         .from('unified_metrics')
         .select('metric_name, value, measurement_date, unit')
         .eq('user_id', userId)
-        .eq('source', 'withings')
+        .ilike('source', 'withings') // Case-insensitive match for WITHINGS/withings
         .in('metric_name', ['Weight', 'Body Fat Percentage'])
         .order('measurement_date', { ascending: false })
         .limit(60); // Get more to ensure we have enough for both metrics

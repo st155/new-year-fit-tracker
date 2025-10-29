@@ -55,21 +55,19 @@ Deno.serve(async (req) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
 
-    // Call Terra API to request data sync
-    const terraResponse = await fetch(`https://api.tryterra.co/v2/user/${token.terra_user_id}/sync`, {
-      method: 'POST',
-      headers: {
-        'dev-id': terraDevId,
-        'x-api-key': terraApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        to_webhook: true,
-        resources: ['daily', 'sleep', 'activity', 'body'],
-      }),
-    });
+    // Call Terra API to get historical body data
+    // Note: Terra automatically sends webhooks when data changes
+    // This fetches historical data and triggers webhook processing
+    const terraResponse = await fetch(
+      `https://api.tryterra.co/v2/body?user_id=${token.terra_user_id}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&to_webhook=true`,
+      {
+        method: 'GET',
+        headers: {
+          'dev-id': terraDevId,
+          'x-api-key': terraApiKey,
+        },
+      }
+    );
 
     if (!terraResponse.ok) {
       const errorText = await terraResponse.text();
