@@ -1157,7 +1157,7 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
-          // Steps
+          // Steps (always update to maximum value for incremental metric)
           const steps = daily.steps ?? daily.steps_data?.steps ?? daily.distance_data?.steps;
           if (typeof steps === 'number') {
             const { data: stepsMetricId } = await supabase.rpc('create_or_get_metric', {
@@ -1168,17 +1168,34 @@ async function processTerraData(supabase: any, payload: any) {
               p_source: source,
             });
             if (stepsMetricId) {
-              await supabase.from('metric_values').upsert({
-                user_id: userId,
-                metric_id: stepsMetricId,
-                value: steps,
-                measurement_date: dateStr,
-                source_data: daily,
-                external_id: `terra_${provider}_steps_${dateStr}`,
-              }, {
-                onConflict: 'user_id,metric_id,measurement_date,external_id',
-              });
-              metricsInserted++;
+              // Check existing value to only update if new is greater
+              const { data: existing } = await supabase
+                .from('metric_values')
+                .select('value')
+                .eq('user_id', userId)
+                .eq('metric_id', stepsMetricId)
+                .eq('measurement_date', dateStr)
+                .eq('external_id', `terra_${provider}_steps_${dateStr}`)
+                .maybeSingle();
+
+              const shouldUpdate = !existing || steps > existing.value;
+
+              if (shouldUpdate) {
+                await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: stepsMetricId,
+                  value: steps,
+                  measurement_date: dateStr,
+                  source_data: daily,
+                  external_id: `terra_${provider}_steps_${dateStr}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                metricsInserted++;
+                console.log(`📊 Steps updated: ${existing?.value || 0} → ${steps}`);
+              } else {
+                console.log(`⏭️ Steps skipped: ${steps} <= ${existing.value} (existing)`);
+              }
             }
           }
 
