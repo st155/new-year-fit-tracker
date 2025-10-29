@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
+import { useSyncAllDevices } from '@/hooks/useSyncAllDevices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Database, Webhook } from 'lucide-react';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 export function WithingsDebugPanel() {
   const [isSyncing, setIsSyncing] = useState(false);
   const forceSyncMutation = useForceTerraSync();
+  const syncAllMutation = useSyncAllDevices();
 
   // Fetch latest metrics from unified_metrics
   const { data: metrics, refetch: refetchMetrics } = useQuery({
@@ -56,8 +58,8 @@ export function WithingsDebugPanel() {
   const handleForceSync = async () => {
     setIsSyncing(true);
     try {
-      await forceSyncMutation.mutateAsync({ provider: 'withings' });
-      toast.success('Синхронизация запущена', {
+      await forceSyncMutation.mutateAsync({ provider: 'withings', dataType: 'body' });
+      toast.success('Синхронизация Withings запущена', {
         description: 'Подождите 30-60 секунд и обновите данные',
       });
       
@@ -68,6 +70,26 @@ export function WithingsDebugPanel() {
       }, 5000);
     } catch (error) {
       console.error('Force sync error:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSyncAll = async () => {
+    setIsSyncing(true);
+    try {
+      await syncAllMutation.mutateAsync();
+      toast.success('Синхронизация всех устройств запущена', {
+        description: 'Подождите 30-60 секунд и обновите данные',
+      });
+      
+      // Wait a bit for Terra to process and send webhooks
+      setTimeout(() => {
+        refetchMetrics();
+        refetchWebhooks();
+      }, 8000);
+    } catch (error) {
+      console.error('Sync all error:', error);
     } finally {
       setIsSyncing(false);
     }
@@ -92,14 +114,23 @@ export function WithingsDebugPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               onClick={handleForceSync} 
+              disabled={isSyncing}
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              Sync Withings
+            </Button>
+            <Button 
+              onClick={handleSyncAll} 
               disabled={isSyncing}
               className="gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              Force Sync Withings
+              Sync All Devices
             </Button>
             <Button 
               onClick={handleRefresh}

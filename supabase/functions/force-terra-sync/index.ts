@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { provider } = await req.json();
+    const { provider, dataType = 'body' } = await req.json();
 
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
@@ -50,16 +50,25 @@ Deno.serve(async (req) => {
       throw new Error(`No active ${provider} connection found`);
     }
 
-    // Calculate date range (last 7 days)
+    // Calculate date range
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 7);
+    
+    // For daily data, fetch today + yesterday; for body data, fetch last 7 days
+    if (dataType === 'daily') {
+      startDate.setDate(startDate.getDate() - 1); // Yesterday
+    } else {
+      startDate.setDate(startDate.getDate() - 7); // Last 7 days
+    }
 
-    // Call Terra API to get historical body data
+    // Determine API endpoint based on data type
+    const endpoint = dataType === 'daily' ? 'daily' : 'body';
+    
+    // Call Terra API to get historical data
     // Note: Terra automatically sends webhooks when data changes
     // This fetches historical data and triggers webhook processing
     const terraResponse = await fetch(
-      `https://api.tryterra.co/v2/body?user_id=${token.terra_user_id}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&to_webhook=true`,
+      `https://api.tryterra.co/v2/${endpoint}?user_id=${token.terra_user_id}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&to_webhook=true`,
       {
         method: 'GET',
         headers: {
@@ -77,12 +86,12 @@ Deno.serve(async (req) => {
 
     const result = await terraResponse.json();
 
-    console.log('Force sync initiated for user:', user.id, 'provider:', provider);
+    console.log('Force sync initiated for user:', user.id, 'provider:', provider, 'dataType:', dataType);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Sync initiated for ${provider}`,
+        message: `Sync initiated for ${provider} (${dataType})`,
         terraResult: result
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

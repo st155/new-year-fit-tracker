@@ -4,22 +4,24 @@ import { toast } from 'sonner';
 
 interface ForceSyncParams {
   provider: string;
+  dataType?: 'body' | 'daily';
 }
 
 export function useForceTerraSync() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ provider }: ForceSyncParams) => {
+    mutationFn: async ({ provider, dataType = 'body' }: ForceSyncParams) => {
       const { data, error } = await supabase.functions.invoke('force-terra-sync', {
-        body: { provider },
+        body: { provider, dataType },
       });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, { provider }) => {
-      toast.success(`Синхронизация ${provider} запущена`, {
+    onSuccess: (_, { provider, dataType = 'body' }) => {
+      const dataTypeLabel = dataType === 'daily' ? 'дневных метрик' : 'данных тела';
+      toast.success(`Синхронизация ${provider} (${dataTypeLabel}) запущена`, {
         description: 'Данные обновятся в течение нескольких минут',
       });
       
