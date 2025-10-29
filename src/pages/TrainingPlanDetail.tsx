@@ -14,7 +14,8 @@ import {
   Copy,
   Trash2,
   Target,
-  Activity
+  Activity,
+  BarChart3
 } from 'lucide-react';
 import { 
   TrainerStatCard, 
@@ -31,6 +32,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { TrainingPlanAnalytics } from '@/components/trainer/training-plan/TrainingPlanAnalytics';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -207,7 +209,7 @@ export default function TrainingPlanDetail() {
 
       {/* Tabs Section */}
       <Tabs defaultValue="workouts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="workouts">
             <Dumbbell className="h-4 w-4 mr-2" />
             Тренировки
@@ -215,6 +217,10 @@ export default function TrainingPlanDetail() {
           <TabsTrigger value="clients">
             <Users className="h-4 w-4 mr-2" />
             Клиенты
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Аналитика
           </TabsTrigger>
           <TabsTrigger value="overview">
             <Activity className="h-4 w-4 mr-2" />
@@ -336,6 +342,15 @@ export default function TrainingPlanDetail() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-4">
+          <TrainingPlanAnalytics
+            workouts={plan.training_plan_workouts || []}
+            assignedClients={plan.assigned_training_plans || []}
+            durationWeeks={plan.duration_weeks}
+          />
         </TabsContent>
 
         {/* Overview Tab */}
