@@ -47,6 +47,7 @@ import TerraCallbackSync from "@/pages/TerraCallback";
 import PrivacyPolicySync from "@/pages/PrivacyPolicy";
 import HealthSync from "@/pages/Health";
 import NotFoundSync from "@/pages/NotFound";
+import WithingsDebugSync from "@/pages/WithingsDebug";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
 const Landing = lazySafe(LandingSync, () => import("@/pages/Landing"));
@@ -73,6 +74,7 @@ const TerraCallback = lazySafe(TerraCallbackSync, () => import("@/pages/TerraCal
 const PrivacyPolicy = lazySafe(PrivacyPolicySync, () => import("@/pages/PrivacyPolicy"));
 const Health = lazySafe(HealthSync, () => import("@/pages/Health"));
 const NotFound = lazySafe(NotFoundSync, () => import("@/pages/NotFound"));
+const WithingsDebug = lazySafe(WithingsDebugSync, () => import("@/pages/WithingsDebug"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -252,6 +254,16 @@ export const AppRoutes = () => {
         {/* Static pages */}
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/health" element={<Health />} />
+        
+        {/* Debug pages - dev/admin only */}
+        <Route path="/withings-debug" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <WithingsDebug />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
       <DevDebugBar />

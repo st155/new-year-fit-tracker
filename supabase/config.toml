@@ -45,6 +45,9 @@ verify_jwt = true
 [functions.terra-sync-scheduler]
 verify_jwt = false
 
+[functions.force-terra-sync]
+verify_jwt = true
+
 [functions.inbody-ingest]
 verify_jwt = true
 

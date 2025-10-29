@@ -27,6 +27,10 @@ export function useForceTerraSync() {
       queryClient.invalidateQueries({ queryKey: ['widgets'] });
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['terra-diagnostics'] });
+      queryClient.invalidateQueries({ queryKey: ['withings-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['withings-debug-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['withings-debug-webhooks'] });
+      queryClient.invalidateQueries({ queryKey: ['body-metrics-withings'] });
     },
     onError: (error: Error) => {
       toast.error('Ошибка синхронизации', {
