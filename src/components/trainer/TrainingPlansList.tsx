@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Dumbbell, Plus } from 'lucide-react';
 import { TrainingPlanBuilder } from './TrainingPlanBuilder';
 import { TrainingPlanCard } from './TrainingPlanCard';
-import { TrainingPlanDetailView } from './TrainingPlanDetailView';
 
 interface TrainingPlan {
   id: string;
@@ -28,9 +27,8 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const loadPlans = async () => {
     try {
@@ -113,39 +111,6 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
     loadClients();
   }, []);
 
-  // Handle plan URL parameter for direct navigation from AI chat
-  useEffect(() => {
-    const planIdFromUrl = searchParams.get('plan');
-    const planId = initialPlanId || planIdFromUrl;
-    
-    if (planId && plans.length > 0) {
-      const planExists = plans.find(p => p.id === planId);
-      if (planExists) {
-        setSelectedPlanId(planId);
-      } else {
-        // Try to load plan directly by ID in case it wasn't in the list
-        const loadPlanById = async () => {
-          const { data, error } = await supabase
-            .from('training_plans')
-            .select('*')
-            .eq('id', planId)
-            .single();
-          
-          if (data && !error) {
-            setSelectedPlanId(planId);
-          } else {
-            toast({
-              title: 'План не найден',
-              description: 'Запрошенный план не существует или был удален',
-              variant: 'destructive'
-            });
-          }
-        };
-        loadPlanById();
-      }
-    }
-  }, [plans, searchParams, initialPlanId, toast]);
-
   if (loading) {
     return <div className="text-center py-8">Загрузка...</div>;
   }
@@ -168,18 +133,10 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
             <p className="text-muted-foreground mb-4">
               Создайте первый план для ваших клиентов
             </p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => setShowBuilder(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Создать план
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedPlanId('demo-plan')}
-              >
-                Показать демо-план
-              </Button>
-            </div>
+            <Button onClick={() => setShowBuilder(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Создать план
+            </Button>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -187,15 +144,7 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
               <TrainingPlanCard
                 key={plan.id}
                 plan={plan}
-                onClick={() => setSelectedPlanId(plan.id)}
-                onDuplicate={() => {
-                  // Will be handled by detail view
-                  setSelectedPlanId(plan.id);
-                }}
-                onDelete={() => {
-                  // Will be handled by detail view
-                  setSelectedPlanId(plan.id);
-                }}
+                onClick={() => navigate(`/training-plans/${plan.id}`)}
               />
             ))}
           </div>
@@ -210,26 +159,6 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
           setShowBuilder(false);
         }}
         clients={clients}
-      />
-
-      <TrainingPlanDetailView
-        planId={selectedPlanId}
-        isDemoMode={selectedPlanId === 'demo-plan'}
-        onClose={() => {
-          setSelectedPlanId(null);
-          // Очистить URL параметр
-          const newSearchParams = new URLSearchParams(searchParams);
-          newSearchParams.delete('plan');
-          window.history.replaceState({}, '', `${window.location.pathname}?${newSearchParams.toString()}`);
-        }}
-        onDeleted={() => {
-          loadPlans();
-          setSelectedPlanId(null);
-          // Очистить URL параметр
-          const newSearchParams = new URLSearchParams(searchParams);
-          newSearchParams.delete('plan');
-          window.history.replaceState({}, '', `${window.location.pathname}?${newSearchParams.toString()}`);
-        }}
       />
     </>
   );

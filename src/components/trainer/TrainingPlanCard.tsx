@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Calendar, User, Dumbbell, MoreVertical, Eye, Edit, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface TrainingPlanCardProps {
   plan: {
@@ -33,9 +34,15 @@ export const TrainingPlanCard = ({
   onDuplicate,
   onDelete
 }: TrainingPlanCardProps) => {
+  const navigate = useNavigate();
+  
   const handleAction = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
     action();
+  };
+
+  const handleCardClick = () => {
+    navigate(`/training-plans/${plan.id}`);
   };
   
   const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -48,7 +55,7 @@ export const TrainingPlanCard = ({
         "hover:shadow-lg hover:-translate-y-1",
         "border-border/50 hover:border-primary/50"
       )}
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
       
@@ -74,7 +81,7 @@ export const TrainingPlanCard = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={(e) => handleAction(e as any, onClick)}>
+            <DropdownMenuItem onClick={(e) => handleAction(e as any, handleCardClick)}>
               <Eye className="h-4 w-4 mr-2" />
               Просмотр
             </DropdownMenuItem>
