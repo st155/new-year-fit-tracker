@@ -33,8 +33,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { useState } from 'react';
-import { TrainingPlanCalendarView } from './TrainingPlanCalendarView';
-import { WorkoutCard } from './WorkoutCard';
+import { TrainingPlanCalendarView, WorkoutCard } from './training-plan';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
