@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.reprocess-webhook]
 verify_jwt = false
+
+[functions.analytics-vitals]
+verify_jwt = false
