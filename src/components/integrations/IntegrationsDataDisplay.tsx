@@ -117,7 +117,7 @@ export function IntegrationsDataDisplay() {
       .from('unified_metrics')
       .select('metric_name, value, unit, measurement_date, source, metric_category, created_at')
       .eq('user_id', user!.id)
-      .eq('source', provider) // provider already uppercase in terra_tokens
+      .ilike('source', provider) // case-insensitive match for source
       .gte('measurement_date', sevenDaysAgoStr)
       .lte('measurement_date', todayStr)
       .order('measurement_date', { ascending: false })
@@ -213,7 +213,7 @@ export function IntegrationsDataDisplay() {
         .from('unified_metrics')
         .select('value, measurement_date, created_at, unit, metric_category')
         .eq('user_id', user!.id)
-        .eq('source', provider)
+        .ilike('source', provider) // case-insensitive match for source
         .eq('metric_name', 'Steps')
         .eq('measurement_date', todayStr)
         .order('value', { ascending: false })
