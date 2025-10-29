@@ -907,6 +907,44 @@ async function processTerraData(supabase: any, payload: any) {
               }
             }
           }
+
+          // Sleep Efficiency
+          const sleepEffObj = sleep.sleep_durations_data?.sleep_efficiency ?? 
+                              sleep.sleep_efficiency_percentage ?? 
+                              sleep.sleep?.efficiency_percentage;
+                              
+          if (typeof sleepEffObj === 'number') {
+            // Convert to percentage if needed (0.95 -> 95%)
+            const sleepEff = sleepEffObj < 1 ? sleepEffObj * 100 : sleepEffObj;
+            
+            const { data: effMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'Sleep Efficiency',
+              p_metric_category: 'sleep',
+              p_unit: '%',
+              p_source: provider.toLowerCase(),
+            });
+            
+            if (effMetricId) {
+              const { error: effError } = await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: effMetricId,
+                value: Math.round(sleepEff * 10) / 10, // Round to 1 decimal
+                measurement_date: measurementDate,
+                source_data: sleep,
+                external_id: `terra_${provider}_sleepeff_${measurementDate}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+              
+              if (!effError) {
+                stats.insertedCounts.sleep++;
+                if (stats.sampleRecords.length < 5) {
+                  stats.sampleRecords.push({ type: 'sleep_efficiency', date: measurementDate, efficiency: sleepEff });
+                }
+              }
+            }
+          }
         } catch (e) {
           console.error('⚠️ Error processing sleep item:', e);
           stats.errors.push(`Sleep processing error: ${e.message}`);
@@ -1120,7 +1158,7 @@ async function processTerraData(supabase: any, payload: any) {
           }
 
           // Steps
-          const steps = daily.steps ?? daily.steps_data?.steps;
+          const steps = daily.steps ?? daily.steps_data?.steps ?? daily.distance_data?.steps;
           if (typeof steps === 'number') {
             const { data: stepsMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
