@@ -169,13 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Initiating Google OAuth...');
+      console.log('🔐 [Google OAuth] Initiating...');
       
       // Use production URL for better OAuth compatibility
       const baseUrl = window.location.origin;
       const redirectTo = `${baseUrl}/`;
+      const supabaseCallbackUrl = 'https://ueykmmzmguzjppdudvef.supabase.co/auth/v1/callback';
       
-      console.log('Redirect URL:', redirectTo);
+      console.log('🔐 [Google OAuth] Redirect URL:', redirectTo);
+      console.log('🔐 [Google OAuth] Expected callback URL:', supabaseCallbackUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -189,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error('Google auth error:', error);
+        console.error('❌ [Google OAuth] Error:', error);
         
         // Log failed OAuth attempt
         if (user?.id) {
@@ -197,23 +199,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           logAuthAttempt(user.id, 'google', false, error.message);
         }
         
-        // Handle specific error cases
-        if (error.message.includes('requested path is invalid') || 
-            error.message.includes('signature is invalid') ||
-            error.message.includes('Invalid token')) {
+        // Handle specific error cases with actionable messages
+        const errorMsg = error.message.toLowerCase();
+        
+        if (errorMsg.includes('redirect_uri_mismatch') || errorMsg.includes('redirect uri')) {
+          console.error('❌ [Google OAuth] redirect_uri_mismatch detected!');
+          console.error('📝 Add this URL to Google Cloud Console → OAuth 2.0 Client ID → Authorized redirect URIs:');
+          console.error(`   ${supabaseCallbackUrl}`);
+          
+          toast.error(
+            "Google OAuth not configured. Please add the Supabase callback URL to your Google Cloud Console. Check browser console for details.",
+            { duration: 6000 }
+          );
+        } else if (errorMsg.includes('requested path is invalid') || 
+                   errorMsg.includes('signature is invalid') ||
+                   errorMsg.includes('invalid token')) {
           toast.error("OAuth Configuration Error. Need to configure Site URL and Redirect URLs in Supabase panel. Contact administrator.");
-        } else if (error.message.includes('Network')) {
+        } else if (errorMsg.includes('network')) {
           toast.error("Network error. Check your internet connection and try again");
         } else {
           toast.error(`Google sign in error: ${error.message}`);
         }
       } else {
-        console.log('Google OAuth initiated successfully');
+        console.log('✅ [Google OAuth] Initiated successfully');
       }
 
       return { data, error };
     } catch (err: any) {
-      console.error('Google auth catch error:', err);
+      console.error('💥 [Google OAuth] Catch error:', err);
       toast.error("Google sign in error. Try again later or use email sign in");
       return { error: err };
     }
