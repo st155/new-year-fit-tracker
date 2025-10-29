@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MetricColor, METRIC_COLOR_VARS } from '@/lib/metric-config';
+import { shouldShowFreshnessWarning, isMetricStale } from '@/lib/metrics/metric-categories';
+import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 
 interface MetricCardProps {
   title: string;
@@ -13,6 +17,7 @@ interface MetricCardProps {
   color: MetricColor;
   source?: string;
   sources?: string[];
+  measurementDate?: string;
   onSourceChange?: (source: string) => void;
   onClick?: () => void;
 }
@@ -26,10 +31,12 @@ export function MetricCard({
   color, 
   source, 
   sources, 
+  measurementDate,
   onSourceChange,
   onClick 
 }: MetricCardProps) {
   const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
+  const forceSyncMutation = useForceTerraSync();
 
   const varName = METRIC_COLOR_VARS[color];
   const wrapperStyle = {
@@ -46,8 +53,18 @@ export function MetricCard({
     }
   };
 
+  const handleSync = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (displaySource) {
+      forceSyncMutation.mutate({ provider: displaySource });
+    }
+  };
+
   const displaySource = sources && sources.length > 0 ? sources[currentSourceIndex] : source;
   const hasMultipleSources = sources && sources.length > 1;
+  
+  const showSyncButton = measurementDate && displaySource && shouldShowFreshnessWarning(title, measurementDate);
+  const staleness = measurementDate ? isMetricStale(title, measurementDate) : null;
 
   return (
     <div
@@ -73,7 +90,7 @@ export function MetricCard({
             )}
           </div>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {displaySource && (
                 <Badge 
                   variant="outline" 
@@ -87,20 +104,44 @@ export function MetricCard({
                   {hasMultipleSources && ` (${currentSourceIndex + 1}/${sources.length})`}
                 </Badge>
               )}
+              {staleness && staleness.isStale && (
+                <Badge 
+                  variant={staleness.isCritical ? "destructive" : "secondary"}
+                  className="text-xs"
+                >
+                  {staleness.ageDays}д назад
+                </Badge>
+              )}
               {subtitle && !displaySource && (
                 <span className="text-xs text-muted-foreground">
                   {subtitle}
                 </span>
               )}
             </div>
-            {change && (
-              <Badge
-                variant={change.startsWith('-') ? 'destructive' : 'default'}
-                className="text-xs"
-              >
-                {change}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {showSyncButton && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  onClick={handleSync}
+                  disabled={forceSyncMutation.isPending}
+                >
+                  <RefreshCw className={cn(
+                    "h-3 w-3",
+                    forceSyncMutation.isPending && "animate-spin"
+                  )} />
+                </Button>
+              )}
+              {change && (
+                <Badge
+                  variant={change.startsWith('-') ? 'destructive' : 'default'}
+                  className="text-xs"
+                >
+                  {change}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
