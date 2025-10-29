@@ -22,16 +22,8 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   
-  // ✅ Don't load profile until user is loaded
-  if (!user) {
-    return (
-      <ProfileContext.Provider value={{ profile: null, loading: true, refetch: async () => {} }}>
-        {children}
-      </ProfileContext.Provider>
-    );
-  }
-  
-  const { data: profile, isLoading: loading, refetch: queryRefetch, error } = useProfileQuery(user.id);
+  // ✅ Hook called unconditionally (React rules)
+  const { data: profile, isLoading: loading, refetch: queryRefetch, error } = useProfileQuery(user?.id || '');
   
   if (error && import.meta.env.DEV) {
     console.error('💥 [ProfileProvider] Query error:', error);
@@ -40,6 +32,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const refetch = async () => {
     await queryRefetch();
   };
+
+  // ✅ Conditional logic AFTER hooks
+  if (!user) {
+    return (
+      <ProfileContext.Provider value={{ profile: null, loading: true, refetch }}>
+        {children}
+      </ProfileContext.Provider>
+    );
+  }
 
   return (
     <ProfileContext.Provider value={{ profile: profile || null, loading, refetch }}>

@@ -8,12 +8,15 @@ export const profileQueryKeys = {
 
 export function useProfileQuery(userId: string | undefined) {
   return useQuery({
-    queryKey: profileQueryKeys.profile(userId!),
+    queryKey: profileQueryKeys.profile(userId || ''),
     queryFn: async () => {
+      // ✅ Early return for empty userId
+      if (!userId) return null;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId!)
+        .eq('user_id', userId)
         .single();
       
       if (error) {
