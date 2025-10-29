@@ -35,3 +35,5 @@ export function useForceTerraSync() {
     },
   });
 }
+
+export type { ForceSyncParams };

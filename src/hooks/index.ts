@@ -9,6 +9,7 @@
 
 // ===== PRIMITIVE HOOKS =====
 export { useAuth } from './useAuth';
+export { useForceTerraSync } from './useForceTerraSync';
 export { useDebounce } from './primitive/useDebounce';
 export { useMediaQuery, useIsMobile, useIsTablet, useIsDesktop } from './primitive/useMediaQuery';
 

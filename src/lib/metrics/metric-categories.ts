@@ -118,3 +118,13 @@ export function shouldShowFreshnessWarning(metricName: string, measurementDate: 
   // Show warnings for automatic metrics if stale
   return isStale;
 }
+
+export function getDataAge(measurementDate: string): string {
+  const now = new Date();
+  const date = new Date(measurementDate);
+  const ageDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (ageDays === 0) return 'Сегодня';
+  if (ageDays === 1) return 'Вчера';
+  return `${ageDays}д назад`;
+}
