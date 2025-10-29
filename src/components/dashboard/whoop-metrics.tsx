@@ -87,62 +87,42 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
       
       console.log('WhoopMetrics: Fetching data for date:', dateStr, 'user:', user.id);
       
-      // Получаем metric_id для whoop метрик (Terra использует uppercase)
-      const { data: whoopMetrics } = await supabase
-        .from('user_metrics')
-        .select('id')
+      // Fetch directly from unified_metrics with Whoop source
+      const { data } = await supabase
+        .from('unified_metrics')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('source', 'WHOOP');
-
-      const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
+        .ilike('source', 'whoop')
+        .gte('measurement_date', format(subDays(selectedDate, 7), 'yyyy-MM-dd'))
+        .lte('measurement_date', dateStr)
+        .order('measurement_date', { ascending: false });
       
-      if (whoopMetricIds.length === 0) {
+      if (!data || data.length === 0) {
         console.log('WhoopMetrics: No Whoop metrics found for user');
         setMetrics([]);
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
-        .from('metric_values')
-        .select(`
-          value,
-          measurement_date,
-          notes,
-          created_at,
-          user_metrics!inner (
-            metric_name,
-            metric_category,
-            unit,
-            source
-          )
-        `)
-        .eq('user_id', user.id)
-        .in('metric_id', whoopMetricIds)
-        .gte('measurement_date', format(subDays(selectedDate, 7), 'yyyy-MM-dd'))
-        .lte('measurement_date', dateStr)
-        .order('measurement_date', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      // Группируем по метрике и берем запись за выбранный день, 
-      // если её нет — берем самую свежую из последних 7 дней
-      const latestMetrics = data?.reduce((acc, item) => {
-        const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
+      // Group by metric and get record for selected day,
+      // if not available - get the most recent from last 7 days
+      const latestMetrics = data.reduce((acc, item) => {
+        const key = `${item.metric_name}_${item.metric_category}`;
         const isToday = item.measurement_date === dateStr;
         const currentDate = new Date(item.measurement_date);
         const existingDate = acc[key] ? new Date(acc[key].measurement_date) : null;
         
-        // Приоритизация: 1) сегодняшние данные всегда важнее, 2) если оба не сегодня - берем свежее
+        // Priority: 1) today's data is always more important, 2) if both not today - take fresher
         if (!acc[key] || 
             (!acc[key].isToday && isToday) || 
             (acc[key].isToday === isToday && existingDate && currentDate > existingDate)) {
           acc[key] = {
-            metric_name: item.user_metrics.metric_name,
-            metric_category: item.user_metrics.metric_category,
-            unit: item.user_metrics.unit,
+            metric_name: item.metric_name,
+            metric_category: item.metric_category,
+            unit: item.unit,
             value: item.value,
             measurement_date: item.measurement_date,
-            notes: item.notes,
+            notes: '',
             isToday,
           };
         }
@@ -199,47 +179,30 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           startDate = subDays(endDate, 7);
       }
 
-      // Получаем metric_id для whoop метрик (Terra использует uppercase)
-      const { data: whoopMetrics } = await supabase
-        .from('user_metrics')
-        .select('id')
+      // Fetch directly from unified_metrics with Whoop source
+      const { data } = await supabase
+        .from('unified_metrics')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('source', 'WHOOP');
-
-      const whoopMetricIds = whoopMetrics?.map(m => m.id) || [];
+        .ilike('source', 'whoop')
+        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
+        .lte('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .order('measurement_date');
       
-      if (whoopMetricIds.length === 0) {
+      if (!data || data.length === 0) {
         setAggregatedMetrics([]);
         setAggregatedLoading(false);
         return;
       }
 
-      const { data } = await supabase
-        .from('metric_values')
-        .select(`
-          value,
-          measurement_date,
-          user_metrics!inner (
-            metric_name,
-            metric_category,
-            unit,
-            source
-          )
-        `)
-        .eq('user_id', user.id)
-        .in('metric_id', whoopMetricIds)
-        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
-        .lte('measurement_date', format(endDate, 'yyyy-MM-dd'))
-        .order('measurement_date');
-
-      // Группируем и агрегируем данные
-      const grouped = data?.reduce((acc, item) => {
-        const key = `${item.user_metrics.metric_name}_${item.user_metrics.metric_category}`;
+      // Group and aggregate data
+      const grouped = data.reduce((acc, item) => {
+        const key = `${item.metric_name}_${item.metric_category}`;
         if (!acc[key]) {
           acc[key] = {
-            metric_name: item.user_metrics.metric_name,
-            metric_category: item.user_metrics.metric_category,
-            unit: item.user_metrics.unit,
+            metric_name: item.metric_name,
+            metric_category: item.metric_category,
+            unit: item.unit,
             values: [],
           };
         }

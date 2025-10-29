@@ -144,9 +144,10 @@ export default function FitnessData() {
       };
 
       dayMetrics.forEach(m => {
-        if (m.metric_name === 'Deep Sleep Duration') sleepData.deep = m.value;
-        if (m.metric_name === 'Light Sleep Duration') sleepData.light = m.value;
-        if (m.metric_name === 'REM Sleep Duration') sleepData.rem = m.value;
+        if (m.metric_name === 'Deep Sleep Duration') sleepData.deep = m.value * 60;
+        if (m.metric_name === 'Light Sleep Duration') sleepData.light = m.value * 60;
+        if (m.metric_name === 'REM Sleep Duration') sleepData.rem = m.value * 60;
+        if (m.metric_name === 'Awake Duration') sleepData.awake = m.value * 60;
         if (m.metric_name === 'Sleep Duration') sleepData.total = m.value;
         if (m.metric_name === 'Sleep Performance' || m.metric_name === 'Sleep Efficiency') sleepData.score = m.value;
       });

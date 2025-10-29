@@ -60,7 +60,7 @@ export function SleepChart({ data }: SleepChartProps) {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                label={{ value: 'Часы', angle: -90, position: 'insideLeft' }}
+                label={{ value: 'Минуты', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -98,7 +98,7 @@ export function SleepChart({ data }: SleepChartProps) {
                             {data.total && (
                               <div className="flex items-center justify-between gap-4 pt-1 border-t">
                                 <span className="font-medium">Всего:</span>
-                                <span className="font-bold">{(data.total / 60).toFixed(1)}ч</span>
+                                <span className="font-bold">{data.total.toFixed(1)}ч</span>
                               </div>
                             )}
                           </div>
@@ -122,7 +122,7 @@ export function SleepChart({ data }: SleepChartProps) {
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="flex flex-col p-2 rounded-lg bg-muted/50">
             <span className="text-xs text-muted-foreground">Средняя длительность</span>
-            <span className="font-medium">{(averageTotal / 60).toFixed(1)}ч</span>
+            <span className="font-medium">{averageTotal.toFixed(1)}ч</span>
           </div>
           {latestScore && (
             <div className="flex flex-col p-2 rounded-lg bg-muted/50">

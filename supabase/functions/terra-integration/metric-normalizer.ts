@@ -79,6 +79,56 @@ export const UNIFIED_METRICS: Record<string, MetricMapping> = {
     category: 'sleep'
   },
   
+  // Sleep Phases
+  deep_sleep_duration: {
+    terraField: [
+      'sleep_durations_data.asleep.duration_asleep_state_deep_sleep_seconds',
+      'asleep.duration_asleep_state_deep_sleep_seconds',
+      'duration_asleep_state_deep_sleep_seconds',
+      'deep_sleep_duration_seconds'
+    ],
+    unifiedName: 'Deep Sleep Duration',
+    unit: 'h',
+    category: 'sleep',
+    transformer: (seconds: number) => Math.round((seconds / 3600) * 10) / 10
+  },
+  light_sleep_duration: {
+    terraField: [
+      'sleep_durations_data.asleep.duration_asleep_state_light_sleep_seconds',
+      'asleep.duration_asleep_state_light_sleep_seconds',
+      'duration_asleep_state_light_sleep_seconds',
+      'light_sleep_duration_seconds'
+    ],
+    unifiedName: 'Light Sleep Duration',
+    unit: 'h',
+    category: 'sleep',
+    transformer: (seconds: number) => Math.round((seconds / 3600) * 10) / 10
+  },
+  rem_sleep_duration: {
+    terraField: [
+      'sleep_durations_data.asleep.duration_asleep_state_rem_sleep_seconds',
+      'asleep.duration_asleep_state_rem_sleep_seconds',
+      'duration_asleep_state_rem_sleep_seconds',
+      'rem_sleep_duration_seconds'
+    ],
+    unifiedName: 'REM Sleep Duration',
+    unit: 'h',
+    category: 'sleep',
+    transformer: (seconds: number) => Math.round((seconds / 3600) * 10) / 10
+  },
+  awake_duration: {
+    terraField: [
+      'sleep_durations_data.awake.duration_awake_state_seconds',
+      'awake.duration_awake_state_seconds',
+      'duration_awake_state_seconds',
+      'awake_duration_seconds'
+    ],
+    unifiedName: 'Awake Duration',
+    unit: 'h',
+    category: 'sleep',
+    transformer: (seconds: number) => Math.round((seconds / 3600) * 10) / 10
+  },
+  
   // HRV
   hrv_rmssd: {
     terraField: ['hrv_rmssd_ms', 'hrv.rmssd_ms', 'hrv.rmssd_milli'],
