@@ -3,27 +3,32 @@
  */
 
 export type MetricDataType = 'automatic' | 'manual';
+export type DeviceType = 'automatic' | 'manual';
 
 export interface MetricFreshnessConfig {
   type: MetricDataType;
+  deviceType: DeviceType;
   maxAgeDays: number; // Maximum age before showing warning
   criticalAgeDays: number; // Maximum age before showing error
 }
 
 const FRESHNESS_CONFIG: Record<string, MetricFreshnessConfig> = {
-  // Manual metrics - measured by user
+  // Manual metrics - measured by user (requires physical device interaction)
   'Weight': {
     type: 'manual',
+    deviceType: 'manual',
     maxAgeDays: 7,
     criticalAgeDays: 14,
   },
   'Body Fat Percentage': {
     type: 'manual',
+    deviceType: 'manual',
     maxAgeDays: 7,
     criticalAgeDays: 14,
   },
   'Muscle Mass': {
     type: 'manual',
+    deviceType: 'manual',
     maxAgeDays: 7,
     criticalAgeDays: 14,
   },
@@ -31,51 +36,61 @@ const FRESHNESS_CONFIG: Record<string, MetricFreshnessConfig> = {
   // Automatic metrics - synced from devices
   'Steps': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Active Calories': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Sleep Duration': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Sleep Efficiency': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Recovery Score': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Resting Heart Rate': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'HRV': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Strain': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'Max Heart Rate': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   },
   'VO2 Max': {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 7, // VO2 Max doesn't change often
     criticalAgeDays: 30,
   },
@@ -84,6 +99,7 @@ const FRESHNESS_CONFIG: Record<string, MetricFreshnessConfig> = {
 export function getMetricFreshnessConfig(metricName: string): MetricFreshnessConfig {
   return FRESHNESS_CONFIG[metricName] || {
     type: 'automatic',
+    deviceType: 'automatic',
     maxAgeDays: 2,
     criticalAgeDays: 3,
   };

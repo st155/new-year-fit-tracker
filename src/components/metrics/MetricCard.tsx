@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RefreshCw, Info, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MetricColor, METRIC_COLOR_VARS } from '@/lib/metric-config';
-import { shouldShowFreshnessWarning, isMetricStale } from '@/lib/metrics/metric-categories';
+import { shouldShowFreshnessWarning, isMetricStale, getMetricFreshnessConfig } from '@/lib/metrics/metric-categories';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 
 interface MetricCardProps {
@@ -63,8 +64,17 @@ export function MetricCard({
   const displaySource = sources && sources.length > 0 ? sources[currentSourceIndex] : source;
   const hasMultipleSources = sources && sources.length > 1;
   
-  const showSyncButton = measurementDate && displaySource && shouldShowFreshnessWarning(title, measurementDate);
+  const metricConfig = getMetricFreshnessConfig(title);
+  const isManualDevice = metricConfig.deviceType === 'manual';
+  const showSyncButton = measurementDate && displaySource && shouldShowFreshnessWarning(title, measurementDate) && !isManualDevice;
   const staleness = measurementDate ? isMetricStale(title, measurementDate) : null;
+  
+  const getManualDeviceInstructions = (source?: string) => {
+    if (source?.toLowerCase() === 'withings') {
+      return 'Для обновления данных:\n1. Встаньте на весы Withings\n2. Дождитесь синхронизации с приложением\n3. Данные появятся здесь через 1-5 минут';
+    }
+    return 'Для обновления данных требуется ручное измерение на устройстве';
+  };
 
   return (
     <div
@@ -104,9 +114,24 @@ export function MetricCard({
                   {hasMultipleSources && ` (${currentSourceIndex + 1}/${sources.length})`}
                 </Badge>
               )}
+              {isManualDevice && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="secondary" className="text-xs gap-1 cursor-help">
+                        <UserCircle className="h-3 w-3" />
+                        Ручной ввод
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs whitespace-pre-line">{getManualDeviceInstructions(displaySource)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {staleness && staleness.isStale && (
                 <Badge 
-                  variant={staleness.isCritical ? "destructive" : "secondary"}
+                  variant={isManualDevice ? "secondary" : (staleness.isCritical ? "destructive" : "secondary")}
                   className="text-xs"
                 >
                   {staleness.ageDays}д назад
@@ -119,6 +144,24 @@ export function MetricCard({
               )}
             </div>
             <div className="flex items-center gap-2">
+              {isManualDevice && measurementDate && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                      >
+                        <Info className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs whitespace-pre-line">{getManualDeviceInstructions(displaySource)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {showSyncButton && (
                 <Button
                   size="sm"
