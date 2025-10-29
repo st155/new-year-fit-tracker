@@ -2789,6 +2789,74 @@ export type Database = {
           },
         ]
       }
+      trainer_schedule_events: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          event_type: string
+          id: string
+          is_cancelled: boolean
+          is_completed: boolean
+          location: string | null
+          metadata: Json | null
+          recurrence_rule: string | null
+          reminder_minutes: number | null
+          start_time: string
+          title: string
+          trainer_id: string
+          training_plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          event_type: string
+          id?: string
+          is_cancelled?: boolean
+          is_completed?: boolean
+          location?: string | null
+          metadata?: Json | null
+          recurrence_rule?: string | null
+          reminder_minutes?: number | null
+          start_time: string
+          title: string
+          trainer_id: string
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string
+          id?: string
+          is_cancelled?: boolean
+          is_completed?: boolean
+          location?: string | null
+          metadata?: Json | null
+          recurrence_rule?: string | null
+          reminder_minutes?: number | null
+          start_time?: string
+          title?: string
+          trainer_id?: string
+          training_plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_schedule_events_training_plan_id_fkey"
+            columns: ["training_plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_plan_workouts: {
         Row: {
           created_at: string | null

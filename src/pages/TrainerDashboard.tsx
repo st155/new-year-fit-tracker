@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp } from "lucide-react";
+import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp, Calendar } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { GlobalClientSearch } from "@/components/trainer/GlobalClientSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -18,6 +18,7 @@ import { TrainerChallengesManager } from "@/components/trainer/TrainerChallenges
 import { AIQuickActionsPanel } from "@/components/trainer/AIQuickActionsPanel";
 import { ClientsList } from "@/components/trainer/ClientsList";
 import { ClientAliasesManager } from "@/components/trainer/ClientAliasesManager";
+import { TrainerCalendar } from "@/components/trainer/calendar/TrainerCalendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -204,6 +205,7 @@ function TrainerDashboardContent() {
     'clients': <Users className="h-4 w-4" />,
     'challenges': <Trophy className="h-4 w-4" />,
     'plans': <TrendingUp className="h-4 w-4" />,
+    'calendar': <Calendar className="h-4 w-4" />,
     'tasks': <Target className="h-4 w-4" />,
     'chat': <MessageSquare className="h-4 w-4" />,
     'goals': <Target className="h-4 w-4" />,
@@ -216,6 +218,7 @@ function TrainerDashboardContent() {
     'clients': 'Клиенты',
     'challenges': 'Челленджи',
     'plans': 'Планы',
+    'calendar': 'Календарь',
     'tasks': 'Задачи',
     'chat': 'Чат',
     'goals': 'Цели',
@@ -259,7 +262,7 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-10 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-11 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="ai-hub" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
@@ -292,7 +295,13 @@ function TrainerDashboardContent() {
                 Планы
               </TabsTrigger>
               <TabsTrigger 
-                value="tasks" 
+                value="calendar" 
+                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                Календарь
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tasks"
                 className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 Задачи
@@ -366,6 +375,10 @@ function TrainerDashboardContent() {
 
             <TabsContent value="plans">
               <TrainingPlansList initialPlanId={selectedPlanId} />
+            </TabsContent>
+
+            <TabsContent value="calendar">
+              <TrainerCalendar />
             </TabsContent>
 
             <TabsContent value="tasks">
