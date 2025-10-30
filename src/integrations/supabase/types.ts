@@ -3123,6 +3123,33 @@ export type Database = {
         }
         Relationships: []
       }
+      web_vitals_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          metric_name: string
+          rating: string
+          url: string
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metric_name: string
+          rating: string
+          url: string
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metric_name?: string
+          rating?: string
+          url?: string
+          value?: number
+        }
+        Relationships: []
+      }
       webhook_logs: {
         Row: {
           created_at: string
