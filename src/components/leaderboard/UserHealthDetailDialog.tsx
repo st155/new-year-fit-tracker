@@ -24,7 +24,7 @@ export function UserHealthDetailDialog({
 }: UserHealthDetailDialogProps) {
   if (!userId) return null;
 
-  const { goals, loading, error } = useClientDetailData(userId);
+  const { goals, healthData, loading, error } = useClientDetailData(userId);
   const { history: bodyHistory } = useBodyComposition(userId);
 
   return (
@@ -56,7 +56,7 @@ export function UserHealthDetailDialog({
             </TabsContent>
 
             <TabsContent value="health" className="space-y-4">
-              <UserOverviewTab userId={userId} />
+              <HealthDataTabs healthData={healthData || []} loading={loading} />
             </TabsContent>
 
             <TabsContent value="body" className="space-y-4">
