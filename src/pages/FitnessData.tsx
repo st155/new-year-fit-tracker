@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Activity, Heart, Zap, Moon, Footprints, Flame, Clock
 } from 'lucide-react';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { RecoveryScoreChart } from '@/components/fitness-data/RecoveryScoreChart';
 import { StrainChart } from '@/components/fitness-data/StrainChart';
@@ -55,11 +55,11 @@ export default function FitnessData() {
         break;
     }
 
-    // Convert to YYYY-MM-DD format to avoid timezone issues
-    const startDateStr = start.toISOString().split('T')[0];
-    const endDateStr = end.toISOString().split('T')[0];
+    // Use ISO strings for precise timestamp comparison
+    const startISO = start.toISOString();
+    const endExclusiveISO = addDays(startOfDay(end), 1).toISOString();
 
-    return { start, end, startDateStr, endDateStr };
+    return { start, end, startISO, endExclusiveISO };
   }, [timeFilter, dateOffset]);
 
   // Fetch metrics data
@@ -72,8 +72,8 @@ export default function FitnessData() {
         .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id)
-        .gte('measurement_date', calculateDateRange.startDateStr)
-        .lte('measurement_date', calculateDateRange.endDateStr)
+        .gte('measurement_date', calculateDateRange.startISO)
+        .lt('measurement_date', calculateDateRange.endExclusiveISO)
         .order('measurement_date', { ascending: true });
 
       if (sourceFilter !== 'all') {
@@ -82,6 +82,15 @@ export default function FitnessData() {
 
       const { data, error } = await query;
       if (error) throw error;
+      
+      console.log(`[FitnessData] Range ISO: ${calculateDateRange.startISO} → ${calculateDateRange.endExclusiveISO}, rows: ${data?.length || 0}`);
+      
+      // Debug Recovery Score for Whoop + Today
+      if (sourceFilter === 'whoop' && timeFilter === 'today') {
+        const recoveryRecords = data?.filter(m => m.metric_name === 'Recovery Score') || [];
+        console.log('[FitnessData] Recovery Score (Whoop/Today):', recoveryRecords.map(r => ({ date: r.measurement_date, value: r.value })));
+      }
+      
       return data || [];
     },
     enabled: !!user,
@@ -119,8 +128,6 @@ export default function FitnessData() {
       
       console.log(`[FitnessData] Unified mode: ${metricsData.length} → ${processedData.length} after dedup`);
     }
-    
-    console.log(`[FitnessData] Date range: ${calculateDateRange.startDateStr} to ${calculateDateRange.endDateStr}, Records: ${processedData.length}`);
 
     // Group by metric_name
     const grouped = processedData.reduce((acc, metric) => {
@@ -165,9 +172,9 @@ export default function FitnessData() {
         }));
     }
 
-    // Process Sleep
+    // Process Sleep - use processedData to avoid duplicates in unified mode
     const sleepDates = new Set<string>();
-    metricsData.forEach(m => {
+    processedData.forEach(m => {
       const name = m.metric_name.toLowerCase();
       if (name.includes('sleep')) {
         sleepDates.add(m.measurement_date.split('T')[0]);
@@ -175,7 +182,7 @@ export default function FitnessData() {
     });
 
     sleepDates.forEach(date => {
-      const dayMetrics = metricsData.filter(m => m.measurement_date.startsWith(date));
+      const dayMetrics = processedData.filter(m => m.measurement_date.startsWith(date));
       const sleepData: any = {
         date: format(new Date(date), 'dd MMM', { locale: ru }),
       };
