@@ -28,7 +28,6 @@ interface UseMetricsOptions {
   enabled?: boolean;
   minConfidence?: number;    // NEW: Filter by minimum confidence
   withQuality?: boolean;      // NEW: Return MetricWithConfidence
-  userId?: string;            // NEW: Override user ID for viewing other profiles
 }
 
 export interface MetricData {
@@ -45,22 +44,19 @@ export interface MetricData {
 export function useMetrics(options: UseMetricsOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { metricTypes, dateRange, enabled = true, minConfidence = 0, withQuality = false, userId: overrideUserId } = options;
+  const { metricTypes, dateRange, enabled = true, minConfidence = 0, withQuality = false } = options;
   const fetcher = new UnifiedDataFetcherV2(supabase);
-  
-  // Use override userId if provided, otherwise use authenticated user
-  const effectiveUserId = overrideUserId ?? user?.id;
 
   // ===== Latest Metrics (with quality if requested) =====
   const latest = useQuery({
-    queryKey: [...queryKeys.metrics.latest(effectiveUserId ?? '', metricTypes ?? []), 'with-quality', withQuality],
+    queryKey: [...queryKeys.metrics.latest(user?.id ?? '', metricTypes ?? []), 'with-quality', withQuality],
     queryFn: async () => {
-      if (!effectiveUserId) return [];
+      if (!user?.id) return [];
 
       if (withQuality) {
         // Use enhanced fetcher with confidence scoring
         const metricsWithConfidence = await fetcher.getLatestUnifiedMetrics(
-          effectiveUserId,
+          user.id,
           metricTypes
         );
         
@@ -74,7 +70,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
       let query = supabase
         .from('unified_metrics')
         .select('*')
-        .eq('user_id', effectiveUserId);
+        .eq('user_id', user.id);
 
       if (metricTypes && metricTypes.length > 0) {
         query = query.in('metric_name', metricTypes);
@@ -96,21 +92,21 @@ export function useMetrics(options: UseMetricsOptions = {}) {
         return true;
       });
     },
-    enabled: enabled && !!effectiveUserId,
+    enabled: enabled && !!user?.id,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 
   // ===== History (if dateRange specified) =====
   const history = useQuery({
-    queryKey: queryKeys.metrics.history(effectiveUserId ?? '', { metricTypes, dateRange }),
+    queryKey: queryKeys.metrics.history(user?.id ?? '', { metricTypes, dateRange }),
     queryFn: async () => {
-      if (!effectiveUserId) return [];
+      if (!user?.id) return [];
 
       let query = supabase
         .from('unified_metrics')
         .select('*')
-        .eq('user_id', effectiveUserId);
+        .eq('user_id', user.id);
 
       if (metricTypes && metricTypes.length > 0) {
         query = query.in('metric_name', metricTypes);
@@ -130,7 +126,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
       if (error) throw error;
       return data || [];
     },
-    enabled: enabled && !!effectiveUserId && !!dateRange,
+    enabled: enabled && !!user?.id && !!dateRange,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -248,8 +244,8 @@ export function useLatestMetricsOnly(metricTypes?: string[]) {
 /**
  * Convenience: Metric history (for Progress charts)
  */
-export function useMetricHistory(metricTypes: string[], dateRange: DateRange, userId?: string) {
-  return useMetrics({ metricTypes, dateRange, userId });
+export function useMetricHistory(metricTypes: string[], dateRange: DateRange) {
+  return useMetrics({ metricTypes, dateRange });
 }
 
 /**

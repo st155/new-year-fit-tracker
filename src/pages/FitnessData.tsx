@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Activity, Heart, Zap, Moon, Footprints, Flame, Clock
 } from 'lucide-react';
-import { format, subDays, startOfDay, endOfDay, addDays } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { RecoveryScoreChart } from '@/components/fitness-data/RecoveryScoreChart';
 import { StrainChart } from '@/components/fitness-data/StrainChart';
@@ -55,11 +55,7 @@ export default function FitnessData() {
         break;
     }
 
-    // For date field (not timestamp), use YYYY-MM-DD format
-    const startDateStr = format(start, 'yyyy-MM-dd');
-    const endDateStr = format(end, 'yyyy-MM-dd');
-
-    return { start, end, startDateStr, endDateStr };
+    return { start, end };
   }, [timeFilter, dateOffset]);
 
   // Fetch metrics data
@@ -72,8 +68,8 @@ export default function FitnessData() {
         .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id)
-        .gte('measurement_date', calculateDateRange.startDateStr)
-        .lte('measurement_date', calculateDateRange.endDateStr)
+        .gte('measurement_date', calculateDateRange.start.toISOString())
+        .lte('measurement_date', calculateDateRange.end.toISOString())
         .order('measurement_date', { ascending: true });
 
       if (sourceFilter !== 'all') {
@@ -82,26 +78,6 @@ export default function FitnessData() {
 
       const { data, error } = await query;
       if (error) throw error;
-      
-      console.log(`[FitnessData] Date range: ${calculateDateRange.startDateStr} → ${calculateDateRange.endDateStr}, source: ${sourceFilter}, rows: ${data?.length || 0}`);
-      
-      // Debug Recovery Score and Day Strain for Whoop + Today
-      if (sourceFilter === 'whoop' && timeFilter === 'today') {
-        const recoveryRecords = data?.filter(m => m.metric_name === 'Recovery Score') || [];
-        console.log('[FitnessData] Recovery Score (Whoop/Today):', recoveryRecords.map(r => ({ 
-          date: r.measurement_date, 
-          value: r.value,
-          priority: r.priority,
-          created_at: r.created_at 
-        })));
-        
-        const strainRecords = data?.filter(m => m.metric_name === 'Day Strain') || [];
-        console.log('[FitnessData] Day Strain (Whoop/Today):', strainRecords.map(r => ({ 
-          date: r.measurement_date, 
-          value: r.value 
-        })));
-      }
-      
       return data || [];
     },
     enabled: !!user,
@@ -119,25 +95,18 @@ export default function FitnessData() {
     };
 
     // Deduplicate by date + metric_name + priority when sourceFilter is 'all'
-    const isUnified = sourceFilter === 'all';
     let processedData = metricsData;
-    
-    if (isUnified) {
+    if (sourceFilter === 'all') {
       const deduped = new Map<string, typeof metricsData[0]>();
       metricsData.forEach(metric => {
         const dateOnly = metric.measurement_date.split('T')[0];
         const key = `${dateOnly}-${metric.metric_name}`;
         const existing = deduped.get(key);
-        const metricPriority = metric.priority ?? 999;
-        const existingPriority = existing?.priority ?? 999;
-        
-        if (!existing || metricPriority < existingPriority) {
+        if (!existing || metric.priority < existing.priority) {
           deduped.set(key, metric);
         }
       });
       processedData = Array.from(deduped.values());
-      
-      console.log(`[FitnessData] Unified mode: ${metricsData.length} → ${processedData.length} after dedup`);
     }
 
     // Group by metric_name
@@ -183,9 +152,9 @@ export default function FitnessData() {
         }));
     }
 
-    // Process Sleep - use processedData to avoid duplicates in unified mode
+    // Process Sleep
     const sleepDates = new Set<string>();
-    processedData.forEach(m => {
+    metricsData.forEach(m => {
       const name = m.metric_name.toLowerCase();
       if (name.includes('sleep')) {
         sleepDates.add(m.measurement_date.split('T')[0]);
@@ -193,7 +162,7 @@ export default function FitnessData() {
     });
 
     sleepDates.forEach(date => {
-      const dayMetrics = processedData.filter(m => m.measurement_date.startsWith(date));
+      const dayMetrics = metricsData.filter(m => m.measurement_date.startsWith(date));
       const sleepData: any = {
         date: format(new Date(date), 'dd MMM', { locale: ru }),
       };
@@ -231,7 +200,7 @@ export default function FitnessData() {
         unit: '%',
         icon: Activity,
         color: 'bg-gradient-to-br from-green-400 to-emerald-500',
-        source: isUnified ? 'Unified' : recovery.latest.source,
+        source: recovery.latest.source,
         sparkline: recovery.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -248,7 +217,7 @@ export default function FitnessData() {
         value: avgStrain.toFixed(1),
         icon: Zap,
         color: 'bg-gradient-to-br from-orange-400 to-red-500',
-        source: isUnified ? 'Unified' : strain.latest.source,
+        source: strain.latest.source,
         sparkline: strain.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -271,7 +240,7 @@ export default function FitnessData() {
         unit: 'bpm',
         icon: Heart,
         color: 'bg-gradient-to-br from-red-400 to-pink-500',
-        source: isUnified ? 'Unified' : hr.latest.source,
+        source: hr.latest.source,
         isStale: age > 24 * 60 * 60 * 1000,
         sparkline: hr.history.slice(-20).map(h => ({ value: h.value })),
       });
@@ -293,7 +262,7 @@ export default function FitnessData() {
         unit: sleep.latest.unit === '%' ? '%' : '/100',
         icon: Moon,
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
-        source: isUnified ? 'Unified' : sleep.latest.source,
+        source: sleep.latest.source,
         sparkline: sleep.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -310,7 +279,7 @@ export default function FitnessData() {
         value: totalSteps.toLocaleString(),
         icon: Footprints,
         color: 'bg-gradient-to-br from-cyan-400 to-blue-500',
-        source: isUnified ? 'Unified' : steps.latest.source,
+        source: steps.latest.source,
         sparkline: steps.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -331,13 +300,13 @@ export default function FitnessData() {
         unit: 'kcal',
         icon: Flame,
         color: 'bg-gradient-to-br from-orange-400 to-red-400',
-        source: isUnified ? 'Unified' : calories.latest.source,
+        source: calories.latest.source,
         sparkline: calories.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
 
     return metrics;
-  }, [metricsData, sourceFilter, calculateDateRange]);
+  }, [metricsData]);
 
   const getDateLabel = () => {
     const { start, end } = calculateDateRange;
