@@ -656,12 +656,15 @@ async function batchInsertMetrics(
 
 function getPriorityForSource(source: string): number {
   const priorityMap: Record<string, number> = {
-    'inbody': 1,
-    'withings': 2,
-    'whoop': 3,
-    'apple_health': 4,
-    'terra': 5,
-    'manual': 6,
+    'whoop': 1,
+    'garmin': 2,
+    'ultrahuman': 2,
+    'oura': 3,
+    'withings': 4,
+    'inbody': 5,
+    'apple_health': 6,
+    'terra': 7,
+    'manual': 8,
   };
   return priorityMap[source.toLowerCase()] || 10;
 }
