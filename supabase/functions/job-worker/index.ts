@@ -273,16 +273,82 @@ async function processTerraWebhookData(
   if (type === 'sleep' && data) {
     for (const sleep of data) {
       const date = sleep.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
+      const durations = sleep.sleep_durations_data;
 
-      if (sleep.sleep_durations_data?.asleep?.duration_asleep_state_seconds) {
-        const sleepHours = sleep.sleep_durations_data.asleep.duration_asleep_state_seconds / 3600;
+      if (durations?.asleep) {
+        // Deep Sleep
+        if (durations.asleep.duration_deep_sleep_state_seconds) {
+          metricsToInsert.push({
+            metric_name: 'Deep Sleep Duration',
+            category: 'sleep',
+            value: Math.round((durations.asleep.duration_deep_sleep_state_seconds / 3600) * 100) / 100,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_deep_sleep_${date}`,
+            user_id,
+          });
+        }
+
+        // Light Sleep
+        if (durations.asleep.duration_light_sleep_state_seconds) {
+          metricsToInsert.push({
+            metric_name: 'Light Sleep Duration',
+            category: 'sleep',
+            value: Math.round((durations.asleep.duration_light_sleep_state_seconds / 3600) * 100) / 100,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_light_sleep_${date}`,
+            user_id,
+          });
+        }
+
+        // REM Sleep
+        if (durations.asleep.duration_REM_sleep_state_seconds) {
+          metricsToInsert.push({
+            metric_name: 'REM Sleep Duration',
+            category: 'sleep',
+            value: Math.round((durations.asleep.duration_REM_sleep_state_seconds / 3600) * 100) / 100,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_rem_sleep_${date}`,
+            user_id,
+          });
+        }
+
+        // Total Sleep Duration (sum of all phases)
+        const deepSleep = durations.asleep.duration_deep_sleep_state_seconds || 0;
+        const lightSleep = durations.asleep.duration_light_sleep_state_seconds || 0;
+        const remSleep = durations.asleep.duration_REM_sleep_state_seconds || 0;
+        const awakeDuration = durations.awake?.duration_awake_state_seconds || 0;
+        
+        const totalSleepSeconds = deepSleep + lightSleep + remSleep + awakeDuration;
+        
+        if (totalSleepSeconds > 0) {
+          metricsToInsert.push({
+            metric_name: 'Sleep Duration',
+            category: 'sleep',
+            value: Math.round((totalSleepSeconds / 3600) * 100) / 100,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_sleep_${date}`,
+            user_id,
+          });
+        }
+      }
+
+      // Sleep Efficiency
+      if (durations?.sleep_efficiency !== undefined) {
+        const efficiency = durations.sleep_efficiency < 1 
+          ? Math.round(durations.sleep_efficiency * 10000) / 100  // 0.9104 -> 91.04%
+          : Math.round(durations.sleep_efficiency * 100) / 100;
+        
         metricsToInsert.push({
-          metric_name: 'Sleep Duration',
+          metric_name: 'Sleep Efficiency',
           category: 'sleep',
-          value: sleepHours,
+          value: efficiency,
           measurement_date: date,
           source: provider,
-          external_id: `terra_${provider}_sleep_${date}`,
+          external_id: `terra_${provider}_sleep_efficiency_${date}`,
           user_id,
         });
       }
@@ -408,6 +474,89 @@ async function processTerraWebhookData(
           external_id: `terra_${provider}_vo2max_${date}`,
           user_id,
         });
+      }
+
+      // Sleep data in daily webhook
+      if (daily.sleep_data) {
+        const durations = daily.sleep_data.sleep_durations_data;
+        
+        if (durations?.asleep) {
+          // Deep Sleep
+          if (durations.asleep.duration_deep_sleep_state_seconds) {
+            metricsToInsert.push({
+              metric_name: 'Deep Sleep Duration',
+              category: 'sleep',
+              value: Math.round((durations.asleep.duration_deep_sleep_state_seconds / 3600) * 100) / 100,
+              measurement_date: date,
+              source: provider,
+              external_id: `terra_${provider}_daily_deep_sleep_${date}`,
+              user_id,
+            });
+          }
+
+          // Light Sleep
+          if (durations.asleep.duration_light_sleep_state_seconds) {
+            metricsToInsert.push({
+              metric_name: 'Light Sleep Duration',
+              category: 'sleep',
+              value: Math.round((durations.asleep.duration_light_sleep_state_seconds / 3600) * 100) / 100,
+              measurement_date: date,
+              source: provider,
+              external_id: `terra_${provider}_daily_light_sleep_${date}`,
+              user_id,
+            });
+          }
+
+          // REM Sleep
+          if (durations.asleep.duration_REM_sleep_state_seconds) {
+            metricsToInsert.push({
+              metric_name: 'REM Sleep Duration',
+              category: 'sleep',
+              value: Math.round((durations.asleep.duration_REM_sleep_state_seconds / 3600) * 100) / 100,
+              measurement_date: date,
+              source: provider,
+              external_id: `terra_${provider}_daily_rem_sleep_${date}`,
+              user_id,
+            });
+          }
+
+          // Total Sleep Duration
+          const deepSleep = durations.asleep.duration_deep_sleep_state_seconds || 0;
+          const lightSleep = durations.asleep.duration_light_sleep_state_seconds || 0;
+          const remSleep = durations.asleep.duration_REM_sleep_state_seconds || 0;
+          const awakeDuration = durations.awake?.duration_awake_state_seconds || 0;
+          
+          const totalSleepSeconds = deepSleep + lightSleep + remSleep + awakeDuration;
+          
+          if (totalSleepSeconds > 0) {
+            metricsToInsert.push({
+              metric_name: 'Sleep Duration',
+              category: 'sleep',
+              value: Math.round((totalSleepSeconds / 3600) * 100) / 100,
+              measurement_date: date,
+              source: provider,
+              external_id: `terra_${provider}_daily_sleep_${date}`,
+              user_id,
+            });
+          }
+
+          // Sleep Efficiency
+          if (durations?.sleep_efficiency !== undefined) {
+            const efficiency = durations.sleep_efficiency < 1 
+              ? Math.round(durations.sleep_efficiency * 10000) / 100
+              : Math.round(durations.sleep_efficiency * 100) / 100;
+            
+            metricsToInsert.push({
+              metric_name: 'Sleep Efficiency',
+              category: 'sleep',
+              value: efficiency,
+              measurement_date: date,
+              source: provider,
+              external_id: `terra_${provider}_daily_sleep_efficiency_${date}`,
+              user_id,
+            });
+          }
+        }
       }
     }
   }
@@ -546,6 +695,10 @@ function getUnitForMetric(metricName: string): string {
     'Steps': 'steps',
     'Distance': 'km',
     'Sleep Duration': 'hours',
+    'Deep Sleep Duration': 'hours',
+    'Light Sleep Duration': 'hours',
+    'REM Sleep Duration': 'hours',
+    'Sleep Efficiency': '%',
     'Active Calories': 'kcal',
     'Workout Calories': 'kcal',
     'Heart Rate': 'bpm',
