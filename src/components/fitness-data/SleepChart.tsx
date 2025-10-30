@@ -63,6 +63,7 @@ export function SleepChart({ data }: SleepChartProps) {
                 label={{ value: 'Минуты', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
+                cursor={false}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
