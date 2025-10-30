@@ -4,6 +4,7 @@ import { useHabits } from "@/hooks/useHabits";
 import { useGoalHabitSync } from "@/hooks/useGoalHabitSync";
 import { HabitMigrationButton } from "@/components/habits/HabitMigrationButton";
 import { HabitCard } from "@/components/habits/HabitCard";
+import { EnhancedHabitCard } from "@/components/habits/EnhancedHabitCard";
 import { HabitStats } from "@/components/habits/HabitStats";
 import { HabitCreateDialog } from "@/components/habits/HabitCreateDialog";
 import { HabitsOverviewChart } from "@/components/habits/HabitsOverviewChart";
@@ -271,10 +272,17 @@ export default function Habits() {
             }>
               {displayHabits.map((habit, index) => (
                 <div key={habit.id} style={{ animationDelay: `${index * 50}ms` }}>
-                  <HabitCard 
-                    habit={habit} 
-                    onCompleted={refetch}
-                  />
+                  {habit.habit_type === 'daily_check' || !habit.habit_type ? (
+                    <EnhancedHabitCard 
+                      habit={habit} 
+                      onCompleted={refetch}
+                    />
+                  ) : (
+                    <HabitCard 
+                      habit={habit} 
+                      onCompleted={refetch}
+                    />
+                  )}
                 </div>
               ))}
             </div>
