@@ -46,11 +46,11 @@ export default function FitnessData() {
         end = endOfDay(subDays(today, dateOffset));
         break;
       case 'week':
-        start = startOfDay(subDays(today, 7 + dateOffset * 7));
+        start = startOfDay(subDays(today, 6 + dateOffset * 7));
         end = endOfDay(subDays(today, dateOffset * 7));
         break;
       case 'month':
-        start = startOfDay(subDays(today, 30 + dateOffset * 30));
+        start = startOfDay(subDays(today, 29 + dateOffset * 30));
         end = endOfDay(subDays(today, dateOffset * 30));
         break;
     }
@@ -94,8 +94,23 @@ export default function FitnessData() {
       cards: [] as any[],
     };
 
+    // Deduplicate by date + metric_name + priority when sourceFilter is 'all'
+    let processedData = metricsData;
+    if (sourceFilter === 'all') {
+      const deduped = new Map<string, typeof metricsData[0]>();
+      metricsData.forEach(metric => {
+        const dateOnly = metric.measurement_date.split('T')[0];
+        const key = `${dateOnly}-${metric.metric_name}`;
+        const existing = deduped.get(key);
+        if (!existing || metric.priority < existing.priority) {
+          deduped.set(key, metric);
+        }
+      });
+      processedData = Array.from(deduped.values());
+    }
+
     // Group by metric_name
-    const grouped = metricsData.reduce((acc, metric) => {
+    const grouped = processedData.reduce((acc, metric) => {
       if (!acc[metric.metric_name]) {
         acc[metric.metric_name] = [];
       }
@@ -119,13 +134,22 @@ export default function FitnessData() {
       }));
     }
 
-    // Process Heart Rate - try both possible names
+    // Process Heart Rate - try both possible names and group by day
     const heartRateData = grouped['Average Heart Rate'] || grouped['Heart Rate'] || grouped['Resting Heart Rate'];
     if (heartRateData) {
-      metrics.heartRate = heartRateData.map(m => ({
-        value: m.value,
-        date: format(new Date(m.measurement_date), 'HH:mm', { locale: ru }),
-      }));
+      const hrByDate = new Map<string, number[]>();
+      heartRateData.forEach(m => {
+        const dateOnly = m.measurement_date.split('T')[0];
+        if (!hrByDate.has(dateOnly)) hrByDate.set(dateOnly, []);
+        hrByDate.get(dateOnly)!.push(m.value);
+      });
+
+      metrics.heartRate = Array.from(hrByDate.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, values]) => ({
+          value: Math.round(values.reduce((sum, v) => sum + v, 0) / values.length),
+          date: format(new Date(date), 'dd MMM', { locale: ru }),
+        }));
     }
 
     // Process Sleep
@@ -166,9 +190,13 @@ export default function FitnessData() {
     // Recovery card
     const recovery = latestMetrics.find(m => m.name === 'Recovery Score');
     if (recovery) {
+      const avgRecovery = recovery.history.length > 0
+        ? Math.round(recovery.history.reduce((sum, h) => sum + h.value, 0) / recovery.history.length)
+        : Math.round(recovery.latest.value);
+      
       metrics.cards.push({
         name: 'Recovery',
-        value: Math.round(recovery.latest.value),
+        value: avgRecovery,
         unit: '%',
         icon: Activity,
         color: 'bg-gradient-to-br from-green-400 to-emerald-500',
@@ -180,9 +208,13 @@ export default function FitnessData() {
     // Strain card
     const strain = latestMetrics.find(m => m.name === 'Day Strain');
     if (strain) {
+      const avgStrain = strain.history.length > 0
+        ? strain.history.reduce((sum, h) => sum + h.value, 0) / strain.history.length
+        : strain.latest.value;
+      
       metrics.cards.push({
         name: 'Day Strain',
-        value: strain.latest.value.toFixed(1),
+        value: avgStrain.toFixed(1),
         icon: Zap,
         color: 'bg-gradient-to-br from-orange-400 to-red-500',
         source: strain.latest.source,
@@ -197,10 +229,14 @@ export default function FitnessData() {
       m.name === 'Resting Heart Rate'
     );
     if (hr) {
+      const avgHR = hr.history.length > 0
+        ? Math.round(hr.history.reduce((sum, h) => sum + h.value, 0) / hr.history.length)
+        : Math.round(hr.latest.value);
+      
       const age = new Date().getTime() - new Date(hr.latest.measurement_date).getTime();
       metrics.cards.push({
         name: 'Heart Rate',
-        value: Math.round(hr.latest.value),
+        value: avgHR,
         unit: 'bpm',
         icon: Heart,
         color: 'bg-gradient-to-br from-red-400 to-pink-500',
@@ -216,9 +252,13 @@ export default function FitnessData() {
       m.name === 'Sleep Efficiency'
     );
     if (sleep) {
+      const avgSleep = sleep.history.length > 0
+        ? Math.round(sleep.history.reduce((sum, h) => sum + h.value, 0) / sleep.history.length)
+        : Math.round(sleep.latest.value);
+      
       metrics.cards.push({
         name: 'Sleep Score',
-        value: Math.round(sleep.latest.value),
+        value: avgSleep,
         unit: sleep.latest.unit === '%' ? '%' : '/100',
         icon: Moon,
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
@@ -230,9 +270,13 @@ export default function FitnessData() {
     // Steps card
     const steps = latestMetrics.find(m => m.name === 'Steps');
     if (steps) {
+      const totalSteps = steps.history.length > 0
+        ? Math.round(steps.history.reduce((sum, h) => sum + h.value, 0))
+        : Math.round(steps.latest.value);
+      
       metrics.cards.push({
         name: 'Steps',
-        value: Math.round(steps.latest.value).toLocaleString(),
+        value: totalSteps.toLocaleString(),
         icon: Footprints,
         color: 'bg-gradient-to-br from-cyan-400 to-blue-500',
         source: steps.latest.source,
@@ -246,9 +290,13 @@ export default function FitnessData() {
       m.name === 'Workout Calories'
     );
     if (calories) {
+      const totalCalories = calories.history.length > 0
+        ? Math.round(calories.history.reduce((sum, h) => sum + h.value, 0))
+        : Math.round(calories.latest.value);
+      
       metrics.cards.push({
         name: 'Calories',
-        value: Math.round(calories.latest.value),
+        value: totalCalories,
         unit: 'kcal',
         icon: Flame,
         color: 'bg-gradient-to-br from-orange-400 to-red-400',
@@ -284,8 +332,8 @@ export default function FitnessData() {
     return <PageLoader message="Загрузка фитнес-данных..." />;
   }
 
-  const latestRecovery = processedMetrics.recovery.length > 0 
-    ? processedMetrics.recovery[processedMetrics.recovery.length - 1] 
+  const avgRecovery = processedMetrics.recovery.length > 0 
+    ? processedMetrics.recovery.reduce((sum, r) => sum + r.value, 0) / processedMetrics.recovery.length
     : null;
 
   return (
@@ -381,9 +429,9 @@ export default function FitnessData() {
           </div>
 
           {/* Hero Recovery Score */}
-          {latestRecovery && latestRecovery.value && (
+          {avgRecovery && (
             <RecoveryScoreChart
-              score={latestRecovery.value}
+              score={avgRecovery}
               history={processedMetrics.recovery}
             />
           )}
