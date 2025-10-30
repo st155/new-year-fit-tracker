@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeGoals } from '@/hooks/useChallengeGoals';
-import { ChallengeGoalCard } from '@/components/progress/ChallengeGoalCard';
+import { EnhancedProgressCard } from '@/components/progress/EnhancedProgressCard';
 import { CompactProgressSummary } from '@/components/progress/CompactProgressSummary';
 import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialChart';
 import { BaselineComparisonCard } from '@/components/progress/BaselineComparisonCard';
@@ -213,12 +213,12 @@ export default function Progress() {
               <h3 className="text-sm font-semibold mb-2 text-muted-foreground">
                 Все цели ({goals.length})
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {goals.map((goal) => (
-                  <ChallengeGoalCard
+                  <EnhancedProgressCard
                     key={goal.id}
                     goal={goal}
-                    onMeasurementAdded={() => refetch()}
+                    onClick={() => navigate(`/goals/${goal.id}`)}
                   />
                 ))}
               </div>
