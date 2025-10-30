@@ -58,14 +58,26 @@ type PeriodType = "1" | "7" | "30";
 export function UserOverviewTab({ userId }: UserOverviewTabProps) {
   const [period, setPeriod] = useState<PeriodType>("30");
 
-  const daysBack = parseInt(period);
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - daysBack);
+  // Memoize metricTypes to prevent query key changes
+  const metricTypes = useMemo(() => METRIC_CONFIGS.map(c => c.name), []);
+
+  // Memoize dateRange to prevent query key changes
+  const dateRange = useMemo(() => {
+    const daysBack = parseInt(period);
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
+    
+    return {
+      start: startDate.toISOString().split('T')[0],
+      end: endDate.toISOString().split('T')[0]
+    };
+  }, [period]);
 
   const { history: metricsData, isLoading } = useMetricHistory(
-    METRIC_CONFIGS.map(c => c.name),
-    { start: startDate.toISOString(), end: endDate.toISOString() }
+    metricTypes,
+    dateRange,
+    userId
   );
 
   const metricStats = useMemo(() => {
@@ -126,6 +138,8 @@ export function UserOverviewTab({ userId }: UserOverviewTabProps) {
 
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Loading metrics...</div>
+      ) : metricsData && metricsData.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">No metrics for selected period</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {METRIC_CONFIGS.map(config => {

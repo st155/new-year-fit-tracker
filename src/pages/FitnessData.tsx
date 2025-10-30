@@ -55,7 +55,11 @@ export default function FitnessData() {
         break;
     }
 
-    return { start, end };
+    // Convert to YYYY-MM-DD format to avoid timezone issues
+    const startDateStr = start.toISOString().split('T')[0];
+    const endDateStr = end.toISOString().split('T')[0];
+
+    return { start, end, startDateStr, endDateStr };
   }, [timeFilter, dateOffset]);
 
   // Fetch metrics data
@@ -68,8 +72,8 @@ export default function FitnessData() {
         .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id)
-        .gte('measurement_date', calculateDateRange.start.toISOString())
-        .lte('measurement_date', calculateDateRange.end.toISOString())
+        .gte('measurement_date', calculateDateRange.startDateStr)
+        .lte('measurement_date', calculateDateRange.endDateStr)
         .order('measurement_date', { ascending: true });
 
       if (sourceFilter !== 'all') {
@@ -95,19 +99,28 @@ export default function FitnessData() {
     };
 
     // Deduplicate by date + metric_name + priority when sourceFilter is 'all'
+    const isUnified = sourceFilter === 'all';
     let processedData = metricsData;
-    if (sourceFilter === 'all') {
+    
+    if (isUnified) {
       const deduped = new Map<string, typeof metricsData[0]>();
       metricsData.forEach(metric => {
         const dateOnly = metric.measurement_date.split('T')[0];
         const key = `${dateOnly}-${metric.metric_name}`;
         const existing = deduped.get(key);
-        if (!existing || metric.priority < existing.priority) {
+        const metricPriority = metric.priority ?? 999;
+        const existingPriority = existing?.priority ?? 999;
+        
+        if (!existing || metricPriority < existingPriority) {
           deduped.set(key, metric);
         }
       });
       processedData = Array.from(deduped.values());
+      
+      console.log(`[FitnessData] Unified mode: ${metricsData.length} → ${processedData.length} after dedup`);
     }
+    
+    console.log(`[FitnessData] Date range: ${calculateDateRange.startDateStr} to ${calculateDateRange.endDateStr}, Records: ${processedData.length}`);
 
     // Group by metric_name
     const grouped = processedData.reduce((acc, metric) => {
@@ -200,7 +213,7 @@ export default function FitnessData() {
         unit: '%',
         icon: Activity,
         color: 'bg-gradient-to-br from-green-400 to-emerald-500',
-        source: recovery.latest.source,
+        source: isUnified ? 'Unified' : recovery.latest.source,
         sparkline: recovery.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -217,7 +230,7 @@ export default function FitnessData() {
         value: avgStrain.toFixed(1),
         icon: Zap,
         color: 'bg-gradient-to-br from-orange-400 to-red-500',
-        source: strain.latest.source,
+        source: isUnified ? 'Unified' : strain.latest.source,
         sparkline: strain.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -240,7 +253,7 @@ export default function FitnessData() {
         unit: 'bpm',
         icon: Heart,
         color: 'bg-gradient-to-br from-red-400 to-pink-500',
-        source: hr.latest.source,
+        source: isUnified ? 'Unified' : hr.latest.source,
         isStale: age > 24 * 60 * 60 * 1000,
         sparkline: hr.history.slice(-20).map(h => ({ value: h.value })),
       });
@@ -262,7 +275,7 @@ export default function FitnessData() {
         unit: sleep.latest.unit === '%' ? '%' : '/100',
         icon: Moon,
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
-        source: sleep.latest.source,
+        source: isUnified ? 'Unified' : sleep.latest.source,
         sparkline: sleep.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -279,7 +292,7 @@ export default function FitnessData() {
         value: totalSteps.toLocaleString(),
         icon: Footprints,
         color: 'bg-gradient-to-br from-cyan-400 to-blue-500',
-        source: steps.latest.source,
+        source: isUnified ? 'Unified' : steps.latest.source,
         sparkline: steps.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
@@ -300,13 +313,13 @@ export default function FitnessData() {
         unit: 'kcal',
         icon: Flame,
         color: 'bg-gradient-to-br from-orange-400 to-red-400',
-        source: calories.latest.source,
+        source: isUnified ? 'Unified' : calories.latest.source,
         sparkline: calories.history.slice(-7).map(h => ({ value: h.value })),
       });
     }
 
     return metrics;
-  }, [metricsData]);
+  }, [metricsData, sourceFilter, calculateDateRange]);
 
   const getDateLabel = () => {
     const { start, end } = calculateDateRange;
