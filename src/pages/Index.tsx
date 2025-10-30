@@ -30,7 +30,7 @@ import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
-import { EnhancedDataQuality } from '@/components/dashboard/EnhancedDataQuality';
+import { CompactDataQualityLine } from '@/components/dashboard/CompactDataQualityLine';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -222,7 +222,7 @@ const Index = () => {
 
         {/* Enhanced Data Quality */}
         <ErrorBoundary>
-          <EnhancedDataQuality userId={user?.id} />
+          <CompactDataQualityLine userId={user?.id} />
         </ErrorBoundary>
 
         {/* Widgets Grid */}
