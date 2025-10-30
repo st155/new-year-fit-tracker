@@ -25,7 +25,7 @@ function InsightMiniCard({ card }: InsightMiniCardProps) {
 
   // Create SVG polyline points
   const width = 100;
-  const height = 40;
+  const height = 25;
   const polylinePoints = points.map((point, i) => {
     const x = (i / (points.length - 1)) * width;
     const y = height - ((point.value - minVal) / range) * height;
@@ -34,16 +34,25 @@ function InsightMiniCard({ card }: InsightMiniCardProps) {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-4">
-        <div className="text-3xl mb-1">{card.emoji}</div>
-        <div className="text-2xl font-bold mb-1" style={{ color: card.color }}>
-          {card.value}
+      <CardContent className="p-2.5">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: Emoji + Value */}
+          <div className="flex items-center gap-2">
+            <div className="text-xl">{card.emoji}</div>
+            <div className="text-lg font-bold" style={{ color: card.color }}>
+              {card.value}
+            </div>
+          </div>
+          
+          {/* Right: Label */}
+          <div className="text-xs text-muted-foreground flex-1 text-right line-clamp-2">
+            {card.label}
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground">{card.label}</div>
         
         {/* Background sparkline */}
         {points.length > 1 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[40px] opacity-20 pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 h-[25px] opacity-15 pointer-events-none">
             <svg
               width="100%"
               height="100%"
@@ -55,7 +64,7 @@ function InsightMiniCard({ card }: InsightMiniCardProps) {
                 points={polylinePoints}
                 fill="none"
                 stroke={card.color}
-                strokeWidth="2"
+                strokeWidth="1.5"
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
@@ -112,7 +121,7 @@ export function EnhancedAIInsights({ userId }: EnhancedAIInsightsProps) {
         <Sparkles className="h-5 w-5 text-primary" />
         Сегодня
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {cards.map((card, i) => (
           <InsightMiniCard key={i} card={card} />
         ))}
