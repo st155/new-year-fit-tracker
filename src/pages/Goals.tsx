@@ -5,7 +5,7 @@ import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { GoalCard } from "@/components/goals/GoalCard";
+import { EnhancedGoalCard } from "@/components/goals/EnhancedGoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { FirstMeasurementDialog } from "@/components/goals/FirstMeasurementDialog";
 import { useSearchParams } from "react-router-dom";
@@ -197,7 +197,7 @@ export default function Goals() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredGoals.map((goal) => (
-            <GoalCard 
+            <EnhancedGoalCard 
               key={goal.id} 
               goal={goal} 
               onMeasurementAdded={() => refetch()}
