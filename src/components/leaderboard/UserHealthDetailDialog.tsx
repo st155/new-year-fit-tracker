@@ -43,20 +43,20 @@ export function UserHealthDetailDialog({
             Unable to load health data
           </div>
         ) : (
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs defaultValue="health" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="health">Health Data</TabsTrigger>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="body">Body Composition</TabsTrigger>
               <TabsTrigger value="goals">Goals</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-4">
-              <UserOverviewTab userId={userId} />
-            </TabsContent>
-
             <TabsContent value="health" className="space-y-4">
               <HealthDataTabs healthData={healthData || []} loading={loading} />
+            </TabsContent>
+
+            <TabsContent value="overview" className="space-y-4">
+              <UserOverviewTab userId={userId} />
             </TabsContent>
 
             <TabsContent value="body" className="space-y-4">
