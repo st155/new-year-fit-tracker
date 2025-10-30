@@ -6,7 +6,7 @@ import { useDataQuality } from '@/hooks/useDataQuality';
 import { useDataQualityHistory } from '@/hooks/useDataQualityHistory';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
-import { ResponsiveContainer, AreaChart, Area, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, Tooltip, ReferenceArea } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -85,7 +85,14 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
                       <stop offset="100%" stopColor={qualityColor} stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
-                  <Tooltip 
+                  
+                  {/* Цветные зоны качества */}
+                  <ReferenceArea y1={80} y2={100} fill="hsl(var(--success))" fillOpacity={0.15} />
+                  <ReferenceArea y1={60} y2={80} fill="hsl(var(--primary))" fillOpacity={0.15} />
+                  <ReferenceArea y1={40} y2={60} fill="hsl(var(--warning))" fillOpacity={0.15} />
+                  <ReferenceArea y1={0} y2={40} fill="hsl(var(--destructive))" fillOpacity={0.15} />
+                  
+                  <Tooltip
                     content={({ active, payload }) => {
                       if (active && payload?.[0]) {
                         const point = payload[0].payload;

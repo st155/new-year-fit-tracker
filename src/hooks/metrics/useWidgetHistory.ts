@@ -61,6 +61,19 @@ export function useWidgetHistory(
       if (error) throw error;
       const rows = data || [];
 
+      // 🔍 DEBUG: Log Recovery Score data
+      const recoveryRows = rows.filter(r => 
+        r.metric_name.toLowerCase().includes('recovery')
+      );
+      if (recoveryRows.length > 0) {
+        console.log('🔍 [useWidgetHistory] Recovery Score data:', {
+          rowCount: recoveryRows.length,
+          dates: recoveryRows.map(r => r.measurement_date),
+          values: recoveryRows.map(r => r.value),
+          priorities: recoveryRows.map(r => r.priority)
+        });
+      }
+
       // Group by widget.id and date, pick best value per day
       const result = new Map<string, WidgetHistoryData[]>();
 

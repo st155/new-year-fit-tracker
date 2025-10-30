@@ -246,6 +246,16 @@ const Index = () => {
               const multiSourceData = !isSingleMode ? multiData?.get(widget.id) : undefined;
               const sparklineData = widgetHistory?.get(widget.id);
               
+              // 🔍 DEBUG: Log Recovery Score sparkline data
+              if (widget.metric_name.toLowerCase().includes('recovery')) {
+                console.log('🔍 [Index] Recovery Score sparkline:', {
+                  widgetId: widget.id,
+                  metricName: widget.metric_name,
+                  sparklineData: sparklineData,
+                  dataLength: sparklineData?.length
+                });
+              }
+              
               return (
                 <WidgetCard
                   key={widget.id}
