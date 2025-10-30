@@ -213,9 +213,14 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Data Quality Visualization */}
+        {/* Enhanced AI Insights */}
         <ErrorBoundary>
-          <DataQualityWidget />
+          <EnhancedAIInsights userId={user?.id} />
+        </ErrorBoundary>
+
+        {/* Enhanced Data Quality */}
+        <ErrorBoundary>
+          <EnhancedDataQuality userId={user?.id} />
         </ErrorBoundary>
 
         {/* Widgets Grid */}

@@ -47,6 +47,10 @@ export {
   useAIActionsRealtime,
 } from './composite/realtime/useRealtimeSubscription';
 
+// Data quality & insights
+export { useTodayInsights } from './useTodayInsights';
+export { useDataQualityHistory } from './useDataQualityHistory';
+
 // ===== FEATURE HOOKS =====
 export { useDashboard, type DashboardOptions } from './feature/useDashboard';
 export { useProgressView } from './feature/useProgressView';
