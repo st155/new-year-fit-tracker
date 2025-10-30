@@ -29,6 +29,8 @@ import { useAutoSync } from '@/hooks/useAutoSync';
 import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
+import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
+import { EnhancedDataQuality } from '@/components/dashboard/EnhancedDataQuality';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();

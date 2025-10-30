@@ -38,21 +38,21 @@ export function useTodayInsights(userId: string | undefined) {
         .gte('measurement_date', sevenDaysAgo)
         .lte('measurement_date', today);
 
-      // Count active goals
-      const goalsResponse = await supabase
+      // Count active goals - bypass type checking to avoid deep instantiation error
+      const goalsResponse = await (supabase as any)
         .from('goals')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('user_id', userId)
         .eq('status', 'active');
-      const goalsCount = goalsResponse.count || 0;
+      const goalsCount = goalsResponse?.data?.length || 0;
 
-      // Count active habits
-      const habitsResponse = await supabase
+      // Count active habits - bypass type checking to avoid deep instantiation error
+      const habitsResponse = await (supabase as any)
         .from('habits')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('user_id', userId)
         .eq('is_active', true);
-      const habitsCount = habitsResponse.count || 0;
+      const habitsCount = habitsResponse?.data?.length || 0;
 
       // Process metrics by date
       const metricsByDate = new Map<string, Set<string>>();
