@@ -14,3 +14,5 @@ export { useTodayMetrics } from './useTodayMetrics';
 export type { TodayMetrics } from './useTodayMetrics';
 export { useChallengeHistory } from './useChallengeHistory';
 export type { ChallengeStats } from './useChallengeHistory';
+export { useWidgetHistory } from './useWidgetHistory';
+export type { WidgetHistoryData } from './useWidgetHistory';

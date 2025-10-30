@@ -11,6 +11,7 @@ import {
 // import { useWidgetsBatch } from '@/hooks/useWidgetsBatch';
 import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { useMultiSourceWidgetsData } from '@/hooks/metrics/useMultiSourceWidgetsData';
+import { useWidgetHistory } from '@/hooks/metrics/useWidgetHistory';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -118,6 +119,12 @@ const Index = () => {
   const processedWidgets = useMemo(() => {
     return [...widgets].sort((a, b) => a.position - b.position);
   }, [widgets]);
+  
+  // ✅ 7-day history for sparkline charts (after processedWidgets is defined)
+  const { data: widgetHistory, isLoading: historyLoading } = useWidgetHistory(
+    user?.id,
+    processedWidgets
+  );
 
   // Wait for auth to load first
   if (authLoading || rolesLoading) {
@@ -230,6 +237,7 @@ const Index = () => {
               const isSingleMode = widget.display_mode !== 'multi';
               const singleData = isSingleMode ? smartData?.get(widget.id) : undefined;
               const multiSourceData = !isSingleMode ? multiData?.get(widget.id) : undefined;
+              const sparklineData = widgetHistory?.get(widget.id);
               
               return (
                 <WidgetCard
@@ -237,6 +245,7 @@ const Index = () => {
                   widget={widget}
                   data={singleData}
                   multiSourceData={multiSourceData}
+                  sparklineData={sparklineData}
                 />
               );
             })}

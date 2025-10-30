@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataQualityBadge } from '@/components/data-quality';
 import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
+import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
 
 interface WidgetCardProps {
@@ -32,6 +33,7 @@ interface WidgetCardProps {
     };
   };
   multiSourceData?: MultiSourceWidgetData;
+  sparklineData?: WidgetHistoryData[];
 }
 
 const getMetricIcon = (metricName: string) => {
@@ -106,7 +108,7 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
-export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData }: WidgetCardProps) {
+export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData, sparklineData }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -446,6 +448,31 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
 
+        {/* Background Sparkline Chart */}
+        {sparklineData && sparklineData.length > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50px] opacity-20 pointer-events-none">
+            <svg className="w-full h-full" preserveAspectRatio="none">
+              <polyline
+                points={sparklineData.map((point, idx) => {
+                  const x = (idx / (sparklineData.length - 1)) * 100;
+                  const values = sparklineData.map(p => p.value);
+                  const min = Math.min(...values);
+                  const max = Math.max(...values);
+                  const range = max - min || 1;
+                  const y = 50 - ((point.value - min) / range) * 50;
+                  return `${x},${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke={color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
+        )}
+
       </CardContent>
     </Card>
   );
@@ -454,6 +481,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   return (
     prevProps.widget.id === nextProps.widget.id &&
     prevProps.data?.value === nextProps.data?.value &&
-    prevProps.data?.measurement_date === nextProps.data?.measurement_date
+    prevProps.data?.measurement_date === nextProps.data?.measurement_date &&
+    prevProps.sparklineData?.length === nextProps.sparklineData?.length
   );
 });
