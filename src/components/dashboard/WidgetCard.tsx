@@ -15,6 +15,9 @@ import { DataQualityBadge } from '@/components/data-quality';
 import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
+import { ResponsiveContainer, LineChart, Line, Tooltip as RechartsTooltip } from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -448,28 +451,38 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
 
-        {/* Background Sparkline Chart */}
+        {/* Sparkline Chart */}
         {sparklineData && sparklineData.length > 1 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50px] opacity-20 pointer-events-none">
-            <svg className="w-full h-full" preserveAspectRatio="none">
-              <polyline
-                points={sparklineData.map((point, idx) => {
-                  const x = (idx / (sparklineData.length - 1)) * 100;
-                  const values = sparklineData.map(p => p.value);
-                  const min = Math.min(...values);
-                  const max = Math.max(...values);
-                  const range = max - min || 1;
-                  const y = 50 - ((point.value - min) / range) * 50;
-                  return `${x},${y}`;
-                }).join(' ')}
-                fill="none"
-                stroke={color}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
+          <div className="mt-2 sm:mt-3 h-[60px] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparklineData}>
+                <RechartsTooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload?.[0]) {
+                      return (
+                        <div className="bg-background/95 backdrop-blur-sm border rounded-md px-2 py-1.5 text-xs shadow-lg">
+                          <div className="text-muted-foreground mb-0.5">
+                            {format(parseISO(payload[0].payload.date), 'd MMM', { locale: ru })}
+                          </div>
+                          <div className="font-semibold" style={{ color }}>
+                            {formatValue(payload[0].value as number, metricName, data.unit)} {data.unit}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
 
