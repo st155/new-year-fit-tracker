@@ -55,11 +55,11 @@ export default function FitnessData() {
         break;
     }
 
-    // Use ISO strings for precise timestamp comparison
-    const startISO = start.toISOString();
-    const endExclusiveISO = addDays(startOfDay(end), 1).toISOString();
+    // For date field (not timestamp), use YYYY-MM-DD format
+    const startDateStr = format(start, 'yyyy-MM-dd');
+    const endDateStr = format(end, 'yyyy-MM-dd');
 
-    return { start, end, startISO, endExclusiveISO };
+    return { start, end, startDateStr, endDateStr };
   }, [timeFilter, dateOffset]);
 
   // Fetch metrics data
@@ -72,8 +72,8 @@ export default function FitnessData() {
         .from('unified_metrics')
         .select('*')
         .eq('user_id', user.id)
-        .gte('measurement_date', calculateDateRange.startISO)
-        .lt('measurement_date', calculateDateRange.endExclusiveISO)
+        .gte('measurement_date', calculateDateRange.startDateStr)
+        .lte('measurement_date', calculateDateRange.endDateStr)
         .order('measurement_date', { ascending: true });
 
       if (sourceFilter !== 'all') {
@@ -83,12 +83,23 @@ export default function FitnessData() {
       const { data, error } = await query;
       if (error) throw error;
       
-      console.log(`[FitnessData] Range ISO: ${calculateDateRange.startISO} → ${calculateDateRange.endExclusiveISO}, rows: ${data?.length || 0}`);
+      console.log(`[FitnessData] Date range: ${calculateDateRange.startDateStr} → ${calculateDateRange.endDateStr}, source: ${sourceFilter}, rows: ${data?.length || 0}`);
       
-      // Debug Recovery Score for Whoop + Today
+      // Debug Recovery Score and Day Strain for Whoop + Today
       if (sourceFilter === 'whoop' && timeFilter === 'today') {
         const recoveryRecords = data?.filter(m => m.metric_name === 'Recovery Score') || [];
-        console.log('[FitnessData] Recovery Score (Whoop/Today):', recoveryRecords.map(r => ({ date: r.measurement_date, value: r.value })));
+        console.log('[FitnessData] Recovery Score (Whoop/Today):', recoveryRecords.map(r => ({ 
+          date: r.measurement_date, 
+          value: r.value,
+          priority: r.priority,
+          created_at: r.created_at 
+        })));
+        
+        const strainRecords = data?.filter(m => m.metric_name === 'Day Strain') || [];
+        console.log('[FitnessData] Day Strain (Whoop/Today):', strainRecords.map(r => ({ 
+          date: r.measurement_date, 
+          value: r.value 
+        })));
       }
       
       return data || [];
