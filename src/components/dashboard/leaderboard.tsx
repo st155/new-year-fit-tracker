@@ -22,7 +22,7 @@ export function Leaderboard() {
   const handleUserClick = (e: React.MouseEvent, userEntry: any) => {
     e.stopPropagation();
     setSelectedUserId(userEntry.user_id);
-    setSelectedUserName(userEntry.username);
+    setSelectedUserName(userEntry.fullName || userEntry.username);
   };
 
   if (loading) {
@@ -56,7 +56,7 @@ export function Leaderboard() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedUserId(item.userId);
-                  setSelectedUserName(item.username);
+                  setSelectedUserName(item.fullName || item.username);
                 }}
                 className={cn(
                   "flex items-center justify-between p-3 rounded-xl transition-all duration-500 cursor-pointer group",

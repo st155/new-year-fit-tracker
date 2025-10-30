@@ -31,7 +31,7 @@ export function useTodayMetrics(userId: string | undefined) {
 
     return {
       steps: grouped.get('Steps')?.value || 0,
-      sleepHours: (grouped.get('Sleep Duration')?.value || 0) / 60, // Convert minutes to hours
+      sleepHours: grouped.get('Sleep Duration')?.value || 0, // Already in hours
       workouts: grouped.get('Workout Count')?.value || 0,
       recovery: grouped.get('Recovery Score')?.value || 0,
       strain: grouped.get('Day Strain')?.value || 0

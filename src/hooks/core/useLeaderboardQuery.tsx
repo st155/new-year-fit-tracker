@@ -29,7 +29,7 @@ export function useLeaderboardQuery(
       const enrichedData = viewData.map((entry: any, index: number) => {
         const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
           userId: entry.user_id,
-          username: entry.username || entry.full_name || 'Anonymous',
+          username: entry.full_name || entry.username || 'Anonymous',
           fullName: entry.full_name,
           avatarUrl: entry.avatar_url,
           totalPoints: entry.total_points || 0,

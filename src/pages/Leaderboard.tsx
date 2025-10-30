@@ -71,7 +71,7 @@ const Leaderboard = () => {
                     {/* 2nd Place */}
                     <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
                       setSelectedUserId(leaderboard[1].userId);
-                      setSelectedUserName(leaderboard[1].username);
+                      setSelectedUserName(leaderboard[1].fullName || leaderboard[1].username);
                     }}>
                       <CardContent className="p-6 text-center">
                         <div className="flex flex-col items-center gap-3">
@@ -97,7 +97,7 @@ const Leaderboard = () => {
                     {/* 1st Place */}
                     <Card className="border-2 border-primary hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
                       setSelectedUserId(leaderboard[0].userId);
-                      setSelectedUserName(leaderboard[0].username);
+                      setSelectedUserName(leaderboard[0].fullName || leaderboard[0].username);
                     }}>
                       <CardContent className="p-6 text-center">
                         <div className="flex flex-col items-center gap-3">
@@ -123,7 +123,7 @@ const Leaderboard = () => {
                     {/* 3rd Place */}
                     <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
                       setSelectedUserId(leaderboard[2].userId);
-                      setSelectedUserName(leaderboard[2].username);
+                      setSelectedUserName(leaderboard[2].fullName || leaderboard[2].username);
                     }}>
                       <CardContent className="p-6 text-center">
                         <div className="flex flex-col items-center gap-3">
@@ -160,7 +160,7 @@ const Leaderboard = () => {
                             key={item.userId}
                             onClick={() => {
                               setSelectedUserId(item.userId);
-                              setSelectedUserName(item.username);
+                              setSelectedUserName(item.fullName || item.username);
                             }}
                             className={cn(
                               "flex items-center justify-between p-4 rounded-lg transition-all cursor-pointer hover:bg-accent/50 hover:scale-[1.01]",
