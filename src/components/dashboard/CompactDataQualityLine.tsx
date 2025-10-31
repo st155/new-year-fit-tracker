@@ -6,12 +6,76 @@ import { useDataQuality } from '@/hooks/useDataQuality';
 import { useDataQualityHistory } from '@/hooks/useDataQualityHistory';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
-import { ResponsiveContainer, AreaChart, Area, Tooltip, ReferenceArea } from 'recharts';
-import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 interface CompactDataQualityLineProps {
   userId?: string;
+}
+
+interface QualityHistoryPoint {
+  date: string;
+  avgConfidence: number;
+}
+
+interface ColoredQualityBarProps {
+  zones: Array<{ icon: string; label: string; count: number; color: string }>;
+  total: number;
+}
+
+function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
+  if (total === 0) return null;
+  
+  return (
+    <div className="space-y-1">
+      {/* Цветная полоса */}
+      <div className="flex h-2 rounded-full overflow-hidden bg-muted/30">
+        {zones.map((zone, i) => {
+          const width = (zone.count / total) * 100;
+          if (width === 0) return null;
+          
+          return (
+            <div
+              key={i}
+              className="transition-all duration-300"
+              style={{
+                width: `${width}%`,
+                backgroundColor: zone.color,
+              }}
+              title={`${zone.label}: ${zone.count} (${Math.round(width)}%)`}
+            />
+          );
+        })}
+      </div>
+      
+      {/* Лейблы под полосой */}
+      <div className="flex justify-between text-[10px]">
+        {zones.map((zone, i) => {
+          if (zone.count === 0) return null;
+          return (
+            <div
+              key={i}
+              className="flex items-center gap-0.5"
+              style={{ color: zone.color }}
+            >
+              <span>{zone.icon}</span>
+              <span className="font-medium">{zone.count}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function generateSparklinePoints(history: QualityHistoryPoint[]) {
+  if (!history || history.length < 2) return '';
+  
+  return history
+    .map((point, i) => {
+      const x = (i / (history.length - 1)) * 100;
+      const y = 20 - (point.avgConfidence / 100) * 20;
+      return `${x},${y}`;
+    })
+    .join(' ');
 }
 
 export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) {
@@ -40,6 +104,8 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
     { icon: '✗', label: 'Плохо', count: metricsByQuality.poor.length, color: 'hsl(var(--destructive))' },
   ];
 
+  const totalMetrics = zones.reduce((sum, z) => sum + z.count, 0);
+
   const handleRecalculate = () => {
     if (user?.id) {
       recalculate({ user_id: user.id });
@@ -48,7 +114,8 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
 
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent className="p-2.5">
+        {/* Заголовок */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -65,91 +132,41 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
           </Button>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Левая часть: Балл */}
-          <div className="flex flex-col items-center justify-center min-w-[60px]">
-            <div className="text-2xl font-bold" style={{ color: qualityColor }}>
-              {Math.round(averageConfidence)}%
-            </div>
-            <div className="text-[10px] text-muted-foreground">балл</div>
+        {/* Основной контент: Балл + Цветная полоса */}
+        <div className="flex items-start gap-3 mb-2">
+          {/* Балл */}
+          <div className="text-xl font-bold min-w-[50px]" style={{ color: qualityColor }}>
+            {Math.round(averageConfidence)}%
           </div>
-
-          {/* Центр: График тренда с градиентом */}
-          <div className="flex-1 h-[45px] relative">
-            {history && history.length > 1 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history}>
-                  <defs>
-                    <linearGradient id="qualityGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={qualityColor} stopOpacity={0.3} />
-                      <stop offset="100%" stopColor={qualityColor} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Цветные зоны качества */}
-                  <ReferenceArea y1={80} y2={100} fill="hsl(var(--success))" fillOpacity={0.15} />
-                  <ReferenceArea y1={60} y2={80} fill="hsl(var(--primary))" fillOpacity={0.15} />
-                  <ReferenceArea y1={40} y2={60} fill="hsl(var(--warning))" fillOpacity={0.15} />
-                  <ReferenceArea y1={0} y2={40} fill="hsl(var(--destructive))" fillOpacity={0.15} />
-                  
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload?.[0]) {
-                        const point = payload[0].payload;
-                        return (
-                          <div className="bg-background/95 backdrop-blur-sm border rounded-md px-3 py-2 text-xs shadow-lg">
-                            <div className="text-muted-foreground mb-1">
-                              {format(parseISO(point.date), 'd MMMM', { locale: ru })}
-                            </div>
-                            <div className="font-semibold text-base" style={{ color: qualityColor }}>
-                              {point.avgConfidence}%
-                            </div>
-                            <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                              <span style={{ color: zones[0].color }}>{zones[0].icon}{zones[0].count}</span>
-                              <span>·</span>
-                              <span style={{ color: zones[1].color }}>{zones[1].icon}{zones[1].count}</span>
-                              <span>·</span>
-                              <span style={{ color: zones[2].color }}>{zones[2].icon}{zones[2].count}</span>
-                              <span>·</span>
-                              <span style={{ color: zones[3].color }}>{zones[3].icon}{zones[3].count}</span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="avgConfidence" 
-                    stroke={qualityColor}
-                    strokeWidth={2}
-                    fill="url(#qualityGradient)"
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                Недостаточно данных
-              </div>
-            )}
-          </div>
-
-          {/* Правая часть: Компактные зоны */}
-          <div className="flex items-center gap-2 text-xs min-w-[120px]">
-            {zones.map((zone, i) => (
-              <div 
-                key={i} 
-                className="flex items-center gap-0.5"
-                title={`${zone.label}: ${zone.count}`}
-              >
-                <span style={{ color: zone.color }}>{zone.icon}</span>
-                <span className="font-medium">{zone.count}</span>
-              </div>
-            ))}
+          
+          {/* Цветная полоса */}
+          <div className="flex-1">
+            <ColoredQualityBar zones={zones} total={totalMetrics} />
           </div>
         </div>
+
+        {/* Мини-график тренда */}
+        {history && history.length > 1 ? (
+          <div className="h-[15px] opacity-50">
+            <svg 
+              viewBox="0 0 100 20" 
+              preserveAspectRatio="none" 
+              className="w-full h-full"
+            >
+              <polyline
+                points={generateSparklinePoints(history)}
+                fill="none"
+                stroke={qualityColor}
+                strokeWidth="1.5"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
+        ) : (
+          <div className="h-[15px] flex items-center justify-center text-[10px] text-muted-foreground opacity-50">
+            Недостаточно данных
+          </div>
+        )}
       </CardContent>
     </Card>
   );
