@@ -137,10 +137,25 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
     return '#10b981';
   }
   
-  // Resting HR: <40 или >90 = красный, 50-80 = зеленый
+  // Resting HR: <35 или >100 = красный, 40-85 = норма
   if (name.includes('resting') && name.includes('hr')) {
-    if (value < 40 || value > 90) return '#ef4444';
-    if (value < 50 || value > 80) return '#eab308';
+    if (value < 35 || value > 100) return '#ef4444';
+    if (value < 45 || value > 85) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Steps: <5000 = красный, <8000 = желтый, >=10000 = зеленый
+  if (name.includes('step')) {
+    if (value < 5000) return '#ef4444';
+    if (value < 8000) return '#eab308';
+    if (value >= 10000) return '#10b981';
+    return null;
+  }
+  
+  // Body Fat Percentage: зависит от пола, упрощенно 15-28% = норма
+  if (name.includes('body') && name.includes('fat')) {
+    if (value < 10 || value > 35) return '#ef4444';
+    if (value < 15 || value > 28) return '#eab308';
     return '#10b981';
   }
   
@@ -196,6 +211,24 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
     return { icon: '⚠️', text: 'Высокая нагрузка', color: '#eab308' };
   }
   
+  // Steps
+  if (name.includes('step')) {
+    if (value < 5000) return { icon: '🔴', text: 'Очень мало', color: '#ef4444' };
+    if (value < 8000) return { icon: '⚠️', text: 'Недостаточно', color: '#eab308' };
+    if (value >= 10000) return { icon: '✅', text: 'Отлично', color: '#10b981' };
+    return { icon: '😊', text: 'Хорошо', color: '#10b981' };
+  }
+  
+  // Body Fat Percentage
+  if (name.includes('body') && name.includes('fat')) {
+    if (value < 10) return { icon: '⚠️', text: 'Слишком низкий', color: '#ef4444' };
+    if (value < 15) return { icon: '📊', text: 'Атлетический', color: '#10b981' };
+    if (value < 20) return { icon: '✅', text: 'Отличный', color: '#10b981' };
+    if (value < 28) return { icon: '😊', text: 'Норма', color: '#10b981' };
+    if (value < 35) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
+    return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
+  }
+  
   return null;
 };
 
@@ -224,7 +257,15 @@ const getMetricTooltip = (metricName: string): string | null => {
   }
   
   if (name.includes('resting') && name.includes('hr')) {
-    return 'Пульс в покое. Норма для взрослых: 50-80 уд/мин';
+    return 'Пульс в покое. Норма для взрослых: 40-85 уд/мин. Атлеты: 40-60 уд/мин';
+  }
+  
+  if (name.includes('step')) {
+    return 'Количество шагов за день. Рекомендуется: >10000 шагов. Минимум: 8000';
+  }
+  
+  if (name.includes('body') && name.includes('fat')) {
+    return 'Процент жира в организме. Норма для мужчин: 15-20%, для женщин: 20-28%. Атлеты: 10-15% (м), 18-22% (ж)';
   }
   
   return null;
@@ -265,6 +306,14 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     const Icon = getMetricIcon(metricName);
     const color = getMetricColor(metricName);
     
+    // Вычислить качество для первого источника (приоритетный)
+    const primarySourceQuality = getMetricQualityColor(metricName, multiSourceData.sources[0].value);
+    
+    // Проверить свежесть для первого источника
+    const daysDiff = Math.floor(multiSourceData.sources[0].age_hours / 24);
+    const isDataStale = daysDiff >= 3;
+    const isDataWarning = daysDiff === 2;
+    
     return (
       <Card 
         className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
@@ -273,7 +322,11 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           background: `linear-gradient(135deg, ${color}08, transparent)`,
           borderWidth: '2px',
           borderStyle: 'solid',
-          borderColor: `${color}30`,
+          borderColor: isDataStale 
+            ? '#ef4444' 
+            : isDataWarning 
+              ? '#eab308' 
+              : primarySourceQuality || `${color}30`,
         }}
       >
         <CardContent className="p-3 sm:p-6">
