@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { completeOnboardingStep, ONBOARDING_STEPS } from "@/lib/onboarding-utils";
 import { DEFAULT_HABIT_TEMPLATES } from "@/lib/habit-templates";
 import { useGoals } from "@/hooks/useGoals";
 
@@ -155,9 +154,6 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       }
 
       toast.success("Привычка создана! 🎉");
-      
-      // Mark onboarding step as completed
-      completeOnboardingStep(user.id, ONBOARDING_STEPS.CREATE_HABITS);
       
       onOpenChange(false);
       

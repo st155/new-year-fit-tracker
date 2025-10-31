@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
 import { useTranslation } from '@/lib/translations';
-
-import { OnboardingTutorial } from '@/components/tutorial/OnboardingTutorial';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -118,7 +116,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5 flex items-center justify-center p-4">
-      <OnboardingTutorial />
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="space-y-8 text-center lg:text-left">
