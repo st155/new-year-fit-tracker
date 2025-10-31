@@ -16,7 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { captureBaseline } from "@/lib/challenge-baseline";
@@ -30,7 +30,7 @@ export default function ChallengeDetail() {
   const [isParticipant, setIsParticipant] = useState(false);
 
   // Check if user is participant
-  useState(() => {
+  useEffect(() => {
     if (user && id) {
       supabase
         .from("challenge_participants")
@@ -42,7 +42,7 @@ export default function ChallengeDetail() {
           setIsParticipant(!!data);
         });
     }
-  });
+  }, [user, id]);
 
   const joinMutation = useMutation({
     mutationFn: async () => {
