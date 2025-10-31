@@ -25,8 +25,17 @@ export function useLeaderboardQuery(
       if (error) throw error;
       if (!viewData || viewData.length === 0) return [];
 
+      // Fetch points breakdown separately
+      const userIds = viewData.map((entry: any) => entry.user_id);
+      const { data: pointsData } = await supabase
+        .from('challenge_points')
+        .select('user_id, performance_points, recovery_points, synergy_points, points_breakdown')
+        .in('user_id', userIds);
+
       // Process and enrich data
       const enrichedData = viewData.map((entry: any, index: number) => {
+        const points = pointsData?.find((p: any) => p.user_id === entry.user_id);
+        
         const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
           userId: entry.user_id,
           username: entry.full_name || entry.username || 'Anonymous',
@@ -50,6 +59,10 @@ export function useLeaderboardQuery(
           avg_recovery_last_7d: entry.avg_recovery_last_7d || null,
           workouts_last_7d: entry.workouts_last_7d || 0,
           weekly_consistency: entry.weekly_consistency || 0,
+          performancePoints: points?.performance_points || 0,
+          recoveryPoints: points?.recovery_points || 0,
+          synergyPoints: points?.synergy_points || 0,
+          pointsBreakdown: points?.points_breakdown as any || undefined,
           totalGoals: 0,
           goalsWithBaseline: 0,
           trackableGoals: 0,

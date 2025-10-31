@@ -7,6 +7,7 @@ import { WeeklyStrainChart } from "./WeeklyStrainChart";
 import { WeeklySleepChart } from "./WeeklySleepChart";
 import { WeeklyRecoveryChart } from "./WeeklyRecoveryChart";
 import { WeeklyStepsChart } from "./WeeklyStepsChart";
+import { BalanceIndicator } from "./BalanceIndicator";
 
 interface LeaderboardUserCardProps {
   user: {
@@ -111,27 +112,35 @@ export function LeaderboardUserCard({ user, rank, onClick, isUser }: Leaderboard
       </div>
 
       {/* Summary Metrics */}
-      <div className="pt-3 border-t space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Footprints className="h-4 w-4" />
-            <span>Total Steps</span>
+      <div className="pt-3 border-t space-y-3">
+        {/* Balance Indicator */}
+        <BalanceIndicator 
+          strain={user.avg_strain_last_7d || 0}
+          recovery={user.avg_recovery_last_7d || 0}
+        />
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Footprints className="h-4 w-4" />
+              <span>Total Steps</span>
+            </div>
+            <span className="font-semibold">{(user.steps_last_7d || 0).toLocaleString()}</span>
           </div>
-          <span className="font-semibold">{(user.steps_last_7d || 0).toLocaleString()}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Activity className="h-4 w-4" />
-            <span>Workouts</span>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Activity className="h-4 w-4" />
+              <span>Workouts</span>
+            </div>
+            <span className="font-semibold">{user.workouts_last_7d || 0} this week</span>
           </div>
-          <span className="font-semibold">{user.workouts_last_7d || 0} this week</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Trophy className="h-4 w-4" />
-            <span>Consistency</span>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Trophy className="h-4 w-4" />
+              <span>Consistency</span>
+            </div>
+            <span className="font-semibold">{Math.round(user.weekly_consistency || 0)}%</span>
           </div>
-          <span className="font-semibold">{Math.round(user.weekly_consistency || 0)}%</span>
         </div>
       </div>
     </Card>

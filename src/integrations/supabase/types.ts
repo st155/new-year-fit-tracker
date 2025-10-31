@@ -756,9 +756,13 @@ export type Database = {
           likes_given: number
           likes_received: number
           measurements_count: number
+          performance_points: number | null
           points: number
+          points_breakdown: Json | null
           posts_count: number
+          recovery_points: number | null
           streak_days: number
+          synergy_points: number | null
           updated_at: string
           user_id: string
         }
@@ -771,9 +775,13 @@ export type Database = {
           likes_given?: number
           likes_received?: number
           measurements_count?: number
+          performance_points?: number | null
           points?: number
+          points_breakdown?: Json | null
           posts_count?: number
+          recovery_points?: number | null
           streak_days?: number
+          synergy_points?: number | null
           updated_at?: string
           user_id: string
         }
@@ -786,9 +794,13 @@ export type Database = {
           likes_given?: number
           likes_received?: number
           measurements_count?: number
+          performance_points?: number | null
           points?: number
+          points_breakdown?: Json | null
           posts_count?: number
+          recovery_points?: number | null
           streak_days?: number
+          synergy_points?: number | null
           updated_at?: string
           user_id?: string
         }

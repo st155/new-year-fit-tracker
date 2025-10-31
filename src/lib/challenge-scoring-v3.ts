@@ -8,6 +8,27 @@ export interface MetricsBadge {
   description: string;
 }
 
+export interface PointsBreakdown {
+  performance: {
+    strain_score: number;
+    activity_volume: number;
+    consistency: number;
+    total: number;
+  };
+  recovery: {
+    recovery_quality: number;
+    sleep_quality: number;
+    heart_health: number;
+    total: number;
+  };
+  synergy: {
+    balance_bonus: number;
+    streak_bonus: number;
+    badge_bonus: number;
+    total: number;
+  };
+}
+
 export interface LeaderboardEntry {
   userId: string;
   username: string;
@@ -41,6 +62,12 @@ export interface LeaderboardEntry {
   avg_recovery_last_7d?: number;
   workouts_last_7d?: number;
   weekly_consistency?: number;
+  
+  // Points breakdown
+  performancePoints?: number;
+  recoveryPoints?: number;
+  synergyPoints?: number;
+  pointsBreakdown?: PointsBreakdown;
   
   // Goals info
   totalGoals: number;
