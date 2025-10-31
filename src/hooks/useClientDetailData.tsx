@@ -8,12 +8,15 @@ interface Goal {
   target_value: number;
   target_unit: string;
   goal_type: string;
-  current_value?: number;
-  progress_percentage?: number;
+  current_value: number;
+  progress_percentage: number;
+  last_measurement_date: string | null;
+  measurements_count: number;
 }
 
 interface Measurement {
   id: string;
+  goal_id: string;
   value: number;
   measurement_date: string;
   goal_name: string;
@@ -377,22 +380,30 @@ export function useClientDetailData(clientUserId?: string) {
         return;
       }
 
-      // Process goals
-      const goalsData = (clientData.goals || []).map((g: any) => ({
+      // Fetch goals with progress using new RPC
+      const { data: goalsWithProgress, error: goalsError } = await supabase
+        .rpc('get_client_goals_with_progress', { p_user_id: clientUserId });
+
+      if (goalsError) {
+        console.error('Error fetching goals with progress:', goalsError);
+      }
+
+      const goalsData = (goalsWithProgress || []).map((g: any) => ({
         id: g.id,
         goal_name: g.goal_name,
         target_value: g.target_value,
         target_unit: g.target_unit,
         goal_type: g.goal_type,
         current_value: g.current_value,
-        progress_percentage: g.current_value && g.target_value 
-          ? Math.min(100, Math.round((g.current_value / g.target_value) * 100))
-          : undefined
+        progress_percentage: g.progress_percentage,
+        last_measurement_date: g.last_measurement_date,
+        measurements_count: g.measurements_count
       }));
 
       // Process measurements
       const measurementsData = (clientData.measurements || []).map((m: any) => ({
         id: m.id,
+        goal_id: m.goal_id || '',
         value: m.value,
         measurement_date: m.measurement_date,
         goal_name: m.goal_name,

@@ -36,6 +36,8 @@ import { format } from "date-fns";
 import { useClientDetailData, formatSourceName } from "@/hooks/useClientDetailData";
 import { HealthDataTabs } from "./health-data/HealthDataTabs";
 import { useQueryClient } from '@tanstack/react-query';
+import { GroupedGoalsView } from './client-detail/GroupedGoalsView';
+import { GoalProgressChart } from './client-detail/GoalProgressChart';
 
 interface Client {
   id: string;
@@ -51,12 +53,15 @@ interface Goal {
   target_value: number;
   target_unit: string;
   goal_type: string;
-  current_value?: number;
-  progress_percentage?: number;
+  current_value: number;
+  progress_percentage: number;
+  last_measurement_date: string | null;
+  measurements_count: number;
 }
 
 interface Measurement {
   id: string;
+  goal_id: string;
   value: number;
   measurement_date: string;
   goal_name: string;
@@ -277,33 +282,29 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {goals.map((goal) => (
-              <Card key={goal.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{goal.goal_name}</CardTitle>
-                    <Badge variant={goal.progress_percentage >= 100 ? "default" : "secondary"}>
-                      {goal.progress_percentage}%
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <Progress value={goal.progress_percentage} className="h-2" />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Текущее: {goal.current_value} {goal.target_unit}
-                      </span>
-                      <span className="text-muted-foreground">
-                        Цель: {goal.target_value} {goal.target_unit}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {goals.length > 0 ? (
+            <GroupedGoalsView 
+              goals={goals} 
+              clientId={client.user_id}
+              onRefresh={refetch}
+            />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <Target className="h-12 w-12 mb-4" />
+                <p className="text-lg font-medium">Нет целей</p>
+                <p className="text-sm">Создайте первую цель для клиента</p>
+                <Button 
+                  onClick={() => setShowGoalDialog(true)} 
+                  className="mt-4"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить цель
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Whoop Health Metrics */}
           {whoopSummary && whoopSummary.recoveryScore.count > 0 && (
@@ -502,6 +503,22 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsContent>
 
         <TabsContent value="measurements" className="space-y-4">
+          {/* Progress Charts */}
+          {goals.length > 0 && measurements.length > 0 && (
+            <div className="space-y-4">
+              {goals
+                .filter(goal => measurements.some(m => m.goal_id === goal.id))
+                .map(goal => (
+                  <GoalProgressChart 
+                    key={goal.id}
+                    goal={goal}
+                    measurements={measurements.filter(m => m.goal_id === goal.id)}
+                  />
+                ))}
+            </div>
+          )}
+
+          {/* Measurements List */}
           <Card>
             <CardHeader>
               <CardTitle>Последние измерения</CardTitle>
