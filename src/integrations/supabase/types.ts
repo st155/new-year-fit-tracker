@@ -3425,6 +3425,7 @@ export type Database = {
       challenge_leaderboard_v2: {
         Row: {
           avatar_url: string | null
+          avg_hrv: number | null
           avg_recovery: number | null
           avg_recovery_last_7d: number | null
           avg_resting_hr: number | null
@@ -3435,11 +3436,14 @@ export type Database = {
           avg_strain_last_7d: number | null
           challenge_id: string | null
           days_with_data: number | null
+          full_name: string | null
+          last_activity_date: string | null
           latest_body_fat: number | null
           latest_weight: number | null
           steps_last_7d: number | null
           streak_days: number | null
           total_calories: number | null
+          total_points: number | null
           total_steps: number | null
           total_workouts: number | null
           user_id: string | null
