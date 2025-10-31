@@ -115,6 +115,7 @@ const getSourceDisplayName = (source: string): string => {
 // Определение цвета рамки по качеству значения метрики
 const getMetricQualityColor = (metricName: string, value: number): string | null => {
   const name = metricName.toLowerCase();
+  console.log('[DEBUG getMetricQualityColor]', metricName, '→', name, '| value:', value);
   
   // Recovery Score: <33 = красный, 33-66 = желтый, >66 = зеленый
   if (name.includes('recovery')) {
@@ -138,14 +139,14 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
   }
   
   // Resting HR: <35 или >100 = красный, 40-85 = норма
-  if (name.includes('resting') && name.includes('hr')) {
+  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
     if (value < 35 || value > 100) return '#ef4444';
     if (value < 45 || value > 85) return '#eab308';
     return '#10b981';
   }
   
   // Steps: <5000 = красный, <8000 = желтый, >=10000 = зеленый
-  if (name.includes('step')) {
+  if (name.includes('step') || name.includes('шаг')) {
     if (value < 5000) return '#ef4444';
     if (value < 8000) return '#eab308';
     if (value >= 10000) return '#10b981';
@@ -153,7 +154,7 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
   }
   
   // Body Fat Percentage: зависит от пола, упрощенно 15-28% = норма
-  if (name.includes('body') && name.includes('fat')) {
+  if ((name.includes('body') && name.includes('fat')) || name.includes('процент жира') || name.includes('жир')) {
     if (value < 10 || value > 35) return '#ef4444';
     if (value < 15 || value > 28) return '#eab308';
     return '#10b981';
@@ -167,20 +168,20 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
   }
   
   // Day Strain: <10 = желтый (мало), 10-18 = зеленый (норма), >18 = желтый (много)
-  if (name.includes('strain') && !name.includes('workout')) {
+  if ((name.includes('strain') && !name.includes('workout')) || name.includes('нагрузка')) {
     if (value < 10 || value > 18) return '#eab308';
     return '#10b981';
   }
   
   // Active Calories: <200 = красный, 200-499 = желтый, >=500 = зеленый
-  if (name.includes('active') && name.includes('calories')) {
+  if ((name.includes('active') && name.includes('calor')) || name.includes('активные калории')) {
     if (value < 200) return '#ef4444';
     if (value < 500) return '#eab308';
     return '#10b981';
   }
   
   // Max Heart Rate: <120 = желтый (низкая интенсивность), >180 = красный
-  if (name.includes('max') && name.includes('heart')) {
+  if ((name.includes('max') && name.includes('heart')) || name.includes('max hr') || name.includes('макс')) {
     if (value < 120) return '#eab308';
     if (value > 180) return '#ef4444';
     return null; // Норма
@@ -192,6 +193,7 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
 // Получение текстового индикатора качества метрики
 const getQualityLabel = (metricName: string, value: number): { icon: string; text: string; color: string } | null => {
   const name = metricName.toLowerCase();
+  console.log('[DEBUG getQualityLabel]', metricName, '→', name, '| value:', value);
   
   if (name.includes('recovery')) {
     if (value < 33) return { icon: '🔴', text: 'Низкое восстановление', color: '#ef4444' };
@@ -258,7 +260,7 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
   }
   
   // Resting Heart Rate (дополнительные детали)
-  if (name.includes('resting') && name.includes('hr')) {
+  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
     if (value < 40) return { icon: '⚠️', text: 'Очень низкий', color: '#ef4444' };
     if (value < 50) return { icon: '🏃', text: 'Атлетический', color: '#10b981' };
     if (value < 60) return { icon: '✅', text: 'Отличный', color: '#10b981' };
@@ -274,6 +276,7 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
 // Получение пояснения для метрики
 const getMetricTooltip = (metricName: string): string | null => {
   const name = metricName.toLowerCase();
+  console.log('[DEBUG getMetricTooltip]', metricName, '→', name);
   
   if (name.includes('recovery')) {
     return 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление';
@@ -295,7 +298,7 @@ const getMetricTooltip = (metricName: string): string | null => {
     return 'Общая нагрузка за день. 10-18 = оптимальная зона';
   }
   
-  if (name.includes('resting') && name.includes('hr')) {
+  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
     return 'Пульс в покое. Норма для взрослых: 40-85 уд/мин. Атлеты: 40-60 уд/мин';
   }
   
