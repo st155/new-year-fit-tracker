@@ -34,6 +34,14 @@ export interface LeaderboardEntry {
   totalSteps: number;
   totalActiveCalories: number;
   
+  // Weekly metrics (last 7 days)
+  steps_last_7d?: number;
+  avg_strain_last_7d?: number;
+  avg_sleep_last_7d?: number;
+  avg_recovery_last_7d?: number;
+  workouts_last_7d?: number;
+  weekly_consistency?: number;
+  
   // Goals info
   totalGoals: number;
   goalsWithBaseline: number;

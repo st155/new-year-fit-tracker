@@ -14,6 +14,8 @@ import { LeaderboardTabs } from "@/components/leaderboard/LeaderboardTabs";
 import { AchievementsGallery } from "@/components/leaderboard/AchievementsGallery";
 import { FeaturedAchievements } from "@/components/leaderboard/FeaturedAchievements";
 import { DailyChallenges } from "@/components/leaderboard/DailyChallenges";
+import { LeaderboardCategoryLeaders } from "@/components/leaderboard/LeaderboardCategoryLeaders";
+import { LeaderboardUserCard } from "@/components/leaderboard/LeaderboardUserCard";
 import { getUserLevel } from "@/lib/gamification";
 
 const Leaderboard = () => {
@@ -65,180 +67,136 @@ const Leaderboard = () => {
                   <PersonalStatsCard userEntry={userEntry} leaderboard={leaderboard} />
                 )}
 
-                {/* Top 3 Podium */}
-                {leaderboard.length >= 3 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* 2nd Place */}
-                    <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
-                      setSelectedUserId(leaderboard[1].userId);
-                      setSelectedUserName(leaderboard[1].fullName || leaderboard[1].username);
-                    }}>
-                      <CardContent className="p-6 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-white shadow-lg">
-                            <Medal className="h-8 w-8" />
-                          </div>
-                          <Avatar className="h-16 w-16 border-4 border-gray-400">
-                            <AvatarImage src={leaderboard[1].avatarUrl} />
-                            <AvatarFallback>{leaderboard[1].username?.[0]?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-bold flex items-center gap-1 justify-center">
-                              <span className="text-xl">{getUserLevel(leaderboard[1].totalPoints).icon}</span>
-                              <span>{leaderboard[1].username}</span>
-                            </div>
-                            <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[1].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 1st Place */}
-                    <Card className="border-2 border-primary hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
-                      setSelectedUserId(leaderboard[0].userId);
-                      setSelectedUserName(leaderboard[0].fullName || leaderboard[0].username);
-                    }}>
-                      <CardContent className="p-6 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white shadow-xl animate-pulse">
-                            <Trophy className="h-10 w-10" />
-                          </div>
-                          <Avatar className="h-20 w-20 border-4 border-yellow-500">
-                            <AvatarImage src={leaderboard[0].avatarUrl} />
-                            <AvatarFallback>{leaderboard[0].username?.[0]?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-bold text-lg flex items-center gap-1 justify-center">
-                              <span className="text-2xl">{getUserLevel(leaderboard[0].totalPoints).icon}</span>
-                              <span>{leaderboard[0].username}</span>
-                            </div>
-                            <div className="text-3xl font-bold text-primary">{formatPoints(leaderboard[0].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* 3rd Place */}
-                    <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
-                      setSelectedUserId(leaderboard[2].userId);
-                      setSelectedUserName(leaderboard[2].fullName || leaderboard[2].username);
-                    }}>
-                      <CardContent className="p-6 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white shadow-lg">
-                            <Award className="h-8 w-8" />
-                          </div>
-                          <Avatar className="h-16 w-16 border-4 border-orange-500">
-                            <AvatarImage src={leaderboard[2].avatarUrl} />
-                            <AvatarFallback>{leaderboard[2].username?.[0]?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-bold flex items-center gap-1 justify-center">
-                              <span className="text-xl">{getUserLevel(leaderboard[2].totalPoints).icon}</span>
-                              <span>{leaderboard[2].username}</span>
-                            </div>
-                            <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[2].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                {/* Weekly Leaders */}
+                {leaderboard.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      Weekly Leaders
+                    </h3>
+                    <LeaderboardCategoryLeaders leaderboard={leaderboard} />
                   </div>
                 )}
 
-                {/* Full Rankings */}
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">Full Rankings</h3>
-                    <div className="space-y-3">
-                      {leaderboard.map((item, index) => {
-                        const level = getUserLevel(item.totalPoints);
-                        return (
-                          <div 
-                            key={item.userId}
-                            onClick={() => {
-                              setSelectedUserId(item.userId);
-                              setSelectedUserName(item.fullName || item.username);
-                            }}
-                            className={cn(
-                              "flex items-center justify-between p-4 rounded-lg transition-all cursor-pointer hover:bg-accent/50 hover:scale-[1.01]",
-                              item.isUser ? "bg-primary/10 border-2 border-primary/30" : "bg-background/50"
-                            )}
-                          >
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-full font-bold shrink-0",
-                                `bg-gradient-to-br ${getRankColorClass(index + 1)}`,
-                                index > 2 && "text-muted-foreground"
-                              )}>
-                                {index + 1}
+                {/* Top 3 Podium */}
+                {leaderboard.length >= 3 && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      Top 3 Podium
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* 2nd Place */}
+                      <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
+                        setSelectedUserId(leaderboard[1].userId);
+                        setSelectedUserName(leaderboard[1].fullName || leaderboard[1].username);
+                      }}>
+                        <CardContent className="p-6 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-white shadow-lg">
+                              <Medal className="h-8 w-8" />
+                            </div>
+                            <Avatar className="h-16 w-16 border-4 border-gray-400">
+                              <AvatarImage src={leaderboard[1].avatarUrl} />
+                              <AvatarFallback>{leaderboard[1].username?.[0]?.toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-bold flex items-center gap-1 justify-center">
+                                <span className="text-xl">{getUserLevel(leaderboard[1].totalPoints).icon}</span>
+                                <span>{leaderboard[1].username}</span>
                               </div>
-
-                              <Avatar className="h-12 w-12 shrink-0">
-                                <AvatarImage src={item.avatarUrl} />
-                                <AvatarFallback>{item.username?.[0]?.toUpperCase()}</AvatarFallback>
-                              </Avatar>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold flex items-center gap-2 flex-wrap">
-                                  <span className="text-lg" title={level.title}>{level.icon}</span>
-                                  <span>{item.username}</span>
-                                  {item.isUser && <span className="text-xs text-primary">(You)</span>}
-                                </div>
-                                
-                                {/* Metrics Summary */}
-                                <div className="flex gap-2 text-[10px] sm:text-xs text-muted-foreground mt-1 flex-wrap">
-                                  <span className="flex items-center gap-1">
-                                    <Flame className="h-3 w-3" />
-                                    {item.activeDays} days
-                                  </span>
-                                  {item.streakDays > 0 && (
-                                    <span className="flex items-center gap-1 text-orange-500">
-                                      🔥 {item.streakDays} streak
-                                    </span>
-                                  )}
-                                  {item.avgRecovery > 0 && (
-                                    <span className="flex items-center gap-1">
-                                      ⚡ {item.avgRecovery}%
-                                    </span>
-                                  )}
-                                  {item.avgSleep > 0 && (
-                                    <span className="flex items-center gap-1">
-                                      😴 {item.avgSleep}h
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Badges */}
-                                {item.badges.length > 0 && (
-                                  <div className="flex gap-1 flex-wrap mt-2">
-                                    {item.badges.slice(0, 3).map(badge => (
-                                      <Badge 
-                                        key={badge.id} 
-                                        variant="secondary" 
-                                        className="text-xs py-0 px-2"
-                                        title={badge.description}
-                                      >
-                                        {badge.icon} {badge.name}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="text-right shrink-0">
-                                <div className="text-2xl font-bold text-primary">{formatPoints(item.totalPoints)}</div>
-                                <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
-                              </div>
+                              <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[1].totalPoints)}</div>
+                              <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
                             </div>
                           </div>
-                        );
-                      })}
+                        </CardContent>
+                      </Card>
+
+                      {/* 1st Place */}
+                      <Card className="border-2 border-primary hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
+                        setSelectedUserId(leaderboard[0].userId);
+                        setSelectedUserName(leaderboard[0].fullName || leaderboard[0].username);
+                      }}>
+                        <CardContent className="p-6 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white shadow-xl animate-pulse">
+                              <Trophy className="h-10 w-10" />
+                            </div>
+                            <Avatar className="h-20 w-20 border-4 border-yellow-500">
+                              <AvatarImage src={leaderboard[0].avatarUrl} />
+                              <AvatarFallback>{leaderboard[0].username?.[0]?.toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-bold text-lg flex items-center gap-1 justify-center">
+                                <span className="text-2xl">{getUserLevel(leaderboard[0].totalPoints).icon}</span>
+                                <span>{leaderboard[0].username}</span>
+                              </div>
+                              <div className="text-3xl font-bold text-primary">{formatPoints(leaderboard[0].totalPoints)}</div>
+                              <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* 3rd Place */}
+                      <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
+                        setSelectedUserId(leaderboard[2].userId);
+                        setSelectedUserName(leaderboard[2].fullName || leaderboard[2].username);
+                      }}>
+                        <CardContent className="p-6 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white shadow-lg">
+                              <Award className="h-8 w-8" />
+                            </div>
+                            <Avatar className="h-16 w-16 border-4 border-orange-500">
+                              <AvatarImage src={leaderboard[2].avatarUrl} />
+                              <AvatarFallback>{leaderboard[2].username?.[0]?.toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-bold flex items-center gap-1 justify-center">
+                                <span className="text-xl">{getUserLevel(leaderboard[2].totalPoints).icon}</span>
+                                <span>{leaderboard[2].username}</span>
+                              </div>
+                              <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[2].totalPoints)}</div>
+                              <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+
+                {/* Full Rankings with Cards */}
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Full Rankings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {leaderboard.map((entry, index) => (
+                      <LeaderboardUserCard
+                        key={entry.userId}
+                        user={{
+                          userId: entry.userId,
+                          username: entry.username,
+                          full_name: entry.fullName || null,
+                          avatar_url: entry.avatarUrl || null,
+                          total_points: entry.totalPoints,
+                          steps_last_7d: entry.steps_last_7d,
+                          avg_strain_last_7d: entry.avg_strain_last_7d || undefined,
+                          avg_sleep_last_7d: entry.avg_sleep_last_7d || undefined,
+                          avg_recovery_last_7d: entry.avg_recovery_last_7d || undefined,
+                          workouts_last_7d: entry.workouts_last_7d,
+                          weekly_consistency: entry.weekly_consistency,
+                        }}
+                        rank={index + 1}
+                        isUser={entry.isUser}
+                        onClick={() => {
+                          setSelectedUserId(entry.userId);
+                          setSelectedUserName(entry.fullName || entry.username);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Side Panel */}

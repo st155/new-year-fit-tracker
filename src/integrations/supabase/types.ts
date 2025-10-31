@@ -3416,20 +3416,26 @@ export type Database = {
           avatar_url: string | null
           avg_hrv: number | null
           avg_recovery: number | null
+          avg_recovery_last_7d: number | null
           avg_resting_hr: number | null
           avg_sleep: number | null
           avg_sleep_efficiency: number | null
+          avg_sleep_last_7d: number | null
           avg_strain: number | null
+          avg_strain_last_7d: number | null
           challenge_id: string | null
           full_name: string | null
           id: string | null
           last_activity_date: string | null
+          steps_last_7d: number | null
           streak_days: number | null
           total_active_calories: number | null
           total_points: number | null
           total_steps: number | null
           user_id: string | null
           username: string | null
+          weekly_consistency: number | null
+          workouts_last_7d: number | null
         }
         Relationships: [
           {
