@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { MobileDebugOverlay } from '@/components/debug/MobileDebugOverlay';
 import { 
   useWidgetsQuery, 
   useAddWidgetMutation, 
@@ -36,6 +37,7 @@ const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [forceReady, setForceReady] = useState(false);
   
   console.log('🏠 [Index] Render state:', { 
     userId: user?.id, 
@@ -94,6 +96,16 @@ const Index = () => {
   // Real-time subscription for metrics updates
   useMetricsRealtime(!!user?.id);
   
+  // 🔥 Force rendering after 10 seconds if stuck loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.warn('⚠️ [Index] Force rendering after 10s timeout');
+      setForceReady(true);
+    }, 10000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+  
   const addWidget = (metricName: string) => {
     if (!user?.id) return;
     addWidgetMutation.mutate({ userId: user.id, metricName });
@@ -128,35 +140,41 @@ const Index = () => {
     processedWidgets
   );
 
-  // Wait for auth to load first
-  if (authLoading || rolesLoading) {
+  // Wait for auth to load first (with force timeout)
+  if ((authLoading || rolesLoading) && !forceReady) {
     console.log('⏳ [Index] Waiting for auth/roles...');
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-muted-foreground">Загрузка профиля...</p>
+      <>
+        <MobileDebugOverlay />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-sm text-muted-foreground">Загрузка профиля...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  if (loading) {
+  if (loading && !forceReady) {
     console.log('⏳ [Index] Waiting for widgets/metrics...');
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
+      <>
+        <MobileDebugOverlay />
+        <div className="min-h-screen bg-background p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-32" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -169,7 +187,9 @@ const Index = () => {
   console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <>
+      <MobileDebugOverlay />
+      <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
         {/* Compact Dashboard Header with AI Insights + Quality */}
         <DashboardHeader />
@@ -282,7 +302,8 @@ const Index = () => {
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel />
-    </div>
+      </div>
+    </>
   );
 };
 

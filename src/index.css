@@ -96,6 +96,15 @@ All colors MUST be HSL.
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* 🔥 iOS Safari CSS variables fix */
+  @supports (-webkit-touch-callout: none) {
+    :root {
+      --background: 226 34% 6%;
+      --foreground: 0 0% 98%;
+      color-scheme: dark;
+    }
+  }
+
   /* Animations */
   @keyframes fade-in {
     from {
@@ -200,13 +209,19 @@ All colors MUST be HSL.
     border-color: hsl(var(--border));
   }
 
+  html {
+    height: -webkit-fill-available; /* 🔥 iOS viewport fix */
+  }
+
   body {
+    background-color: #10121A; /* 🔥 Solid fallback for mobile */
     background: linear-gradient(180deg, #10121A 0%, #0d0f16 100%);
     color: hsl(var(--foreground));
     font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+    min-height: -webkit-fill-available; /* 🔥 iOS safe height */
     overflow-x: hidden;
   }
 
