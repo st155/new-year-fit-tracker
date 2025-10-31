@@ -49,48 +49,61 @@ export function AIThreadSidebar() {
               <p className="text-xs text-muted-foreground mt-1">Start a new chat to begin</p>
             </div>
           ) : (
-            conversations.map(conv => (
-              <div
-                key={conv.id}
-                className={cn(
-                  "group relative rounded-lg transition-colors",
-                  currentConversation?.id === conv.id && "bg-accent"
-                )}
-              >
-                <button
-                  onClick={() => selectConversation(conv.id)}
+            conversations.map(conv => {
+              const isActive = currentConversation?.id === conv.id;
+              
+              return (
+                <div
+                  key={conv.id}
                   className={cn(
-                    "w-full text-left px-3 py-2 rounded-lg transition-colors",
-                    "hover:bg-accent/50",
-                    currentConversation?.id === conv.id && "bg-accent"
+                    "group relative rounded-lg transition-all",
+                    isActive && "bg-accent ring-2 ring-primary/20"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="flex-1 truncate text-sm font-medium">
-                      {conv.title || 'Untitled Conversation'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {conv.last_message_at && formatDistanceToNow(new Date(conv.last_message_at), { 
-                      addSuffix: true,
-                      locale: ru 
-                    })}
-                  </p>
-                </button>
-                
-                {/* Delete button */}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </AlertDialogTrigger>
+                  <button
+                    onClick={() => {
+                      console.log('🔄 Switching to conversation:', conv.id);
+                      selectConversation(conv.id);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2.5 rounded-lg transition-colors",
+                      "hover:bg-accent/50",
+                      isActive && "bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <MessageSquare className={cn(
+                        "h-4 w-4 shrink-0",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className={cn(
+                        "flex-1 truncate text-sm",
+                        isActive ? "font-semibold" : "font-medium"
+                      )}>
+                        {conv.title || 'Untitled Conversation'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {conv.last_message_at && formatDistanceToNow(new Date(conv.last_message_at), { 
+                        addSuffix: true,
+                        locale: ru 
+                      })}
+                    </p>
+                  </button>
+                  
+                  {/* Delete button - only for non-active conversations */}
+                  {!isActive && (
+                    <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
@@ -104,10 +117,12 @@ export function AIThreadSidebar() {
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            ))
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </ScrollArea>

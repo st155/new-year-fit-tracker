@@ -216,13 +216,6 @@ function TrainerDashboardContent() {
         <div className="flex items-center justify-between mb-4">
           <NavigationBreadcrumbs items={breadcrumbs} />
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setAiDrawerOpen(true)}
-              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Assistant
-            </Button>
             <NotificationBell />
           </div>
         </div>
@@ -241,7 +234,15 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-6 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+              <TabsTrigger 
+                value="ai-hub" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white rounded-lg transition-all"
+                onClick={() => setAiDrawerOpen(true)}
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Hub
+              </TabsTrigger>
               <TabsTrigger 
                 value="clients" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"

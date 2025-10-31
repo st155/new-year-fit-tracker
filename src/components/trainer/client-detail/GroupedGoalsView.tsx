@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Heart, TrendingUp, Weight, Activity } from 'lucide-react';
 import { GoalCard } from './GoalCard';
 import { QuickMeasurementDialog } from './QuickMeasurementDialog';
+import { GoalEditDialog } from './GoalEditDialog';
 import { cn } from '@/lib/utils';
 
 interface Goal {
@@ -26,6 +27,7 @@ interface GroupedGoalsViewProps {
 export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsViewProps) {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showMeasurement, setShowMeasurement] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const groupedGoals = useMemo(() => {
     const groups: Record<string, Goal[]> = {
@@ -82,6 +84,11 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
     setShowMeasurement(true);
   };
 
+  const handleEdit = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setShowEdit(true);
+  };
+
   return (
     <>
       <Tabs defaultValue="all" className="space-y-4">
@@ -105,6 +112,7 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
                 key={goal.id} 
                 goal={goal}
                 onAddMeasurement={() => handleAddMeasurement(goal)}
+                onEdit={() => handleEdit(goal)}
               />
             ))}
           </div>
@@ -129,6 +137,7 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
                     key={goal.id} 
                     goal={goal}
                     onAddMeasurement={() => handleAddMeasurement(goal)}
+                    onEdit={() => handleEdit(goal)}
                   />
                 ))}
               </div>
@@ -138,16 +147,28 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
       </Tabs>
 
       {selectedGoal && (
-        <QuickMeasurementDialog
-          goal={selectedGoal}
-          clientId={clientId}
-          open={showMeasurement}
-          onOpenChange={setShowMeasurement}
-          onSuccess={() => {
-            onRefresh();
-            setShowMeasurement(false);
-          }}
-        />
+        <>
+          <QuickMeasurementDialog
+            goal={selectedGoal}
+            clientId={clientId}
+            open={showMeasurement}
+            onOpenChange={setShowMeasurement}
+            onSuccess={() => {
+              onRefresh();
+              setShowMeasurement(false);
+            }}
+          />
+          
+          <GoalEditDialog
+            goal={selectedGoal}
+            open={showEdit}
+            onOpenChange={setShowEdit}
+            onSuccess={() => {
+              onRefresh();
+              setShowEdit(false);
+            }}
+          />
+        </>
       )}
     </>
   );

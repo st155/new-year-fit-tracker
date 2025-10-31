@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Paperclip, Send, Loader2, AtSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChat } from './useAIChat';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,7 +32,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
   const [mentionsOpen, setMentionsOpen] = useState(false);
   const [clients, setClients] = useState<ClientSuggestion[]>([]);
   const [mentionedClients, setMentionedClients] = useState<string[]>([]);
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const [mentionSearch, setMentionSearch] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load clients for @mentions
@@ -64,36 +64,68 @@ export function AIInput({ selectedClient }: AIInputProps) {
     }
   }, [input]);
 
-  // Detect @ symbol for mentions
-  useEffect(() => {
-    const lastChar = input[cursorPosition - 1];
-    if (lastChar === '@') {
-      setMentionsOpen(true);
+  // Detect @ for mentions
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const searchTerm = textBeforeCursor.substring(lastAtIndex + 1);
+      if (searchTerm.length <= 20 && !/\s/.test(searchTerm)) {
+        setMentionSearch(searchTerm);
+        setMentionsOpen(true);
+        return;
+      }
     }
-  }, [input, cursorPosition]);
-
-  const handleSelectClient = (client: ClientSuggestion) => {
-    // Replace @ with client mention
-    const beforeAt = input.substring(0, cursorPosition - 1);
-    const afterAt = input.substring(cursorPosition);
-    const newInput = `${beforeAt}@${client.full_name || client.username} ${afterAt}`;
     
-    setInput(newInput);
-    setMentionedClients(prev => [...prev, client.user_id]);
     setMentionsOpen(false);
-    
-    // Focus back on textarea
-    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
+  const handleSelectClient = (client: ClientSuggestion) => {
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = input.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const beforeAt = input.substring(0, lastAtIndex);
+      const afterCursor = input.substring(cursorPos);
+      const newInput = `${beforeAt}@${client.full_name || client.username} ${afterCursor}`;
+      
+      setInput(newInput);
+      setMentionedClients(prev => [...new Set([...prev, client.user_id])]);
+      setMentionsOpen(false);
+      setMentionSearch('');
+      
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        const newPos = lastAtIndex + (client.full_name || client.username).length + 2;
+        textareaRef.current?.setSelectionRange(newPos, newPos);
+      }, 0);
+    }
+  };
+
+  const filteredClients = clients.filter(c => {
+    const searchLower = mentionSearch.toLowerCase();
+    return (
+      c.full_name.toLowerCase().includes(searchLower) ||
+      c.username.toLowerCase().includes(searchLower)
+    );
+  });
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Escape' && mentionsOpen) {
+      e.preventDefault();
+      setMentionsOpen(false);
+      return;
+    }
+    
+    if (e.key === 'Enter' && !e.shiftKey && !mentionsOpen) {
       e.preventDefault();
       handleSend();
     }
-    
-    // Update cursor position
-    setCursorPosition((e.target as HTMLTextAreaElement).selectionStart || 0);
   };
 
   const handleSend = async () => {
@@ -115,40 +147,50 @@ export function AIInput({ selectedClient }: AIInputProps) {
   return (
     <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
       <div className="max-w-4xl mx-auto relative">
-        {/* Mentions popup */}
-        {mentionsOpen && (
-          <div className="absolute bottom-full mb-2 left-0 right-0 z-50">
-            <Command className="rounded-lg border shadow-lg bg-popover">
-              <CommandInput placeholder="Search clients..." />
+        
+        {/* Mentions Popover */}
+        <Popover open={mentionsOpen} onOpenChange={setMentionsOpen}>
+          <PopoverContent 
+            side="top" 
+            align="start" 
+            className="w-[400px] p-0"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <Command>
+              <CommandInput 
+                placeholder="Search clients..." 
+                value={mentionSearch}
+                onValueChange={setMentionSearch}
+              />
               <CommandList>
                 <CommandEmpty>No clients found.</CommandEmpty>
                 <CommandGroup heading="Your Clients">
-                  {clients.map((client) => (
+                  {filteredClients.map((client) => (
                     <CommandItem
                       key={client.user_id}
                       value={client.full_name || client.username}
                       onSelect={() => handleSelectClient(client)}
                       className="cursor-pointer"
                     >
-                      <AtSign className="h-4 w-4 mr-2" />
-                      <span>{client.full_name || client.username}</span>
+                      <AtSign className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{client.full_name || client.username}</span>
+                        <span className="text-xs text-muted-foreground">@{client.username}</span>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
               </CommandList>
             </Command>
-          </div>
-        )}
+          </PopoverContent>
+        </Popover>
         
         {/* Input area */}
         <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-2 focus-within:border-primary/50 transition-colors">
           <Textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setCursorPosition(e.target.selectionStart || 0);
-            }}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Message AI Assistant... (use @ to mention clients)"
             className="resize-none border-0 bg-transparent focus-visible:ring-0 min-h-[24px] max-h-[200px] placeholder:text-muted-foreground/60"
