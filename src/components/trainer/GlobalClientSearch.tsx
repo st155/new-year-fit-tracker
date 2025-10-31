@@ -49,26 +49,24 @@ export const GlobalClientSearch = ({ open, onOpenChange }: GlobalClientSearchPro
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
-      .from("trainer_clients")
-      .select(`
-        client_id,
-        profiles!trainer_clients_client_id_fkey (
-          username,
-          full_name,
-          avatar_url
-        )
-      `)
-      .eq("trainer_id", user.id)
-      .eq("active", true);
+    // Используем RPC вместо JOIN через foreign key для обхода проблем с RLS
+    const { data, error } = await supabase
+      .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
+
+    if (error) {
+      console.error('❌ [GlobalClientSearch] Error loading clients:', error);
+      setLoading(false);
+      return;
+    }
 
     if (data) {
       const clientsData = data.map((tc: any) => ({
         client_id: tc.client_id,
-        username: tc.profiles?.username,
-        full_name: tc.profiles?.full_name,
-        avatar_url: tc.profiles?.avatar_url,
+        username: tc.username,
+        full_name: tc.full_name,
+        avatar_url: tc.avatar_url,
       }));
+      console.log('✅ [GlobalClientSearch] Loaded clients:', clientsData.length);
       setClients(clientsData);
     }
     setLoading(false);

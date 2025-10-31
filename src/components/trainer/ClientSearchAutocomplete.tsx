@@ -30,20 +30,23 @@ export const ClientSearchAutocomplete = ({ onSelect, placeholder = "Найти �
     const loadAllClients = async () => {
       if (!user) return;
 
-      const { data } = await supabase
-        .from('trainer_clients')
-        .select(`
-          profiles!trainer_clients_client_id_fkey (
-            user_id, username, full_name, avatar_url
-          )
-        `)
-        .eq('trainer_id', user.id)
-        .eq('active', true);
+      // Используем RPC вместо JOIN через foreign key для обхода проблем с RLS
+      const { data, error } = await supabase
+        .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
 
-      const clients = (data || [])
-        .map((tc: any) => tc.profiles)
-        .filter(Boolean);
+      if (error) {
+        console.error('❌ [ClientSearchAutocomplete] Error loading clients:', error);
+        return;
+      }
+
+      const clients = (data || []).map((tc: any) => ({
+        user_id: tc.client_id,
+        username: tc.username,
+        full_name: tc.full_name,
+        avatar_url: tc.avatar_url
+      }));
       
+      console.log('✅ [ClientSearchAutocomplete] Loaded clients:', clients.length);
       setAllClients(clients);
     };
 

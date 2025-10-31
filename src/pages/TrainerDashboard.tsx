@@ -123,43 +123,27 @@ function TrainerDashboardContent() {
     try {
       setLoading(true);
       
-      // Оптимизированный запрос: один JOIN вместо N+1 проблемы
+      // Используем RPC вместо JOIN через foreign key для обхода проблем с RLS
       const { data, error } = await supabase
-        .from('trainer_clients')
-        .select(`
-          id,
-          client_id,
-          assigned_at,
-          active,
-          profiles!trainer_clients_client_id_fkey (
-            user_id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          goals:goals!user_id (
-            id
-          )
-        `)
-        .eq('trainer_id', user.id)
-        .eq('active', true);
+        .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
 
       if (error) throw error;
 
       const formattedClients: TrainerClient[] = (data || []).map((tc: any) => ({
-        id: tc.id,
-        user_id: tc.profiles.user_id,
-        username: tc.profiles.username || '',
-        full_name: tc.profiles.full_name || '',
-        avatar_url: tc.profiles.avatar_url,
-        assigned_at: tc.assigned_at,
-        active: tc.active,
-        goals_count: tc.goals?.length || 0
+        id: tc.client_id, // используем client_id как id
+        user_id: tc.client_id,
+        username: tc.username || '',
+        full_name: tc.full_name || '',
+        avatar_url: tc.avatar_url,
+        assigned_at: new Date().toISOString(), // RPC не возвращает assigned_at
+        active: true,
+        goals_count: tc.active_goals_count || 0
       }));
 
+      console.log('✅ [TrainerDashboard] Loaded clients:', formattedClients.length);
       setClients(formattedClients);
     } catch (error) {
-      console.error('Error loading clients:', error);
+      console.error('❌ [TrainerDashboard] Error loading clients:', error);
       toast.error('Ошибка загрузки клиентов');
     } finally {
       setLoading(false);
