@@ -2,8 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Trophy, Zap, Moon, Heart, Activity } from "lucide-react";
+import { Trophy, Zap, Moon, Heart, Activity, Footprints } from "lucide-react";
 import { WeeklyStrainChart } from "./WeeklyStrainChart";
+import { WeeklySleepChart } from "./WeeklySleepChart";
+import { WeeklyRecoveryChart } from "./WeeklyRecoveryChart";
+import { WeeklyStepsChart } from "./WeeklyStepsChart";
 
 interface LeaderboardUserCardProps {
   user: {
@@ -68,55 +71,69 @@ export function LeaderboardUserCard({ user, rank, onClick, isUser }: Leaderboard
         </div>
       </div>
 
-      {/* Weekly Strain Chart */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">Strain Trend (7 days)</p>
+      {/* Main Charts */}
+      <div className="space-y-4">
+        {/* Strain Chart */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-chart-5" />
+            <p className="text-xs font-medium text-muted-foreground">Strain Trend (7 days)</p>
+          </div>
+          <WeeklyStrainChart userId={user.userId} height={60} />
         </div>
-        <WeeklyStrainChart userId={user.userId} height={50} />
+
+        {/* Sleep Chart */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Moon className="h-4 w-4 text-chart-2" />
+            <p className="text-xs font-medium text-muted-foreground">Sleep Trend (7 days)</p>
+          </div>
+          <WeeklySleepChart userId={user.userId} height={60} />
+        </div>
+
+        {/* Recovery Chart */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Heart className="h-4 w-4 text-chart-3" />
+            <p className="text-xs font-medium text-muted-foreground">Recovery Trend (7 days)</p>
+          </div>
+          <WeeklyRecoveryChart userId={user.userId} height={60} />
+        </div>
+
+        {/* Steps Chart */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Footprints className="h-4 w-4 text-chart-1" />
+            <p className="text-xs font-medium text-muted-foreground">Steps Trend (7 days)</p>
+          </div>
+          <WeeklyStepsChart userId={user.userId} height={60} />
+        </div>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-chart-5" />
-          <div>
-            <p className="text-xs text-muted-foreground">Strain</p>
-            <p className="font-semibold">{(user.avg_strain_last_7d || 0).toFixed(1)}</p>
+      {/* Summary Metrics */}
+      <div className="pt-3 border-t space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Footprints className="h-4 w-4" />
+            <span>Total Steps</span>
           </div>
+          <span className="font-semibold">{(user.steps_last_7d || 0).toLocaleString()}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Moon className="h-4 w-4 text-chart-2" />
-          <div>
-            <p className="text-xs text-muted-foreground">Sleep</p>
-            <p className="font-semibold">{(user.avg_sleep_last_7d || 0).toFixed(1)}h</p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Activity className="h-4 w-4" />
+            <span>Workouts</span>
           </div>
+          <span className="font-semibold">{user.workouts_last_7d || 0} this week</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Heart className="h-4 w-4 text-chart-3" />
-          <div>
-            <p className="text-xs text-muted-foreground">Recovery</p>
-            <p className="font-semibold">{Math.round(user.avg_recovery_last_7d || 0)}%</p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Trophy className="h-4 w-4" />
+            <span>Consistency</span>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-chart-1" />
-          <div>
-            <p className="text-xs text-muted-foreground">Active</p>
-            <p className="font-semibold">{Math.round(user.weekly_consistency || 0)}%</p>
-          </div>
+          <span className="font-semibold">{Math.round(user.weekly_consistency || 0)}%</span>
         </div>
       </div>
-
-      {/* Workouts Badge */}
-      {(user.workouts_last_7d || 0) > 0 && (
-        <div className="pt-2 border-t">
-          <Badge variant="secondary" className="text-xs">
-            🔥 {user.workouts_last_7d} workouts this week
-          </Badge>
-        </div>
-      )}
     </Card>
   );
 }
