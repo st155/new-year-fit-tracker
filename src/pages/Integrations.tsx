@@ -10,7 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock } from 'lucide-react';
+import { Clock, Zap, X, ArrowRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Helper to format relative time
 const getRelativeTime = (date: string | null): { text: string; color: string } => {
@@ -46,10 +49,35 @@ export default function IntegrationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [diagnosticData, setDiagnosticData] = useState<any[]>([]);
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const isOnboarding = searchParams.get('onboarding') === 'true';
+  const [showOnboardingHint, setShowOnboardingHint] = useState(false);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
   }, []);
+
+  // Показать подсказку онбординга для новых пользователей
+  useEffect(() => {
+    if (isOnboarding && user) {
+      setShowOnboardingHint(true);
+    }
+  }, [isOnboarding, user]);
+
+  const handleCompleteOnboarding = () => {
+    if (user) {
+      localStorage.setItem(`onboarding_flow_completed_${user.id}`, 'true');
+      localStorage.removeItem(`new_user_${user.id}`);
+      navigate('/');
+    }
+  };
+
+  const handleSkipIntegrations = () => {
+    setShowOnboardingHint(false);
+    handleCompleteOnboarding();
+  };
 
   // Load diagnostic data (terra_tokens for current user)
   useEffect(() => {
@@ -72,6 +100,49 @@ export default function IntegrationsPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6">
+      {/* Onboarding Banner */}
+      {showOnboardingHint && (
+        <Alert className="border-primary/50 bg-gradient-to-r from-primary/5 to-primary/10">
+          <Zap className="h-5 w-5 text-primary" />
+          <div className="flex items-start justify-between flex-1">
+            <div className="flex-1">
+              <AlertTitle className="text-lg font-semibold mb-1">
+                Подключите ваше фитнес-устройство
+              </AlertTitle>
+              <AlertDescription className="text-base">
+                Автоматический трекинг поможет вам достигать целей быстрее. 
+                Подключите Whoop, Garmin, Withings или другие устройства для синхронизации данных.
+              </AlertDescription>
+              <div className="flex items-center gap-3 mt-4">
+                <Button 
+                  onClick={() => setShowOnboardingHint(false)}
+                  className="gap-2"
+                >
+                  <Zap className="h-4 w-4" />
+                  Подключить сейчас
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSkipIntegrations}
+                  className="gap-2"
+                >
+                  Пропустить
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 ml-4"
+              onClick={handleSkipIntegrations}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </Alert>
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Интеграции</h1>

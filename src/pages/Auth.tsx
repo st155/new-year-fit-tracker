@@ -49,7 +49,16 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      const isNewUser = localStorage.getItem(`new_user_${user.id}`);
+      const flowCompleted = localStorage.getItem(`onboarding_flow_completed_${user.id}`);
+      
+      if (isNewUser && !flowCompleted) {
+        // Новый пользователь → начинаем онбординг-флоу
+        navigate('/challenges?onboarding=true');
+      } else {
+        // Существующий пользователь → на главную
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
@@ -66,7 +75,8 @@ const Auth = () => {
       } else {
         localStorage.removeItem('rememberedEmail');
       }
-      navigate('/dashboard');
+      
+      // Редирект будет обработан в useEffect когда user обновится
     }
     
     setIsLoading(false);

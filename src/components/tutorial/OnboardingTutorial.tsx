@@ -29,6 +29,12 @@ export function OnboardingTutorial() {
   if (publicRoutes.some(route => location.pathname.startsWith(route))) {
     return null;
   }
+
+  // Don't show during main onboarding flow
+  const isInOnboardingFlow = location.search.includes('onboarding=true');
+  if (isInOnboardingFlow) {
+    return null;
+  }
   
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
