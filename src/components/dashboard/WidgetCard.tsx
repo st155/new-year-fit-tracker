@@ -172,6 +172,20 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
     return '#10b981';
   }
   
+  // Active Calories: <200 = красный, 200-499 = желтый, >=500 = зеленый
+  if (name.includes('active') && name.includes('calories')) {
+    if (value < 200) return '#ef4444';
+    if (value < 500) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Max Heart Rate: <120 = желтый (низкая интенсивность), >180 = красный
+  if (name.includes('max') && name.includes('heart')) {
+    if (value < 120) return '#eab308';
+    if (value > 180) return '#ef4444';
+    return null; // Норма
+  }
+  
   return null;
 };
 
@@ -229,6 +243,31 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
     return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
   }
   
+  // Active Calories
+  if (name.includes('active') && name.includes('calories')) {
+    if (value < 200) return { icon: '🔴', text: 'Мало активности', color: '#ef4444' };
+    if (value < 500) return { icon: '⚠️', text: 'Средняя активность', color: '#eab308' };
+    return { icon: '✅', text: 'Отличная активность', color: '#10b981' };
+  }
+  
+  // Max Heart Rate
+  if (name.includes('max') && name.includes('heart')) {
+    if (value < 120) return { icon: '⚠️', text: 'Низкая интенсивность', color: '#eab308' };
+    if (value > 180) return { icon: '🔴', text: 'Очень высокий', color: '#ef4444' };
+    return { icon: '💪', text: 'Норма', color: '#10b981' };
+  }
+  
+  // Resting Heart Rate (дополнительные детали)
+  if (name.includes('resting') && name.includes('hr')) {
+    if (value < 40) return { icon: '⚠️', text: 'Очень низкий', color: '#ef4444' };
+    if (value < 50) return { icon: '🏃', text: 'Атлетический', color: '#10b981' };
+    if (value < 60) return { icon: '✅', text: 'Отличный', color: '#10b981' };
+    if (value < 70) return { icon: '😊', text: 'Хороший', color: '#10b981' };
+    if (value < 85) return { icon: '📊', text: 'Норма', color: '#10b981' };
+    if (value < 100) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
+    return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
+  }
+  
   return null;
 };
 
@@ -266,6 +305,18 @@ const getMetricTooltip = (metricName: string): string | null => {
   
   if (name.includes('body') && name.includes('fat')) {
     return 'Процент жира в организме. Норма для мужчин: 15-20%, для женщин: 20-28%. Атлеты: 10-15% (м), 18-22% (ж)';
+  }
+  
+  if (name.includes('active') && name.includes('calories')) {
+    return 'Калории, сожженные через физическую активность. Рекомендуется: >500 kcal. Минимум: 200 kcal';
+  }
+  
+  if (name.includes('max') && name.includes('heart')) {
+    return 'Максимальный пульс за день. Отражает интенсивность тренировки. Норма зависит от возраста (формула: 220 - возраст)';
+  }
+  
+  if (name.includes('weight')) {
+    return 'Масса тела. Интерпретация зависит от ваших целей (похудение/набор массы)';
   }
   
   return null;
