@@ -3700,6 +3700,23 @@ export type Database = {
         Args: { p_client_id: string; p_days?: number }
         Returns: Json
       }
+      get_client_goals_with_progress: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          current_value: number
+          goal_name: string
+          goal_type: string
+          id: string
+          last_measurement_date: string
+          measurements_count: number
+          progress_percentage: number
+          target_unit: string
+          target_value: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_client_unified_metrics_secure: {
         Args: {
           p_end_date?: string
