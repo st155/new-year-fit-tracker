@@ -44,37 +44,47 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
     try {
       setLoading(true);
 
-      let query = supabase
-        .from('trainer_schedule_events')
-        .select(`
-          *,
-          client:profiles!trainer_schedule_events_client_id_fkey (
-            user_id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          training_plan:training_plans!trainer_schedule_events_training_plan_id_fkey (
-            id,
-            name
-          )
-        `)
-        .eq('trainer_id', user.id)
-        .order('start_time', { ascending: true });
-
-      if (startDate) {
-        query = query.gte('start_time', startDate.toISOString());
-      }
-
-      if (endDate) {
-        query = query.lte('start_time', endDate.toISOString());
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .rpc('get_trainer_schedule_events', {
+          p_trainer_id: user.id,
+          p_start_date: startDate?.toISOString(),
+          p_end_date: endDate?.toISOString()
+        });
 
       if (error) throw error;
 
-      setEvents((data as any) || []);
+      // Map RPC results to expected format
+      const formattedEvents: ScheduleEvent[] = (data || []).map((event: any) => ({
+        id: event.id,
+        trainer_id: event.trainer_id,
+        client_id: event.client_id,
+        training_plan_id: event.training_plan_id,
+        event_type: event.event_type,
+        title: event.title,
+        description: event.description,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        location: event.location,
+        is_completed: event.is_completed,
+        is_cancelled: event.is_cancelled,
+        recurrence_rule: event.recurrence_rule,
+        reminder_minutes: event.reminder_minutes,
+        metadata: event.metadata,
+        created_at: event.created_at,
+        updated_at: event.updated_at,
+        client: event.client_user_id ? {
+          user_id: event.client_user_id,
+          username: event.client_username || '',
+          full_name: event.client_full_name || '',
+          avatar_url: event.client_avatar_url
+        } : undefined,
+        training_plan: event.training_plan_name ? {
+          id: event.training_plan_id!,
+          name: event.training_plan_name
+        } : undefined
+      }));
+
+      setEvents(formattedEvents);
     } catch (error) {
       console.error('Error loading schedule events:', error);
       toast.error('Ошибка загрузки событий');

@@ -87,17 +87,22 @@ export const useAIConversations = (userId: string | undefined) => {
 
   // Add optimistic message
   const addOptimisticMessage = (content: string, role: 'user' | 'assistant') => {
+    const optimisticId = `temp-${Date.now()}-${Math.random()}`;
     const optimisticMsg: AIMessage = {
-      id: `temp-${Date.now()}`,
+      id: optimisticId,
       conversation_id: currentConversation?.id || 'temp',
       role,
       content,
-      metadata: { isOptimistic: true, status: 'sending' },
+      metadata: { 
+        isOptimistic: true, 
+        status: 'sending',
+        optimisticId // Store for deduplication
+      },
       created_at: new Date().toISOString()
     };
     
     setOptimisticMessages(prev => [...prev, optimisticMsg]);
-    return optimisticMsg.id;
+    return optimisticId;
   };
 
   // Remove optimistic message
@@ -172,7 +177,8 @@ export const useAIConversations = (userId: string | undefined) => {
             mentionedClients,
             mentionedNames,
             contextClientId,
-            autoExecute
+            autoExecute,
+            optimisticId // Pass optimisticId for deduplication
           }
         });
         
@@ -376,13 +382,25 @@ export const useAIConversations = (userId: string | undefined) => {
           console.log('📨 Realtime INSERT event received:', payload);
           const newMessage = payload.new as AIMessage;
           
-          // Deduplication: check for matching optimistic message
+          // Improved deduplication: check by optimisticId first, then by content + time
           setOptimisticMessages(prev => {
-            const matchingOptimistic = prev.find(
-              m => m.role === newMessage.role && 
-                   m.content === newMessage.content &&
-                   m.conversation_id === newMessage.conversation_id
-            );
+            const matchingOptimistic = prev.find(m => {
+              // Check by optimisticId in metadata if available
+              if (newMessage.metadata?.optimisticId && m.metadata?.optimisticId) {
+                return m.metadata.optimisticId === newMessage.metadata.optimisticId;
+              }
+              
+              // Fallback: match by role, first 100 chars of content, and time proximity
+              if (m.role !== newMessage.role) return false;
+              
+              const contentMatch = m.content.substring(0, 100) === newMessage.content.substring(0, 100);
+              const timeDiff = Math.abs(
+                new Date(m.created_at).getTime() - new Date(newMessage.created_at).getTime()
+              );
+              const timeMatch = timeDiff < 10000; // Within 10 seconds
+              
+              return contentMatch && timeMatch && m.conversation_id === newMessage.conversation_id;
+            });
             
             if (matchingOptimistic) {
               console.log('✅ Real-time message received, removing optimistic:', matchingOptimistic.id);
