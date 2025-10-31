@@ -28,7 +28,7 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-6 animate-fade-in">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Trophy className="h-8 w-8 text-primary" />
@@ -67,7 +67,7 @@ const Leaderboard = () => {
 
                 {/* Top 3 Podium */}
                 {leaderboard.length >= 3 && (
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* 2nd Place */}
                     <Card className="mt-8 hover:scale-[1.02] transition-all cursor-pointer" onClick={() => {
                       setSelectedUserId(leaderboard[1].userId);
@@ -189,7 +189,7 @@ const Leaderboard = () => {
                                 </div>
                                 
                                 {/* Metrics Summary */}
-                                <div className="flex gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                                <div className="flex gap-2 text-[10px] sm:text-xs text-muted-foreground mt-1 flex-wrap">
                                   <span className="flex items-center gap-1">
                                     <Flame className="h-3 w-3" />
                                     {item.activeDays} days

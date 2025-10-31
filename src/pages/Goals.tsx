@@ -93,17 +93,17 @@ export default function Goals() {
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Goals</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Goals</h1>
           <p className="text-muted-foreground">Track your personal and challenge goals</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="icon" onClick={() => refetch()} className="touch-friendly">
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setCreateDialogOpen(true)}>
+          <Button onClick={() => setCreateDialogOpen(true)} className="flex-1 sm:flex-initial touch-friendly">
             <Plus className="h-4 w-4 mr-2" />
             New Goal
           </Button>
@@ -112,11 +112,11 @@ export default function Goals() {
 
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap w-full sm:w-auto">
           <Button 
             variant={filter === 'all' ? 'default' : 'outline'}
             onClick={() => handleFilterChange('all')}
-            className={cn(filter === 'all' && "bg-gradient-primary")}
+            className={cn(filter === 'all' && "bg-gradient-primary", "w-full sm:w-auto touch-friendly")}
           >
             <Filter className="h-4 w-4 mr-2" />
             Все ({allGoals.length})
@@ -124,7 +124,7 @@ export default function Goals() {
           <Button 
             variant={filter === 'personal' ? 'default' : 'outline'}
             onClick={() => handleFilterChange('personal')}
-            className={cn(filter === 'personal' && "bg-gradient-primary")}
+            className={cn(filter === 'personal' && "bg-gradient-primary", "w-full sm:w-auto touch-friendly")}
           >
             <Target className="h-4 w-4 mr-2" />
             Личные ({personalGoals.length})
@@ -133,7 +133,8 @@ export default function Goals() {
             variant={filter === 'challenges' ? 'default' : 'outline'}
             onClick={() => handleFilterChange('challenges')}
             className={cn(
-              filter === 'challenges' && "bg-gradient-to-r from-muted-foreground/30 to-muted-foreground/20 border-muted-foreground/40"
+              filter === 'challenges' && "bg-gradient-to-r from-muted-foreground/30 to-muted-foreground/20 border-muted-foreground/40",
+              "w-full sm:w-auto touch-friendly"
             )}
           >
             <Trophy className="h-4 w-4 mr-2" />

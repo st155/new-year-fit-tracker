@@ -139,12 +139,12 @@ export default function Progress() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-3">
         {/* Compact Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Прогресс</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">Прогресс</h1>
             <p className="text-xs text-muted-foreground">
               {goals?.length || 0} {goals?.length === 1 ? 'цель' : 'целей'} из челленджей
             </p>
@@ -154,10 +154,10 @@ export default function Progress() {
             variant="outline"
             size="sm"
             onClick={() => refetch()}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto touch-friendly"
           >
             <RefreshCw className="h-4 w-4" />
-            Обновить
+            <span className="sm:inline">Обновить</span>
           </Button>
         </div>
 

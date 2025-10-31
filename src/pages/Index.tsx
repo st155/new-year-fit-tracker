@@ -169,8 +169,8 @@ const Index = () => {
   console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
         {/* Compact Dashboard Header with AI Insights + Quality */}
         <DashboardHeader />
         
@@ -239,7 +239,7 @@ const Index = () => {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {processedWidgets.map((widget) => {
               const isSingleMode = widget.display_mode !== 'multi';
               const singleData = isSingleMode ? smartData?.get(widget.id) : undefined;

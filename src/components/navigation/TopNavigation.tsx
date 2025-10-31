@@ -94,8 +94,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-      <div className="flex items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top">
+      <div className="flex items-center justify-between px-3 py-4 md:px-4 md:py-3">
         {/* Logo */}
         <div className="flex items-center gap-3 min-w-[120px]">
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
@@ -124,7 +124,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                 prefetch.route(item.path);
               }}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[60px] hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95",
+                "flex flex-col items-center gap-1.5 h-auto py-3 px-4 min-h-[56px] min-w-[60px] touch-friendly hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95 md:py-2 md:px-3 md:min-h-[unset]",
                 isActive(item.path) && "bg-accent/30"
               )}
             >
@@ -132,10 +132,11 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                 <CustomNavigationIcon 
                   type={item.type} 
                   isActive={isActive(item.path)}
+                  className="h-6 w-6 md:h-5 md:w-5"
                 />
               </div>
               <span className={cn(
-                "text-[10px] font-medium transition-colors",
+                "text-xs md:text-[10px] font-medium transition-colors",
                 isActive(item.path) ? "text-primary" : "text-muted-foreground"
               )}>
                 {item.label}
@@ -151,10 +152,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-10 w-10 p-0 hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
+                className="h-11 w-11 md:h-10 md:w-10 p-0 touch-friendly hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
               >
                 <Settings 
-                  className="h-5 w-5 transition-all duration-300 icon-spin-hover" 
+                  className="h-6 w-6 md:h-5 md:w-5 transition-all duration-300 icon-spin-hover"
                   style={{
                     color: '#a855f7',
                     filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.5))'
@@ -182,10 +183,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
           <Button
             variant="ghost"
             size="sm"
-            className="h-10 w-10 p-0 hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
+            className="h-11 w-11 md:h-10 md:w-10 p-0 touch-friendly hover:bg-transparent hover:scale-110 active:scale-95 transition-all duration-300"
             onClick={() => navigate('/profile')}
           >
-            <Avatar className="h-9 w-9 border-2 border-accent/30 ring-2 ring-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.4)] hover:ring-4 transition-all duration-300 hover:rotate-6">
+            <Avatar className="h-10 w-10 md:h-9 md:w-9 border-2 border-accent/30 ring-2 ring-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.4)] hover:ring-4 transition-all duration-300 hover:rotate-6">
               <AvatarImage src={profile?.avatar_url} />
               <AvatarFallback className="bg-gradient-to-br from-cyan-400 to-blue-500 text-white text-xs font-bold">
                 {getInitials(profile?.username || profile?.full_name || userName || 'U')}

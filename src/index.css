@@ -478,6 +478,28 @@ All colors MUST be HSL.
   .stagger-fade-in > *:nth-child(5) { animation-delay: 400ms; }
   .stagger-fade-in > *:nth-child(6) { animation-delay: 500ms; }
 
+  /* Mobile-first touch utilities */
+  .touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Safe area for iPhone notch */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  @media (max-width: 768px) {
+    .mobile-nav {
+      padding: 1rem 0.75rem;
+    }
+    
+    .mobile-text-lg {
+      font-size: 0.875rem; /* 14px */
+    }
+  }
+
   /* Progress bars */
   .progress-bar {
     position: relative;
