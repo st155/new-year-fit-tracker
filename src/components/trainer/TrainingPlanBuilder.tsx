@@ -163,12 +163,11 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
 
               <div>
                 <Label>Клиент (необязательно)</Label>
-                <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <Select value={selectedClient || undefined} onValueChange={setSelectedClient}>
                   <SelectTrigger>
                     <SelectValue placeholder="Не назначать сейчас" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Не назначать сейчас</SelectItem>
                     {clients.map(client => (
                       <SelectItem key={client.user_id} value={client.user_id}>
                         {client.full_name} (@{client.username})
