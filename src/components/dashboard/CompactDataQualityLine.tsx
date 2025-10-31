@@ -27,7 +27,7 @@ function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
   return (
     <div className="space-y-1">
       {/* Цветная полоса */}
-      <div className="flex h-2 rounded-full overflow-hidden bg-muted/30">
+      <div className="flex h-3 rounded-full overflow-hidden bg-muted/30">
         {zones.map((zone, i) => {
           const width = (zone.count / total) * 100;
           if (width === 0) return null;
@@ -47,9 +47,10 @@ function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
       </div>
       
       {/* Лейблы под полосой */}
-      <div className="flex justify-between text-[10px]">
+      <div className="flex justify-between text-xs gap-2">
         {zones.map((zone, i) => {
           if (zone.count === 0) return null;
+          const percentage = Math.round((zone.count / total) * 100);
           return (
             <div
               key={i}
@@ -57,7 +58,7 @@ function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
               style={{ color: zone.color }}
             >
               <span>{zone.icon}</span>
-              <span className="font-medium">{zone.count}</span>
+              <span className="font-semibold">{zone.count} ({percentage}%)</span>
             </div>
           );
         })}
@@ -147,23 +148,33 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
 
         {/* Мини-график тренда */}
         {history && history.length > 1 ? (
-          <div className="h-[15px] opacity-50">
+          <div className="h-[24px] opacity-70">
             <svg 
               viewBox="0 0 100 20" 
               preserveAspectRatio="none" 
               className="w-full h-full"
             >
+              <defs>
+                <linearGradient id="qualityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={qualityColor} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={qualityColor} stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <polygon
+                points={`0,20 ${generateSparklinePoints(history)} 100,20`}
+                fill="url(#qualityGradient)"
+              />
               <polyline
                 points={generateSparklinePoints(history)}
                 fill="none"
                 stroke={qualityColor}
-                strokeWidth="1.5"
+                strokeWidth="2"
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
           </div>
         ) : (
-          <div className="h-[15px] flex items-center justify-center text-[10px] text-muted-foreground opacity-50">
+          <div className="h-[24px] flex items-center justify-center text-xs text-muted-foreground opacity-50">
             Недостаточно данных
           </div>
         )}
