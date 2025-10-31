@@ -178,12 +178,7 @@ const Index = () => {
     );
   }
 
-  // If trainer - show AI-centric interface
-  if (isTrainer) {
-    console.log('👨‍🏫 [Index] Redirecting to trainer dashboard...');
-    return <TrainerIndexPage />;
-  }
-  
+  // ✅ Trainer redirect handled by RoleBasedRoute wrapper - no need for duplicate check here
   console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
 
   return (
