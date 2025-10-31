@@ -87,7 +87,8 @@ serve(async (req) => {
       mentionedClients = [],
       mentionedNames = [], // Raw names mentioned (for fuzzy matching)
       contextClientId, // Client selected in UI context
-      autoExecute = true // Auto-execute simple actions by default
+      autoExecute = true, // Auto-execute simple actions by default
+      optimisticId // For deduplication of optimistic messages
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -167,27 +168,15 @@ serve(async (req) => {
     let contextData = '';
     let disambiguationNeeded = [];
     
-    // Load ALL active clients for AI context
+    // Load ALL active clients for AI context using RPC to avoid RLS issues
     const { data: allTrainerClients } = await supabaseClient
-      .from('trainer_clients')
-      .select(`
-        client_id,
-        profiles!trainer_clients_client_id_fkey (
-          user_id,
-          username,
-          full_name
-        )
-      `)
-      .eq('trainer_id', user.id)
-      .eq('active', true)
-      .limit(20);
+      .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
 
     if (allTrainerClients && allTrainerClients.length > 0) {
       contextData += '\n\n📋 YOUR ACTIVE CLIENTS (use these names ONLY):\n';
-      for (const tc of allTrainerClients) {
-        const profile = tc.profiles as any;
-        if (profile) {
-          contextData += `- ${profile.full_name} (@${profile.username}) [ID: ${profile.user_id}]\n`;
+      for (const client of allTrainerClients) {
+        if (client.username && client.full_name) {
+          contextData += `- ${client.full_name} (@${client.username}) [ID: ${client.client_id}]\n`;
         }
       }
       contextData += '\n⚠️ CRITICAL: Only use these exact client names in your responses. Never invent fake names like @coach_*, @john_*, @sarah_*.\n';
@@ -860,7 +849,7 @@ IMPORTANT INSTRUCTIONS:
           conversation_id: conversation.id,
           role: 'user',
           content: message,
-          metadata: {}
+          metadata: { optimisticId }
         });
         
         // Save error message
@@ -890,7 +879,7 @@ IMPORTANT INSTRUCTIONS:
           conversation_id: conversation.id,
           role: 'user',
           content: message,
-          metadata: {}
+          metadata: { optimisticId }
         });
         
         // Save error message
@@ -1281,7 +1270,10 @@ IMPORTANT INSTRUCTIONS:
           conversation_id: conversation.id,
           role: 'user',
           content: message,
-          metadata: { mentioned_clients: mentionedClients }
+          metadata: { 
+            mentioned_clients: mentionedClients,
+            optimisticId // Store for deduplication
+          }
         },
         {
           conversation_id: conversation.id,
@@ -1300,7 +1292,10 @@ IMPORTANT INSTRUCTIONS:
         conversation_id: conversation.id,
         role: 'user',
         content: message,
-        metadata: { mentioned_clients: mentionedClients }
+        metadata: { 
+          mentioned_clients: mentionedClients,
+          optimisticId // Store for deduplication
+        }
       });
     }
 

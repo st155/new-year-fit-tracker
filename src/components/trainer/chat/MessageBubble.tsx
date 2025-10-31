@@ -48,6 +48,24 @@ export const MessageBubble = memo(({
   const status = message.metadata?.status;
   const isAutoExecuted = message.role === 'system' && message.metadata?.autoExecuted;
 
+  // Clean debug content from AI messages
+  const cleanContent = (content: string): string => {
+    const lines = content.split('\n');
+    const filteredLines = lines.filter(line => {
+      const trimmed = line.trim().toLowerCase();
+      // Filter out SQL queries and debug information
+      return !trimmed.startsWith('`update_goal') &&
+             !trimmed.startsWith('`add_measurement') &&
+             !trimmed.startsWith('`create_client_goals') &&
+             !trimmed.includes('client_id=') &&
+             !trimmed.includes('measure_unit=') &&
+             !trimmed.includes('goal_name=') &&
+             !trimmed.includes('executing now...') &&
+             trimmed.length > 0; // Remove empty lines
+    });
+    return filteredLines.join('\n').trim();
+  };
+
   // Render clickable client mentions
   const renderMessageContent = (content: string) => {
     if (!content) return null;
@@ -335,7 +353,7 @@ export const MessageBubble = memo(({
       </Avatar>
       <div className="flex-1 min-w-0 max-w-[80%]">
         <div className="bg-muted rounded-lg px-4 py-2">
-          <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(message.content)}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">{renderMessageContent(cleanContent(message.content))}</p>
         </div>
         
         {message.metadata?.needsApproval && actionCount > 0 && (

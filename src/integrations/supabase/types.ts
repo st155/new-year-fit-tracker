@@ -3733,6 +3733,37 @@ export type Database = {
           username: string
         }[]
       }
+      get_trainer_schedule_events: {
+        Args: {
+          p_end_date?: string
+          p_start_date?: string
+          p_trainer_id: string
+        }
+        Returns: {
+          client_avatar_url: string
+          client_full_name: string
+          client_id: string
+          client_user_id: string
+          client_username: string
+          created_at: string
+          description: string
+          end_time: string
+          event_type: string
+          id: string
+          is_cancelled: boolean
+          is_completed: boolean
+          location: string
+          metadata: Json
+          recurrence_rule: string
+          reminder_minutes: number
+          start_time: string
+          title: string
+          trainer_id: string
+          training_plan_id: string
+          training_plan_name: string
+          updated_at: string
+        }[]
+      }
       get_unified_metrics: {
         Args: {
           p_end_date?: string

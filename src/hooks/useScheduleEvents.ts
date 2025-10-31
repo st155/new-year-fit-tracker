@@ -49,12 +49,12 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
           p_trainer_id: user.id,
           p_start_date: startDate?.toISOString(),
           p_end_date: endDate?.toISOString()
-        });
+        }) as { data: any[] | null; error: any };
 
       if (error) throw error;
 
       // Map RPC results to expected format
-      const formattedEvents: ScheduleEvent[] = (data || []).map((event: any) => ({
+      const formattedEvents: ScheduleEvent[] = ((data as any[]) || []).map((event: any) => ({
         id: event.id,
         trainer_id: event.trainer_id,
         client_id: event.client_id,
