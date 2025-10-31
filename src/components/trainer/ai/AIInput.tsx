@@ -34,6 +34,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
   const [mentionedClients, setMentionedClients] = useState<string[]>([]);
   const [mentionSearch, setMentionSearch] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Load clients for @mentions
   useEffect(() => {
@@ -63,6 +64,18 @@ export function AIInput({ selectedClient }: AIInputProps) {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
     }
   }, [input]);
+
+  // Close mentions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mentionsOpen && containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setMentionsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mentionsOpen]);
 
   // Detect @ for mentions
   const handleInputChange = (value: string) => {
@@ -146,25 +159,24 @@ export function AIInput({ selectedClient }: AIInputProps) {
 
   return (
     <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
-      <div className="max-w-4xl mx-auto relative">
+      <div className="max-w-4xl mx-auto relative" ref={containerRef}>
         
-        {/* Mentions Popover */}
-        <Popover open={mentionsOpen} onOpenChange={setMentionsOpen}>
-          <PopoverContent 
-            side="top" 
-            align="start" 
-            className="w-[400px] p-0"
-            onOpenAutoFocus={(e) => e.preventDefault()}
+        {/* Mentions Dropdown */}
+        {mentionsOpen && (
+          <div 
+            className="absolute bottom-full mb-2 left-0 w-[400px] z-50 bg-popover border border-border rounded-lg shadow-lg"
+            style={{ transform: 'translateY(-8px)' }}
           >
             <Command>
               <CommandInput 
-                placeholder="Search clients..." 
+                placeholder="Поиск клиентов..." 
                 value={mentionSearch}
                 onValueChange={setMentionSearch}
+                autoFocus
               />
               <CommandList>
-                <CommandEmpty>No clients found.</CommandEmpty>
-                <CommandGroup heading="Your Clients">
+                <CommandEmpty>Клиенты не найдены.</CommandEmpty>
+                <CommandGroup heading="Ваши клиенты">
                   {filteredClients.map((client) => (
                     <CommandItem
                       key={client.user_id}
@@ -182,8 +194,8 @@ export function AIInput({ selectedClient }: AIInputProps) {
                 </CommandGroup>
               </CommandList>
             </Command>
-          </PopoverContent>
-        </Popover>
+          </div>
+        )}
         
         {/* Input area */}
         <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-2 focus-within:border-primary/50 transition-colors">

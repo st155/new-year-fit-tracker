@@ -8,7 +8,7 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
-import { AIDrawer } from "@/components/trainer/ai";
+import { AIDrawer, AIEmbeddedChat } from "@/components/trainer/ai";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
 import { ClientsList } from "@/components/trainer/ClientsList";
@@ -237,8 +237,7 @@ function TrainerDashboardContent() {
             <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="ai-hub" 
-                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white rounded-lg transition-all"
-                onClick={() => setAiDrawerOpen(true)}
+                className="gap-1 whitespace-nowrap flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 rounded-lg transition-all font-medium shadow-lg shadow-purple-500/25"
               >
                 <Sparkles className="h-4 w-4" />
                 AI Hub
@@ -286,6 +285,10 @@ function TrainerDashboardContent() {
                 Настройки
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ai-hub" className="h-[calc(100vh-200px)]">
+              <AIEmbeddedChat selectedClient={selectedClient} />
+            </TabsContent>
 
             <TabsContent value="clients">
               <ClientsList 

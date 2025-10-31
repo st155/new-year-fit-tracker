@@ -1,4 +1,5 @@
-import { Plus, MessageSquare, Trash2, Settings as SettingsIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, MessageSquare, Trash2, Settings as SettingsIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,14 @@ export function AIThreadSidebar() {
     startNewConversation,
     deleteConversation
   } = useAIChat();
+  const [loadingConversation, setLoadingConversation] = useState<string | null>(null);
+
+  const handleSelectConversation = async (convId: string) => {
+    setLoadingConversation(convId);
+    console.log('🔄 Switching to conversation:', convId);
+    await selectConversation(convId);
+    setLoadingConversation(null);
+  };
 
   return (
     <div className="w-[280px] border-r bg-muted/30 flex flex-col">
@@ -61,16 +70,20 @@ export function AIThreadSidebar() {
                   )}
                 >
                   <button
-                    onClick={() => {
-                      console.log('🔄 Switching to conversation:', conv.id);
-                      selectConversation(conv.id);
-                    }}
+                    onClick={() => handleSelectConversation(conv.id)}
                     className={cn(
-                      "w-full text-left px-3 py-2.5 rounded-lg transition-colors",
+                      "w-full text-left px-3 py-2.5 rounded-lg transition-colors relative",
                       "hover:bg-accent/50",
-                      isActive && "bg-accent"
+                      isActive && "bg-accent",
+                      loadingConversation === conv.id && "bg-accent/50"
                     )}
                   >
+                    {/* Loading spinner */}
+                    {loadingConversation === conv.id && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <MessageSquare className={cn(
                         "h-4 w-4 shrink-0",
