@@ -7,7 +7,7 @@ import { Sparkles, History, X, Filter, FileDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AIChatWindow } from './AIChatWindow';
+import { ModernAIChatWindow } from './chat/ModernAIChatWindow';
 import { AIConversationList } from './AIConversationList';
 import { ConversationSearch } from './ConversationSearch';
 import { useAIConversations } from '@/hooks/useAIConversations';
@@ -283,7 +283,7 @@ export const TrainerAIHub = ({ selectedClient }: TrainerAIHubProps) => {
           minHeight: isMobile ? '400px' : '600px' 
         }}
       >
-        <AIChatWindow
+        <ModernAIChatWindow
           messages={messages}
           currentConversation={currentConversation}
           selectedClient={localSelectedClient}
