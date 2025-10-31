@@ -10,13 +10,14 @@ interface WeeklySleepChartProps {
 
 function CustomTooltip({ active, payload }: any) {
   if (active && payload && payload.length) {
+    const value = payload[0].value;
     return (
       <div className="bg-card border border-border rounded-lg p-2 shadow-lg">
         <p className="text-xs text-muted-foreground">
           {format(new Date(payload[0].payload.date), 'MMM dd')}
         </p>
         <p className="text-sm font-semibold text-chart-2">
-          {payload[0].value.toFixed(1)}h sleep
+          {value.toFixed(1)}% sleep
         </p>
       </div>
     );
@@ -27,9 +28,17 @@ function CustomTooltip({ active, payload }: any) {
 export function WeeklySleepChart({ userId, height = 60 }: WeeklySleepChartProps) {
   const { data: sleepData = [], isLoading } = useUserWeeklySleep(userId);
 
-  if (isLoading || sleepData.length === 0) {
+  if (isLoading) {
     return (
       <div className="w-full bg-muted/20 rounded animate-pulse" style={{ height }} />
+    );
+  }
+
+  if (sleepData.length === 0) {
+    return (
+      <div className="flex items-center justify-center bg-muted/10 rounded text-xs text-muted-foreground" style={{ height }}>
+        No data available
+      </div>
     );
   }
 
@@ -37,7 +46,7 @@ export function WeeklySleepChart({ userId, height = 60 }: WeeklySleepChartProps)
   const min = Math.min(...values);
   const max = Math.max(...values);
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  const maxValue = Math.max(...values, 10);
+  const maxValue = Math.max(...values, 100);
 
   return (
     <div>
@@ -61,7 +70,7 @@ export function WeeklySleepChart({ userId, height = 60 }: WeeklySleepChartProps)
           />
         </AreaChart>
       </ResponsiveContainer>
-      <MetricMiniStats min={min} avg={avg} max={max} unit="h" decimals={1} />
+      <MetricMiniStats min={min} avg={avg} max={max} unit="%" decimals={1} />
     </div>
   );
 }

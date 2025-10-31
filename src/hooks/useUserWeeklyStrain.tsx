@@ -16,7 +16,8 @@ export function useUserWeeklyStrain(userId: string | undefined) {
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
 
-      const { data, error } = await supabase
+      // Try Day Strain first (WHOOP)
+      const { data: dayStrainData, error: dayError } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
@@ -25,9 +26,26 @@ export function useUserWeeklyStrain(userId: string | undefined) {
         .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date', { ascending: true });
 
-      if (error) throw error;
+      if (!dayError && dayStrainData && dayStrainData.length > 0) {
+        return dayStrainData.map(item => ({
+          date: item.measurement_date,
+          value: item.value
+        })) as StrainDataPoint[];
+      }
 
-      return (data || []).map(item => ({
+      // Fallback to Workout Strain
+      const { data: workoutStrainData, error: workoutError } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Workout Strain')
+        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
+        .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .order('measurement_date', { ascending: true });
+
+      if (workoutError) return [];
+
+      return (workoutStrainData || []).map(item => ({
         date: item.measurement_date,
         value: item.value
       })) as StrainDataPoint[];

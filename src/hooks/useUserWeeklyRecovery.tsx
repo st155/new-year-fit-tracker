@@ -16,6 +16,7 @@ export function useUserWeeklyRecovery(userId: string | undefined) {
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
 
+      // Try Recovery Score (WHOOP, Oura)
       const { data, error } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
@@ -25,7 +26,7 @@ export function useUserWeeklyRecovery(userId: string | undefined) {
         .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) return [];
 
       return (data || []).map(item => ({
         date: item.measurement_date,

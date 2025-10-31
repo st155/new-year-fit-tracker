@@ -36,9 +36,17 @@ function CustomTooltip({ active, payload }: any) {
 export function WeeklyStrainChart({ userId, height = 60 }: WeeklyStrainChartProps) {
   const { data: strainData = [], isLoading } = useUserWeeklyStrain(userId);
 
-  if (isLoading || strainData.length === 0) {
+  if (isLoading) {
     return (
       <div className="w-full bg-muted/20 rounded animate-pulse" style={{ height }} />
+    );
+  }
+
+  if (strainData.length === 0) {
+    return (
+      <div className="flex items-center justify-center bg-muted/10 rounded text-xs text-muted-foreground" style={{ height }}>
+        No data available
+      </div>
     );
   }
 

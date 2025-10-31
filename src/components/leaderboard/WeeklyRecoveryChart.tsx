@@ -27,9 +27,17 @@ function CustomTooltip({ active, payload }: any) {
 export function WeeklyRecoveryChart({ userId, height = 60 }: WeeklyRecoveryChartProps) {
   const { data: recoveryData = [], isLoading } = useUserWeeklyRecovery(userId);
 
-  if (isLoading || recoveryData.length === 0) {
+  if (isLoading) {
     return (
       <div className="w-full bg-muted/20 rounded animate-pulse" style={{ height }} />
+    );
+  }
+
+  if (recoveryData.length === 0) {
+    return (
+      <div className="flex items-center justify-center bg-muted/10 rounded text-xs text-muted-foreground" style={{ height }}>
+        No data available
+      </div>
     );
   }
 

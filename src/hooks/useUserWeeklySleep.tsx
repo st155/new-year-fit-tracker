@@ -16,7 +16,8 @@ export function useUserWeeklySleep(userId: string | undefined) {
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
 
-      const { data, error } = await supabase
+      // Try Sleep Performance first (WHOOP, Oura - percentage)
+      const { data: performanceData, error: perfError } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
@@ -25,11 +26,29 @@ export function useUserWeeklySleep(userId: string | undefined) {
         .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date', { ascending: true });
 
-      if (error) throw error;
+      if (!perfError && performanceData && performanceData.length > 0) {
+        return performanceData.map(item => ({
+          date: item.measurement_date,
+          value: item.value
+        })) as SleepDataPoint[];
+      }
 
-      return (data || []).map(item => ({
+      // Fallback to Sleep Duration (ULTRAHUMAN, Garmin - hours)
+      const { data: durationData, error: durError } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Sleep Duration')
+        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
+        .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .order('measurement_date', { ascending: true });
+
+      if (durError) throw durError;
+
+      // Convert hours to percentage (8 hours = 100%)
+      return (durationData || []).map(item => ({
         date: item.measurement_date,
-        value: item.value
+        value: Math.min((item.value / 8) * 100, 100)
       })) as SleepDataPoint[];
     },
     enabled: !!userId,
