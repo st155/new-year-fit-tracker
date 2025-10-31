@@ -4,20 +4,27 @@ import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/lib/challenge-s
 
 export const leaderboardQueryKeys = {
   all: ['leaderboard'] as const,
-  list: (limit?: number) => [...leaderboardQueryKeys.all, 'list', limit] as const,
+  list: (limit?: number, timePeriod?: string) => [...leaderboardQueryKeys.all, 'list', limit, timePeriod] as const,
 };
 
 export function useLeaderboardQuery(
   userId: string | undefined,
-  options?: { limit?: number }
+  options?: { limit?: number; timePeriod?: 'overall' | 'week' | 'month' }
 ) {
   return useQuery({
-    queryKey: leaderboardQueryKeys.list(options?.limit),
+    queryKey: leaderboardQueryKeys.list(options?.limit, options?.timePeriod),
     queryFn: async () => {
       if (!userId) return [];
 
+      const timePeriod = options?.timePeriod || 'overall';
+      const viewName = timePeriod === 'week' 
+        ? 'challenge_leaderboard_week'
+        : timePeriod === 'month'
+        ? 'challenge_leaderboard_month'
+        : 'challenge_leaderboard_v2';
+
       const { data: viewData, error } = await supabase
-        .from('challenge_leaderboard_v2' as any)
+        .from(viewName as any)
         .select('*')
         .order('total_points', { ascending: false })
         .limit(options?.limit || 100);

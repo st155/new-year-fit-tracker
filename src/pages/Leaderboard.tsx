@@ -20,10 +20,13 @@ import { getUserLevel } from "@/lib/gamification";
 
 const Leaderboard = () => {
   const { t } = useTranslation();
-  const { leaderboard, loading, userEntry } = useLeaderboard();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeTab, setActiveTab] = useState('overall');
+  
+  // Map activeTab to timePeriod for the hook
+  const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
+  const { leaderboard, loading, userEntry } = useLeaderboard({ timePeriod });
 
   if (loading) {
     return <PageLoader message="Loading leaderboard..." />;

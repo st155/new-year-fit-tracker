@@ -7,18 +7,19 @@ interface UseLeaderboardOptions {
   limit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  timePeriod?: 'overall' | 'week' | 'month';
 }
 
 export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   const { user } = useAuth();
-  const { limit, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall' } = options;
   
   const { 
     data: leaderboard = [], 
     isLoading: loading, 
     error: queryError,
     refetch 
-  } = useLeaderboardQuery(user?.id, { limit });
+  } = useLeaderboardQuery(user?.id, { limit, timePeriod });
 
   // Auto-refresh interval
   useEffect(() => {

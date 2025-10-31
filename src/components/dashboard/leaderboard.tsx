@@ -15,7 +15,7 @@ import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
 export function Leaderboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { leaderboard, loading } = useLeaderboard({ limit: 5 });
+  const { leaderboard, loading } = useLeaderboard({ limit: 5, timePeriod: 'overall' });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
 
