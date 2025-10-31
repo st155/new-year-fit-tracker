@@ -4,7 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon, Info } from 'lucide-react';
 import { widgetKeys, type Widget } from '@/hooks/useWidgetsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -111,6 +112,124 @@ const getSourceDisplayName = (source: string): string => {
   return nameMap[source.toLowerCase()] || source;
 };
 
+// Определение цвета рамки по качеству значения метрики
+const getMetricQualityColor = (metricName: string, value: number): string | null => {
+  const name = metricName.toLowerCase();
+  
+  // Recovery Score: <33 = красный, 33-66 = желтый, >66 = зеленый
+  if (name.includes('recovery')) {
+    if (value < 33) return '#ef4444';
+    if (value < 67) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Sleep Efficiency: <75 = красный, 75-85 = желтый, ≥85 = зеленый
+  if (name.includes('sleep') && name.includes('efficiency')) {
+    if (value < 75) return '#ef4444';
+    if (value < 85) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Sleep Duration: <6ч = красный, 6-7ч = желтый, ≥7ч = зеленый
+  if (name.includes('sleep') && name.includes('duration')) {
+    if (value < 6) return '#ef4444';
+    if (value < 7) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Resting HR: <40 или >90 = красный, 50-80 = зеленый
+  if (name.includes('resting') && name.includes('hr')) {
+    if (value < 40 || value > 90) return '#ef4444';
+    if (value < 50 || value > 80) return '#eab308';
+    return '#10b981';
+  }
+  
+  // HRV: >60 = зеленый, 40-60 = желтый, <40 = красный
+  if (name.includes('hrv')) {
+    if (value < 40) return '#ef4444';
+    if (value < 60) return '#eab308';
+    return '#10b981';
+  }
+  
+  // Day Strain: <10 = желтый (мало), 10-18 = зеленый (норма), >18 = желтый (много)
+  if (name.includes('strain') && !name.includes('workout')) {
+    if (value < 10 || value > 18) return '#eab308';
+    return '#10b981';
+  }
+  
+  return null;
+};
+
+// Получение текстового индикатора качества метрики
+const getQualityLabel = (metricName: string, value: number): { icon: string; text: string; color: string } | null => {
+  const name = metricName.toLowerCase();
+  
+  if (name.includes('recovery')) {
+    if (value < 33) return { icon: '🔴', text: 'Низкое восстановление', color: '#ef4444' };
+    if (value < 67) return { icon: '⚠️', text: 'Среднее', color: '#eab308' };
+    return { icon: '✅', text: 'Отличное', color: '#10b981' };
+  }
+  
+  if (name.includes('sleep') && name.includes('efficiency')) {
+    if (value < 75) return { icon: '😴', text: 'Плохой сон', color: '#ef4444' };
+    if (value < 85) return { icon: '😐', text: 'Норма', color: '#eab308' };
+    if (value < 95) return { icon: '😊', text: 'Хороший сон', color: '#10b981' };
+    return { icon: '🌟', text: 'Отличный сон', color: '#10b981' };
+  }
+  
+  if (name.includes('sleep') && name.includes('duration')) {
+    if (value < 6) return { icon: '😴', text: 'Мало сна', color: '#ef4444' };
+    if (value < 7) return { icon: '😐', text: 'Недостаточно', color: '#eab308' };
+    if (value < 8) return { icon: '😊', text: 'Хорошо', color: '#10b981' };
+    return { icon: '🌟', text: 'Отлично', color: '#10b981' };
+  }
+  
+  if (name.includes('hrv')) {
+    if (value < 40) return { icon: '🔴', text: 'Низкое', color: '#ef4444' };
+    if (value < 60) return { icon: '⚠️', text: 'Среднее', color: '#eab308' };
+    return { icon: '✅', text: 'Отличное', color: '#10b981' };
+  }
+  
+  if (name.includes('strain') && !name.includes('workout')) {
+    if (value < 10) return { icon: '⚠️', text: 'Низкая нагрузка', color: '#eab308' };
+    if (value <= 18) return { icon: '✅', text: 'Норма', color: '#10b981' };
+    return { icon: '⚠️', text: 'Высокая нагрузка', color: '#eab308' };
+  }
+  
+  return null;
+};
+
+// Получение пояснения для метрики
+const getMetricTooltip = (metricName: string): string | null => {
+  const name = metricName.toLowerCase();
+  
+  if (name.includes('recovery')) {
+    return 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление';
+  }
+  
+  if (name.includes('sleep') && name.includes('efficiency')) {
+    return 'Процент времени, проведенного во сне от времени в постели. >85% = отлично, 75-85% = норма, <75% = плохо';
+  }
+  
+  if (name.includes('sleep') && name.includes('duration')) {
+    return 'Продолжительность сна. Рекомендуется 7-9 часов для взрослых';
+  }
+  
+  if (name.includes('hrv')) {
+    return 'Вариабельность сердечного ритма. Индикатор восстановления и адаптации к стрессу. Чем выше - тем лучше';
+  }
+  
+  if (name.includes('strain') && !name.includes('workout')) {
+    return 'Общая нагрузка за день. 10-18 = оптимальная зона';
+  }
+  
+  if (name.includes('resting') && name.includes('hr')) {
+    return 'Пульс в покое. Норма для взрослых: 50-80 уд/мин';
+  }
+  
+  return null;
+};
+
 export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData, sparklineData }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -176,12 +295,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               const isStale = daysDiff >= 3;
               const isWarning = daysDiff === 2;
               
+              const qualityColor = getMetricQualityColor(metricName, src.value);
+              
               return (
                 <div 
                   key={idx} 
-                  className="flex items-center justify-between p-2 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between p-2 rounded-lg transition-colors"
                   style={{
-                    borderLeft: `3px solid ${color}`,
+                    borderLeft: `3px solid ${qualityColor || color}`,
+                    backgroundColor: qualityColor ? `${qualityColor}10` : 'hsl(var(--accent) / 0.3)',
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1">
@@ -276,6 +398,11 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
   
+  // Качество метрики (цвет рамки по значению)
+  const qualityColor = getMetricQualityColor(metricName, data.value);
+  const qualityLabel = getQualityLabel(metricName, data.value);
+  const metricTooltip = getMetricTooltip(metricName);
+  
   // Проверка на устаревшие данные с двумя уровнями (на основе дней)
   const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const daysDiff = (() => {
@@ -304,7 +431,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: isDataStale ? '#ef4444' : isDataWarning ? '#eab308' : (trendColor || `${color}30`),
+        borderColor: isDataStale 
+          ? '#ef4444' // Приоритет 1: устаревшие данные = красный
+          : isDataWarning 
+            ? '#eab308' // Приоритет 2: предупреждение о свежести = желтый
+            : qualityColor // Приоритет 3: качество значения метрики
+              ? qualityColor 
+              : (trendColor || `${color}30`), // Приоритет 4: тренд или дефолтный цвет
       }}
     >
       <CardContent className="p-3 sm:p-6">
@@ -346,9 +479,23 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         
         <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="flex-1">
-            <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
-              {metricName}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
+                {metricName}
+              </p>
+              {metricTooltip && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">{metricTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -365,15 +512,42 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
         </div>
 
-        <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
-          <Icon className="h-4 w-4 sm:h-6 sm:w-6" style={{ color }} />
-          <span className="text-xl sm:text-3xl font-bold" style={{ color }}>
-            {formatValue(data.value, metricName, data.unit)}
-          </span>
-          {data.unit && (
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {data.unit}
+        <div className="space-y-2">
+          <div className="flex items-baseline gap-1 sm:gap-2">
+            <Icon className="h-4 w-4 sm:h-6 sm:w-6" style={{ color }} />
+            <span className="text-xl sm:text-3xl font-bold" style={{ color }}>
+              {formatValue(data.value, metricName, data.unit)}
             </span>
+            {data.unit && (
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                {data.unit}
+              </span>
+            )}
+          </div>
+          
+          {/* Текстовый индикатор качества */}
+          {qualityLabel && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs">{qualityLabel.icon}</span>
+              <span className="text-xs font-medium" style={{ color: qualityLabel.color }}>
+                {qualityLabel.text}
+              </span>
+            </div>
+          )}
+          
+          {/* Прогресс-бар для ключевых метрик */}
+          {(metricName === 'Recovery Score' || 
+            (metricName.includes('Sleep') && metricName.includes('Efficiency')) ||
+            metricName.includes('HRV')) && (
+            <Progress 
+              value={metricName === 'Recovery Score' ? data.value : 
+                     metricName.includes('HRV') ? Math.min(100, (data.value / 100) * 100) :
+                     data.value} 
+              className="h-1.5"
+              variant={qualityColor === '#10b981' ? 'success' : 
+                      qualityColor === '#eab308' ? 'warning' : 
+                      qualityColor === '#ef4444' ? 'danger' : 'default'}
+            />
           )}
         </div>
 
