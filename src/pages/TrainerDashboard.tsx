@@ -1,28 +1,20 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, MessageSquare, Sparkles, Home, Trophy, TrendingUp, Calendar } from "lucide-react";
+import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { GlobalClientSearch } from "@/components/trainer/GlobalClientSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
-import { TrainerOverview } from "@/components/trainer/TrainerOverview";
-import { ClientGoalsManager } from "@/components/trainer/ClientGoalsManager";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
-import { TrainerAIHub } from "@/components/trainer/TrainerAIHub";
+import { AIDrawer } from "@/components/trainer/ai";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
-import { ClientTasksManager } from "@/components/trainer/ClientTasksManager";
-import { TrainerChat } from "@/components/trainer/TrainerChat";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
-import { AIQuickActionsPanel } from "@/components/trainer/AIQuickActionsPanel";
 import { ClientsList } from "@/components/trainer/ClientsList";
-import { ClientAliasesManager } from "@/components/trainer/ClientAliasesManager";
 import { TrainerCalendar } from "@/components/trainer/calendar/TrainerCalendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrainerSettings } from "@/components/trainer/settings/TrainerSettings";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { PageLoader } from "@/components/ui/page-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,9 +42,10 @@ function TrainerDashboardContent() {
   const [clients, setClients] = useState<TrainerClient[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'ai-hub');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'clients');
   const [previousTab, setPreviousTab] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
 
   console.log('👔 [TrainerDashboard] Render', {
     timestamp: new Date().toISOString(),
@@ -110,9 +103,7 @@ function TrainerDashboardContent() {
     if (clientId && clients.length > 0) {
       const client = clients.find(c => c.user_id === clientId);
       if (client) {
-        // Set navigation source based on tab
-        const source = tab === 'ai-hub' ? { type: 'ai-hub' as const } : { type: 'clients' as const };
-        setSelectedClient(client, source);
+        setSelectedClient(client, { type: 'clients' as const });
       }
     }
   }, [searchParams, clients]);
@@ -158,7 +149,7 @@ function TrainerDashboardContent() {
 
   const handleBackToList = () => {
     setSelectedClient(null);
-    const returnTab = previousTab || 'overview';
+    const returnTab = previousTab || 'clients';
     setSearchParams({ tab: returnTab });
     setActiveTab(returnTab);
     setPreviousTab('');
@@ -184,29 +175,21 @@ function TrainerDashboardContent() {
   ];
 
   const tabIcons: Record<string, JSX.Element> = {
-    'ai-hub': <Sparkles className="h-4 w-4" />,
-    'overview': <Home className="h-4 w-4" />,
     'clients': <Users className="h-4 w-4" />,
-    'challenges': <Trophy className="h-4 w-4" />,
     'plans': <TrendingUp className="h-4 w-4" />,
     'calendar': <Calendar className="h-4 w-4" />,
-    'tasks': <Target className="h-4 w-4" />,
-    'chat': <MessageSquare className="h-4 w-4" />,
-    'goals': <Target className="h-4 w-4" />,
+    'challenges': <Trophy className="h-4 w-4" />,
     'analytics': <BarChart3 className="h-4 w-4" />,
+    'settings': <Settings className="h-4 w-4" />,
   };
 
   const tabLabels: Record<string, string> = {
-    'ai-hub': 'AI Ассистент',
-    'overview': 'Обзор',
     'clients': 'Клиенты',
-    'challenges': 'Челленджи',
     'plans': 'Планы',
     'calendar': 'Календарь',
-    'tasks': 'Задачи',
-    'chat': 'Чат',
-    'goals': 'Цели',
+    'challenges': 'Челленджи',
     'analytics': 'Аналитика',
+    'settings': 'Настройки',
   };
 
   if (!selectedClient) {
@@ -233,96 +216,75 @@ function TrainerDashboardContent() {
         <div className="flex items-center justify-between mb-4">
           <NavigationBreadcrumbs items={breadcrumbs} />
           <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setAiDrawerOpen(true)}
+              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Assistant
+            </Button>
             <NotificationBell />
           </div>
         </div>
         
         <GlobalClientSearch open={searchOpen} onOpenChange={setSearchOpen} />
+        <AIDrawer 
+          open={aiDrawerOpen} 
+          onOpenChange={setAiDrawerOpen}
+          selectedClient={selectedClient}
+        />
         
-        {selectedClient && activeTab !== 'ai-hub' ? (
+        {selectedClient ? (
           <ClientDetailView 
             client={selectedClient} 
             onBack={handleBackToList} 
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-11 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
-              <TabsTrigger 
-                value="ai-hub" 
-                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                <Sparkles className="h-4 w-4" />
-                AI Hub
-              </TabsTrigger>
-              <TabsTrigger 
-                value="overview" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                Обзор
-              </TabsTrigger>
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-6 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="clients" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
+                <Users className="h-4 w-4" />
                 Клиенты
               </TabsTrigger>
               <TabsTrigger 
-                value="challenges" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                Челленджи
-              </TabsTrigger>
-              <TabsTrigger 
                 value="plans" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
+                <TrendingUp className="h-4 w-4" />
                 Планы
               </TabsTrigger>
               <TabsTrigger 
                 value="calendar" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
+                <Calendar className="h-4 w-4" />
                 Календарь
               </TabsTrigger>
               <TabsTrigger 
-                value="tasks"
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                value="challenges" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
-                Задачи
-              </TabsTrigger>
-              <TabsTrigger 
-                value="chat" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                Чат
-              </TabsTrigger>
-              <TabsTrigger 
-                value="goals" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
-              >
-                Цели
+                <Trophy className="h-4 w-4" />
+                Челленджи
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
+                <BarChart3 className="h-4 w-4" />
                 Аналитика
               </TabsTrigger>
               <TabsTrigger 
-                value="aliases" 
-                className="whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+                value="settings" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
-                Псевдонимы
+                <Settings className="h-4 w-4" />
+                Настройки
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="ai-hub">
-              <TrainerAIHub selectedClient={selectedClient} />
-            </TabsContent>
-
-            <TabsContent value="overview">
-              <TrainerOverview onClientSelect={handleClientSelect} />
-            </TabsContent>
 
             <TabsContent value="clients">
               <ClientsList 
@@ -365,34 +327,16 @@ function TrainerDashboardContent() {
               <TrainerCalendar />
             </TabsContent>
 
-            <TabsContent value="tasks">
-              <ClientTasksManager />
-            </TabsContent>
-
-            <TabsContent value="chat">
-              <TrainerChat />
-            </TabsContent>
-
-            <TabsContent value="goals">
-              <ClientGoalsManager 
-                clients={clients}
-                selectedClient={selectedClient as any}
-                onSelectClient={(client) => setSelectedClient(client, { type: 'goals' })}
-              />
-            </TabsContent>
-
             <TabsContent value="analytics">
               <TrainerAnalytics />
             </TabsContent>
 
-            <TabsContent value="aliases">
-              <ClientAliasesManager />
+            <TabsContent value="settings">
+              <TrainerSettings />
             </TabsContent>
           </Tabs>
         )}
       </div>
-      
-      <AIQuickActionsPanel />
     </div>
   );
 }

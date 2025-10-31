@@ -1,11 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrainerAIWidget } from '@/components/trainer/TrainerAIWidget';
-import { AIQuickActionsPanel } from '@/components/trainer/AIQuickActionsPanel';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard, Dumbbell } from 'lucide-react';
+import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard, Dumbbell, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,36 +109,41 @@ export default function TrainerIndexPage() {
           </Button>
         </div>
 
-        {/* Hero с AI */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Главный AI Widget - занимает 2/3 */}
-          <div className="lg:col-span-2">
-            <TrainerAIWidget />
-          </div>
+        {/* Hero Card */}
+        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              AI Assistant
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Используйте AI ассистента для управления клиентами, целями и тренировочными планами
+            </p>
+            <Button
+              onClick={() => navigate('/trainer-dashboard')}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Открыть AI кабинет
+            </Button>
+          </CardContent>
+        </Card>
 
-          {/* Quick Stats - 1/3 */}
-          <div className="space-y-4">
-            {stats.map((stat, idx) => (
-              <Card key={idx} className="relative overflow-hidden">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-                  <div className={stat.color}>{stat.icon}</div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {pendingActions.length > 0 && (
-              <Button
-                className="w-full"
-                onClick={() => navigate('/trainer-dashboard?tab=ai-hub')}
-              >
-                Просмотреть действия ({pendingActions.length})
-              </Button>
-            )}
-          </div>
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, idx) => (
+            <Card key={idx} className="relative overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                <div className={stat.color}>{stat.icon}</div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Быстрый доступ к разделам */}
@@ -150,7 +152,7 @@ export default function TrainerIndexPage() {
             <CardTitle>Быстрый доступ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Button
                 variant="outline"
                 className="h-20 flex flex-col gap-2"
@@ -158,14 +160,6 @@ export default function TrainerIndexPage() {
               >
                 <Users className="h-5 w-5" />
                 <span className="text-sm">Клиенты</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col gap-2"
-                onClick={() => navigate('/trainer-dashboard?tab=goals')}
-              >
-                <Target className="h-5 w-5" />
-                <span className="text-sm">Цели</span>
               </Button>
               <Button
                 variant="outline"
@@ -195,8 +189,6 @@ export default function TrainerIndexPage() {
           </CardContent>
         </Card>
       </div>
-      
-      <AIQuickActionsPanel />
     </div>
   );
 }
