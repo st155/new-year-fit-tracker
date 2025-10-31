@@ -3422,6 +3422,7 @@ export type Database = {
           avg_strain: number | null
           challenge_id: string | null
           full_name: string | null
+          id: string | null
           last_activity_date: string | null
           streak_days: number | null
           total_active_calories: number | null
@@ -3430,22 +3431,7 @@ export type Database = {
           user_id: string | null
           username: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "challenge_participants_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "challenges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenge_participants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       challenge_progress: {
         Row: {
