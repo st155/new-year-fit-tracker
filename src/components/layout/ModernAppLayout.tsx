@@ -3,7 +3,7 @@ import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { BottomNavigation } from "@/components/navigation/BottomNavigation";
 import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/primitive";
 
 interface ModernAppLayoutProps {
   children: ReactNode;

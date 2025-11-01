@@ -10,7 +10,7 @@ import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import { TrainerNotifications } from "@/components/trainer/notifications/TrainerNotifications";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/primitive";
 import {
   DropdownMenu,
   DropdownMenuContent,

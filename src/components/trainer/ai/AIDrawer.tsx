@@ -6,7 +6,7 @@ import { AIMessageList } from './AIMessageList';
 import { AIInput } from './AIInput';
 import { AIThreadSidebar } from './AIThreadSidebar';
 import { AIChatProvider } from './AIChatProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/primitive';
 
 interface AIDrawerProps {
   open: boolean;

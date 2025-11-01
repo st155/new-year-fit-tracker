@@ -15,7 +15,7 @@ import { useClientContext } from '@/contexts/ClientContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MentionAutocomplete, ClientSuggestion } from './MentionAutocomplete';
 import { ClientDisambiguationModal } from './ClientDisambiguationModal';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/primitive';
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 interface AIChatWindowProps {
