@@ -1,5 +1,6 @@
 export { useUnifiedMetricsQuery, metricsQueryKeys } from './useUnifiedMetricsQuery';
 export type { UnifiedMetric } from './useUnifiedMetricsQuery';
+export type { MetricWithConfidence } from '@/lib/data-quality';
 export { useLatestMetrics, useDeviceMetrics } from './useLatestMetrics';
 export type { DeviceFilter } from './useLatestMetrics';
 export { useLatestMetric } from './useLatestMetric';

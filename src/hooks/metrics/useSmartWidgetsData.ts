@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ConfidenceScorer, ConflictResolver, ResolutionStrategy } from '@/lib/data-quality';
 import { widgetKeys, type Widget } from '@/hooks/useWidgetsQuery';
 import { getAliasSet, METRIC_ALIASES } from '@/lib/metric-aliases';
 
@@ -8,30 +9,39 @@ export interface SmartWidgetData {
   unit: string;
   measurement_date: string; // YYYY-MM-DD
   source: string;           // actual selected source
-  confidence?: number;      // from client_unified_metrics.confidence_score if available
+  confidence_score?: number; // V2: confidence score from conflict resolution
 }
 
 interface UseSmartWidgetsDataResult {
   data: Map<string, SmartWidgetData>; // key: widget.id
   ages: Map<string, number>;          // key: widget.id -> age in hours
+  confidenceMap: Map<string, number>; // V2: key: widget.id -> confidence score
   isLoading: boolean;
   error: any;
 }
 
-// Compare two metric rows to pick the best one
-// Preference: newer measurement_date -> lower priority -> newer created_at
-const isBetter = (a: any, b: any) => {
-  if (!b) return true;
-  const aDate = new Date(a.measurement_date).getTime();
-  const bDate = new Date(b.measurement_date).getTime();
-  if (aDate !== bDate) return aDate > bDate;
-  const aPr = a.priority ?? Number.MAX_SAFE_INTEGER;
-  const bPr = b.priority ?? Number.MAX_SAFE_INTEGER;
-  if (aPr !== bPr) return aPr < bPr;
-  const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
-  const bCreated = b.created_at ? new Date(b.created_at).getTime() : 0;
-  return aCreated > bCreated;
-};
+// Helper to select resolution strategy based on metric name
+function selectStrategyForMetric(metricName: string): ResolutionStrategy {
+  const lower = metricName.toLowerCase();
+  
+  if (lower.includes('weight') || lower.includes('body_fat') || lower.includes('muscle')) {
+    return ResolutionStrategy.HIGHEST_PRIORITY;
+  }
+  
+  if (lower.includes('heart_rate') || lower.includes('hrv') || lower.includes('steps')) {
+    return ResolutionStrategy.AVERAGE;
+  }
+  
+  if (lower.includes('sleep')) {
+    return ResolutionStrategy.HIGHEST_CONFIDENCE;
+  }
+  
+  if (lower.includes('manual')) {
+    return ResolutionStrategy.MANUAL_OVERRIDE;
+  }
+  
+  return ResolutionStrategy.HIGHEST_CONFIDENCE;
+}
 
 export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[]): UseSmartWidgetsDataResult {
   const query = useQuery({
@@ -56,7 +66,7 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
       // Single query: all needed fields, all sources
       const { data, error } = await supabase
         .from('unified_metrics')
-        .select('metric_name, source, value, unit, measurement_date, created_at, priority, confidence_score')
+        .select('id, metric_name, source, value, unit, measurement_date, created_at, priority, confidence_score')
         .eq('user_id', userId)
         .in('metric_name', metricNames)
         .gte('measurement_date', from)
@@ -68,65 +78,90 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
       if (error) throw error;
       const rows = data || [];
 
-      // For each widget, pick best row among its metric name and aliases
+      // V2: For each widget, use conflict resolution to pick best data point
       const result = new Map<string, SmartWidgetData>();
       const ages = new Map<string, number>();
+      const confidenceMap = new Map<string, number>();
 
       // Precompute acceptable names per widget
       const acceptableByWidget = new Map<string, Set<string>>();
       for (const w of widgets) acceptableByWidget.set(w.id, getAliasSet(w.metric_name));
 
-      // Pick best per widget
+      // Pick best per widget using V2 conflict resolution
       for (const w of widgets) {
         const acceptable = acceptableByWidget.get(w.id)!;
-        let best: any | null = null;
-        for (const row of rows) {
-          if (!acceptable.has(row.metric_name)) continue;
-          if (isBetter(row, best)) best = row;
-        }
+        const candidates = rows.filter(row => acceptable.has(row.metric_name));
         
-        // Fallback for Max Heart Rate from daily_health_summary
-        if (!best && acceptable.has('Max Heart Rate')) {
-          const today = new Date().toISOString().split('T')[0];
-          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-          
-          const { data: summaryData } = await supabase
-            .from('daily_health_summary')
-            .select('heart_rate_max, date')
-            .eq('user_id', userId)
-            .in('date', [today, yesterday])
-            .order('date', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          if (summaryData && summaryData.heart_rate_max) {
-            best = {
-              value: summaryData.heart_rate_max,
-              unit: 'bpm',
-              measurement_date: summaryData.date,
-              source: 'terra',
-              created_at: new Date().toISOString(),
-              priority: 50,
-            };
+        if (candidates.length === 0) {
+          // Fallback for Max Heart Rate from daily_health_summary
+          if (acceptable.has('Max Heart Rate')) {
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            const { data: summaryData } = await supabase
+              .from('daily_health_summary')
+              .select('heart_rate_max, date')
+              .eq('user_id', userId)
+              .in('date', [today, yesterday])
+              .order('date', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            if (summaryData && summaryData.heart_rate_max) {
+              result.set(w.id, {
+                value: summaryData.heart_rate_max,
+                unit: 'bpm',
+                measurement_date: summaryData.date,
+                source: 'terra',
+                confidence_score: 100,
+              });
+              
+              const hours = Math.max(0, Math.floor((Date.now() - new Date(summaryData.date).getTime()) / (1000 * 60 * 60)));
+              ages.set(w.id, hours);
+              confidenceMap.set(w.id, 100);
+            }
           }
+          continue;
         }
-        
-        if (best) {
-          result.set(w.id, {
-            value: Number(best.value),
-            unit: best.unit,
-            measurement_date: best.measurement_date,
-            source: best.source,
-            confidence: typeof best.confidence_score === 'number' ? best.confidence_score : undefined,
-          });
-          // Age in hours
-          const day = new Date(best.measurement_date);
-          const hours = Math.max(0, Math.floor((Date.now() - day.getTime()) / (1000 * 60 * 60)));
-          ages.set(w.id, hours);
-        }
+
+        // V2: Use confidence scoring and conflict resolution
+        const metricsWithConfidence = ConfidenceScorer.calculateBatch(
+          candidates.map(c => ({
+            metric_id: c.id || '',
+            user_id: userId,
+            metric_name: c.metric_name,
+            metric_type: c.metric_name as any,
+            value: c.value,
+            unit: c.unit,
+            source: c.source as any,
+            measurement_date: c.measurement_date,
+            created_at: c.created_at || new Date().toISOString(),
+            priority: c.priority || 5,
+          }))
+        );
+
+        // If only one candidate, use it directly
+        const winner = metricsWithConfidence.length === 1
+          ? metricsWithConfidence[0]
+          : ConflictResolver.resolve(metricsWithConfidence, {
+              strategy: selectStrategyForMetric(w.metric_name),
+              minConfidenceThreshold: 30,
+            });
+
+        result.set(w.id, {
+          value: winner.metric.value,
+          unit: winner.metric.unit,
+          measurement_date: winner.metric.measurement_date,
+          source: winner.metric.source,
+          confidence_score: winner.confidence,
+        });
+
+        const hours = Math.max(0, Math.floor((Date.now() - new Date(winner.metric.measurement_date).getTime()) / (1000 * 60 * 60)));
+        ages.set(w.id, hours);
+        confidenceMap.set(w.id, winner.confidence);
       }
 
-      return { data: result, ages };
+      return { data: result, ages, confidenceMap };
     },
     enabled: !!userId && widgets.length > 0,
     staleTime: 2 * 60 * 1000,
@@ -139,6 +174,7 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
   return {
     data: (query.data as any)?.data ?? new Map(),
     ages: (query.data as any)?.ages ?? new Map(),
+    confidenceMap: (query.data as any)?.confidenceMap ?? new Map(),
     isLoading: query.isLoading,
     error: query.error,
   };

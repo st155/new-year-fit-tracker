@@ -27,7 +27,8 @@ interface UseMetricsOptions {
   dateRange?: DateRange;
   enabled?: boolean;
   minConfidence?: number;    // NEW: Filter by minimum confidence
-  withQuality?: boolean;      // NEW: Return MetricWithConfidence
+  withQuality?: boolean;      // NEW: Return MetricWithConfidence - default true in V2
+  useV2?: boolean;            // NEW: Feature flag override
 }
 
 export interface MetricData {
@@ -44,16 +45,26 @@ export interface MetricData {
 export function useMetrics(options: UseMetricsOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { metricTypes, dateRange, enabled = true, minConfidence = 0, withQuality = false } = options;
+  const { 
+    metricTypes, 
+    dateRange, 
+    enabled = true, 
+    minConfidence = 0, 
+    withQuality = true,  // V2: Default to true
+    useV2 = true 
+  } = options;
   const fetcher = new UnifiedDataFetcherV2(supabase);
+
+  // For now, use V2 by default (feature flag can be added later via separate hook)
+  const finalUseV2 = useV2;
 
   // ===== Latest Metrics (with quality if requested) =====
   const latest = useQuery({
-    queryKey: [...queryKeys.metrics.latest(user?.id ?? '', metricTypes ?? []), 'with-quality', withQuality],
+    queryKey: ['unified-metrics', 'latest', user?.id, metricTypes, withQuality, finalUseV2],
     queryFn: async () => {
       if (!user?.id) return [];
 
-      if (withQuality) {
+      if (finalUseV2 && withQuality) {
         // Use enhanced fetcher with confidence scoring
         const metricsWithConfidence = await fetcher.getLatestUnifiedMetrics(
           user.id,
@@ -185,13 +196,44 @@ export function useMetrics(options: UseMetricsOptions = {}) {
 
   // ===== NEW: Quality helpers =====
   const getMetricWithQuality = (metricName: string): MetricWithConfidence | undefined => {
-    if (!withQuality) return undefined;
+    if (!withQuality || !finalUseV2) return undefined;
     return (latest.data as MetricWithConfidence[])?.find(m => m.metric.metric_name === metricName);
   };
 
   const hasGoodQuality = (metricName: string): boolean => {
     const metric = getMetricWithQuality(metricName);
     return metric ? metric.confidence >= 70 : false;
+  };
+
+  // NEW: Get conflicts for a metric
+  const getConflicts = (metricName: string) => {
+    if (!finalUseV2) return [];
+    // Placeholder - would need to fetch raw data
+    return [];
+  };
+
+  // NEW: Get quality report for all metrics
+  const getQualityReport = () => {
+    if (!withQuality || !finalUseV2 || !latest.data) return null;
+
+    const metricsWithConfidence = latest.data as MetricWithConfidence[];
+    const total = metricsWithConfidence.length;
+    const excellent = metricsWithConfidence.filter(m => m.confidence >= 80).length;
+    const good = metricsWithConfidence.filter(m => m.confidence >= 60 && m.confidence < 80).length;
+    const fair = metricsWithConfidence.filter(m => m.confidence >= 40 && m.confidence < 60).length;
+    const poor = metricsWithConfidence.filter(m => m.confidence < 40).length;
+    const avgConfidence = total > 0 
+      ? metricsWithConfidence.reduce((sum, m) => sum + m.confidence, 0) / total 
+      : 0;
+
+    return {
+      total,
+      excellent,
+      good,
+      fair,
+      poor,
+      averageConfidence: avgConfidence,
+    };
   };
 
   return {
@@ -214,7 +256,9 @@ export function useMetrics(options: UseMetricsOptions = {}) {
     // NEW: Quality helpers
     getMetricWithQuality,
     hasGoodQuality,
-    qualitySummary: withQuality ? (latest.data as MetricWithConfidence[])?.map(m => ({
+    getConflicts,
+    getQualityReport,
+    qualitySummary: withQuality && finalUseV2 ? (latest.data as MetricWithConfidence[])?.map(m => ({
       metricName: m.metric.metric_name,
       confidence: m.confidence,
       source: m.metric.source,

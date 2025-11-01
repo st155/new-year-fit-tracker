@@ -55,7 +55,7 @@ export function useDashboard(options?: DashboardOptions) {
         unit: data?.unit,
         date: data?.measurement_date,
         source: data?.source,
-        confidence: data?.confidence,
+        confidence: data?.confidence_score,
         age,
       };
     });

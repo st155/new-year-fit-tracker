@@ -10,6 +10,11 @@ export {
   type MetricData 
 } from './useMetrics';
 
+export {
+  useMetricWithQuality,
+  useConflictDetection,
+} from './useMetricsV2';
+
 export { 
   useBodyComposition,
   type BodyCompositionData,
