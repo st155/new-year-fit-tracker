@@ -29,10 +29,20 @@ export function AIThreadSidebar() {
   const [loadingConversation, setLoadingConversation] = useState<string | null>(null);
 
   const handleSelectConversation = async (convId: string) => {
+    // Prevent switching if already loading this conversation
+    if (loadingConversation === convId) return;
+    
+    // Prevent switching if already selected
+    if (currentConversation?.id === convId) return;
+    
     setLoadingConversation(convId);
     console.log('🔄 Switching to conversation:', convId);
-    await selectConversation(convId);
-    setLoadingConversation(null);
+    
+    try {
+      await selectConversation(convId);
+    } finally {
+      setLoadingConversation(null);
+    }
   };
 
   return (

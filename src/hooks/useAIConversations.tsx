@@ -218,7 +218,22 @@ export const useAIConversations = (userId: string | undefined) => {
         metadata: { isOptimistic: true, status: 'sent' }
       });
 
-      // Realtime subscription handles message delivery - no fallback needed
+      // Fallback: If message doesn't arrive via realtime within 3 seconds, force reload
+      const fallbackTimer = setTimeout(async () => {
+        console.log('⚠️ Realtime message not received within 3s, forcing reload');
+        if (currentConversation?.id || data.conversationId) {
+          const convId = currentConversation?.id || data.conversationId;
+          await loadMessages(convId);
+          // Remove all optimistic messages since we have real data now
+          setOptimisticMessages([]);
+        }
+      }, 3000);
+
+      // Clear fallback timer if component unmounts or conversation changes
+      const clearFallback = () => clearTimeout(fallbackTimer);
+      
+      // Store cleanup function
+      (window as any).__clearAIFallback = clearFallback;
 
       // Check for disambiguation needed
       if (data?.needsDisambiguation) {
@@ -375,6 +390,11 @@ export const useAIConversations = (userId: string | undefined) => {
     if (!currentConversation?.id) return;
 
     console.log(`🔔 Setting up realtime subscription for conversation: ${currentConversation.id}`);
+    
+    // Clear any pending fallback timers when switching conversations
+    if ((window as any).__clearAIFallback) {
+      (window as any).__clearAIFallback();
+    }
 
     const channel = supabase
       .channel(`ai_messages_${currentConversation.id}`)
@@ -459,6 +479,10 @@ export const useAIConversations = (userId: string | undefined) => {
 
     return () => {
       supabase.removeChannel(channel);
+      // Clear fallback timer on unmount
+      if ((window as any).__clearAIFallback) {
+        (window as any).__clearAIFallback();
+      }
     };
   }, [currentConversation?.id, showToast]);
 

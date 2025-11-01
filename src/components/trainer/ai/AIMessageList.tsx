@@ -168,7 +168,24 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
           })}
         </AnimatePresence>
         
-        {/* Loading state */}
+        {/* Loading states */}
+        {sending && sendingState === 'sending' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-4 justify-start"
+          >
+            <Avatar className="h-9 w-9 shrink-0 ring-2 ring-purple-500/20">
+              <div className="h-full w-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Loader2 className="h-4 w-4 text-white animate-spin" />
+              </div>
+            </Avatar>
+            <div className="rounded-2xl px-4 py-3 bg-muted shadow-sm">
+              <span className="text-sm text-muted-foreground">Отправка сообщения...</span>
+            </div>
+          </motion.div>
+        )}
+        
         {sending && sendingState === 'processing' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
