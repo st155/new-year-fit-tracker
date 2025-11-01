@@ -76,6 +76,7 @@ export function useClientDetailData(clientUserId?: string) {
   const [aiHistory, setAiHistory] = useState<any[]>([]);
   const [whoopSummary, setWhoopSummary] = useState<WhoopSummary | null>(null);
   const [ouraSummary, setOuraSummary] = useState<OuraSummary | null>(null);
+  const [clientData, setClientData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -367,9 +368,10 @@ export function useClientDetailData(clientUserId?: string) {
       if (rpcError) throw rpcError;
 
       // Parse JSONB response
-      const clientData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+      const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+      setClientData(parsedData);
 
-      if (!clientData) {
+      if (!parsedData) {
         setGoals([]);
         setMeasurements([]);
         setHealthData([]);
@@ -401,7 +403,7 @@ export function useClientDetailData(clientUserId?: string) {
       }));
 
       // Process measurements
-      const measurementsData = (clientData.measurements || []).map((m: any) => ({
+      const measurementsData = (parsedData.measurements || []).map((m: any) => ({
         id: m.id,
         goal_id: m.goal_id || '',
         value: m.value,
@@ -412,7 +414,7 @@ export function useClientDetailData(clientUserId?: string) {
       }));
 
       // Process unified metrics with proper format
-      const unifiedMetricsData = (clientData.unified_metrics || []).map((m: any) => ({
+      const unifiedMetricsData = (parsedData.unified_metrics || []).map((m: any) => ({
         user_id: clientUserId,
         metric_name: m.metric_name,
         value: m.value,
@@ -424,7 +426,7 @@ export function useClientDetailData(clientUserId?: string) {
 
       // Merge health data
       const mergedHealth = mergeHealthData(
-        clientData.health_summary || [],
+        parsedData.health_summary || [],
         unifiedMetricsData
       );
 
@@ -435,7 +437,7 @@ export function useClientDetailData(clientUserId?: string) {
       setGoals(goalsData);
       setMeasurements(measurementsData);
       setHealthData(mergedHealth);
-      setAiHistory(clientData.ai_history || []);
+      setAiHistory(parsedData.ai_history || []);
       setWhoopSummary(whoopSum);
       setOuraSummary(ouraSum);
       setError(null);
@@ -457,7 +459,9 @@ export function useClientDetailData(clientUserId?: string) {
     ouraSummary,
     loading,
     error,
-    refetch: loadClientData
+    refetch: loadClientData,
+    // Export unified metrics for workout analysis
+    unifiedMetrics: clientData?.unified_metrics || []
   };
 }
 

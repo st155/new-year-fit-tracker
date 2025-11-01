@@ -39,6 +39,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { GroupedGoalsView } from './client-detail/GroupedGoalsView';
 import { GoalProgressChart } from './client-detail/GoalProgressChart';
 import { GoalsProgressOverview } from './client-detail/GoalsProgressOverview';
+import { WorkoutAnalysis } from './client-detail/WorkoutAnalysis';
+import { ProgressTimeline } from './client-detail/ProgressTimeline';
+import { TrainerNotes } from './client-detail/TrainerNotes';
 
 interface Client {
   id: string;
@@ -100,6 +103,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     aiHistory,
     whoopSummary,
     ouraSummary,
+    unifiedMetrics,
     loading, 
     error, 
     refetch
@@ -275,8 +279,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       </Card>
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-4 bg-muted/50 p-1 gap-1">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-6 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
+          <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
+          <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
           <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
           <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
           <TabsTrigger value="ai-history" className="whitespace-nowrap flex-shrink-0">AI История ({aiHistory.length})</TabsTrigger>
@@ -568,6 +574,27 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="workouts" className="space-y-4">
+          <WorkoutAnalysis 
+            metrics={unifiedMetrics} 
+            clientName={client.full_name || client.username}
+          />
+          
+          {/* Trainer Notes about workouts */}
+          <TrainerNotes 
+            clientId={client.user_id}
+            clientName={client.full_name || client.username}
+          />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-4">
+          <ProgressTimeline 
+            goals={goals}
+            measurements={measurements}
+            recoveryScore={whoopSummary ? [whoopSummary.recoveryScore.avg] : undefined}
+          />
         </TabsContent>
 
         <TabsContent value="measurements" className="space-y-4">
