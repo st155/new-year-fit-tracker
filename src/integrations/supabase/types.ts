@@ -2576,6 +2576,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          job_id: string | null
           payload: Json
           processed_at: string | null
           processed_count: number | null
@@ -2588,6 +2589,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          job_id?: string | null
           payload: Json
           processed_at?: string | null
           processed_count?: number | null
@@ -2600,6 +2602,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          job_id?: string | null
           payload?: Json
           processed_at?: string | null
           processed_count?: number | null
@@ -2609,7 +2612,15 @@ export type Database = {
           user_id?: string | null
           webhook_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "terra_webhooks_raw_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "background_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainer_broadcasts: {
         Row: {
@@ -3827,6 +3838,13 @@ export type Database = {
       retry_failed_jobs: {
         Args: { p_job_type?: string }
         Returns: {
+          retried_count: number
+        }[]
+      }
+      retry_stuck_terra_webhooks: {
+        Args: { stuck_threshold_minutes?: number }
+        Returns: {
+          failed_count: number
           retried_count: number
         }[]
       }
