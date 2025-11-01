@@ -245,16 +245,25 @@ export const useAIConversations = (userId: string | undefined) => {
       
       // Assistant message will be updated via realtime when backend saves the real response
 
-      // Fallback: If message doesn't arrive via realtime within 1 second, force reload
+      // Immediate fallback: Force reload after 500ms to ensure message appears
+      const convIdForReload = currentConversation?.id || data.conversationId;
+      if (convIdForReload) {
+        setTimeout(async () => {
+          console.log('⚡ Force reloading messages after 500ms');
+          await loadMessages(convIdForReload);
+          setOptimisticMessages([]);
+        }, 500);
+      }
+
+      // Secondary fallback: If message still doesn't arrive, reload again at 1.5s
       const fallbackTimer = setTimeout(async () => {
-        console.log('⚠️ Realtime message not received within 1s, forcing reload');
+        console.log('⚠️ Realtime message not received within 1.5s, forcing secondary reload');
         if (currentConversation?.id || data.conversationId) {
           const convId = currentConversation?.id || data.conversationId;
           await loadMessages(convId);
-          // Remove all optimistic messages since we have real data now
           setOptimisticMessages([]);
         }
-      }, 1000);
+      }, 1500);
 
       // Clear fallback timer if component unmounts or conversation changes
       const clearFallback = () => clearTimeout(fallbackTimer);
@@ -456,7 +465,13 @@ export const useAIConversations = (userId: string | undefined) => {
           filter: `conversation_id=eq.${currentConversation.id}`
         },
         (payload) => {
-          console.log('📨 Realtime INSERT event received:', payload);
+          console.log('🔔 [REALTIME] INSERT received:', {
+            messageId: payload.new.id,
+            role: payload.new.role,
+            conversationId: payload.new.conversation_id,
+            content: payload.new.content?.substring(0, 50),
+            timestamp: new Date().toISOString()
+          });
           const newMessage = payload.new as AIMessage;
           
           // Improved deduplication: check by optimisticId first, then by content + time
@@ -522,11 +537,15 @@ export const useAIConversations = (userId: string | undefined) => {
           setMessages(prev => prev.map(msg => 
             msg.id === updatedMessage.id ? updatedMessage : msg
           ));
-        }
-      )
-      .subscribe();
+          }
+        )
+        .subscribe((status, err) => {
+          console.log('🔔 [REALTIME] Subscription status:', status);
+          if (err) console.error('🔔 [REALTIME] Subscription error:', err);
+        });
 
     return () => {
+      console.log('🔔 [REALTIME] Cleaning up subscription');
       supabase.removeChannel(channel);
       // Clear fallback timer on unmount
       if ((window as any).__clearAIFallback) {
@@ -534,6 +553,22 @@ export const useAIConversations = (userId: string | undefined) => {
       }
     };
   }, [currentConversation?.id, showToast]);
+
+  // Polling fallback: Poll for new messages while sending
+  useEffect(() => {
+    if (!currentConversation?.id || !sending) return;
+    
+    console.log('🔄 Starting polling fallback while sending...');
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 Polling for new messages...');
+      await loadMessages(currentConversation.id);
+    }, 800);
+    
+    return () => {
+      console.log('🔄 Stopping polling fallback');
+      clearInterval(pollInterval);
+    };
+  }, [currentConversation?.id, sending, loadMessages]);
 
   return {
     conversations,
