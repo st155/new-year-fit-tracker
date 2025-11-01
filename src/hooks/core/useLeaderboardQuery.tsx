@@ -82,6 +82,13 @@ export function useLeaderboardQuery(
       // Re-sort after badge bonus
       const sortedData = enrichedData.sort((a, b) => b.totalPoints - a.totalPoints);
       
+      // Debug: Log enrichment results
+      console.log('✅ [Leaderboard] Enriched data:', sortedData.slice(0, 5).map(e => ({
+        username: e.username,
+        badges: e.badges.length,
+        finalPoints: e.totalPoints
+      })));
+      
       // Update ranks after re-sorting
       return sortedData.map((entry, index) => ({
         ...entry,
@@ -89,7 +96,7 @@ export function useLeaderboardQuery(
       }));
     },
     enabled: !!userId,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 30 * 1000, // 30 seconds for more frequent updates
     gcTime: 3 * 60 * 1000,
   });
 }
