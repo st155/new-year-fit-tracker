@@ -3897,6 +3897,7 @@ export type Database = {
       }
       challenge_leaderboard_v2: {
         Row: {
+          active_days: number | null
           avatar_url: string | null
           avg_hrv: number | null
           avg_recovery: number | null
@@ -4036,64 +4037,113 @@ export type Database = {
       }
       client_unified_metrics: {
         Row: {
+          confidence_factors: Json | null
           confidence_score: number | null
+          conflict_group: string | null
           created_at: string | null
+          deleted_at: string | null
+          external_id: string | null
+          id: string | null
+          is_outlier: boolean | null
+          is_primary: boolean | null
           measurement_date: string | null
           metric_category: string | null
           metric_name: string | null
+          notes: string | null
+          photo_url: string | null
           priority: number | null
+          provider: string | null
+          quality_score: number | null
           source: string | null
+          source_data: Json | null
+          source_metadata: Json | null
           unit: string | null
+          updated_at: string | null
           user_id: string | null
           value: number | null
+        }
+        Insert: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          conflict_group?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          external_id?: string | null
+          id?: string | null
+          is_outlier?: boolean | null
+          is_primary?: boolean | null
+          measurement_date?: string | null
+          metric_category?: string | null
+          metric_name?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          priority?: number | null
+          provider?: string | null
+          quality_score?: number | null
+          source?: string | null
+          source_data?: Json | null
+          source_metadata?: Json | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          confidence_factors?: Json | null
+          confidence_score?: number | null
+          conflict_group?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          external_id?: string | null
+          id?: string | null
+          is_outlier?: boolean | null
+          is_primary?: boolean | null
+          measurement_date?: string | null
+          metric_category?: string | null
+          metric_name?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          priority?: number | null
+          provider?: string | null
+          quality_score?: number | null
+          source?: string | null
+          source_data?: Json | null
+          source_metadata?: Json | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number | null
         }
         Relationships: []
       }
       data_quality_trends: {
         Row: {
-          avg_confidence: number | null
-          date: string | null
-          excellent_count: number | null
-          fair_count: number | null
-          good_count: number | null
-          metric_name: string | null
-          metrics_count: number | null
-          poor_count: number | null
+          avg_quality_score: number | null
+          measurement_date: string | null
+          metric_count: number | null
+          source_count: number | null
+          user_id: string | null
         }
         Relationships: []
       }
       edge_function_performance: {
         Row: {
-          date: string | null
-          errors: number | null
-          first_invocation: string | null
-          function_name: string | null
-          invocations: number | null
-          last_invocation: string | null
+          avg_duration_seconds: number | null
+          failed: number | null
+          function_type: string | null
+          last_execution: string | null
+          successful: number | null
+          total_executions: number | null
         }
         Relationships: []
       }
       job_processing_stats: {
         Row: {
-          avg_duration_seconds: number | null
+          avg_duration: number | null
           count: number | null
-          date: string | null
-          job_type: string | null
-          max_duration_seconds: number | null
+          last_created: string | null
           status: string | null
-        }
-        Relationships: []
-      }
-      latest_unified_metrics: {
-        Row: {
-          created_at: string | null
-          measurement_date: string | null
-          metric_name: string | null
-          priority: number | null
-          source: string | null
-          unit: string | null
-          user_id: string | null
-          value: number | null
+          type: string | null
         }
         Relationships: []
       }
@@ -4123,31 +4173,18 @@ export type Database = {
       }
       trainer_client_summary: {
         Row: {
-          active_goals_count: number | null
-          avatar_url: string | null
-          client_id: string | null
-          full_name: string | null
-          health_summary: Json | null
-          last_activity_date: string | null
-          recent_measurements_count: number | null
+          active_clients: number | null
+          avg_recovery_score: number | null
+          total_clients: number | null
           trainer_id: string | null
-          username: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "trainer_clients_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       webhook_processing_stats: {
         Row: {
-          avg_processing_seconds: number | null
           count: number | null
-          date: string | null
+          last_received: string | null
+          provider: string | null
           status: string | null
         }
         Relationships: []
