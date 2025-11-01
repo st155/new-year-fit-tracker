@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MetricCard } from './MetricCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity } from 'lucide-react';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 
 interface MetricCardData {
   name: string;
@@ -51,19 +52,21 @@ export function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
 
   return (
     <AnimatePresence mode="popLayout">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric, index) => (
+      <motion.div
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        {metrics.map((metric) => (
           <motion.div
             key={metric.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ delay: index * 0.05 }}
+            variants={staggerItem}
           >
             <MetricCard {...metric} />
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }

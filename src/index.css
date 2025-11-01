@@ -287,6 +287,51 @@ All colors MUST be HSL.
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   }
 
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-medium {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-intense {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Tremor-specific glassmorphism overrides */
+  .tremor-Card-root {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .tremor-Card-root[data-decoration="top"] {
+    border-top-width: 2px !important;
+  }
+
+  .tremor-Table-root {
+    background: transparent !important;
+  }
+
+  .tremor-TableRow-root:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .tremor-ProgressBar-root {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
   /* Glow utilities */
   .glow-primary {
     box-shadow: 0 0 30px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.2);

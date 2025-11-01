@@ -21,6 +21,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { ExportReportsDialog } from "./ExportReportsDialog";
 import { ClientProgressCharts } from "./ClientProgressCharts";
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/animations';
+import { Card as TremorCard, Metric, Text, BadgeDelta, ProgressBar, Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Badge as TremorBadge } from '@tremor/react';
 
 interface ClientStats {
   id: string;
@@ -295,61 +298,74 @@ export function TrainerAnalytics() {
 
       {/* Общая статистика */}
       {overallStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Всего подопечных</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overallStats.total_clients}</div>
-              <p className="text-xs text-muted-foreground">
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          <motion.div variants={staggerItem}>
+            <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="cyan">
+              <div className="flex items-center justify-between">
+                <Text>Всего подопечных</Text>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Metric className="mt-2">{overallStats.total_clients}</Metric>
+              <Text className="text-xs mt-1">
                 Активных: {overallStats.active_clients}
-              </p>
-            </CardContent>
-          </Card>
+              </Text>
+              <BadgeDelta 
+                deltaType={overallStats.active_clients > 0 ? "moderateIncrease" : "unchanged"} 
+                className="mt-2"
+              >
+                {overallStats.total_clients > 0 ? Math.round((overallStats.active_clients / overallStats.total_clients) * 100) : 0}% активность
+              </BadgeDelta>
+            </TremorCard>
+          </motion.div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Активных целей</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overallStats.total_goals}</div>
-              <p className="text-xs text-muted-foreground">
+          <motion.div variants={staggerItem}>
+            <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="purple">
+              <div className="flex items-center justify-between">
+                <Text>Активных целей</Text>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Metric className="mt-2">{overallStats.total_goals}</Metric>
+              <Text className="text-xs mt-1">
                 Завершено: {overallStats.completed_goals}
-              </p>
-            </CardContent>
-          </Card>
+              </Text>
+            </TremorCard>
+          </motion.div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Измерений за месяц</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overallStats.recent_measurements}</div>
-              <p className="text-xs text-muted-foreground">
-                Последние 30 дней
-              </p>
-            </CardContent>
-          </Card>
+          <motion.div variants={staggerItem}>
+            <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="orange">
+              <div className="flex items-center justify-between">
+                <Text>Измерений за месяц</Text>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Metric className="mt-2">{overallStats.recent_measurements}</Metric>
+              <Text className="text-xs mt-1">Последние 30 дней</Text>
+            </TremorCard>
+          </motion.div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Средний прогресс</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overallStats.avg_progress}%</div>
-              <Progress value={overallStats.avg_progress} className="h-2 mt-2" />
-            </CardContent>
-          </Card>
-        </div>
+          <motion.div variants={staggerItem}>
+            <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="emerald">
+              <div className="flex items-center justify-between">
+                <Text>Средний прогресс</Text>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Metric className="mt-2">{overallStats.avg_progress}%</Metric>
+              <ProgressBar 
+                value={overallStats.avg_progress} 
+                color="emerald" 
+                className="mt-2" 
+              />
+            </TremorCard>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Статистика по клиентам */}
-      <Card>
+      <TremorCard className="glass-medium border-white/10">
         <CardHeader>
           <CardTitle>Детальная статистика по подопечным</CardTitle>
           <CardDescription>
@@ -357,62 +373,91 @@ export function TrainerAnalytics() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {clientStats.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium">Нет подопечных</h3>
-                <p className="text-muted-foreground">
-                  Добавьте подопечных для просмотра аналитики
-                </p>
-              </div>
-            ) : (
-              clientStats.map((client) => (
-                <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h4 className="font-medium">{client.full_name || client.username}</h4>
-                      <p className="text-sm text-muted-foreground">@{client.username}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="text-right text-sm">
+          {clientStats.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium">Нет подопечных</h3>
+              <p className="text-muted-foreground">
+                Добавьте подопечных для просмотра аналитики
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>Клиент</TableHeaderCell>
+                  <TableHeaderCell>Цели</TableHeaderCell>
+                  <TableHeaderCell>Активность</TableHeaderCell>
+                  <TableHeaderCell>Прогресс</TableHeaderCell>
+                  <TableHeaderCell>Статус</TableHeaderCell>
+                  <TableHeaderCell>Последнее измерение</TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {clientStats.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{client.full_name || client.username}</div>
+                        <div className="text-xs text-muted-foreground">@{client.username}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
                         <Target className="h-3 w-3" />
-                        <span>{client.goals_count} целей</span>
+                        <span>{client.goals_count}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
                         <Activity className="h-3 w-3" />
-                        <span>{client.recent_measurements} измерений</span>
+                        <span>{client.recent_measurements}</span>
                       </div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="text-lg font-bold">{client.progress_score}%</div>
-                      <Progress value={client.progress_score} className="h-2 w-16" />
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(client.status)}
-                      <Badge className={getStatusColor(client.status)}>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Text className="text-xs font-medium">{client.progress_score}%</Text>
+                        <ProgressBar 
+                          value={client.progress_score} 
+                          color={
+                            client.progress_score >= 80 ? 'emerald' :
+                            client.progress_score >= 60 ? 'blue' :
+                            client.progress_score >= 30 ? 'yellow' : 'red'
+                          }
+                          className="w-24"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <TremorBadge 
+                        color={
+                          client.status === 'excellent' ? 'emerald' :
+                          client.status === 'good' ? 'blue' :
+                          client.status === 'needs_attention' ? 'yellow' : 'red'
+                        }
+                        icon={
+                          client.status === 'excellent' ? Award :
+                          client.status === 'good' ? CheckCircle :
+                          client.status === 'needs_attention' ? AlertTriangle : TrendingDown
+                        }
+                      >
                         {getStatusLabel(client.status)}
-                      </Badge>
-                    </div>
-                    
-                    {client.last_activity && (
-                      <div className="text-xs text-muted-foreground text-right">
-                        <div>Последняя активность:</div>
-                        <div>{new Date(client.last_activity).toLocaleDateString()}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                      </TremorBadge>
+                    </TableCell>
+                    <TableCell>
+                      {client.last_activity && (
+                        <Text className="text-xs">
+                          {new Date(client.last_activity).toLocaleDateString('ru')}
+                        </Text>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
-      </Card>
+      </TremorCard>
 
       {/* Рекомендации */}
       <Card>

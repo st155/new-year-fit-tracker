@@ -9,10 +9,8 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { RecoveryScoreChart } from '@/components/fitness-data/RecoveryScoreChart';
-import { StrainChart } from '@/components/fitness-data/StrainChart';
-import { HeartRateChart } from '@/components/fitness-data/HeartRateChart';
-import { SleepChart } from '@/components/fitness-data/SleepChart';
+import { TremorMetricCard, TremorAreaChartCard, TremorBarChartCard } from '@/components/charts/TremorWrappers';
+import { adaptMetricsToTremor, adaptStrainToTremor, adaptSleepToTremor, valueFormatters } from '@/lib/tremor-adapter';
 import { MetricsGrid } from '@/components/fitness-data/MetricsGrid';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
@@ -20,6 +18,8 @@ import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsD
 import { SystemHealthIndicator } from '@/components/integrations/SystemHealthIndicator';
 import { AutoRefreshToggle } from '@/components/integrations/AutoRefreshToggle';
 import { PageLoader } from '@/components/ui/page-loader';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { BarChart } from '@tremor/react';
 
 type TimeFilter = 'today' | 'week' | 'month';
 type SourceFilter = 'all' | 'whoop' | 'garmin' | 'ultrahuman';
@@ -382,9 +382,15 @@ export default function FitnessData() {
 
           {/* Hero Recovery Score */}
           {latestRecovery && latestRecovery.value && (
-            <RecoveryScoreChart
-              score={latestRecovery.value}
-              history={processedMetrics.recovery}
+            <TremorMetricCard
+              title="Recovery Score"
+              value={latestRecovery.value}
+              unit="%"
+              data={adaptMetricsToTremor(processedMetrics.recovery)}
+              categories={['value']}
+              color="emerald"
+              showChart={true}
+              icon={<Activity className="h-4 w-4 text-muted-foreground" />}
             />
           )}
 
@@ -394,15 +400,47 @@ export default function FitnessData() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {processedMetrics.strain.length > 0 && (
-              <StrainChart data={processedMetrics.strain} />
+              <TremorBarChartCard
+                title="Day Strain"
+                description="Уровень напряжения за выбранный период"
+                data={adaptStrainToTremor(processedMetrics.strain)}
+                categories={['Strain']}
+                colors={['orange']}
+                valueFormatter={valueFormatters.decimal}
+              />
             )}
             {processedMetrics.heartRate.length > 0 && (
-              <HeartRateChart data={processedMetrics.heartRate} />
+              <TremorAreaChartCard
+                title="Heart Rate"
+                description="Частота сердцебиения"
+                data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
+                categories={['Heart Rate']}
+                colors={['rose']}
+                valueFormatter={valueFormatters.bpm}
+              />
             )}
           </div>
 
           {processedMetrics.sleep.length > 0 && (
-            <SleepChart data={processedMetrics.sleep} />
+            <Card className="glass-medium border-white/10">
+              <CardHeader>
+                <CardTitle>Sleep Stages</CardTitle>
+                <CardDescription>Фазы сна за выбранный период</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BarChart
+                  className="h-72"
+                  data={adaptSleepToTremor(processedMetrics.sleep)}
+                  index="date"
+                  categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
+                  colors={['indigo', 'blue', 'purple', 'slate']}
+                  stack={true}
+                  valueFormatter={valueFormatters.minutes}
+                  showLegend={true}
+                  showGridLines={false}
+                />
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
