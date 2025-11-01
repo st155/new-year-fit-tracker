@@ -22,6 +22,8 @@ const GoogleIcon = () => (
 );
 
 const Auth = () => {
+  console.log('🔐 [Auth Page] Rendering auth page...');
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');

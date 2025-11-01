@@ -20,6 +20,8 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
+  console.log('👤 [ProfileProvider] Rendering...');
+  
   const { user } = useAuth();
   
   // ✅ Hook called unconditionally (React rules)

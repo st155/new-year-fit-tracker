@@ -37,9 +37,12 @@ initPrefetcher(queryClient);
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
+  console.log('🚀 [AppContent] Rendering...');
+  
   // Initialize invalidation, web vitals, sentry (deferred to not block render)
   // Note: prefetcher is initialized synchronously at module level
   useEffect(() => {
+    console.log('🚀 [AppContent] useEffect initializing strategies...');
     const timer = setTimeout(() => {
       initInvalidator(queryClient);
       initWebVitals();
@@ -73,6 +76,8 @@ const AppContent = () => {
     }
   }, []);
 
+  console.log('🚀 [AppContent] Rendering providers and routes...');
+  
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <BrowserRouter>

@@ -63,13 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Safety timeout: if getSession hangs > 8 seconds, force loading=false
+    // Safety timeout: if getSession hangs > 5 seconds, force loading=false
     sessionTimeout = setTimeout(() => {
       if (mounted) {
-        console.warn('⚠️ [AuthProvider] Session check timeout, forcing ready state');
+        console.warn('⚠️ [AuthProvider] Session check timeout (5s), forcing ready state');
         setLoading(false);
       }
-    }, 8000);
+    }, 5000);
 
     // THEN check for existing session with error handling
     supabase.auth.getSession()
