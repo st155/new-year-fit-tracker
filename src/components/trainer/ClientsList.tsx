@@ -59,9 +59,9 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'activity'>('activity');
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'activity' | 'health_score'>('activity');
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive' | 'at_risk' | 'high_performers' | 'new'>('all');
-  const [groupBy, setGroupBy] = useState<'none' | 'health_score' | 'challenges' | 'activity'>('none');
+  
 
   const loadAllUsers = async () => {
     setLoadingUsers(true);
@@ -197,6 +197,10 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
           return a.full_name.localeCompare(b.full_name);
         } else if (sortBy === 'date') {
           return new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime();
+        } else if (sortBy === 'health_score') {
+          const aHealth = (a as any).health_score || 0;
+          const bHealth = (b as any).health_score || 0;
+          return bHealth - aHealth;
         } else {
           // Sort by activity (last_measurement date)
           const aDate = a.last_measurement ? new Date(a.last_measurement).getTime() : 0;
@@ -375,6 +379,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
             <SelectItem value="activity">По активности</SelectItem>
             <SelectItem value="name">По имени</SelectItem>
             <SelectItem value="date">По дате добавления</SelectItem>
+            <SelectItem value="health_score">По Health Score</SelectItem>
           </SelectContent>
         </Select>
         
@@ -393,17 +398,6 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
           </SelectContent>
         </Select>
 
-        <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Группировка" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Без группировки</SelectItem>
-            <SelectItem value="health_score">По Health Score</SelectItem>
-            <SelectItem value="challenges">По челленджам</SelectItem>
-            <SelectItem value="activity">По активности</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Client Cards */}
