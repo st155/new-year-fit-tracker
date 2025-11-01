@@ -72,16 +72,24 @@ export const useAIConversations = (userId: string | undefined) => {
 
   // Select conversation
   const selectConversation = async (conversationId: string | null) => {
+    console.log('🔄 [selectConversation] Called with ID:', conversationId);
+    
     if (!conversationId) {
+      console.log('🔄 [selectConversation] Clearing conversation');
       setCurrentConversation(null);
       setMessages([]);
       return;
     }
 
     const conversation = conversations.find(c => c.id === conversationId);
+    console.log('🔄 [selectConversation] Found conversation:', conversation?.title || 'NOT FOUND');
+    
     if (conversation) {
+      console.log('🔄 [selectConversation] Setting currentConversation:', conversation.id);
       setCurrentConversation(conversation);
+      console.log('🔄 [selectConversation] Loading messages...');
       await loadMessages(conversationId);
+      console.log('✅ [selectConversation] Complete');
     }
   };
 

@@ -72,10 +72,10 @@ export function AIThreadSidebar() {
                   <button
                     onClick={() => handleSelectConversation(conv.id)}
                     className={cn(
-                      "w-full text-left px-3 py-2.5 rounded-lg transition-colors relative",
+                      "w-full text-left px-3 py-2.5 rounded-lg transition-all relative",
                       "hover:bg-accent/50",
-                      isActive && "bg-accent",
-                      loadingConversation === conv.id && "bg-accent/50"
+                      isActive && "bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-purple-500/50 shadow-md",
+                      loadingConversation === conv.id && "opacity-50"
                     )}
                   >
                     {/* Loading spinner */}
@@ -91,7 +91,7 @@ export function AIThreadSidebar() {
                       )} />
                       <span className={cn(
                         "flex-1 truncate text-sm",
-                        isActive ? "font-semibold" : "font-medium"
+                        isActive ? "font-bold text-primary" : "font-medium"
                       )}>
                         {conv.title || 'Untitled Conversation'}
                       </span>

@@ -41,16 +41,35 @@ export function AIInput({ selectedClient }: AIInputProps) {
     if (!user) return;
     
     const loadClients = async () => {
-      const { data } = await supabase
-        .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
+      console.log('🔍 Loading clients for @mentions...');
       
-      if (data) {
-        setClients(data.map((c: any) => ({
-          id: c.client_id,
-          user_id: c.client_id,
-          username: c.username || '',
-          full_name: c.full_name || '',
-        })));
+      const { data, error } = await supabase
+        .from('trainer_clients')
+        .select(`
+          client_id,
+          profiles!trainer_clients_client_id_fkey (
+            user_id,
+            username,
+            full_name
+          )
+        `)
+        .eq('trainer_id', user.id)
+        .eq('active', true);
+      
+      if (data && !error) {
+        const clientsList = data
+          .filter((tc: any) => tc.profiles)
+          .map((tc: any) => ({
+            id: tc.profiles.user_id,
+            user_id: tc.profiles.user_id,
+            username: tc.profiles.username || '',
+            full_name: tc.profiles.full_name || tc.profiles.username || 'Unknown',
+          }));
+        
+        setClients(clientsList);
+        console.log('✅ Loaded clients for mentions:', clientsList.length, clientsList);
+      } else {
+        console.error('❌ Error loading clients:', error);
       }
     };
     
