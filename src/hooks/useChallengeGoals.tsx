@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAggregatedBodyMetrics } from "./useAggregatedBodyMetrics";
 import { isTimeUnit } from "@/lib/utils";
+import { toast } from "sonner";
 
 export interface ChallengeGoal {
   id: string;
@@ -39,11 +40,12 @@ export function useChallengeGoals(userId?: string) {
     queryFn: async () => {
       if (!userId) return [];
 
-      // 1. Get user's challenge participations with baseline data
-      const { data: participations } = await supabase
-        .from("challenge_participants")
-        .select("challenge_id, baseline_body_fat, baseline_weight, baseline_muscle_mass, baseline_recorded_at, challenges(title, start_date)")
-        .eq("user_id", userId);
+      try {
+        // 1. Get user's challenge participations with baseline data
+        const { data: participations } = await supabase
+          .from("challenge_participants")
+          .select("challenge_id, baseline_body_fat, baseline_weight, baseline_muscle_mass, baseline_recorded_at, challenges(title, start_date)")
+          .eq("user_id", userId);
 
       const challengeIds = participations?.map(p => p.challenge_id) || [];
 
@@ -313,9 +315,14 @@ export function useChallengeGoals(userId?: string) {
         };
       });
 
-      return challengeGoals;
+        return challengeGoals;
+      } catch (error) {
+        console.error('❌ Error fetching challenge goals:', error);
+        toast.error('Ошибка загрузки целей');
+        return [];
+      }
     },
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds for faster updates
   });
 }

@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dumbbell, Users, Trophy, Target } from 'lucide-react';
+import { Dumbbell, Users, Trophy, Target, AlertCircle } from 'lucide-react';
 import { useTranslation } from '@/lib/translations';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -38,7 +39,10 @@ const Auth = () => {
   });
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
+  
+  const redirectFrom = (location.state as any)?.from;
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail');
@@ -173,6 +177,14 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {redirectFrom && (
+              <Alert className="mb-4 border-primary/50 bg-primary/5">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-sm">
+                  Войдите, чтобы открыть: <span className="font-semibold">{redirectFrom}</span>
+                </AlertDescription>
+              </Alert>
+            )}
             {/* Google Sign In Button */}
             <div className="space-y-4">
               <Button 

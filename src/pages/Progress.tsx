@@ -10,10 +10,12 @@ import { BaselineComparisonCard } from '@/components/progress/BaselineComparison
 import { PointsImpactCard } from '@/components/progress/PointsImpactCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trophy, BarChart3 } from 'lucide-react';
+import { RefreshCw, Trophy, BarChart3, Users } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import { PageLoader } from '@/components/ui/page-loader';
+import { toast } from 'sonner';
 import {
   Accordion,
   AccordionContent,
@@ -24,7 +26,29 @@ import {
 export default function Progress() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
+  const { data: goals, isLoading, error, refetch } = useChallengeGoals(user?.id);
+  const [showLoader, setShowLoader] = useState(true);
+
+  // Show loader for max 2.5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+      if (isLoading) {
+        toast.info('Данные загружаются дольше обычного', {
+          action: {
+            label: 'Обновить',
+            onClick: () => window.location.reload()
+          }
+        });
+      }
+    }, 2500);
+
+    if (!isLoading) {
+      setShowLoader(false);
+    }
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   // Calculate overview stats
   const overviewStats = useMemo(() => {
@@ -123,21 +147,29 @@ export default function Progress() {
     };
   }, [goals]);
 
-  if (isLoading) {
+  if (isLoading && showLoader) {
+    return <PageLoader message="Загрузка прогресса..." />;
+  }
+
+  // Error or empty state
+  if (error || (!isLoading && (!goals || goals.length === 0))) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-          <Skeleton className="h-48" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
-          </div>
+      <AnimatedPage className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          <EmptyState
+            icon={<Users className="h-12 w-12" />}
+            title={error ? "Ошибка загрузки данных" : "Нет целей для отслеживания"}
+            description={error 
+              ? "Не удалось загрузить прогресс. Попробуйте обновить страницу."
+              : "Присоединитесь к челленджу, чтобы автоматически создать цели и начать отслеживать свой прогресс"
+            }
+            action={{
+              label: error ? "Обновить страницу" : "Присоединиться к челленджу",
+              onClick: () => error ? window.location.reload() : navigate("/challenges")
+            }}
+          />
         </div>
-      </div>
+      </AnimatedPage>
     );
   }
 
@@ -164,22 +196,8 @@ export default function Progress() {
           </Button>
         </div>
 
-        {/* Empty State */}
-        {!goals || goals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <EmptyState
-              icon={<Trophy className="h-12 w-12" />}
-              title="Вы пока не участвуете в челленджах"
-              description="Присоединитесь к челленджу, чтобы отслеживать свой прогресс"
-            />
-            <Button 
-              onClick={() => navigate('/challenges')}
-              className="mt-6"
-            >
-              Присоединиться к челленджу
-            </Button>
-          </div>
-        ) : (
+        {/* Content when goals exist */}
+        {goals && goals.length > 0 && (
           <>
             {/* Compact Progress Summary */}
             <CompactProgressSummary {...overviewStats} />
