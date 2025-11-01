@@ -86,17 +86,40 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   isOptimistic && "opacity-60",
                   isFailed && "opacity-40 border-2 border-destructive"
                 )}>
-                  {/* Tool execution results */}
-                  {msg.metadata?.pendingAction && (
-                    <AIToolCard action={msg.metadata.pendingAction} />
+                  {/* Show preparing indicator for assistant messages */}
+                  {!isUser && (msg.metadata?.preparingPlan || msg.metadata?.status === 'preparing') && (
+                    <div className="flex items-center gap-2 py-1 mb-2">
+                      <Sparkles className="h-4 w-4 animate-pulse text-purple-500" />
+                      <span className="text-sm text-muted-foreground">
+                        Готовлю структурированный план...
+                      </span>
+                    </div>
                   )}
                   
-                  {/* Message content */}
-                  <div className={cn(
-                    "prose prose-sm dark:prose-invert max-w-none",
-                    isUser && "prose-invert"
-                  )}>
-                    <ReactMarkdown
+                  {/* Show tool results if available */}
+                  {msg.metadata?.autoExecuted && msg.metadata?.results && (
+                    <div className="space-y-2 mb-3">
+                      {msg.metadata.results.map((result: any, idx: number) => (
+                        <AIToolCard
+                          key={idx}
+                          action={{
+                            type: result.action || result.action_type || 'Unknown',
+                            description: result.message || JSON.stringify(result.data || {}),
+                            status: result.success ? 'success' : 'failed',
+                            result: result.data
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Message content - hide for preparing messages that are just loading */}
+                  {!(msg.metadata?.preparingPlan || msg.metadata?.status === 'preparing') && (
+                    <div className={cn(
+                      "prose prose-sm dark:prose-invert max-w-none",
+                      isUser && "prose-invert"
+                    )}>
+                      <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
                         code({ className, children, ...props }: any) {
@@ -148,11 +171,12 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                             </a>
                           );
                         }
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                  </div>
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                   
                   {/* Status indicators */}
                   {isOptimistic && !isFailed && (

@@ -156,7 +156,22 @@ export const useAIConversations = (userId: string | undefined) => {
     });
 
     // Add optimistic user message
-    const optimisticId = addOptimisticMessage(message, 'user');
+    const optimisticUserId = addOptimisticMessage(message, 'user');
+
+    // Add optimistic assistant "preparing" message
+    const optimisticAssistantId = addOptimisticMessage(
+      '🤖 Анализирую данные и готовлю структурированный план...', 
+      'assistant'
+    );
+    
+    // Mark assistant message as preparing
+    updateOptimisticMessage(optimisticAssistantId, {
+      metadata: { 
+        isOptimistic: true, 
+        status: 'preparing',
+        preparingPlan: true
+      }
+    });
 
     // 30-second timeout for stuck requests
     const timeoutId = setTimeout(() => {
@@ -195,7 +210,8 @@ export const useAIConversations = (userId: string | undefined) => {
             mentionedNames,
             contextClientId,
             autoExecute,
-            optimisticId // Pass optimisticId for deduplication
+            optimisticUserId, // Pass user message optimisticId for deduplication
+            optimisticAssistantId // Pass assistant preparing message id
           }
         });
         
@@ -222,10 +238,12 @@ export const useAIConversations = (userId: string | undefined) => {
       // Clear timeout on success
       clearTimeout(timeoutId);
 
-      // Mark optimistic message as sent (don't remove yet, wait for realtime)
-      updateOptimisticMessage(optimisticId, {
+      // Mark optimistic user message as sent (don't remove yet, wait for realtime)
+      updateOptimisticMessage(optimisticUserId, {
         metadata: { isOptimistic: true, status: 'sent' }
       });
+      
+      // Assistant message will be updated via realtime when backend saves the real response
 
       // Fallback: If message doesn't arrive via realtime within 1.5 seconds, force reload
       const fallbackTimer = setTimeout(async () => {
@@ -298,9 +316,14 @@ export const useAIConversations = (userId: string | undefined) => {
         console.error('Failed to log AI error:', logError);
       }
       
-      // Mark optimistic message as failed
-      updateOptimisticMessage(optimisticId, { 
+      // Mark optimistic user message as failed
+      updateOptimisticMessage(optimisticUserId, { 
         metadata: { isOptimistic: true, status: 'failed' } 
+      });
+      
+      // Also mark assistant preparing message as failed if it exists
+      updateOptimisticMessage(optimisticAssistantId, {
+        metadata: { isOptimistic: true, status: 'failed', preparingPlan: false }
       });
       
       // Set error state

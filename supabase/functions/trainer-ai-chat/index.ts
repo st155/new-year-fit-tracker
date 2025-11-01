@@ -88,7 +88,8 @@ serve(async (req) => {
       mentionedNames = [], // Raw names mentioned (for fuzzy matching)
       contextClientId, // Client selected in UI context
       autoExecute = true, // Auto-execute simple actions by default
-      optimisticId // For deduplication of optimistic messages
+      optimisticUserId, // User message optimisticId for deduplication
+      optimisticAssistantId // Assistant preparing message id to update
     } = await req.json();
 
     const supabaseClient = createClient(
@@ -1193,25 +1194,61 @@ IMPORTANT INSTRUCTIONS:
         ...action.data
       }));
       
-      // Update system message with real plan
-      const { count } = await supabaseClient
-        .from('ai_messages')
-        .update({
-          content: assistantMessage,
-          metadata: {
-            isPlan: true,
-            pendingActionId: optimisticPendingAction.id,
-            suggestedActions,
-            status: 'pending'
-          }
-        })
-        .eq('conversation_id', conversation.id)
-        .eq('role', 'system')
-        .eq('metadata->status', 'preparing');
+      // Try to find and update preparing assistant message first
+      let preparingMessage = null;
+      if (optimisticAssistantId) {
+        const { data: preparingByOptimisticId } = await supabaseClient
+          .from('ai_messages')
+          .select('id')
+          .eq('conversation_id', conversation.id)
+          .eq('role', 'assistant')
+          .eq('metadata->>isOptimistic', 'true')
+          .eq('metadata->>status', 'preparing')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        preparingMessage = preparingByOptimisticId;
+      }
       
-      // Fallback: If optimistic message not found, create new assistant message
-      if (!count || count === 0) {
-        console.warn('⚠️ Optimistic message not found, creating new assistant message');
+      // Fallback: search by status only
+      if (!preparingMessage) {
+        const { data: preparingByStatus } = await supabaseClient
+          .from('ai_messages')
+          .select('id')
+          .eq('conversation_id', conversation.id)
+          .eq('role', 'assistant')
+          .eq('metadata->>status', 'preparing')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        preparingMessage = preparingByStatus;
+      }
+      
+      if (preparingMessage) {
+        // Update the preparing message with real AI response
+        const { error: updateError } = await supabaseClient
+          .from('ai_messages')
+          .update({
+            content: assistantMessage,
+            metadata: {
+              isPlan: true,
+              pendingActionId: optimisticPendingAction.id,
+              suggestedActions,
+              status: 'pending',
+              isOptimistic: false // No longer optimistic
+            }
+          })
+          .eq('id', preparingMessage.id);
+        
+        if (updateError) {
+          console.error('❌ Failed to update preparing message:', updateError);
+        } else {
+          console.log(`✅ Updated preparing message ${preparingMessage.id} with AI response`);
+        }
+      } else {
+        console.warn('⚠️ No preparing message found, creating new assistant message');
         await supabaseClient.from('ai_messages').insert({
           conversation_id: conversation.id,
           role: 'assistant',
@@ -1223,8 +1260,6 @@ IMPORTANT INSTRUCTIONS:
             status: 'pending'
           }
         });
-      } else {
-        console.log(`✅ Updated ${count} optimistic message(s) with AI response`);
       }
     } else {
       // Only check for plan if not auto-executed and no optimistic action
@@ -1261,42 +1296,48 @@ IMPORTANT INSTRUCTIONS:
       }
     }
 
-    // Save messages to database with metadata (only if not optimistic mode)
-    if (!optimisticPendingAction) {
-      isPlan = !autoExecuted && structuredActions.length > 0;
-      
-      await supabaseClient.from('ai_messages').insert([
-        {
-          conversation_id: conversation.id,
-          role: 'user',
-          content: message,
-          metadata: { 
-            mentioned_clients: mentionedClients,
-            optimisticId // Store for deduplication
-          }
-        },
-        {
-          conversation_id: conversation.id,
-          role: 'assistant',
-          content: assistantMessage,
-          metadata: {
-            isPlan,
-            pendingActionId,
-            suggestedActions
-          }
-        }
-      ]);
-    } else {
-      // Only save user message in optimistic mode (system message already created)
+    // Save messages to database
+    // Always save user message (if not already saved from optimistic)
+    const { data: existingUserMsg } = await supabaseClient
+      .from('ai_messages')
+      .select('id')
+      .eq('conversation_id', conversation.id)
+      .eq('metadata->>optimisticId', optimisticUserId)
+      .maybeSingle();
+    
+    if (!existingUserMsg) {
       await supabaseClient.from('ai_messages').insert({
         conversation_id: conversation.id,
         role: 'user',
         content: message,
         metadata: { 
           mentioned_clients: mentionedClients,
-          optimisticId // Store for deduplication
+          optimisticId: optimisticUserId // Store for deduplication
         }
       });
+      console.log('✅ Saved user message to database');
+    } else {
+      console.log('⏭️ User message already exists, skipping insert');
+    }
+    
+    // Save assistant message only if NOT in optimistic mode
+    // (in optimistic mode, we already updated the preparing message above)
+    if (!optimisticPendingAction && !optimisticAssistantId) {
+      isPlan = !autoExecuted && structuredActions.length > 0;
+      
+      await supabaseClient.from('ai_messages').insert({
+        conversation_id: conversation.id,
+        role: 'assistant',
+        content: assistantMessage,
+        metadata: {
+          isPlan,
+          pendingActionId,
+          suggestedActions
+        }
+      });
+      console.log('✅ Saved assistant message to database');
+    } else if (optimisticPendingAction || optimisticAssistantId) {
+      console.log('⏭️ Optimistic mode: assistant message already updated above');
     }
 
     // Update conversation title if it's the first message
