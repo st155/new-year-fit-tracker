@@ -26,6 +26,7 @@ interface ClientMetric {
   name: string;
   value: number | string;
   unit?: string;
+  subtitle?: string;
   icon: ReactNode;
   color?: "orange" | "green" | "blue" | "purple";
   trend?: 'up' | 'down' | 'stable' | 'improving' | 'declining';
@@ -183,30 +184,37 @@ export function TrainerClientCard({
           {metrics.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
               {metrics.slice(0, 4).map((metric, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 text-xs">
-                  <div className={cn(
-                    "h-3.5 w-3.5 flex-shrink-0",
-                    metric.color ? `text-trainer-${metric.color}` : "text-muted-foreground",
-                    metric.alert && "text-red-500"
-                  )}>
-                    {metric.icon}
-                  </div>
-                  <div className="min-w-0 flex items-center gap-1">
-                    <span className={cn(
-                      "truncate",
-                      metric.alert ? "text-red-500 font-medium" : "text-muted-foreground"
+                <div key={idx} className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <div className={cn(
+                      "h-3.5 w-3.5 flex-shrink-0",
+                      metric.color ? `text-trainer-${metric.color}` : "text-muted-foreground",
+                      metric.alert && "text-red-500"
                     )}>
-                      {metric.name}:
-                    </span>
-                    <span className={cn(
-                      "font-medium",
-                      metric.alert ? "text-red-500" : ""
-                    )}>
-                      {metric.value}
-                      {metric.unit && ` ${metric.unit}`}
-                    </span>
-                    {metric.trend && getTrendIcon(metric.trend)}
+                      {metric.icon}
+                    </div>
+                    <div className="min-w-0 flex items-center gap-1">
+                      <span className={cn(
+                        "truncate",
+                        metric.alert ? "text-red-500 font-medium" : "text-muted-foreground"
+                      )}>
+                        {metric.name}:
+                      </span>
+                      <span className={cn(
+                        "font-medium",
+                        metric.alert ? "text-red-500" : ""
+                      )}>
+                        {metric.value}
+                        {metric.unit && ` ${metric.unit}`}
+                      </span>
+                      {metric.trend && getTrendIcon(metric.trend)}
+                    </div>
                   </div>
+                  {metric.subtitle && (
+                    <p className="text-[10px] text-muted-foreground ml-5">
+                      {metric.subtitle}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

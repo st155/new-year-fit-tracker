@@ -452,10 +452,11 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                 icon: <Moon className="h-3 w-3" />,
                 color: 'purple' as const
               },
-              client.whoop_recovery_avg && {
+              (client.latest_recovery || client.whoop_recovery_avg) && {
                 name: 'Recovery',
-                value: Math.round(client.whoop_recovery_avg),
+                value: client.latest_recovery ? Math.round(client.latest_recovery) : Math.round(client.whoop_recovery_avg),
                 unit: '%',
+                subtitle: client.whoop_recovery_avg && client.latest_recovery ? `7д: ${Math.round(client.whoop_recovery_avg)}%` : undefined,
                 trend: client.recovery_trend,
                 alert: client.low_recovery_alert,
                 icon: <Heart className="h-3 w-3" />,

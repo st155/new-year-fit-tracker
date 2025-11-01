@@ -37,6 +37,7 @@ interface TrainerClient {
   recent_measurements_count?: number;
   last_activity_date?: string;
   whoop_recovery_avg?: number;
+  latest_recovery?: number;
   sleep_hours_avg?: number;
   weight_latest?: number;
   vo2max_latest?: number;
@@ -146,6 +147,7 @@ function TrainerDashboardContent() {
         recent_measurements_count: tc.recent_measurements_count || 0,
         last_activity_date: tc.last_activity_date,
         whoop_recovery_avg: tc.whoop_recovery_avg,
+        latest_recovery: tc.latest_recovery,
         sleep_hours_avg: tc.sleep_hours_avg,
         weight_latest: tc.weight_latest,
         vo2max_latest: tc.vo2max_latest,
