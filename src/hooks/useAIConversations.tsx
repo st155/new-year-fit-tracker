@@ -51,6 +51,7 @@ export const useAIConversations = (userId: string | undefined) => {
 
   // Load messages for a conversation
   const loadMessages = async (conversationId: string) => {
+    console.log('📥 [loadMessages] Loading for conversation:', conversationId);
     try {
       const { data, error } = await supabase
         .from('ai_messages')
@@ -59,9 +60,11 @@ export const useAIConversations = (userId: string | undefined) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      
+      console.log('📥 [loadMessages] Loaded messages:', data?.length || 0);
       setMessages((data || []) as AIMessage[]);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('❌ [loadMessages] Error:', error);
       showToast({
         title: 'Ошибка',
         description: 'Не удалось загрузить сообщения',
@@ -78,6 +81,7 @@ export const useAIConversations = (userId: string | undefined) => {
       console.log('🔄 [selectConversation] Clearing conversation');
       setCurrentConversation(null);
       setMessages([]);
+      setOptimisticMessages([]);
       return;
     }
 
@@ -86,10 +90,15 @@ export const useAIConversations = (userId: string | undefined) => {
     
     if (conversation) {
       console.log('🔄 [selectConversation] Setting currentConversation:', conversation.id);
+      
+      // КРИТИЧНО: Очистить ВСЕ старые данные перед переключением
+      setMessages([]);
+      setOptimisticMessages([]);
       setCurrentConversation(conversation);
+      
       console.log('🔄 [selectConversation] Loading messages...');
       await loadMessages(conversationId);
-      console.log('✅ [selectConversation] Complete');
+      console.log('✅ [selectConversation] Messages loaded');
     }
   };
 
