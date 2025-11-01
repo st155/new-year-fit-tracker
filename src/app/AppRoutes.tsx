@@ -231,7 +231,9 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <TrainerOnlyRoute>
               <ModernAppLayout>
-                <TrainingPlanDetail />
+                <AsyncErrorBoundary>
+                  <TrainingPlanDetail />
+                </AsyncErrorBoundary>
               </ModernAppLayout>
             </TrainerOnlyRoute>
           </ProtectedRoute>

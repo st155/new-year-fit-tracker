@@ -128,7 +128,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   )}
                   
                   {/* NEW: Warning for text-only plans */}
-                  {looksLikePlan && (
+                  {looksLikePlan && Alert && AlertTriangle && (
                     <Alert className="mb-3 border-yellow-500/50 bg-yellow-500/10">
                       <AlertTriangle className="h-4 w-4 text-yellow-500" />
                       <AlertDescription className="text-xs">

@@ -17,7 +17,26 @@ import {
 export default function TrainingPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { plan, loading, refetch, deletePlan, duplicatePlan } = useTrainingPlanDetail(id || null);
+  
+  // Early return if no ID provided
+  if (!id) {
+    return (
+      <div className="container max-w-4xl mx-auto py-8">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Идентификатор плана не указан</h2>
+            <Button onClick={() => navigate('/trainer-dashboard?tab=plans')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Вернуться к планам
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  const { plan, loading, refetch, deletePlan, duplicatePlan } = useTrainingPlanDetail(id);
 
   const handleDelete = async () => {
     const success = await deletePlan();
