@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles } from 'lucide-react';
+import { SparklesCore } from '@/components/aceternity';
 
 interface AIInsight {
   emoji: string;
@@ -105,10 +106,25 @@ export function DashboardHeader() {
 
   return (
     <div className="space-y-3">
-      {/* AI Insights Ticker */}
+      {/* AI Insights Ticker with Sparkles Background */}
       {insights.length > 0 && (
-        <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-2.5 overflow-hidden">
-          <div className="flex items-center gap-3">
+        <div className="relative w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-2.5 overflow-hidden">
+          {/* Sparkles Background */}
+          <div className="absolute inset-0 w-full h-full">
+            <SparklesCore
+              id="dashboardSparkles"
+              background="transparent"
+              minSize={0.4}
+              maxSize={1}
+              particleDensity={50}
+              className="w-full h-full"
+              particleColor="#06b6d4"
+              speed={0.5}
+            />
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center gap-3">
             <Sparkles className="h-4 w-4 text-primary shrink-0 ml-4 animate-pulse" />
             <div className="flex-1 overflow-hidden">
               <div className="flex gap-8 animate-[marquee_30s_linear_infinite] whitespace-nowrap">

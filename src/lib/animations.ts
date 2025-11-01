@@ -88,3 +88,35 @@ export const getAnimationVariants = (variants: Variants): Variants => {
   }
   return variants;
 };
+
+// Check if browser supports advanced 3D animations
+export const supportsAdvancedAnimations = () => {
+  if (typeof window === 'undefined') return false;
+  
+  const supportsTransform3D = () => {
+    const el = document.createElement('p');
+    let has3d = false;
+    const transforms: Record<string, string> = {
+      'webkitTransform': '-webkit-transform',
+      'OTransform': '-o-transform',
+      'msTransform': '-ms-transform',
+      'MozTransform': '-moz-transform',
+      'transform': 'transform',
+    };
+
+    document.body.insertBefore(el, null);
+
+    for (const t in transforms) {
+      if ((el.style as any)[t] !== undefined) {
+        (el.style as any)[t] = 'translate3d(1px,1px,1px)';
+        has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]) !== undefined;
+        break;
+      }
+    }
+
+    document.body.removeChild(el);
+    return has3d;
+  };
+
+  return supportsTransform3D();
+};

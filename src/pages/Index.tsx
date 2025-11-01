@@ -35,6 +35,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { CompactDataQualityLine } from '@/components/dashboard/CompactDataQualityLine';
+import { BackgroundGradient } from '@/components/aceternity';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -233,9 +234,14 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Enhanced AI Insights */}
+        {/* Enhanced AI Insights with Background Gradient */}
         <ErrorBoundary>
-          <EnhancedAIInsights userId={user?.id} />
+          <BackgroundGradient
+            className="rounded-2xl"
+            animate={true}
+          >
+            <EnhancedAIInsights userId={user?.id} />
+          </BackgroundGradient>
         </ErrorBoundary>
 
         {/* Enhanced Data Quality */}
