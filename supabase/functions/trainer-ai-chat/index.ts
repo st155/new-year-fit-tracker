@@ -469,10 +469,25 @@ ${detectedMode === 'challenge' ? '- Help manage challenges and competitions\n- S
 
 Context data:${contextData}
 
+🚨 CRITICAL TOOL USAGE RULES (MUST FOLLOW):
+
+When users ask you to:
+- "создать план тренировок" / "разработать план" / "составить план"
+- "поставить цели" / "установить задачи" / "создать цели"
+- "добавить измерения" / "записать результаты"
+- "update goal" / "change goal" / "изменить цель"
+
+YOU MUST:
+1. Generate a helpful text response explaining what you're doing
+2. **ALWAYS call the appropriate tool functions** (create_training_plan, create_client_goals, add_measurements, update_goal)
+3. DO NOT just describe the plan in text - you MUST call the tool to create structured data
+
+The trainer needs structured data to approve and execute your plans. Text-only responses will be ignored!
+
 IMPORTANT INSTRUCTIONS:
 1. When the trainer wants to make changes (update goals, add measurements, create tasks), respond in PLAN MODE:
    - Clearly explain what you'll do
-   - List specific actions with data
+   - **CALL THE APPROPRIATE TOOL FUNCTION WITH STRUCTURED DATA**
    - End with "Ready to implement this plan?"
    
 2. For analysis and discussion, respond normally with insights and suggestions.
@@ -814,18 +829,33 @@ IMPORTANT INSTRUCTIONS:
                        message.toLowerCase().includes('выполнить план') ||
                        message.toLowerCase().includes('да, реализовать');
 
+    // NEW: Detect if user is requesting plan/goal creation
+    const userMessage = message.toLowerCase();
+    const needsStructuredOutput = 
+      userMessage.includes('создай план') ||
+      userMessage.includes('разработай план') ||
+      userMessage.includes('составь план') ||
+      userMessage.includes('поставь цел') ||
+      userMessage.includes('установи цел') ||
+      userMessage.includes('создай цел') ||
+      userMessage.includes('добавь измерен') ||
+      userMessage.includes('создать план') ||
+      userMessage.includes('create plan') ||
+      userMessage.includes('set goal') ||
+      userMessage.includes('add measurement');
+
     const requestBody: any = {
       model: 'google/gemini-2.5-flash',
       messages: aiMessages,
     };
 
     // Add tools if user is creating plan or approving
-    if (isApproval || eagerMode || contextMode === 'goals' || mentionedClients.length > 0) {
+    if (isApproval || eagerMode || contextMode === 'goals' || mentionedClients.length > 0 || needsStructuredOutput) {
       requestBody.tools = tools;
-      // Force tool usage in eager mode
-      if (eagerMode) {
+      // Force tool usage in eager mode OR when user explicitly requests plan/goal creation
+      if (eagerMode || needsStructuredOutput) {
         requestBody.tool_choice = "required";
-        console.log('🔧 Forcing tool usage in eager mode');
+        console.log('🔧 Forcing tool usage:', eagerMode ? 'eager mode' : 'plan creation detected');
       } else {
         requestBody.tool_choice = "auto";
       }
@@ -911,7 +941,14 @@ IMPORTANT INSTRUCTIONS:
     let assistantMessage = aiResponse.choices[0].message.content || '';
     const toolCalls = aiResponse.choices[0].message.tool_calls;
 
-    console.log('AI response generated');
+    // NEW: Debug logging for tool call status
+    console.log('🔍 DEBUG AI Response:', {
+      hasToolCalls: !!toolCalls && toolCalls.length > 0,
+      toolCallsCount: toolCalls?.length || 0,
+      assistantMessageLength: assistantMessage.length,
+      needsStructuredOutput,
+      eagerMode
+    });
     
     // Initialize isPlan at the top level to avoid scope issues
     let isPlan = false;
@@ -1067,6 +1104,54 @@ IMPORTANT INSTRUCTIONS:
       }
       
       console.log(`✅ After normalization: all actions ready with client_id`);
+    } else {
+      // NEW: Fallback parsing for text-only responses that look like plans
+      console.log('⚠️ AI did not use tools, checking for text-only plan...');
+      
+      const hasPlanStructure = /понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(assistantMessage);
+      const hasGoalStructure = /цель|goal|target|прогресс|progress/i.test(assistantMessage);
+      
+      if ((hasPlanStructure || hasGoalStructure) && (contextClientId || mentionedClients.length > 0)) {
+        console.log('📋 Detected text-only plan/goal, creating fallback structured action');
+        
+        // Determine client ID
+        const targetClientId = contextClientId || mentionedClients[0];
+        
+        if (hasPlanStructure && needsStructuredOutput && userMessage.includes('план')) {
+          // Create a basic training plan structure
+          structuredActions.push({
+            type: 'create_training_plan',
+            data: {
+              client_id: targetClientId,
+              plan_name: 'План тренировок',
+              description: 'План создан AI - требуется ручное заполнение деталей',
+              duration_weeks: 4,
+              workouts: [] // Empty for now, trainer will need to fill manually
+            }
+          });
+          console.log('✅ Created fallback training_plan structured action');
+        } else if (hasGoalStructure && needsStructuredOutput && userMessage.includes('цел')) {
+          // Create a placeholder goal
+          structuredActions.push({
+            type: 'create_goal',
+            data: {
+              client_id: targetClientId,
+              goal_name: 'Новая цель',
+              goal_type: 'general',
+              target_value: 100,
+              target_unit: 'units'
+            }
+          });
+          console.log('✅ Created fallback goal structured action');
+        }
+      }
+      
+      // Log final status
+      console.log('🔍 DEBUG Structured Actions:', {
+        structuredActionsCount: structuredActions.length,
+        willCreatePendingAction: structuredActions.length > 0,
+        actions: structuredActions.map(a => ({ type: a.type, hasClientId: !!a.data?.client_id }))
+      });
     }
 
     // Auto-execute simple actions if enabled

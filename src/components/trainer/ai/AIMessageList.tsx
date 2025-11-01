@@ -6,7 +6,8 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sparkles, User, Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Sparkles, User, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChat } from './useAIChat';
 import { AIToolCard } from './AIToolCard';
@@ -55,6 +56,19 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
             const isSystem = msg.role === 'system';
             const isOptimistic = msg.metadata?.isOptimistic;
             const isFailed = msg.metadata?.status === 'failed';
+            
+            // NEW: Detect if message looks like a plan but has no pending action
+            const looksLikePlan = msg.role === 'assistant' && 
+              !msg.metadata?.pendingActionId &&
+              !msg.metadata?.autoExecuted &&
+              !msg.metadata?.preparingPlan &&
+              (
+                msg.content.includes('План тренировок') || 
+                msg.content.includes('Training Plan') ||
+                msg.content.includes('Готовы реализовать') ||
+                msg.content.includes('Ready to implement') ||
+                /понедельник|вторник|среда|четверг|пятница/i.test(msg.content)
+              );
             
             return (
               <motion.div
@@ -111,6 +125,18 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                         />
                       ))}
                     </div>
+                  )}
+                  
+                  {/* NEW: Warning for text-only plans */}
+                  {looksLikePlan && (
+                    <Alert className="mb-3 border-yellow-500/50 bg-yellow-500/10">
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                      <AlertDescription className="text-xs">
+                        <strong>AI создал план в виде текста.</strong> Для автоматического создания используйте 
+                        более конкретную формулировку (например: "создай план тренировок для @client") 
+                        или скопируйте план вручную.
+                      </AlertDescription>
+                    </Alert>
                   )}
                   
                   {/* Message content - hide for preparing messages that are just loading */}
