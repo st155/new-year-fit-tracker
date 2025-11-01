@@ -1405,9 +1405,63 @@ IMPORTANT INSTRUCTIONS:
       console.log('⏭️ User message already exists, skipping insert');
     }
     
-    // Save assistant message only if NOT in optimistic mode
-    // (in optimistic mode, we already updated the preparing message above)
-    if (!optimisticPendingAction && !optimisticAssistantId) {
+    // Save assistant message:
+    // 1. If optimisticPendingAction exists AND structured actions created → already updated above
+    // 2. If optimisticAssistantId exists → try to update it, fallback to insert if not found
+    // 3. Otherwise → insert new message
+
+    if (optimisticPendingAction && structuredActions.length > 0) {
+      // Case 1: Already updated via optimistic pending action flow
+      console.log('⏭️ Optimistic mode: assistant message already updated via pending action');
+    } else if (optimisticAssistantId) {
+      // Case 2: Try to update the preparing message sent from frontend
+      console.log('📝 Trying to update optimistic assistant message:', optimisticAssistantId);
+      
+      // First, try to find and update the preparing message
+      const { data: existingMessage } = await supabaseClient
+        .from('ai_messages')
+        .select('id')
+        .eq('conversation_id', conversation.id)
+        .eq('role', 'assistant')
+        .eq('id', optimisticAssistantId)
+        .single();
+      
+      if (existingMessage) {
+        // Update existing preparing message
+        await supabaseClient
+          .from('ai_messages')
+          .update({
+            content: assistantMessage,
+            metadata: {
+              isPlan: !autoExecuted && structuredActions.length > 0,
+              pendingActionId,
+              suggestedActions,
+              isOptimistic: false // No longer optimistic
+            }
+          })
+          .eq('id', optimisticAssistantId);
+        
+        console.log('✅ Updated optimistic assistant message');
+      } else {
+        // Fallback: preparing message not found, create new one
+        console.warn('⚠️ Optimistic assistant message not found, creating new one');
+        
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: assistantMessage,
+          metadata: {
+            isPlan: !autoExecuted && structuredActions.length > 0,
+            pendingActionId,
+            suggestedActions,
+            optimisticId: optimisticAssistantId // Store for deduplication
+          }
+        });
+        
+        console.log('✅ Created new assistant message (fallback)');
+      }
+    } else {
+      // Case 3: No optimistic mode, create new message
       isPlan = !autoExecuted && structuredActions.length > 0;
       
       await supabaseClient.from('ai_messages').insert({
@@ -1420,9 +1474,8 @@ IMPORTANT INSTRUCTIONS:
           suggestedActions
         }
       });
+      
       console.log('✅ Saved assistant message to database');
-    } else if (optimisticPendingAction || optimisticAssistantId) {
-      console.log('⏭️ Optimistic mode: assistant message already updated above');
     }
 
     // Update conversation title if it's the first message

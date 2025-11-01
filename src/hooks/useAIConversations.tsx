@@ -245,16 +245,16 @@ export const useAIConversations = (userId: string | undefined) => {
       
       // Assistant message will be updated via realtime when backend saves the real response
 
-      // Fallback: If message doesn't arrive via realtime within 1.5 seconds, force reload
+      // Fallback: If message doesn't arrive via realtime within 1 second, force reload
       const fallbackTimer = setTimeout(async () => {
-        console.log('⚠️ Realtime message not received within 1.5s, forcing reload');
+        console.log('⚠️ Realtime message not received within 1s, forcing reload');
         if (currentConversation?.id || data.conversationId) {
           const convId = currentConversation?.id || data.conversationId;
           await loadMessages(convId);
           // Remove all optimistic messages since we have real data now
           setOptimisticMessages([]);
         }
-      }, 1500);
+      }, 1000);
 
       // Clear fallback timer if component unmounts or conversation changes
       const clearFallback = () => clearTimeout(fallbackTimer);
