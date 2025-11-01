@@ -97,7 +97,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top w-full">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top w-full">
       <div className="flex items-center justify-between px-4 py-3 w-full max-w-full">
         {/* Logo - Clickable */}
         <div 

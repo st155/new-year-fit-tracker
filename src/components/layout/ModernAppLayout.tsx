@@ -31,7 +31,7 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
       <MetricsViewProvider>
         <div className="min-h-screen flex flex-col w-full bg-background">
           <TopNavigation />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pt-16">
             {children}
           </main>
           {/* Bottom Navigation - Only on mobile */}
