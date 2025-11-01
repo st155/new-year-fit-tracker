@@ -140,7 +140,7 @@ export default function Body() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="current">
+        <TabsContent value="current" className="space-y-6">
           <CurrentMetrics current={current} isLoading={isLoading} />
         </TabsContent>
 

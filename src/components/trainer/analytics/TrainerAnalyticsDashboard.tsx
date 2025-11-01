@@ -5,26 +5,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Card as TremorCard, Metric, Text, BarChart, DonutChart } from '@tremor/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { QuickActionsPanel } from './QuickActionsPanel';
 import { RecentActivityTimeline } from './RecentActivityTimeline';
 import { ExportAllClients } from './ExportAllClients';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
 import { 
   Users, 
   TrendingUp, 
@@ -194,59 +181,51 @@ export function TrainerAnalyticsDashboard() {
       
       <QuickActionsPanel />
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Tremor */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего клиентов</CardTitle>
+        <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="cyan">
+          <div className="flex items-center justify-between">
+            <Text>Всего клиентов</Text>
             <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.totalClients}</div>
-            <p className="text-xs text-muted-foreground">
-              {summary.activeClients} с данными за 7 дней
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <Metric className="mt-2">{summary.totalClients}</Metric>
+          <Text className="text-muted-foreground">
+            {summary.activeClients} с данными за 7 дней
+          </Text>
+        </TremorCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Средний Health Score</CardTitle>
+        <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="blue">
+          <div className="flex items-center justify-between">
+            <Text>Средний Health Score</Text>
             <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.avgHealthScore}</div>
-            <p className="text-xs text-muted-foreground">
-              Из 100 возможных
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <Metric className="mt-2">{summary.avgHealthScore}</Metric>
+          <Text className="text-muted-foreground">
+            Из 100 возможных
+          </Text>
+        </TremorCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Клиенты с алертами</CardTitle>
-            <AlertCircle className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{summary.clientsAtRisk}</div>
-            <p className="text-xs text-muted-foreground">
-              Низкое восстановление или просроченные задачи
-            </p>
-          </CardContent>
-        </Card>
+        <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="amber">
+          <div className="flex items-center justify-between">
+            <Text>Клиенты с алертами</Text>
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+          </div>
+          <Metric className="mt-2 text-amber-500">{summary.clientsAtRisk}</Metric>
+          <Text className="text-muted-foreground">
+            Низкое восстановление или просроченные задачи
+          </Text>
+        </TremorCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Топ-исполнители</CardTitle>
-            <Award className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">{summary.topPerformers}</div>
-            <p className="text-xs text-muted-foreground">
-              Health Score {'>'} 80
-            </p>
-          </CardContent>
-        </Card>
+        <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="emerald">
+          <div className="flex items-center justify-between">
+            <Text>Топ-исполнители</Text>
+            <Award className="h-4 w-4 text-emerald-500" />
+          </div>
+          <Metric className="mt-2 text-emerald-500">{summary.topPerformers}</Metric>
+          <Text className="text-muted-foreground">
+            Health Score {'>'} 80
+          </Text>
+        </TremorCard>
       </div>
 
       <Tabs defaultValue="engagement" className="space-y-4">
@@ -257,57 +236,36 @@ export function TrainerAnalyticsDashboard() {
         </TabsList>
 
         <TabsContent value="engagement" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Активность клиентов (последние 7 дней)</CardTitle>
-              <CardDescription>Количество синхронизированных метрик</CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={engagement}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="client_name" 
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="measurements_count" fill="hsl(var(--primary))" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <TremorCard className="glass-medium border-white/10">
+            <Text className="text-lg font-semibold mb-1">Активность клиентов (последние 7 дней)</Text>
+            <Text className="text-muted-foreground mb-4">Количество синхронизированных метрик</Text>
+            <BarChart
+              className="h-80"
+              data={engagement}
+              index="client_name"
+              categories={['measurements_count']}
+              colors={['cyan']}
+              valueFormatter={(value) => value.toString()}
+              showLegend={false}
+              showGridLines={false}
+              yAxisWidth={40}
+            />
+          </TremorCard>
         </TabsContent>
 
         <TabsContent value="distribution" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Распределение клиентов по Health Score</CardTitle>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={healthDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {healthDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <TremorCard className="glass-medium border-white/10">
+            <Text className="text-lg font-semibold mb-4">Распределение клиентов по Health Score</Text>
+            <DonutChart
+              className="h-80"
+              data={healthDistribution}
+              category="value"
+              index="name"
+              colors={['emerald', 'blue', 'amber', 'red']}
+              showLabel={true}
+              valueFormatter={(value) => value.toString()}
+            />
+          </TremorCard>
         </TabsContent>
         
         <TabsContent value="timeline" className="space-y-4">

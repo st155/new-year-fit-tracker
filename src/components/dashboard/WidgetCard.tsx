@@ -1,4 +1,5 @@
 import { useEffect, useState, memo, useMemo, useCallback } from 'react';
+import { Card as TremorCard, AreaChart } from '@tremor/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,6 @@ import { getConfidenceColor } from '@/lib/data-quality';
 import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
-import { ResponsiveContainer, LineChart, Line, Tooltip as RechartsTooltip } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -762,38 +762,25 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
 
-        {/* Sparkline Chart */}
+        {/* Sparkline Chart - Tremor AreaChart */}
         {sparklineData && sparklineData.length > 1 && (
-          <div className="mt-2 sm:mt-3 h-[60px] -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sparklineData}>
-                <RechartsTooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload?.[0]) {
-                      return (
-                        <div className="bg-background/95 backdrop-blur-sm border rounded-md px-2 py-1.5 text-xs shadow-lg">
-                          <div className="text-muted-foreground mb-0.5">
-                            {format(parseISO(payload[0].payload.date), 'd MMM', { locale: ru })}
-                          </div>
-                          <div className="font-semibold" style={{ color }}>
-                            {formatValue(payload[0].value as number, metricName, data.unit)} {data.unit}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke={color}
-                  strokeWidth={2}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
+            <AreaChart
+              data={sparklineData.map(d => ({ 
+                date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+                value: d.value 
+              }))}
+              index="date"
+              categories={['value']}
+              colors={[color.replace('#', '')]}
+              showLegend={false}
+              showXAxis={false}
+              showYAxis={false}
+              showGridLines={false}
+              className="h-[60px]"
+              curveType="natural"
+              valueFormatter={(value) => `${formatValue(value, metricName, data.unit)} ${data.unit}`}
+            />
           </div>
         )}
 

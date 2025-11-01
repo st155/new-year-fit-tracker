@@ -1,8 +1,10 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, Metric, Text, AreaChart } from '@tremor/react';
 import { Badge } from '@/components/ui/badge';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { DataQualityBadge } from '@/components/data-quality/DataQualityBadge';
+import { ConflictWarningBadge } from '@/components/data-quality/ConflictWarningBadge';
+import { getConfidenceColor } from '@/lib/data-quality';
 
 interface MetricCardProps {
   name: string;
@@ -14,6 +16,7 @@ interface MetricCardProps {
   isStale?: boolean;
   sparkline?: { value: number }[];
   subtitle?: string;
+  confidence?: number;
 }
 
 export function MetricCard({
@@ -26,7 +29,13 @@ export function MetricCard({
   isStale,
   sparkline,
   subtitle,
+  confidence = 75,
 }: MetricCardProps) {
+  const sparklineData = sparkline?.map((s, idx) => ({ 
+    index: idx.toString(), 
+    value: s.value 
+  })) || [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -34,54 +43,55 @@ export function MetricCard({
       transition={{ duration: 0.3 }}
       whileHover={{ scale: 1.02 }}
     >
-      <Card className="relative overflow-hidden">
-        <CardContent className="p-4">
+      <Card 
+        className="glass-medium border-white/10 hover:border-primary/30 transition-all"
+        style={{ borderLeft: `3px solid ${getConfidenceColor(confidence)}` }}
+      >
+        <div className="p-4">
           <div className="flex items-start justify-between mb-3">
             <div className={`p-2 rounded-lg ${color}`}>
               <Icon className="h-4 w-4 text-white" />
             </div>
-            {source && (
-              <Badge variant="outline" className="text-xs">
-                {source}
-              </Badge>
-            )}
+            <div className="flex gap-1 items-center">
+              {source && (
+                <Badge variant="outline" className="text-xs">
+                  {source}
+                </Badge>
+              )}
+              <DataQualityBadge confidence={confidence} size="compact" />
+              <ConflictWarningBadge metricName={name} />
+            </div>
           </div>
           
-          <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">{name}</div>
+          <div className="space-y-1 mb-2">
+            <Text className="text-muted-foreground">{name}</Text>
             <div className="flex items-baseline gap-1">
-              <motion.span
-                className="text-2xl font-bold"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
+              <Metric>
                 {value}
-              </motion.span>
+              </Metric>
               {unit && (
-                <span className="text-sm text-muted-foreground">{unit}</span>
+                <span className="text-sm text-muted-foreground ml-1">{unit}</span>
               )}
             </div>
             {subtitle && (
-              <div className="text-xs text-muted-foreground">{subtitle}</div>
+              <Text className="text-xs text-muted-foreground">{subtitle}</Text>
             )}
           </div>
 
-          {/* Sparkline */}
-          {sparkline && sparkline.length > 0 && (
-            <div className="mt-3 h-12">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sparkline}>
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={1.5}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          {/* Sparkline with Tremor */}
+          {sparklineData.length > 0 && (
+            <AreaChart
+              data={sparklineData}
+              index="index"
+              categories={['value']}
+              colors={['cyan']}
+              showLegend={false}
+              showXAxis={false}
+              showYAxis={false}
+              showGridLines={false}
+              className="h-12 mt-2"
+              curveType="natural"
+            />
           )}
 
           {/* Stale indicator */}
@@ -90,7 +100,7 @@ export function MetricCard({
               Устаревшие
             </Badge>
           )}
-        </CardContent>
+        </div>
       </Card>
     </motion.div>
   );

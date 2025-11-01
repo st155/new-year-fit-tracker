@@ -18,6 +18,8 @@ import { RefreshCw } from 'lucide-react';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 
 export default function ProgressNew() {
   const { user } = useAuth();
@@ -122,16 +124,23 @@ export default function ProgressNew() {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
             {widgets.map((widget) => (
-              <WidgetErrorBoundary key={widget.id} widgetName={widget.metric_name}>
-                <WidgetCard
-                  widget={widget}
-                  data={smartData?.get(widget.id)}
-                />
-              </WidgetErrorBoundary>
+              <motion.div key={widget.id} variants={staggerItem}>
+                <WidgetErrorBoundary widgetName={widget.metric_name}>
+                  <WidgetCard
+                    widget={widget}
+                    data={smartData?.get(widget.id)}
+                  />
+                </WidgetErrorBoundary>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

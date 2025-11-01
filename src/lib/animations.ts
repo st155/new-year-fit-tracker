@@ -27,18 +27,21 @@ export const staggerContainer: Variants = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.1,
       delayChildren: 0.1
     }
   }
 };
 
 export const staggerItem: Variants = {
-  initial: { opacity: 0, y: 10 },
+  initial: { opacity: 0, y: 20 },
   animate: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.3, ease: 'easeOut' }
+    transition: { 
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1] // Custom easing
+    }
   }
 };
 
@@ -54,12 +57,30 @@ export const hoverLift = {
   }
 };
 
-// Page transition
-export const pageTransition = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.3, ease: 'easeInOut' }
+// Page transition with scale effect
+export const pageTransition: Variants = {
+  initial: { 
+    opacity: 0, 
+    y: 20,
+    scale: 0.98 
+  },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1]
+    }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -20,
+    scale: 0.98,
+    transition: {
+      duration: 0.3
+    }
+  }
 };
 
 // Fade in animation

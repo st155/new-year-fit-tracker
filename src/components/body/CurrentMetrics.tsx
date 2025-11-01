@@ -5,6 +5,9 @@ import { useAggregatedBodyMetrics } from "@/hooks/useAggregatedBodyMetrics";
 import { useDataQuality } from "@/hooks/useDataQuality";
 import { BodyMetricCard } from "./BodyMetricCard";
 import { SegmentalAnalysis } from "./SegmentalAnalysis";
+import { BodyModel3D } from "@/components/body-composition/BodyModel3D";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CurrentMetricsProps {
   current: any;
@@ -15,6 +18,34 @@ export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
   const { user } = useAuth();
   const metrics = useAggregatedBodyMetrics(user?.id);
   const { getMetricWithQuality } = useDataQuality();
+
+  // Fetch segmental data for 3D model
+  const { data: segmentalData } = useQuery({
+    queryKey: ['body-segmental', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('body_composition_view')
+        .select('segmental_data')
+        .eq('user_id', user.id)
+        .order('measurement_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching segmental data:', error);
+        return [];
+      }
+      
+      // Parse and validate segmental data
+      const rawData = data?.segmental_data;
+      if (!rawData || !Array.isArray(rawData)) return [];
+      
+      return rawData as Array<{ name: string; value: number; balanced?: boolean }>;
+    },
+    enabled: !!user?.id,
+  });
 
   if (isLoading) {
     return (
@@ -113,6 +144,17 @@ export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
       {/* Segmental analysis if available */}
       {metrics.segmental && (
         <SegmentalAnalysis segmental={metrics.segmental} />
+      )}
+
+      {/* 3D Body Model */}
+      {segmentalData && Array.isArray(segmentalData) && segmentalData.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">3D Body Model</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Green segments indicate balanced muscle distribution
+          </p>
+          <BodyModel3D segmentalData={segmentalData} />
+        </div>
       )}
     </div>
   );
