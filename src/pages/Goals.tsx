@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EnhancedGoalCard } from "@/components/goals/EnhancedGoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { FirstMeasurementDialog } from "@/components/goals/FirstMeasurementDialog";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ type FilterType = 'all' | 'personal' | 'challenges';
 
 export default function Goals() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [showFirstMeasurement, setShowFirstMeasurement] = useState(false);
@@ -190,14 +191,19 @@ export default function Goals() {
                   : "Create your first goal or join a challenge"
           }
           action={
-            !searchQuery.trim() && filter !== 'challenges'
+            !searchQuery.trim() && filter === 'challenges'
               ? {
-                  label: "Create Goal",
-                  onClick: () => setCreateDialogOpen(true)
+                  label: "Найти челленджи",
+                  onClick: () => navigate('/challenges')
                 }
-            : undefined
-        }
-      />
+              : !searchQuery.trim() && filter !== 'challenges'
+                ? {
+                    label: "Create Goal",
+                    onClick: () => setCreateDialogOpen(true)
+                  }
+              : undefined
+          }
+        />
       ) : (
         <motion.div 
           className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"

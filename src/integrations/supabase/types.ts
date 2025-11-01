@@ -4460,6 +4460,7 @@ export type Database = {
         Returns: boolean
       }
       is_trainer: { Args: { _user_id: string }; Returns: boolean }
+      join_challenge: { Args: { p_challenge_id: string }; Returns: Json }
       retry_failed_jobs: {
         Args: { p_job_type?: string }
         Returns: {

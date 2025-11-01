@@ -48,24 +48,34 @@ export default function ChallengeDetail() {
     mutationFn: async () => {
       if (!user || !id) throw new Error("Missing user or challenge ID");
       
-      const { error } = await supabase
-        .from("challenge_participants")
-        .insert({
-          challenge_id: id,
-          user_id: user.id,
-        });
+      const { data, error } = await supabase.rpc('join_challenge', {
+        p_challenge_id: id
+      });
 
       if (error) throw error;
+      
+      console.log('✅ Joined challenge:', data);
+      return data;
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      const result = data as any;
+      const goalsCreated = result?.goals_created || 0;
+      
+      if (goalsCreated > 0) {
+        toast.success(`Вы присоединились к челленджу! Создано целей: ${goalsCreated}`);
+      } else {
+        toast.success("Вы присоединились к челленджу!");
+      }
+      
       // Capture baseline metrics
       if (user && id) {
         await captureBaseline(user.id, id);
       }
       
-      toast.success("Вы присоединились к челленджу!");
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
       setIsParticipant(true);
     },
     onError: (error) => {
