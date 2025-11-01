@@ -47,6 +47,8 @@ import { PeriodComparison } from './export/PeriodComparison';
 import { AutoSyncMonitor } from './automation/AutoSyncMonitor';
 import { ConflictResolutionPanel } from './automation/ConflictResolutionPanel';
 import { AutomatedInsights } from './automation/AutomatedInsights';
+import { ClientHealthScore } from './client-detail/ClientHealthScore';
+import { AdvancedFilters, FilterState } from './client-detail/AdvancedFilters';
 
 interface Client {
   id: string;
@@ -99,6 +101,23 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const navigate = useNavigate();
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    period: '30d',
+    sources: [],
+    metricTypes: [],
+    minConfidence: 0,
+  });
+  
+  const handleResetFilters = () => {
+    setFilters({
+      period: '30d',
+      sources: [],
+      metricTypes: [],
+      minConfidence: 0,
+    });
+  };
 
   // Используем оптимизированный хук для загрузки данных
   const { 
@@ -279,7 +298,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 {getInitials(client.full_name || client.username)}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <CardTitle className="text-2xl">{client.full_name || client.username}</CardTitle>
               <CardDescription>@{client.username}</CardDescription>
               <div className="flex gap-2 mt-2">
@@ -287,9 +306,30 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 <Badge variant="outline">{measurements.length} измерений за месяц</Badge>
               </div>
             </div>
+            
+            {/* Client Health Score */}
+            <ClientHealthScore
+              totalScore={85} // TODO: Calculate from actual data
+              breakdown={{
+                recovery: 22,
+                sleep: 20,
+                activity: 18,
+                consistency: 12,
+                trend: 13,
+              }}
+              lastUpdated={new Date()}
+              className="hidden lg:block"
+            />
           </div>
         </CardHeader>
       </Card>
+
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        onReset={handleResetFilters}
+      />
 
       <Tabs defaultValue="goals" className="space-y-4">
         <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">

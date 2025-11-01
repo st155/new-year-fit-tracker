@@ -98,3 +98,9 @@ verify_jwt = false
 
 [functions.trainer-alerts]
 verify_jwt = false
+
+[functions.generate-trainer-notifications]
+verify_jwt = false
+
+[functions.generate-trainer-notifications.cron]
+schedule = "0 */6 * * *"

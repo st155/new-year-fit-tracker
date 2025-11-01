@@ -99,6 +99,53 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'quickActions.leaderboard': 'Leaderboard',
     'quickActions.data': 'Data',
     
+    // Trainer Navigation
+    'navigation.trainerDashboard': 'Панель тренера',
+    'navigation.analytics': 'Аналитика',
+    
+    // Trainer Analytics Dashboard
+    'trainer.analytics.title': 'Аналитика тренера',
+    'trainer.analytics.overview': 'Обзор',
+    'trainer.analytics.clients': 'Клиенты',
+    'trainer.analytics.metrics': 'Метрики',
+    'trainer.analytics.totalClients': 'Всего клиентов',
+    'trainer.analytics.activeClients': 'Активных клиентов',
+    'trainer.analytics.avgRecovery': 'Средний Recovery',
+    'trainer.analytics.avgStrain': 'Средний Strain',
+    'trainer.analytics.clientEngagement': 'Вовлеченность клиентов',
+    'trainer.analytics.healthScores': 'Показатели здоровья',
+    'trainer.analytics.lastSync': 'Последняя синхронизация',
+    'trainer.analytics.measurements': 'Измерений',
+    'trainer.analytics.noData': 'Нет данных',
+    
+    // Automation
+    'trainer.automation.title': 'Автоматизация',
+    'trainer.automation.syncMonitor': 'Мониторинг синхронизации',
+    'trainer.automation.conflicts': 'Конфликты данных',
+    'trainer.automation.insights': 'Автоматические инсайты',
+    'trainer.automation.staleData': 'Устаревшие данные',
+    'trainer.automation.syncAll': 'Синхронизировать все',
+    'trainer.automation.resolveConflict': 'Разрешить конфликт',
+    'trainer.automation.overtraining': 'Предупреждение о перетренированности',
+    'trainer.automation.lowRecovery': 'Низкий Recovery',
+    'trainer.automation.sleepIssues': 'Проблемы со сном',
+    'trainer.automation.goodProgress': 'Хороший прогресс',
+    
+    // Export & Reports
+    'trainer.export.title': 'Экспорт отчета',
+    'trainer.export.selectPeriod': 'Выберите период',
+    'trainer.export.selectSections': 'Выберите разделы',
+    'trainer.export.downloadPDF': 'Скачать PDF',
+    'trainer.export.generating': 'Генерация отчета...',
+    'trainer.export.success': 'Отчет успешно сгенерирован',
+    'trainer.export.error': 'Ошибка генерации отчета',
+    'trainer.comparison.title': 'Сравнение периодов',
+    'trainer.comparison.period1': 'Период 1',
+    'trainer.comparison.period2': 'Период 2',
+    'trainer.comparison.compare': 'Сравнить',
+    'trainer.comparison.improvement': 'Улучшение',
+    'trainer.comparison.decline': 'Снижение',
+
     // Auth
     'auth.signIn': 'Вход',
     'auth.signUp': 'Регистрация',

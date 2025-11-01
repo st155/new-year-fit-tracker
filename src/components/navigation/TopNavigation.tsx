@@ -9,6 +9,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
+import { TrainerNotifications } from "@/components/trainer/notifications/TrainerNotifications";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -147,6 +148,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
         {/* Settings & Profile - Right */}
         <div className="flex items-center gap-2 min-w-[120px] justify-end">
+          {/* Trainer Notifications - Show only for trainers */}
+          {isTrainer && <TrainerNotifications />}
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

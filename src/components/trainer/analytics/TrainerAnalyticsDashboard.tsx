@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { QuickActionsPanel } from './QuickActionsPanel';
+import { RecentActivityTimeline } from './RecentActivityTimeline';
+import { ExportAllClients } from './ExportAllClients';
 import { 
   BarChart, 
   Bar, 
@@ -141,6 +144,17 @@ export function TrainerAnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Quick Actions Panel */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Аналитика тренера</h1>
+          <p className="text-muted-foreground">Общая статистика и активность клиентов</p>
+        </div>
+        <ExportAllClients />
+      </div>
+      
+      <QuickActionsPanel />
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -200,6 +214,7 @@ export function TrainerAnalyticsDashboard() {
         <TabsList>
           <TabsTrigger value="engagement">Вовлеченность</TabsTrigger>
           <TabsTrigger value="distribution">Распределение</TabsTrigger>
+          <TabsTrigger value="timeline">Активность</TabsTrigger>
         </TabsList>
 
         <TabsContent value="engagement" className="space-y-4">
@@ -254,6 +269,10 @@ export function TrainerAnalyticsDashboard() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="timeline" className="space-y-4">
+          <RecentActivityTimeline />
         </TabsContent>
       </Tabs>
     </div>

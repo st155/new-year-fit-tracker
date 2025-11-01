@@ -43,6 +43,7 @@ import MedicalDocumentsSync from "@/pages/MedicalDocuments";
 import TrainerDashboardSync from "@/pages/TrainerDashboard";
 import TrainerTestPageSync from "@/pages/TrainerTestPage";
 import TrainingPlanDetailSync from "@/pages/TrainingPlanDetail";
+import TrainerAnalyticsDashboardSync from "@/pages/TrainerAnalyticsDashboard";
 import AdminSync from "@/pages/Admin";
 import TerraCallbackSync from "@/pages/TerraCallback";
 import PrivacyPolicySync from "@/pages/PrivacyPolicy";
@@ -70,6 +71,7 @@ const MedicalDocuments = lazySafe(MedicalDocumentsSync, () => import("@/pages/Me
 const TrainerDashboard = lazySafe(TrainerDashboardSync, () => import("@/pages/TrainerDashboard"));
 const TrainerTestPage = lazySafe(TrainerTestPageSync, () => import("@/pages/TrainerTestPage"));
 const TrainingPlanDetail = lazySafe(TrainingPlanDetailSync, () => import("@/pages/TrainingPlanDetail"));
+const TrainerAnalyticsDashboard = lazySafe(TrainerAnalyticsDashboardSync, () => import("@/pages/TrainerAnalyticsDashboard"));
 const Admin = lazySafe(AdminSync, () => import("@/pages/Admin"));
 const TerraCallback = lazySafe(TerraCallbackSync, () => import("@/pages/TerraCallback"));
 const PrivacyPolicy = lazySafe(PrivacyPolicySync, () => import("@/pages/PrivacyPolicy"));
@@ -223,6 +225,15 @@ export const AppRoutes = () => {
             <TrainerOnlyRoute>
               <ModernAppLayout>
                 <TrainerDashboard />
+              </ModernAppLayout>
+            </TrainerOnlyRoute>
+          </ProtectedRoute>
+        } />
+        <Route path="/trainer-analytics" element={
+          <ProtectedRoute>
+            <TrainerOnlyRoute>
+              <ModernAppLayout>
+                <TrainerAnalyticsDashboard />
               </ModernAppLayout>
             </TrainerOnlyRoute>
           </ProtectedRoute>

@@ -1474,6 +1474,45 @@ export type Database = {
           },
         ]
       }
+      goal_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          goal_type: string
+          id: string
+          is_public: boolean | null
+          target_value: number
+          template_name: string
+          trainer_id: string
+          unit: string
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          goal_type: string
+          id?: string
+          is_public?: boolean | null
+          target_value: number
+          template_name: string
+          trainer_id: string
+          unit: string
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          goal_type?: string
+          id?: string
+          is_public?: boolean | null
+          target_value?: number
+          template_name?: string
+          trainer_id?: string
+          unit?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           challenge_id: string | null
@@ -3773,6 +3812,19 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      client_health_scores: {
+        Row: {
+          activity_score: number | null
+          consistency_score: number | null
+          last_measurement: string | null
+          recovery_score: number | null
+          sleep_score: number | null
+          total_health_score: number | null
+          trend_score: number | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       client_unified_metrics: {
         Row: {
