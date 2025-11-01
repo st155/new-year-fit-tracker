@@ -3839,14 +3839,25 @@ export type Database = {
       get_trainer_clients_enhanced: {
         Args: { p_trainer_id: string }
         Returns: {
+          active_challenges_count: number
           active_goals_count: number
           avatar_url: string
           client_id: string
+          days_since_last_data: number
           full_name: string
+          goals_at_risk: number
+          goals_on_track: number
+          has_overdue_tasks: boolean
           health_score: number
           last_activity_date: string
+          low_recovery_alert: boolean
+          measurements_trend: string
+          poor_sleep_alert: boolean
           recent_measurements_count: number
+          recovery_trend: string
           sleep_hours_avg: number
+          sleep_trend: string
+          top_3_goals: Json
           username: string
           vo2max_latest: number
           weight_latest: number

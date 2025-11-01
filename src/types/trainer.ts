@@ -14,6 +14,22 @@ export interface TrainerClient {
     weight_latest: number | null;
     vo2max_latest: number | null;
   };
+  // New enhanced metrics
+  goals_on_track: number;
+  goals_at_risk: number;
+  measurements_trend: 'up' | 'stable' | 'down';
+  sleep_trend: 'improving' | 'stable' | 'declining';
+  recovery_trend: 'improving' | 'stable' | 'declining';
+  days_since_last_data: number;
+  has_overdue_tasks: boolean;
+  low_recovery_alert: boolean;
+  poor_sleep_alert: boolean;
+  active_challenges_count: number;
+  top_3_goals: Array<{
+    id: string;
+    name: string;
+    progress: number;
+  }>;
 }
 
 export interface AIConversation {
