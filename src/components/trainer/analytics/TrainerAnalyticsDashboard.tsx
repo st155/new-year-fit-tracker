@@ -69,15 +69,26 @@ export function TrainerAnalyticsDashboard() {
 
       if (clientsError) throw clientsError;
 
-      // Calculate summary
+      const totalClients = clients?.length || 0;
+
+      // Категории по health_score (не пересекаются)
+      const topPerformers = clients?.filter(c => c.health_score >= 80).length || 0;
+      const goodPerformers = clients?.filter(c => c.health_score >= 60 && c.health_score < 80).length || 0;
+      const needsAttention = clients?.filter(c => c.health_score >= 40 && c.health_score < 60).length || 0;
+      const atRisk = clients?.filter(c => c.health_score < 40).length || 0;
+
+      // Активные клиенты (с данными за последние 7 дней)
       const activeClients = clients?.filter(c => c.days_since_last_data <= 7).length || 0;
-      const avgHealth = clients?.length 
-        ? clients.reduce((sum, c) => sum + (c.health_score || 0), 0) / clients.length 
-        : 0;
-      const atRisk = clients?.filter(c => 
+
+      // Клиенты с алертами (низкое восстановление или просроченные задачи)
+      const clientsWithAlerts = clients?.filter(c => 
         c.low_recovery_alert || c.poor_sleep_alert || c.has_overdue_tasks
       ).length || 0;
-      const topPerformers = clients?.filter(c => c.health_score >= 80).length || 0;
+
+      // Средний health score
+      const avgHealth = totalClients > 0
+        ? clients.reduce((sum, c) => sum + (c.health_score || 0), 0) / totalClients
+        : 0;
 
       // Get total measurements
       const { count, error: countError } = await supabase
@@ -88,12 +99,24 @@ export function TrainerAnalyticsDashboard() {
 
       if (countError) throw countError;
 
+      console.log('📊 [TrainerAnalyticsDashboard] Analytics loaded:', {
+        totalClients,
+        activeClients,
+        avgHealthScore: Math.round(avgHealth),
+        topPerformers,
+        goodPerformers,
+        needsAttention,
+        atRisk,
+        clientsWithAlerts,
+        totalMeasurements: count || 0,
+      });
+
       setSummary({
-        totalClients: clients?.length || 0,
+        totalClients,
         activeClients,
         avgHealthScore: Math.round(avgHealth),
         totalMeasurements: count || 0,
-        clientsAtRisk: atRisk,
+        clientsAtRisk: clientsWithAlerts,
         topPerformers,
       });
 
@@ -106,6 +129,14 @@ export function TrainerAnalyticsDashboard() {
       })) || [];
 
       setEngagement(engagementData);
+
+      // Store categories for health distribution
+      (window as any).__healthCategories = {
+        topPerformers,
+        goodPerformers,
+        needsAttention,
+        atRisk,
+      };
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
@@ -136,10 +167,18 @@ export function TrainerAnalyticsDashboard() {
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
+  const categories = (window as any).__healthCategories || {
+    topPerformers: 0,
+    goodPerformers: 0,
+    needsAttention: 0,
+    atRisk: 0,
+  };
+
   const healthDistribution = [
-    { name: 'Отлично (80+)', value: summary.topPerformers, color: COLORS[0] },
-    { name: 'Хорошо (60-79)', value: summary.activeClients - summary.topPerformers - summary.clientsAtRisk, color: COLORS[1] },
-    { name: 'Требует внимания', value: summary.clientsAtRisk, color: COLORS[3] },
+    { name: 'Отлично (80+)', value: categories.topPerformers, color: COLORS[0] },
+    { name: 'Хорошо (60-79)', value: categories.goodPerformers, color: COLORS[1] },
+    { name: 'Требует внимания (40-59)', value: categories.needsAttention, color: COLORS[2] },
+    { name: 'В зоне риска (<40)', value: categories.atRisk, color: COLORS[3] },
   ].filter(item => item.value > 0);
 
   return (
@@ -165,7 +204,7 @@ export function TrainerAnalyticsDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{summary.totalClients}</div>
             <p className="text-xs text-muted-foreground">
-              {summary.activeClients} активных за неделю
+              {summary.activeClients} с данными за 7 дней
             </p>
           </CardContent>
         </Card>
@@ -185,13 +224,13 @@ export function TrainerAnalyticsDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Требуют внимания</CardTitle>
+            <CardTitle className="text-sm font-medium">Клиенты с алертами</CardTitle>
             <AlertCircle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{summary.clientsAtRisk}</div>
             <p className="text-xs text-muted-foreground">
-              Низкое восстановление или задачи
+              Низкое восстановление или просроченные задачи
             </p>
           </CardContent>
         </Card>
