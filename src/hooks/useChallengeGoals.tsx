@@ -42,10 +42,15 @@ export function useChallengeGoals(userId?: string) {
 
       try {
         // 1. Get user's challenge participations with baseline data
-        const { data: participations } = await supabase
+        const { data: participations, error: partErr } = await supabase
           .from("challenge_participants")
           .select("challenge_id, baseline_body_fat, baseline_weight, baseline_muscle_mass, baseline_recorded_at, challenges(title, start_date)")
           .eq("user_id", userId);
+
+        if (partErr) {
+          console.error('❌ [useChallengeGoals] Error fetching participations:', partErr);
+          throw partErr;
+        }
 
       const challengeIds = participations?.map(p => p.challenge_id) || [];
 

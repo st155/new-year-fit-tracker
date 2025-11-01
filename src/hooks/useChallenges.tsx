@@ -25,7 +25,13 @@ export function useChallenges(userId?: string) {
         .order("start_date", { ascending: false });
 
       if (challengesError) {
-        console.error('❌ [useChallenges] Error fetching challenges:', challengesError);
+        console.error('❌ [useChallenges] Error fetching challenges:', {
+          error: challengesError,
+          message: challengesError.message,
+          code: challengesError.code,
+          details: challengesError.details,
+          hint: challengesError.hint
+        });
         throw challengesError;
       }
 
