@@ -10,7 +10,7 @@ import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import { TrainerNotifications } from "@/components/trainer/notifications/TrainerNotifications";
-import { useIsMobile } from "@/hooks/primitive";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,8 +97,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top">
-      <div className="flex items-center justify-between px-3 py-4 md:px-4 md:py-3">
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top w-full">
+      <div className="flex items-center justify-between px-4 py-3 w-full max-w-full">
         {/* Logo - Clickable */}
         <div 
           className="flex items-center gap-3 min-w-[120px] cursor-pointer hover:opacity-80 transition-opacity"
