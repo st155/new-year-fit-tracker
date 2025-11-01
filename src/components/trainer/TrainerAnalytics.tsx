@@ -33,9 +33,11 @@ interface ClientStats {
   username: string;
   full_name: string;
   goals_count: number;
-  completed_goals: number;
+  goals_on_track: number;
+  goals_at_risk: number;
   recent_measurements: number;
   last_activity: string;
+  health_score: number;
   progress_score: number;
   status: 'excellent' | 'good' | 'needs_attention' | 'inactive';
 }
@@ -78,35 +80,62 @@ export function TrainerAnalytics() {
 
       // Обрабатываем данные клиентов
       const stats: ClientStats[] = (clients || []).map((client: any) => {
-        const goalsCount = client.goals_count || 0;
-        const completedGoals = client.completed_goals || 0;
-        const recentMetricsCount = client.recent_metrics_count || 0;
+        const goalsCount = client.active_goals_count || 0;
+        const goalsOnTrack = client.goals_on_track || 0;
+        const goalsAtRisk = client.goals_at_risk || 0;
+        const recentMeasurementsCount = client.recent_measurements_count || 0;
         const lastActivity = client.last_activity_date || '';
+        const healthScore = client.health_score || 0;
         
         // Вычисляем очки прогресса (0-100)
         let progressScore = 0;
+        
+        // Наличие целей (20 баллов)
         if (goalsCount > 0) progressScore += 20;
-        if (recentMetricsCount > 0) progressScore += 30;
-        if (recentMetricsCount >= 4) progressScore += 25; // Регулярные измерения
-        if (lastActivity && new Date(lastActivity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
-          progressScore += 25; // Активность за последнюю неделю
+        
+        // Регулярные измерения (30 баллов)
+        if (recentMeasurementsCount > 0) progressScore += 15;
+        if (recentMeasurementsCount >= 5) progressScore += 15;
+        
+        // Прогресс по целям (25 баллов)
+        if (goalsCount > 0 && goalsOnTrack > 0) {
+          const trackPercentage = (goalsOnTrack / goalsCount) * 100;
+          if (trackPercentage >= 80) progressScore += 25;
+          else if (trackPercentage >= 50) progressScore += 15;
+          else progressScore += 5;
+        }
+        
+        // Недавняя активность (25 баллов)
+        if (lastActivity) {
+          const daysSinceActivity = Math.floor(
+            (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysSinceActivity <= 1) progressScore += 25;
+          else if (daysSinceActivity <= 3) progressScore += 15;
+          else if (daysSinceActivity <= 7) progressScore += 10;
+          else if (daysSinceActivity <= 14) progressScore += 5;
         }
 
-        // Определяем статус
+        // Определяем статус на основе health_score (если есть) или progressScore
         let status: ClientStats['status'] = 'inactive';
-        if (progressScore >= 80) status = 'excellent';
-        else if (progressScore >= 60) status = 'good';
-        else if (progressScore >= 30) status = 'needs_attention';
+        const scoreToUse = healthScore > 0 ? healthScore : progressScore;
+        
+        if (scoreToUse >= 80) status = 'excellent';
+        else if (scoreToUse >= 60) status = 'good';
+        else if (scoreToUse >= 40) status = 'needs_attention';
+        else status = 'inactive';
 
         return {
-          id: client.id,
-          user_id: client.user_id,
-          username: client.username,
-          full_name: client.full_name,
+          id: client.client_id,
+          user_id: client.client_id,
+          username: client.username || '',
+          full_name: client.full_name || '',
           goals_count: goalsCount,
-          completed_goals: completedGoals,
-          recent_measurements: recentMetricsCount,
+          goals_on_track: goalsOnTrack,
+          goals_at_risk: goalsAtRisk,
+          recent_measurements: recentMeasurementsCount,
           last_activity: lastActivity,
+          health_score: healthScore,
           progress_score: progressScore,
           status
         };
@@ -118,7 +147,8 @@ export function TrainerAnalytics() {
       const totalClients = stats.length;
       const activeClients = stats.filter(c => c.status !== 'inactive').length;
       const totalGoals = stats.reduce((sum, c) => sum + c.goals_count, 0);
-      const completedGoalsSum = stats.reduce((sum, c) => sum + c.completed_goals, 0);
+      const goalsOnTrack = stats.reduce((sum, c) => sum + c.goals_on_track, 0);
+      const goalsAtRisk = stats.reduce((sum, c) => sum + c.goals_at_risk, 0);
       const recentMeasurementsSum = stats.reduce((sum, c) => sum + c.recent_measurements, 0);
       const avgProgress = totalClients > 0 
         ? stats.reduce((sum, c) => sum + c.progress_score, 0) / totalClients 
@@ -128,7 +158,7 @@ export function TrainerAnalytics() {
         total_clients: totalClients,
         active_clients: activeClients,
         total_goals: totalGoals,
-        completed_goals: completedGoalsSum,
+        completed_goals: goalsOnTrack,
         recent_measurements: recentMeasurementsSum,
         avg_progress: Math.round(avgProgress)
       });
