@@ -188,7 +188,7 @@ const Index = () => {
   return (
     <AnimatedPage>
       <MobileDebugOverlay />
-      <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="min-h-screen bg-background p-4 md:p-6 pb-24 md:pb-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
         {/* Compact Dashboard Header with AI Insights + Quality */}
         <DashboardHeader />
@@ -201,16 +201,17 @@ const Index = () => {
           </div>
           
           {/* Right: Actions */}
-          <div className="flex items-center gap-2">
-            {/* Refresh Button - Icon only */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Refresh Button */}
             <Button
               variant="outline"
-              size="icon"
+              size="default"
               onClick={handleRefresh}
               disabled={isSyncing}
-              title="Обновить данные"
+              className="gap-2 h-10 md:h-9"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="md:hidden">Обновить</span>
             </Button>
             
             {/* Widget Settings */}
@@ -226,7 +227,7 @@ const Index = () => {
               variant="outline"
               size="default"
               onClick={() => navigate('/fitness-data?tab=connections')}
-              className="gap-2"
+              className="gap-2 min-w-[120px] h-10 md:h-9"
             >
               <Plug className="h-4 w-4" />
               <span>Интеграции</span>
@@ -280,7 +281,7 @@ const Index = () => {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {processedWidgets.map((widget) => {
               const isSingleMode = widget.display_mode !== 'multi';
               const singleData = isSingleMode ? smartData?.get(widget.id) : undefined;

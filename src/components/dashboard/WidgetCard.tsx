@@ -370,7 +370,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     
     return (
       <Card 
-        className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
+        className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative min-h-[180px] md:min-h-[160px]"
         onClick={handleCardClick}
         style={{
           background: `linear-gradient(135deg, ${color}08, transparent)`,
@@ -383,13 +383,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               : primarySourceQuality || `${color}30`,
         }}
       >
-        <CardContent className="p-3 sm:p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground mb-1">
+              <p className="text-base md:text-sm font-medium text-foreground mb-1">
                 {metricName}
               </p>
-              <p className="text-xs text-muted-foreground/60">
+              <p className="text-sm md:text-xs text-muted-foreground/60">
                 {multiSourceData.sources.length} {multiSourceData.sources.length === 1 ? 'источник' : 'источника'}
               </p>
             </div>
@@ -532,7 +532,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative"
+      className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative min-h-[180px] md:min-h-[160px]"
       onClick={handleCardClick}
       style={{
         background: `linear-gradient(135deg, ${color}08, transparent)`,
@@ -547,7 +547,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               : (trendColor || `${color}30`), // Приоритет 4: тренд или дефолтный цвет
       }}
     >
-      <CardContent className="p-3 sm:p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex gap-1 sm:gap-2">
           {/* Data Quality Badge - show if confidence < 80 */}
           {data?.confidence !== undefined && data.confidence < 80 && (
@@ -587,7 +587,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-1">
-              <p className="text-xs sm:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
+              <p className="text-base md:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
                 {metricName}
               </p>
               {metricTooltip && (
@@ -621,12 +621,12 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
         <div className="space-y-2">
           <div className="flex items-baseline gap-1 sm:gap-2">
-            <Icon className="h-4 w-4 sm:h-6 sm:w-6" style={{ color }} />
-            <span className="text-xl sm:text-3xl font-bold" style={{ color }}>
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6" style={{ color }} />
+            <span className="text-3xl sm:text-3xl md:text-2xl font-bold" style={{ color }}>
               {formatValue(data.value, metricName, data.unit)}
             </span>
             {data.unit && (
-              <span className="text-xs sm:text-sm text-muted-foreground">
+              <span className="text-base sm:text-sm text-muted-foreground">
                 {data.unit}
               </span>
             )}
@@ -635,8 +635,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           {/* Текстовый индикатор качества */}
           {qualityLabel && (
             <div className="flex items-center gap-1">
-              <span className="text-xs">{qualityLabel.icon}</span>
-              <span className="text-xs font-medium" style={{ color: qualityLabel.color }}>
+              <span className="text-sm md:text-xs">{qualityLabel.icon}</span>
+              <span className="text-sm md:text-xs font-medium" style={{ color: qualityLabel.color }}>
                 {qualityLabel.text}
               </span>
             </div>

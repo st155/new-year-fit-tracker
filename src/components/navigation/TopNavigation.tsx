@@ -10,6 +10,7 @@ import { useTranslation } from "@/lib/translations";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import { TrainerNotifications } from "@/components/trainer/notifications/TrainerNotifications";
+import { useIsMobile } from "@/hooks/primitive";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const navigate = useNavigate();
   const location = useLocation();
   const prefetch = usePrefetch();
+  const isMobile = useIsMobile();
   
   // Safe hooks with fallbacks
   let profile = null;
@@ -97,18 +99,22 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-sm safe-area-top">
       <div className="flex items-center justify-between px-3 py-4 md:px-4 md:py-3">
-        {/* Logo */}
-        <div className="flex items-center gap-3 min-w-[120px]">
+        {/* Logo - Clickable */}
+        <div 
+          className="flex items-center gap-3 min-w-[120px] cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => navigate('/dashboard')}
+        >
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
-          <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <span className="text-xl md:text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Elite10
           </span>
         </div>
 
-        {/* Navigation - Center */}
-        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 justify-center px-4">
+        {/* Navigation - Center - Hide on mobile */}
+        {!isMobile && (
+          <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 justify-center px-4">
           {navItems.map((item) => (
             <Button
               key={item.path}
@@ -144,7 +150,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
               </span>
             </Button>
           ))}
-        </nav>
+          </nav>
+        )}
 
         {/* Settings & Profile - Right */}
         <div className="flex items-center gap-2 min-w-[120px] justify-end">

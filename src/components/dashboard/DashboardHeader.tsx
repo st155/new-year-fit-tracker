@@ -108,7 +108,7 @@ export function DashboardHeader() {
     <div className="space-y-3">
       {/* AI Insights Ticker with Sparkles Background */}
       {insights.length > 0 && (
-        <div className="relative w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-2.5 overflow-hidden">
+        <div className="relative w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 md:py-2.5 overflow-hidden">
           {/* Sparkles Background */}
           <div className="absolute inset-0 w-full h-full">
             <SparklesCore
