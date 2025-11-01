@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Users, Calendar, CheckCircle2, Clock, Target } from "lucide-react";
+import { Trophy, Users, Calendar, CheckCircle2, Clock, Target, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
@@ -42,10 +42,14 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
               {challenge.title}
             </CardTitle>
           </div>
-          {challenge.isParticipant && (
+          {challenge.isParticipant ? (
             <Badge className="bg-success/20 text-success border-success/50 shrink-0">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               Active
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="shrink-0">
+              Доступно
             </Badge>
           )}
         </div>
@@ -118,11 +122,22 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           asChild 
           className={challenge.isParticipant 
             ? "w-full bg-gradient-primary hover:opacity-90" 
-            : "w-full"
+            : "w-full bg-gradient-primary hover:opacity-90 shadow-glow-primary"
           }
+          size="lg"
         >
-          <Link to={`/challenges/${challenge.id}`}>
-            {challenge.isParticipant ? "View Progress" : "Join Challenge"}
+          <Link to={`/challenges/${challenge.id}`} className="flex items-center justify-center gap-2">
+            {challenge.isParticipant ? (
+              <>
+                <Trophy className="h-4 w-4" />
+                View Progress
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-5 w-5" />
+                Присоединиться к челленджу
+              </>
+            )}
           </Link>
         </Button>
       </CardContent>

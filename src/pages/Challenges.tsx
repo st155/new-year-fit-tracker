@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useChallenges } from "@/hooks/useChallenges";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Trophy, Target, Users, TrendingUp, Sparkles, X } from "lucide-react";
+import { Trophy, Target, Users, TrendingUp, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -162,11 +161,21 @@ export default function Challenges() {
           </CardContent>
         </Card>
       ) : !challenges || challenges.length === 0 ? (
-        <EmptyState
-          icon={<Trophy className="h-12 w-12" />}
-          title="No active challenges"
-          description="Check back later for new challenges or create your own"
-        />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="rounded-full bg-primary/10 p-3 mb-4">
+              <Trophy className="h-12 w-12 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Нет активных челленджей</h3>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              Проверьте позже или свяжитесь с тренером для создания нового челленджа
+            </p>
+            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              Обновить
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-6">
           <div>
