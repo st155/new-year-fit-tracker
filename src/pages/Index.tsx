@@ -133,10 +133,19 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
   };
   
-  // Sort widgets by position
+  // Sort widgets by position and filter out empty ones
   const processedWidgets = useMemo(() => {
-    return [...widgets].sort((a, b) => a.position - b.position);
-  }, [widgets]);
+    const sorted = [...widgets].sort((a, b) => a.position - b.position);
+    
+    // Filter out widgets without data
+    return sorted.filter(widget => {
+      const isSingleMode = widget.display_mode !== 'multi';
+      const hasData = isSingleMode 
+        ? smartData?.has(widget.id)
+        : multiData?.has(widget.id) && multiData.get(widget.id)?.sources?.length > 0;
+      return hasData;
+    });
+  }, [widgets, smartData, multiData]);
   
   // ✅ 7-day history for sparkline charts (after processedWidgets is defined)
   const { data: widgetHistory, isLoading: historyLoading } = useWidgetHistory(

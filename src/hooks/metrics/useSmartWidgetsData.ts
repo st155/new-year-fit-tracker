@@ -24,23 +24,38 @@ interface UseSmartWidgetsDataResult {
 function selectStrategyForMetric(metricName: string): ResolutionStrategy {
   const lower = metricName.toLowerCase();
   
+  // WHOOP expert metrics - ALWAYS use source priority
+  if (
+    lower.includes('recovery') ||
+    lower.includes('strain') ||
+    lower.includes('sleep') ||
+    lower.includes('hrv')
+  ) {
+    return ResolutionStrategy.HIGHEST_PRIORITY;
+  }
+  
+  // Cardiovascular metrics - WHOOP priority
+  if (lower.includes('heart') && !lower.includes('max')) {
+    return ResolutionStrategy.HIGHEST_PRIORITY;
+  }
+  
+  // Body composition - InBody/Withings priority
   if (lower.includes('weight') || lower.includes('body_fat') || lower.includes('muscle')) {
     return ResolutionStrategy.HIGHEST_PRIORITY;
   }
   
-  if (lower.includes('heart_rate') || lower.includes('hrv') || lower.includes('steps')) {
-    return ResolutionStrategy.AVERAGE;
+  // Activity metrics - prefer device priority over averaging
+  if (lower.includes('steps') || lower.includes('calories')) {
+    return ResolutionStrategy.HIGHEST_PRIORITY;
   }
   
-  if (lower.includes('sleep')) {
-    return ResolutionStrategy.HIGHEST_CONFIDENCE;
-  }
-  
+  // Manual entry always wins
   if (lower.includes('manual')) {
     return ResolutionStrategy.MANUAL_OVERRIDE;
   }
   
-  return ResolutionStrategy.HIGHEST_CONFIDENCE;
+  // Default: highest priority (favor known devices)
+  return ResolutionStrategy.HIGHEST_PRIORITY;
 }
 
 export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[]): UseSmartWidgetsDataResult {
