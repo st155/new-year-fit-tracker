@@ -17,7 +17,7 @@ import {
 export default function TrainingPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { plan, loading, deletePlan, duplicatePlan } = useTrainingPlanDetail(id || null);
+  const { plan, loading, refetch, deletePlan, duplicatePlan } = useTrainingPlanDetail(id || null);
 
   const handleDelete = async () => {
     const success = await deletePlan();
@@ -47,10 +47,15 @@ export default function TrainingPlanDetail() {
             <p className="text-muted-foreground mb-4">
               Запрошенный план не существует или был удален
             </p>
-            <Button onClick={() => navigate('/trainer-dashboard?tab=plans')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться к планам
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={refetch}>
+                Попробовать снова
+              </Button>
+              <Button onClick={() => navigate('/trainer-dashboard?tab=plans')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Вернуться к планам
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

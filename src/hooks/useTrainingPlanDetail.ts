@@ -50,10 +50,15 @@ export const useTrainingPlanDetail = (planId: string | null) => {
   const { toast } = useToast();
 
   const loadPlan = async () => {
-    if (!planId) return;
+    if (!planId) {
+      console.log('❌ No planId provided');
+      return;
+    }
 
+    console.log('🔄 Loading training plan:', planId);
     setLoading(true);
     try {
+      // Load plan with workouts and assigned clients
       const { data, error } = await supabase
         .from('training_plans')
         .select(`
@@ -65,7 +70,7 @@ export const useTrainingPlanDetail = (planId: string | null) => {
             start_date,
             end_date,
             status,
-            profiles!assigned_training_plans_client_id_fkey (
+            profiles (
               user_id,
               username,
               full_name,
@@ -76,19 +81,37 @@ export const useTrainingPlanDetail = (planId: string | null) => {
         .eq('id', planId)
         .maybeSingle();
 
-      if (error) throw error;
-      console.log('Plan loaded:', data);
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Plan loaded successfully:', {
+        planId,
+        planName: data?.name,
+        workoutsCount: data?.training_plan_workouts?.length || 0,
+        assignedClientsCount: data?.assigned_training_plans?.length || 0
+      });
       
       if (!data) {
+        console.warn('⚠️ Plan not found');
         throw new Error('План не найден');
       }
       
       setPlan(data as any);
-    } catch (error) {
-      console.error('Error loading plan:', error);
+    } catch (error: any) {
+      console.error('❌ Error loading plan:', {
+        planId,
+        error: error?.message || error,
+        details: error?.details,
+        hint: error?.hint
+      });
+      
       toast({
         title: 'Ошибка',
-        description: 'Не удалось загрузить план',
+        description: error?.message?.includes('не найден') 
+          ? 'План не найден или был удален'
+          : 'Не удалось загрузить план тренировок',
         variant: 'destructive'
       });
     } finally {
