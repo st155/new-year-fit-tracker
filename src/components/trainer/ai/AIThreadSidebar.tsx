@@ -152,9 +152,18 @@ export function AIThreadSidebar() {
       
       {/* Footer */}
       <div className="p-4 border-t">
-        <Button variant="ghost" size="sm" className="w-full justify-start">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full justify-start"
+          onClick={() => {
+            console.log('Settings clicked - feature coming soon');
+            // TODO: Implement settings modal
+          }}
+          disabled
+        >
           <SettingsIcon className="h-4 w-4 mr-2" />
-          Settings
+          Settings (Coming Soon)
         </Button>
       </div>
     </div>

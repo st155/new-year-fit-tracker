@@ -38,6 +38,7 @@ import { HealthDataTabs } from "./health-data/HealthDataTabs";
 import { useQueryClient } from '@tanstack/react-query';
 import { GroupedGoalsView } from './client-detail/GroupedGoalsView';
 import { GoalProgressChart } from './client-detail/GoalProgressChart';
+import { GoalsProgressOverview } from './client-detail/GoalsProgressOverview';
 
 interface Client {
   id: string;
@@ -283,25 +284,54 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
 
         <TabsContent value="goals" className="space-y-4">
           {goals.length > 0 ? (
-            <GroupedGoalsView 
-              goals={goals} 
-              clientId={client.user_id}
-              onRefresh={refetch}
-            />
+            <>
+              {/* Beautiful Progress Overview */}
+              <GoalsProgressOverview 
+                goals={goals}
+                measurements={measurements}
+              />
+              
+              {/* Original Grouped View - collapsed by default */}
+              <details className="mt-8">
+                <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  Показать группировку по типам целей
+                </summary>
+                <div className="mt-4">
+                  <GroupedGoalsView 
+                    goals={goals} 
+                    clientId={client.user_id}
+                    onRefresh={refetch}
+                  />
+                </div>
+              </details>
+            </>
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <Target className="h-12 w-12 mb-4" />
-                <p className="text-lg font-medium">Нет целей</p>
-                <p className="text-sm">Создайте первую цель для клиента</p>
-                <Button 
-                  onClick={() => setShowGoalDialog(true)} 
-                  className="mt-4"
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добавить цель
-                </Button>
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <Target className="h-16 w-16 mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">У клиента пока нет целей</h3>
+                <p className="text-sm text-muted-foreground mb-6 max-w-md">
+                  Создайте цели для клиента, чтобы отслеживать его прогресс. 
+                  Вы можете создать цели по силовым показателям, кардио, 
+                  составу тела или гибкости.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setShowGoalDialog(true)} 
+                    size="lg"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Создать первую цель
+                  </Button>
+                  <Button 
+                    onClick={handleOpenAIHub} 
+                    size="lg"
+                    variant="outline"
+                  >
+                    <Sparkles className="h-5 w-5 mr-2" />
+                    Спросить AI
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

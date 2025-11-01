@@ -218,16 +218,16 @@ export const useAIConversations = (userId: string | undefined) => {
         metadata: { isOptimistic: true, status: 'sent' }
       });
 
-      // Fallback: If message doesn't arrive via realtime within 3 seconds, force reload
+      // Fallback: If message doesn't arrive via realtime within 1.5 seconds, force reload
       const fallbackTimer = setTimeout(async () => {
-        console.log('⚠️ Realtime message not received within 3s, forcing reload');
+        console.log('⚠️ Realtime message not received within 1.5s, forcing reload');
         if (currentConversation?.id || data.conversationId) {
           const convId = currentConversation?.id || data.conversationId;
           await loadMessages(convId);
           // Remove all optimistic messages since we have real data now
           setOptimisticMessages([]);
         }
-      }, 3000);
+      }, 1500);
 
       // Clear fallback timer if component unmounts or conversation changes
       const clearFallback = () => clearTimeout(fallbackTimer);
@@ -390,6 +390,23 @@ export const useAIConversations = (userId: string | undefined) => {
     if (!currentConversation?.id) return;
 
     console.log(`🔔 Setting up realtime subscription for conversation: ${currentConversation.id}`);
+    
+    // Test RLS policies for realtime subscription
+    const testSubscription = async () => {
+      const { data, error } = await supabase
+        .from('ai_messages')
+        .select('id')
+        .eq('conversation_id', currentConversation.id)
+        .limit(1);
+        
+      if (error) {
+        console.error('❌ [Realtime] Unable to read ai_messages (RLS issue?):', error);
+      } else {
+        console.log('✅ [Realtime] Can read ai_messages, subscription should work');
+      }
+    };
+    
+    testSubscription();
     
     // Clear any pending fallback timers when switching conversations
     if ((window as any).__clearAIFallback) {
