@@ -3782,6 +3782,20 @@ export type Database = {
           jobs_created: number
         }[]
       }
+      get_challenge_participant_goals_with_progress: {
+        Args: { p_challenge_id: string; p_user_id: string }
+        Returns: {
+          current_value: number
+          goal_id: string
+          goal_name: string
+          goal_type: string
+          last_measurement_date: string
+          measurements_count: number
+          progress_percentage: number
+          target_unit: string
+          target_value: number
+        }[]
+      }
       get_client_detailed_data: {
         Args: { p_client_id: string; p_days?: number }
         Returns: Json
@@ -3822,6 +3836,23 @@ export type Database = {
         }[]
       }
       get_monitoring_dashboard_data: { Args: never; Returns: Json }
+      get_trainer_clients_enhanced: {
+        Args: { p_trainer_id: string }
+        Returns: {
+          active_goals_count: number
+          avatar_url: string
+          client_id: string
+          full_name: string
+          health_score: number
+          last_activity_date: string
+          recent_measurements_count: number
+          sleep_hours_avg: number
+          username: string
+          vo2max_latest: number
+          weight_latest: number
+          whoop_recovery_avg: number
+        }[]
+      }
       get_trainer_clients_summary: {
         Args: { p_trainer_id?: string }
         Returns: {

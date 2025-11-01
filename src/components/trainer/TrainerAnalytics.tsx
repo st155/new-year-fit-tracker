@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Users, 
   Target, 
@@ -19,6 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { ExportReportsDialog } from "./ExportReportsDialog";
 import { ClientProgressCharts } from "./ClientProgressCharts";
 import { motion } from 'framer-motion';
@@ -365,99 +367,107 @@ export function TrainerAnalytics() {
       )}
 
       {/* Статистика по клиентам */}
-      <TremorCard className="glass-medium border-white/10">
+      <Card className="glass-medium neon-border">
         <CardHeader>
-          <CardTitle>Детальная статистика по подопечным</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Детальная статистика по подопечным
+          </CardTitle>
           <CardDescription>
             Прогресс и активность каждого подопечного
           </CardDescription>
         </CardHeader>
         <CardContent>
           {clientStats.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">Нет подопечных</h3>
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Нет подопечных</h3>
               <p className="text-muted-foreground">
                 Добавьте подопечных для просмотра аналитики
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Клиент</TableHeaderCell>
-                  <TableHeaderCell>Цели</TableHeaderCell>
-                  <TableHeaderCell>Активность</TableHeaderCell>
-                  <TableHeaderCell>Прогресс</TableHeaderCell>
-                  <TableHeaderCell>Статус</TableHeaderCell>
-                  <TableHeaderCell>Последнее измерение</TableHeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {clientStats.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{client.full_name || client.username}</div>
-                        <div className="text-xs text-muted-foreground">@{client.username}</div>
+            <div className="space-y-4">
+              {clientStats.map((client) => (
+                <motion.div
+                  key={client.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="glass-light p-4 rounded-lg hover:neon-border transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="relative">
+                      <Avatar className="h-14 w-14 border-2 border-white/10">
+                        <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-white font-bold">
+                          {client.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className={cn(
+                        "absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background flex items-center justify-center",
+                        client.status === 'excellent' ? "bg-green-500" :
+                        client.status === 'good' ? "bg-blue-500" :
+                        client.status === 'needs_attention' ? "bg-yellow-500" : "bg-red-500"
+                      )}>
+                        {client.status === 'excellent' ? <Award className="h-3 w-3 text-white" /> :
+                         client.status === 'good' ? <CheckCircle className="h-3 w-3 text-white" /> :
+                         client.status === 'needs_attention' ? <AlertTriangle className="h-3 w-3 text-white" /> :
+                         <TrendingDown className="h-3 w-3 text-white" />}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Target className="h-3 w-3" />
-                        <span>{client.goals_count}</span>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold truncate">{client.full_name || client.username}</h4>
+                        <Badge className={cn(
+                          "text-xs",
+                          client.status === 'excellent' ? "bg-green-500/20 text-green-400" :
+                          client.status === 'good' ? "bg-blue-500/20 text-blue-400" :
+                          client.status === 'needs_attention' ? "bg-yellow-500/20 text-yellow-400" :
+                          "bg-red-500/20 text-red-400"
+                        )}>
+                          {getStatusLabel(client.status)}
+                        </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Activity className="h-3 w-3" />
-                        <span>{client.recent_measurements}</span>
+                      <p className="text-xs text-muted-foreground">@{client.username}</p>
+                      
+                      {/* Metrics */}
+                      <div className="flex gap-4 mt-2">
+                        <div className="flex items-center gap-1 text-xs">
+                          <Target className="h-3 w-3 text-purple-400" />
+                          <span className="text-muted-foreground">Целей:</span>
+                          <span className="font-medium">{client.goals_count}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <Activity className="h-3 w-3 text-green-400" />
+                          <span className="text-muted-foreground">Активность:</span>
+                          <span className="font-medium">{client.recent_measurements}</span>
+                        </div>
+                        {client.last_activity && (
+                          <div className="flex items-center gap-1 text-xs">
+                            <Calendar className="h-3 w-3 text-blue-400" />
+                            <span className="text-muted-foreground">{new Date(client.last_activity).toLocaleDateString('ru')}</span>
+                          </div>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Text className="text-xs font-medium">{client.progress_score}%</Text>
-                        <ProgressBar 
-                          value={client.progress_score} 
-                          color={
-                            client.progress_score >= 80 ? 'emerald' :
-                            client.progress_score >= 60 ? 'blue' :
-                            client.progress_score >= 30 ? 'yellow' : 'red'
-                          }
-                          className="w-24"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <TremorBadge 
-                        color={
-                          client.status === 'excellent' ? 'emerald' :
-                          client.status === 'good' ? 'blue' :
-                          client.status === 'needs_attention' ? 'yellow' : 'red'
-                        }
-                        icon={
-                          client.status === 'excellent' ? Award :
-                          client.status === 'good' ? CheckCircle :
-                          client.status === 'needs_attention' ? AlertTriangle : TrendingDown
-                        }
-                      >
-                        {getStatusLabel(client.status)}
-                      </TremorBadge>
-                    </TableCell>
-                    <TableCell>
-                      {client.last_activity && (
-                        <Text className="text-xs">
-                          {new Date(client.last_activity).toLocaleDateString('ru')}
-                        </Text>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+
+                    {/* Progress */}
+                    <div className="hidden md:flex flex-col items-end gap-1 min-w-[100px]">
+                      <span className="text-xs font-medium">{client.progress_score}%</span>
+                      <Progress 
+                        value={client.progress_score} 
+                        className="h-2 w-full"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
         </CardContent>
-      </TremorCard>
+      </Card>
 
       {/* Рекомендации */}
       <Card>

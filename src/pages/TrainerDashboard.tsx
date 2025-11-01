@@ -115,21 +115,29 @@ function TrainerDashboardContent() {
     try {
       setLoading(true);
       
-      // Используем RPC вместо JOIN через foreign key для обхода проблем с RLS
+      // Используем enhanced RPC для получения всех данных клиентов
       const { data, error } = await supabase
-        .rpc('get_trainer_clients_summary', { p_trainer_id: user.id });
+        .rpc('get_trainer_clients_enhanced', { p_trainer_id: user.id });
 
       if (error) throw error;
 
       const formattedClients: TrainerClient[] = (data || []).map((tc: any) => ({
-        id: tc.client_id, // используем client_id как id
+        id: tc.client_id,
         user_id: tc.client_id,
         username: tc.username || '',
         full_name: tc.full_name || '',
         avatar_url: tc.avatar_url,
-        assigned_at: new Date().toISOString(), // RPC не возвращает assigned_at
+        assigned_at: new Date().toISOString(),
         active: true,
-        goals_count: tc.active_goals_count || 0
+        goals_count: tc.active_goals_count || 0,
+        // Добавляем новые поля
+        health_score: tc.health_score || 0,
+        recent_measurements_count: tc.recent_measurements_count || 0,
+        last_activity_date: tc.last_activity_date,
+        whoop_recovery_avg: tc.whoop_recovery_avg,
+        sleep_hours_avg: tc.sleep_hours_avg,
+        weight_latest: tc.weight_latest,
+        vo2max_latest: tc.vo2max_latest
       }));
 
       console.log('✅ [TrainerDashboard] Loaded clients:', formattedClients.length);

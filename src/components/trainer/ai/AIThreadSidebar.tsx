@@ -29,17 +29,29 @@ export function AIThreadSidebar() {
   const [loadingConversation, setLoadingConversation] = useState<string | null>(null);
 
   const handleSelectConversation = async (convId: string) => {
+    console.log('🖱️ [AIThreadSidebar] Conversation clicked:', convId);
+    console.log('🖱️ [AIThreadSidebar] Current conversation ID:', currentConversation?.id);
+    
     // Prevent switching if already loading this conversation
-    if (loadingConversation === convId) return;
+    if (loadingConversation === convId) {
+      console.log('⚠️ [AIThreadSidebar] Already loading this conversation');
+      return;
+    }
     
     // Prevent switching if already selected
-    if (currentConversation?.id === convId) return;
+    if (currentConversation?.id === convId) {
+      console.log('⚠️ [AIThreadSidebar] Already selected');
+      return;
+    }
     
     setLoadingConversation(convId);
-    console.log('🔄 Switching to conversation:', convId);
+    console.log('🔄 [AIThreadSidebar] Switching to conversation:', convId);
     
     try {
       await selectConversation(convId);
+      console.log('✅ [AIThreadSidebar] Conversation selected successfully');
+    } catch (error) {
+      console.error('❌ [AIThreadSidebar] Failed to select conversation:', error);
     } finally {
       setLoadingConversation(null);
     }

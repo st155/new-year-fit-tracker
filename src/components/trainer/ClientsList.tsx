@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, User, Target, Calendar, ArrowUpDown, Filter } from "lucide-react";
+import { Plus, Search, User, Target, Calendar, ArrowUpDown, Filter, Activity, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TrainerClientCard } from "./ui/TrainerClientCard";
 import {
   Select,
   SelectContent,
@@ -342,69 +343,59 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map((client) => {
-            const lastActivityText = client.last_measurement 
-              ? formatDistanceToNow(new Date(client.last_measurement), { addSuffix: true, locale: ru })
-              : 'Нет активности';
+          {filteredClients.map((client: any) => {
+            const healthScore = client.health_score || 0;
+            const isActive = client.last_activity_date && 
+              new Date(client.last_activity_date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             
-            const isRecentlyActive = client.last_measurement && 
-              new Date(client.last_measurement) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
+            const metrics = [];
+            if (client.weight_latest) {
+              metrics.push({
+                name: 'Weight',
+                value: Math.round(client.weight_latest),
+                unit: 'kg',
+                icon: <Target className="h-4 w-4" />,
+                color: 'blue' as const
+              });
+            }
+            if (client.whoop_recovery_avg) {
+              metrics.push({
+                name: 'Recovery',
+                value: Math.round(client.whoop_recovery_avg),
+                unit: '%',
+                icon: <Activity className="h-4 w-4" />,
+                color: 'green' as const
+              });
+            }
+            if (client.recent_measurements_count) {
+              metrics.push({
+                name: 'Measurements',
+                value: client.recent_measurements_count,
+                unit: '',
+                icon: <TrendingUp className="h-4 w-4" />,
+                color: 'purple' as const
+              });
+            }
+            
             return (
-              <Card 
-                key={client.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => onSelectClient(client)}
-              >
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={client.avatar_url} />
-                        <AvatarFallback>
-                          <User className="h-5 w-5" />
-                        </AvatarFallback>
-                      </Avatar>
-                      {isRecentlyActive && (
-                        <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base">{client.full_name || client.username}</CardTitle>
-                      <CardDescription>@{client.username}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{client.goals_count || 0} активных целей</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {lastActivityText}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs">
-                        С {new Date(client.assigned_at).toLocaleDateString()}
-                      </Badge>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectClient(client);
-                        }}
-                      >
-                        Подробнее
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <TrainerClientCard
+                key={client.id}
+                client={{
+                  id: client.id,
+                  username: client.username,
+                  full_name: client.full_name,
+                  avatar_url: client.avatar_url,
+                  goals_count: client.active_goals_count
+                }}
+                healthScore={healthScore}
+                metrics={metrics}
+                isActive={isActive}
+                lastActivity={client.last_activity_date ? 
+                  `Активность: ${new Date(client.last_activity_date).toLocaleDateString('ru-RU')}` : 
+                  'Нет активности'
+                }
+                onViewDetails={() => onSelectClient(client)}
+              />
             );
           })}
         </div>
