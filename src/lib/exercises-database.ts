@@ -5,6 +5,7 @@ export interface Exercise {
   category: 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio';
   muscleGroups: string[];
   equipment: 'barbell' | 'dumbbell' | 'machine' | 'bodyweight' | 'cable' | 'other';
+  type: 'strength' | 'cardio' | 'bodyweight';
   description?: string;
 }
 
@@ -15,6 +16,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Bench Press',
     nameRu: 'Жим штанги лежа',
     category: 'chest',
+    type: 'strength',
     muscleGroups: ['chest', 'triceps', 'shoulders'],
     equipment: 'barbell',
     description: 'Базовое упражнение для развития грудных мышц'
@@ -24,6 +26,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Dumbbell Press',
     nameRu: 'Жим гантелей лежа',
     category: 'chest',
+    type: 'strength',
     muscleGroups: ['chest', 'triceps', 'shoulders'],
     equipment: 'dumbbell'
   },
@@ -32,6 +35,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Push-ups',
     nameRu: 'Отжимания',
     category: 'chest',
+    type: 'bodyweight',
     muscleGroups: ['chest', 'triceps', 'core'],
     equipment: 'bodyweight'
   },
@@ -42,6 +46,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Deadlift',
     nameRu: 'Становая тяга',
     category: 'back',
+    type: 'strength',
     muscleGroups: ['back', 'legs', 'core'],
     equipment: 'barbell',
     description: 'Базовое упражнение для всего тела'
@@ -51,6 +56,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Pull-ups',
     nameRu: 'Подтягивания',
     category: 'back',
+    type: 'bodyweight',
     muscleGroups: ['back', 'biceps'],
     equipment: 'bodyweight'
   },
@@ -59,6 +65,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Barbell Row',
     nameRu: 'Тяга штанги в наклоне',
     category: 'back',
+    type: 'strength',
     muscleGroups: ['back', 'biceps'],
     equipment: 'barbell'
   },
@@ -69,6 +76,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Squat',
     nameRu: 'Приседания',
     category: 'legs',
+    type: 'strength',
     muscleGroups: ['quads', 'glutes', 'core'],
     equipment: 'barbell',
     description: 'Базовое упражнение для ног'
@@ -78,6 +86,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Leg Press',
     nameRu: 'Жим ногами',
     category: 'legs',
+    type: 'strength',
     muscleGroups: ['quads', 'glutes'],
     equipment: 'machine'
   },
@@ -86,6 +95,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Lunges',
     nameRu: 'Выпады',
     category: 'legs',
+    type: 'strength',
     muscleGroups: ['quads', 'glutes'],
     equipment: 'dumbbell'
   },
@@ -96,6 +106,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Overhead Press',
     nameRu: 'Жим штанги стоя',
     category: 'shoulders',
+    type: 'strength',
     muscleGroups: ['shoulders', 'triceps'],
     equipment: 'barbell'
   },
@@ -104,6 +115,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Lateral Raise',
     nameRu: 'Махи гантелями в стороны',
     category: 'shoulders',
+    type: 'strength',
     muscleGroups: ['shoulders'],
     equipment: 'dumbbell'
   },
@@ -114,6 +126,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Bicep Curl',
     nameRu: 'Подъем на бицепс',
     category: 'arms',
+    type: 'strength',
     muscleGroups: ['biceps'],
     equipment: 'dumbbell'
   },
@@ -122,6 +135,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Tricep Extension',
     nameRu: 'Французский жим',
     category: 'arms',
+    type: 'strength',
     muscleGroups: ['triceps'],
     equipment: 'dumbbell'
   },
@@ -132,6 +146,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Plank',
     nameRu: 'Планка',
     category: 'core',
+    type: 'bodyweight',
     muscleGroups: ['core'],
     equipment: 'bodyweight'
   },
@@ -140,6 +155,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Crunches',
     nameRu: 'Скручивания',
     category: 'core',
+    type: 'bodyweight',
     muscleGroups: ['abs'],
     equipment: 'bodyweight'
   },
@@ -150,6 +166,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Running',
     nameRu: 'Бег',
     category: 'cardio',
+    type: 'cardio',
     muscleGroups: ['legs', 'cardio'],
     equipment: 'other'
   },
@@ -158,6 +175,7 @@ export const EXERCISES: Exercise[] = [
     name: 'Cycling',
     nameRu: 'Велосипед',
     category: 'cardio',
+    type: 'cardio',
     muscleGroups: ['legs', 'cardio'],
     equipment: 'machine'
   }

@@ -11,10 +11,25 @@ import { Plus, Trash2 } from 'lucide-react';
 interface WorkoutExercise {
   exercise_id: string;
   exercise_name: string;
+  exercise_type: 'strength' | 'cardio' | 'bodyweight';
   sets: number;
   reps: string;
   rest_seconds: number;
   notes?: string;
+  
+  // Для силовых упражнений
+  weight?: number;
+  weight_unit?: 'kg' | 'lbs';
+  tempo?: string;
+  
+  // Для кардио
+  distance?: number;
+  duration?: number;
+  pace?: string;
+  intensity?: 'low' | 'moderate' | 'high' | 'intervals';
+  
+  // Универсальное
+  target_metric?: string;
 }
 
 interface WorkoutEditorProps {
@@ -43,16 +58,35 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
 
   const handleAddExercise = (exercise: Exercise) => {
-    setExercises([
-      ...exercises,
-      {
-        exercise_id: exercise.id,
-        exercise_name: exercise.nameRu,
-        sets: 3,
-        reps: '10',
-        rest_seconds: 90
-      }
-    ]);
+    const baseExercise: WorkoutExercise = {
+      exercise_id: exercise.id,
+      exercise_name: exercise.nameRu,
+      exercise_type: exercise.type,
+      sets: 3,
+      reps: '10',
+      rest_seconds: 90
+    };
+
+    if (exercise.type === 'strength') {
+      setExercises([...exercises, {
+        ...baseExercise,
+        weight: undefined,
+        weight_unit: 'kg',
+        tempo: undefined,
+      }]);
+    } else if (exercise.type === 'cardio') {
+      setExercises([...exercises, {
+        ...baseExercise,
+        sets: 1,
+        reps: '',
+        distance: undefined,
+        duration: undefined,
+        pace: undefined,
+        intensity: 'moderate',
+      }]);
+    } else {
+      setExercises([...exercises, baseExercise]);
+    }
   };
 
   const handleRemoveExercise = (index: number) => {
@@ -139,34 +173,177 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <Label className="text-xs">Подходы</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={ex.sets}
-                          onChange={(e) => handleUpdateExercise(index, 'sets', parseInt(e.target.value))}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Повторения</Label>
-                        <Input
-                          placeholder="10 или 8-12"
-                          value={ex.reps}
-                          onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Отдых (сек)</Label>
-                        <Input
-                          type="number"
-                          min="30"
-                          value={ex.rest_seconds}
-                          onChange={(e) => handleUpdateExercise(index, 'rest_seconds', parseInt(e.target.value))}
-                        />
-                      </div>
-                    </div>
+                    {ex.exercise_type === 'strength' && (
+                      <>
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <Label className="text-xs">Подходы</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={ex.sets}
+                              onChange={(e) => handleUpdateExercise(index, 'sets', parseInt(e.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Повторения</Label>
+                            <Input
+                              placeholder="10 или 8-12"
+                              value={ex.reps}
+                              onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Вес (кг)</Label>
+                            <Input
+                              type="number"
+                              step="0.5"
+                              placeholder="60"
+                              value={ex.weight || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'weight', e.target.value ? parseFloat(e.target.value) : undefined)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Input
+                              type="number"
+                              min="30"
+                              value={ex.rest_seconds}
+                              onChange={(e) => handleUpdateExercise(index, 'rest_seconds', parseInt(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Темп (опционально)</Label>
+                            <Input
+                              placeholder="3-0-1-0"
+                              value={ex.tempo || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'tempo', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Целевая метрика</Label>
+                            <Input
+                              placeholder="до отказа, макс вес"
+                              value={ex.target_metric || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'target_metric', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {ex.exercise_type === 'cardio' && (
+                      <>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs">Дистанция (км)</Label>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              placeholder="5"
+                              value={ex.distance || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'distance', e.target.value ? parseFloat(e.target.value) : undefined)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Время (мин)</Label>
+                            <Input
+                              type="number"
+                              placeholder="30"
+                              value={ex.duration || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'duration', e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Темп</Label>
+                            <Input
+                              placeholder="5:30 мин/км"
+                              value={ex.pace || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'pace', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Интенсивность</Label>
+                            <select
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              value={ex.intensity || 'moderate'}
+                              onChange={(e) => handleUpdateExercise(index, 'intensity', e.target.value)}
+                            >
+                              <option value="low">Легкая</option>
+                              <option value="moderate">Средняя</option>
+                              <option value="high">Высокая</option>
+                              <option value="intervals">Интервальная</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Input
+                              type="number"
+                              min="30"
+                              value={ex.rest_seconds}
+                              onChange={(e) => handleUpdateExercise(index, 'rest_seconds', parseInt(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {ex.exercise_type === 'bodyweight' && (
+                      <>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs">Подходы</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={ex.sets}
+                              onChange={(e) => handleUpdateExercise(index, 'sets', parseInt(e.target.value))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Повторения</Label>
+                            <Input
+                              placeholder="макс или 20"
+                              value={ex.reps}
+                              onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Input
+                              type="number"
+                              min="30"
+                              value={ex.rest_seconds}
+                              onChange={(e) => handleUpdateExercise(index, 'rest_seconds', parseInt(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Доп. вес (кг, опционально)</Label>
+                            <Input
+                              type="number"
+                              step="0.5"
+                              placeholder="10"
+                              value={ex.weight || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'weight', e.target.value ? parseFloat(e.target.value) : undefined)}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Темп</Label>
+                            <Input
+                              placeholder="3-0-1-0"
+                              value={ex.tempo || ''}
+                              onChange={(e) => handleUpdateExercise(index, 'tempo', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <Label className="text-xs">Заметки (опционально)</Label>

@@ -5,10 +5,18 @@ import { Dumbbell } from 'lucide-react';
 
 interface WorkoutExercise {
   exercise_name: string;
+  exercise_type?: 'strength' | 'cardio' | 'bodyweight';
   sets: number;
   reps: string;
   rest_seconds: number;
   notes?: string;
+  weight?: number;
+  tempo?: string;
+  distance?: number;
+  duration?: number;
+  pace?: string;
+  intensity?: string;
+  target_metric?: string;
 }
 
 interface TrainingPlanWorkout {
@@ -82,15 +90,61 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="text-center">
-                          <div className="font-semibold">{exercise.sets}</div>
-                          <div className="text-xs text-muted-foreground">подходов</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold">{exercise.reps}</div>
-                          <div className="text-xs text-muted-foreground">повторов</div>
-                        </div>
+                      <div className="flex items-center gap-4 text-sm flex-wrap">
+                        {exercise.sets > 0 && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.sets}</div>
+                            <div className="text-xs text-muted-foreground">подходов</div>
+                          </div>
+                        )}
+                        {exercise.reps && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.reps}</div>
+                            <div className="text-xs text-muted-foreground">повторов</div>
+                          </div>
+                        )}
+                        {exercise.weight && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.weight} кг</div>
+                            <div className="text-xs text-muted-foreground">вес</div>
+                          </div>
+                        )}
+                        {exercise.distance && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.distance} км</div>
+                            <div className="text-xs text-muted-foreground">дистанция</div>
+                          </div>
+                        )}
+                        {exercise.duration && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.duration} мин</div>
+                            <div className="text-xs text-muted-foreground">время</div>
+                          </div>
+                        )}
+                        {exercise.pace && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.pace}</div>
+                            <div className="text-xs text-muted-foreground">темп</div>
+                          </div>
+                        )}
+                        {exercise.intensity && (
+                          <div className="text-center">
+                            <div className="font-semibold capitalize">{exercise.intensity}</div>
+                            <div className="text-xs text-muted-foreground">интенсивность</div>
+                          </div>
+                        )}
+                        {exercise.tempo && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.tempo}</div>
+                            <div className="text-xs text-muted-foreground">темп</div>
+                          </div>
+                        )}
+                        {exercise.target_metric && (
+                          <div className="text-center">
+                            <div className="font-semibold">{exercise.target_metric}</div>
+                            <div className="text-xs text-muted-foreground">цель</div>
+                          </div>
+                        )}
                         <div className="text-center">
                           <div className="font-semibold">{exercise.rest_seconds}с</div>
                           <div className="text-xs text-muted-foreground">отдых</div>

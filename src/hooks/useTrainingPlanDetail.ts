@@ -5,10 +5,19 @@ import { useToast } from '@/hooks/use-toast';
 interface WorkoutExercise {
   exercise_id: string;
   exercise_name: string;
+  exercise_type?: 'strength' | 'cardio' | 'bodyweight';
   sets: number;
   reps: string;
   rest_seconds: number;
   notes?: string;
+  weight?: number;
+  weight_unit?: 'kg' | 'lbs';
+  tempo?: string;
+  distance?: number;
+  duration?: number;
+  pace?: string;
+  intensity?: 'low' | 'moderate' | 'high' | 'intervals';
+  target_metric?: string;
 }
 
 interface TrainingPlanWorkout {
