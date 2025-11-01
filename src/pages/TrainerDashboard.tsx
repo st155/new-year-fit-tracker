@@ -33,6 +33,15 @@ interface TrainerClient {
   assigned_at: string;
   active: boolean;
   goals_count?: number;
+  health_score?: number;
+  recent_measurements_count?: number;
+  last_activity_date?: string;
+  whoop_recovery_avg?: number;
+  sleep_hours_avg?: number;
+  weight_latest?: number;
+  vo2max_latest?: number;
+  connected_sources?: string[];
+  days_since_last_data?: number;
 }
 
 function TrainerDashboardContent() {
@@ -139,7 +148,9 @@ function TrainerDashboardContent() {
         whoop_recovery_avg: tc.whoop_recovery_avg,
         sleep_hours_avg: tc.sleep_hours_avg,
         weight_latest: tc.weight_latest,
-        vo2max_latest: tc.vo2max_latest
+        vo2max_latest: tc.vo2max_latest,
+        connected_sources: tc.connected_sources || [],
+        days_since_last_data: tc.days_since_last_data ?? 999
       }));
 
       console.log('✅ [TrainerDashboard] Loaded clients:', formattedClients.length);
