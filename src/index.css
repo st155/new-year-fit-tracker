@@ -37,6 +37,8 @@ All colors MUST be HSL.
     --ring: 180 100% 50%;
     --success: 158 64% 52%;
     --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
     --radius: 1.5rem;
     
     /* Metric-specific glowing colors */
@@ -160,6 +162,8 @@ All colors MUST be HSL.
     --ring: 180 100% 50%;
     --success: 158 64% 52%;
     --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
     --metric-body-fat: 142 76% 45%;
     --metric-weight: 24 95% 53%;
     --metric-vo2max: 199 89% 48%;
