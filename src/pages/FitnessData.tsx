@@ -382,7 +382,7 @@ export default function FitnessData() {
           </div>
 
           {/* Hero Recovery Score */}
-          {latestRecovery && latestRecovery.value && (
+          {latestRecovery && latestRecovery.value && processedMetrics.recovery.length > 0 && (
             <TremorMetricCard
               title="Recovery Score"
               value={latestRecovery.value}
@@ -393,6 +393,16 @@ export default function FitnessData() {
               showChart={true}
               icon={<Activity className="h-4 w-4 text-muted-foreground" />}
             />
+          )}
+          
+          {/* Fallback if no recovery data */}
+          {(!latestRecovery || !latestRecovery.value || processedMetrics.recovery.length === 0) && (
+            <div className="glass-medium border-white/10 rounded-lg p-6 text-center">
+              <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Нет данных Recovery Score за выбранный период
+              </p>
+            </div>
           )}
 
           {/* Metrics Grid */}

@@ -188,12 +188,12 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
 
       <div
         className={cn(
-          "glass-card overflow-hidden hover:shadow-lg transition-all group relative",
+          "inbody-card neon-border overflow-hidden hover:shadow-lg transition-all group relative",
           "cursor-pointer p-5 space-y-3"
         )}
         onClick={() => navigate(`/habits/${habit.id}`)}
       >
-        <div className={`h-1 absolute top-0 left-0 right-0 bg-gradient-to-r ${theme.gradient}`} />
+        <div className={`h-1 absolute top-0 left-0 right-0 bg-gradient-to-r ${theme.gradient} pulse-glow`} />
 
         {/* Header */}
         <div className="flex items-center justify-between pt-1">

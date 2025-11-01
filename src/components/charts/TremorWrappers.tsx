@@ -28,7 +28,7 @@ export function TremorMetricCard({
   icon
 }: TremorMetricCardProps) {
   return (
-    <Card className="glass-medium border-white/10">
+    <Card className="glass-medium border-white/10 bg-card">
       <div className="flex items-center justify-between">
         <Text className="text-muted-foreground">{title}</Text>
         {icon}
@@ -74,7 +74,7 @@ export function TremorAreaChartCard({
   className = ''
 }: TremorAreaChartCardProps) {
   return (
-    <Card className={`glass-medium border-white/10 ${className}`}>
+    <Card className={`glass-medium border-white/10 bg-card ${className}`}>
       <h3 className="text-lg font-semibold">{title}</h3>
       {description && <Text className="mt-1 text-muted-foreground">{description}</Text>}
       <AreaChart
@@ -114,7 +114,7 @@ export function TremorBarChartCard({
   className = ''
 }: TremorBarChartCardProps) {
   return (
-    <Card className={`glass-medium border-white/10 ${className}`}>
+    <Card className={`glass-medium border-white/10 bg-card ${className}`}>
       <h3 className="text-lg font-semibold">{title}</h3>
       {description && <Text className="mt-1 text-muted-foreground">{description}</Text>}
       <BarChart

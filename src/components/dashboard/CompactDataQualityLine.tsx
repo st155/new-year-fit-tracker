@@ -114,7 +114,7 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
   };
 
   return (
-    <Card>
+    <Card className="glass-card neon-border">
       <CardContent className="p-2.5">
         {/* Заголовок */}
         <div className="flex items-center justify-between mb-2">
@@ -136,7 +136,7 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
         {/* Основной контент: Балл + Цветная полоса */}
         <div className="flex items-start gap-3 mb-2">
           {/* Балл */}
-          <div className="text-xl font-bold min-w-[50px]" style={{ color: qualityColor }}>
+          <div className="text-xl font-bold min-w-[50px] metric-glow pulse-glow" style={{ color: qualityColor }}>
             {Math.round(averageConfidence)}%
           </div>
           

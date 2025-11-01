@@ -13,6 +13,7 @@ import { HabitCreateDialog } from "@/components/habits/HabitCreateDialog";
 import { HabitsOverviewChart } from "@/components/habits/HabitsOverviewChart";
 import { HabitProgressChart } from "@/components/habits/HabitProgressChart";
 import { HabitCalendarHeatmap } from "@/components/habits/HabitCalendarHeatmap";
+import { IntermittentFastingWidget } from "@/components/habits/IntermittentFastingWidget";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -225,6 +226,17 @@ export default function Habits() {
       )}
 
       <HabitStats userId={user?.id} />
+
+      {/* Special Widgets Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Специальные виджеты</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <IntermittentFastingWidget />
+          {/* Future widgets: WaterIntakeWidget, SleepQualityWidget, etc. */}
+        </div>
+      </div>
 
       {!habits || habits.length === 0 ? (
         <EmptyState

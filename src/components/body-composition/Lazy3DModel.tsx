@@ -24,6 +24,28 @@ interface Props {
 export function Lazy3DModel({ segmentData, interactive = true, showTooltips = true }: Props) {
   const [show3D, setShow3D] = useState(false);
 
+  // Guard: Check if segmentData is valid
+  const hasValidData = segmentData && (
+    segmentData.rightArmPercent !== null ||
+    segmentData.leftArmPercent !== null ||
+    segmentData.trunkPercent !== null ||
+    segmentData.rightLegPercent !== null ||
+    segmentData.leftLegPercent !== null
+  );
+
+  if (!hasValidData) {
+    return (
+      <div className="h-[500px] flex items-center justify-center border-2 border-destructive/20 rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/50">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-destructive text-lg font-semibold">⚠️ Нет данных для 3D модели</div>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Сегментные данные отсутствуют. Загрузите новый InBody отчет для отображения 3D модели тела.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!show3D) {
     return (
       <div className="h-[500px] flex items-center justify-center border-2 border-primary/20 rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm relative overflow-hidden">

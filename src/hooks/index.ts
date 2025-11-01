@@ -84,6 +84,14 @@ export { useTrainerChallenges } from './useTrainerChallenges';
 export { useAIConversations } from './useAIConversations';
 export { useAIPendingActions } from './useAIPendingActions';
 export { useFastingWindow } from './useFastingWindow';
+export { 
+  useActiveFastingSession,
+  useFastingHistory,
+  useStartFasting,
+  useEndFasting,
+  useFastingStats,
+  type FastingSession
+} from './useFastingSessions';
 export { useGoalHabitSync } from './useGoalHabitSync';
 export { usePrefetch } from './usePrefetch';
 export { useTrainingPlanDetail } from './useTrainingPlanDetail';

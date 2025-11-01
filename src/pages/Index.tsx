@@ -236,21 +236,38 @@ const Index = () => {
 
         {/* Enhanced AI Insights with Background Gradient */}
         <ErrorBoundary>
-          <BackgroundGradient
-            className="rounded-2xl"
-            animate={true}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <EnhancedAIInsights userId={user?.id} />
-          </BackgroundGradient>
+            <BackgroundGradient
+              className="rounded-2xl"
+              animate={true}
+            >
+              <EnhancedAIInsights userId={user?.id} />
+            </BackgroundGradient>
+          </motion.div>
         </ErrorBoundary>
 
         {/* Enhanced Data Quality */}
         <ErrorBoundary>
-          <CompactDataQualityLine userId={user?.id} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <CompactDataQualityLine userId={user?.id} />
+          </motion.div>
         </ErrorBoundary>
 
         {/* Widgets Grid */}
-        {widgets.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {widgets.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
             <p className="text-muted-foreground mb-4">
               Нет виджетов. Добавьте их через настройки.
@@ -292,6 +309,7 @@ const Index = () => {
             })}
           </div>
         )}
+        </motion.div>
 
         {/* Habits Section - MOVED ABOVE LEADERBOARD */}
         <ErrorBoundary>

@@ -1343,6 +1343,48 @@ export type Database = {
           },
         ]
       }
+      fasting_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          end_time: string | null
+          fasting_type: string
+          id: string
+          interrupted_reason: string | null
+          notes: string | null
+          start_time: string
+          target_hours: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          fasting_type: string
+          id?: string
+          interrupted_reason?: string | null
+          notes?: string | null
+          start_time: string
+          target_hours?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          fasting_type?: string
+          id?: string
+          interrupted_reason?: string | null
+          notes?: string | null
+          start_time?: string
+          target_hours?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       fasting_windows: {
         Row: {
           created_at: string | null
@@ -3050,6 +3092,39 @@ export type Database = {
           progress?: number | null
           unlocked_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_habit_widgets: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          id: string
+          position: number
+          updated_at: string | null
+          user_id: string
+          visible: boolean | null
+          widget_type: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          position?: number
+          updated_at?: string | null
+          user_id: string
+          visible?: boolean | null
+          widget_type: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          position?: number
+          updated_at?: string | null
+          user_id?: string
+          visible?: boolean | null
+          widget_type?: string
         }
         Relationships: []
       }
