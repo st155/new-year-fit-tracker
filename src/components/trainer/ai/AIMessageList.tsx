@@ -21,7 +21,7 @@ interface AIMessageListProps {
 }
 
 export function AIMessageList({ selectedClient }: AIMessageListProps) {
-  const { messages, sending, sendingState } = useAIChat();
+  const { messages, sending, sendingState, loading, currentConversation } = useAIChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +35,20 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
   return (
     <ScrollArea className="flex-1 px-4 md:px-6 py-4" ref={scrollRef}>
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Loading state when switching conversations */}
+        {loading && messages.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-center py-12"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+              <p className="text-sm text-muted-foreground">Загружаем историю...</p>
+            </div>
+          </motion.div>
+        )}
+        
         <AnimatePresence mode="popLayout">
           {messages.map((msg, idx) => {
             const isUser = msg.role === 'user';
