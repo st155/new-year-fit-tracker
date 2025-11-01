@@ -3529,7 +3529,6 @@ export type Database = {
           latest_weight: number | null
           steps_last_7d: number | null
           streak_days: number | null
-          total_active_calories: number | null
           total_calories: number | null
           total_points: number | null
           total_steps: number | null
@@ -3539,7 +3538,22 @@ export type Database = {
           weekly_consistency: number | null
           workouts_last_7d: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       challenge_leaderboard_v2: {
         Row: {
@@ -3618,7 +3632,22 @@ export type Database = {
           weekly_consistency: number | null
           workouts_last_7d: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       challenge_progress: {
         Row: {
@@ -3751,6 +3780,10 @@ export type Database = {
       aggregate_daily_health_data: {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
+      }
+      calculate_streak_days: {
+        Args: { p_end_date?: string; p_user_id: string }
+        Returns: number
       }
       check_rate_limit: {
         Args: {
