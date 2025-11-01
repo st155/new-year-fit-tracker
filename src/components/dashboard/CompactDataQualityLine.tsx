@@ -6,6 +6,8 @@ import { useDataQuality } from '@/hooks/useDataQuality';
 import { useDataQualityHistory } from '@/hooks/useDataQualityHistory';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
+import { QualityZoneModal } from './QualityZoneModal';
 
 interface CompactDataQualityLineProps {
   userId?: string;
@@ -19,9 +21,10 @@ interface QualityHistoryPoint {
 interface ColoredQualityBarProps {
   zones: Array<{ icon: string; label: string; count: number; color: string }>;
   total: number;
+  onZoneClick: (zoneLabel: string) => void;
 }
 
-function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
+function ColoredQualityBar({ zones, total, onZoneClick }: ColoredQualityBarProps) {
   if (total === 0) return null;
   
   return (
@@ -35,12 +38,13 @@ function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
           return (
             <div
               key={i}
-              className="transition-all duration-300"
+              className="transition-all duration-300 cursor-pointer hover:opacity-80"
               style={{
                 width: `${width}%`,
                 backgroundColor: zone.color,
               }}
               title={`${zone.label}: ${zone.count} (${Math.round(width)}%)`}
+              onClick={() => onZoneClick(zone.label)}
             />
           );
         })}
@@ -54,8 +58,9 @@ function ColoredQualityBar({ zones, total }: ColoredQualityBarProps) {
           return (
             <div
               key={i}
-              className="flex items-center gap-0.5"
+              className="flex items-center gap-0.5 cursor-pointer hover:opacity-80"
               style={{ color: zone.color }}
+              onClick={() => onZoneClick(zone.label)}
             >
               <span>{zone.icon}</span>
               <span className="font-semibold">{zone.count} ({percentage}%)</span>
@@ -81,9 +86,10 @@ function generateSparklinePoints(history: QualityHistoryPoint[]) {
 
 export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) {
   const { user } = useAuth();
-  const { averageConfidence, metricsByQuality, isLoading } = useDataQuality();
+  const { averageConfidence, metricsByQuality, metrics, isLoading } = useDataQuality();
   const { data: history } = useDataQualityHistory(userId);
   const { recalculate, isRecalculating } = useConfidenceRecalculation();
+  const [modalZone, setModalZone] = useState<{ label: string; metrics: Array<{ metricName: string; confidence: number; source: any; factors: any }> } | null>(null);
   
   if (isLoading) return <Skeleton className="h-[70px] w-full" />;
   if (!metricsByQuality) return null;
@@ -111,6 +117,27 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
     if (user?.id) {
       recalculate({ user_id: user.id });
     }
+  };
+
+  const handleZoneClick = (zoneLabel: string) => {
+    let zoneMetrics: Array<{ metricName: string; confidence: number; source: any; factors: any }> = [];
+    
+    switch (zoneLabel) {
+      case 'Отлично':
+        zoneMetrics = metricsByQuality.excellent;
+        break;
+      case 'Хорошо':
+        zoneMetrics = metricsByQuality.good;
+        break;
+      case 'Средне':
+        zoneMetrics = metricsByQuality.fair;
+        break;
+      case 'Плохо':
+        zoneMetrics = metricsByQuality.poor;
+        break;
+    }
+    
+    setModalZone({ label: zoneLabel, metrics: zoneMetrics });
   };
 
   return (
@@ -142,7 +169,7 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
           
           {/* Цветная полоса */}
           <div className="flex-1">
-            <ColoredQualityBar zones={zones} total={totalMetrics} />
+            <ColoredQualityBar zones={zones} total={totalMetrics} onZoneClick={handleZoneClick} />
           </div>
         </div>
 
@@ -179,6 +206,12 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
           </div>
         )}
       </CardContent>
+      
+      <QualityZoneModal
+        isOpen={modalZone !== null}
+        onClose={() => setModalZone(null)}
+        zone={modalZone}
+      />
     </Card>
   );
 }

@@ -15,6 +15,10 @@ const badgeVariants = cva(
         success: "border-transparent bg-success text-success-foreground hover:bg-success/80",
         pulse: "border-transparent bg-primary text-primary-foreground animate-glow-pulse",
         heartbeat: "border-transparent bg-destructive text-destructive-foreground animate-heartbeat",
+        excellent: "border-transparent bg-success text-success-foreground hover:bg-success/80",
+        good: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        fair: "border-transparent bg-warning text-warning-foreground hover:bg-warning/80",
+        poor: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
       },
     },
     defaultVariants: {

@@ -12,7 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { DataQualityBadge } from '@/components/data-quality';
+import { DataQualityBadge, ConflictWarningBadge } from '@/components/data-quality';
+import { getConfidenceColor } from '@/lib/data-quality';
 import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
@@ -381,9 +382,23 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             : isDataWarning 
               ? '#eab308' 
               : primarySourceQuality || `${color}30`,
+          borderLeft: multiSourceData.sources[0]?.confidence 
+            ? `4px solid ${getConfidenceColor(multiSourceData.sources[0].confidence)}` 
+            : undefined,
         }}
       >
         <CardContent className="p-4 sm:p-6">
+          <div className="absolute top-2 right-2 flex gap-1">
+            {multiSourceData.sources[0]?.confidence && (
+              <DataQualityBadge
+                confidence={multiSourceData.sources[0].confidence}
+                size="compact"
+                showLabel={false}
+              />
+            )}
+            <ConflictWarningBadge metricName={metricName} />
+          </div>
+
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <p className="text-base md:text-sm font-medium text-foreground mb-1">
@@ -425,6 +440,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     <Badge variant="outline" className="text-xs">
                       {getSourceDisplayName(src.source)}
                     </Badge>
+                    {src.confidence && (
+                      <DataQualityBadge
+                        confidence={src.confidence}
+                        size="compact"
+                        showLabel={false}
+                      />
+                    )}
                     {src.age_hours < 24 ? (
                       <span className="text-xs text-muted-foreground">{src.age_hours}ч</span>
                     ) : (
@@ -545,19 +567,27 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             : qualityColor // Приоритет 3: качество значения метрики
               ? qualityColor 
               : (trendColor || `${color}30`), // Приоритет 4: тренд или дефолтный цвет
+        borderLeft: data?.confidence 
+          ? `4px solid ${getConfidenceColor(data.confidence)}` 
+          : undefined,
       }}
     >
       <CardContent className="p-4 sm:p-6">
         <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex gap-1 sm:gap-2">
-          {/* Data Quality Badge - show if confidence < 80 */}
-          {data?.confidence !== undefined && data.confidence < 80 && (
+          {/* Data Quality Badge - always show if available */}
+          {data?.confidence !== undefined && (
             <DataQualityBadge
               confidence={data.confidence}
               factors={data.factors}
               metricName={metricName}
               userId={user?.id}
+              size="compact"
+              showLabel={false}
             />
           )}
+          
+          {/* Conflict Warning Badge */}
+          <ConflictWarningBadge metricName={metricName} />
           
           {/* Freshness Badge */}
           {(isDataWarning || isDataStale) && isWhoopSource && (

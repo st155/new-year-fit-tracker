@@ -20,6 +20,8 @@ interface DataQualityBadgeProps {
   userId?: string;
   showRecalculate?: boolean;
   onRecalculate?: () => void;
+  size?: 'default' | 'compact';
+  showLabel?: boolean;
 }
 
 export function DataQualityBadge({
@@ -29,6 +31,8 @@ export function DataQualityBadge({
   userId,
   showRecalculate = false,
   onRecalculate,
+  size = 'default',
+  showLabel = true,
 }: DataQualityBadgeProps) {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const { icon, variant, label, color } = getConfidenceDisplay(confidence);
@@ -54,11 +58,28 @@ export function DataQualityBadge({
     }
   };
 
+  // Compact mode: just icon + percentage
+  if (size === 'compact') {
+    return (
+      <Badge variant={variant as any} className="gap-1 px-2 py-0.5 text-xs">
+        {icon}
+        <span>{Math.round(confidence)}%</span>
+      </Badge>
+    );
+  }
+
   if (!factors) {
     return (
       <Badge variant={variant as any} className="gap-1">
         {icon}
-        {label}
+        <span>{Math.round(confidence)}%</span>
+        {showLabel && <span className="ml-1">{label}</span>}
+        {showRecalculate && (
+          <RefreshCw 
+            className="w-3 h-3 ml-1 cursor-pointer hover:rotate-180 transition-transform" 
+            onClick={handleRecalculate}
+          />
+        )}
       </Badge>
     );
   }

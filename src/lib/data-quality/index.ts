@@ -21,3 +21,10 @@ export {
 } from './conflict-resolution';
 
 export { UnifiedDataFetcherV2 } from './unified-data-fetcher-v2';
+
+export {
+  getConfidenceColor,
+  getConfidenceBadgeVariant,
+  getConfidenceLabel,
+  getConfidenceIcon,
+} from './ui-helpers';
