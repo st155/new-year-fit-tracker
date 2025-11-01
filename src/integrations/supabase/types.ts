@@ -2896,6 +2896,54 @@ export type Database = {
           },
         ]
       }
+      trainer_reports: {
+        Row: {
+          client_id: string
+          client_name: string | null
+          created_at: string | null
+          file_name: string
+          file_size_bytes: number | null
+          goals_count: number | null
+          id: string
+          metrics_count: number | null
+          period_end: string
+          period_start: string
+          report_config: Json | null
+          report_type: string
+          trainer_id: string
+        }
+        Insert: {
+          client_id: string
+          client_name?: string | null
+          created_at?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          goals_count?: number | null
+          id?: string
+          metrics_count?: number | null
+          period_end: string
+          period_start: string
+          report_config?: Json | null
+          report_type: string
+          trainer_id: string
+        }
+        Update: {
+          client_id?: string
+          client_name?: string | null
+          created_at?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          goals_count?: number | null
+          id?: string
+          metrics_count?: number | null
+          period_end?: string
+          period_start?: string
+          report_config?: Json | null
+          report_type?: string
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       trainer_schedule_events: {
         Row: {
           client_id: string | null

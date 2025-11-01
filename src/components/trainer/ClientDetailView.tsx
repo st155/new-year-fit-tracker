@@ -42,6 +42,8 @@ import { GoalsProgressOverview } from './client-detail/GoalsProgressOverview';
 import { WorkoutAnalysis } from './client-detail/WorkoutAnalysis';
 import { ProgressTimeline } from './client-detail/ProgressTimeline';
 import { TrainerNotes } from './client-detail/TrainerNotes';
+import { ClientReportExport } from './export/ClientReportExport';
+import { PeriodComparison } from './export/PeriodComparison';
 
 interface Client {
   id: string;
@@ -227,6 +229,14 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         
         {/* Actions Bar */}
         <div className="flex gap-2">
+          <ClientReportExport
+            client={client}
+            goals={goals}
+            healthData={healthData}
+            whoopSummary={whoopSummary}
+            ouraSummary={ouraSummary}
+            unifiedMetrics={unifiedMetrics}
+          />
           <Button onClick={() => setShowGoalDialog(true)} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Добавить цель
@@ -279,10 +289,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       </Card>
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-6 bg-muted/50 p-1 gap-1">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
           <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
           <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
+          <TabsTrigger value="comparison" className="whitespace-nowrap flex-shrink-0">Сравнение</TabsTrigger>
           <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
           <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
           <TabsTrigger value="ai-history" className="whitespace-nowrap flex-shrink-0">AI История ({aiHistory.length})</TabsTrigger>
@@ -595,6 +606,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             measurements={measurements}
             recoveryScore={whoopSummary ? [whoopSummary.recoveryScore.avg] : undefined}
           />
+        </TabsContent>
+
+        <TabsContent value="comparison" className="space-y-4">
+          <PeriodComparison clientId={client.user_id} />
         </TabsContent>
 
         <TabsContent value="measurements" className="space-y-4">
