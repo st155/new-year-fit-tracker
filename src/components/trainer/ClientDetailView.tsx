@@ -35,7 +35,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from "date-fns";
 import { useClientDetailData, formatSourceName } from "@/hooks/useClientDetailData";
 import { HealthDataTabs } from "./health-data/HealthDataTabs";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
 import { GroupedGoalsView } from './client-detail/GroupedGoalsView';
 import { GoalProgressChart } from './client-detail/GoalProgressChart';
 import { GoalsProgressOverview } from './client-detail/GoalsProgressOverview';
@@ -95,6 +96,41 @@ interface ClientDetailViewProps {
   client: Client;
   onBack: () => void;
 }
+
+// Health Score Component with Data Fetching
+const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
+  const { data: healthScore } = useQuery({
+    queryKey: ['client-health-score', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_health_scores')
+        .select('*')
+        .eq('user_id', clientId)
+        .single();
+      
+      if (error) {
+        console.warn('Health score not available:', error);
+        return null;
+      }
+      return data;
+    },
+  });
+
+  return (
+    <ClientHealthScore
+      totalScore={Math.round(healthScore?.total_health_score || 0)}
+      breakdown={{
+        recovery: Math.round(healthScore?.recovery_score || 0),
+        sleep: Math.round(healthScore?.sleep_score || 0),
+        activity: Math.round(healthScore?.activity_score || 0),
+        consistency: Math.round(healthScore?.consistency_score || 0),
+        trend: Math.round(healthScore?.trend_score || 0),
+      }}
+      lastUpdated={healthScore?.last_measurement ? new Date(healthScore.last_measurement) : new Date()}
+      className="hidden lg:block"
+    />
+  );
+};
 
 export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
@@ -308,18 +344,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             </div>
             
             {/* Client Health Score */}
-            <ClientHealthScore
-              totalScore={85} // TODO: Calculate from actual data
-              breakdown={{
-                recovery: 22,
-                sleep: 20,
-                activity: 18,
-                consistency: 12,
-                trend: 13,
-              }}
-              lastUpdated={new Date()}
-              className="hidden lg:block"
-            />
+            <ClientHealthScoreWithData clientId={client.user_id} />
           </div>
         </CardHeader>
       </Card>

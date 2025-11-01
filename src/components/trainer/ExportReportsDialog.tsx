@@ -29,15 +29,37 @@ export const ExportReportsDialog = ({
     setExporting(true);
     
     try {
-      // TODO: Implement actual export logic
-      // For PDF: use jspdf
-      // For CSV: generate CSV string and download
-      
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate export
+      if (format === 'csv') {
+        // Generate CSV content
+        const headers = ['Metric', 'Value', 'Date'];
+        const rows = [
+          headers.join(','),
+          // Add sample data - in production, fetch real data
+          `"Client","${clientName || 'Unknown'}",""`,
+          `"Export Date","${new Date().toLocaleDateString()}",""`,
+        ];
+        
+        const csvContent = rows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `report-${clientName || 'client'}-${Date.now()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // For PDF, using basic implementation - can be enhanced with jspdf
+        toast.info("PDF export coming soon - use CSV for now");
+        return;
+      }
       
       toast.success(`Report exported as ${format.toUpperCase()}`);
       onOpenChange(false);
     } catch (error) {
+      console.error('Export error:', error);
       toast.error("Failed to export report");
     } finally {
       setExporting(false);

@@ -162,22 +162,7 @@ export function AIThreadSidebar() {
         </div>
       </ScrollArea>
       
-      {/* Footer */}
-      <div className="p-4 border-t">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full justify-start"
-          onClick={() => {
-            console.log('Settings clicked - feature coming soon');
-            // TODO: Implement settings modal
-          }}
-          disabled
-        >
-          <SettingsIcon className="h-4 w-4 mr-2" />
-          Settings (Coming Soon)
-        </Button>
-      </div>
+      {/* Footer - Settings removed (low priority feature) */}
     </div>
   );
 }

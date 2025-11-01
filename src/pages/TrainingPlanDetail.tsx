@@ -1,4 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from "@/integrations/supabase/client";
 import { useTrainingPlanDetail } from '@/hooks/useTrainingPlanDetail';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -83,7 +85,9 @@ export default function TrainingPlanDetail() {
 
   const activeClients = plan.assigned_training_plans?.filter(a => a.status === 'active').length || 0;
   const totalWorkouts = plan.training_plan_workouts?.length || 0;
-  const completionRate = 85; // TODO: Calculate from actual data
+  
+  // Completion rate - simplified (full implementation requires training_plan_workout_logs table)
+  const completionRate = 0; // Default to 0 until workout logs are tracked
 
   return (
     <div className="container max-w-7xl mx-auto py-6 space-y-6">
