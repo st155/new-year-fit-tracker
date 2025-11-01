@@ -337,14 +337,14 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           )}
 
           {/* Whoop Health Metrics */}
-          {whoopSummary && whoopSummary.recoveryScore.count > 0 && (
-            <div className="space-y-4 mt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Метрики здоровья от Whoop
-                <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
-              </h3>
-              
+          <div className="space-y-4 mt-8">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Метрики здоровья от Whoop
+              <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
+            </h3>
+            
+            {whoopSummary && whoopSummary.recoveryScore.count > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Recovery Score Card */}
                 <Card>
@@ -489,47 +489,85 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                   </Card>
                 )}
               </div>
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-semibold mb-2">Данные Whoop не найдены</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    У клиента не подключен Whoop или нет данных за последние 7 дней
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href="https://www.whoop.com" target="_blank" rel="noopener noreferrer">
+                      Узнать о Whoop
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-              {/* Oura Summary */}
-              {ouraSummary && ouraSummary.sleep.count > 0 && (
-                <Card className="mt-6">
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Moon className="h-5 w-5 text-purple-500" />
-                      <CardTitle>Статистика Oura (7 дней)</CardTitle>
-                      <Badge variant="outline">Oura Ring</Badge>
+          {/* Oura Ring Metrics */}
+          <div className="space-y-4 mt-8">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Moon className="h-5 w-5" />
+              Метрики здоровья от Oura
+              <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
+            </h3>
+
+            {ouraSummary && ouraSummary.sleep.count > 0 ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Moon className="h-5 w-5 text-purple-500" />
+                    <CardTitle>Статистика Oura (7 дней)</CardTitle>
+                    <Badge variant="outline">Oura Ring</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Сон</p>
+                    <div className="space-y-1">
+                      <p className="text-sm">Средняя продолжительность: <strong>{ouraSummary.sleep.durationAvg}h</strong></p>
+                      <p className="text-sm">Эффективность: <strong>{ouraSummary.sleep.efficiencyAvg}%</strong></p>
+                      <p className="text-sm">Глубокий сон: <strong>{ouraSummary.sleep.deepSleepAvg}h</strong></p>
+                      <p className="text-sm">REM сон: <strong>{ouraSummary.sleep.remSleepAvg}h</strong></p>
                     </div>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">Сон</p>
-                      <div className="space-y-1">
-                        <p className="text-sm">Средняя продолжительность: <strong>{ouraSummary.sleep.durationAvg}h</strong></p>
-                        <p className="text-sm">Эффективность: <strong>{ouraSummary.sleep.efficiencyAvg}%</strong></p>
-                        <p className="text-sm">Глубокий сон: <strong>{ouraSummary.sleep.deepSleepAvg}h</strong></p>
-                        <p className="text-sm">REM сон: <strong>{ouraSummary.sleep.remSleepAvg}h</strong></p>
-                      </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">HRV</p>
+                    <div className="space-y-1">
+                      <p className="text-sm">Среднее: <strong>{ouraSummary.hrv.avg} ms</strong></p>
+                      <p className="text-sm">Диапазон: <strong>{ouraSummary.hrv.min} - {ouraSummary.hrv.max} ms</strong></p>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">HRV</p>
-                      <div className="space-y-1">
-                        <p className="text-sm">Среднее: <strong>{ouraSummary.hrv.avg} ms</strong></p>
-                        <p className="text-sm">Диапазон: <strong>{ouraSummary.hrv.min} - {ouraSummary.hrv.max} ms</strong></p>
-                      </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Дыхание</p>
+                    <div className="space-y-1">
+                      <p className="text-sm">Средняя частота: <strong>{ouraSummary.respiratoryRate.avg} вдохов/мин</strong></p>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">Дыхание</p>
-                      <div className="space-y-1">
-                        <p className="text-sm">Средняя частота: <strong>{ouraSummary.respiratoryRate.avg} вдохов/мин</strong></p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Moon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-semibold mb-2">Данные Oura не найдены</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    У клиента не подключен Oura Ring или нет данных за последние 7 дней
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href="https://ouraring.com" target="_blank" rel="noopener noreferrer">
+                      Узнать об Oura Ring
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="measurements" className="space-y-4">
