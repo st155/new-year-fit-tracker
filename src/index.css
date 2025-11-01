@@ -821,4 +821,72 @@ All colors MUST be HSL.
   .rotate-slow:hover {
     animation: rotate-slow 10s linear infinite;
   }
+
+  /* Tremor Dark Mode Chart Colors Override */
+  .dark .tremor-AreaChart-area,
+  .dark .tremor-BarChart-bar {
+    opacity: 0.9 !important;
+  }
+
+  /* Ensure chart bars are visible in dark mode with brighter colors */
+  .dark .tremor-BarChart-bar[fill="#4f46e5"] { /* indigo */
+    fill: #6366f1 !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#3b82f6"] { /* blue */
+    fill: #60a5fa !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#8b5cf6"] { /* purple */
+    fill: #a78bfa !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#64748b"] { /* slate */
+    fill: #94a3b8 !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#8b5cf6"] { /* violet */
+    fill: #c084fc !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#06b6d4"] { /* cyan */
+    fill: #22d3ee !important;
+  }
+
+  .dark .tremor-BarChart-bar[fill="#d946ef"] { /* fuchsia */
+    fill: #e879f9 !important;
+  }
+
+  /* Improve area chart visibility */
+  .dark .tremor-AreaChart-area[fill*="orange"],
+  .dark .tremor-AreaChart-area[fill*="amber"] {
+    fill: #fb923c !important;
+    fill-opacity: 0.3 !important;
+  }
+
+  .dark .tremor-AreaChart-area[fill*="rose"],
+  .dark .tremor-AreaChart-area[fill*="pink"] {
+    fill: #fb7185 !important;
+    fill-opacity: 0.3 !important;
+  }
+
+  /* Chart lines should be brighter */
+  .dark .tremor-AreaChart-line,
+  .dark .recharts-line-curve {
+    stroke-width: 2.5px !important;
+  }
+
+  /* Grid lines for better readability */
+  .dark .tremor-AreaChart-gridLine,
+  .dark .tremor-BarChart-gridLine,
+  .dark .recharts-cartesian-grid-horizontal line,
+  .dark .recharts-cartesian-grid-vertical line {
+    stroke: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Chart tooltips */
+  .dark .tremor-Tooltip-root {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
 }

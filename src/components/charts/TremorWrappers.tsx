@@ -28,7 +28,7 @@ export function TremorMetricCard({
   icon
 }: TremorMetricCardProps) {
   return (
-    <Card className="glass-medium border-white/10 bg-card">
+    <Card className="bg-card/50 border-white/20">
       <div className="flex items-center justify-between">
         <Text className="text-muted-foreground">{title}</Text>
         {icon}
@@ -62,6 +62,7 @@ interface TremorAreaChartCardProps {
   colors: string[];
   valueFormatter?: (value: number) => string;
   className?: string;
+  showGridLines?: boolean;
 }
 
 export function TremorAreaChartCard({
@@ -71,10 +72,11 @@ export function TremorAreaChartCard({
   categories,
   colors,
   valueFormatter,
-  className = ''
+  className = '',
+  showGridLines = false,
 }: TremorAreaChartCardProps) {
   return (
-    <Card className={`glass-medium border-white/10 bg-card ${className}`}>
+    <Card className={`bg-card/50 border-white/20 ${className}`}>
       <h3 className="text-lg font-semibold">{title}</h3>
       {description && <Text className="mt-1 text-muted-foreground">{description}</Text>}
       <AreaChart
@@ -85,7 +87,7 @@ export function TremorAreaChartCard({
         colors={colors}
         valueFormatter={valueFormatter}
         showLegend={true}
-        showGridLines={false}
+        showGridLines={showGridLines}
         curveType="natural"
       />
     </Card>
@@ -101,6 +103,7 @@ interface TremorBarChartCardProps {
   valueFormatter?: (value: number) => string;
   stack?: boolean;
   className?: string;
+  showGridLines?: boolean;
 }
 
 export function TremorBarChartCard({
@@ -111,10 +114,11 @@ export function TremorBarChartCard({
   colors,
   valueFormatter,
   stack = false,
-  className = ''
+  className = '',
+  showGridLines = false,
 }: TremorBarChartCardProps) {
   return (
-    <Card className={`glass-medium border-white/10 bg-card ${className}`}>
+    <Card className={`bg-card/50 border-white/20 ${className}`}>
       <h3 className="text-lg font-semibold">{title}</h3>
       {description && <Text className="mt-1 text-muted-foreground">{description}</Text>}
       <BarChart
@@ -125,7 +129,7 @@ export function TremorBarChartCard({
         colors={colors}
         valueFormatter={valueFormatter}
         showLegend={categories.length > 1}
-        showGridLines={false}
+        showGridLines={showGridLines}
         stack={stack}
       />
     </Card>

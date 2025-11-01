@@ -458,8 +458,9 @@ export default function FitnessData() {
                 description="Уровень напряжения за выбранный период"
                 data={adaptStrainToTremor(processedMetrics.strain)}
                 categories={['Strain']}
-                colors={['orange']}
+                colors={['amber']}
                 valueFormatter={valueFormatters.decimal}
+                showGridLines={true}
               />
             )}
             {processedMetrics.heartRate.length > 0 && (
@@ -468,14 +469,15 @@ export default function FitnessData() {
                 description="Частота сердцебиения"
                 data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
                 categories={['Heart Rate']}
-                colors={['rose']}
+                colors={['pink']}
                 valueFormatter={valueFormatters.bpm}
+                showGridLines={true}
               />
             )}
           </div>
 
           {processedMetrics.sleep.length > 0 && (
-            <Card className="glass-medium border-white/10">
+            <Card className="bg-card/50 border-white/20">
               <CardHeader>
                 <CardTitle>Sleep Stages</CardTitle>
                 <CardDescription>Фазы сна за выбранный период</CardDescription>
@@ -486,11 +488,11 @@ export default function FitnessData() {
                   data={adaptSleepToTremor(processedMetrics.sleep)}
                   index="date"
                   categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
-                  colors={['indigo', 'blue', 'purple', 'slate']}
+                  colors={['violet', 'cyan', 'fuchsia', 'slate']}
                   stack={true}
                   valueFormatter={valueFormatters.minutes}
                   showLegend={true}
-                  showGridLines={false}
+                  showGridLines={true}
                 />
               </CardContent>
             </Card>
