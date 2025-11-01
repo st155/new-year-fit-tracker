@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dumbbell, Heart, TrendingUp, Weight, Activity } from 'lucide-react';
+import { Dumbbell, Heart, TrendingUp, Weight, Activity, Target } from 'lucide-react';
 import { GoalCard } from './GoalCard';
 import { QuickMeasurementDialog } from './QuickMeasurementDialog';
 import { GoalEditDialog } from './GoalEditDialog';
@@ -76,6 +76,11 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
       label: 'Гибкость', 
       icon: <Activity className="h-5 w-5" />,
       color: 'bg-purple-500/10 text-purple-600'
+    },
+    other: { 
+      label: 'Другое', 
+      icon: <Target className="h-5 w-5" />,
+      color: 'bg-gray-500/10 text-gray-600'
     }
   };
 
@@ -121,6 +126,11 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
         {Object.entries(groupedGoals).map(([type, typeGoals]) => {
           if (typeGoals.length === 0) return null;
           const typeConfig = typeLabels[type];
+          
+          if (!typeConfig) {
+            console.warn(`⚠️ Unknown goal type: ${type}`);
+            return null;
+          }
           
           return (
             <TabsContent key={type} value={type} className="space-y-4">
