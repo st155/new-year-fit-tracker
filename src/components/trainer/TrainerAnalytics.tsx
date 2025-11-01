@@ -68,79 +68,26 @@ export function TrainerAnalytics() {
 
     setLoading(true);
     try {
-      await Promise.all([
-        loadClientStats(),
-        loadOverallStats()
-      ]);
-    } catch (error: any) {
-      console.error('Error loading analytics:', error);
-      toast.error('Ошибка загрузки аналитики');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Используем оптимизированный RPC вместо множественных запросов
+      const { data: clients, error } = await supabase
+        .rpc('get_trainer_clients_enhanced', {
+          p_trainer_id: user.id
+        });
 
-  const loadClientStats = async () => {
-    if (!user) return;
+      if (error) throw error;
 
-    try {
-      // Получаем всех клиентов тренера
-      const { data: clients, error: clientsError } = await supabase
-        .from('trainer_clients')
-        .select(`
-          id,
-          client_id,
-          profiles!trainer_clients_client_id_fkey (
-            user_id,
-            username,
-            full_name
-          )
-        `)
-        .eq('trainer_id', user.id)
-        .eq('active', true);
-
-      if (clientsError) throw clientsError;
-
-      // Для каждого клиента собираем статистику
-      const statsPromises = (clients || []).map(async (client: any) => {
-        const profile = client.profiles;
-        
-        // Получаем цели клиента
-        const { data: goals } = await supabase
-          .from('goals')
-          .select('id')
-          .eq('user_id', profile.user_id);
-
-        // Получаем измерения за последние 30 дней
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const { data: recentMeasurements } = await supabase
-          .from('measurements')
-          .select('id, measurement_date')
-          .eq('user_id', profile.user_id)
-          .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]);
-
-        // Получаем последнюю активность
-        const { data: lastMeasurement } = await supabase
-          .from('measurements')
-          .select('measurement_date')
-          .eq('user_id', profile.user_id)
-          .order('measurement_date', { ascending: false })
-          .limit(1)
-          .single();
-
-        // Вычисляем прогресс и статус
-        const goalsCount = goals?.length || 0;
-        const completedGoals = 0; // Будет вычислено на основе достижения целей
-        const recentMeasurementsCount = recentMeasurements?.length || 0;
-        const lastActivity = lastMeasurement?.measurement_date || '';
+      // Обрабатываем данные клиентов
+      const stats: ClientStats[] = (clients || []).map((client: any) => {
+        const goalsCount = client.goals_count || 0;
+        const completedGoals = client.completed_goals || 0;
+        const recentMetricsCount = client.recent_metrics_count || 0;
+        const lastActivity = client.last_activity_date || '';
         
         // Вычисляем очки прогресса (0-100)
         let progressScore = 0;
         if (goalsCount > 0) progressScore += 20;
-        if (recentMeasurementsCount > 0) progressScore += 30;
-        if (recentMeasurementsCount >= 4) progressScore += 25; // Регулярные измерения
+        if (recentMetricsCount > 0) progressScore += 30;
+        if (recentMetricsCount >= 4) progressScore += 25; // Регулярные измерения
         if (lastActivity && new Date(lastActivity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
           progressScore += 25; // Активность за последнюю неделю
         }
@@ -153,67 +100,43 @@ export function TrainerAnalytics() {
 
         return {
           id: client.id,
-          user_id: profile.user_id,
-          username: profile.username,
-          full_name: profile.full_name,
+          user_id: client.user_id,
+          username: client.username,
+          full_name: client.full_name,
           goals_count: goalsCount,
           completed_goals: completedGoals,
-          recent_measurements: recentMeasurementsCount,
+          recent_measurements: recentMetricsCount,
           last_activity: lastActivity,
           progress_score: progressScore,
           status
         };
       });
 
-      const stats = await Promise.all(statsPromises);
       setClientStats(stats);
-    } catch (error: any) {
-      console.error('Error loading client stats:', error);
-    }
-  };
 
-  const loadOverallStats = async () => {
-    if (!user) return;
-
-    try {
-      // Подсчитываем общую статистику
-      const { data: clientsCount } = await supabase
-        .from('trainer_clients')
-        .select('id', { count: 'exact' })
-        .eq('trainer_id', user.id)
-        .eq('active', true);
-
-      const { data: goalsCount } = await supabase
-        .from('goals')
-        .select('id', { count: 'exact' })
-        .in('user_id', clientStats.map(c => c.user_id));
-
-      // Измерения за последние 30 дней
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { data: recentMeasurements } = await supabase
-        .from('measurements')
-        .select('id', { count: 'exact' })
-        .in('user_id', clientStats.map(c => c.user_id))
-        .gte('measurement_date', thirtyDaysAgo.toISOString().split('T')[0]);
-
-      const totalClients = clientsCount?.length || 0;
-      const activeClients = clientStats.filter(c => c.status !== 'inactive').length;
+      // Вычисляем общую статистику из загруженных данных
+      const totalClients = stats.length;
+      const activeClients = stats.filter(c => c.status !== 'inactive').length;
+      const totalGoals = stats.reduce((sum, c) => sum + c.goals_count, 0);
+      const completedGoalsSum = stats.reduce((sum, c) => sum + c.completed_goals, 0);
+      const recentMeasurementsSum = stats.reduce((sum, c) => sum + c.recent_measurements, 0);
       const avgProgress = totalClients > 0 
-        ? clientStats.reduce((sum, c) => sum + c.progress_score, 0) / totalClients 
+        ? stats.reduce((sum, c) => sum + c.progress_score, 0) / totalClients 
         : 0;
 
       setOverallStats({
         total_clients: totalClients,
         active_clients: activeClients,
-        total_goals: goalsCount?.length || 0,
-        completed_goals: 0, // Будет вычислено
-        recent_measurements: recentMeasurements?.length || 0,
+        total_goals: totalGoals,
+        completed_goals: completedGoalsSum,
+        recent_measurements: recentMeasurementsSum,
         avg_progress: Math.round(avgProgress)
       });
     } catch (error: any) {
-      console.error('Error loading overall stats:', error);
+      console.error('Error loading analytics:', error);
+      toast.error('Ошибка загрузки аналитики');
+    } finally {
+      setLoading(false);
     }
   };
 
