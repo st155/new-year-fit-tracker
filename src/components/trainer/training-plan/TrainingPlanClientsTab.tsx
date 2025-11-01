@@ -11,7 +11,7 @@ interface AssignedClient {
     username: string;
     full_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface TrainingPlanClientsTabProps {
@@ -39,22 +39,39 @@ export function TrainingPlanClientsTab({
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {assignedClients.map((assignment) => (
-        <TrainerClientCard
-          key={assignment.id}
-          client={{
-            id: assignment.client_id,
-            username: assignment.profiles.username,
-            full_name: assignment.profiles.full_name,
-            avatar_url: assignment.profiles.avatar_url,
-            goals_count: 0
-          }}
-          healthScore={75}
-          isActive={assignment.status === 'active'}
-          lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString('ru-RU')}`}
-          onViewDetails={() => onViewClient(assignment.client_id)}
-        />
-      ))}
+      {assignedClients.map((assignment) => {
+        if (!assignment.profiles) {
+          return (
+            <Card key={assignment.id}>
+              <CardContent className="py-6">
+                <p className="text-sm text-muted-foreground">
+                  Профиль клиента не найден
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ID: {assignment.client_id}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        return (
+          <TrainerClientCard
+            key={assignment.id}
+            client={{
+              id: assignment.client_id,
+              username: assignment.profiles.username,
+              full_name: assignment.profiles.full_name,
+              avatar_url: assignment.profiles.avatar_url,
+              goals_count: 0
+            }}
+            healthScore={75}
+            isActive={assignment.status === 'active'}
+            lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString('ru-RU')}`}
+            onViewDetails={() => onViewClient(assignment.client_id)}
+          />
+        );
+      })}
     </div>
   );
 }

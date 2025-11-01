@@ -30,7 +30,7 @@ interface AssignedClient {
     username: string;
     full_name: string;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface TrainingPlanDetail {
@@ -57,48 +57,77 @@ export const useTrainingPlanDetail = (planId: string | null) => {
 
     console.log('🔄 Loading training plan:', planId);
     setLoading(true);
+    
     try {
-      // Load plan with workouts and assigned clients
-      const { data, error } = await supabase
+      // 1️⃣ Load base plan data
+      const { data: planData, error: planError } = await supabase
         .from('training_plans')
-        .select(`
-          *,
-          training_plan_workouts (*),
-          assigned_training_plans (
-            id,
-            client_id,
-            start_date,
-            end_date,
-            status,
-            profiles (
-              user_id,
-              username,
-              full_name,
-              avatar_url
-            )
-          )
-        `)
+        .select('*')
         .eq('id', planId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Supabase error:', error);
-        throw error;
+        .single();
+      
+      if (planError) throw planError;
+      if (!planData) throw new Error('План не найден');
+      
+      console.log('✅ Plan base data loaded:', planData.name);
+      
+      // 2️⃣ Load workouts
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('training_plan_workouts')
+        .select('*')
+        .eq('plan_id', planId)
+        .order('day_of_week');
+      
+      if (workoutsError) throw workoutsError;
+      console.log('✅ Workouts loaded:', workouts?.length || 0);
+      
+      // 3️⃣ Load assigned plans
+      const { data: assignedPlans, error: assignedError } = await supabase
+        .from('assigned_training_plans')
+        .select('id, client_id, start_date, end_date, status')
+        .eq('plan_id', planId);
+      
+      if (assignedError) throw assignedError;
+      console.log('✅ Assigned plans loaded:', assignedPlans?.length || 0);
+      
+      // 4️⃣ Load profiles for assigned clients (if any)
+      let assignedWithProfiles = [];
+      if (assignedPlans && assignedPlans.length > 0) {
+        const clientIds = assignedPlans.map(a => a.client_id);
+        
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, username, full_name, avatar_url')
+          .in('user_id', clientIds);
+        
+        if (profilesError) {
+          console.warn('⚠️ Could not load profiles:', profilesError);
+        }
+        
+        console.log('✅ Profiles loaded:', profiles?.length || 0);
+        
+        // 5️⃣ Merge data
+        assignedWithProfiles = assignedPlans.map(assigned => ({
+          ...assigned,
+          profiles: profiles?.find(p => p.user_id === assigned.client_id) || null
+        }));
       }
       
-      console.log('✅ Plan loaded successfully:', {
+      // 6️⃣ Compose final object
+      const fullPlan = {
+        ...planData,
+        training_plan_workouts: workouts || [],
+        assigned_training_plans: assignedWithProfiles
+      };
+      
+      setPlan(fullPlan as any);
+      console.log('✅ Plan fully loaded:', {
         planId,
-        planName: data?.name,
-        workoutsCount: data?.training_plan_workouts?.length || 0,
-        assignedClientsCount: data?.assigned_training_plans?.length || 0
+        planName: fullPlan.name,
+        workoutsCount: fullPlan.training_plan_workouts.length,
+        assignedClientsCount: fullPlan.assigned_training_plans.length
       });
       
-      if (!data) {
-        console.warn('⚠️ Plan not found');
-        throw new Error('План не найден');
-      }
-      
-      setPlan(data as any);
     } catch (error: any) {
       console.error('❌ Error loading plan:', {
         planId,
