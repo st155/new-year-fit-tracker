@@ -2,22 +2,23 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageLoader } from "@/components/ui/page-loader";
+import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings, Activity, Plus } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { GlobalClientSearch } from "@/components/trainer/GlobalClientSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ClientContextProvider, useClientContext } from "@/contexts/ClientContext";
 import { TrainerAnalytics } from "@/components/trainer/TrainerAnalytics";
 import { ClientDetailView } from "@/components/trainer/ClientDetailView";
+import { ClientsList } from '@/components/trainer/ClientsList';
+import { TrainerSettings } from '@/components/trainer/settings/TrainerSettings';
 import { AIDrawer, AIEmbeddedChat } from "@/components/trainer/ai";
 import { TrainingPlansList } from "@/components/trainer/TrainingPlansList";
 import { TrainerChallengesManager } from "@/components/trainer/TrainerChallengesManager";
-import { ClientsList } from "@/components/trainer/ClientsList";
 import { TrainerCalendar } from "@/components/trainer/calendar/TrainerCalendar";
-import { TrainerSettings } from "@/components/trainer/settings/TrainerSettings";
 import { IntegrationsMonitor } from "@/components/trainer/IntegrationsMonitor";
-import { Button } from "@/components/ui/button";
-import { PageLoader } from "@/components/ui/page-loader";
+import { AlertsPanel } from '@/components/trainer/alerts/AlertsPanel';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -245,7 +246,11 @@ function TrainerDashboardContent() {
             onBack={handleBackToList} 
           />
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <>
+            {/* Alerts Panel - show above tabs */}
+            <AlertsPanel />
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="ai-hub" 
@@ -362,6 +367,7 @@ function TrainerDashboardContent() {
               <TrainerSettings />
             </TabsContent>
           </Tabs>
+          </>
         )}
       </div>
     </AnimatedPage>

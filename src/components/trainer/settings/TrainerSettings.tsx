@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClientAliasesManager } from '../ClientAliasesManager';
-import { Settings, UserCog } from 'lucide-react';
+import { Settings, UserCog, Bell } from 'lucide-react';
+import { NotificationSettings } from './NotificationSettings';
 
 export function TrainerSettings() {
   return (
@@ -11,25 +12,33 @@ export function TrainerSettings() {
           <Settings className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage your trainer account settings</p>
+          <h1 className="text-2xl font-bold">Настройки</h1>
+          <p className="text-muted-foreground">Управление настройками аккаунта тренера</p>
         </div>
       </div>
 
-      <Tabs defaultValue="aliases" className="space-y-6">
+      <Tabs defaultValue="notifications" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="h-4 w-4" />
+            Уведомления
+          </TabsTrigger>
           <TabsTrigger value="aliases" className="gap-2">
             <UserCog className="h-4 w-4" />
-            Client Aliases
+            Псевдонимы клиентов
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="notifications">
+          <NotificationSettings />
+        </TabsContent>
 
         <TabsContent value="aliases">
           <Card>
             <CardHeader>
-              <CardTitle>Client Aliases</CardTitle>
+              <CardTitle>Псевдонимы клиентов</CardTitle>
               <CardDescription>
-                Set custom names for your clients to use with AI assistant
+                Настройте альтернативные имена для клиентов в AI-помощнике
               </CardDescription>
             </CardHeader>
             <CardContent>

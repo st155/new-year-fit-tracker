@@ -12,6 +12,25 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
+interface UserNotification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  source_id: string;
+  read: boolean;
+  created_at: string;
+  metadata?: {
+    client_id?: string;
+    source?: string;
+    days_stale?: number;
+    avg_strain?: number;
+    avg_recovery?: number;
+    alert_type: 'integration_issue' | 'client_overtrain' | 'low_recovery';
+  };
+}
+
 interface Alert {
   id: string;
   type: string;
@@ -26,7 +45,6 @@ interface Alert {
     alert_type: 'integration_issue' | 'client_overtrain' | 'low_recovery';
   };
   created_at: string;
-  read_at?: string;
 }
 
 export function AlertsPanel() {
@@ -86,19 +104,21 @@ export function AlertsPanel() {
 
       if (error) throw error;
 
-      // Filter alerts that have alert_type in metadata
-      const systemAlerts = (data || []).filter(notification => 
-        notification.metadata && 
-        ['integration_issue', 'client_overtrain', 'low_recovery'].includes(notification.metadata.alert_type)
-      ).map(n => ({
-        id: n.id,
-        type: n.type || 'system',
-        title: n.title || '',
-        message: n.message || '',
-        data: n.metadata as Alert['data'],
-        created_at: n.created_at,
-        read_at: n.read ? n.read_at : undefined
-      }));
+      // Cast to our extended type and filter alerts
+      const notifications = (data || []) as UserNotification[];
+      const systemAlerts = notifications
+        .filter(notification => 
+          notification.metadata && 
+          ['integration_issue', 'client_overtrain', 'low_recovery'].includes(notification.metadata.alert_type)
+        )
+        .map(n => ({
+          id: n.id,
+          type: n.type || 'system',
+          title: n.title || '',
+          message: n.message || '',
+          data: n.metadata as Alert['data'],
+          created_at: n.created_at
+        }));
 
       setAlerts(systemAlerts);
     } catch (error) {
@@ -112,7 +132,7 @@ export function AlertsPanel() {
     try {
       const { error } = await supabase
         .from('user_notifications')
-        .update({ read: true, read_at: new Date().toISOString() })
+        .update({ read: true })
         .eq('id', alertId);
 
       if (error) throw error;

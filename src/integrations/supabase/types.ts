@@ -3211,6 +3211,7 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          metadata: Json | null
           read: boolean
           source_id: string | null
           title: string
@@ -3221,6 +3222,7 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          metadata?: Json | null
           read?: boolean
           source_id?: string | null
           title: string
@@ -3231,6 +3233,7 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          metadata?: Json | null
           read?: boolean
           source_id?: string | null
           title?: string

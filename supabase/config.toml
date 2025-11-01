@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.retry-stuck-webhooks]
 verify_jwt = false
+
+[functions.trainer-alerts]
+verify_jwt = false
