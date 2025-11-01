@@ -1429,6 +1429,30 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          key: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          key: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       goal_baselines: {
         Row: {
           baseline_value: number
@@ -2032,6 +2056,98 @@ export type Database = {
           },
         ]
       }
+      inbody_detailed_segments: {
+        Row: {
+          created_at: string | null
+          id: string
+          impedance_data: Json | null
+          measurement_id: string
+          research_params: Json | null
+          segmental_data: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          impedance_data?: Json | null
+          measurement_id: string
+          research_params?: Json | null
+          segmental_data?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          impedance_data?: Json | null
+          measurement_id?: string
+          research_params?: Json | null
+          segmental_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbody_detailed_segments_measurement_id_fkey"
+            columns: ["measurement_id"]
+            isOneToOne: true
+            referencedRelation: "inbody_measurements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbody_measurements: {
+        Row: {
+          bmi: number | null
+          bmr: number | null
+          body_fat_mass: number | null
+          body_fat_percentage: number | null
+          created_at: string | null
+          id: string
+          mineral: number | null
+          muscle_mass: number | null
+          protein: number | null
+          skeletal_muscle_mass: number | null
+          test_date: string
+          total_body_water: number | null
+          updated_at: string | null
+          user_id: string
+          visceral_fat_level: number | null
+          weight: number | null
+        }
+        Insert: {
+          bmi?: number | null
+          bmr?: number | null
+          body_fat_mass?: number | null
+          body_fat_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          mineral?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          skeletal_muscle_mass?: number | null
+          test_date: string
+          total_body_water?: number | null
+          updated_at?: string | null
+          user_id: string
+          visceral_fat_level?: number | null
+          weight?: number | null
+        }
+        Update: {
+          bmi?: number | null
+          bmr?: number | null
+          body_fat_mass?: number | null
+          body_fat_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          mineral?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          skeletal_muscle_mass?: number | null
+          test_date?: string
+          total_body_water?: number | null
+          updated_at?: string | null
+          user_id?: string
+          visceral_fat_level?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       inbody_uploads: {
         Row: {
           analysis_id: string | null
@@ -2321,6 +2437,51 @@ export type Database = {
           unified_metric_name?: string
           unified_unit?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      metric_snapshots: {
+        Row: {
+          avg_quality_score: number | null
+          created_at: string | null
+          id: string
+          metric_name: string
+          snapshot_date: string
+          trend_direction: string | null
+          updated_at: string | null
+          user_id: string
+          value_avg: number | null
+          value_count: number | null
+          value_max: number | null
+          value_min: number | null
+        }
+        Insert: {
+          avg_quality_score?: number | null
+          created_at?: string | null
+          id?: string
+          metric_name: string
+          snapshot_date: string
+          trend_direction?: string | null
+          updated_at?: string | null
+          user_id: string
+          value_avg?: number | null
+          value_count?: number | null
+          value_max?: number | null
+          value_min?: number | null
+        }
+        Update: {
+          avg_quality_score?: number | null
+          created_at?: string | null
+          id?: string
+          metric_name?: string
+          snapshot_date?: string
+          trend_direction?: string | null
+          updated_at?: string | null
+          user_id?: string
+          value_avg?: number | null
+          value_count?: number | null
+          value_max?: number | null
+          value_min?: number | null
         }
         Relationships: []
       }
@@ -3135,10 +3296,13 @@ export type Database = {
         Row: {
           confidence_factors: Json | null
           confidence_score: number | null
+          conflict_group: string | null
           created_at: string | null
+          deleted_at: string | null
           external_id: string | null
           id: string
           is_outlier: boolean | null
+          is_primary: boolean | null
           measurement_date: string
           metric_category: string
           metric_name: string
@@ -3146,8 +3310,10 @@ export type Database = {
           photo_url: string | null
           priority: number
           provider: string | null
+          quality_score: number | null
           source: string
           source_data: Json | null
+          source_metadata: Json | null
           unit: string
           updated_at: string | null
           user_id: string
@@ -3156,10 +3322,13 @@ export type Database = {
         Insert: {
           confidence_factors?: Json | null
           confidence_score?: number | null
+          conflict_group?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           external_id?: string | null
           id?: string
           is_outlier?: boolean | null
+          is_primary?: boolean | null
           measurement_date: string
           metric_category: string
           metric_name: string
@@ -3167,8 +3336,10 @@ export type Database = {
           photo_url?: string | null
           priority?: number
           provider?: string | null
+          quality_score?: number | null
           source: string
           source_data?: Json | null
+          source_metadata?: Json | null
           unit: string
           updated_at?: string | null
           user_id: string
@@ -3177,10 +3348,13 @@ export type Database = {
         Update: {
           confidence_factors?: Json | null
           confidence_score?: number | null
+          conflict_group?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           external_id?: string | null
           id?: string
           is_outlier?: boolean | null
+          is_primary?: boolean | null
           measurement_date?: string
           metric_category?: string
           metric_name?: string
@@ -3188,8 +3362,10 @@ export type Database = {
           photo_url?: string | null
           priority?: number
           provider?: string | null
+          quality_score?: number | null
           source?: string
           source_data?: Json | null
+          source_metadata?: Json | null
           unit?: string
           updated_at?: string | null
           user_id?: string
@@ -3640,6 +3816,38 @@ export type Database = {
       }
     }
     Views: {
+      activity_summary_view: {
+        Row: {
+          active_calories: number | null
+          avg_activity_quality: number | null
+          day_strain: number | null
+          distance_km: number | null
+          measurement_date: string | null
+          steps: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      body_composition_view: {
+        Row: {
+          bmi: number | null
+          bmr: number | null
+          body_fat_mass: number | null
+          body_fat_percentage: number | null
+          created_at: string | null
+          impedance_data: Json | null
+          measurement_date: string | null
+          muscle_mass: number | null
+          research_params: Json | null
+          segmental_data: Json | null
+          skeletal_muscle_mass: number | null
+          updated_at: string | null
+          user_id: string | null
+          visceral_fat_level: number | null
+          weight: number | null
+        }
+        Relationships: []
+      }
       challenge_leaderboard_month: {
         Row: {
           active_days: number | null
@@ -3889,6 +4097,30 @@ export type Database = {
         }
         Relationships: []
       }
+      recovery_metrics_view: {
+        Row: {
+          avg_recovery_quality: number | null
+          hrv: number | null
+          measurement_date: string | null
+          recovery_score: number | null
+          resting_hr: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      sleep_analysis_view: {
+        Row: {
+          avg_sleep_quality: number | null
+          deep_sleep: number | null
+          light_sleep: number | null
+          measurement_date: string | null
+          rem_sleep: number | null
+          sleep_efficiency: number | null
+          sleep_hours: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       trainer_client_summary: {
         Row: {
           active_goals_count: number | null
@@ -3923,6 +4155,10 @@ export type Database = {
     }
     Functions: {
       aggregate_daily_health_data: {
+        Args: { p_date: string; p_user_id: string }
+        Returns: undefined
+      }
+      calculate_daily_snapshots: {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
