@@ -461,7 +461,7 @@ export default function FitnessData() {
                 description="Уровень напряжения за выбранный период"
                 data={adaptStrainToTremor(processedMetrics.strain)}
                 categories={['Strain']}
-                colors={['amber']}
+                colors={['orange']}
                 valueFormatter={valueFormatters.decimal}
                 showGridLines={true}
               />
@@ -472,7 +472,7 @@ export default function FitnessData() {
                 description="Частота сердцебиения"
                 data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
                 categories={['Heart Rate']}
-                colors={['pink']}
+                colors={['rose']}
                 valueFormatter={valueFormatters.bpm}
                 showGridLines={true}
               />
@@ -491,11 +491,12 @@ export default function FitnessData() {
                   data={adaptSleepToTremor(processedMetrics.sleep)}
                   index="date"
                   categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
-                  colors={['violet', 'cyan', 'fuchsia', 'slate']}
+                  colors={['violet', 'cyan', 'fuchsia', 'amber']}
                   stack={true}
                   valueFormatter={valueFormatters.minutes}
                   showLegend={true}
                   showGridLines={true}
+                  showAnimation={true}
                 />
               </CardContent>
             </Card>

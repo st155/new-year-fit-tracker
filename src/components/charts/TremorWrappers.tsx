@@ -131,6 +131,9 @@ export function TremorBarChartCard({
         showLegend={categories.length > 1}
         showGridLines={showGridLines}
         stack={stack}
+        showAnimation={true}
+        animationDuration={300}
+        yAxisWidth={48}
       />
     </Card>
   );

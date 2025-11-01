@@ -889,4 +889,57 @@ All colors MUST be HSL.
     background: rgba(0, 0, 0, 0.9) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
   }
+
+  /* Fix black bars in dark mode - replace with bright colors */
+  .dark .tremor-BarChart-bar[fill="#000000"],
+  .dark .tremor-BarChart-bar[fill="#000"],
+  .dark .tremor-BarChart-bar[fill="rgb(0, 0, 0)"] {
+    fill: #94a3b8 !important; /* slate-400 */
+  }
+
+  /* Enhance all bar colors for better visibility */
+  .dark .tremor-BarChart-bar {
+    filter: brightness(1.3) !important;
+    opacity: 0.95 !important;
+  }
+
+  /* Enhance area charts */
+  .dark .tremor-AreaChart-area {
+    filter: brightness(1.2) !important;
+    fill-opacity: 0.4 !important;
+  }
+
+  /* Make chart lines more visible */
+  .dark .tremor-AreaChart-line {
+    stroke-width: 3px !important;
+    filter: brightness(1.5) !important;
+  }
+
+  /* Improve chart text visibility */
+  .dark .tremor-Chart-text,
+  .dark .recharts-text {
+    fill: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  /* Axis lines */
+  .dark .tremor-Chart-axis {
+    stroke: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  /* Special styling for Sleep Stages categories */
+  .dark [data-name="Deep Sleep"] {
+    fill: #8b5cf6 !important; /* violet-500 */
+  }
+
+  .dark [data-name="Light Sleep"] {
+    fill: #06b6d4 !important; /* cyan-500 */
+  }
+
+  .dark [data-name="REM Sleep"] {
+    fill: #d946ef !important; /* fuchsia-500 */
+  }
+
+  .dark [data-name="Awake"] {
+    fill: #f59e0b !important; /* amber-500 */
+  }
 }
