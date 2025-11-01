@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatedPage } from '@/components/layout/AnimatedPage';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 import { MobileDebugOverlay } from '@/components/debug/MobileDebugOverlay';
 import { 
   useWidgetsQuery, 
@@ -182,7 +185,7 @@ const Index = () => {
   console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
 
   return (
-    <>
+    <AnimatedPage>
       <MobileDebugOverlay />
       <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
@@ -290,15 +293,20 @@ const Index = () => {
         </ErrorBoundary>
 
         {/* Leaderboard Section */}
-        <div className="mt-8">
+        <motion.div 
+          className="mt-8"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           <Leaderboard />
-        </div>
+        </motion.div>
       </div>
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel />
       </div>
-    </>
+    </AnimatedPage>
   );
 };
 

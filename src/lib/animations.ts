@@ -71,3 +71,20 @@ export const fadeIn: Variants = {
   },
   exit: { opacity: 0 }
 };
+
+// Check if user prefers reduced motion
+export const shouldReduceMotion = () => {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+// Get animation variants with reduced motion support
+export const getAnimationVariants = (variants: Variants): Variants => {
+  if (shouldReduceMotion()) {
+    return {
+      initial: {},
+      animate: {},
+      exit: {}
+    };
+  }
+  return variants;
+};

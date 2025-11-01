@@ -1,5 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeGoals } from '@/hooks/useChallengeGoals';
+import { AnimatedPage } from '@/components/layout/AnimatedPage';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 import { EnhancedProgressCard } from '@/components/progress/EnhancedProgressCard';
 import { CompactProgressSummary } from '@/components/progress/CompactProgressSummary';
 import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialChart';
@@ -139,7 +142,7 @@ export default function Progress() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
+    <AnimatedPage className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-3">
         {/* Compact Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -209,23 +212,28 @@ export default function Progress() {
             </Accordion>
 
             {/* Goals Grid */}
-            <div>
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
               <h3 className="text-sm font-semibold mb-2 text-muted-foreground">
                 Все цели ({goals.length})
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {goals.map((goal) => (
-                  <EnhancedProgressCard
-                    key={goal.id}
-                    goal={goal}
-                    onClick={() => navigate(`/goals/${goal.id}`)}
-                  />
+                {goals.map((goal, index) => (
+                  <motion.div key={goal.id} variants={staggerItem}>
+                    <EnhancedProgressCard
+                      goal={goal}
+                      onClick={() => navigate(`/goals/${goal.id}`)}
+                    />
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </>
         )}
       </div>
-    </div>
+    </AnimatedPage>
   );
 }

@@ -1,4 +1,8 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { motion } from "framer-motion";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useChallenges } from "@/hooks/useChallenges";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -6,7 +10,6 @@ import { Trophy, Target, Users, TrendingUp, Sparkles, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -52,7 +55,7 @@ export default function Challenges() {
   };
 
   return (
-    <>
+    <AnimatedPage>
       {/* Welcome Modal for New Users */}
       <Dialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
         <DialogContent className="sm:max-w-md">
@@ -141,14 +144,21 @@ export default function Challenges() {
             <h2 className="text-2xl font-bold mb-2">Available Challenges</h2>
             <p className="text-muted-foreground">Choose a challenge and start your journey</p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 stagger-fade-in">
+          <motion.div 
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
             {challenges.map((challenge) => (
-              <ChallengeCard key={challenge.id} challenge={challenge} />
+              <motion.div key={challenge.id} variants={staggerItem}>
+                <ChallengeCard challenge={challenge} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
       </div>
-    </>
+    </AnimatedPage>
   );
 }

@@ -1,5 +1,6 @@
 import { Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { MotionProvider } from "@/providers/MotionProvider";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -95,8 +96,9 @@ export const AppRoutes = () => {
   }, [user]);
 
   return (
-    <Suspense fallback={<PageLoader message="Loading..." />}>
-      <Routes>
+    <MotionProvider>
+      <Suspense fallback={<PageLoader message="Loading..." />}>
+        <Routes>
         {/* Debug route - no auth, no lazy, no providers */}
         <Route path="/__debug" element={<DebugPage />} />
         
@@ -271,5 +273,6 @@ export const AppRoutes = () => {
       <InstallPrompt />
       <UpdatePrompt />
     </Suspense>
+    </MotionProvider>
   );
 };

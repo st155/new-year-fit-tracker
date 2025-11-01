@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
@@ -211,7 +212,7 @@ function TrainerDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-trainer-bg pb-24">
+    <AnimatedPage className="min-h-screen bg-trainer-bg pb-24">
       <div className="px-4 max-w-7xl mx-auto mt-6">
         <div className="flex items-center justify-between mb-4">
           <NavigationBreadcrumbs items={breadcrumbs} />
@@ -341,7 +342,7 @@ function TrainerDashboardContent() {
           </Tabs>
         )}
       </div>
-    </div>
+    </AnimatedPage>
   );
 }
 

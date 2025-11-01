@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { motion } from "framer-motion";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useHabits } from "@/hooks/useHabits";
 import { useGoalHabitSync } from "@/hooks/useGoalHabitSync";
 import { HabitMigrationButton } from "@/components/habits/HabitMigrationButton";
@@ -137,7 +140,7 @@ export default function Habits() {
   }
 
   return (
-    <div className="container py-6 space-y-8">
+    <AnimatedPage className="container py-6 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-glow bg-gradient-to-r from-primary to-primary-end bg-clip-text text-transparent">
@@ -265,13 +268,18 @@ export default function Habits() {
 
           {/* Cards View */}
           <TabsContent value="cards" className="mt-0">
-            <div className={
-              viewMode === 'grid' 
-                ? "grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 stagger-fade-in"
-                : "space-y-4 stagger-fade-in"
-            }>
-              {displayHabits.map((habit, index) => (
-                <div key={habit.id} style={{ animationDelay: `${index * 50}ms` }}>
+            <motion.div
+              className={
+                viewMode === 'grid' 
+                  ? "grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+                  : "space-y-4"
+              }
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {displayHabits.map((habit) => (
+                <motion.div key={habit.id} variants={staggerItem}>
                   {habit.habit_type === 'daily_check' || !habit.habit_type ? (
                     <EnhancedHabitCard 
                       habit={habit} 
@@ -283,9 +291,9 @@ export default function Habits() {
                       onCompleted={refetch}
                     />
                   )}
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {displayHabits.length === 0 && selectedCategory !== 'all' && (
               <div className="text-center py-12">
@@ -331,7 +339,7 @@ export default function Habits() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
       />
-    </div>
+    </AnimatedPage>
   );
 }
 

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { motion } from "framer-motion";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -93,7 +96,7 @@ export default function Goals() {
   }
 
   return (
-    <div className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <AnimatedPage className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Goals</h1>
@@ -192,20 +195,26 @@ export default function Goals() {
                   label: "Create Goal",
                   onClick: () => setCreateDialogOpen(true)
                 }
-              : undefined
-          }
-        />
+            : undefined
+        }
+      />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div 
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           {filteredGoals.map((goal) => (
-            <EnhancedGoalCard 
-              key={goal.id} 
-              goal={goal} 
-              onMeasurementAdded={() => refetch()}
-              readonly={!goal.is_personal}
-            />
+            <motion.div key={goal.id} variants={staggerItem}>
+              <EnhancedGoalCard 
+                goal={goal} 
+                onMeasurementAdded={() => refetch()}
+                readonly={!goal.is_personal}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       <GoalCreateDialog 
@@ -223,6 +232,6 @@ export default function Goals() {
           setGoalsNeedingBaseline([]);
         }}
       />
-    </div>
+    </AnimatedPage>
   );
 }

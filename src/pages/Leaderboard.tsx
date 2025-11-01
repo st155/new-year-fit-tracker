@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
+import { motion } from "framer-motion";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,7 +36,7 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-6 animate-fade-in">
+    <AnimatedPage className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Trophy className="h-8 w-8 text-primary" />
@@ -72,13 +75,17 @@ const Leaderboard = () => {
 
                 {/* Weekly Leaders */}
                 {leaderboard.length > 0 && (
-                  <div>
+                  <motion.div
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                  >
                     <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                       <Trophy className="h-5 w-5 text-primary" />
                       Weekly Leaders
                     </h3>
                     <LeaderboardCategoryLeaders leaderboard={leaderboard} />
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Top 3 Podium */}
@@ -171,35 +178,40 @@ const Leaderboard = () => {
                 )}
 
                 {/* Full Rankings with Cards */}
-                <div>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                >
                   <h3 className="text-xl font-semibold mb-4">Full Rankings</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {leaderboard.map((entry, index) => (
-                      <LeaderboardUserCard
-                        key={entry.userId}
-                        user={{
-                          userId: entry.userId,
-                          username: entry.username,
-                          full_name: entry.fullName || null,
-                          avatar_url: entry.avatarUrl || null,
-                          total_points: entry.totalPoints,
-                          steps_last_7d: entry.steps_last_7d,
-                          avg_strain_last_7d: entry.avg_strain_last_7d || undefined,
-                          avg_sleep_last_7d: entry.avg_sleep_last_7d || undefined,
-                          avg_recovery_last_7d: entry.avg_recovery_last_7d || undefined,
-                          workouts_last_7d: entry.workouts_last_7d,
-                          weekly_consistency: entry.weekly_consistency,
-                        }}
-                        rank={index + 1}
-                        isUser={entry.isUser}
-                        onClick={() => {
-                          setSelectedUserId(entry.userId);
-                          setSelectedUserName(entry.fullName || entry.username);
-                        }}
-                      />
+                      <motion.div key={entry.userId} variants={staggerItem}>
+                        <LeaderboardUserCard
+                          user={{
+                            userId: entry.userId,
+                            username: entry.username,
+                            full_name: entry.fullName || null,
+                            avatar_url: entry.avatarUrl || null,
+                            total_points: entry.totalPoints,
+                            steps_last_7d: entry.steps_last_7d,
+                            avg_strain_last_7d: entry.avg_strain_last_7d || undefined,
+                            avg_sleep_last_7d: entry.avg_sleep_last_7d || undefined,
+                            avg_recovery_last_7d: entry.avg_recovery_last_7d || undefined,
+                            workouts_last_7d: entry.workouts_last_7d,
+                            weekly_consistency: entry.weekly_consistency,
+                          }}
+                          rank={index + 1}
+                          isUser={entry.isUser}
+                          onClick={() => {
+                            setSelectedUserId(entry.userId);
+                            setSelectedUserName(entry.fullName || entry.username);
+                          }}
+                        />
+                      </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               {/* Side Panel */}
@@ -218,7 +230,7 @@ const Leaderboard = () => {
         open={!!selectedUserId}
         onClose={() => setSelectedUserId(null)}
       />
-    </div>
+    </AnimatedPage>
   );
 };
 

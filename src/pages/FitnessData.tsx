@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -289,7 +290,7 @@ export default function FitnessData() {
     : null;
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
+    <AnimatedPage className="container mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -459,6 +460,6 @@ export default function FitnessData() {
           <IntegrationsDataDisplay key={`details-${refreshKey}`} />
         </TabsContent>
       </Tabs>
-    </div>
+    </AnimatedPage>
   );
 }

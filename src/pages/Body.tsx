@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useBodyComposition } from "@/hooks/composite/data/useBodyComposition";
+import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { CurrentMetrics } from "@/components/body/CurrentMetrics";
 import { BodyHistory } from "@/components/body/BodyHistory";
 import { ComparisonView } from "@/components/body/ComparisonView";
@@ -73,7 +74,7 @@ export default function Body() {
     );
 
   return (
-    <div className="container py-6 space-y-6">
+    <AnimatedPage className="container py-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Body Composition</h1>
         <p className="text-muted-foreground">Track your body metrics and progress</p>
@@ -156,6 +157,6 @@ export default function Body() {
           <InBodyHistory ref={inbodyHistoryRef} />
         </TabsContent>
       </Tabs>
-    </div>
+    </AnimatedPage>
   );
 }
