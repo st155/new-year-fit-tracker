@@ -154,13 +154,14 @@ export class PrefetchStrategy {
 
   private async prefetchLeaderboardPage(userId: string) {
     await this.queryClient.prefetchQuery({
-      queryKey: leaderboardQueryKeys.list(100),
+      queryKey: leaderboardQueryKeys.list(userId, 100, 'overall'),
       queryFn: async () => {
         const { data } = await supabase
-          .from('challenge_leaderboard_v2' as any)
-          .select('*')
-          .order('total_points', { ascending: false })
-          .limit(100);
+          .rpc('get_leaderboard_for_viewer', {
+            viewer: userId,
+            time_period: 'overall',
+            limit_n: 100
+          });
         return data || [];
       },
       staleTime: 1 * 60 * 1000,

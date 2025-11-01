@@ -35,13 +35,36 @@ export function Leaderboard() {
     return <LeaderboardSkeleton />;
   }
 
+  if (!loading && leaderboard.length === 0) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+            {t('leaderboard.team')} {t('leaderboard.title')}
+          </h3>
+        </div>
+        <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              No leaderboard data available
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              Refresh page
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
-      <div 
-        className="space-y-4 animate-fade-in"
-        style={{ border: '2px solid blue', minHeight: '300px' }}
-      >
-        <div 
+      <div className="space-y-4 animate-fade-in">
+        <div
           className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
           onClick={() => navigate('/leaderboard')}
         >

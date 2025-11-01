@@ -4,7 +4,7 @@ import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/lib/challenge-s
 
 export const leaderboardQueryKeys = {
   all: ['leaderboard'] as const,
-  list: (limit?: number, timePeriod?: string) => [...leaderboardQueryKeys.all, 'list', limit, timePeriod] as const,
+  list: (userId?: string, limit?: number, timePeriod?: string) => [...leaderboardQueryKeys.all, 'list', userId, limit, timePeriod] as const,
 };
 
 // Fallback query for basic leaderboard data when views fail
@@ -101,45 +101,45 @@ export function useLeaderboardQuery(
   options?: { limit?: number; timePeriod?: 'overall' | 'week' | 'month' }
 ) {
   return useQuery({
-    queryKey: leaderboardQueryKeys.list(options?.limit, options?.timePeriod),
+    queryKey: leaderboardQueryKeys.list(userId, options?.limit, options?.timePeriod),
     queryFn: async () => {
       if (!userId) return [];
 
       const timePeriod = options?.timePeriod || 'overall';
-      const viewName = timePeriod === 'week' 
-        ? 'challenge_leaderboard_week'
-        : timePeriod === 'month'
-        ? 'challenge_leaderboard_month'
-        : 'challenge_leaderboard_v2';
+      const limit = options?.limit || 100;
 
-      console.log('[useLeaderboardQuery] Fetching from view:', viewName);
+      console.log('[useLeaderboardQuery] Fetching via RPC:', { userId, timePeriod, limit });
 
-      const { data: viewData, error } = await supabase
-        .from(viewName as any)
-        .select('*')
-        .order('total_points', { ascending: false })
-        .limit(options?.limit || 100);
+      // Use new SECURITY DEFINER RPC function
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_leaderboard_for_viewer', {
+          viewer: userId,
+          time_period: timePeriod,
+          limit_n: limit
+        });
 
-      if (error) {
-        console.error('[useLeaderboardQuery] View query error:', error);
+      if (rpcError) {
+        console.error('[useLeaderboardQuery] RPC error:', rpcError);
         console.debug('[useLeaderboardQuery] Attempting fallback query');
-        return fetchFallbackLeaderboard(userId, options?.limit);
+        return fetchFallbackLeaderboard(userId, limit);
       }
       
-      if (!viewData || viewData.length === 0) {
-        console.log('[useLeaderboardQuery] No data from view, trying fallback');
-        return fetchFallbackLeaderboard(userId, options?.limit);
+      if (!rpcData || rpcData.length === 0) {
+        console.log('[useLeaderboardQuery] No data from RPC (returned 0 rows), trying fallback');
+        return fetchFallbackLeaderboard(userId, limit);
       }
 
+      console.log('[useLeaderboardQuery] RPC returned:', rpcData.length, 'entries');
+
       // Fetch points breakdown separately
-      const userIds = viewData.map((entry: any) => entry.user_id);
+      const userIds = rpcData.map((entry: any) => entry.user_id);
       const { data: pointsData } = await supabase
         .from('challenge_points')
         .select('user_id, performance_points, recovery_points, synergy_points, points_breakdown')
         .in('user_id', userIds);
 
       // Process and enrich data
-      const enrichedData = viewData.map((entry: any, index: number) => {
+      const enrichedData = rpcData.map((entry: any, index: number) => {
         const points = pointsData?.find((p: any) => p.user_id === entry.user_id);
         
         const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
@@ -195,7 +195,8 @@ export function useLeaderboardQuery(
       }));
     },
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 seconds for more frequent updates
-    gcTime: 3 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 3 * 60 * 1000, // 3 minutes
+    refetchOnWindowFocus: true,
   });
 }

@@ -4290,6 +4290,38 @@ export type Database = {
           unified_unit: string
         }[]
       }
+      get_leaderboard_for_viewer: {
+        Args: { limit_n?: number; time_period?: string; viewer: string }
+        Returns: {
+          active_days: number
+          avatar_url: string
+          avg_hrv: number
+          avg_recovery: number
+          avg_recovery_last_7d: number
+          avg_resting_hr: number
+          avg_sleep: number
+          avg_sleep_efficiency: number
+          avg_sleep_last_7d: number
+          avg_strain: number
+          avg_strain_last_7d: number
+          challenge_id: string
+          days_with_data: number
+          full_name: string
+          last_activity_date: string
+          latest_body_fat: number
+          latest_weight: number
+          steps_last_7d: number
+          streak_days: number
+          total_calories: number
+          total_points: number
+          total_steps: number
+          total_workouts: number
+          user_id: string
+          username: string
+          weekly_consistency: number
+          workouts_last_7d: number
+        }[]
+      }
       get_monitoring_dashboard_data: { Args: never; Returns: Json }
       get_overtrained_clients: {
         Args: never
