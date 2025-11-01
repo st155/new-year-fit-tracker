@@ -4,4 +4,5 @@ export { AIInput } from './AIInput';
 export { AIThreadSidebar } from './AIThreadSidebar';
 export { AIToolCard } from './AIToolCard';
 export { AIEmbeddedChat } from './AIEmbeddedChat';
+export { AIActionsHistory } from './AIActionsHistory';
 export { useAIChat } from './useAIChat';

@@ -1,12 +1,19 @@
 import { Drawer } from 'vaul';
 import { motion } from 'framer-motion';
-import { Sparkles, X, History, Settings as SettingsIcon } from 'lucide-react';
+import { Sparkles, X, History, Settings as SettingsIcon, MessageSquare, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { AIMessageList } from './AIMessageList';
 import { AIInput } from './AIInput';
 import { AIThreadSidebar } from './AIThreadSidebar';
+import { AIActionsHistory } from './AIActionsHistory';
 import { AIChatProvider } from './AIChatProvider';
+import { AIPendingActionsPanel } from '../AIPendingActionsPanel';
+import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useIsMobile } from '@/hooks/primitive';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 interface AIDrawerProps {
   open: boolean;
@@ -19,12 +26,19 @@ interface AIDrawerProps {
   } | null;
 }
 
-export function AIDrawer({ open, onOpenChange, selectedClient }: AIDrawerProps) {
+function AIDrawerContent({ onOpenChange, selectedClient }: Omit<AIDrawerProps, 'open'>) {
   const isMobile = useIsMobile();
+  const [userId, setUserId] = useState<string | undefined>();
+  const [activeTab, setActiveTab] = useState<'chat' | 'pending' | 'history'>('chat');
+  const { pendingActions, executing, executeActions, rejectAction } = useAIPendingActions(userId);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id);
+    });
+  }, []);
 
   return (
-    <AIChatProvider>
-      <Drawer.Root open={open} onOpenChange={onOpenChange}>
         <Drawer.Portal>
           {/* Overlay with gradient blur */}
           <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
@@ -68,20 +82,6 @@ export function AIDrawer({ open, onOpenChange, selectedClient }: AIDrawerProps) 
               <div className="flex items-center gap-2">
                 <Button 
                   variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                >
-                  <History className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                >
-                  <SettingsIcon className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant="ghost" 
                   size="icon" 
                   onClick={() => onOpenChange(false)}
                   className="h-9 w-9 rounded-full"
@@ -91,20 +91,83 @@ export function AIDrawer({ open, onOpenChange, selectedClient }: AIDrawerProps) 
               </div>
             </div>
             
-            {/* Chat Area - 2 columns on desktop */}
+            {/* Tabs Navigation */}
+            <div className="border-b bg-background/95">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <TabsList className="w-full justify-start rounded-none border-b-0 bg-transparent p-0 px-6">
+                  <TabsTrigger 
+                    value="chat" 
+                    className="relative rounded-none border-b-2 border-transparent px-4 pb-3 pt-2 font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Чат
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="pending" 
+                    className="relative rounded-none border-b-2 border-transparent px-4 pb-3 pt-2 font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Ожидают
+                    {pendingActions.length > 0 && (
+                      <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {pendingActions.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="history" 
+                    className="relative rounded-none border-b-2 border-transparent px-4 pb-3 pt-2 font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    <History className="h-4 w-4 mr-2" />
+                    История
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Content Area */}
             <div className="flex flex-1 overflow-hidden">
-              {/* Thread Sidebar (hidden on mobile) */}
-              {!isMobile && <AIThreadSidebar />}
-              
-              {/* Main Chat */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <AIMessageList selectedClient={selectedClient} />
-                <AIInput selectedClient={selectedClient} />
-              </div>
+              {activeTab === 'chat' && (
+                <>
+                  {/* Thread Sidebar (hidden on mobile) */}
+                  {!isMobile && <AIThreadSidebar />}
+                  
+                  {/* Main Chat */}
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <AIMessageList selectedClient={selectedClient} />
+                    <AIInput selectedClient={selectedClient} />
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'pending' && (
+                <div className="flex-1 overflow-hidden p-4">
+                  <AIPendingActionsPanel
+                    pendingActions={pendingActions}
+                    executing={executing}
+                    onExecute={executeActions}
+                    onReject={rejectAction}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="flex-1 overflow-hidden">
+                  <AIActionsHistory userId={userId} />
+                </div>
+              )}
             </div>
             
           </Drawer.Content>
         </Drawer.Portal>
+  );
+}
+
+export function AIDrawer({ open, onOpenChange, selectedClient }: AIDrawerProps) {
+  return (
+    <AIChatProvider>
+      <Drawer.Root open={open} onOpenChange={onOpenChange}>
+        <AIDrawerContent onOpenChange={onOpenChange} selectedClient={selectedClient} />
       </Drawer.Root>
     </AIChatProvider>
   );
