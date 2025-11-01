@@ -78,9 +78,21 @@ export default function ChallengeDetail() {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       setIsParticipant(true);
     },
-    onError: (error) => {
-      toast.error("Не удалось присоединиться к челленджу");
-      console.error(error);
+    onError: (error: any) => {
+      console.error('❌ [join_challenge] Failed:', {
+        error: error,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        challengeId: id,
+        userId: user?.id
+      });
+      
+      const errorMessage = error?.message || "Не удалось присоединиться к челленджу";
+      toast.error(errorMessage, {
+        description: import.meta.env.DEV ? `Error: ${error?.code || 'unknown'}` : undefined
+      });
     },
   });
 

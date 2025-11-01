@@ -4195,6 +4195,7 @@ export type Database = {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
       }
+      backfill_challenge_goals: { Args: never; Returns: Json }
       calculate_daily_snapshots: {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined

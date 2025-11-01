@@ -92,6 +92,11 @@ export default function Goals() {
             <Skeleton key={i} className="h-48" />
           ))}
         </div>
+        {import.meta.env.DEV && (
+          <div className="bg-muted/50 border border-warning/30 rounded-lg p-3 text-xs">
+            <p className="text-muted-foreground">🔍 Dev: Loading goals for user {user?.id}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -165,6 +170,22 @@ export default function Goals() {
             Дисциплины челленджа определяются тренером и залочены для редактирования. 
             Отслеживайте прогресс по каждой дисциплине в разделе <strong>Challenge Progress</strong>.
           </p>
+        </div>
+      )}
+
+      {/* Dev Diagnostics */}
+      {import.meta.env.DEV && (
+        <div className="bg-muted/50 border border-info/30 rounded-lg p-4 text-xs space-y-2">
+          <p className="font-semibold text-info">🔍 Dev Diagnostics:</p>
+          <ul className="space-y-1 text-muted-foreground">
+            <li>• User ID: {user?.id || 'Not authenticated'}</li>
+            <li>• Total goals: {allGoals.length}</li>
+            <li>• Personal goals: {personalGoals.length}</li>
+            <li>• Challenge goals: {challengeGoals.length}</li>
+            <li>• Filtered goals: {filteredGoals.length}</li>
+            <li>• Search query: {searchQuery || 'none'}</li>
+            <li>• Current filter: {filter}</li>
+          </ul>
         </div>
       )}
 
