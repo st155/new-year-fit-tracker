@@ -36,6 +36,23 @@ export const useUserRole = () => {
           timeoutPromise
         ]) as any;
 
+        console.log('👔 [useUserRole] Roles query result:', {
+          userId: user.id,
+          roles,
+          rolesError,
+          hasRolePermission: roles && roles.length > 0
+        });
+
+        // Check if it's a JWT expired error
+        if (rolesError) {
+          console.error('❌ [useUserRole] Roles query failed:', rolesError);
+          
+          if (rolesError.message?.includes('JWT') || rolesError.code === 'PGRST301') {
+            console.warn('⚠️ [useUserRole] JWT expired, forcing session refresh');
+            await supabase.auth.refreshSession();
+          }
+        }
+
         // Check profiles table
         const profilePromise = supabase
           .from('profiles')
@@ -48,9 +65,23 @@ export const useUserRole = () => {
           timeoutPromise
         ]) as any;
 
+        console.log('👤 [useUserRole] Profile query result:', {
+          userId: user.id,
+          profile,
+          profileError,
+          hasActiveTrainerRole: profile?.trainer_role === true
+        });
+
         const hasRolePermission = roles && roles.length > 0;
         const hasActiveTrainerRole = profile?.trainer_role === true;
         const finalIsTrainer = hasRolePermission && hasActiveTrainerRole;
+
+        console.log('✅ [useUserRole] Final result:', {
+          userId: user.id,
+          hasRolePermission,
+          hasActiveTrainerRole,
+          finalIsTrainer
+        });
 
         // Log inconsistent state only in dev
         if (import.meta.env.DEV) {
