@@ -1,10 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Activity, Heart, Zap, Moon, Footprints, Flame, Clock
 } from 'lucide-react';
@@ -12,7 +10,7 @@ import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { TremorMetricCard, TremorAreaChartCard, TremorBarChartCard } from '@/components/charts/TremorWrappers';
 import { adaptMetricsToTremor, adaptStrainToTremor, adaptSleepToTremor, valueFormatters } from '@/lib/tremor-adapter';
-import { MetricsGrid } from '@/components/fitness-data/MetricsGrid';
+import { MetricCard } from '@/components/fitness-data/MetricCard';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
@@ -21,6 +19,9 @@ import { AutoRefreshToggle } from '@/components/integrations/AutoRefreshToggle';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart } from '@tremor/react';
+import { useMetrics } from '@/hooks/composite/data/useMetrics';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/animations';
 
 type TimeFilter = 'today' | 'week' | 'month';
 type SourceFilter = 'all' | 'whoop' | 'garmin' | 'ultrahuman';
@@ -59,30 +60,34 @@ export default function FitnessData() {
     return { start, end };
   }, [timeFilter, dateOffset]);
 
-  // Fetch metrics data
-  const { data: metricsData = [], isLoading } = useQuery({
-    queryKey: ['fitness-metrics', user?.id, calculateDateRange, sourceFilter, refreshKey],
-    queryFn: async () => {
-      if (!user) return [];
-
-      let query = supabase
-        .from('unified_metrics')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('measurement_date', calculateDateRange.start.toISOString())
-        .lte('measurement_date', calculateDateRange.end.toISOString())
-        .order('measurement_date', { ascending: true });
-
-      if (sourceFilter !== 'all') {
-        query = query.ilike('source', sourceFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+  // Fetch metrics data with V2 quality hooks
+  const { 
+    history: metricsData = [], 
+    isLoadingHistory: isLoading,
+    qualitySummary 
+  } = useMetrics({ 
+    metricTypes: [
+      'Recovery Score',
+      'Day Strain',
+      'Average Heart Rate',
+      'Heart Rate',
+      'Resting Heart Rate',
+      'Sleep Performance',
+      'Sleep Efficiency',
+      'Steps',
+      'Active Calories',
+      'Workout Calories',
+      'Deep Sleep Duration',
+      'Light Sleep Duration',
+      'REM Sleep Duration',
+      'Awake Duration',
+      'Sleep Duration',
+    ],
+    withQuality: true,
+    dateRange: {
+      start: calculateDateRange.start.toISOString(),
+      end: calculateDateRange.end.toISOString(),
     },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Process metrics for display
@@ -175,6 +180,7 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-green-400 to-emerald-500',
         source: recovery.latest.source,
         sparkline: recovery.history.slice(-7).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => q.metricName === 'Recovery Score')?.confidence || 0,
       });
     }
 
@@ -188,6 +194,7 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-orange-400 to-red-500',
         source: strain.latest.source,
         sparkline: strain.history.slice(-7).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => q.metricName === 'Day Strain')?.confidence || 0,
       });
     }
 
@@ -208,6 +215,11 @@ export default function FitnessData() {
         source: hr.latest.source,
         isStale: age > 24 * 60 * 60 * 1000,
         sparkline: hr.history.slice(-20).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => 
+          q.metricName === 'Average Heart Rate' || 
+          q.metricName === 'Heart Rate' || 
+          q.metricName === 'Resting Heart Rate'
+        )?.confidence || 0,
       });
     }
 
@@ -225,6 +237,10 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
         source: sleep.latest.source,
         sparkline: sleep.history.slice(-7).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => 
+          q.metricName === 'Sleep Performance' || 
+          q.metricName === 'Sleep Efficiency'
+        )?.confidence || 0,
       });
     }
 
@@ -238,6 +254,7 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-cyan-400 to-blue-500',
         source: steps.latest.source,
         sparkline: steps.history.slice(-7).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => q.metricName === 'Steps')?.confidence || 0,
       });
     }
 
@@ -255,11 +272,15 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-orange-400 to-red-400',
         source: calories.latest.source,
         sparkline: calories.history.slice(-7).map(h => ({ value: h.value })),
+        confidence: qualitySummary?.find(q => 
+          q.metricName === 'Active Calories' || 
+          q.metricName === 'Workout Calories'
+        )?.confidence || 0,
       });
     }
 
     return metrics;
-  }, [metricsData]);
+  }, [metricsData, qualitySummary]);
 
   const getDateLabel = () => {
     const { start, end } = calculateDateRange;
@@ -405,8 +426,29 @@ export default function FitnessData() {
             </div>
           )}
 
-          {/* Metrics Grid */}
-          <MetricsGrid metrics={processedMetrics.cards} />
+          {/* Metrics Grid with Framer Motion */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {processedMetrics.cards.map((card) => (
+              <motion.div key={card.name} variants={staggerItem}>
+                <MetricCard
+                  name={card.name}
+                  value={card.value}
+                  unit={card.unit}
+                  icon={card.icon}
+                  color={card.color}
+                  source={card.source}
+                  isStale={card.isStale}
+                  sparkline={card.sparkline}
+                  confidence={card.confidence}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

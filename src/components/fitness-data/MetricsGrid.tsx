@@ -14,8 +14,10 @@ interface MetricCardData {
   isStale?: boolean;
   sparkline?: { value: number }[];
   subtitle?: string;
-  confidence?: number;
+  confidence: number;
 }
+
+export type { MetricCardData };
 
 interface MetricsGridProps {
   metrics: MetricCardData[];
