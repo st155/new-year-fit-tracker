@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings } from "lucide-react";
+import { Users, Target, BarChart3, Sparkles, Home, Trophy, TrendingUp, Calendar, Settings, Activity } from "lucide-react";
 import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
 import { GlobalClientSearch } from "@/components/trainer/GlobalClientSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -15,6 +15,7 @@ import { TrainerChallengesManager } from "@/components/trainer/TrainerChallenges
 import { ClientsList } from "@/components/trainer/ClientsList";
 import { TrainerCalendar } from "@/components/trainer/calendar/TrainerCalendar";
 import { TrainerSettings } from "@/components/trainer/settings/TrainerSettings";
+import { IntegrationsMonitor } from "@/components/trainer/IntegrationsMonitor";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/ui/page-loader";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,6 +189,7 @@ function TrainerDashboardContent() {
     'plans': <TrendingUp className="h-4 w-4" />,
     'calendar': <Calendar className="h-4 w-4" />,
     'challenges': <Trophy className="h-4 w-4" />,
+    'integrations': <Activity className="h-4 w-4" />,
     'analytics': <BarChart3 className="h-4 w-4" />,
     'settings': <Settings className="h-4 w-4" />,
   };
@@ -197,6 +199,7 @@ function TrainerDashboardContent() {
     'plans': 'Планы',
     'calendar': 'Календарь',
     'challenges': 'Челленджи',
+    'integrations': 'Интеграции',
     'analytics': 'Аналитика',
     'settings': 'Настройки',
   };
@@ -243,7 +246,7 @@ function TrainerDashboardContent() {
           />
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
+            <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-slate-900/50 p-1.5 gap-1 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="ai-hub" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 rounded-lg transition-all font-medium shadow-lg shadow-purple-500/25"
@@ -278,6 +281,13 @@ function TrainerDashboardContent() {
               >
                 <Trophy className="h-4 w-4" />
                 Челленджи
+              </TabsTrigger>
+              <TabsTrigger 
+                value="integrations" 
+                className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
+              >
+                <Activity className="h-4 w-4" />
+                Интеграции
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
@@ -338,6 +348,10 @@ function TrainerDashboardContent() {
 
             <TabsContent value="calendar">
               <TrainerCalendar />
+            </TabsContent>
+
+            <TabsContent value="integrations">
+              <IntegrationsMonitor clients={clients as any} loading={loading} />
             </TabsContent>
 
             <TabsContent value="analytics">
