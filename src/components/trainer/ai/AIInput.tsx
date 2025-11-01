@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Paperclip, Send, Loader2, AtSign } from 'lucide-react';
+import { Paperclip, Send, Loader2, AtSign, Mic, MicOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChat } from './useAIChat';
 import { Popover, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 interface AIInputProps {
   selectedClient?: {
@@ -35,6 +36,37 @@ export function AIInput({ selectedClient }: AIInputProps) {
   const [mentionSearch, setMentionSearch] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [isListening, setIsListening] = useState(false);
+  
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
+  // Sync transcript to input
+  useEffect(() => {
+    if (transcript && listening) {
+      setInput(transcript);
+    }
+  }, [transcript, listening]);
+
+  const handleStartVoice = () => {
+    resetTranscript();
+    setIsListening(true);
+    SpeechRecognition.startListening({ 
+      continuous: true,
+      language: 'ru-RU' // Russian language
+    });
+  };
+
+  const handleStopVoice = () => {
+    SpeechRecognition.stopListening();
+    setIsListening(false);
+    // Transcript is already in input, user can edit or send
+  };
 
   // Load clients for @mentions
   useEffect(() => {
@@ -230,6 +262,26 @@ export function AIInput({ selectedClient }: AIInputProps) {
           />
           
           <div className="flex items-center gap-1 shrink-0 pb-1">
+            {/* Voice Input Button */}
+            {browserSupportsSpeechRecognition && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 hover:bg-muted transition-all",
+                  isListening && "bg-red-500/20 text-red-500 animate-pulse"
+                )}
+                onClick={isListening ? handleStopVoice : handleStartVoice}
+                disabled={sending}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+
             <Button 
               variant="ghost" 
               size="icon"
@@ -261,16 +313,33 @@ export function AIInput({ selectedClient }: AIInputProps) {
         
         {/* Quick tips */}
         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground px-1">
-          <div className="flex items-center gap-1">
-            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Shift</kbd>
-            <span>+</span>
-            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Enter</kbd>
-            <span>new line</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">@</kbd>
-            <span>mention client</span>
-          </div>
+          {isListening && (
+            <div className="flex items-center gap-2 text-red-500 animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-red-500" />
+              <span>Слушаю...</span>
+            </div>
+          )}
+          
+          {!isListening && (
+            <>
+              <div className="flex items-center gap-1">
+                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Shift</kbd>
+                <span>+</span>
+                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Enter</kbd>
+                <span>new line</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">@</kbd>
+                <span>mention client</span>
+              </div>
+              {browserSupportsSpeechRecognition && (
+                <div className="flex items-center gap-1">
+                  <Mic className="h-3 w-3" />
+                  <span>voice input</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

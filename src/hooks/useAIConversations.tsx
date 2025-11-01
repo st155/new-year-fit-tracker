@@ -199,10 +199,18 @@ export const useAIConversations = (userId: string | undefined) => {
       // Update to processing state
       setSendingState('processing');
       
-      // Retry logic for edge function errors
-      while (retryAttempt <= maxRetries) {
-        const response = await supabase.functions.invoke('trainer-ai-chat', {
-          body: {
+      // Replace supabase.functions.invoke with fetch for streaming
+      const authToken = (await supabase.auth.getSession()).data.session?.access_token;
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/trainer-ai-chat`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             conversationId: currentConversation?.id,
             message,
             contextMode,
@@ -210,31 +218,111 @@ export const useAIConversations = (userId: string | undefined) => {
             mentionedNames,
             contextClientId,
             autoExecute,
-            optimisticUserId, // Pass user message optimisticId for deduplication
-            optimisticAssistantId // Pass assistant preparing message id
+            optimisticUserId,
+            optimisticAssistantId
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      // Check if streaming
+      const contentType = response.headers.get('content-type');
+      const isStreaming = contentType?.includes('text/event-stream');
+
+      if (!isStreaming) {
+        // Fallback to JSON (existing logic)
+        data = await response.json();
+      } else {
+        console.log('🌊 Processing streaming response');
+        
+        // Remove "preparing" optimistic message immediately
+        removeOptimisticMessage(optimisticAssistantId);
+        
+        // Process SSE stream
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let streamedContent = '';
+        let finalData: any = null;
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const eventData = line.slice(6);
+                
+                if (eventData === '[DONE]') continue;
+
+                try {
+                  const parsed = JSON.parse(eventData);
+
+                  if (parsed.type === 'content') {
+                    // Append content chunk
+                    streamedContent += parsed.content;
+                    
+                    // Update UI immediately - this is where the "typing" effect happens
+                    setMessages(prev => {
+                      const lastMsg = prev[prev.length - 1];
+                      if (lastMsg?.role === 'assistant' && lastMsg.metadata?.isStreaming) {
+                        return [
+                          ...prev.slice(0, -1),
+                          { ...lastMsg, content: streamedContent }
+                        ];
+                      }
+                      // First chunk - create new message
+                      return [
+                        ...prev,
+                        {
+                          id: `streaming-${Date.now()}`,
+                          conversation_id: currentConversation?.id || '',
+                          role: 'assistant',
+                          content: streamedContent,
+                          metadata: { isStreaming: true },
+                          created_at: new Date().toISOString()
+                        } as AIMessage
+                      ];
+                    });
+                  } else if (parsed.type === 'done') {
+                    // Stream complete
+                    finalData = parsed;
+                    console.log('✅ Stream complete:', finalData);
+                  } else if (parsed.type === 'error') {
+                    throw new Error(parsed.error);
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse SSE event:', e);
+                }
+              }
+            }
           }
-        });
-        
-        data = response.data;
-        error = response.error;
-        
-        console.log('[AI Chat] Response received:', {
-          success: !error,
-          hasData: !!data
-        });
-        
-        // Only retry for isPlan deployment errors
-        if (error && error.message?.includes('isPlan') && retryAttempt < maxRetries) {
-          console.log(`🔄 Deployment error, retry in 1s (${retryAttempt + 1}/${maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          retryAttempt++;
-        } else {
-          break;
+
+          // Clear streaming flag and reload messages
+          setTimeout(() => {
+            if (currentConversation?.id || finalData?.conversationId) {
+              loadMessages(currentConversation?.id || finalData.conversationId);
+            }
+          }, 100);
+
+          data = finalData;
+
+        } catch (streamError) {
+          console.error('❌ Stream processing error:', streamError);
+          throw streamError;
         }
       }
 
-      if (error) throw error;
-      
       // Clear timeout on success
       clearTimeout(timeoutId);
 
