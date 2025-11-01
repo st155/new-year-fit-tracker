@@ -10,6 +10,13 @@ export function HabitsSection() {
   const { user } = useAuth();
   const { habits, isLoading } = useHabits(user?.id);
 
+  console.log('🏋️ [HabitsSection] Render:', {
+    userId: user?.id,
+    habitsCount: habits?.length,
+    isLoading,
+    habits: habits
+  });
+
   // Show top 3 active habits
   const displayHabits = habits?.slice(0, 3) || [];
 
@@ -56,7 +63,10 @@ export function HabitsSection() {
   ).length || 0;
 
   return (
-    <div className="space-y-4">
+    <div 
+      className="space-y-4"
+      style={{ border: '2px solid red', minHeight: '200px' }}
+    >
       {/* Header with Quick Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

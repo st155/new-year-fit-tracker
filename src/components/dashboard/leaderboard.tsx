@@ -19,6 +19,12 @@ export function Leaderboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
 
+  console.log('🏆 [Leaderboard] Render:', {
+    leaderboardLength: leaderboard?.length,
+    loading,
+    leaderboard: leaderboard
+  });
+
   const handleUserClick = (e: React.MouseEvent, userEntry: any) => {
     e.stopPropagation();
     setSelectedUserId(userEntry.user_id);
@@ -31,7 +37,10 @@ export function Leaderboard() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-4 animate-fade-in">
+      <div 
+        className="space-y-4 animate-fade-in"
+        style={{ border: '2px solid blue', minHeight: '300px' }}
+      >
         <div 
           className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
           onClick={() => navigate('/leaderboard')}

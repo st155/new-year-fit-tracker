@@ -313,19 +313,29 @@ const Index = () => {
         </motion.div>
 
         {/* Habits Section - MOVED ABOVE LEADERBOARD */}
-        <ErrorBoundary>
+        <ErrorBoundary fallback={
+          <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
+            <p className="text-sm text-destructive">❌ Habits section failed to load</p>
+          </div>
+        }>
           <HabitsSection />
         </ErrorBoundary>
 
         {/* Leaderboard Section */}
-        <motion.div 
-          className="mt-8"
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-        >
-          <Leaderboard />
-        </motion.div>
+        <ErrorBoundary fallback={
+          <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
+            <p className="text-sm text-destructive">❌ Leaderboard failed to load</p>
+          </div>
+        }>
+          <motion.div 
+            className="mt-8"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            <Leaderboard />
+          </motion.div>
+        </ErrorBoundary>
       </div>
 
       {/* Quick Actions Panel */}
