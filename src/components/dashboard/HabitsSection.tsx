@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function HabitsSection() {
   const { user } = useAuth();
-  const { habits, isLoading } = useHabits(user?.id);
+  const { habits, isLoading, error, refetch } = useHabits(user?.id);
 
   console.log('🏋️ [HabitsSection] Render:', {
     userId: user?.id,
@@ -33,6 +33,31 @@ export function HabitsSection() {
             <Skeleton key={i} className="h-48" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // Show error state with retry option
+  if (error) {
+    return (
+      <div className="border-2 border-destructive/50 rounded-lg p-8 text-center">
+        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Target className="h-8 w-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Ошибка загрузки привычек</h3>
+        <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+          {error.message || 'Не удалось загрузить ваши привычки'}
+        </p>
+        {import.meta.env.DEV && (
+          <pre className="text-xs text-left bg-muted p-2 rounded mb-4 max-w-md mx-auto overflow-auto">
+            userId: {user?.id || 'missing'}{'\n'}
+            error: {JSON.stringify(error, null, 2)}
+          </pre>
+        )}
+        <Button onClick={() => refetch()} variant="outline" className="gap-2">
+          <Target className="h-4 w-4" />
+          Попробовать снова
+        </Button>
       </div>
     );
   }

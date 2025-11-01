@@ -15,7 +15,14 @@ import { Button } from "@/components/ui/button";
 
 export default function Challenges() {
   const { user } = useAuth();
-  const { challenges, isLoading } = useChallenges(user?.id);
+  const { challenges, isLoading, error, refetch } = useChallenges(user?.id);
+  
+  console.log('🏆 [Challenges Page] Render:', {
+    userId: user?.id,
+    challengesCount: challenges?.length,
+    isLoading,
+    error: error?.message
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
@@ -132,7 +139,29 @@ export default function Challenges() {
       </div>
 
       {/* Challenges Grid */}
-      {!challenges || challenges.length === 0 ? (
+      {error ? (
+        <Card className="border-destructive/50">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="rounded-full bg-destructive/10 p-3 mb-4">
+              <Trophy className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Ошибка загрузки челленджей</h3>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
+              {error.message || 'Не удалось загрузить челленджи'}
+            </p>
+            {import.meta.env.DEV && (
+              <pre className="text-xs text-left bg-muted p-4 rounded mb-4 max-w-2xl overflow-auto w-full">
+                userId: {user?.id || 'missing'}{'\n'}
+                error: {JSON.stringify(error, null, 2)}
+              </pre>
+            )}
+            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              Обновить
+            </Button>
+          </CardContent>
+        </Card>
+      ) : !challenges || challenges.length === 0 ? (
         <EmptyState
           icon={<Trophy className="h-12 w-12" />}
           title="No active challenges"
