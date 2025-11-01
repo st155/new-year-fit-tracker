@@ -488,6 +488,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                 hasAlerts={hasAlerts}
                 hasOverdueTasks={client.has_overdue_tasks || false}
                 topGoals={client.top_3_goals || []}
+                connectedSources={client.connected_sources || []}
                 onViewDetails={() => onSelectClient(client)}
                 onAskAI={() => onSelectClient(client)}
               />

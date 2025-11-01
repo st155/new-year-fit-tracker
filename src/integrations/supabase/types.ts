@@ -3876,6 +3876,7 @@ export type Database = {
           active_goals_count: number
           avatar_url: string
           client_id: string
+          connected_sources: string[]
           days_since_last_data: number
           full_name: string
           goals_at_risk: number

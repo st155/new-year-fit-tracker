@@ -14,7 +14,11 @@ import {
   AlertTriangle, 
   Trophy, 
   Clock,
-  Target
+  Target,
+  Activity,
+  Moon,
+  Dumbbell,
+  Watch
 } from "lucide-react";
 import { CardHoverEffect } from "@/components/aceternity";
 
@@ -46,6 +50,7 @@ interface TrainerClientCardProps {
   hasAlerts?: boolean;
   hasOverdueTasks?: boolean;
   topGoals?: Array<{ id: string; name: string; progress: number }>;
+  connectedSources?: string[];
   onViewDetails?: () => void;
   onAskAI?: () => void;
   className?: string;
@@ -63,6 +68,7 @@ export function TrainerClientCard({
   hasAlerts = false,
   hasOverdueTasks = false,
   topGoals = [],
+  connectedSources = [],
   onViewDetails,
   onAskAI,
   className
@@ -97,6 +103,24 @@ export function TrainerClientCard({
   };
 
   const goalsCount = client.goals_count || 0;
+
+  const getSourceIcon = (source: string) => {
+    const lowerSource = source.toLowerCase();
+    if (lowerSource === 'whoop') return Activity;
+    if (lowerSource === 'oura') return Moon;
+    if (lowerSource === 'garmin') return Dumbbell;
+    if (lowerSource === 'withings') return Watch;
+    return Activity;
+  };
+
+  const getSourceLabel = (source: string) => {
+    const lowerSource = source.toLowerCase();
+    if (lowerSource === 'whoop') return 'Whoop';
+    if (lowerSource === 'oura') return 'Oura';
+    if (lowerSource === 'garmin') return 'Garmin';
+    if (lowerSource === 'withings') return 'Withings';
+    return source;
+  };
 
   return (
     <CardHoverEffect
@@ -244,6 +268,26 @@ export function TrainerClientCard({
             >
               Health: {healthScore}%
             </Badge>
+            
+            {/* Integration Badges */}
+            {connectedSources.length > 0 && (
+              <div className="flex items-center gap-1">
+                {connectedSources.map((source) => {
+                  const SourceIcon = getSourceIcon(source);
+                  return (
+                    <Badge 
+                      key={source}
+                      variant="outline" 
+                      className="text-xs gap-1 px-2 py-0"
+                      title={`Connected to ${getSourceLabel(source)}`}
+                    >
+                      <SourceIcon className="h-3 w-3" />
+                      {getSourceLabel(source)}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {lastActivity && (
