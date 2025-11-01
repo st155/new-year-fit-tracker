@@ -9,6 +9,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface AIInputProps {
   selectedClient?: {
@@ -34,6 +36,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
   const [clients, setClients] = useState<ClientSuggestion[]>([]);
   const [mentionedClients, setMentionedClients] = useState<string[]>([]);
   const [mentionSearch, setMentionSearch] = useState('');
+  const [requireConfirmation, setRequireConfirmation] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -204,7 +207,8 @@ export function AIInput({ selectedClient }: AIInputProps) {
       selectedClient ? 'client_specific' : 'general',
       mentionedClients,
       [],
-      selectedClient?.user_id
+      selectedClient?.user_id,
+      !requireConfirmation // autoExecute is opposite of requireConfirmation
     );
   };
 
@@ -311,35 +315,52 @@ export function AIInput({ selectedClient }: AIInputProps) {
           </div>
         </div>
         
-        {/* Quick tips */}
-        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground px-1">
-          {isListening && (
-            <div className="flex items-center gap-2 text-red-500 animate-pulse">
-              <div className="h-2 w-2 rounded-full bg-red-500" />
-              <span>Слушаю...</span>
-            </div>
-          )}
-          
-          {!isListening && (
-            <>
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Shift</kbd>
-                <span>+</span>
-                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Enter</kbd>
-                <span>new line</span>
+        {/* Quick tips and Settings */}
+        <div className="flex items-center justify-between gap-3 mt-2 text-xs px-1">
+          <div className="flex items-center gap-3 text-muted-foreground">
+            {isListening && (
+              <div className="flex items-center gap-2 text-red-500 animate-pulse">
+                <div className="h-2 w-2 rounded-full bg-red-500" />
+                <span>Слушаю...</span>
               </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">@</kbd>
-                <span>mention client</span>
-              </div>
-              {browserSupportsSpeechRecognition && (
+            )}
+            
+            {!isListening && (
+              <>
                 <div className="flex items-center gap-1">
-                  <Mic className="h-3 w-3" />
-                  <span>voice input</span>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Shift</kbd>
+                  <span>+</span>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Enter</kbd>
+                  <span>new line</span>
                 </div>
-              )}
-            </>
-          )}
+                <div className="flex items-center gap-1">
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">@</kbd>
+                  <span>mention client</span>
+                </div>
+                {browserSupportsSpeechRecognition && (
+                  <div className="flex items-center gap-1">
+                    <Mic className="h-3 w-3" />
+                    <span>voice input</span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* Auto-execute setting */}
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              id="require-confirmation" 
+              checked={requireConfirmation}
+              onCheckedChange={(checked) => setRequireConfirmation(checked as boolean)}
+            />
+            <Label 
+              htmlFor="require-confirmation" 
+              className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+            >
+              Требовать подтверждение
+            </Label>
+          </div>
         </div>
       </div>
     </div>

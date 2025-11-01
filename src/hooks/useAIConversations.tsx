@@ -141,7 +141,7 @@ export const useAIConversations = (userId: string | undefined) => {
     mentionedClients: string[] = [],
     mentionedNames: string[] = [],
     contextClientId?: string,
-    autoExecute: boolean = true
+    autoExecute: boolean = false
   ) => {
     if (!userId) return null;
 

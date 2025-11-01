@@ -2,8 +2,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAIActionsHistory } from '@/hooks/useAIActionsHistory';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { 
   Target, 
   TrendingUp, 
@@ -144,10 +142,31 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                       </div>
                       
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(action.created_at), {
-                          addSuffix: true,
-                          locale: ru
-                        })}
+                        {(() => {
+                          const actionDate = new Date(action.created_at);
+                          const now = new Date();
+                          const diffHours = (now.getTime() - actionDate.getTime()) / (1000 * 60 * 60);
+                          
+                          if (diffHours < 24) {
+                            return actionDate.toLocaleTimeString('ru-RU', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            });
+                          } else if (diffHours < 168) { // less than 7 days
+                            return actionDate.toLocaleDateString('ru-RU', { 
+                              day: '2-digit', 
+                              month: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            });
+                          } else {
+                            return actionDate.toLocaleDateString('ru-RU', { 
+                              day: '2-digit', 
+                              month: '2-digit',
+                              year: 'numeric'
+                            });
+                          }
+                        })()}
                       </span>
                     </div>
 

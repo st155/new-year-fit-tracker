@@ -19,7 +19,8 @@ interface AIChatContextType {
     conversationType?: 'general' | 'client_specific',
     mentionedClients?: string[],
     attachments?: string[],
-    clientUserId?: string
+    clientUserId?: string,
+    autoExecute?: boolean
   ) => Promise<void>;
   startNewConversation: () => void;
   deleteConversation: (conversationId: string) => Promise<void>;
