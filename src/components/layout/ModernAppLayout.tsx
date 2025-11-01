@@ -1,9 +1,7 @@
 import { ReactNode, memo } from "react";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
-import { BottomNavigation } from "@/components/navigation/BottomNavigation";
 import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
-import { useIsMobile } from "@/hooks/primitive";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
@@ -13,8 +11,7 @@ interface ModernAppLayoutProps {
 const LAYOUT_SAFE_MODE = false; // ✅ Navigation restored
 
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
-  const isMobile = useIsMobile();
-  console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ', isMobile:', isMobile, ')');
+  console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');
   
   if (LAYOUT_SAFE_MODE) {
     return (
@@ -34,8 +31,6 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
           <main className="flex-1 overflow-auto pt-16">
             {children}
           </main>
-          {/* Bottom Navigation - Only on mobile */}
-          {isMobile && <BottomNavigation />}
         </div>
       </MetricsViewProvider>
     </SafeProfileProvider>
