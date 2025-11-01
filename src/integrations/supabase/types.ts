@@ -2795,6 +2795,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_notification_settings: {
+        Row: {
+          created_at: string
+          digest_frequency: string | null
+          digest_time: string | null
+          email_client_alerts: boolean | null
+          email_daily_digest: boolean | null
+          email_enabled: boolean | null
+          email_integration_issues: boolean | null
+          id: string
+          push_enabled: boolean | null
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          digest_frequency?: string | null
+          digest_time?: string | null
+          email_client_alerts?: boolean | null
+          email_daily_digest?: boolean | null
+          email_enabled?: boolean | null
+          email_integration_issues?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          digest_frequency?: string | null
+          digest_time?: string | null
+          email_client_alerts?: boolean | null
+          email_daily_digest?: boolean | null
+          email_enabled?: boolean | null
+          email_integration_issues?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trainer_posts: {
         Row: {
           challenge_id: string | null
@@ -3869,6 +3911,26 @@ export type Database = {
         }[]
       }
       get_monitoring_dashboard_data: { Args: never; Returns: Json }
+      get_overtrained_clients: {
+        Args: never
+        Returns: {
+          avg_recovery: number
+          avg_strain: number
+          client_id: string
+          full_name: string
+          trainer_id: string
+        }[]
+      }
+      get_stale_integrations: {
+        Args: never
+        Returns: {
+          client_id: string
+          days_stale: number
+          full_name: string
+          source: string
+          trainer_id: string
+        }[]
+      }
       get_trainer_clients_enhanced: {
         Args: { p_trainer_id: string }
         Returns: {
