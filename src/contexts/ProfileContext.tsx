@@ -25,13 +25,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   
   // ✅ Hook called unconditionally (React rules)
-  const { data: profile, isLoading: loading, refetch: queryRefetch, error } = useProfileQuery(user?.id || '');
+  const { data: profile, isLoading: loading, refetch: queryRefetch, error } = useProfileQuery(user?.id);
   
   if (error && import.meta.env.DEV) {
     console.error('💥 [ProfileProvider] Query error:', error);
   }
 
   const refetch = async () => {
+    console.log('🔄 [ProfileProvider] Manual refetch triggered');
     await queryRefetch();
   };
 

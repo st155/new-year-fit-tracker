@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Camera, Save, User, ArrowLeft, Shield, Bell, Mail, Share, Settings } from "lucide-react";
+import { Camera, Save, User, ArrowLeft, Shield, Bell, Mail, Share, Settings, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +13,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
+  const { profile: contextProfile, refetch: refetchProfile } = useProfile();
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState({
     username: '',
     full_name: '',
@@ -39,7 +42,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [user]);
+  }, [user, contextProfile]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -155,18 +158,51 @@ const ProfilePage = () => {
     return email.substring(0, 2).toUpperCase();
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetchProfile();
+      await fetchProfile();
+      toast({
+        title: "Обновлено",
+        description: "Профиль успешно обновлен",
+      });
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обновить профиль",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="space-y-8">
         {/* Header с градиентом */}
         <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              Profile
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your data and account settings
-            </p>
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+                Profile
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your data and account settings
+              </p>
+            </div>
+            <Button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Обновить
+            </Button>
           </div>
         </div>
 

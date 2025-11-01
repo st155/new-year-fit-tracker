@@ -13,6 +13,8 @@ export function useProfileQuery(userId: string | undefined) {
       // ✅ Early return for empty userId
       if (!userId) return null;
       
+      console.log('🔄 [useProfileQuery] Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -20,6 +22,8 @@ export function useProfileQuery(userId: string | undefined) {
         .single();
       
       if (error) {
+        console.error('❌ [useProfileQuery] Error details:', error);
+        
         // Handle "not found" gracefully - return null instead of throwing
         if (error.code === 'PGRST116' || error.message?.includes('406')) {
           if (import.meta.env.DEV) {
@@ -42,12 +46,15 @@ export function useProfileQuery(userId: string | undefined) {
         }
         throw error;
       }
+      
+      console.log('✅ [useProfileQuery] Profile loaded:', data);
       return data;
     },
     enabled: !!userId,
     throwOnError: false, // ✅ Don't throw error during rendering
-    staleTime: 10 * 60 * 1000, // Profile rarely changes
-    gcTime: 30 * 60 * 1000,
-    retry: 2,
+    staleTime: 0, // ✅ Always refetch for fresh data
+    gcTime: 5 * 60 * 1000, // ✅ Reduced from 30 to 5 minutes
+    refetchOnMount: 'always', // ✅ Force refetch on mount
+    retry: 3, // ✅ Increased retries
   });
 }
