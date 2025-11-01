@@ -29,6 +29,7 @@ interface UseMetricsOptions {
   minConfidence?: number;    // NEW: Filter by minimum confidence
   withQuality?: boolean;      // NEW: Return MetricWithConfidence - default true in V2
   useV2?: boolean;            // NEW: Feature flag override
+  sourceFilter?: string;      // NEW: Filter by source ('all' | 'whoop' | 'garmin' | 'ultrahuman', etc.)
 }
 
 export interface MetricData {
@@ -51,7 +52,8 @@ export function useMetrics(options: UseMetricsOptions = {}) {
     enabled = true, 
     minConfidence = 0, 
     withQuality = true,  // V2: Default to true
-    useV2 = true 
+    useV2 = true,
+    sourceFilter
   } = options;
   const fetcher = new UnifiedDataFetcherV2(supabase);
 
@@ -60,7 +62,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
 
   // ===== Latest Metrics (with quality if requested) =====
   const latest = useQuery({
-    queryKey: ['unified-metrics', 'latest', user?.id, metricTypes, withQuality, finalUseV2],
+    queryKey: ['unified-metrics', 'latest', user?.id, metricTypes, withQuality, finalUseV2, sourceFilter],
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -87,6 +89,10 @@ export function useMetrics(options: UseMetricsOptions = {}) {
         query = query.in('metric_name', metricTypes);
       }
 
+      if (sourceFilter && sourceFilter !== 'all') {
+        query = query.ilike('source', sourceFilter);
+      }
+
       const { data, error } = await query
         .order('metric_name')
         .order('measurement_date', { ascending: false })
@@ -110,7 +116,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
 
   // ===== History (if dateRange specified) =====
   const history = useQuery({
-    queryKey: queryKeys.metrics.history(user?.id ?? '', { metricTypes, dateRange }),
+    queryKey: queryKeys.metrics.history(user?.id ?? '', { metricTypes, dateRange, sourceFilter }),
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -127,6 +133,10 @@ export function useMetrics(options: UseMetricsOptions = {}) {
         query = query
           .gte('measurement_date', dateRange.start)
           .lte('measurement_date', dateRange.end);
+      }
+
+      if (sourceFilter && sourceFilter !== 'all') {
+        query = query.ilike('source', sourceFilter);
       }
 
       const { data, error } = await query

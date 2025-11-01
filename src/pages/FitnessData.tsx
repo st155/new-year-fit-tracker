@@ -3,6 +3,8 @@ import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useMetricsView } from '@/contexts/MetricsViewContext';
+import { MetricsViewToggle } from '@/components/dashboard/MetricsViewToggle';
 import { 
   Activity, Heart, Zap, Moon, Footprints, Flame, Clock
 } from 'lucide-react';
@@ -22,14 +24,14 @@ import { BarChart } from '@tremor/react';
 import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type TimeFilter = 'today' | 'week' | 'month';
-type SourceFilter = 'all' | 'whoop' | 'garmin' | 'ultrahuman';
 
 export default function FitnessData() {
   const { user } = useAuth();
+  const { deviceFilter } = useMetricsView();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [dateOffset, setDateOffset] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -84,6 +86,7 @@ export default function FitnessData() {
       'Sleep Duration',
     ],
     withQuality: true,
+    sourceFilter: deviceFilter,
     dateRange: {
       start: calculateDateRange.start.toISOString(),
       end: calculateDateRange.end.toISOString(),
@@ -295,13 +298,6 @@ export default function FitnessData() {
   const handlePreviousPeriod = () => setDateOffset(prev => prev + 1);
   const handleNextPeriod = () => setDateOffset(prev => Math.max(0, prev - 1));
 
-  const sourceOptions = [
-    { value: 'all' as const, label: 'Все' },
-    { value: 'whoop' as const, label: 'Whoop' },
-    { value: 'garmin' as const, label: 'Garmin' },
-    { value: 'ultrahuman' as const, label: 'Ultrahuman' },
-  ];
-
   if (isLoading) {
     return <PageLoader message="Загрузка фитнес-данных..." />;
   }
@@ -364,19 +360,8 @@ export default function FitnessData() {
               </Button>
             </div>
 
-            {/* Source filters */}
-            <div className="flex items-center gap-2">
-              {sourceOptions.map(option => (
-                <Button
-                  key={option.value}
-                  variant={sourceFilter === option.value ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSourceFilter(option.value)}
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
+            {/* Device filters */}
+            <MetricsViewToggle />
           </div>
 
           {/* Date navigator */}
@@ -418,37 +403,55 @@ export default function FitnessData() {
           
           {/* Fallback if no recovery data */}
           {(!latestRecovery || !latestRecovery.value || processedMetrics.recovery.length === 0) && (
-            <div className="glass-medium border-white/10 rounded-lg p-6 text-center">
-              <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Нет данных Recovery Score за выбранный период
-              </p>
-            </div>
+            <EmptyState
+              icon={Activity}
+              title="Нет данных Recovery Score"
+              description={
+                deviceFilter !== 'all'
+                  ? `Нет данных от ${deviceFilter.toUpperCase()} за выбранный период`
+                  : 'Нет данных за выбранный период'
+              }
+            />
+          )}
+
+          {/* Empty state if no data */}
+          {processedMetrics.cards.length === 0 && (
+            <EmptyState
+              icon={Activity}
+              title="Нет данных для отображения"
+              description={
+                deviceFilter !== 'all'
+                  ? `Нет данных от ${deviceFilter.toUpperCase()} за выбранный период. Попробуйте выбрать другое устройство или временной период.`
+                  : 'Нет данных за выбранный период. Попробуйте выбрать другой временной период.'
+              }
+            />
           )}
 
           {/* Metrics Grid with Framer Motion */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
-            {processedMetrics.cards.map((card) => (
-              <motion.div key={card.name} variants={staggerItem}>
-                <MetricCard
-                  name={card.name}
-                  value={card.value}
-                  unit={card.unit}
-                  icon={card.icon}
-                  color={card.color}
-                  source={card.source}
-                  isStale={card.isStale}
-                  sparkline={card.sparkline}
-                  confidence={card.confidence}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
+          {processedMetrics.cards.length > 0 && (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {processedMetrics.cards.map((card) => (
+                <motion.div key={card.name} variants={staggerItem}>
+                  <MetricCard
+                    name={card.name}
+                    value={card.value}
+                    unit={card.unit}
+                    icon={card.icon}
+                    color={card.color}
+                    source={card.source}
+                    isStale={card.isStale}
+                    sparkline={card.sparkline}
+                    confidence={card.confidence}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
