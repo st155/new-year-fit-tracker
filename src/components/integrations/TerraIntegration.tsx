@@ -118,12 +118,15 @@ export function TerraIntegration() {
     // КРИТИЧНО: открываем popup СИНХРОННО (до любых await) чтобы избежать блокировки браузером
     let popup: Window | null = null;
     if (!isIOS) {
-      popup = window.open('', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
+      popup = window.open('', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes,noopener=1,noreferrer=1');
       if (popup) {
         try {
           popup.document.write(`
             <html>
-              <head><title>Подключение Terra...</title></head>
+              <head>
+                <title>Подключение Terra...</title>
+                <meta name="referrer" content="no-referrer">
+              </head>
               <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f5f5f5;">
                 <div style="text-align: center;">
                   <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
@@ -243,8 +246,13 @@ export function TerraIntegration() {
       let errorMessage = 'Не удалось подключить устройство';
       let errorTitle = 'Ошибка подключения';
       let showSupabaseStatus = false;
+      let showCookieFix = false;
       
-      if (error.message === 'Request timeout') {
+      if (error.message?.includes('400') || error.message?.includes('Bad Request') || error.message?.includes('Cookie Too Large')) {
+        errorTitle = '400 Bad Request - Слишком много cookies';
+        errorMessage = `Браузер отправляет слишком много данных (cookies) на сервер Terra.`;
+        showCookieFix = true;
+      } else if (error.message === 'Request timeout') {
         errorTitle = 'Превышено время ожидания';
         errorMessage = 'Сервер не ответил вовремя. Пожалуйста, попробуйте еще раз через несколько секунд.';
         showSupabaseStatus = true;
@@ -289,6 +297,14 @@ export function TerraIntegration() {
         description: (
           <div className="space-y-2">
             <div className="whitespace-pre-line">{errorMessage}</div>
+            {showCookieFix && (
+              <div className="text-xs space-y-2 mt-3 p-2 bg-muted rounded">
+                <div className="font-semibold">💡 Как исправить:</div>
+                <div>1. Очистите cookies браузера (Настройки → Конфиденциальность)</div>
+                <div>2. Попробуйте в режиме Инкогнито</div>
+                <div>3. Или используйте альтернативный метод подключения (кнопка ниже)</div>
+              </div>
+            )}
             {showSupabaseStatus && (
               <a 
                 href="https://status.supabase.com" 
@@ -303,7 +319,7 @@ export function TerraIntegration() {
           </div>
         ),
         variant: 'destructive',
-        action: (
+        action: showCookieFix ? undefined : (
           <Button 
             variant="outline" 
             size="sm" 
@@ -312,6 +328,40 @@ export function TerraIntegration() {
             Повторить
           </Button>
         ),
+      });
+      setConnectingProvider(null);
+    }
+  };
+
+  const connectViaRedirect = async (provider: string) => {
+    if (!user) return;
+    
+    // Save current location to return after auth
+    sessionStorage.setItem('terra_return_url', window.location.pathname);
+    sessionStorage.setItem('terra_last_provider', provider);
+    
+    toast({
+      title: 'Переходим на страницу авторизации...',
+      description: 'Вы будете перенаправлены на Terra для подключения устройства',
+    });
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'generate-widget-session' },
+      });
+      
+      if (error) throw error;
+      if (!data?.url) throw new Error('No widget URL received');
+      
+      // Redirect in same tab (avoids cookie issues with popups)
+      setTimeout(() => {
+        window.location.href = data.url;
+      }, 1000);
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error.message,
+        variant: 'destructive',
       });
       setConnectingProvider(null);
     }
@@ -596,32 +646,43 @@ export function TerraIntegration() {
               const isConnecting = connectingProvider === provider;
               
               return (
-                <Button
-                  key={provider}
-                  variant={isConnected ? "secondary" : "outline"}
-                  className="h-auto py-4 justify-start"
-                  onClick={() => !isConnected && connectProvider(provider)}
-                  disabled={isConnected || isConnecting}
-                >
-                  {isConnecting ? (
-                    <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                  ) : (
-                    <Icon className="h-5 w-5 mr-3" />
-                  )}
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
+                <div key={provider} className="space-y-2">
+                  <Button
+                    variant={isConnected ? "secondary" : "outline"}
+                    className="h-auto py-4 justify-start w-full"
+                    onClick={() => !isConnected && connectProvider(provider)}
+                    disabled={isConnected || isConnecting}
+                  >
+                    {isConnecting ? (
+                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                    ) : (
+                      <Icon className="h-5 w-5 mr-3" />
+                    )}
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
+                      {isConnected ? (
+                        <p className="text-xs text-muted-foreground">Подключено</p>
+                      ) : isConnecting ? (
+                        <p className="text-xs text-muted-foreground">Открываем окно...</p>
+                      ) : null}
+                    </div>
                     {isConnected ? (
-                      <p className="text-xs text-muted-foreground">Подключено</p>
-                    ) : isConnecting ? (
-                      <p className="text-xs text-muted-foreground">Открываем окно...</p>
-                    ) : null}
-                  </div>
-                  {isConnected ? (
-                    <CheckCircle className="h-4 w-4 text-success" />
-                  ) : (
-                    <ExternalLink className="h-4 w-4 opacity-50" />
+                      <CheckCircle className="h-4 w-4 text-success" />
+                    ) : (
+                      <ExternalLink className="h-4 w-4 opacity-50" />
+                    )}
+                  </Button>
+                  {isConnecting && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => connectViaRedirect(provider)}
+                      className="w-full text-xs"
+                    >
+                      Альтернативный метод (Redirect)
+                    </Button>
                   )}
-                </Button>
+                </div>
               );
             })}
           </div>

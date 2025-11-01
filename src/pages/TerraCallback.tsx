@@ -185,10 +185,12 @@ export default function TerraCallback() {
                   
                   // Clear sessionStorage
                   sessionStorage.removeItem('terra_last_provider');
+                  sessionStorage.removeItem('terra_return_url');
                   
-                  // Redirect after poll completes
+                  // Redirect to saved URL or integrations
+                  const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
                   setTimeout(() => {
-                    navigate('/integrations');
+                    navigate(returnUrl);
                   }, 1000);
                 }
               }, 1000);
