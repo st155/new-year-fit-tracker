@@ -44,6 +44,9 @@ import { ProgressTimeline } from './client-detail/ProgressTimeline';
 import { TrainerNotes } from './client-detail/TrainerNotes';
 import { ClientReportExport } from './export/ClientReportExport';
 import { PeriodComparison } from './export/PeriodComparison';
+import { AutoSyncMonitor } from './automation/AutoSyncMonitor';
+import { ConflictResolutionPanel } from './automation/ConflictResolutionPanel';
+import { AutomatedInsights } from './automation/AutomatedInsights';
 
 interface Client {
   id: string;
@@ -289,10 +292,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       </Card>
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-muted/50 p-1 gap-1">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
           <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
           <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
+          <TabsTrigger value="automation" className="whitespace-nowrap flex-shrink-0">Автоматизация</TabsTrigger>
           <TabsTrigger value="comparison" className="whitespace-nowrap flex-shrink-0">Сравнение</TabsTrigger>
           <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
           <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
@@ -606,6 +610,14 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             measurements={measurements}
             recoveryScore={whoopSummary ? [whoopSummary.recoveryScore.avg] : undefined}
           />
+        </TabsContent>
+
+        <TabsContent value="automation" className="space-y-4">
+          <div className="grid gap-6">
+            <AutoSyncMonitor clientId={client.user_id} />
+            <AutomatedInsights clientId={client.user_id} />
+            <ConflictResolutionPanel clientId={client.user_id} />
+          </div>
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-4">
