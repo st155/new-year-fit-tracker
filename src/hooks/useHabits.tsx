@@ -5,8 +5,12 @@ export function useHabits(userId?: string) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["habits", userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId) {
+        console.log('[useHabits] No userId provided, returning empty array');
+        return [];
+      }
 
+      console.log('[useHabits] Fetching habits for user:', userId);
       const today = new Date().toISOString().split('T')[0];
 
       const { data: habits, error: habitsError } = await supabase
@@ -41,6 +45,8 @@ export function useHabits(userId?: string) {
         .from("habit_attempts")
         .select("*")
         .eq("user_id", userId);
+
+      console.log('[useHabits] Fetched habits:', habits?.length || 0);
 
       return habits.map(habit => {
         const habitStats = stats?.find(s => s.habit_id === habit.id);
@@ -79,6 +85,14 @@ export function useHabits(userId?: string) {
     },
     enabled: !!userId,
     staleTime: 60 * 1000,
+  });
+
+  // Log results for debugging
+  console.log('[useHabits] Query result:', { 
+    habitsCount: data?.length || 0, 
+    isLoading, 
+    error: error?.message,
+    userId 
   });
 
   return {

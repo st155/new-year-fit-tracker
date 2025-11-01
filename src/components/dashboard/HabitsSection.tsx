@@ -20,7 +20,8 @@ export function HabitsSection() {
   // Show top 3 active habits
   const displayHabits = habits?.slice(0, 3) || [];
 
-  if (isLoading) {
+  // Show loading skeleton while user exists but habits are loading
+  if (isLoading || (user?.id && !habits)) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -63,10 +64,7 @@ export function HabitsSection() {
   ).length || 0;
 
   return (
-    <div 
-      className="space-y-4"
-      style={{ border: '2px solid red', minHeight: '200px' }}
-    >
+    <div className="space-y-4">
       {/* Header with Quick Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -4203,6 +4203,10 @@ export type Database = {
         Args: { p_end_date?: string; p_user_id: string }
         Returns: number
       }
+      can_view_profile: {
+        Args: { _target: string; _viewer: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_key: string
