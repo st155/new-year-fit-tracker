@@ -34,10 +34,25 @@ import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
-import { HealthScoreWidget } from '@/components/dashboard/HealthScoreWidget';
+import { useDataQuality } from '@/hooks/useDataQuality';
+import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
+  
+  // Health Score data
+  const { 
+    averageConfidence, 
+    metricsByQuality, 
+    isLoading: healthLoading 
+  } = useDataQuality();
+  const { recalculate, isRecalculating } = useConfidenceRecalculation();
+
+  const handleHealthRefresh = () => {
+    if (user?.id) {
+      recalculate({ user_id: user.id });
+    }
+  };
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [forceReady, setForceReady] = useState(false);
@@ -252,25 +267,23 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Enhanced AI Insights */}
+        {/* Enhanced AI Insights with Health Score */}
         <ErrorBoundary>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <EnhancedAIInsights userId={user?.id} />
-          </motion.div>
-        </ErrorBoundary>
-
-        {/* Enhanced Data Quality */}
-        <ErrorBoundary>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <HealthScoreWidget userId={user?.id} />
+            <EnhancedAIInsights 
+              userId={user?.id}
+              healthScore={{
+                averageConfidence,
+                metricsByQuality,
+                isLoading: healthLoading,
+                isRecalculating,
+                onRefresh: handleHealthRefresh,
+              }}
+            />
           </motion.div>
         </ErrorBoundary>
 
