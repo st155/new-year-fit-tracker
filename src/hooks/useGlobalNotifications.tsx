@@ -38,11 +38,12 @@ export function useGlobalNotifications() {
 
         const goalsCount = goalsResult?.count || 0;
         if (goalsCount > 0) {
+          const goalText = goalsCount === 1 ? 'цель требует внимания' : `${goalsCount} целей требуют внимания`;
           newNotifications.push({
             id: 'goals-attention',
             type: 'goal',
             icon: '🎯',
-            message: `${goalsCount} ${goalsCount === 1 ? 'цель требует' : 'целей требуют'} внимания`,
+            message: goalText,
             href: '/goals?filter=attention',
             priority: 1,
           });
@@ -59,11 +60,12 @@ export function useGlobalNotifications() {
         if (conflictsData.length > 0) {
           const uniqueMetrics = new Set(conflictsData.map((d: any) => d.metric_name));
           const conflicts = uniqueMetrics.size;
+          const conflictText = conflicts === 1 ? 'метрика с конфликтами' : `${conflicts} метрик с конфликтами`;
           newNotifications.push({
             id: 'data-conflicts',
             type: 'conflict',
             icon: '⚠️',
-            message: `${conflicts} ${conflicts === 1 ? 'метрика' : 'метрик'} с конфликтами данных`,
+            message: conflictText,
             href: '/?tab=quality',
             priority: 2,
           });
@@ -78,11 +80,12 @@ export function useGlobalNotifications() {
 
         const challengesCount = challengesResult?.count || 0;
         if (challengesCount > 0) {
+          const challengeText = challengesCount === 1 ? 'активный челлендж' : `${challengesCount} активных челленджа`;
           newNotifications.push({
             id: 'active-challenges',
             type: 'habit',
             icon: '🏆',
-            message: `${challengesCount} ${challengesCount === 1 ? 'активный челлендж' : 'активных челленджа'}`,
+            message: challengeText,
             href: '/progress',
             priority: 4,
           });
