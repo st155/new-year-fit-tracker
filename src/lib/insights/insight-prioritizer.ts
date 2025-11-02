@@ -3,6 +3,7 @@
  */
 
 import type { SmartInsight } from './types';
+import type { InsightPreferences } from '@/hooks/useInsightPersonalization';
 
 /**
  * Prioritize insights based on:
@@ -14,9 +15,15 @@ export function prioritizeInsights(insights: SmartInsight[]): SmartInsight[] {
   // Type weights
   const typeWeights: Record<string, number> = {
     critical: 100,
+    anomaly: 95,
     warning: 80,
+    trainer: 75,
+    prediction: 70,
     achievement: 60,
+    social: 55,
+    correlation: 50,
     recommendation: 40,
+    temporal: 30,
     info: 20,
   };
 
@@ -70,4 +77,26 @@ export function filterByPriority(insights: SmartInsight[], minPriority: number):
  */
 export function limitInsights(insights: SmartInsight[], maxCount: number): SmartInsight[] {
   return insights.slice(0, maxCount);
+}
+
+/**
+ * Apply user personalization preferences
+ */
+export function applyPersonalization(
+  insights: SmartInsight[],
+  preferences: InsightPreferences
+): SmartInsight[] {
+  return insights.filter((insight) => {
+    // Filter by enabled types
+    if (!preferences.enabledTypes.includes(insight.type)) {
+      return false;
+    }
+
+    // Filter by muted insights
+    if (preferences.mutedInsights.includes(insight.id)) {
+      return false;
+    }
+
+    return true;
+  });
 }

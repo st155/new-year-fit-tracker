@@ -2,7 +2,18 @@
  * Smart Insights Types
  */
 
-export type InsightType = 'critical' | 'warning' | 'achievement' | 'info' | 'recommendation';
+export type InsightType = 
+  | 'critical' 
+  | 'warning' 
+  | 'achievement' 
+  | 'info' 
+  | 'recommendation'
+  | 'correlation'
+  | 'anomaly'
+  | 'prediction'
+  | 'social'
+  | 'trainer'
+  | 'temporal';
 
 export interface SmartInsight {
   id: string;
@@ -28,4 +39,6 @@ export interface InsightGeneratorContext {
   goalsData?: any;
   habitsData?: any;
   todayMetrics?: any;
+  challengeData?: any;
+  trainerData?: any;
 }

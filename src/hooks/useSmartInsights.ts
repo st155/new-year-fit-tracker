@@ -21,10 +21,22 @@ import {
   generateRecommendationInsights,
 } from '@/lib/insights/insight-generators';
 import {
+  generateCorrelationInsights,
+  generateAnomalyInsights,
+  generatePredictionInsights,
+  generateSocialInsights,
+  generateTrainerInsights,
+  generateTemporalInsights,
+} from '@/lib/insights/advanced-generators';
+import {
   prioritizeInsights,
   deduplicateInsights,
   limitInsights,
+  applyPersonalization,
 } from '@/lib/insights/insight-prioritizer';
+import { useInsightPersonalization } from './useInsightPersonalization';
+import { useChallengeProgress } from './useChallengeProgress';
+import { useTrainerMessages } from './useTrainerMessages';
 
 interface UseSmartInsightsOptions {
   maxInsights?: number;
@@ -52,6 +64,11 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
     },
   });
 
+  // Fetch advanced data sources
+  const { data: challengeData } = useChallengeProgress(user?.id);
+  const { data: trainerData } = useTrainerMessages(user?.id);
+  const { preferences } = useInsightPersonalization();
+
   const isLoading = todayLoading || metricsLoading || qualityData.isLoading;
 
   // Generate insights
@@ -65,6 +82,8 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
       goalsData: { personal: personalGoals, challenge: challengeGoals },
       habitsData: habits,
       todayMetrics,
+      challengeData,
+      trainerData,
     };
 
     const allInsights: SmartInsight[] = [];
@@ -101,11 +120,39 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
       allInsights.push(...generateRecommendationInsights(context));
     }
 
+    // Advanced insights
+    if (shouldInclude('correlations')) {
+      allInsights.push(...generateCorrelationInsights(context));
+    }
+
+    if (shouldInclude('anomalies')) {
+      allInsights.push(...generateAnomalyInsights(context));
+    }
+
+    if (shouldInclude('predictions')) {
+      allInsights.push(...generatePredictionInsights(context));
+    }
+
+    if (shouldInclude('social')) {
+      allInsights.push(...generateSocialInsights(context));
+    }
+
+    if (shouldInclude('trainer')) {
+      allInsights.push(...generateTrainerInsights(context));
+    }
+
+    if (shouldInclude('temporal')) {
+      allInsights.push(...generateTemporalInsights(context));
+    }
+
     // Process insights
     let processed = allInsights;
     
     // Deduplicate
     processed = deduplicateInsights(processed);
+    
+    // Apply personalization
+    processed = applyPersonalization(processed, preferences);
     
     // Prioritize
     processed = prioritizeInsights(processed);
@@ -127,6 +174,9 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
     challengeGoals,
     habits,
     todayMetrics,
+    challengeData,
+    trainerData,
+    preferences,
     enabledSources,
     maxInsights,
     minPriority,
