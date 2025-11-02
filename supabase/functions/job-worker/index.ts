@@ -205,8 +205,8 @@ async function processTerraWebhookData(
           category: 'body',
           value: body.body_mass_kg,
           measurement_date: date,
-          source: provider,
-          external_id: `terra_${provider}_weight_${date}`,
+          source: provider.toLowerCase(),
+          external_id: `terra_${provider.toLowerCase()}_weight_${date}`,
           user_id,
         });
       }
@@ -217,18 +217,22 @@ async function processTerraWebhookData(
           category: 'body',
           value: body.body_fat_percentage,
           measurement_date: date,
-          source: provider,
-          external_id: `terra_${provider}_bodyfat_${date}`,
+          source: provider.toLowerCase(),
+          external_id: `terra_${provider.toLowerCase()}_bodyfat_${date}`,
           user_id,
         });
       }
 
       // Withings format (measurements_data.measurements[])
-      if (body.measurements_data?.measurements) {
+      if (body.measurements_data?.measurements && Array.isArray(body.measurements_data.measurements)) {
+        console.log(`📊 Processing ${body.measurements_data.measurements.length} Withings body measurements for ${provider}`);
+        
         for (const measurement of body.measurements_data.measurements) {
           const measurementDate = measurement.measurement_time?.split('T')[0] || date;
           const measurementTime = measurement.measurement_time || `${date}T00:00:00Z`;
-          const uniqueId = `terra_${provider}_${measurementDate}_${measurementTime.replace(/[:.]/g, '')}`;
+          const uniqueId = `terra_${provider.toLowerCase()}_${measurementDate}_${measurementTime.replace(/[:.]/g, '')}`;
+
+          console.log(`  - Measurement: weight=${measurement.weight_kg}, bodyfat=${measurement.bodyfat_percentage}, date=${measurementDate}`);
 
           if (measurement.weight_kg) {
             metricsToInsert.push({
@@ -236,7 +240,7 @@ async function processTerraWebhookData(
               category: 'body',
               value: measurement.weight_kg,
               measurement_date: measurementDate,
-              source: provider,
+              source: provider.toLowerCase(),
               external_id: `${uniqueId}_weight`,
               user_id,
             });
@@ -248,7 +252,7 @@ async function processTerraWebhookData(
               category: 'body',
               value: measurement.bodyfat_percentage,
               measurement_date: measurementDate,
-              source: provider,
+              source: provider.toLowerCase(),
               external_id: `${uniqueId}_bodyfat`,
               user_id,
             });
@@ -260,7 +264,7 @@ async function processTerraWebhookData(
               category: 'body',
               value: measurement.muscle_mass_g / 1000, // Convert to kg
               measurement_date: measurementDate,
-              source: provider,
+              source: provider.toLowerCase(),
               external_id: `${uniqueId}_muscle`,
               user_id,
             });

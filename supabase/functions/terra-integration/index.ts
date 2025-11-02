@@ -773,6 +773,25 @@ async function processTerraData(supabase: any, payload: any) {
                       stats.errors.push(`Weight metric: ${weightError.message}`);
                     }
                   }
+                  
+                  // CRITICAL: Also insert into unified_metrics
+                  await supabase.from('unified_metrics').upsert({
+                    user_id: userId,
+                    metric_name: 'Weight',
+                    metric_category: 'body',
+                    value: measurement.weight_kg,
+                    unit: 'kg',
+                    measurement_date: measurementDate,
+                    source: source,
+                    provider: provider,
+                    external_id: `terra_${provider}_weight_${measurementDate}`,
+                    priority: source === 'withings' ? 4 : 7,
+                    confidence_score: 50,
+                  }, {
+                    onConflict: 'user_id,metric_name,measurement_date,source',
+                  });
+                  
+                  console.log(`✅ Inserted Weight into unified_metrics: ${measurement.weight_kg}kg on ${measurementDate}`);
                 }
                 
                 // Save Body Fat
@@ -795,6 +814,25 @@ async function processTerraData(supabase: any, payload: any) {
                       onConflict: 'user_id,metric_id,measurement_date,external_id',
                     });
                   }
+                  
+                  // CRITICAL: Also insert into unified_metrics
+                  await supabase.from('unified_metrics').upsert({
+                    user_id: userId,
+                    metric_name: 'Body Fat Percentage',
+                    metric_category: 'body',
+                    value: measurement.bodyfat_percentage,
+                    unit: '%',
+                    measurement_date: measurementDate,
+                    source: source,
+                    provider: provider,
+                    external_id: `terra_${provider}_bodyfat_${measurementDate}`,
+                    priority: source === 'withings' ? 4 : 7,
+                    confidence_score: 50,
+                  }, {
+                    onConflict: 'user_id,metric_name,measurement_date,source',
+                  });
+                  
+                  console.log(`✅ Inserted Body Fat Percentage into unified_metrics: ${measurement.bodyfat_percentage}% on ${measurementDate}`);
                 }
               }
             }

@@ -84,6 +84,9 @@ verify_jwt = false
 [functions.backfill-unified-metrics]
 verify_jwt = true
 
+[functions.backfill-withings-bodyfat]
+verify_jwt = true
+
 [functions.reprocess-webhook]
 verify_jwt = false
 
