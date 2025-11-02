@@ -25,14 +25,32 @@ export function useForceTerraSync() {
         description: 'Данные обновятся в течение нескольких минут',
       });
       
-      // Invalidate relevant queries
+      // Invalidate ALL relevant queries
       queryClient.invalidateQueries({ queryKey: ['widgets'] });
+      queryClient.invalidateQueries({ queryKey: ['metrics'] });
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['latest-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['terra-diagnostics'] });
       queryClient.invalidateQueries({ queryKey: ['withings-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['withings-debug-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['withings-debug-webhooks'] });
       queryClient.invalidateQueries({ queryKey: ['body-metrics-withings'] });
+      
+      // Force immediate refetch after webhook processing delay
+      setTimeout(() => {
+        queryClient.refetchQueries({ 
+          queryKey: ['widgets'],
+          type: 'active' 
+        });
+        queryClient.refetchQueries({ 
+          queryKey: ['metrics'],
+          type: 'active' 
+        });
+        queryClient.refetchQueries({ 
+          queryKey: ['unified-metrics'],
+          type: 'active' 
+        });
+      }, 2000); // 2 секунды для обработки вебхука
     },
     onError: (error: Error) => {
       toast.error('Ошибка синхронизации', {

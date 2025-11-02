@@ -549,10 +549,23 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   logger.debug('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
   const getDataAgeMessage = () => {
-    if (isToday) return 'Данные за сегодня';
-    if (isYesterday) return 'Данные за вчера';
-    if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
-    return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
+    if (!data?.measurement_date) return 'Нет данных';
+    
+    const measurementDate = parseISO(data.measurement_date);
+    const now = new Date();
+    const diffMinutes = Math.floor((now.getTime() - measurementDate.getTime()) / 60000);
+    
+    if (diffMinutes < 60) {
+      return `${diffMinutes}м назад`;
+    } else if (diffMinutes < 1440) {
+      return `${Math.floor(diffMinutes / 60)}ч назад`;
+    } else if (isToday) {
+      return 'Данные за сегодня';
+    } else if (isYesterday) {
+      return 'Данные за вчера';
+    } else {
+      return format(measurementDate, 'd MMM', { locale: ru });
+    }
   };
   
   const getFreshnessIndicator = () => {

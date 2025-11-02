@@ -337,7 +337,7 @@ async function processTerraWebhookData(
       }
 
       // Sleep Efficiency
-      if (durations?.sleep_efficiency !== undefined) {
+      if (durations?.sleep_efficiency !== undefined && durations.sleep_efficiency > 0) {
         const efficiency = durations.sleep_efficiency < 1 
           ? Math.round(durations.sleep_efficiency * 10000) / 100  // 0.9104 -> 91.04%
           : Math.round(durations.sleep_efficiency * 100) / 100;
@@ -351,6 +351,29 @@ async function processTerraWebhookData(
           external_id: `terra_${provider}_sleep_efficiency_${date}`,
           user_id,
         });
+      } else if (provider === 'ULTRAHUMAN') {
+        // Для Ultrahuman рассчитываем Sleep Efficiency на основе других полей
+        const totalSleep = (durations?.asleep?.duration_deep_sleep_state_seconds || 0) +
+                          (durations?.asleep?.duration_light_sleep_state_seconds || 0) +
+                          (durations?.asleep?.duration_REM_sleep_state_seconds || 0);
+        
+        const timeInBed = durations?.time_in_bed_seconds || 
+                         durations?.asleep?.time_in_bed_seconds ||
+                         (totalSleep + (durations?.awake?.duration_awake_state_seconds || 0));
+        
+        if (totalSleep > 0 && timeInBed > 0 && totalSleep <= timeInBed) {
+          const calculatedEfficiency = Math.round((totalSleep / timeInBed) * 10000) / 100;
+          
+          metricsToInsert.push({
+            metric_name: 'Sleep Efficiency',
+            category: 'sleep',
+            value: Math.min(calculatedEfficiency, 100), // Cap at 100%
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_sleep_efficiency_calc_${date}`,
+            user_id,
+          });
+        }
       }
     }
   }
@@ -541,7 +564,7 @@ async function processTerraWebhookData(
           }
 
           // Sleep Efficiency
-          if (durations?.sleep_efficiency !== undefined) {
+          if (durations?.sleep_efficiency !== undefined && durations.sleep_efficiency > 0) {
             const efficiency = durations.sleep_efficiency < 1 
               ? Math.round(durations.sleep_efficiency * 10000) / 100
               : Math.round(durations.sleep_efficiency * 100) / 100;
@@ -555,6 +578,29 @@ async function processTerraWebhookData(
               external_id: `terra_${provider}_daily_sleep_efficiency_${date}`,
               user_id,
             });
+          } else if (provider === 'ULTRAHUMAN') {
+            // Для Ultrahuman рассчитываем Sleep Efficiency
+            const totalSleep = (durations?.asleep?.duration_deep_sleep_state_seconds || 0) +
+                              (durations?.asleep?.duration_light_sleep_state_seconds || 0) +
+                              (durations?.asleep?.duration_REM_sleep_state_seconds || 0);
+            
+            const timeInBed = durations?.time_in_bed_seconds || 
+                             durations?.asleep?.time_in_bed_seconds ||
+                             (totalSleep + (durations?.awake?.duration_awake_state_seconds || 0));
+            
+            if (totalSleep > 0 && timeInBed > 0 && totalSleep <= timeInBed) {
+              const calculatedEfficiency = Math.round((totalSleep / timeInBed) * 10000) / 100;
+              
+              metricsToInsert.push({
+                metric_name: 'Sleep Efficiency',
+                category: 'sleep',
+                value: Math.min(calculatedEfficiency, 100),
+                measurement_date: date,
+                source: provider,
+                external_id: `terra_${provider}_daily_sleep_efficiency_calc_${date}`,
+                user_id,
+              });
+            }
           }
         }
       }

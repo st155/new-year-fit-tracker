@@ -935,28 +935,40 @@ All colors MUST be HSL.
     opacity: 0.95 !important;
   }
 
-  /* Enhance area charts */
-  .dark .tremor-AreaChart-area {
-    filter: brightness(1.2) !important;
-    fill-opacity: 0.4 !important;
-  }
+.modern-habit-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border) / 0.5);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+}
 
-  /* Make chart lines more visible */
-  .dark .tremor-AreaChart-line {
-    stroke-width: 3px !important;
-    filter: brightness(1.5) !important;
-  }
+.modern-habit-card:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 0 20px 60px -15px hsl(var(--primary) / 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
 
-  /* Improve chart text visibility */
-  .dark .tremor-Chart-text,
-  .dark .recharts-text {
-    fill: rgba(255, 255, 255, 0.7) !important;
-  }
+/* Animated gradient overlay on hover */
+.modern-habit-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: radial-gradient(
+    circle at 50% 50%,
+    hsl(var(--primary) / 0.15) 0%,
+    transparent 50%
+  );
+}
 
-  /* Axis lines */
-  .dark .tremor-Chart-axis {
-    stroke: rgba(255, 255, 255, 0.2) !important;
-  }
+.modern-habit-card:hover::before {
+  opacity: 1;
+}
+
+/* Dark mode chart fixes */
 
   /* Special styling for Sleep Stages categories */
   .dark [data-name="Deep Sleep"] {

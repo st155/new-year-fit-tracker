@@ -89,12 +89,12 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           {/* Header */}
           <div className="flex items-center gap-3">
             <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center ring-2",
+              "w-14 h-14 rounded-2xl flex items-center justify-center ring-2 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl",
               status.isFasting 
-                ? "bg-gradient-to-br from-emerald-500/20 to-green-500/30 ring-emerald-500/30"
-                : "bg-gradient-to-br from-orange-500/20 to-yellow-500/30 ring-orange-500/30"
+                ? "bg-gradient-to-br from-emerald-500/30 to-green-500/40 ring-emerald-500/40 group-hover:ring-emerald-400 group-hover:shadow-emerald-500/50"
+                : "bg-gradient-to-br from-orange-500/30 to-yellow-500/40 ring-orange-500/40 group-hover:ring-orange-400 group-hover:shadow-orange-500/50"
             )}>
-              <Icon className="h-6 w-6" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
+              <Icon className="h-7 w-7" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
             </div>
             <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
           </div>
@@ -102,7 +102,7 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           {/* Big Timer */}
           <div className="text-center py-3">
             <div className={cn(
-              "text-5xl font-black bg-gradient-to-r bg-clip-text text-transparent",
+              "text-6xl md:text-7xl font-black bg-gradient-to-r bg-clip-text text-transparent leading-none tracking-tight",
               status.isFasting 
                 ? "from-emerald-400 via-green-400 to-emerald-500"
                 : "from-orange-400 via-yellow-400 to-orange-500"
@@ -118,7 +118,7 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           {/* Progress Bar */}
           <Progress 
             value={progress} 
-            className="h-3"
+            className="h-4 group-hover:h-5 transition-all duration-300"
             variant={status.isFasting ? "success" : "warning"}
           />
 
@@ -146,15 +146,15 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
         <div className="space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/20 to-pink-500/30 flex items-center justify-center ring-2 ring-rose-500/30">
-              <Icon className="h-6 w-6" style={{ color: neonColor }} />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/30 to-pink-500/40 flex items-center justify-center ring-2 ring-rose-500/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-rose-400 group-hover:shadow-2xl group-hover:shadow-rose-500/50">
+              <Icon className="h-7 w-7" style={{ color: neonColor }} />
             </div>
             <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
           </div>
 
           {/* Big Timer */}
           <div className="text-center py-3">
-            <div className="text-5xl font-black bg-gradient-to-r from-rose-400 via-pink-400 to-rose-500 bg-clip-text text-transparent leading-tight">
+            <div className="text-6xl md:text-7xl font-black bg-gradient-to-r from-rose-400 via-pink-400 to-rose-500 bg-clip-text text-transparent leading-none tracking-tight">
               {elapsedTime.days > 0 && `${elapsedTime.days}д `}
               {elapsedTime.hours}ч
             </div>
@@ -166,7 +166,7 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           {/* Progress Bar */}
           <Progress 
             value={progressPercent} 
-            className="h-2.5"
+            className="h-4 group-hover:h-5 transition-all duration-300"
             variant="danger"
           />
 
@@ -203,8 +203,8 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/30 flex items-center justify-center ring-2 ring-primary/30">
-            <Icon className="h-6 w-6" style={{ color: neonColor }} />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-primary/60 group-hover:shadow-2xl group-hover:shadow-primary/50">
+            <Icon className="h-7 w-7" style={{ color: neonColor }} />
           </div>
           <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
         </div>
@@ -226,7 +226,7 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
         ) : habit.habit_type === "numeric_counter" && targetValue ? (
           <div className="space-y-3 py-2">
             <div className="text-center">
-              <div className="text-5xl font-black bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
+              <div className="text-6xl md:text-7xl font-black bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent leading-none tracking-tight">
                 {currentValue}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
@@ -235,7 +235,7 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
             </div>
             <Progress 
               value={progress} 
-              className="h-3"
+              className="h-4 group-hover:h-5 transition-all duration-300"
               autoColor
             />
             <div className="text-center text-xs text-muted-foreground">

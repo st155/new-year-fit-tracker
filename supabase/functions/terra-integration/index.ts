@@ -913,7 +913,7 @@ async function processTerraData(supabase: any, payload: any) {
                               sleep.sleep_efficiency_percentage ?? 
                               sleep.sleep?.efficiency_percentage;
                               
-          if (typeof sleepEffObj === 'number') {
+          if (typeof sleepEffObj === 'number' && sleepEffObj > 0) {
             // Convert to percentage if needed (0.95 -> 95%)
             const sleepEff = sleepEffObj < 1 ? sleepEffObj * 100 : sleepEffObj;
             
@@ -941,6 +941,48 @@ async function processTerraData(supabase: any, payload: any) {
                 stats.insertedCounts.sleep++;
                 if (stats.sampleRecords.length < 5) {
                   stats.sampleRecords.push({ type: 'sleep_efficiency', date: measurementDate, efficiency: sleepEff });
+                }
+              }
+            }
+          } else if (provider === 'ULTRAHUMAN') {
+            // Для Ultrahuman рассчитываем Sleep Efficiency на основе других полей
+            const durations = sleep.sleep_durations_data;
+            const totalSleep = (durations?.asleep?.duration_deep_sleep_state_seconds || 0) +
+                              (durations?.asleep?.duration_light_sleep_state_seconds || 0) +
+                              (durations?.asleep?.duration_REM_sleep_state_seconds || 0);
+            
+            const timeInBed = durations?.time_in_bed_seconds || 
+                             durations?.asleep?.time_in_bed_seconds ||
+                             (totalSleep + (durations?.awake?.duration_awake_state_seconds || 0));
+            
+            if (totalSleep > 0 && timeInBed > 0 && totalSleep <= timeInBed) {
+              const calculatedEfficiency = Math.round((totalSleep / timeInBed) * 10000) / 100;
+              
+              const { data: effMetricId } = await supabase.rpc('create_or_get_metric', {
+                p_user_id: userId,
+                p_metric_name: 'Sleep Efficiency',
+                p_metric_category: 'sleep',
+                p_unit: '%',
+                p_source: provider.toLowerCase(),
+              });
+              
+              if (effMetricId) {
+                const { error: effError } = await supabase.from('metric_values').upsert({
+                  user_id: userId,
+                  metric_id: effMetricId,
+                  value: Math.min(calculatedEfficiency, 100),
+                  measurement_date: measurementDate,
+                  source_data: sleep,
+                  external_id: `terra_${provider}_sleepeff_calc_${measurementDate}`,
+                }, {
+                  onConflict: 'user_id,metric_id,measurement_date,external_id',
+                });
+                
+                if (!effError) {
+                  stats.insertedCounts.sleep++;
+                  if (stats.sampleRecords.length < 5) {
+                    stats.sampleRecords.push({ type: 'sleep_efficiency_calc', date: measurementDate, efficiency: calculatedEfficiency });
+                  }
                 }
               }
             }
