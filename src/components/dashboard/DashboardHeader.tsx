@@ -39,18 +39,7 @@ export function DashboardHeader() {
   const { insights, isLoading } = useSmartInsights({ maxInsights: 10 });
   const { preferences, muteInsight } = useInsightPersonalization();
   
-  // Show skeleton while loading
-  if (isLoading) {
-    return (
-      <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3">
-        <div className="flex items-center gap-3 px-4">
-          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-          <span className="text-sm text-muted-foreground">Загрузка инсайтов...</span>
-        </div>
-      </div>
-    );
-  }
-  
+  // All hooks must be called before any conditional returns
   const [selectedInsight, setSelectedInsight] = useState<SmartInsight | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(0);
@@ -89,6 +78,18 @@ export function DashboardHeader() {
     
     return () => clearInterval(interval);
   }, [insights, isPaused, preferences.refreshInterval]);
+  
+  // Show skeleton while loading (after all hooks)
+  if (isLoading) {
+    return (
+      <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3">
+        <div className="flex items-center gap-3 px-4">
+          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+          <span className="text-sm text-muted-foreground">Загрузка инсайтов...</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleInsightClick = (insight: SmartInsight) => {
     if (insight.action.type === 'modal') {
