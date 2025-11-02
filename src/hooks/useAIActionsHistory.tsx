@@ -12,6 +12,7 @@ export interface AIActionLog {
   success: boolean;
   error_message: string | null;
   created_at: string;
+  client_name?: string;
 }
 
 export const useAIActionsHistory = (userId: string | undefined, limit: number = 50) => {
@@ -25,13 +26,30 @@ export const useAIActionsHistory = (userId: string | undefined, limit: number = 
     try {
       const { data, error } = await supabase
         .from('ai_action_logs')
-        .select('*')
+        .select(`
+          *,
+          client_aliases!left(alias_name)
+        `)
         .eq('trainer_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      setActions((data || []) as AIActionLog[]);
+      
+      // Map to add client_name from aliases
+      const actionsWithClientNames = (data || []).map((action: any) => {
+        const aliases = action.client_aliases;
+        const clientName = Array.isArray(aliases) && aliases.length > 0 
+          ? aliases[0].alias_name 
+          : null;
+        
+        return {
+          ...action,
+          client_name: clientName
+        };
+      });
+      
+      setActions(actionsWithClientNames as AIActionLog[]);
     } catch (error) {
       console.error('Error loading action history:', error);
       toast({

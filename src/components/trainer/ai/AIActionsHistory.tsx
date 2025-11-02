@@ -11,7 +11,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,24 +42,66 @@ const getActionTypeLabel = (actionType: string) => {
   return actionType;
 };
 
+const goalTypeLabels: Record<string, string> = {
+  'body_fat': 'Процент жира',
+  'vo2max': 'VO2max',
+  'hanging_leg_raises': 'Подъем ног в висе',
+  'pushups': 'Отжимания',
+  'plank': 'Планка',
+  'weight': 'Вес',
+  'muscle_mass': 'Мышечная масса',
+  'steps': 'Шаги',
+  'water_intake': 'Потребление воды',
+  'sleep_hours': 'Часы сна',
+  'workouts': 'Тренировки',
+  'calories_burned': 'Сожженные калории'
+};
+
 const getActionDescription = (action: any) => {
   const details = action.action_details || {};
   const type = action.action_type.toLowerCase();
   
-  if (type.includes('goal')) {
-    return `${details.metric_name || 'Метрика'}: ${details.target_value || ''}${details.unit || ''}`;
+  if (type.includes('create_goal')) {
+    const goalName = details.goal_name || goalTypeLabels[details.goal_type] || 'Цель';
+    const targetValue = details.target_value;
+    const targetUnit = details.target_unit || '';
+    return `Создана цель "${goalName}": достичь ${targetValue}${targetUnit}`;
   }
   
-  if (type.includes('measurement')) {
-    return `${details.metric_name || 'Метрика'}: ${details.value || ''}${details.unit || ''}`;
+  if (type.includes('update_goal')) {
+    const goalName = details.goal_name || goalTypeLabels[details.goal_type] || 'Цель';
+    if (details.target_value) {
+      return `Обновлена цель "${goalName}": новое значение ${details.target_value}${details.target_unit || ''}`;
+    }
+    return `Обновлена цель "${goalName}"`;
   }
   
-  if (type.includes('task')) {
-    return details.title || details.description || 'Новая задача';
+  if (type.includes('delete_goal')) {
+    const goalName = details.goal_name || 'Цель';
+    return `Удалена цель "${goalName}"`;
   }
   
-  if (type.includes('training_plan') || type.includes('plan')) {
-    return details.plan_name || details.name || 'Новый план';
+  if (type.includes('add_measurement')) {
+    const metricName = details.metric_name || details.goal_name || 'Показатель';
+    const value = details.value;
+    const unit = details.unit || '';
+    return `Добавлено измерение "${metricName}": ${value}${unit}`;
+  }
+  
+  if (type.includes('create_task')) {
+    return `Создана задача: ${details.title || details.description || 'Новая задача'}`;
+  }
+  
+  if (type.includes('update_task')) {
+    return `Обновлена задача: ${details.title || details.description || 'Задача'}`;
+  }
+  
+  if (type.includes('create_training_plan')) {
+    return `Создан план тренировок: ${details.plan_name || details.name || 'Новый план'}`;
+  }
+  
+  if (type.includes('assign') && type.includes('plan')) {
+    return `Назначен план: ${details.plan_name || details.name || 'План тренировок'}`;
   }
   
   return JSON.stringify(details).substring(0, 100);
@@ -130,6 +173,13 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                         {getActionTypeLabel(action.action_type)}
                       </Badge>
                       
+                      {action.client_name && (
+                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {action.client_name}
+                        </Badge>
+                      )}
+                      
                       <div className="flex items-center gap-1.5">
                         {action.success ? (
                           <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
@@ -171,7 +221,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm mb-2">
+                    <p className="text-sm mb-2 font-medium">
                       {getActionDescription(action)}
                     </p>
 
@@ -185,11 +235,16 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                     {/* Details */}
                     <details className="text-xs mt-2">
                       <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                        Детали
+                        Технические детали
                       </summary>
-                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto max-h-40">
-                        {JSON.stringify(action.action_details, null, 2)}
-                      </pre>
+                      <div className="mt-2 p-3 bg-muted rounded text-xs space-y-1">
+                        {Object.entries(action.action_details || {}).map(([key, value]) => (
+                          <div key={key} className="flex gap-2">
+                            <span className="text-muted-foreground font-mono min-w-[120px]">{key}:</span>
+                            <span className="font-mono break-all">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
                     </details>
                   </div>
                 </div>
