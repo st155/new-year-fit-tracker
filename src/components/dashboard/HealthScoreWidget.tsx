@@ -33,7 +33,7 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
   const { recalculate, isRecalculating } = useConfidenceRecalculation();
   const [modalZone, setModalZone] = useState<{ label: string; metrics: QualitySummaryMetric[] } | null>(null);
   
-  if (isLoading) return <Skeleton className="h-[200px] w-full rounded-lg" />;
+  if (isLoading) return <Skeleton className="h-[24px] w-full rounded-lg" />;
   if (!metricsByQuality) return null;
 
   const totalMetrics = 
@@ -126,158 +126,91 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
   const poorPercent = (metricsByQuality.poor.length / totalMetrics) * 100;
 
   return (
-    <Card className="p-4 space-y-3">
-      {/* Заголовок с inline Alert */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">Health Score</span>
-          {metricsByQuality.poor.length > 2 && (
-            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-              {metricsByQuality.poor.length} критич.
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Основной балл с круговым прогрессом */}
-      <div className="flex items-center gap-3">
-        {/* Круговой прогресс с градиентом */}
-        <div className="relative w-16 h-16 flex-shrink-0">
-          <svg className="w-full h-full -rotate-90">
-            <defs>
-              <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor={gradientColors.from} />
-                <stop offset="100%" stopColor={gradientColors.to} />
-              </linearGradient>
-            </defs>
-            {/* Фоновый круг */}
-            <circle 
-              cx="32" 
-              cy="32" 
-              r="26"
-              className="stroke-muted/20"
-              strokeWidth="6"
-              fill="none"
-            />
-            {/* Прогресс круг */}
-            <circle 
-              cx="32" 
-              cy="32" 
-              r="26"
-              stroke="url(#healthGradient)"
-              strokeWidth="6"
-              fill="none"
-              strokeDasharray={`${(averageConfidence / 100) * 163.36} 163.36`}
-              strokeLinecap="round"
-              className="transition-all duration-500 ease-out"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span 
-              className="text-xl font-bold" 
-              style={{ color: qualityColor }}
-              title={`${Math.round(averageConfidence)}% • ${getHealthStatusLabel(averageConfidence)}\n\nОтлично: ${metricsByQuality.excellent.length} (${Math.round(excellentPercent)}%)\nХорошо: ${metricsByQuality.good.length} (${Math.round(goodPercent)}%)\nСредне: ${metricsByQuality.fair.length} (${Math.round(fairPercent)}%)\nПлохо: ${metricsByQuality.poor.length} (${Math.round(poorPercent)}%)`}
-            >
-              {Math.round(averageConfidence)}
-            </span>
-          </div>
-        </div>
+    <Card className="p-2">
+      <div className="flex items-center gap-2">
+        {/* Icon + Title */}
+        <Activity className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+        <span className="text-xs font-semibold whitespace-nowrap">Health Score:</span>
         
-        {/* Описание */}
-        <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold flex items-center gap-1.5">
-            <span>{getHealthStatusIcon(averageConfidence)}</span>
-            <span>{getHealthStatusLabel(averageConfidence)}</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-0.5">
-            на основе {totalMetrics} {totalMetrics === 1 ? 'показателя' : 'показателей'}
-          </div>
-        </div>
-        
-        {/* Кнопка обновления */}
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          className="h-8 w-8 flex-shrink-0"
-          onClick={handleRefresh}
-          disabled={isRecalculating}
+        {/* Score with color */}
+        <span 
+          className="text-sm font-bold tabular-nums"
+          style={{ color: qualityColor }}
+          title={`${Math.round(averageConfidence)}% • ${getHealthStatusLabel(averageConfidence)}`}
         >
-          <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
-      {/* Цветная сегментированная полоса */}
-      <div className="space-y-2">
-        {/* Полоса с процентами - упрощенная без Tooltip */}
-        <div className="flex h-6 rounded-full overflow-hidden bg-muted/30 gap-0.5">
+          {Math.round(averageConfidence)}
+        </span>
+        
+        {/* Status emoji */}
+        <span className="text-xs">{getHealthStatusIcon(averageConfidence)}</span>
+        
+        {/* Critical badge if needed */}
+        {metricsByQuality.poor.length > 2 && (
+          <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">
+            {metricsByQuality.poor.length}
+          </Badge>
+        )}
+        
+        {/* Segmented bar */}
+        <div 
+          className="flex-1 flex h-2 rounded-full overflow-hidden bg-muted/30 gap-[0.5px] cursor-pointer min-w-[100px]"
+          onClick={() => handleZoneClick('Все')}
+          title="Клик для детальной статистики"
+        >
           {metricsByQuality.excellent.length > 0 && (
             <div 
-              className="bg-success transition-all duration-500 hover:opacity-80 cursor-pointer first:rounded-l-full"
+              className="bg-success transition-all duration-500 hover:opacity-80"
               style={{ width: `${excellentPercent}%` }}
-              onClick={() => handleZoneClick('Отлично')}
-              title={`Отлично: ${metricsByQuality.excellent.length} показателей (${Math.round(excellentPercent)}%)`}
+              title={`Отлично: ${metricsByQuality.excellent.length} (${Math.round(excellentPercent)}%)`}
             />
           )}
           {metricsByQuality.good.length > 0 && (
             <div 
-              className="bg-primary transition-all duration-500 hover:opacity-80 cursor-pointer"
+              className="bg-primary transition-all duration-500 hover:opacity-80"
               style={{ width: `${goodPercent}%` }}
-              onClick={() => handleZoneClick('Хорошо')}
-              title={`Хорошо: ${metricsByQuality.good.length} показателей (${Math.round(goodPercent)}%)`}
+              title={`Хорошо: ${metricsByQuality.good.length} (${Math.round(goodPercent)}%)`}
             />
           )}
           {metricsByQuality.fair.length > 0 && (
             <div 
-              className="bg-warning transition-all duration-500 hover:opacity-80 cursor-pointer"
+              className="bg-warning transition-all duration-500 hover:opacity-80"
               style={{ width: `${fairPercent}%` }}
-              onClick={() => handleZoneClick('Средне')}
-              title={`Средне: ${metricsByQuality.fair.length} показателей (${Math.round(fairPercent)}%)`}
+              title={`Средне: ${metricsByQuality.fair.length} (${Math.round(fairPercent)}%)`}
             />
           )}
           {metricsByQuality.poor.length > 0 && (
             <div 
-              className="bg-destructive transition-all duration-500 hover:opacity-80 cursor-pointer last:rounded-r-full"
+              className="bg-destructive transition-all duration-500 hover:opacity-80"
               style={{ width: `${poorPercent}%` }}
-              onClick={() => handleZoneClick('Плохо')}
-              title={`Плохо: ${metricsByQuality.poor.length} показателей (${Math.round(poorPercent)}%)`}
+              title={`Плохо: ${metricsByQuality.poor.length} (${Math.round(poorPercent)}%)`}
             />
           )}
         </div>
         
-        {/* Легенда - компактная в одну линию */}
-        <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-success"></div>
-            <span className="font-mono">{metricsByQuality.excellent.length}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <span className="font-mono">{metricsByQuality.good.length}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-warning"></div>
-            <span className="font-mono">{metricsByQuality.fair.length}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-destructive"></div>
-            <span className="font-mono">{metricsByQuality.poor.length}</span>
-          </div>
+        {/* Inline legend - numbers only */}
+        <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-mono whitespace-nowrap">
+          <span title="Отлично">{metricsByQuality.excellent.length}</span>
+          <span>·</span>
+          <span title="Хорошо">{metricsByQuality.good.length}</span>
+          <span>·</span>
+          <span title="Средне">{metricsByQuality.fair.length}</span>
+          <span>·</span>
+          <span title="Плохо">{metricsByQuality.poor.length}</span>
         </div>
+        
+        {/* Refresh button */}
+        <Button 
+          size="icon" 
+          variant="ghost" 
+          className="h-5 w-5 flex-shrink-0"
+          onClick={handleRefresh}
+          disabled={isRecalculating}
+          title="Обновить данные"
+        >
+          <RefreshCw className={`h-2.5 w-2.5 ${isRecalculating ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
 
-      {/* Кнопка детального просмотра - компактная */}
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="w-full text-xs h-7"
-        onClick={() => handleZoneClick('Все')}
-      >
-        <BarChart3 className="h-3 w-3 mr-1.5" />
-        Детальная статистика
-      </Button>
-
-      {/* Модалка с метриками */}
       <QualityZoneModal
         isOpen={modalZone !== null}
         onClose={() => setModalZone(null)}
