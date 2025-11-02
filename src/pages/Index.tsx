@@ -100,6 +100,15 @@ const Index = () => {
   // Real-time subscription for metrics updates
   useMetricsRealtime(!!user?.id);
   
+  // 🔄 Force invalidate queries on mount for fresh data
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🔄 [Index] Force invalidating queries for fresh data');
+      queryClient.invalidateQueries({ queryKey: ['metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['widgets'] });
+    }
+  }, [user?.id, queryClient]);
+  
   // 🔥 Force rendering after 10 seconds if stuck loading
   useEffect(() => {
     const timeout = setTimeout(() => {

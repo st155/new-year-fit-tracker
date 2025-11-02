@@ -540,6 +540,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     const dataDay = startOf(new Date(data.measurement_date));
     return Math.max(0, Math.floor((today.getTime() - dataDay.getTime()) / 86400000));
   })();
+  const isToday = daysDiff === 0;
+  const isYesterday = daysDiff === 1;
   const isDataWarning = daysDiff === 2; // Желтый: 2 дня
   const isDataStale = daysDiff >= 3; // Красный: 3+ дней
   const isWhoopSource = source.toLowerCase() === 'whoop';
@@ -547,10 +549,21 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   logger.debug('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
   const getDataAgeMessage = () => {
-    if (daysDiff <= 1) return 'Данные актуальны';
+    if (isToday) return 'Данные за сегодня';
+    if (isYesterday) return 'Данные за вчера';
     if (daysDiff === 2) return 'Данные не обновлялись 2 дня';
     return `Данные не обновлялись ${daysDiff} ${daysDiff === 1 ? 'день' : daysDiff < 5 ? 'дня' : 'дней'}`;
   };
+  
+  const getFreshnessIndicator = () => {
+    if (isToday) return { label: '🟢 Сегодня', variant: 'success' as const, tooltip: 'Данные за сегодня' };
+    if (isYesterday) return { label: '🟡 Вчера', variant: 'outline' as const, tooltip: 'Данные за вчера - сегодняшние еще обрабатываются' };
+    if (isDataWarning) return { label: '⏱️ 2д', variant: 'outline' as const, tooltip: 'Данные не обновлялись 2 дня' };
+    if (isDataStale) return { label: '⚠️ Устарело', variant: 'destructive' as const, tooltip: `Данные не обновлялись ${daysDiff} дней` };
+    return null;
+  };
+  
+  const freshnessIndicator = getFreshnessIndicator();
 
   return (
     <Card 
@@ -589,25 +602,20 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           {/* Conflict Warning Badge */}
           <ConflictWarningBadge metricName={metricName} />
           
-          {/* Freshness Badge */}
-          {(isDataWarning || isDataStale) && isWhoopSource && (
+          {/* Freshness Badge - показываем для всех источников */}
+          {freshnessIndicator && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge 
-                    variant={isDataStale ? "destructive" : "outline"} 
+                    variant={freshnessIndicator.variant} 
                     className="text-xs"
-                    style={isDataWarning ? { 
-                      backgroundColor: '#fef3c7', 
-                      color: '#854d0e',
-                      borderColor: '#eab308'
-                    } : undefined}
                   >
-                    {isDataStale ? '⚠️ Устарело' : '⏱️ Не обновлялось'}
+                    {freshnessIndicator.label}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{getDataAgeMessage()}</p>
+                  <p>{freshnessIndicator.tooltip}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

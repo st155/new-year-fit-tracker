@@ -99,7 +99,7 @@ export function useUnifiedMetricsQuery(
       }
     },
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds - more aggressive refresh for real-time data
     gcTime: 5 * 60 * 1000,
   });
 }
