@@ -60,7 +60,7 @@ export function generateTrendInsights(context: InsightGeneratorContext): SmartIn
   
   keyMetrics.forEach(metricName => {
     const history = metricsData.history.filter((m: any) => m.metric_name === metricName);
-    if (history.length < 7) return; // Need at least a week of data
+    if (history.length < 5) return; // Need at least 5 days of data
 
     // Calculate trend (last 3 days vs previous 4 days)
     const recent = history.slice(0, 3).reduce((sum: number, m: any) => sum + m.value, 0) / 3;

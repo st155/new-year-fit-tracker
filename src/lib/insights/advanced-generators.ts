@@ -31,7 +31,7 @@ export function generateCorrelationInsights(
   context: InsightGeneratorContext
 ): SmartInsight[] {
   const { metricsData } = context;
-  if (!metricsData?.history || metricsData.history.length < 30) return [];
+  if (!metricsData?.history || metricsData.history.length < 7) return [];
 
   const insights: SmartInsight[] = [];
 
@@ -51,10 +51,10 @@ export function generateCorrelationInsights(
   });
 
   // Sleep vs Recovery correlation
-  if (sleepValues.length >= 7 && recoveryValues.length >= 7) {
+  if (sleepValues.length >= 5 && recoveryValues.length >= 5) {
     const correlation = calculateCorrelation(sleepValues, recoveryValues);
 
-    if (Math.abs(correlation) > 0.5) {
+    if (Math.abs(correlation) > 0.4) {
       const avgSleep = sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length;
       const goodSleep = sleepValues.filter((v) => v > avgSleep);
       const goodSleepIndices = sleepValues
@@ -107,7 +107,7 @@ export function generateAnomalyInsights(
     .map((m: any) => m.value)
     .slice(0, 30);
 
-  if (stepsHistory.length >= 7 && todayMetrics.steps) {
+  if (stepsHistory.length >= 5 && todayMetrics.steps) {
     const stats = calculateStats(stepsHistory);
     const zScore = calculateZScore(todayMetrics.steps, stats.mean, stats.std);
 
@@ -134,7 +134,7 @@ export function generateAnomalyInsights(
     .map((m: any) => m.value)
     .slice(0, 30);
 
-  if (sleepHistory.length >= 7 && todayMetrics.sleep) {
+  if (sleepHistory.length >= 5 && todayMetrics.sleep) {
     const stats = calculateStats(sleepHistory);
     const zScore = calculateZScore(todayMetrics.sleep, stats.mean, stats.std);
 
@@ -290,7 +290,7 @@ export function generateTemporalInsights(
   context: InsightGeneratorContext
 ): SmartInsight[] {
   const { metricsData } = context;
-  if (!metricsData?.history || metricsData.history.length < 30) return [];
+  if (!metricsData?.history || metricsData.history.length < 7) return [];
 
   const insights: SmartInsight[] = [];
 
