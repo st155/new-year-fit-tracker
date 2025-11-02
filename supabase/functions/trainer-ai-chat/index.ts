@@ -1900,7 +1900,10 @@ IMPORTANT INSTRUCTIONS:
             }
 
             // Final update to assistant message
-            await supabaseClient
+            console.log(`📝 Updating assistant message ${assistantMessageId} with pendingActionId: ${pendingActionId}`);
+            console.log(`   Content length: ${accumulatedContent.length}, Actions: ${structuredActions.length}`);
+            
+            let { data: updateData, error: updateError } = await supabaseClient
               .from('ai_messages')
               .update({
                 content: accumulatedContent,
@@ -1912,7 +1915,35 @@ IMPORTANT INSTRUCTIONS:
                   optimisticId: optimisticAssistantId
                 }
               })
-              .eq('id', assistantMessageId);
+              .eq('id', assistantMessageId)
+              .select();
+
+            // Fallback: try updating by optimisticId if direct update failed
+            if (updateError || !updateData || updateData.length === 0) {
+              console.warn(`⚠️ Update by ID failed, trying by optimisticId: ${optimisticAssistantId}`, updateError);
+              const fallbackUpdate = await supabaseClient
+                .from('ai_messages')
+                .update({
+                  content: accumulatedContent,
+                  metadata: {
+                    isStreaming: false,
+                    isPlan: structuredActions.length > 0,
+                    pendingActionId,
+                    suggestedActions: structuredActions,
+                    optimisticId: optimisticAssistantId
+                  }
+                })
+                .eq('metadata->>optimisticId', optimisticAssistantId)
+                .select();
+              
+              if (fallbackUpdate.error) {
+                console.error('❌ Fallback update also failed:', fallbackUpdate.error);
+              } else {
+                console.log('✅ Successfully updated via fallback (optimisticId):', fallbackUpdate.data);
+              }
+            } else {
+              console.log('✅ Successfully updated assistant message:', updateData);
+            }
 
             // Send completion event
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 

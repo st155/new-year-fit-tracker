@@ -298,6 +298,15 @@ export const useAIConversations = (userId: string | undefined) => {
                     // Stream complete
                     finalData = parsed;
                     console.log('✅ Stream complete:', finalData);
+                    
+                    // Show notification if pending action was created
+                    if (parsed.pendingActionId) {
+                      showToast({
+                        title: '📋 План готов к выполнению',
+                        description: 'Перейдите на вкладку "Ожидают" для подтверждения действий',
+                        duration: 5000
+                      });
+                    }
                   } else if (parsed.type === 'error') {
                     throw new Error(parsed.error);
                   }
