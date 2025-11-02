@@ -5,6 +5,7 @@ import { useHabits } from "@/hooks/useHabits";
 import { HabitCompactCard } from "@/components/habits/HabitCompactCard";
 import { Target, Plus, ArrowRight, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 export function HabitsSection() {
   const { user } = useAuth();
@@ -122,16 +123,27 @@ export function HabitsSection() {
         </Link>
       </div>
 
-      {/* Compact Grid */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      {/* Modern Habit Grid */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {displayHabits.map((habit, index) => (
           <Link
             key={habit.id}
             to={`/habits/${habit.id}`}
-            className="animate-fade-in block"
-            style={{ animationDelay: `${index * 0.05}s` }}
+            className="block"
           >
-            <HabitCompactCard habit={habit} userId={user?.id} />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.3, 
+                delay: index * 0.1,
+                ease: "easeOut"
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <HabitCompactCard habit={habit} userId={user?.id} />
+            </motion.div>
           </Link>
         ))}
       </div>
