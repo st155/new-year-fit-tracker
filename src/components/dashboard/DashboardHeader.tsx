@@ -1,113 +1,35 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Sparkles } from 'lucide-react';
 import { SparklesCore } from '@/components/aceternity';
+import { useNavigate } from 'react-router-dom';
+import { useSmartInsights } from '@/hooks/useSmartInsights';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
-interface AIInsight {
-  emoji: string;
-  message: string;
-}
+const getBadgeVariant = (type: string) => {
+  switch (type) {
+    case 'critical': return 'destructive';
+    case 'warning': return 'default';
+    case 'achievement': return 'success';
+    case 'recommendation': return 'secondary';
+    case 'info':
+    default: return 'outline';
+  }
+};
 
 export function DashboardHeader() {
-  const { user } = useAuth();
-  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const navigate = useNavigate();
+  const { insights, isLoading } = useSmartInsights({ maxInsights: 7 });
 
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchInsights = async () => {
-      try {
-        const [goalsData, metricsData] = await Promise.all([
-          supabase
-            .from('goals')
-            .select('*, measurements(created_at)')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false }),
-          
-          supabase
-            .from('metric_values')
-            .select('*')
-            .eq('user_id', user.id)
-            .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-            .order('created_at', { ascending: false })
-        ]);
-
-        const generatedInsights: AIInsight[] = [];
-
-        // Today's synced metrics
-        if (metricsData.data && metricsData.data.length > 0) {
-          const todayMetrics = metricsData.data.filter(m => 
-            new Date(m.created_at).toDateString() === new Date().toDateString()
-          );
-          
-          if (todayMetrics.length > 0) {
-            generatedInsights.push({
-              emoji: '🔥',
-              message: `Сегодня синхронизировано ${todayMetrics.length} метрик`
-            });
-          }
-        }
-
-        // Stale goals needing attention
-        if (goalsData.data) {
-          const staleGoals = goalsData.data.filter(goal => {
-            const lastMeasurement = goal.measurements?.[0];
-            if (!lastMeasurement) return true;
-            
-            const daysSince = Math.floor(
-              (Date.now() - new Date(lastMeasurement.created_at).getTime()) / (1000 * 60 * 60 * 24)
-            );
-            
-            return daysSince > 7;
-          });
-
-          if (staleGoals.length > 0) {
-            generatedInsights.push({
-              emoji: '⚠️',
-              message: `${staleGoals.length} ${staleGoals.length === 1 ? 'цель требует' : 'целей требуют'} внимания`
-            });
-          }
-        }
-
-        // Active metrics count
-        if (metricsData.data && metricsData.data.length > 0) {
-          generatedInsights.push({
-            emoji: '📊',
-            message: `${metricsData.data.length} записей метрик за последние 24 часа`
-          });
-        }
-
-
-        // Weekly achievement
-        if (metricsData.data && metricsData.data.length >= 10) {
-          generatedInsights.push({
-            emoji: '🏆',
-            message: `${metricsData.data.length} метрик за сутки - продолжайте!`
-          });
-        }
-
-        // Default message
-        if (generatedInsights.length === 0) {
-          generatedInsights.push({
-            emoji: '🎯',
-            message: 'Начните логировать метрики для получения AI инсайтов'
-          });
-        }
-
-        setInsights(generatedInsights);
-      } catch (error) {
-        console.error('Error fetching insights:', error);
-      }
-    };
-
-    fetchInsights();
-  }, [user]);
+  const handleInsightClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+    }
+  };
 
   return (
     <div className="space-y-3">
-      {/* AI Insights Ticker with Sparkles Background */}
-      {insights.length > 0 && (
+      {/* Smart AI Insights Ticker */}
+      {!isLoading && insights.length > 0 && (
         <div className="relative w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 md:py-2.5 overflow-hidden">
           {/* Sparkles Background */}
           <div className="absolute inset-0 w-full h-full">
@@ -127,12 +49,20 @@ export function DashboardHeader() {
           <div className="relative z-10 flex items-center gap-3">
             <Sparkles className="h-4 w-4 text-primary shrink-0 ml-4 animate-pulse" />
             <div className="flex-1 overflow-hidden">
-              <div className="flex gap-8 animate-[marquee_30s_linear_infinite] whitespace-nowrap">
+              <div className="flex gap-3 animate-[marquee_40s_linear_infinite] whitespace-nowrap">
                 {[...insights, ...insights].map((insight, i) => (
-                  <span key={i} className="text-sm font-medium text-foreground flex items-center gap-2">
-                    <span>{insight.emoji}</span>
-                    <span>{insight.message}</span>
-                  </span>
+                  <Badge
+                    key={`${insight.id}-${i}`}
+                    variant={getBadgeVariant(insight.type)}
+                    className={cn(
+                      "cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg shrink-0",
+                      insight.type === 'critical' && "animate-pulse"
+                    )}
+                    onClick={() => handleInsightClick(insight.action.path)}
+                  >
+                    <span className="mr-1.5">{insight.emoji}</span>
+                    <span className="text-sm font-medium">{insight.message}</span>
+                  </Badge>
                 ))}
               </div>
             </div>
