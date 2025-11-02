@@ -63,6 +63,7 @@ export function useMetrics(options: UseMetricsOptions = {}) {
   // ===== Latest Metrics (with quality if requested) =====
   const latest = useQuery({
     queryKey: ['unified-metrics', 'latest', user?.id, metricTypes, withQuality, finalUseV2, sourceFilter],
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       if (!user?.id) return [];
 
