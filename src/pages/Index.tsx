@@ -34,7 +34,7 @@ import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
-import { CompactDataQualityLine } from '@/components/dashboard/CompactDataQualityLine';
+import { HealthScoreWidget } from '@/components/dashboard/HealthScoreWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -270,7 +270,7 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <CompactDataQualityLine userId={user?.id} />
+            <HealthScoreWidget userId={user?.id} />
           </motion.div>
         </ErrorBoundary>
 

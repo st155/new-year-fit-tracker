@@ -13,7 +13,17 @@ interface QualityZoneModalProps {
   onClose: () => void;
   zone: {
     label: string;
-    metrics: Array<{ metricName: string; confidence: number; source: any; factors: any }>;
+    metrics: Array<{ 
+      metricName: string; 
+      confidence: number; 
+      source: any; 
+      factors?: {
+        sourceReliability: number;
+        dataFreshness: number;
+        measurementFrequency: number;
+        crossValidation: number;
+      }
+    }>;
   } | null;
 }
 
