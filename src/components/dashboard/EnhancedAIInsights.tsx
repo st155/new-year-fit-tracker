@@ -1,6 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
 import { useTodayInsights } from '@/hooks/useTodayInsights';
+import { memo } from 'react';
 
 interface InsightCard {
   emoji: string;
@@ -79,7 +81,7 @@ interface EnhancedAIInsightsProps {
   userId?: string;
 }
 
-export function EnhancedAIInsights({ userId }: EnhancedAIInsightsProps) {
+const EnhancedAIInsightsComponent = ({ userId }: EnhancedAIInsightsProps) => {
   const { data: insights, isLoading } = useTodayInsights(userId);
   
   if (isLoading || !insights) return null;
@@ -88,44 +90,60 @@ export function EnhancedAIInsights({ userId }: EnhancedAIInsightsProps) {
     {
       emoji: '🔥',
       value: insights.metrics.today,
-      label: 'метрик синхронизировано',
+      label: 'метрик',
       sparklineData: insights.metrics.history,
       color: 'hsl(var(--chart-1))',
     },
     {
       emoji: '📈',
       value: insights.sources.today,
-      label: 'источников данных',
+      label: 'источников',
       sparklineData: insights.sources.history,
       color: 'hsl(var(--chart-2))',
     },
     {
       emoji: '🎯',
       value: insights.goals.active,
-      label: 'активных целей',
+      label: 'целей',
       sparklineData: insights.goals.history,
       color: 'hsl(var(--chart-3))',
     },
     {
       emoji: '⚡',
       value: insights.habits.active,
-      label: 'активных привычек',
+      label: 'привычек',
       sparklineData: insights.habits.history,
       color: 'hsl(var(--chart-4))',
     },
   ];
   
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
-        Сегодня
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {cards.map((card, i) => (
-          <InsightMiniCard key={i} card={card} />
-        ))}
-      </div>
-    </div>
+    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      <CardContent className="p-2">
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Сегодня:</span>
+          </div>
+          
+          {cards.map((card, i) => (
+            <Badge 
+              key={i} 
+              variant="outline" 
+              className="shrink-0 px-2 py-1 gap-1.5 hover:bg-muted/50 transition-colors cursor-default"
+            >
+              <span className="text-sm">{card.emoji}</span>
+              <span className="text-sm font-bold" style={{ color: card.color }}>
+                {card.value}
+              </span>
+              <span className="text-xs text-muted-foreground">{card.label}</span>
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+// Мемоизируем компонент
+export const EnhancedAIInsights = memo(EnhancedAIInsightsComponent);

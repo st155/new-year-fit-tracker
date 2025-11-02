@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { useMetrics } from './composite/data/useMetrics';
 import type { MetricWithConfidence } from '@/lib/data-quality';
 
 /**
  * Hook for accessing data quality information
  * Uses the enhanced useMetrics hook with withQuality enabled
+ * Optimized with memoization for performance
  */
 export function useDataQuality(metricTypes?: string[]) {
   const { 
@@ -34,18 +36,19 @@ export function useDataQuality(metricTypes?: string[]) {
     return 'Poor';
   };
 
-  // Helper: Get average confidence for all metrics
-  const averageConfidence = qualitySummary && qualitySummary.length > 0
-    ? qualitySummary.reduce((sum, m) => sum + m.confidence, 0) / qualitySummary.length
-    : 0;
+  // Helper: Get average confidence for all metrics (memoized)
+  const averageConfidence = useMemo(() => {
+    if (!qualitySummary || qualitySummary.length === 0) return 0;
+    return qualitySummary.reduce((sum, m) => sum + m.confidence, 0) / qualitySummary.length;
+  }, [qualitySummary]);
 
-  // Helper: Get metrics by quality level
-  const metricsByQuality = {
+  // Helper: Get metrics by quality level (memoized)
+  const metricsByQuality = useMemo(() => ({
     excellent: qualitySummary?.filter(m => m.confidence >= 80) || [],
     good: qualitySummary?.filter(m => m.confidence >= 60 && m.confidence < 80) || [],
     fair: qualitySummary?.filter(m => m.confidence >= 40 && m.confidence < 60) || [],
     poor: qualitySummary?.filter(m => m.confidence < 40) || [],
-  };
+  }), [qualitySummary]);
 
   return {
     // Data with quality

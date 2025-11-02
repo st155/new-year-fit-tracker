@@ -1,22 +1,46 @@
 import { Lightbulb } from "lucide-react";
+import { useGlobalNotifications } from "@/hooks/useGlobalNotifications";
+import { useNavigate } from "react-router-dom";
 
 export function GlobalTicker() {
-  const tips = [
-    "Follow your plan and track your growth!",
-    "Consistency is key to achieving your fitness goals!",
-    "Stay hydrated and track your progress daily!",
-    "Push yourself, because no one else is going to do it for you!",
+  const { notifications } = useGlobalNotifications();
+  const navigate = useNavigate();
+  
+  // Если нет уведомлений, показываем мотивационные советы
+  const fallbackTips = [
+    { icon: '💪', message: 'Следуй своему плану и отслеживай прогресс!' },
+    { icon: '🔥', message: 'Постоянство - ключ к достижению целей!' },
+    { icon: '💧', message: 'Не забывай пить воду и отслеживать метрики!' },
+    { icon: '🎯', message: 'Двигайся вперёд - никто другой не сделает это за тебя!' },
   ];
 
+  const displayItems = notifications.length > 0 
+    ? notifications 
+    : fallbackTips.map((tip, i) => ({
+        id: `tip-${i}`,
+        icon: tip.icon,
+        message: tip.message,
+        href: '/',
+      }));
+
+  const handleClick = (href: string) => {
+    if (href) navigate(href);
+  };
+
   return (
-    <div className="w-full bg-gradient-to-r from-background via-muted/30 to-background border-b border-border py-3 overflow-hidden">
+    <div className="w-full bg-gradient-to-r from-background via-muted/20 to-background border-b border-border/50 py-2 overflow-hidden backdrop-blur-sm">
       <div className="flex items-center gap-3">
-        <Lightbulb className="h-5 w-5 text-primary shrink-0 ml-4 animate-pulse" />
+        <Lightbulb className="h-4 w-4 text-primary shrink-0 ml-4 animate-pulse" />
         <div className="flex-1 overflow-hidden">
-          <div className="flex gap-12 animate-[marquee_30s_linear_infinite] whitespace-nowrap">
-            {[...tips, ...tips].map((tip, i) => (
-              <span key={i} className="text-sm text-foreground/80 text-glow">
-                Pro tip: {tip}
+          <div className="flex gap-8 animate-[marquee_40s_linear_infinite] whitespace-nowrap">
+            {[...displayItems, ...displayItems].map((item, i) => (
+              <span 
+                key={`${item.id}-${i}`} 
+                className="text-sm text-foreground/80 cursor-pointer hover:text-primary transition-colors flex items-center gap-1.5"
+                onClick={() => handleClick(item.href || '/')}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.message}</span>
               </span>
             ))}
           </div>

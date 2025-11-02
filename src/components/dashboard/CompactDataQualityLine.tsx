@@ -1,12 +1,14 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { BarChart3, RefreshCw } from 'lucide-react';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useDataQualityHistory } from '@/hooks/useDataQualityHistory';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { QualityZoneModal } from './QualityZoneModal';
 
 interface CompactDataQualityLineProps {
@@ -84,14 +86,14 @@ function generateSparklinePoints(history: QualityHistoryPoint[]) {
     .join(' ');
 }
 
-export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) {
+const CompactDataQualityLineComponent = ({ userId }: CompactDataQualityLineProps) => {
   const { user } = useAuth();
-  const { averageConfidence, metricsByQuality, metrics, isLoading } = useDataQuality();
-  const { data: history } = useDataQualityHistory(userId);
+  const { averageConfidence, metricsByQuality, isLoading } = useDataQuality();
+  const { data: history, isLoading: historyLoading } = useDataQualityHistory(userId);
   const { recalculate, isRecalculating } = useConfidenceRecalculation();
   const [modalZone, setModalZone] = useState<{ label: string; metrics: Array<{ metricName: string; confidence: number; source: any; factors: any }> } | null>(null);
   
-  if (isLoading) return <Skeleton className="h-[70px] w-full" />;
+  if (isLoading) return <Skeleton className="h-[50px] w-full rounded-lg" />;
   if (!metricsByQuality) return null;
 
   // Цвет на основе общего балла
@@ -141,70 +143,71 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
   };
 
   return (
-    <Card className="glass-card neon-border">
-      <CardContent className="p-2.5">
+    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      <CardContent className="p-3">
         {/* Заголовок */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">Качество данных</h3>
+            <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Качество данных</span>
           </div>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-7 w-7"
-            onClick={handleRecalculate}
-            disabled={isRecalculating}
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRecalculating ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-
-        {/* Основной контент: Балл + Цветная полоса */}
-        <div className="flex items-start gap-3 mb-2">
-          {/* Балл */}
-          <div className="text-xl font-bold min-w-[50px] metric-glow pulse-glow" style={{ color: qualityColor }}>
-            {Math.round(averageConfidence)}%
-          </div>
-          
-          {/* Цветная полоса */}
-          <div className="flex-1">
-            <ColoredQualityBar zones={zones} total={totalMetrics} onZoneClick={handleZoneClick} />
-          </div>
-        </div>
-
-        {/* Мини-график тренда */}
-        {history && history.length > 1 ? (
-          <div className="h-[24px] opacity-70">
-            <svg 
-              viewBox="0 0 100 20" 
-              preserveAspectRatio="none" 
-              className="w-full h-full"
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold" style={{ color: qualityColor }}>
+              {Math.round(averageConfidence)}%
+            </span>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="h-6 w-6"
+              onClick={handleRecalculate}
+              disabled={isRecalculating}
             >
-              <defs>
-                <linearGradient id="qualityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor={qualityColor} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={qualityColor} stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <polygon
-                points={`0,20 ${generateSparklinePoints(history)} 100,20`}
-                fill="url(#qualityGradient)"
-              />
-              <polyline
-                points={generateSparklinePoints(history)}
-                fill="none"
-                stroke={qualityColor}
-                strokeWidth="2"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
+              <RefreshCw className={`h-3 w-3 ${isRecalculating ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
-        ) : (
-          <div className="h-[24px] flex items-center justify-center text-xs text-muted-foreground opacity-50">
-            Недостаточно данных
-          </div>
-        )}
+        </div>
+
+        {/* Тонкий прогресс бар с градиентом */}
+        <div className="relative mb-2">
+          <Progress 
+            value={averageConfidence} 
+            className="h-1.5"
+          />
+          {!historyLoading && history && history.length > 1 && (
+            <div className="absolute -bottom-4 left-0 right-0 h-5 opacity-30 pointer-events-none">
+              <svg 
+                viewBox="0 0 100 20" 
+                preserveAspectRatio="none" 
+                className="w-full h-full"
+              >
+                <polyline
+                  points={generateSparklinePoints(history)}
+                  fill="none"
+                  stroke={qualityColor}
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Компактные бейджи */}
+        <div className="flex items-center gap-2 flex-wrap pt-3">
+          {zones.map((zone, i) => (
+            zone.count > 0 && (
+              <Badge 
+                key={i} 
+                variant="outline" 
+                className="text-xs px-1.5 py-0 cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ borderColor: zone.color, color: zone.color }}
+                onClick={() => handleZoneClick(zone.label)}
+              >
+                {zone.icon}{zone.count}
+              </Badge>
+            )
+          ))}
+        </div>
       </CardContent>
       
       <QualityZoneModal
@@ -214,4 +217,7 @@ export function CompactDataQualityLine({ userId }: CompactDataQualityLineProps) 
       />
     </Card>
   );
-}
+};
+
+// Мемоизируем компонент для оптимизации
+export const CompactDataQualityLine = memo(CompactDataQualityLineComponent);

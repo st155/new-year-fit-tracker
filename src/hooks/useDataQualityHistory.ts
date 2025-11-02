@@ -53,7 +53,8 @@ export function useDataQualityHistory(userId: string | undefined) {
       return result;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - cached for performance
     gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false, // Don't refetch on window focus for performance
   });
 }
