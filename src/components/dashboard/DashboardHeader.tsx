@@ -38,6 +38,19 @@ export function DashboardHeader() {
   const navigate = useNavigate();
   const { insights, isLoading } = useSmartInsights({ maxInsights: 10 });
   const { preferences, muteInsight } = useInsightPersonalization();
+  
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3">
+        <div className="flex items-center gap-3 px-4">
+          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+          <span className="text-sm text-muted-foreground">Загрузка инсайтов...</span>
+        </div>
+      </div>
+    );
+  }
+  
   const [selectedInsight, setSelectedInsight] = useState<SmartInsight | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(0);

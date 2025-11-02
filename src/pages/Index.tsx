@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { motion } from 'framer-motion';
@@ -222,8 +222,17 @@ const Index = () => {
       <MobileDebugOverlay />
       <div className="min-h-screen bg-background p-4 md:p-6 pb-24 md:pb-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
-        {/* Compact Dashboard Header with AI Insights + Quality */}
-        <DashboardHeader />
+        {/* Compact Dashboard Header with AI Insights + Quality - Instant Loading */}
+        <Suspense fallback={
+          <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 animate-pulse">
+            <div className="flex items-center gap-3 px-4">
+              <div className="h-4 w-4 bg-primary/20 rounded" />
+              <div className="h-4 w-48 bg-muted rounded" />
+            </div>
+          </div>
+        }>
+          <DashboardHeader />
+        </Suspense>
         
         {/* Controls Bar - Compact */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

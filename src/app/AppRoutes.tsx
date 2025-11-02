@@ -45,6 +45,7 @@ import TrainerTestPageSync from "@/pages/TrainerTestPage";
 import TrainingPlanDetailSync from "@/pages/TrainingPlanDetail";
 import TrainerAnalyticsDashboardSync from "@/pages/TrainerAnalyticsDashboard";
 import AdminSync from "@/pages/Admin";
+import MetricDetailSync from "@/pages/MetricDetail";
 import TerraCallbackSync from "@/pages/TerraCallback";
 import PrivacyPolicySync from "@/pages/PrivacyPolicy";
 import HealthSync from "@/pages/Health";
@@ -78,6 +79,7 @@ const PrivacyPolicy = lazySafe(PrivacyPolicySync, () => import("@/pages/PrivacyP
 const Health = lazySafe(HealthSync, () => import("@/pages/Health"));
 const NotFound = lazySafe(NotFoundSync, () => import("@/pages/NotFound"));
 const WithingsDebug = lazySafe(WithingsDebugSync, () => import("@/pages/WithingsDebug"));
+const MetricDetail = lazySafe(MetricDetailSync, () => import("@/pages/MetricDetail"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -275,6 +277,15 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <WithingsDebug />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Metric detail pages */}
+        <Route path="/metrics/:metricName" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <MetricDetail />
             </ModernAppLayout>
           </ProtectedRoute>
         } />

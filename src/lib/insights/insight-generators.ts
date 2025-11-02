@@ -105,11 +105,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
       );
       
       if (daysSinceCreation > 7) {
+        const goalTitle = goal.title || goal.metric_name || 'Цель';
         insights.push({
           id: `goal-stale-${goal.id}`,
           type: 'warning',
           emoji: '⚠️',
-          message: `Цель "${goal.title}" не обновлялась ${daysSinceCreation} ${daysSinceCreation === 1 ? 'день' : 'дней'}`,
+          message: `Цель "${goalTitle}" не обновлялась ${daysSinceCreation} ${daysSinceCreation === 1 ? 'день' : 'дней'}`,
           priority: 65,
           action: { type: 'navigate', path: `/goals/${goal.id}` },
           timestamp: new Date(),
@@ -127,11 +128,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
 
     // Near completion (80-99%)
     if (progress >= 80 && progress < 100) {
+      const goalTitle = goal.title || goal.metric_name || 'Цель';
       insights.push({
         id: `goal-near-${goal.id}`,
         type: 'achievement',
         emoji: '🎯',
-        message: `Цель "${goal.title}" на ${Math.round(progress)}%!`,
+        message: `Цель "${goalTitle}" на ${Math.round(progress)}%!`,
         priority: 85,
         action: { type: 'navigate', path: `/goals/${goal.id}` },
         timestamp: new Date(),
@@ -143,11 +145,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
     const lastMeasurement = new Date(goal.measurements[0]?.created_at);
     const isToday = lastMeasurement.toDateString() === new Date().toDateString();
     if (progress >= 100 && isToday) {
+      const goalTitle = goal.title || goal.metric_name || 'Цель';
       insights.push({
         id: `goal-complete-${goal.id}`,
         type: 'achievement',
         emoji: '🎉',
-        message: `Цель "${goal.title}" достигнута!`,
+        message: `Цель "${goalTitle}" достигнута!`,
         priority: 90,
         action: { type: 'navigate', path: `/goals/${goal.id}` },
         timestamp: new Date(),

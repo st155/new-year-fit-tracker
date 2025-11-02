@@ -338,10 +338,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
 
   const handleCardClick = useCallback(() => {
-    // Trigger refresh через React Query invalidation
-    queryClient.invalidateQueries({ queryKey: widgetKeys.all });
-    queryClient.invalidateQueries({ queryKey: ['metrics'] });
-  }, [queryClient]);
+    // Navigate to metric detail page
+    navigate(`/metrics/${encodeURIComponent(metricName)}`);
+  }, [navigate, metricName]);
 
   // Мемоизация дорогих вычислений
   const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
