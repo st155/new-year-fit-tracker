@@ -65,7 +65,7 @@ export function useMultiSourceWidgetsData(
       for (const w of widgets) {
         const acceptable = getAliasSet(w.metric_name);
         
-        // Group by source
+        // Group by source - keep only the LATEST measurement
         const sourceMap = new Map<string, any>();
         
         for (const row of rows) {
@@ -75,11 +75,19 @@ export function useMultiSourceWidgetsData(
           if (!existing) {
             sourceMap.set(row.source, row);
           } else {
-            // Keep the newest by created_at (when data was synced)
-            const existingCreated = new Date(existing.created_at).getTime();
-            const rowCreated = new Date(row.created_at).getTime();
-            if (rowCreated > existingCreated) {
+            // Keep the newest by measurement_date (not created_at)
+            const existingDate = new Date(existing.measurement_date).getTime();
+            const rowDate = new Date(row.measurement_date).getTime();
+            
+            // If same measurement date, prefer higher confidence
+            if (rowDate > existingDate) {
               sourceMap.set(row.source, row);
+            } else if (rowDate === existingDate) {
+              const existingConf = existing.confidence_score ?? 0;
+              const rowConf = row.confidence_score ?? 0;
+              if (rowConf > existingConf) {
+                sourceMap.set(row.source, row);
+              }
             }
           }
         }
@@ -125,15 +133,22 @@ export function useMultiSourceWidgetsData(
             };
           });
 
-          // Sort by data freshness (sync time)
-          sources.sort((a, b) => {
-            return a.age_hours - b.age_hours; // freshest first
+          // Remove duplicates by source (in case of data issues)
+          const uniqueSources = new Map<string, SourceData>();
+          sources.forEach(src => {
+            const existing = uniqueSources.get(src.source);
+            if (!existing || src.age_hours < existing.age_hours) {
+              uniqueSources.set(src.source, src);
+            }
           });
 
-          const primarySource = sources[0]?.source;
+          const finalSources = Array.from(uniqueSources.values());
+          finalSources.sort((a, b) => a.age_hours - b.age_hours); // freshest first
+
+          const primarySource = finalSources[0]?.source;
 
           result.set(w.id, {
-            sources,
+            sources: finalSources,
             primarySource,
           });
         }

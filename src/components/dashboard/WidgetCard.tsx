@@ -394,9 +394,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             <ConflictWarningBadge metricName={metricName} />
           </div>
 
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground mb-1">
+              <h3 className="text-base font-semibold text-foreground mb-1">
                 {metricName}
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -417,13 +417,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               return (
                 <div 
                   key={idx} 
-                  className="rounded-lg p-3 bg-card/50 hover:bg-card/70 transition-colors"
+                  className="rounded-lg p-2.5 bg-card/50 hover:bg-card/70 transition-colors"
                   style={{
                     borderLeft: `3px solid ${qualityColor || color}`,
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1">
-                    <span className="text-2xl font-bold" style={{ color }}>
+                    <span className="text-xl font-bold" style={{ color }}>
                       {formatValue(src.value, metricName, src.unit)}
                     </span>
                     <span className="text-sm text-muted-foreground">{src.unit}</span>
@@ -622,10 +622,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
         
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <div className="flex items-center gap-1">
-              <h3 className="text-lg font-semibold text-foreground mb-1">
+              <h3 className="text-base font-semibold text-foreground mb-1">
                 {metricName}
               </h3>
               {metricTooltip && (
@@ -657,14 +657,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-baseline gap-2 my-3">
-            <Icon className="h-5 w-5" style={{ color }} />
-            <span className="text-4xl font-bold tracking-tight" style={{ color }}>
+        <div className="space-y-2">
+          <div className="flex items-baseline gap-2 my-2">
+            <span className="text-3xl font-bold tracking-tight" style={{ color }}>
               {formatValue(data.value, metricName, data.unit)}
             </span>
             {data.unit && (
-              <span className="text-lg text-muted-foreground">
+              <span className="text-base text-muted-foreground">
                 {data.unit}
               </span>
             )}
@@ -690,14 +689,14 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                        metricName.includes('HRV') ? Math.min(100, (data.value / 100) * 100) :
                        data.value} 
                 autoColor={true}
-                className="h-3"
+                className="h-4"
               />
             </div>
           )}
           
           {/* Специальная обработка Body Fat Percentage */}
           {(metricName.toLowerCase().includes('body') && metricName.toLowerCase().includes('fat')) && (
-            <div className="space-y-2 mt-3">
+            <div className="space-y-2 mt-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">
                   Здоровая зона: 15-25%
@@ -711,10 +710,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               </div>
               <Progress 
                 value={Math.min((data.value / 35) * 100, 100)} 
-                className="h-3"
+                className="h-4"
                 autoColor={true}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground font-medium">
                 {data.value < 15 ? 'Слишком низкий' : 
                  data.value <= 20 ? 'Атлетический' :
                  data.value <= 25 ? 'Отличный' :
