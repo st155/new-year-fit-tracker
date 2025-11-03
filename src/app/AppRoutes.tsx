@@ -51,6 +51,7 @@ import PrivacyPolicySync from "@/pages/PrivacyPolicy";
 import HealthSync from "@/pages/Health";
 import NotFoundSync from "@/pages/NotFound";
 import WithingsDebugSync from "@/pages/WithingsDebug";
+import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
 const Landing = lazySafe(LandingSync, () => import("@/pages/Landing"));
@@ -267,6 +268,7 @@ export const AppRoutes = () => {
         
         {/* OAuth callbacks */}
         <Route path="/terra-callback" element={<TerraCallback />} />
+        <Route path="/terra-widget-loader" element={<TerraWidgetLoader />} />
         
         {/* Static pages */}
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
