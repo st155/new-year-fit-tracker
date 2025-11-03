@@ -12,6 +12,7 @@ function getProviderPriority(provider: string): number {
     'OURA': 3,
     'WITHINGS': 4,
     'POLAR': 4,
+    'GOOGLE': 4,
   };
   return priorities[provider.toUpperCase()] || 5;
 }

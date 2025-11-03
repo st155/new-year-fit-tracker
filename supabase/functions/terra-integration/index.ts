@@ -110,7 +110,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           reference_id: user.id,
-          providers: 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR',
+          providers: 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR,GOOGLE',
           language: 'en',
           auth_success_redirect_url: redirectUrl,
           auth_failure_redirect_url: redirectUrl,
