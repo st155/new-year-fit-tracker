@@ -1,5 +1,6 @@
 import { useEffect, useState, memo, useMemo, useCallback } from 'react';
-import { Card as TremorCard, AreaChart } from '@tremor/react';
+import { Card as TremorCard } from '@tremor/react';
+import { Area, AreaChart, ResponsiveContainer, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +40,26 @@ interface WidgetCardProps {
   };
   multiSourceData?: MultiSourceWidgetData;
   sparklineData?: WidgetHistoryData[];
+}
+
+// Custom tooltip component for sparkline charts
+function WidgetChartTooltip({ active, payload, metricName, unit }: any) {
+  if (active && payload && payload.length) {
+    const value = payload[0].value;
+    const date = payload[0].payload.date;
+    
+    return (
+      <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg">
+        <p className="text-xs text-muted-foreground mb-0.5">
+          {date}
+        </p>
+        <p className="text-sm font-semibold text-foreground">
+          {formatValue(value, metricName, unit)} {unit}
+        </p>
+      </div>
+    );
+  }
+  return null;
 }
 
 const getMetricIcon = (metricName: string) => {
@@ -802,25 +823,42 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
 
-        {/* Sparkline Chart - Tremor AreaChart */}
+        {/* Sparkline Chart - Recharts */}
         {sparklineData && sparklineData.length > 1 && (
           <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
-            <AreaChart
-              data={sparklineData.map(d => ({ 
-                date: format(parseISO(d.date), 'd MMM', { locale: ru }),
-                value: d.value 
-              }))}
-              index="date"
-              categories={['value']}
-              colors={[color.replace('#', '')]}
-              showLegend={false}
-              showXAxis={false}
-              showYAxis={false}
-              showGridLines={false}
-              className="h-[60px]"
-              curveType="natural"
-              valueFormatter={(value) => `${formatValue(value, metricName, data.unit)} ${data.unit}`}
-            />
+            <ResponsiveContainer width="100%" height={60}>
+              <AreaChart 
+                data={sparklineData.map(d => ({ 
+                  date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+                  value: d.value 
+                }))}
+                margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <YAxis domain={['auto', 'auto']} hide />
+                <RechartsTooltip 
+                  content={
+                    <WidgetChartTooltip 
+                      metricName={metricName} 
+                      unit={data.unit} 
+                    />
+                  } 
+                />
+                <Area
+                  type="natural"
+                  dataKey="value"
+                  stroke={color}
+                  strokeWidth={2}
+                  fill={`url(#gradient-${metricName.replace(/\s+/g, '-')})`}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         )}
 
