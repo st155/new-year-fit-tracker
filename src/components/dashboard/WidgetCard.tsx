@@ -708,11 +708,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   {data.value >= 15 && data.value <= 25 ? 'В норме' : 'Вне нормы'}
                 </Badge>
               </div>
-              <Progress 
-                value={Math.min((data.value / 35) * 100, 100)} 
-                className="h-4"
-                autoColor={true}
-              />
+                  <Progress 
+                    value={Math.min((data.value / 35) * 100, 100)} 
+                    className="h-4"
+                    variant={
+                      data.value < 15 || data.value > 28 ? 'danger' :
+                      data.value > 25 ? 'warning' : 
+                      'success'
+                    }
+                  />
               <p className="text-xs text-muted-foreground font-medium">
                 {data.value < 15 ? 'Слишком низкий' : 
                  data.value <= 20 ? 'Атлетический' :
