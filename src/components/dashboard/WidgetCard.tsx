@@ -373,17 +373,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative min-h-[180px] md:min-h-[160px]"
         onClick={handleCardClick}
         style={{
-          background: `linear-gradient(135deg, ${color}08, transparent)`,
           borderWidth: '2px',
           borderStyle: 'solid',
           borderColor: isDataStale 
             ? '#ef4444' 
             : isDataWarning 
               ? '#eab308' 
-              : primarySourceQuality || `${color}30`,
-          borderLeft: multiSourceData.sources[0]?.confidence 
-            ? `4px solid ${getConfidenceColor(multiSourceData.sources[0].confidence)}` 
-            : undefined,
+              : primarySourceQuality || 'hsl(var(--border))',
         }}
       >
         <CardContent className="p-4 sm:p-6">
@@ -400,10 +396,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <p className="text-base md:text-sm font-medium text-foreground mb-1">
+              <h3 className="text-lg font-semibold text-foreground mb-1">
                 {metricName}
-              </p>
-              <p className="text-sm md:text-xs text-muted-foreground/60">
+              </h3>
+              <p className="text-xs text-muted-foreground">
                 {multiSourceData.sources.length} {multiSourceData.sources.length === 1 ? 'источник' : 'источника'}
               </p>
             </div>
@@ -421,18 +417,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               return (
                 <div 
                   key={idx} 
-                  className="flex items-center justify-between p-2 rounded-lg transition-colors"
+                  className="rounded-lg p-3 bg-card/50 hover:bg-card/70 transition-colors"
                   style={{
                     borderLeft: `3px solid ${qualityColor || color}`,
-                    backgroundColor: qualityColor ? `${qualityColor}10` : 'hsl(var(--accent) / 0.3)',
                   }}
                 >
                   <div className="flex items-center gap-2 flex-1">
-                    <Icon className="h-4 w-4" style={{ color }} />
-                    <span className="text-lg font-semibold" style={{ color }}>
+                    <span className="text-2xl font-bold" style={{ color }}>
                       {formatValue(src.value, metricName, src.unit)}
                     </span>
-                    <span className="text-xs text-muted-foreground">{src.unit}</span>
+                    <span className="text-sm text-muted-foreground">{src.unit}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -582,19 +576,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
       className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer relative min-h-[180px] md:min-h-[160px]"
       onClick={handleCardClick}
       style={{
-        background: `linear-gradient(135deg, ${color}08, transparent)`,
         borderWidth: '2px',
         borderStyle: 'solid',
         borderColor: isDataStale 
-          ? '#ef4444' // Приоритет 1: устаревшие данные = красный
+          ? '#ef4444' 
           : isDataWarning 
-            ? '#eab308' // Приоритет 2: предупреждение о свежести = желтый
-            : qualityColor // Приоритет 3: качество значения метрики
-              ? qualityColor 
-              : (trendColor || `${color}30`), // Приоритет 4: тренд или дефолтный цвет
-        borderLeft: data?.confidence 
-          ? `4px solid ${getConfidenceColor(data.confidence)}` 
-          : undefined,
+            ? '#eab308' 
+            : qualityColor || 'hsl(var(--border))',
       }}
     >
       <CardContent className="p-4 sm:p-6">
@@ -634,12 +622,12 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
         
-        <div className="flex items-start justify-between mb-2 sm:mb-3">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-1">
-              <p className="text-base md:text-sm font-medium text-foreground mb-0.5 sm:mb-1">
+              <h3 className="text-lg font-semibold text-foreground mb-1">
                 {metricName}
-              </p>
+              </h3>
               {metricTooltip && (
                 <TooltipProvider>
                   <Tooltip>
@@ -669,14 +657,14 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color }} />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-baseline gap-1 sm:gap-2">
-            <Icon className="h-5 w-5 sm:h-6 sm:w-6" style={{ color }} />
-            <span className="text-3xl sm:text-3xl md:text-2xl font-bold" style={{ color }}>
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-2 my-3">
+            <Icon className="h-5 w-5" style={{ color }} />
+            <span className="text-4xl font-bold tracking-tight" style={{ color }}>
               {formatValue(data.value, metricName, data.unit)}
             </span>
             {data.unit && (
-              <span className="text-base sm:text-sm text-muted-foreground">
+              <span className="text-lg text-muted-foreground">
                 {data.unit}
               </span>
             )}
@@ -696,15 +684,44 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           {(metricName === 'Recovery Score' || 
             (metricName.includes('Sleep') && metricName.includes('Efficiency')) ||
             metricName.includes('HRV')) && (
-            <Progress 
-              value={metricName === 'Recovery Score' ? data.value : 
-                     metricName.includes('HRV') ? Math.min(100, (data.value / 100) * 100) :
-                     data.value} 
-              className="h-1.5"
-              variant={qualityColor === '#10b981' ? 'success' : 
-                      qualityColor === '#eab308' ? 'warning' : 
-                      qualityColor === '#ef4444' ? 'danger' : 'default'}
-            />
+            <div className="space-y-1">
+              <Progress 
+                value={metricName === 'Recovery Score' ? data.value : 
+                       metricName.includes('HRV') ? Math.min(100, (data.value / 100) * 100) :
+                       data.value} 
+                autoColor={true}
+                className="h-3"
+              />
+            </div>
+          )}
+          
+          {/* Специальная обработка Body Fat Percentage */}
+          {(metricName.toLowerCase().includes('body') && metricName.toLowerCase().includes('fat')) && (
+            <div className="space-y-2 mt-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  Здоровая зона: 15-25%
+                </span>
+                <Badge 
+                  variant={data.value >= 15 && data.value <= 25 ? 'default' : 'outline'}
+                  className="text-xs"
+                >
+                  {data.value >= 15 && data.value <= 25 ? 'В норме' : 'Вне нормы'}
+                </Badge>
+              </div>
+              <Progress 
+                value={Math.min((data.value / 35) * 100, 100)} 
+                className="h-3"
+                autoColor={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                {data.value < 15 ? 'Слишком низкий' : 
+                 data.value <= 20 ? 'Атлетический' :
+                 data.value <= 25 ? 'Отличный' :
+                 data.value <= 28 ? 'Норма' :
+                 'Повышенный'}
+              </p>
+            </div>
           )}
         </div>
 
