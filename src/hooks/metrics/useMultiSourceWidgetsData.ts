@@ -40,10 +40,8 @@ export function useMultiSourceWidgetsData(
       }
       const metricNames = Array.from(metricNamesSet);
 
-      // Time window: last 24 hours for current data only
-      const now = new Date();
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const from = yesterday.toISOString();
+      // Time window: only today's data
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
       // Query all metrics from all sources
       const { data, error } = await supabase
@@ -51,7 +49,7 @@ export function useMultiSourceWidgetsData(
         .select('metric_name, source, value, unit, measurement_date, created_at, priority, confidence_score')
         .eq('user_id', userId)
         .in('metric_name', metricNames)
-        .gte('measurement_date', from)
+        .gte('measurement_date', today)
         .order('measurement_date', { ascending: false })
         .order('priority', { ascending: true })
         .order('confidence_score', { ascending: false });
@@ -133,16 +131,8 @@ export function useMultiSourceWidgetsData(
             };
           });
 
-          // Remove duplicates by source (in case of data issues)
-          const uniqueSources = new Map<string, SourceData>();
-          sources.forEach(src => {
-            const existing = uniqueSources.get(src.source);
-            if (!existing || src.age_hours < existing.age_hours) {
-              uniqueSources.set(src.source, src);
-            }
-          });
-
-          const finalSources = Array.from(uniqueSources.values());
+          // Sort by freshness (sourceMap already ensures uniqueness per source)
+          const finalSources = sources;
           finalSources.sort((a, b) => a.age_hours - b.age_hours); // freshest first
 
           const primarySource = finalSources[0]?.source;
