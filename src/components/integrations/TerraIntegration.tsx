@@ -46,6 +46,7 @@ const PROVIDER_ICONS: Record<string, any> = {
   POLAR: Heart,
   SUUNTO: Watch,
   PELOTON: Activity,
+  GOOGLE: Activity,
 };
 
 const PROVIDER_NAMES: Record<string, string> = {
@@ -58,6 +59,7 @@ const PROVIDER_NAMES: Record<string, string> = {
   SUUNTO: 'Suunto',
   PELOTON: 'Peloton',
   ULTRAHUMAN: 'Ultrahuman',
+  GOOGLE: 'Google Fit',
 };
 
 const AVAILABLE_PROVIDERS = [
@@ -67,6 +69,7 @@ const AVAILABLE_PROVIDERS = [
   'GARMIN',
   'WITHINGS',
   'POLAR',
+  'GOOGLE',
 ];
 
 export function TerraIntegration() {
