@@ -59,6 +59,14 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   // Get enhanced body model data
   const enhancedData = useEnhancedBodyModel(user?.id, selectedDate);
   
+  console.log('[InBodyDetailView] Enhanced data:', enhancedData);
+
+  // Early return if no enhanced data
+  if (!enhancedData || !enhancedData.segmental || !enhancedData.overall) {
+    console.warn('[InBodyDetailView] Missing enhanced data, showing skeleton');
+    return <InBodyDetailViewSkeleton />;
+  }
+  
   const weightChange = calculateMetricChange(analysis.weight, previousAnalysis?.weight ?? null);
   const smmChange = calculateMetricChange(analysis.skeletal_muscle_mass, previousAnalysis?.skeletal_muscle_mass ?? null);
   const bfmChange = calculateMetricChange(analysis.body_fat_mass, previousAnalysis?.body_fat_mass ?? null);
@@ -68,7 +76,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   const visceralFatStatus = getVisceralFatStatus(analysis.visceral_fat_area);
 
   // Use enhanced segmental data if viewing current analysis
-  const segmentData = selectedDate 
+  const segmentData = selectedDate && enhancedData?.segmental?.data
     ? enhancedData.segmental.data 
     : {
         rightArmPercent: analysis.right_arm_percent,
@@ -181,14 +189,14 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             </div>
             
             {/* Data Source Indicator */}
-            <BodyDataSourceIndicator
-              source={enhancedData.segmental.source}
-              confidence={enhancedData.confidence}
-              lastInBodyDate={enhancedData.lastInBodyDate}
-              lastUpdated={enhancedData.segmental.lastUpdated}
-              weightSource={enhancedData.overall.weight.source}
-              bodyFatSource={enhancedData.overall.bodyFat.source}
-            />
+              <BodyDataSourceIndicator
+                source={enhancedData?.segmental?.source ?? 'none'}
+                confidence={enhancedData?.confidence ?? 'low'}
+                lastInBodyDate={enhancedData?.lastInBodyDate ?? null}
+                lastUpdated={enhancedData?.segmental?.lastUpdated ?? null}
+                weightSource={enhancedData?.overall?.weight?.source ?? 'none'}
+                bodyFatSource={enhancedData?.overall?.bodyFat?.source ?? 'none'}
+              />
           </div>
           <HumanBodyModel 
             segmentData={segmentData} 

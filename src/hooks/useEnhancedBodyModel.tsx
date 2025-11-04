@@ -49,8 +49,17 @@ export function useEnhancedBodyModel(userId?: string, targetDate?: Date): Enhanc
   const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestMetrics(actualUserId);
 
   const enhancedData = useMemo(() => {
-    // Default empty state
-    const defaultData: EnhancedBodyModelData = {
+    try {
+      console.log('[useEnhancedBodyModel] Computing data:', {
+        inbodyLoading,
+        unifiedLoading,
+        inbodyCount: inbodyAnalyses?.length ?? 0,
+        hasUnifiedMetrics: !!unifiedMetrics,
+        targetDate,
+      });
+
+      // Default empty state
+      const defaultData: EnhancedBodyModelData = {
       segmental: {
         source: 'none',
         data: {
@@ -230,14 +239,49 @@ export function useEnhancedBodyModel(userId?: string, targetDate?: Date): Enhanc
       overall.weight.value !== null && 
       (segmental.source === 'inbody' || overall.bodyFat.value !== null);
 
-    return {
-      segmental,
-      overall,
-      confidence,
-      lastInBodyDate,
-      hasSufficientData,
-    };
-  }, [inbodyAnalyses, unifiedMetrics, inbodyLoading, unifiedLoading]);
+      const result = {
+        segmental,
+        overall,
+        confidence,
+        lastInBodyDate,
+        hasSufficientData,
+      };
+
+      console.log('[useEnhancedBodyModel] Computed result:', {
+        source: result.segmental.source,
+        confidence: result.confidence,
+        hasSufficientData: result.hasSufficientData,
+      });
+
+      return result;
+    } catch (error) {
+      console.error('[useEnhancedBodyModel] Error computing data:', error);
+      // Return default data on error
+      return {
+        segmental: {
+          source: 'none' as DataSource,
+          data: {
+            rightArmPercent: null,
+            leftArmPercent: null,
+            trunkPercent: null,
+            rightLegPercent: null,
+            leftLegPercent: null,
+          },
+          lastUpdated: null,
+          confidence: 'low' as ConfidenceLevel,
+        },
+        overall: {
+          weight: { value: null, source: 'none', date: null },
+          bodyFat: { value: null, source: 'none', date: null },
+          muscleMass: { value: null, source: 'none', date: null },
+          visceralFat: { value: null, source: 'none', date: null },
+        },
+        confidence: 'low' as ConfidenceLevel,
+        lastInBodyDate: null,
+        hasSufficientData: false,
+      };
+    }
+  }, [inbodyAnalyses, unifiedMetrics, inbodyLoading, unifiedLoading, targetDate]);
 
   return enhancedData;
 }

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { InBodyDetailView } from "./InBodyDetailView";
 import { convertPdfToImage, convertPdfToImages } from "@/lib/pdf-to-image";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import "../../index-inbody-styles.css";
 
 interface InBodyAnalysis {
@@ -494,11 +495,25 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
       <Dialog open={!!selectedAnalysis} onOpenChange={() => setSelectedAnalysis(null)}>
         <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto p-0 bg-slate-950 border-purple-500/20">
           {selectedAnalysis && (
-            <InBodyDetailView
-              analysis={selectedAnalysis}
-              previousAnalysis={analyses[analyses.findIndex(a => a.id === selectedAnalysis.id) + 1]}
-              onClose={() => setSelectedAnalysis(null)}
-            />
+            <ErrorBoundary
+              fallback={
+                <div className="p-8 text-center">
+                  <div className="text-destructive text-xl mb-4">⚠️ Ошибка загрузки</div>
+                  <p className="text-muted-foreground mb-4">
+                    Не удалось загрузить данные InBody. Попробуйте обновить страницу.
+                  </p>
+                  <Button onClick={() => window.location.reload()}>
+                    Обновить
+                  </Button>
+                </div>
+              }
+            >
+              <InBodyDetailView
+                analysis={selectedAnalysis}
+                previousAnalysis={analyses[analyses.findIndex(a => a.id === selectedAnalysis.id) + 1]}
+                onClose={() => setSelectedAnalysis(null)}
+              />
+            </ErrorBoundary>
           )}
         </DialogContent>
       </Dialog>
