@@ -9,18 +9,35 @@ import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-
 import { CheckCircle2, Flame, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { HabitOptionsMenu } from "./HabitOptionsMenu";
+import { HabitEditDialog } from "./HabitEditDialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface HabitCompactCardProps {
   habit: any;
   userId?: string;
+  onCompleted?: () => void;
 }
 
-export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
+export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCardProps) {
   const [elapsedTime, setElapsedTime] = useState<{
     days: number;
     hours: number;
     minutes: number;
   } | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const Icon = getHabitIcon(habit);
   const sentiment = getHabitSentiment(habit);
@@ -73,6 +90,23 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
       )
     : null;
 
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from("habits")
+        .update({ is_active: false })
+        .eq("id", habit.id);
+
+      if (error) throw error;
+
+      toast.success("Привычка архивирована");
+      onCompleted?.();
+    } catch (error) {
+      console.error("Error archiving habit:", error);
+      toast.error("Ошибка при архивировании");
+    }
+  };
+
   // FASTING TRACKER - Modern design
   if (habit.habit_type === "fasting_tracker") {
     const { status } = fastingWindow;
@@ -84,20 +118,25 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
     const progress = Math.min(((currentDuration || 0) / (targetHours * 60)) * 100, 100);
 
     return (
-      <Card className="modern-habit-card group p-6 h-full">
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center ring-2 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl",
-              status.isFasting 
-                ? "bg-gradient-to-br from-emerald-500/30 to-green-500/40 ring-emerald-500/40 group-hover:ring-emerald-400 group-hover:shadow-emerald-500/50"
-                : "bg-gradient-to-br from-orange-500/30 to-yellow-500/40 ring-orange-500/40 group-hover:ring-orange-400 group-hover:shadow-orange-500/50"
-            )}>
-              <Icon className="h-7 w-7" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
+      <>
+        <Card className="modern-habit-card group p-6 h-full">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center ring-2 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl",
+                status.isFasting 
+                  ? "bg-gradient-to-br from-emerald-500/30 to-green-500/40 ring-emerald-500/40 group-hover:ring-emerald-400 group-hover:shadow-emerald-500/50"
+                  : "bg-gradient-to-br from-orange-500/30 to-yellow-500/40 ring-orange-500/40 group-hover:ring-orange-400 group-hover:shadow-orange-500/50"
+              )}>
+                <Icon className="h-7 w-7" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
+              </div>
+              <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
+              <HabitOptionsMenu
+                onEdit={() => setShowEditDialog(true)}
+                onDelete={() => setShowDeleteDialog(true)}
+              />
             </div>
-            <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
-          </div>
 
           {/* Big Timer */}
           <div className="text-center py-3">
@@ -133,6 +172,36 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           </div>
         </div>
       </Card>
+      
+      <HabitEditDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        habit={habit}
+        onSuccess={onCompleted}
+      />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Архивировать
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
     );
   }
 
@@ -142,15 +211,20 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
     const progressPercent = Math.min((totalHours / 720) * 100, 100); // 30 days = 720 hours
 
     return (
-      <Card className="modern-habit-card group p-6 h-full">
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/30 to-pink-500/40 flex items-center justify-center ring-2 ring-rose-500/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-rose-400 group-hover:shadow-2xl group-hover:shadow-rose-500/50">
-              <Icon className="h-7 w-7" style={{ color: neonColor }} />
+      <>
+        <Card className="modern-habit-card group p-6 h-full">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/30 to-pink-500/40 flex items-center justify-center ring-2 ring-rose-500/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-rose-400 group-hover:shadow-2xl group-hover:shadow-rose-500/50">
+                <Icon className="h-7 w-7" style={{ color: neonColor }} />
+              </div>
+              <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
+              <HabitOptionsMenu
+                onEdit={() => setShowEditDialog(true)}
+                onDelete={() => setShowDeleteDialog(true)}
+              />
             </div>
-            <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
-          </div>
 
           {/* Big Timer */}
           <div className="text-center py-3">
@@ -187,6 +261,36 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
           </div>
         </div>
       </Card>
+
+      <HabitEditDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        habit={habit}
+        onSuccess={onCompleted}
+      />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Архивировать
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
     );
   }
 
@@ -199,15 +303,20 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
   const progress = targetValue ? Math.min((currentValue / targetValue) * 100, 100) : 0;
 
   return (
-    <Card className="modern-habit-card group p-6 h-full">
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-primary/60 group-hover:shadow-2xl group-hover:shadow-primary/50">
-            <Icon className="h-7 w-7" style={{ color: neonColor }} />
+    <>
+      <Card className="modern-habit-card group p-6 h-full">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:ring-primary/60 group-hover:shadow-2xl group-hover:shadow-primary/50">
+              <Icon className="h-7 w-7" style={{ color: neonColor }} />
+            </div>
+            <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
+            <HabitOptionsMenu
+              onEdit={() => setShowEditDialog(true)}
+              onDelete={() => setShowDeleteDialog(true)}
+            />
           </div>
-          <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
-        </div>
 
         {/* Main Content */}
         {isCompletedToday ? (
@@ -268,5 +377,35 @@ export function HabitCompactCard({ habit, userId }: HabitCompactCardProps) {
         </div>
       </div>
     </Card>
+
+    <HabitEditDialog
+      open={showEditDialog}
+      onOpenChange={setShowEditDialog}
+      habit={habit}
+      onSuccess={onCompleted}
+    />
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent className="glass-strong border-white/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="glass-card border-white/20">
+            Отмена
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-destructive hover:bg-destructive/90"
+          >
+            Архивировать
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }
