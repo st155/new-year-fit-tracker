@@ -28,9 +28,17 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
   const isEnding = daysLeft <= 7 && daysLeft > 0;
 
   return (
-    <Card className="glass-card border-primary/20 hover-lift group overflow-hidden relative">
+    <Card className={`glass-card hover-lift group overflow-hidden relative ${
+      challenge.isParticipant 
+        ? "border-2 border-primary shadow-glow-primary" 
+        : "border-primary/20"
+    }`}>
       {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+      <div className={`absolute inset-0 bg-gradient-primary transition-opacity ${
+        challenge.isParticipant 
+          ? "opacity-5" 
+          : "opacity-0 group-hover:opacity-5"
+      }`} />
       
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
@@ -43,9 +51,9 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             </CardTitle>
           </div>
           {challenge.isParticipant ? (
-            <Badge className="bg-success/20 text-success border-success/50 shrink-0">
+            <Badge className="bg-success/20 text-success border-success/50 shrink-0 animate-pulse">
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              Active
+              Участвую
             </Badge>
           ) : (
             <Badge variant="outline" className="shrink-0">
