@@ -5,12 +5,13 @@ import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useChallenges } from "@/hooks/useChallenges";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
-import { Trophy, Target, Users, TrendingUp, Sparkles } from "lucide-react";
+import { Trophy, Target, Users, TrendingUp, Sparkles, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { CreateChallengeDialog } from "@/components/trainer/CreateChallengeDialog";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function Challenges() {
   const searchParams = new URLSearchParams(location.search);
   const isOnboarding = searchParams.get('onboarding') === 'true';
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Показать приветственное модальное окно для новых пользователей
   useEffect(() => {
@@ -94,14 +96,26 @@ export default function Challenges() {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-8 md:p-12">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
         <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <Trophy className="h-8 w-8 text-white" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Trophy className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-white">Challenges</h1>
+                <p className="text-white/90 text-lg">Push your limits and achieve greatness</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white">Challenges</h1>
-              <p className="text-white/90 text-lg">Push your limits and achieve greatness</p>
-            </div>
+            {user && (
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-white text-primary hover:bg-white/90 shadow-lg shrink-0"
+                size="lg"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Создать
+              </Button>
+            )}
           </div>
 
           {/* Quick Stats */}
@@ -168,7 +182,7 @@ export default function Challenges() {
             </div>
             <h3 className="text-lg font-semibold mb-2">Нет активных челленджей</h3>
             <p className="text-sm text-muted-foreground text-center mb-6">
-              Проверьте позже или свяжитесь с тренером для создания нового челленджа
+              Создайте свой челлендж или дождитесь новых от других участников
             </p>
             <Button onClick={() => refetch()} variant="outline" className="gap-2">
               <Trophy className="h-4 w-4" />
@@ -196,6 +210,16 @@ export default function Challenges() {
           </motion.div>
         </div>
       )}
+
+      {/* Create Challenge Dialog */}
+      <CreateChallengeDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={() => {
+          setShowCreateDialog(false);
+          refetch();
+        }}
+      />
       </div>
     </AnimatedPage>
   );

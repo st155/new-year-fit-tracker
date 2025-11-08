@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeDetail } from "@/hooks/useChallengeDetail";
+import { useIsParticipant } from "@/hooks/useIsParticipant";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
@@ -16,7 +17,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { captureBaseline } from "@/lib/challenge-baseline";
@@ -27,22 +27,7 @@ export default function ChallengeDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { challenge, isLoading } = useChallengeDetail(id);
-  const [isParticipant, setIsParticipant] = useState(false);
-
-  // Check if user is participant
-  useEffect(() => {
-    if (user && id) {
-      supabase
-        .from("challenge_participants")
-        .select("*")
-        .eq("challenge_id", id)
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => {
-          setIsParticipant(!!data);
-        });
-    }
-  }, [user, id]);
+  const { data: isParticipant = false, refetch: refetchParticipation } = useIsParticipant(id, user?.id);
 
   const joinMutation = useMutation({
     mutationFn: async () => {
@@ -76,7 +61,7 @@ export default function ChallengeDetail() {
       queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
       queryClient.invalidateQueries({ queryKey: ["goals"] });
-      setIsParticipant(true);
+      refetchParticipation();
     },
     onError: (error: any) => {
       console.error('❌ [join_challenge] Failed:', {
@@ -112,7 +97,7 @@ export default function ChallengeDetail() {
       toast.success("Вы вышли из челленджа");
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
-      setIsParticipant(false);
+      refetchParticipation();
       navigate("/challenges");
     },
     onError: (error) => {
