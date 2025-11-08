@@ -7,10 +7,14 @@ import remarkGfm from 'remark-gfm';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, User, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Sparkles, User, Loader2, AlertCircle, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChat } from './useAIChat';
 import { AIToolCard } from './AIToolCard';
+import { useAIPendingActions } from '@/hooks/useAIPendingActions';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface AIMessageListProps {
   selectedClient?: {
@@ -23,8 +27,21 @@ interface AIMessageListProps {
 
 export function AIMessageList({ selectedClient }: AIMessageListProps) {
   const { messages, sending, sendingState, loading, currentConversation } = useAIChat();
+  const { user } = useAuth();
+  const { pendingActions, executeActions, rejectAction, executing } = useAIPendingActions(user?.id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const handleExecute = async (pendingActionId: string) => {
+    const pendingAction = pendingActions.find(pa => pa.id === pendingActionId);
+    if (!pendingAction) return;
+
+    const actions = Array.isArray(pendingAction.action_data) 
+      ? pendingAction.action_data 
+      : [pendingAction.action_data];
+    
+    await executeActions(pendingActionId, pendingAction.conversation_id, actions);
+  };
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -204,6 +221,16 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     </div>
                   )}
                   
+                  {/* Pending Action Indicator */}
+                  {!isUser && msg.metadata?.pendingActionId && (
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
+                      <Clock className="h-3 w-3 text-amber-500 animate-pulse" />
+                      <span className="text-xs text-muted-foreground">
+                        Ожидает подтверждения
+                      </span>
+                    </div>
+                  )}
+
                   {/* Status indicators */}
                   {isOptimistic && !isFailed && (
                     <div className="flex items-center gap-2 mt-2 text-xs opacity-70">
@@ -219,6 +246,67 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Pending Action Card - shown after AI message */}
+                {!isUser && msg.metadata?.pendingActionId && (() => {
+                  const pendingAction = pendingActions.find(pa => pa.id === msg.metadata?.pendingActionId);
+                  if (!pendingAction) return null;
+                  
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="ml-12 mt-2"
+                    >
+                      <Card className="border-amber-500/50 bg-amber-500/10 overflow-hidden">
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <div className="font-medium text-sm">План действий</div>
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {pendingAction.action_plan}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleExecute(pendingAction.id)}
+                              disabled={executing}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              {executing ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  Выполняю...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-3 w-3 mr-2" />
+                                  Выполнить
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => rejectAction(pendingAction.id)}
+                              disabled={executing}
+                              className="flex-1 border-red-500/50 text-red-600 hover:bg-red-500/10"
+                            >
+                              <XCircle className="h-3 w-3 mr-2" />
+                              Отклонить
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                })()}
                 
                 {isUser && (
                   <Avatar className="h-8 w-8 md:h-9 md:w-9 shrink-0 ring-2 ring-primary/20">

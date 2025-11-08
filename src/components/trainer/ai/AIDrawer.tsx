@@ -109,7 +109,7 @@ function AIDrawerContent({ onOpenChange, selectedClient }: Omit<AIDrawerProps, '
                     <Clock className="h-4 w-4 mr-2" />
                     Ожидают
                     {pendingActions.length > 0 && (
-                      <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                      <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs animate-pulse">
                         {pendingActions.length}
                       </Badge>
                     )}

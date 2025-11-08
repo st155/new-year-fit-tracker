@@ -299,13 +299,20 @@ export const useAIConversations = (userId: string | undefined) => {
                     finalData = parsed;
                     console.log('✅ Stream complete:', finalData);
                     
-                    // Show notification if pending action was created
+                    // Trigger immediate refresh of pending actions
                     if (parsed.pendingActionId) {
                       showToast({
-                        title: '📋 План готов к выполнению',
-                        description: 'Перейдите на вкладку "Ожидают" для подтверждения действий',
+                        title: '📋 План готов',
+                        description: 'Нажмите "Выполнить" в чате для подтверждения',
                         duration: 5000
                       });
+                      
+                      // Trigger pending actions refresh
+                      if (typeof window !== 'undefined' && (window as any).__refreshPendingActions) {
+                        setTimeout(() => {
+                          (window as any).__refreshPendingActions();
+                        }, 100);
+                      }
                     }
                   } else if (parsed.type === 'error') {
                     throw new Error(parsed.error);

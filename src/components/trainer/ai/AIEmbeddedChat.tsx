@@ -63,7 +63,7 @@ export function AIEmbeddedChat({ selectedClient }: AIEmbeddedChatProps) {
                 <TabsTrigger value="pending" className="data-[state=active]:bg-white dark:data-[state=active]:bg-purple-950">
                   <span>Ожидают</span>
                   {pendingActions.length > 0 && (
-                    <Badge className="ml-2 bg-purple-500 text-white hover:bg-purple-600" variant="secondary">
+                    <Badge className="ml-2 bg-purple-500 text-white hover:bg-purple-600 animate-pulse" variant="secondary">
                       {pendingActions.length}
                     </Badge>
                   )}

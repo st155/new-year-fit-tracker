@@ -70,6 +70,12 @@ export const useAIPendingActions = (userId: string | undefined) => {
       if (error) throw error;
       
       await loadPendingActions();
+      
+      toast({
+        title: '📋 План создан',
+        description: 'Проверьте вкладку "Ожидают" для подтверждения'
+      });
+      
       return data;
     } catch (error) {
       console.error('Error creating pending action:', error);
@@ -160,28 +166,64 @@ export const useAIPendingActions = (userId: string | undefined) => {
     loadPendingActions();
   }, [userId]);
 
-  // Set up realtime subscription with debounce
+  // Set up realtime subscription with improved handling
   useEffect(() => {
     if (!userId) return;
 
     let debounceTimer: NodeJS.Timeout;
+    let previousCount = pendingActions.length;
 
     const channel = supabase
       .channel('ai_pending_actions')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ai_pending_actions',
+          filter: `trainer_id=eq.${userId}`
+        },
+        async () => {
+          // Immediate reload for new actions
+          await loadPendingActions();
+          
+          // Show toast for new pending action
+          if (pendingActions.length === 0) {
+            toast({
+              title: '✨ Новый план готов',
+              description: 'Перейдите на вкладку "Ожидают"',
+              duration: 5000
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'ai_pending_actions',
           filter: `trainer_id=eq.${userId}`
         },
         () => {
-          // Debounce to avoid rapid reloads
+          // Debounced reload for updates
           clearTimeout(debounceTimer);
           debounceTimer = setTimeout(() => {
             loadPendingActions();
-          }, 500);
+          }, 100);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'ai_pending_actions',
+          filter: `trainer_id=eq.${userId}`
+        },
+        () => {
+          // Immediate reload for deletes
+          loadPendingActions();
         }
       )
       .subscribe();
@@ -189,6 +231,18 @@ export const useAIPendingActions = (userId: string | undefined) => {
     return () => {
       clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // Expose refresh function globally for triggering from other hooks
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__refreshPendingActions = loadPendingActions;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__refreshPendingActions;
+      }
     };
   }, [userId]);
 
