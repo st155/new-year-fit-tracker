@@ -73,7 +73,6 @@ export function useClientDetailData(clientUserId?: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [healthData, setHealthData] = useState<HealthData[]>([]);
-  const [aiHistory, setAiHistory] = useState<any[]>([]);
   const [whoopSummary, setWhoopSummary] = useState<WhoopSummary | null>(null);
   const [ouraSummary, setOuraSummary] = useState<OuraSummary | null>(null);
   const [clientData, setClientData] = useState<any>(null);
@@ -375,7 +374,6 @@ export function useClientDetailData(clientUserId?: string) {
         setGoals([]);
         setMeasurements([]);
         setHealthData([]);
-        setAiHistory([]);
         setWhoopSummary(null);
         setOuraSummary(null);
         setLoading(false);
@@ -437,7 +435,6 @@ export function useClientDetailData(clientUserId?: string) {
       setGoals(goalsData);
       setMeasurements(measurementsData);
       setHealthData(mergedHealth);
-      setAiHistory(parsedData.ai_history || []);
       setWhoopSummary(whoopSum);
       setOuraSummary(ouraSum);
       setError(null);
@@ -476,7 +473,6 @@ export function useClientDetailData(clientUserId?: string) {
     goals,
     measurements,
     healthData,
-    aiHistory,
     whoopSummary,
     ouraSummary,
     loading,

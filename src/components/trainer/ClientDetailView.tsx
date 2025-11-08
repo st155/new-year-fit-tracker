@@ -184,7 +184,6 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     goals, 
     measurements, 
     healthData, 
-    aiHistory,
     whoopSummary,
     ouraSummary,
     unifiedMetrics,
@@ -343,7 +342,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       />
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
           <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
           <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
@@ -351,7 +350,6 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           <TabsTrigger value="comparison" className="whitespace-nowrap flex-shrink-0">Сравнение</TabsTrigger>
           <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
           <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
-          <TabsTrigger value="ai-history" className="whitespace-nowrap flex-shrink-0">AI История ({aiHistory.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
@@ -1091,56 +1089,6 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </Card>
               )}
             </>
-          )}
-        </TabsContent>
-
-        {/* AI History Tab */}
-        <TabsContent value="ai-history" className="space-y-4">
-          {aiHistory.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground">
-                <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Нет истории AI действий для этого клиента</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {aiHistory.map((log) => (
-                <Card key={log.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={log.success ? "default" : "destructive"}>
-                          {log.action_type}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(log.created_at).toLocaleDateString('ru-RU')}
-                        </span>
-                      </div>
-                      {log.success ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          Выполнено
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-red-50 text-red-700">
-                          Ошибка
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <pre className="text-sm bg-muted p-3 rounded overflow-auto">
-                        {JSON.stringify(log.action_details, null, 2)}
-                      </pre>
-                      {log.error_message && (
-                        <p className="text-sm text-destructive">{log.error_message}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           )}
         </TabsContent>
       </Tabs>
