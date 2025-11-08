@@ -115,7 +115,7 @@ export function ClientHealthScore({
         <div className="space-y-4">
           <div>
             <h4 className="font-semibold mb-2">Health Score Breakdown</h4>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-foreground/70 mb-4">
               Comprehensive health assessment based on multiple factors
             </p>
           </div>
@@ -127,9 +127,9 @@ export function ClientHealthScore({
                 <Heart className="h-4 w-4 text-red-500" />
                 <span className="text-sm font-medium">Recovery</span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {breakdown.recovery.toFixed(0)}/25
-              </span>
+                  <span className="text-sm font-medium text-foreground/90">
+                    {breakdown.recovery.toFixed(0)}/25
+                  </span>
             </div>
             <Progress value={(breakdown.recovery / 25) * 100} className="h-2" />
           </div>
@@ -141,7 +141,7 @@ export function ClientHealthScore({
                 <Moon className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">Sleep Quality</span>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium text-foreground/90">
                 {breakdown.sleep.toFixed(0)}/25
               </span>
             </div>
@@ -155,9 +155,9 @@ export function ClientHealthScore({
                 <Activity className="h-4 w-4 text-green-500" />
                 <span className="text-sm font-medium">Activity Level</span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {breakdown.activity.toFixed(0)}/20
-              </span>
+                  <span className="text-sm font-medium text-foreground/90">
+                    {breakdown.activity.toFixed(0)}/20
+                  </span>
             </div>
             <Progress value={(breakdown.activity / 20) * 100} className="h-2" />
           </div>
@@ -169,7 +169,7 @@ export function ClientHealthScore({
                 <Calendar className="h-4 w-4 text-purple-500" />
                 <span className="text-sm font-medium">Consistency</span>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium text-foreground/90">
                 {breakdown.consistency.toFixed(0)}/15
               </span>
             </div>
@@ -183,15 +183,15 @@ export function ClientHealthScore({
                 <TrendingUp className="h-4 w-4 text-orange-500" />
                 <span className="text-sm font-medium">Progress Trend</span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {breakdown.trend.toFixed(0)}/15
-              </span>
+                  <span className="text-sm font-medium text-foreground/90">
+                    {breakdown.trend.toFixed(0)}/15
+                  </span>
             </div>
             <Progress value={(breakdown.trend / 15) * 100} className="h-2" />
           </div>
 
           {lastUpdated && (
-            <div className="pt-2 border-t text-xs text-muted-foreground">
+            <div className="pt-2 border-t text-xs text-foreground/60">
               Last updated: {lastUpdated.toLocaleDateString()}
             </div>
           )}
