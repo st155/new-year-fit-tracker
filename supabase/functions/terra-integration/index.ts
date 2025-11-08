@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { writeToUnifiedMetrics } from '../_shared/unified-metrics-writer.ts';
+import { mapTerraActivityType } from '../_shared/terra-activity-types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -545,13 +546,19 @@ async function processTerraData(supabase: any, payload: any) {
         if (activity.active_durations?.length > 0) {
           for (const workout of activity.active_durations) {
             const externalId = `terra_${provider}_${workout.start_time}`;
+            const workoutType = mapTerraActivityType(workout.activity_type, provider);
+            const distanceKm = activity.distance_data?.distance_meters 
+              ? Math.round(activity.distance_data.distance_meters / 10) / 100  // Convert meters to km with 2 decimals
+              : null;
+            
             const { error: workoutError } = await supabase.from('workouts').upsert({
               user_id: userId,
-              workout_type: workout.activity_type || 'Activity',
+              workout_type: workoutType,
               start_time: workout.start_time,
               end_time: workout.end_time,
               duration_minutes: Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000),
               calories_burned: activity.calories_data?.total_burned_calories,
+              distance_km: distanceKm,
               heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
               heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
               source: provider.toLowerCase(),

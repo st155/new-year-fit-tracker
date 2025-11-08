@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dumbbell, Activity, Clock, Flame, Heart, TrendingUp, Footprints } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { todayDateString } from "@/lib/datetime-utils";
+import { getWorkoutIcon } from "@/lib/workout-icons";
 
 interface TodayWorkout {
   id: string;
@@ -15,6 +16,7 @@ interface TodayWorkout {
   end_time: string | null;
   duration_minutes: number | null;
   calories_burned: number | null;
+  distance_km: number | null;
   heart_rate_avg: number | null;
   heart_rate_max: number | null;
   source: string;
@@ -346,8 +348,8 @@ export function TodayActivity() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-                    <Dumbbell className="h-4 w-4 text-white" />
+                  <div className="text-2xl">
+                    {getWorkoutIcon(workout.workout_type)}
                   </div>
                   
                   <div className="space-y-1">
@@ -355,14 +357,12 @@ export function TodayActivity() {
                       <h4 className="font-semibold text-foreground">
                         {workout.workout_type}
                       </h4>
-                      {workout.source === 'whoop' && (
-                        <Badge variant="secondary" className="text-xs">
-                          Whoop
-                        </Badge>
-                      )}
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {workout.source}
+                      </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center flex-wrap gap-3 text-xs text-muted-foreground">
                       {workout.strain && (
                         <span className="flex items-center gap-1">
                           <TrendingUp className="h-3 w-3" />
@@ -379,6 +379,12 @@ export function TodayActivity() {
                         <span className="flex items-center gap-1">
                           <Flame className="h-3 w-3" />
                           {Math.round(workout.calories_burned)} kcal
+                        </span>
+                      )}
+                      {workout.distance_km && (
+                        <span className="flex items-center gap-1">
+                          <Footprints className="h-3 w-3" />
+                          {workout.distance_km.toFixed(2)} км
                         </span>
                       )}
                       {workout.heart_rate_avg && (

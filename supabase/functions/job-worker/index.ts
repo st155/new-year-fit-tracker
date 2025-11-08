@@ -3,6 +3,7 @@ import { JobQueue, JobType, Job } from '../_shared/background-jobs.ts';
 import { Logger } from '../_shared/monitoring.ts';
 import { withErrorHandling, EdgeFunctionError, ErrorCode } from '../_shared/error-handling.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { mapTerraActivityType } from '../_shared/terra-activity-types.ts';
 
 const logger = new Logger('job-worker');
 
@@ -153,6 +154,36 @@ async function processTerraWebhookData(
         for (const workout of activity.active_durations) {
           const workoutDate = workout.start_time?.split('T')[0] || date;
           const workoutId = `terra_${provider}_workout_${workout.start_time}`;
+          const workoutType = mapTerraActivityType(workout.activity_type, provider);
+          const distanceKm = activity.distance_data?.distance_meters 
+            ? Math.round(activity.distance_data.distance_meters / 10) / 100
+            : null;
+
+          // Insert full workout record
+          const { error: workoutError } = await supabase.from('workouts').upsert({
+            user_id: user_id,
+            workout_type: workoutType,
+            start_time: workout.start_time,
+            end_time: workout.end_time,
+            duration_minutes: workout.end_time 
+              ? Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000)
+              : null,
+            calories_burned: activity.calories_data?.total_burned_calories,
+            distance_km: distanceKm,
+            heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
+            heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
+            source: provider.toLowerCase(),
+            external_id: workoutId,
+          }, {
+            onConflict: 'external_id',
+            ignoreDuplicates: false,
+          });
+
+          if (workoutError) {
+            logger.error('Failed to insert workout', workoutError);
+          } else {
+            processedCount++;
+          }
 
           if (activity.calories_data?.total_burned_calories) {
             metricsToInsert.push({
@@ -166,11 +197,11 @@ async function processTerraWebhookData(
             });
           }
 
-          if (activity.distance_data?.distance_meters) {
+          if (distanceKm) {
             metricsToInsert.push({
               metric_name: 'Distance',
               category: 'workout',
-              value: activity.distance_data.distance_meters / 1000,
+              value: distanceKm,
               measurement_date: workoutDate,
               source: provider,
               external_id: `${workoutId}_distance`,
