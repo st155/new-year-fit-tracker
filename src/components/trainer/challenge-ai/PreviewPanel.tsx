@@ -23,7 +23,7 @@ export const PreviewPanel = ({
   disciplines,
 }: PreviewPanelProps) => {
   return (
-    <Card className="p-6 bg-gradient-to-br from-primary/5 via-background to-background border-primary/20">
+    <Card className="p-6 bg-card border-2 border-primary/50 shadow-xl">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
@@ -38,7 +38,7 @@ export const PreviewPanel = ({
 
           <div>
             <Label className="text-xs text-muted-foreground">Description</Label>
-            <p className="text-sm text-foreground/80 mt-1">{description}</p>
+            <p className="text-sm text-foreground mt-1">{description}</p>
           </div>
 
           <div className="flex gap-2 flex-wrap">
@@ -53,10 +53,10 @@ export const PreviewPanel = ({
               {disciplines.map((discipline, idx) => (
                 <div
                   key={idx}
-                  className="flex justify-between items-center p-2 rounded-lg bg-secondary/50"
+                  className="flex justify-between items-center p-3 rounded-lg bg-primary/10 border border-primary/20"
                 >
-                  <span className="text-sm text-foreground">{discipline.name}</span>
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-sm font-medium text-foreground">{discipline.name}</span>
+                  <span className="text-sm font-bold text-primary">
                     {discipline.benchmarkValue} {discipline.unit}
                   </span>
                 </div>
