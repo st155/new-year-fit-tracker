@@ -18,7 +18,8 @@ import { LeaderboardTabs } from "@/components/leaderboard/LeaderboardTabs";
 import { AchievementsGallery } from "@/components/leaderboard/AchievementsGallery";
 import { FeaturedAchievements } from "@/components/leaderboard/FeaturedAchievements";
 import { DailyChallenges } from "@/components/leaderboard/DailyChallenges";
-import { LeaderboardCategoryLeaders } from "@/components/leaderboard/LeaderboardCategoryLeaders";
+import { LeaderboardCategoryLeaders, CategoryInfo } from "@/components/leaderboard/LeaderboardCategoryLeaders";
+import { CategoryLeaderboardDialog } from "@/components/leaderboard/CategoryLeaderboardDialog";
 import { LeaderboardUserCard } from "@/components/leaderboard/LeaderboardUserCard";
 import { getUserLevel } from "@/lib/gamification";
 
@@ -27,6 +28,7 @@ const Leaderboard = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeTab, setActiveTab] = useState('overall');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryInfo | null>(null);
   
   // Map activeTab to timePeriod for the hook
   const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
@@ -103,7 +105,10 @@ const Leaderboard = () => {
                       <Trophy className="h-5 w-5 text-primary" />
                       Weekly Leaders
                     </h3>
-                    <LeaderboardCategoryLeaders leaderboard={leaderboard} />
+                    <LeaderboardCategoryLeaders 
+                      leaderboard={leaderboard}
+                      onCategoryClick={setSelectedCategory}
+                    />
                   </motion.div>
                 )}
 
@@ -269,6 +274,13 @@ const Leaderboard = () => {
         userName={selectedUserName}
         open={!!selectedUserId}
         onClose={() => setSelectedUserId(null)}
+      />
+
+      <CategoryLeaderboardDialog
+        open={!!selectedCategory}
+        onClose={() => setSelectedCategory(null)}
+        category={selectedCategory}
+        leaderboard={leaderboard}
       />
     </AnimatedPage>
   );
