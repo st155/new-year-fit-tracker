@@ -1215,6 +1215,27 @@ export type Database = {
         }
         Relationships: []
       }
+      discipline_metric_mappings: {
+        Row: {
+          created_at: string | null
+          discipline_name: string
+          id: string
+          unified_metric_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          discipline_name: string
+          id?: string
+          unified_metric_name: string
+        }
+        Update: {
+          created_at?: string | null
+          discipline_name?: string
+          id?: string
+          unified_metric_name?: string
+        }
+        Relationships: []
+      }
       edge_function_logs: {
         Row: {
           duration_ms: number | null
@@ -1487,6 +1508,13 @@ export type Database = {
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "goal_baselines_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
           {
@@ -1812,6 +1840,13 @@ export type Database = {
             columns: ["linked_goal_id"]
             isOneToOne: false
             referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "habits_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
           {
@@ -2266,6 +2301,13 @@ export type Database = {
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "measurements_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
           {
@@ -4136,6 +4178,47 @@ export type Database = {
           total_executions: number | null
         }
         Relationships: []
+      }
+      goal_current_values: {
+        Row: {
+          current_value: number | null
+          goal_id: string | null
+          goal_name: string | null
+          last_updated: string | null
+          source: string | null
+          target_unit: string | null
+          target_value: number | null
+          user_id: string | null
+        }
+        Insert: {
+          current_value?: never
+          goal_id?: string | null
+          goal_name?: string | null
+          last_updated?: never
+          source?: never
+          target_unit?: string | null
+          target_value?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          current_value?: never
+          goal_id?: string | null
+          goal_name?: string | null
+          last_updated?: never
+          source?: never
+          target_unit?: string | null
+          target_value?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       job_processing_stats: {
         Row: {
