@@ -14,6 +14,7 @@ interface LeaderboardEntry {
   comments_count: number;
   likes_received: number;
   streak_days: number;
+  difficulty_level?: number;
   profiles?: {
     username: string;
     full_name?: string;
@@ -50,14 +51,26 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
       }
 
       const userIds = pointsData.map(p => p.user_id);
+      
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('user_id, username, full_name, avatar_url, trainer_role')
         .in('user_id', userIds);
 
+      const { data: participantsData } = await supabase
+        .from('challenge_participants')
+        .select('user_id, difficulty_level')
+        .eq('challenge_id', challengeId)
+        .in('user_id', userIds);
+
       const combined = pointsData.map(points => {
         const profile = profilesData?.find(p => p.user_id === points.user_id);
-        return { ...points, profiles: profile };
+        const participant = participantsData?.find(p => p.user_id === points.user_id);
+        return { 
+          ...points, 
+          profiles: profile,
+          difficulty_level: participant?.difficulty_level || 0
+        };
       });
 
       setLeaderboard(combined);
@@ -136,13 +149,18 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
                   </Avatar>
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold">
                         {entry.profiles?.full_name || entry.profiles?.username}
                         {entry.user_id === user?.id && " (Вы)"}
                       </p>
                       {entry.profiles?.trainer_role && (
                         <Badge className="text-xs bg-gradient-primary text-white">Тренер</Badge>
+                      )}
+                      {entry.difficulty_level && entry.difficulty_level > 0 && (
+                        <Badge className="text-xs bg-orange-500 text-white">
+                          +{entry.difficulty_level} 🔥
+                        </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">@{entry.profiles?.username}</p>

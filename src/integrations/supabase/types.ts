@@ -701,6 +701,7 @@ export type Database = {
           baseline_source: string | null
           baseline_weight: number | null
           challenge_id: string
+          difficulty_level: number | null
           id: string
           joined_at: string
           user_id: string
@@ -713,6 +714,7 @@ export type Database = {
           baseline_source?: string | null
           baseline_weight?: number | null
           challenge_id: string
+          difficulty_level?: number | null
           id?: string
           joined_at?: string
           user_id: string
@@ -725,6 +727,7 @@ export type Database = {
           baseline_source?: string | null
           baseline_weight?: number | null
           challenge_id?: string
+          difficulty_level?: number | null
           id?: string
           joined_at?: string
           user_id?: string
@@ -4544,7 +4547,12 @@ export type Database = {
         Returns: boolean
       }
       is_trainer: { Args: { _user_id: string }; Returns: boolean }
-      join_challenge: { Args: { p_challenge_id: string }; Returns: Json }
+      join_challenge:
+        | { Args: { p_challenge_id: string }; Returns: Json }
+        | {
+            Args: { p_challenge_id: string; p_difficulty_level?: number }
+            Returns: Json
+          }
       retry_failed_jobs: {
         Args: { p_job_type?: string }
         Returns: {

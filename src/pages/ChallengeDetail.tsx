@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeDetail } from "@/hooks/useChallengeDetail";
 import { useIsParticipant } from "@/hooks/useIsParticipant";
+import { useDifficultyLevel } from "@/hooks/useDifficultyLevel";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 import { ChallengeProgressDashboard } from "@/components/challenges/ChallengeProgressDashboard";
 import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOverview";
+import { DifficultySelectorDialog } from "@/components/challenge/DifficultySelectorDialog";
+import { DifficultyBadge } from "@/components/challenge/DifficultyBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
@@ -28,13 +32,32 @@ export default function ChallengeDetail() {
   const queryClient = useQueryClient();
   const { challenge, isLoading } = useChallengeDetail(id);
   const { data: isParticipant = false, refetch: refetchParticipation } = useIsParticipant(id, user?.id);
+  const { data: difficultyLevel = 0 } = useDifficultyLevel(id, user?.id);
+  const [showDifficultyDialog, setShowDifficultyDialog] = useState(false);
+
+  // Fetch challenge disciplines for difficulty dialog
+  const { data: disciplines = [] } = useQuery({
+    queryKey: ["challenge-disciplines", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from("challenge_disciplines")
+        .select("discipline_name, benchmark_value, unit")
+        .eq("challenge_id", id)
+        .order("position");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!id,
+  });
 
   const joinMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (difficulty: number = 0) => {
       if (!user || !id) throw new Error("Missing user or challenge ID");
       
       const { data, error } = await supabase.rpc('join_challenge', {
-        p_challenge_id: id
+        p_challenge_id: id,
+        p_difficulty_level: difficulty
       });
 
       if (error) throw error;
@@ -152,9 +175,12 @@ export default function ChallengeDetail() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-4xl md:text-5xl font-bold text-white">{challenge.title}</h1>
                   {isParticipant && (
-                    <Badge className="bg-success/20 text-success border-success/50">
-                      ✓ Участвую
-                    </Badge>
+                    <>
+                      <Badge className="bg-success/20 text-success border-success/50">
+                        ✓ Участвую
+                      </Badge>
+                      <DifficultyBadge level={difficultyLevel} />
+                    </>
                   )}
                 </div>
                 <p className="text-white/90 text-lg max-w-2xl">{challenge.description}</p>
@@ -162,7 +188,7 @@ export default function ChallengeDetail() {
 
               {!isParticipant ? (
                 <Button
-                  onClick={() => joinMutation.mutate()}
+                  onClick={() => setShowDifficultyDialog(true)}
                   disabled={joinMutation.isPending}
                   size="lg"
                   className="bg-white text-primary hover:bg-white/90 shrink-0"
@@ -272,7 +298,7 @@ export default function ChallengeDetail() {
               </CardHeader>
               <CardContent>
                 <Button
-                  onClick={() => joinMutation.mutate()}
+                  onClick={() => setShowDifficultyDialog(true)}
                   disabled={joinMutation.isPending}
                   size="lg"
                   className="bg-gradient-primary"
@@ -297,6 +323,16 @@ export default function ChallengeDetail() {
           <ChallengeLeaderboard challengeId={id!} />
         </TabsContent>
       </Tabs>
+
+      <DifficultySelectorDialog
+        open={showDifficultyDialog}
+        onOpenChange={setShowDifficultyDialog}
+        disciplines={disciplines}
+        onConfirm={(level) => {
+          joinMutation.mutate(level);
+          setShowDifficultyDialog(false);
+        }}
+      />
     </div>
   );
 }
