@@ -19,8 +19,6 @@ import {
   Sparkles,
   Info,
   Wifi,
-  LayoutDashboard,
-  Trophy,
   Moon,
   Flame,
   Wind
@@ -28,7 +26,7 @@ import {
 import { useClientContext } from "@/contexts/ClientContext";
 import { useNavigate } from "react-router-dom";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
-import { NavigationBreadcrumbs, Breadcrumb } from "@/components/navigation/NavigationBreadcrumbs";
+
 import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
@@ -239,43 +237,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
     navigate(`/trainer-dashboard?tab=ai-hub&client=${client.user_id}`);
   };
 
-  // Build breadcrumbs
-  const breadcrumbs: Breadcrumb[] = [
-    { 
-      label: 'Dashboard', 
-      path: '/trainer-dashboard?tab=overview',
-      icon: <LayoutDashboard className="h-4 w-4 mr-1" />
-    }
-  ];
-
-  if (navigationSource?.type === 'challenges' && navigationSource.challengeId) {
-    breadcrumbs.push({
-      label: navigationSource.challengeName || 'Челлендж',
-      path: `/trainer-dashboard?tab=challenges&challenge=${navigationSource.challengeId}`,
-      icon: <Trophy className="h-4 w-4 mr-1" />
-    });
-  } else if (navigationSource?.type === 'overview') {
-    breadcrumbs.push({
-      label: 'Обзор',
-      path: '/trainer-dashboard?tab=overview'
-    });
-  } else if (navigationSource?.type === 'ai-hub') {
-    breadcrumbs.push({
-      label: 'AI Hub',
-      path: '/trainer-dashboard?tab=ai-hub',
-      icon: <Sparkles className="h-4 w-4 mr-1" />
-    });
-  }
-
-  breadcrumbs.push({
-    label: client.full_name || client.username
-  });
-
   return (
     <div className="space-y-6">
-      {/* Breadcrumbs */}
-      <NavigationBreadcrumbs items={breadcrumbs} />
-
       {/* Header with Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
