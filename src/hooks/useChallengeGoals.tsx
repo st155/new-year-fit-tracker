@@ -99,11 +99,24 @@ export function useChallengeGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // 6. Return all goals without deduplication
+      // 6. Get current values from unified_metrics via goal_current_values view
+      const { data: currentValues } = await supabase
+        .from("goal_current_values")
+        .select("*")
+        .in("goal_id", goalIds);
+
+      // 7. Fetch unified metrics history for goals that have mappings
+      const { data: allUnifiedHistory } = await supabase
+        .from("unified_metrics")
+        .select("metric_name, value, measurement_date")
+        .eq("user_id", userId)
+        .order("measurement_date", { ascending: false });
+
+      // 8. Return all goals without deduplication
       // Display all 9 challenge goals + 2 personal goals (total 11)
       console.info('Total goals (no deduplication):', goals.length);
 
-      // 7. Map goals with measurements and calculate progress
+      // 9. Map goals with measurements and calculate progress
       const challengeGoals: ChallengeGoal[] = goals.map(goal => {
         const allMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
         
@@ -124,6 +137,15 @@ export function useChallengeGoals(userId?: string) {
         const baselineDate = participation?.baseline_recorded_at || challengeStartDate;
         
         let subSources: ChallengeGoal['subSources'] = undefined;
+        
+        // Check if we have unified metrics data for this goal
+        const currentValueData = currentValues?.find(cv => cv.goal_id === goal.id);
+        const isBodyCompositionGoal = goalNameLower.includes('вес') || 
+                                      goalNameLower.includes('weight') ||
+                                      goalNameLower.includes('жир') || 
+                                      goalNameLower.includes('fat') ||
+                                      goalNameLower.includes('мышц') || 
+                                      goalNameLower.includes('muscle');
         
         if (goalNameLower.includes('вес') || goalNameLower.includes('weight')) {
           currentValue = bodyMetrics.weight?.value || allMeasurements[0]?.value || 0;
@@ -200,12 +222,37 @@ export function useChallengeGoals(userId?: string) {
           if (!baselineValue) {
             baselineValue = participation?.baseline_muscle_mass || allMeasurements[allMeasurements.length - 1]?.value || null;
           }
+        } else if (currentValueData && currentValueData.current_value) {
+          // For other goals, use unified_metrics data from goal_current_values view
+          currentValue = currentValueData.current_value;
+          source = currentValueData.source as any;
+          
+          // Get history from pre-fetched unified metrics
+          const unifiedHistory = allUnifiedHistory
+            ?.filter(h => h.metric_name === goal.goal_name)
+            .slice(0, 14) || [];
+          
+          if (unifiedHistory.length > 0) {
+            sparklineData = unifiedHistory.map(d => ({
+              goal_id: goal.id,
+              value: d.value,
+              measurement_date: d.measurement_date
+            }));
+            
+            // Use earliest from unified_metrics as baseline
+            baselineValue = unifiedHistory[unifiedHistory.length - 1].value;
+          }
+          
+          // Fallback to manual measurements if no unified history
+          if (allMeasurements.length > 1 && !baselineValue) {
+            baselineValue = allMeasurements[allMeasurements.length - 1].value;
+          }
         } else {
-          // For other goals (running, pull-ups, etc.)
+          // Final fallback: use manual measurements
           currentValue = allMeasurements[0]?.value || 0;
           source = 'manual';
           
-          // Use earliest measurement as baseline, but NOT currentValue
+          // Use earliest measurement as baseline
           if (allMeasurements.length > 1) {
             baselineValue = allMeasurements[allMeasurements.length - 1].value;
           } else {

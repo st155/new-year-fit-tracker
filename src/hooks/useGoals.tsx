@@ -24,11 +24,25 @@ export function useGoals(userId?: string) {
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
-      // Attach measurements to goals
-      const goalsWithMeasurements = goals.map(goal => ({
-        ...goal,
-        measurements: measurements?.filter(m => m.goal_id === goal.id) || []
-      }));
+      // Fetch current values from unified_metrics via goal_current_values view
+      const goalIds = goals?.map(g => g.id) || [];
+      const { data: currentValues } = await supabase
+        .from("goal_current_values")
+        .select("*")
+        .in("goal_id", goalIds);
+
+      // Attach measurements and current values to goals
+      const goalsWithMeasurements = goals.map(goal => {
+        const goalMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
+        const currentValueData = currentValues?.find(cv => cv.goal_id === goal.id);
+        
+        return {
+          ...goal,
+          measurements: goalMeasurements,
+          current_value: currentValueData?.current_value || goalMeasurements[0]?.value || 0,
+          source: currentValueData?.source || 'manual'
+        };
+      });
 
         const personal = goalsWithMeasurements.filter(g => g.is_personal);
         const challenge = goalsWithMeasurements.filter(g => !g.is_personal);
