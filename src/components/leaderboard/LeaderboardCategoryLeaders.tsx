@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Footprints, Moon, Zap, Heart, LucideIcon } from "lucide-react";
+import { Flame, Footprints, Moon, Zap, Heart, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -13,7 +13,7 @@ interface LeaderboardEntry {
   avgSleepEfficiency?: number;
   avg_strain_last_7d?: number | null;
   avg_recovery_last_7d?: number | null;
-  weekly_consistency?: number;
+  streakDays?: number;
 }
 
 export type CategoryMetric = 
@@ -22,7 +22,7 @@ export type CategoryMetric =
   | 'avgSleepEfficiency'
   | 'avg_strain_last_7d'
   | 'avg_recovery_last_7d'
-  | 'weekly_consistency';
+  | 'streakDays';
 
 export interface CategoryInfo {
   title: string;
@@ -65,8 +65,8 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       (user.avg_recovery_last_7d || 0) > (max.avg_recovery_last_7d || 0) ? user : max
     , leaderboard[0]);
 
-    const consistencyLeader = leaderboard.reduce((max, user) => 
-      (user.weekly_consistency || 0) > (max.weekly_consistency || 0) ? user : max
+    const streakLeader = leaderboard.reduce((max, user) => 
+      (user.streakDays || 0) > (max.streakDays || 0) ? user : max
     , leaderboard[0]);
 
     return [
@@ -115,14 +115,14 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
         description: "Average recovery score in the last 7 days"
       },
       {
-        icon: Trophy,
-        title: "Most Consistent",
-        value: `${Math.round(consistencyLeader?.weekly_consistency || 0)}%`,
-        user: consistencyLeader,
+        icon: Flame,
+        title: "Longest Streak",
+        value: `${Math.round(streakLeader?.streakDays || 0)} 🔥`,
+        user: streakLeader,
         color: "text-chart-4",
-        metricKey: 'weekly_consistency' as CategoryMetric,
-        formatValue: (val: number) => `${Math.round(val)}%`,
-        description: "Weekly activity consistency"
+        metricKey: 'streakDays' as CategoryMetric,
+        formatValue: (val: number) => `${Math.round(val)} 🔥`,
+        description: "Current activity streak in days"
       }
     ];
   };

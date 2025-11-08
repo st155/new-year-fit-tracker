@@ -16,7 +16,7 @@ interface LeaderboardEntry {
   avgSleepEfficiency?: number;
   avg_strain_last_7d?: number | null;
   avg_recovery_last_7d?: number | null;
-  weekly_consistency?: number;
+  streakDays?: number;
   totalPoints: number;
 }
 
