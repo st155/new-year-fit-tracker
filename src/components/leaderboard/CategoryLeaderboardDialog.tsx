@@ -13,6 +13,7 @@ interface LeaderboardEntry {
   avatarUrl?: string | null;
   steps_last_7d?: number;
   avg_sleep_last_7d?: number | null;
+  avgSleepEfficiency?: number;
   avg_strain_last_7d?: number | null;
   avg_recovery_last_7d?: number | null;
   weekly_consistency?: number;
@@ -29,6 +30,7 @@ interface CategoryLeaderboardDialogProps {
 interface RankedEntry extends LeaderboardEntry {
   rank: number;
   value: number;
+  secondaryValue?: number;
   differenceFromLeader: number;
 }
 
@@ -69,12 +71,20 @@ export function CategoryLeaderboardDialog({
 
   // Filter and sort leaderboard by the selected metric
   const rankedEntries: RankedEntry[] = leaderboard
-    .map(entry => ({
-      ...entry,
-      value: (entry[category.metricKey] as number) || 0,
-      rank: 0,
-      differenceFromLeader: 0
-    }))
+    .map(entry => {
+      const primaryValue = (entry[category.metricKey] as number) || 0;
+      const secondaryValue = category.secondaryMetricKey 
+        ? (entry[category.secondaryMetricKey] as number) || 0 
+        : undefined;
+      
+      return {
+        ...entry,
+        value: primaryValue,
+        secondaryValue,
+        rank: 0,
+        differenceFromLeader: 0
+      };
+    })
     .filter(entry => entry.value > 0)
     .sort((a, b) => b.value - a.value)
     .map((entry, index) => ({
@@ -182,6 +192,11 @@ export function CategoryLeaderboardDialog({
                     <div className={cn("text-2xl font-bold", category.color)}>
                       {category.formatValue(entry.value)}
                     </div>
+                    {entry.secondaryValue !== undefined && category.secondaryFormatValue && (
+                      <div className="text-xs text-muted-foreground">
+                        {category.secondaryFormatValue(entry.secondaryValue)} {category.secondaryLabel}
+                      </div>
+                    )}
                     {entry.rank > 1 && (
                       <div className="text-xs text-muted-foreground">
                         {difference > 0 ? '+' : ''}{category.formatValue(Math.abs(difference))}

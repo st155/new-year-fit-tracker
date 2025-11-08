@@ -10,6 +10,7 @@ interface LeaderboardEntry {
   avatarUrl?: string | null;
   steps_last_7d?: number;
   avg_sleep_last_7d?: number | null;
+  avgSleepEfficiency?: number;
   avg_strain_last_7d?: number | null;
   avg_recovery_last_7d?: number | null;
   weekly_consistency?: number;
@@ -18,6 +19,7 @@ interface LeaderboardEntry {
 export type CategoryMetric = 
   | 'steps_last_7d'
   | 'avg_sleep_last_7d'
+  | 'avgSleepEfficiency'
   | 'avg_strain_last_7d'
   | 'avg_recovery_last_7d'
   | 'weekly_consistency';
@@ -29,6 +31,9 @@ export interface CategoryInfo {
   metricKey: CategoryMetric;
   formatValue: (value: number) => string;
   description?: string;
+  secondaryMetricKey?: CategoryMetric;
+  secondaryFormatValue?: (value: number) => string;
+  secondaryLabel?: string;
 }
 
 interface LeaderboardCategoryLeadersProps {
@@ -38,6 +43,7 @@ interface LeaderboardCategoryLeadersProps {
 
 interface CategoryLeader extends CategoryInfo {
   value: string;
+  secondaryValue?: string;
   user: LeaderboardEntry | null;
 }
 
@@ -48,7 +54,7 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
     , leaderboard[0]);
 
     const sleepLeader = leaderboard.reduce((max, user) => 
-      (user.avg_sleep_last_7d || 0) > (max.avg_sleep_last_7d || 0) ? user : max
+      (user.avgSleepEfficiency || 0) > (max.avgSleepEfficiency || 0) ? user : max
     , leaderboard[0]);
 
     const strainLeader = leaderboard.reduce((max, user) => 
@@ -77,12 +83,16 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       {
         icon: Moon,
         title: "Best Sleep",
-        value: `${(sleepLeader?.avg_sleep_last_7d || 0).toFixed(1)}h`,
+        value: `${Math.round(sleepLeader?.avgSleepEfficiency || 0)}%`,
+        secondaryValue: `${(sleepLeader?.avg_sleep_last_7d || 0).toFixed(1)}h`,
         user: sleepLeader,
         color: "text-chart-2",
-        metricKey: 'avg_sleep_last_7d' as CategoryMetric,
-        formatValue: (val: number) => `${val.toFixed(1)}h`,
-        description: "Average sleep hours in the last 7 days"
+        metricKey: 'avgSleepEfficiency' as CategoryMetric,
+        formatValue: (val: number) => `${Math.round(val)}%`,
+        secondaryMetricKey: 'avg_sleep_last_7d' as CategoryMetric,
+        secondaryFormatValue: (val: number) => `${val.toFixed(1)}h`,
+        secondaryLabel: "sleep",
+        description: "Sleep quality and duration"
       },
       {
         icon: Zap,
@@ -139,8 +149,13 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
             </div>
             
             {/* Large value - centered */}
-            <div className="text-center">
+            <div className="text-center space-y-1">
               <p className={cn("text-2xl font-bold", category.color)}>{category.value}</p>
+              {category.secondaryValue && (
+                <p className="text-xs text-muted-foreground">
+                  {category.secondaryValue} {category.secondaryLabel}
+                </p>
+              )}
             </div>
             
             {/* Avatar + Name - centered */}
