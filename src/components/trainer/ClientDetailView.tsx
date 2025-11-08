@@ -48,6 +48,8 @@ import { ConflictResolutionPanel } from './automation/ConflictResolutionPanel';
 import { AutomatedInsights } from './automation/AutomatedInsights';
 import { ClientHealthScore } from './client-detail/ClientHealthScore';
 import { AdvancedFilters, FilterState } from './client-detail/AdvancedFilters';
+import { ClientDetailSkeleton } from './client-detail/ClientDetailSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 interface Client {
   id: string;
@@ -97,7 +99,7 @@ interface ClientDetailViewProps {
 
 // Health Score Component with Data Fetching
 const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
-  const { data: healthScore } = useQuery({
+  const { data: healthScore, isLoading, error } = useQuery({
     queryKey: ['client-health-score', clientId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -113,6 +115,30 @@ const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
       return data;
     },
   });
+
+  if (isLoading) {
+    return (
+      <div className="hidden lg:block">
+        <Card className="w-64">
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              <div className="h-12 w-12 rounded-full bg-muted animate-pulse mx-auto" />
+              <div className="h-6 w-24 bg-muted rounded animate-pulse mx-auto" />
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-4 w-full bg-muted rounded animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !healthScore) {
+    return null;
+  }
 
   return (
     <ClientHealthScore
@@ -209,6 +235,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   };
 
   if (loading) {
+    return <ClientDetailSkeleton onBack={onBack} />;
+  }
+
+  if (error) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
@@ -217,18 +247,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             Назад
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-muted rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <ErrorState
+          title="Ошибка загрузки данных клиента"
+          message={error.message || "Не удалось загрузить данные. Проверьте подключение и попробуйте снова."}
+          onRetry={refetch}
+        />
       </div>
     );
   }

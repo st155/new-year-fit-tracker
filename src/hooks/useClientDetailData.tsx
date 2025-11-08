@@ -444,7 +444,29 @@ export function useClientDetailData(clientUserId?: string) {
 
     } catch (err) {
       console.error('Error loading client data:', err);
-      setError(err as Error);
+      
+      // Создаем более информативные сообщения об ошибках
+      let errorMessage = 'Неизвестная ошибка при загрузке данных';
+      
+      if (err instanceof Error) {
+        const message = err.message.toLowerCase();
+        
+        if (message.includes('permission') || message.includes('access denied') || message.includes('unauthorized')) {
+          errorMessage = 'У вас нет доступа к данным этого клиента. Проверьте права доступа.';
+        } else if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+          errorMessage = 'Проблема с подключением к серверу. Проверьте интернет-соединение.';
+        } else if (message.includes('not found') || message.includes('no rows')) {
+          errorMessage = 'Данные клиента не найдены. Возможно, клиент был удален.';
+        } else if (message.includes('timeout')) {
+          errorMessage = 'Превышено время ожидания. Попробуйте снова.';
+        } else {
+          errorMessage = `Ошибка загрузки: ${err.message}`;
+        }
+        
+        setError(new Error(errorMessage));
+      } else {
+        setError(new Error(errorMessage));
+      }
     } finally {
       setLoading(false);
     }
