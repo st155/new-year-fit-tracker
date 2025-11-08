@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChallengeParticipantsList } from "./ChallengeParticipantsList";
 import { CreateChallengeDialog } from "./CreateChallengeDialog";
+import { CreateChallengeDialogAI } from "./CreateChallengeDialogAI";
 import { EditChallengeDialog } from "./EditChallengeDialog";
-import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle } from "lucide-react";
+import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ export function TrainerChallengesManager() {
   const { challenges, isLoading, refetch } = useTrainerChallenges(user?.id);
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createAIDialogOpen, setCreateAIDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [challengeToEdit, setChallengeToEdit] = useState<any>(null);
 
@@ -104,10 +106,16 @@ export function TrainerChallengesManager() {
             Управляйте челленджами и участниками
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Создать челлендж
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Classic
+          </Button>
+          <Button onClick={() => setCreateAIDialogOpen(true)}>
+            <Sparkles className="h-4 w-4 mr-2" />
+            AI Mode
+          </Button>
+        </div>
       </div>
 
       {/* Статистика */}
@@ -281,6 +289,13 @@ export function TrainerChallengesManager() {
       <CreateChallengeDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onSuccess={refetch}
+      />
+
+      <CreateChallengeDialogAI
+        open={createAIDialogOpen}
+        onOpenChange={setCreateAIDialogOpen}
+        trainerId={user?.id || ''}
         onSuccess={refetch}
       />
 
