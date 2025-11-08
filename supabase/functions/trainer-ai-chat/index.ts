@@ -289,18 +289,29 @@ serve(async (req) => {
             .eq('active', true);
           
           if (candidates && candidates.length > 0) {
-            // Simple fuzzy matching: check if mentioned name is contained in full_name or username
-            const nameToMatch = mentionedName.toLowerCase();
+            // Enhanced fuzzy matching: check if mentioned name is contained in full_name or username
+            // Also handle partial matches like "Aleksandar" matching "Aleksandar B"
+            const nameToMatch = mentionedName.toLowerCase().trim();
             const matches = candidates
               .filter(c => {
                 const profile = c.profiles as any;
                 if (!profile) return false;
                 const fullName = profile.full_name?.toLowerCase() || '';
                 const username = profile.username?.toLowerCase() || '';
-                return fullName.includes(nameToMatch) || 
-                       nameToMatch.includes(fullName) ||
-                       username.includes(nameToMatch) ||
-                       nameToMatch.includes(username);
+                
+                // Split names into parts to handle "Aleksandar" matching "Aleksandar B"
+                const fullNameParts = fullName.split(/\s+/);
+                const nameToMatchParts = nameToMatch.split(/\s+/);
+                
+                // Check for exact substring match
+                if (fullName.includes(nameToMatch) || nameToMatch.includes(fullName)) return true;
+                if (username.includes(nameToMatch) || nameToMatch.includes(username)) return true;
+                
+                // Check if mentioned name matches any part of full name (e.g., "Aleksandar" matches first part of "Aleksandar B")
+                const matchesFirstPart = fullNameParts[0] && fullNameParts[0].includes(nameToMatch);
+                const mentionMatchesStart = fullName.startsWith(nameToMatch);
+                
+                return matchesFirstPart || mentionMatchesStart;
               })
               .slice(0, 3); // Top 3 candidates
             
@@ -832,17 +843,30 @@ IMPORTANT INSTRUCTIONS:
     // NEW: Detect if user is requesting plan/goal creation
     const userMessage = message.toLowerCase();
     const needsStructuredOutput = 
+      // План
       userMessage.includes('создай план') ||
       userMessage.includes('разработай план') ||
       userMessage.includes('составь план') ||
+      userMessage.includes('создать план') ||
+      userMessage.includes('create plan') ||
+      // Цели
       userMessage.includes('поставь цел') ||
       userMessage.includes('установи цел') ||
       userMessage.includes('создай цел') ||
-      userMessage.includes('добавь измерен') ||
-      userMessage.includes('создать план') ||
-      userMessage.includes('create plan') ||
+      userMessage.includes('добавь цел') ||
+      userMessage.includes('добавь новую цел') ||
+      userMessage.includes('обнови цел') ||
+      userMessage.includes('измен цел') ||
       userMessage.includes('set goal') ||
-      userMessage.includes('add measurement');
+      userMessage.includes('add goal') ||
+      userMessage.includes('update goal') ||
+      // Измерения
+      userMessage.includes('добавь измерен') ||
+      userMessage.includes('добавь результат') ||
+      userMessage.includes('запиши результат') ||
+      userMessage.includes('текущий результат') ||
+      userMessage.includes('add measurement') ||
+      userMessage.includes('record result');
 
     const requestBody: any = {
       model: 'google/gemini-2.5-flash',
@@ -850,13 +874,30 @@ IMPORTANT INSTRUCTIONS:
       stream: true, // ENABLE STREAMING
     };
 
-    // Add tools if user is creating plan or approving
-    if (isApproval || eagerMode || contextMode === 'goals' || mentionedClients.length > 0 || needsStructuredOutput) {
+    // Check if message contains action-related keywords
+    const hasMentions = mentionedClients.length > 0 || mentionedNames.length > 0;
+    const hasActionKeywords = 
+      userMessage.includes('цель') || 
+      userMessage.includes('goal') ||
+      userMessage.includes('измерен') ||
+      userMessage.includes('measurement') ||
+      userMessage.includes('план') ||
+      userMessage.includes('plan') ||
+      userMessage.includes('результат') ||
+      userMessage.includes('result');
+
+    // Add tools if user is creating plan, approving, or mentions clients with action keywords
+    if (isApproval || eagerMode || contextMode === 'goals' || hasMentions || needsStructuredOutput || hasActionKeywords) {
       requestBody.tools = tools;
-      // Force tool usage in eager mode OR when user explicitly requests plan/goal creation
-      if (eagerMode || needsStructuredOutput) {
+      // Force tool usage in eager mode OR when user explicitly requests plan/goal creation OR mentions client with actions
+      const shouldForceTools = eagerMode || needsStructuredOutput || (hasMentions && hasActionKeywords);
+      if (shouldForceTools) {
         requestBody.tool_choice = "required";
-        console.log('🔧 Forcing tool usage:', eagerMode ? 'eager mode' : 'plan creation detected');
+        console.log('🔧 Forcing tool usage:', 
+          eagerMode ? 'eager mode' : 
+          needsStructuredOutput ? 'action detected' : 
+          'client mention with action keywords'
+        );
       } else {
         requestBody.tool_choice = "auto";
       }
