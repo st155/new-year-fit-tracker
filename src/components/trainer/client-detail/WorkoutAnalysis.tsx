@@ -6,6 +6,7 @@ import { format, subDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Activity, TrendingUp, Flame, Zap } from 'lucide-react';
 import { UnifiedMetric } from '@/hooks/metrics';
+import { mapTerraActivityType } from '@/lib/terra-activity-types';
 
 interface WorkoutAnalysisProps {
   metrics: UnifiedMetric[];
@@ -34,8 +35,9 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
     workoutMetrics
       .filter(m => m.metric_name === 'Workout Type')
       .forEach(m => {
-        const type = String(m.value);
-        typeMap.set(type, (typeMap.get(type) || 0) + 1);
+        // Convert numeric codes to readable names
+        const typeName = mapTerraActivityType(m.value, m.source);
+        typeMap.set(typeName, (typeMap.get(typeName) || 0) + 1);
       });
 
     return Array.from(typeMap.entries())

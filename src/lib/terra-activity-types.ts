@@ -111,13 +111,18 @@ export const TERRA_ACTIVITY_TYPES: Record<number, string> = {
 /**
  * Map Terra activity type code to readable name
  */
-export function mapTerraActivityType(activityType: string | number | null | undefined, provider: string): string {
+export function mapTerraActivityType(activityType: string | number | null | undefined, provider?: string): string {
   if (!activityType) {
     return 'Тренировка';
   }
 
   // If it's already a string (Withings, etc.), return as is
   if (typeof activityType === 'string') {
+    // Try to parse if it's a numeric string
+    const parsed = parseInt(activityType, 10);
+    if (!isNaN(parsed)) {
+      return TERRA_ACTIVITY_TYPES[parsed] || `Активность ${parsed}`;
+    }
     return activityType;
   }
 

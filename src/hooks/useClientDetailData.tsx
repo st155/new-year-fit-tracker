@@ -460,8 +460,21 @@ export function useClientDetailData(clientUserId?: string) {
     loading,
     error,
     refetch: loadClientData,
-    // Export unified metrics for workout analysis
-    unifiedMetrics: clientData?.unified_metrics || []
+    // Export unified metrics for workout analysis, including workouts
+    unifiedMetrics: [
+      ...(clientData?.unified_metrics || []),
+      ...(clientData?.workouts || []).map((w: any) => ({
+        user_id: clientUserId,
+        metric_name: 'Workout Type',
+        value: w.workout_type,
+        measurement_date: w.measurement_date || w.start_time?.split('T')?.[0],
+        source: w.source,
+        unit: 'activity',
+        priority: 1,
+        // Store complete workout data
+        workout: w
+      }))
+    ]
   };
 }
 
