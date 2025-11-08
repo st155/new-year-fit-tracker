@@ -272,7 +272,7 @@ export function useClientDetailData(clientUserId?: string) {
   const calculateWhoopSummary = (unifiedData: any[]): WhoopSummary | null => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentData = unifiedData.filter(d => 
-      new Date(d.measurement_date) >= sevenDaysAgo && d.source === 'whoop'
+      new Date(d.measurement_date) >= sevenDaysAgo && d.source?.toLowerCase() === 'whoop'
     );
 
     if (recentData.length === 0) return null;
@@ -316,7 +316,7 @@ export function useClientDetailData(clientUserId?: string) {
   const calculateOuraSummary = (unifiedData: any[]): OuraSummary | null => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentData = unifiedData.filter(d => 
-      new Date(d.measurement_date) >= sevenDaysAgo && d.source === 'oura'
+      new Date(d.measurement_date) >= sevenDaysAgo && d.source?.toLowerCase() === 'oura'
     );
 
     if (recentData.length === 0) return null;
