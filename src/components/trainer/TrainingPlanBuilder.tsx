@@ -9,6 +9,7 @@ import { WorkoutEditor } from './WorkoutEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TrainingPlanBuilderProps {
   open: boolean;
@@ -216,10 +217,13 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
                     <Button
                       key={index}
                       variant={workout ? 'default' : 'outline'}
-                      className="flex flex-col h-24 items-center justify-center text-xs p-2"
+                      className={cn(
+                        'flex flex-col h-24 items-center justify-center text-xs p-2 transition-all',
+                        workout ? 'shadow-md hover:shadow-lg' : 'hover:border-primary/50'
+                      )}
                       onClick={() => setEditingDay(index)}
                     >
-                      <Calendar className="h-4 w-4 mb-1" />
+                      <Calendar className={cn('h-4 w-4 mb-1', workout && 'text-primary-foreground')} />
                       <span className="font-medium">{day.slice(0, 2)}</span>
                       {workout ? (
                         <span className="text-xs mt-1 truncate w-full text-center">

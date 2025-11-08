@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Dumbbell, Plus } from 'lucide-react';
+import { Dumbbell, Plus, Sparkles } from 'lucide-react';
 import { TrainingPlanBuilder } from './TrainingPlanBuilder';
 import { TrainingPlanCard } from './TrainingPlanCard';
+import { CreateTrainingPlanDialogAI } from './CreateTrainingPlanDialogAI';
 
 interface TrainingPlan {
   id: string;
@@ -27,6 +28,8 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showAIBuilder, setShowAIBuilder] = useState(false);
+  const [trainerId, setTrainerId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -34,6 +37,8 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
+      
+      setTrainerId(user.user.id);
 
       const { data, error } = await supabase
         .from('training_plans')
@@ -120,10 +125,16 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Тренировочные планы</h3>
-          <Button onClick={() => setShowBuilder(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Создать план
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowBuilder(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Classic
+            </Button>
+            <Button onClick={() => setShowAIBuilder(true)}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Mode
+            </Button>
+          </div>
         </div>
 
         {plans.length === 0 ? (
@@ -133,10 +144,16 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
             <p className="text-muted-foreground mb-4">
               Создайте первый план для ваших клиентов
             </p>
-            <Button onClick={() => setShowBuilder(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Создать план
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={() => setShowBuilder(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Classic Mode
+              </Button>
+              <Button onClick={() => setShowAIBuilder(true)}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Mode
+              </Button>
+            </div>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -159,6 +176,16 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
           setShowBuilder(false);
         }}
         clients={clients}
+      />
+
+      <CreateTrainingPlanDialogAI
+        open={showAIBuilder}
+        onOpenChange={setShowAIBuilder}
+        trainerId={trainerId}
+        onSuccess={() => {
+          loadPlans();
+          setShowAIBuilder(false);
+        }}
       />
     </>
   );

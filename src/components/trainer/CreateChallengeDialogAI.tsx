@@ -47,21 +47,41 @@ export const CreateChallengeDialogAI = ({
     return `A ${difficultyLabels[difficulty]} ${duration}-week ${selectedPreset.category.toLowerCase()} challenge designed for ${audienceLabels[targetAudience]}. ${selectedPreset.description}`;
   };
 
+  const calculateBenchmark = (disc: any, difficultyLevel: number, audienceLevel: number) => {
+    const baseMult = difficultyMultipliers[difficultyLevel];
+    const audienceMult = audienceMultipliers[audienceLevel];
+    
+    let value: number;
+    
+    if (disc.direction === 'lower') {
+      // For "lower is better" metrics (RHR, 5K time) - inverse the multipliers
+      const inverseMult = 1 / (baseMult * audienceMult);
+      value = disc.baseValue * inverseMult;
+    } else if (disc.direction === 'target') {
+      // For "target" metrics (Sleep Hours) - minimal variation, slightly increase with audience
+      const targetVariation = 1 + (audienceMult - 1) * 0.15;
+      value = disc.baseValue * targetVariation;
+    } else {
+      // For "higher is better" metrics (Recovery Score, VO2 Max, strength)
+      value = disc.baseValue * disc.scalingFactor * baseMult * audienceMult;
+    }
+    
+    // Apply min/max constraints
+    if (disc.min !== undefined) value = Math.max(disc.min, value);
+    if (disc.max !== undefined) value = Math.min(disc.max, value);
+    
+    return Math.round(value * 10) / 10;
+  };
+
   const generateDisciplines = () => {
     if (!selectedPreset) return [];
     
-    const baseMult = difficultyMultipliers[difficulty];
-    const audienceMult = audienceMultipliers[targetAudience];
-    
-    return selectedPreset.disciplines.slice(0, disciplineCount).map((disc) => {
-      const finalValue = disc.baseValue * disc.scalingFactor * baseMult * audienceMult;
-      return {
-        name: disc.name,
-        type: disc.type,
-        benchmarkValue: Math.round(finalValue * 10) / 10,
-        unit: disc.unit,
-      };
-    });
+    return selectedPreset.disciplines.slice(0, disciplineCount).map((disc) => ({
+      name: disc.name,
+      type: disc.type,
+      benchmarkValue: calculateBenchmark(disc, difficulty, targetAudience),
+      unit: disc.unit,
+    }));
   };
 
   const handleCreate = async () => {
