@@ -15,13 +15,11 @@ import { logger } from "@/lib/logger";
 import { lazySafe } from "@/lib/lazy-safe";
 import { DevDebugBar } from "@/components/dev/DevDebugBar";
 import { AsyncErrorBoundary } from "@/components/error/AsyncErrorBoundary";
+import { ROUTE_SMOKE } from "@/lib/safe-flags";
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
 import SmokeHome from "@/pages/SmokeHome";
-
-// 🔥 ROUTE_SMOKE: Temporarily route / to SmokeHome (bypass all auth/layout)
-const ROUTE_SMOKE = false;
 
 // Sync imports for all pages
 import LandingSync from "@/pages/Landing";
@@ -108,8 +106,14 @@ export const AppRoutes = () => {
 
   return (
     <MotionProvider>
-      <Suspense fallback={<PageLoader message="Loading..." />}>
-        <Routes>
+      <AsyncErrorBoundary
+        fallback={<PageLoader message="Recovering..." />}
+        onError={(error) => {
+          logger.error('[AppRoutes] Route rendering error:', error);
+        }}
+      >
+        <Suspense fallback={<PageLoader message="Loading..." />}>
+          <Routes>
         {/* Debug route - no auth, no lazy, no providers */}
         <Route path="/__debug" element={<DebugPage />} />
         
@@ -316,13 +320,14 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <DevDebugBar />
-      <Sonner />
-      <InstallPrompt />
-      <UpdatePrompt />
-    </Suspense>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <DevDebugBar />
+        <Sonner />
+        <InstallPrompt />
+        <UpdatePrompt />
+      </Suspense>
+      </AsyncErrorBoundary>
     </MotionProvider>
   );
 };

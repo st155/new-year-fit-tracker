@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./index-inbody-styles.css";
+import { SMOKE_MODE, enableSafeMode } from "./lib/safe-flags";
 
-// 🚨 SMOKE MODE: Render minimal component to test React mounting
-const SMOKE_MODE = false;
+// Smoke mode is now managed via safe-flags.ts
 
 const root = document.getElementById("root");
 
@@ -658,6 +658,23 @@ async function boot() {
     (window as any).__react_mounted__ = true;
     console.log('✅ [Boot] App rendered successfully');
     console.timeEnd('boot');
+    
+    // 🔥 Boot watchdog: detect if app fails to render content
+    setTimeout(() => {
+      const rootEl = document.getElementById('root');
+      if (!rootEl || rootEl.children.length === 0 || rootEl.textContent?.trim() === '') {
+        console.error('🚨 [Boot Watchdog] No content detected after 3 seconds!');
+        console.error('Root element:', rootEl);
+        console.error('Children count:', rootEl?.children.length);
+        
+        // Show recovery UI
+        reactRoot.render(
+          <BootError message="App rendered but no content appeared. This might be a routing or suspense issue." />
+        );
+      } else {
+        console.log('✅ [Boot Watchdog] Content detected, app is healthy');
+      }
+    }, 3000);
     
   } catch (err) {
     console.error('💥 [Boot] App load/mount failed:', err);

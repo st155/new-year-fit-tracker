@@ -1,10 +1,10 @@
 import { ComponentType, lazy } from "react";
+import { DISABLE_LAZY } from "./safe-flags";
 
 /**
  * Feature flag to disable lazy loading on dev/preview environments
- * This helps avoid "Failed to fetch dynamically imported module" errors
+ * Now managed centrally via safe-flags.ts
  */
-export const DISABLE_LAZY = true; // 🔥 Temporarily disabled for white screen diagnosis
 
 /**
  * Safe lazy wrapper that bypasses React.lazy on dev/preview environments

@@ -1,16 +1,17 @@
 import { Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/page-loader";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { SafeRouter } from "@/lib/SafeRouter";
 import { registerServiceWorker, setupVersionCheck } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher } from "@/lib/prefetch-strategy";
 import { initWebVitals } from "@/lib/web-vitals";
 import { initSentry } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
+import { DISABLE_SW } from "@/lib/safe-flags";
 import { AppRoutes } from "./app/AppRoutes";
 
 const queryClient = new QueryClient({
@@ -53,10 +54,8 @@ const AppContent = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Service worker registration - DISABLED temporarily to fix black screen
+  // Service worker registration - Managed via safe-flags
   useEffect(() => {
-    const DISABLE_SW = true; // Feature flag to disable SW in production
-    
     if (import.meta.env.PROD && !DISABLE_SW) {
       try {
         registerServiceWorker();
@@ -80,13 +79,13 @@ const AppContent = () => {
   
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <BrowserRouter>
+      <SafeRouter>
         <AuthProvider>
           <Suspense fallback={<PageLoader message="Loading application..." />}>
             <AppRoutes />
           </Suspense>
         </AuthProvider>
-      </BrowserRouter>
+      </SafeRouter>
     </ThemeProvider>
   );
 };

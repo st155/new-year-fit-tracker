@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom"],
     },
     optimizeDeps: {
-      exclude: ['lucide-react'],
+      include: ['react', 'react-dom', 'react-router-dom'],
     },
     build: {
       target: 'es2020',
@@ -33,6 +33,10 @@ export default defineConfig(({ mode }) => {
         output: {
           format: 'es',
           inlineDynamicImports: false,
+          // Deterministic chunk names with hash for cache busting
+          entryFileNames: `assets/[name]-[hash].js`,
+          chunkFileNames: `assets/[name]-[hash].js`,
+          assetFileNames: `assets/[name]-[hash].[ext]`,
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
             'vendor-query': ['@tanstack/react-query'],
@@ -49,6 +53,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: mode === 'production' ? 'hidden' : true,
       chunkSizeWarningLimit: 500,
       cssCodeSplit: true,
+      // Keep assets inline limit small to avoid too many tiny chunks
+      assetsInlineLimit: 2048, // 2KB
     },
   };
 });

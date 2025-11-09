@@ -2,13 +2,11 @@ import { ReactNode, memo } from "react";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
+import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
 }
-
-// 🔥 LAYOUT_SAFE_MODE: Bypass all providers/navigation for diagnosis
-const LAYOUT_SAFE_MODE = false; // ✅ Navigation restored
 
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
   console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');
