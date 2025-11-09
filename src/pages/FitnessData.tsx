@@ -13,6 +13,9 @@ import { ru } from 'date-fns/locale';
 import { TremorMetricCard, TremorAreaChartCard, TremorBarChartCard } from '@/components/charts/TremorWrappers';
 import { adaptMetricsToTremor, adaptStrainToTremor, adaptSleepToTremor, valueFormatters } from '@/lib/tremor-adapter';
 import { MetricCard } from '@/components/fitness-data/MetricCard';
+import { FitnessCard } from '@/components/ui/fitness-card';
+import { cn } from '@/lib/utils';
+import { Text, Metric, AreaChart, BarChart } from '@tremor/react';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
@@ -20,7 +23,6 @@ import { SystemHealthIndicator } from '@/components/integrations/SystemHealthInd
 import { AutoRefreshToggle } from '@/components/integrations/AutoRefreshToggle';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BarChart } from '@tremor/react';
 import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
@@ -389,16 +391,40 @@ export default function FitnessData() {
 
           {/* Hero Recovery Score */}
           {latestRecovery && latestRecovery.value && processedMetrics.recovery.length > 0 && (
-            <TremorMetricCard
-              title="Recovery Score"
-              value={latestRecovery.value}
-              unit="%"
-              data={adaptMetricsToTremor(processedMetrics.recovery)}
-              categories={['value']}
-              color="emerald"
-              showChart={true}
-              icon={<Activity className="h-4 w-4 text-muted-foreground" />}
-            />
+            <FitnessCard variant="gradient" className="neon-border pulse-glow col-span-full">
+              <div className="p-8">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/50">
+                      <Activity className="h-10 w-10 text-white" />
+                    </div>
+                    <div>
+                      <Text className="text-muted-foreground text-sm font-medium mb-2">Recovery Score</Text>
+                      <div className="flex items-baseline gap-2">
+                        <Metric className="metric-glow text-6xl">{Math.round(latestRecovery.value)}</Metric>
+                        <span className="text-2xl text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Recovery trend chart */}
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <Text className="text-sm text-muted-foreground mb-4">Тренд восстановления</Text>
+                  <AreaChart
+                    data={adaptMetricsToTremor(processedMetrics.recovery)}
+                    index="date"
+                    categories={['value']}
+                    colors={['emerald']}
+                    showLegend={false}
+                    showGridLines={true}
+                    className="h-40"
+                    curveType="natural"
+                    valueFormatter={(value) => `${value}%`}
+                  />
+                </div>
+              </div>
+            </FitnessCard>
           )}
           
           {/* Fallback if no recovery data */}
@@ -430,13 +456,18 @@ export default function FitnessData() {
           {/* Metrics Grid with Framer Motion */}
           {processedMetrics.cards.length > 0 && (
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               variants={staggerContainer}
               initial="initial"
               animate="animate"
             >
-              {processedMetrics.cards.map((card) => (
-                <motion.div key={card.name} variants={staggerItem}>
+              {processedMetrics.cards.map((card, index) => (
+                <motion.div 
+                  key={card.name} 
+                  variants={staggerItem}
+                  className="stagger-item"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <MetricCard
                     name={card.name}
                     value={card.value}
@@ -456,34 +487,71 @@ export default function FitnessData() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {processedMetrics.strain.length > 0 && (
-              <TremorBarChartCard
-                title="Day Strain"
-                description="Уровень напряжения за выбранный период"
-                data={adaptStrainToTremor(processedMetrics.strain)}
-                categories={['Strain']}
-                colors={['orange']}
-                valueFormatter={valueFormatters.decimal}
-                showGridLines={true}
-              />
+              <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Day Strain</CardTitle>
+                      <CardDescription className="text-xs">Уровень напряжения</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <BarChart
+                    data={adaptStrainToTremor(processedMetrics.strain)}
+                    index="date"
+                    categories={['Strain']}
+                    colors={['orange']}
+                    showGridLines={true}
+                    className="h-64"
+                    valueFormatter={valueFormatters.decimal}
+                  />
+                </CardContent>
+              </FitnessCard>
             )}
             {processedMetrics.heartRate.length > 0 && (
-              <TremorAreaChartCard
-                title="Heart Rate"
-                description="Частота сердцебиения"
-                data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
-                categories={['Heart Rate']}
-                colors={['rose']}
-                valueFormatter={valueFormatters.bpm}
-                showGridLines={true}
-              />
+              <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                      <Heart className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Heart Rate</CardTitle>
+                      <CardDescription className="text-xs">Частота сердечных сокращений</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AreaChart
+                    data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
+                    index="date"
+                    categories={['Heart Rate']}
+                    colors={['rose']}
+                    showGridLines={true}
+                    className="h-64"
+                    valueFormatter={valueFormatters.bpm}
+                  />
+                </CardContent>
+              </FitnessCard>
             )}
           </div>
 
           {processedMetrics.sleep.length > 0 && (
-            <Card className="bg-card/50 border-white/20">
+            <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
               <CardHeader>
-                <CardTitle>Sleep Stages</CardTitle>
-                <CardDescription>Фазы сна за выбранный период</CardDescription>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <Moon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Sleep Stages</CardTitle>
+                    <CardDescription className="text-xs">Фазы сна за выбранный период</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <BarChart
@@ -499,7 +567,7 @@ export default function FitnessData() {
                   showAnimation={true}
                 />
               </CardContent>
-            </Card>
+            </FitnessCard>
           )}
         </TabsContent>
 

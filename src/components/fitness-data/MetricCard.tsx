@@ -1,9 +1,11 @@
-import { Card, Metric, Text, AreaChart } from '@tremor/react';
+import { Metric, Text, AreaChart } from '@tremor/react';
 import { Badge } from '@/components/ui/badge';
 import { LucideIcon } from 'lucide-react';
 import { DataQualityBadge } from '@/components/data-quality/DataQualityBadge';
 import { ConflictWarningBadge } from '@/components/data-quality/ConflictWarningBadge';
 import { getConfidenceColor } from '@/lib/data-quality';
+import { FitnessCard } from '@/components/ui/fitness-card';
+import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
   name: string;
@@ -35,19 +37,35 @@ export function MetricCard({
     value: s.value 
   })) || [];
 
+  const getChartColor = () => {
+    if (color.includes('green') || color.includes('emerald')) return 'emerald';
+    if (color.includes('orange')) return 'orange';
+    if (color.includes('red') || color.includes('pink')) return 'rose';
+    if (color.includes('blue') || color.includes('indigo')) return 'indigo';
+    if (color.includes('cyan')) return 'cyan';
+    return 'cyan';
+  };
+
   return (
-    <Card 
-      className="glass-medium border-white/10 hover:border-primary/30 transition-all"
-      style={{ borderLeft: `3px solid ${getConfidenceColor(confidence)}` }}
+    <FitnessCard 
+      variant={confidence > 80 ? "gradient" : "default"}
+      className={cn(
+        "hover:scale-[1.02] transition-all duration-300",
+        confidence > 90 && "neon-border"
+      )}
     >
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className={`p-2 rounded-lg ${color}`}>
-            <Icon className="h-4 w-4 text-white" />
+      <div className="p-6">
+        {/* Icon with gradient background */}
+        <div className="flex items-start justify-between mb-4">
+          <div className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center shadow-lg",
+            color
+          )}>
+            <Icon className="h-6 w-6 text-white" />
           </div>
-          <div className="flex gap-1 items-center">
+          <div className="flex gap-2 items-center flex-wrap justify-end">
             {source && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs backdrop-blur-sm">
                 {source}
               </Badge>
             )}
@@ -56,35 +74,41 @@ export function MetricCard({
           </div>
         </div>
         
-        <div className="space-y-1 mb-2">
-          <Text className="text-muted-foreground">{name}</Text>
-          <div className="flex items-baseline gap-1">
-            <Metric>
+        {/* Metric value */}
+        <div className="space-y-2 mb-4">
+          <Text className="text-muted-foreground text-sm font-medium">{name}</Text>
+          <div className="flex items-baseline gap-2">
+            <div className={cn(
+              "text-3xl font-bold",
+              confidence > 80 && "metric-glow"
+            )}>
               {value}
-            </Metric>
+            </div>
             {unit && (
-              <span className="text-sm text-muted-foreground ml-1">{unit}</span>
+              <span className="text-lg text-muted-foreground">{unit}</span>
             )}
           </div>
           {subtitle && (
-            <Text className="text-xs text-muted-foreground">{subtitle}</Text>
+            <Text className="text-xs text-muted-foreground/80">{subtitle}</Text>
           )}
         </div>
 
-        {/* Sparkline with Tremor */}
+        {/* Sparkline with improved styling */}
         {sparklineData.length > 0 && (
-          <AreaChart
-            data={sparklineData}
-            index="index"
-            categories={['value']}
-            colors={['cyan']}
-            showLegend={false}
-            showXAxis={false}
-            showYAxis={false}
-            showGridLines={false}
-            className="h-12 mt-2"
-            curveType="natural"
-          />
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <AreaChart
+              data={sparklineData}
+              index="index"
+              categories={['value']}
+              colors={[getChartColor()]}
+              showLegend={false}
+              showXAxis={false}
+              showYAxis={false}
+              showGridLines={false}
+              className="h-16"
+              curveType="natural"
+            />
+          </div>
         )}
 
         {/* Stale indicator */}
@@ -94,6 +118,6 @@ export function MetricCard({
           </Badge>
         )}
       </div>
-    </Card>
+    </FitnessCard>
   );
 }
