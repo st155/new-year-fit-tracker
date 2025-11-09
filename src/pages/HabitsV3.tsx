@@ -15,6 +15,8 @@ import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announce
 // Lazy load heavy components
 const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
 const FocusMode = lazy(() => import('@/components/habits-v3/layouts/FocusMode').then(m => ({ default: m.FocusMode })));
+const TimelineView = lazy(() => import('@/components/habits-v3/layouts/TimelineView').then(m => ({ default: m.TimelineView })));
+const AnalyticsView = lazy(() => import('@/components/habits-v3/layouts/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 
 const LoadingSkeleton = () => (
   <div className="space-y-4">
@@ -160,15 +162,21 @@ export default function HabitsV3() {
           </TabsContent>
 
           <TabsContent value="timeline">
-            <div className="glass-card p-6 text-center text-muted-foreground">
-              ⏰ Временная шкала в разработке
-            </div>
+            <Suspense fallback={<LoadingSkeleton />}>
+              <TimelineView
+                habits={habits}
+                onHabitClick={handleHabitTap}
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="analytics">
-            <div className="glass-card p-6 text-center text-muted-foreground">
-              📊 Аналитика в разработке
-            </div>
+            <Suspense fallback={<LoadingSkeleton />}>
+              <AnalyticsView
+                habits={habits}
+                userId={user?.id}
+              />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
