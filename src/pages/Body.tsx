@@ -11,7 +11,7 @@ import { LayoutDashboard, FileText, Clock, Box } from "lucide-react";
 
 export default function Body() {
   const { user } = useAuth();
-  const { current, timeline, reports, sourceStats, isLoading } = useMultiSourceBodyData(90);
+  const { current, timeline, reports, sourceStats, sparklines, isLoading } = useMultiSourceBodyData(30);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const latestReport = reports?.[0];
@@ -56,6 +56,7 @@ export default function Body() {
             latestReport={latestReport}
             sourceStats={sourceStats}
             timeline={timeline}
+            sparklines={sparklines}
             isLoading={isLoading}
             onUploadReport={() => setActiveTab("reports")}
             onViewReport={() => setActiveTab("reports")}

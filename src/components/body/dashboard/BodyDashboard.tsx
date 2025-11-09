@@ -12,6 +12,7 @@ interface BodyDashboardProps {
   latestReport?: BodyReport;
   sourceStats: Record<string, SourceStats>;
   timeline: TimelineEntry[];
+  sparklines?: Record<string, Array<{date: string; value: number}>>;
   isLoading?: boolean;
   onUploadReport?: () => void;
   onManualEntry?: () => void;
@@ -23,6 +24,7 @@ export function BodyDashboard({
   latestReport,
   sourceStats,
   timeline,
+  sparklines = {},
   isLoading,
   onUploadReport,
   onManualEntry,
@@ -80,32 +82,28 @@ export function BodyDashboard({
             icon={<span className="text-lg">⚖️</span>}
             data={current.weight}
             unit="kg"
-            timeline={timeline}
-            metricKey="weight"
+            sparklineData={sparklines.weight}
           />
           <MultiSourceMetricCard
             title="Body Fat"
             icon={<span className="text-lg">📊</span>}
             data={current.bodyFat}
             unit="%"
-            timeline={timeline}
-            metricKey="bodyFat"
+            sparklineData={sparklines.bodyFat}
           />
           <MultiSourceMetricCard
             title="Muscle Mass"
             icon={<span className="text-lg">💪</span>}
             data={current.muscleMass}
             unit="kg"
-            timeline={timeline}
-            metricKey="muscleMass"
+            sparklineData={sparklines.muscleMass}
           />
           <MultiSourceMetricCard
             title="BMI"
             icon={<span className="text-lg">📏</span>}
             data={current.bmi}
             unit=""
-            timeline={timeline}
-            metricKey="bmi"
+            sparklineData={sparklines.bmi}
           />
         </div>
       </div>
@@ -121,8 +119,7 @@ export function BodyDashboard({
                 icon={<span className="text-lg">🔥</span>}
                 data={current.bmr}
                 unit="kcal"
-                timeline={timeline}
-                metricKey="bmr"
+                sparklineData={sparklines.bmr}
               />
             )}
             {current.visceralFat && (
@@ -131,8 +128,7 @@ export function BodyDashboard({
                 icon={<span className="text-lg">⚠️</span>}
                 data={current.visceralFat}
                 unit=""
-                timeline={timeline}
-                metricKey="visceralFat"
+                sparklineData={sparklines.visceralFat}
               />
             )}
             {current.bodyWater && (
@@ -141,8 +137,7 @@ export function BodyDashboard({
                 icon={<span className="text-lg">💧</span>}
                 data={current.bodyWater}
                 unit="L"
-                timeline={timeline}
-                metricKey="bodyWater"
+                sparklineData={sparklines.bodyWater}
               />
             )}
             {current.protein && (
@@ -151,8 +146,7 @@ export function BodyDashboard({
                 icon={<span className="text-lg">🥩</span>}
                 data={current.protein}
                 unit="kg"
-                timeline={timeline}
-                metricKey="protein"
+                sparklineData={sparklines.protein}
               />
             )}
           </div>

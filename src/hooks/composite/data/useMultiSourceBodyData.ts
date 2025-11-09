@@ -108,6 +108,9 @@ export function useMultiSourceBodyData(days: number = 90) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Fetch InBody analyses
@@ -126,6 +129,9 @@ export function useMultiSourceBodyData(days: number = 90) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Fetch manual body composition entries
@@ -145,6 +151,9 @@ export function useMultiSourceBodyData(days: number = 90) {
       return data || [];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const isLoading = unifiedLoading || inbodyLoading || manualLoading;
@@ -343,11 +352,13 @@ export function useMultiSourceBodyData(days: number = 90) {
 
   // ===== TIMELINE DATA =====
   const timeline: TimelineEntry[] = useMemo(() => {
-    const entries: TimelineEntry[] = [];
+    const entriesMap = new Map<string, TimelineEntry>();
 
-    // Add unified metrics
+    // Add unified metrics - Use Map for O(1) lookups
     unifiedMetrics?.forEach(m => {
-      const existing = entries.find(e => e.date === m.measurement_date && e.source === m.source);
+      const key = `${m.measurement_date}-${m.source}`;
+      const existing = entriesMap.get(key);
+      
       if (existing) {
         if (m.metric_name === 'Weight') existing.weight = m.value;
         if (m.metric_name === 'Body Fat %') existing.bodyFat = m.value;
@@ -361,13 +372,14 @@ export function useMultiSourceBodyData(days: number = 90) {
         if (m.metric_name === 'Weight') entry.weight = m.value;
         if (m.metric_name === 'Body Fat %') entry.bodyFat = m.value;
         if (m.metric_name === 'Skeletal Muscle Mass') entry.muscleMass = m.value;
-        entries.push(entry);
+        entriesMap.set(key, entry);
       }
     });
 
     // Add InBody data
     inbodyData?.forEach(ib => {
-      entries.push({
+      const key = `${ib.test_date}-INBODY`;
+      entriesMap.set(key, {
         date: ib.test_date,
         weight: ib.weight,
         bodyFat: ib.percent_body_fat,
@@ -379,7 +391,8 @@ export function useMultiSourceBodyData(days: number = 90) {
 
     // Add manual data
     manualData?.forEach(m => {
-      entries.push({
+      const key = `${m.measurement_date}-MANUAL`;
+      entriesMap.set(key, {
         date: m.measurement_date,
         weight: m.weight || undefined,
         bodyFat: m.body_fat_percentage || undefined,
@@ -389,7 +402,8 @@ export function useMultiSourceBodyData(days: number = 90) {
       });
     });
 
-    return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return Array.from(entriesMap.values())
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [unifiedMetrics, inbodyData, manualData]);
 
   // ===== BODY REPORTS =====
@@ -457,11 +471,32 @@ export function useMultiSourceBodyData(days: number = 90) {
     return stats;
   }, [unifiedMetrics, inbodyData, manualData, days]);
 
+  // ===== PRECOMPUTED SPARKLINES =====
+  const sparklines: Record<string, Array<{date: string; value: number}>> = useMemo(() => {
+    const result: Record<string, Array<{date: string; value: number}>> = {};
+    
+    const metricKeys = ['weight', 'bodyFat', 'muscleMass', 'bmi', 'bmr', 'visceralFat', 'bodyWater', 'protein'] as const;
+    
+    metricKeys.forEach(key => {
+      result[key] = timeline
+        .filter(entry => entry[key] !== undefined && entry[key] !== null)
+        .slice(0, 7)
+        .reverse()
+        .map(entry => ({
+          date: entry.date,
+          value: entry[key] as number
+        }));
+    });
+    
+    return result;
+  }, [timeline]);
+
   return {
     current,
     timeline,
     reports,
     sourceStats,
+    sparklines,
     isLoading,
     hasData: Object.keys(current).length > 0,
   };

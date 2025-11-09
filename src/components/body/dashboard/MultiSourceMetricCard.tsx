@@ -19,8 +19,7 @@ interface MultiSourceMetricCardProps {
   data?: MetricValue;
   unit?: string;
   allSources?: MetricValue[]; // All available sources for this metric
-  timeline?: TimelineEntry[]; // Historical data for sparkline
-  metricKey?: 'weight' | 'bodyFat' | 'muscleMass' | 'bmi' | 'bmr' | 'visceralFat' | 'bodyWater' | 'protein';
+  sparklineData?: Array<{date: string; value: number}>; // Pre-computed sparkline data
   trend?: {
     value: number;
     percentage: number;
@@ -43,22 +42,9 @@ export function MultiSourceMetricCard({
   data,
   unit = '',
   allSources = [],
-  timeline = [],
-  metricKey,
+  sparklineData = [],
   trend,
 }: MultiSourceMetricCardProps) {
-  // Extract sparkline data from timeline for this specific metric
-  const sparklineData = useMemo(() => {
-    if (!timeline || !metricKey) return [];
-    
-    return timeline
-      .filter(entry => entry[metricKey] !== undefined && entry[metricKey] !== null)
-      .slice(-7) // Last 7 measurements
-      .map(entry => ({
-        date: entry.date,
-        value: entry[metricKey] as number,
-      }));
-  }, [timeline, metricKey]);
   if (!data) {
     return (
       <Card>
@@ -149,7 +135,7 @@ export function MultiSourceMetricCard({
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={sparklineData}>
                   <defs>
-                    <linearGradient id={`gradient-${metricKey}`} x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id={`gradient-${title.replace(/\s/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                       <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
@@ -178,7 +164,7 @@ export function MultiSourceMetricCard({
                     dataKey="value"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
-                    fill={`url(#gradient-${metricKey})`}
+                    fill={`url(#gradient-${title.replace(/\s/g, '-')})`}
                     animationDuration={300}
                   />
                 </AreaChart>
