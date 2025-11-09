@@ -10,12 +10,25 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { TremorMetricCard, TremorAreaChartCard, TremorBarChartCard } from '@/components/charts/TremorWrappers';
-import { adaptMetricsToTremor, adaptStrainToTremor, adaptSleepToTremor, valueFormatters } from '@/lib/tremor-adapter';
 import { MetricCard } from '@/components/fitness-data/MetricCard';
 import { FitnessCard } from '@/components/ui/fitness-card';
 import { cn } from '@/lib/utils';
 import { Text, Metric, AreaChart, BarChart } from '@tremor/react';
+import { 
+  ResponsiveContainer, 
+  AreaChart as RechartsAreaChart,
+  BarChart as RechartsBarChart,
+  Area,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend as RechartsLegend
+} from 'recharts';
+import { lazy, Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { chartColors, sleepColors } from '@/lib/chart-colors';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
@@ -328,23 +341,28 @@ export default function FitnessData() {
     ? processedMetrics.recovery[processedMetrics.recovery.length - 1] 
     : null;
 
-  // SVG градиенты для графиков
+  // Lazy load StackedBarChartWrapper
+  const StackedBarChartWrapper = lazy(() => 
+    import('@/components/charts/recharts-wrappers/StackedBarChartWrapper')
+  );
+
+  // SVG градиенты для Recharts
   const chartGradients = (
     <svg width="0" height="0" style={{ position: 'absolute' }}>
       <defs>
-        <linearGradient id="emerald-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgb(52, 211, 153)" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="rgb(52, 211, 153)" stopOpacity="0.1" />
+        <linearGradient id="emerald-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor={`rgb(${chartColors.emeraldRGB})`} stopOpacity="0.6" />
+          <stop offset="95%" stopColor={`rgb(${chartColors.emeraldRGB})`} stopOpacity="0" />
         </linearGradient>
         
-        <linearGradient id="rose-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgb(251, 113, 133)" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="rgb(251, 113, 133)" stopOpacity="0.1" />
+        <linearGradient id="rose-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor={`rgb(${chartColors.roseRGB})`} stopOpacity="0.6" />
+          <stop offset="95%" stopColor={`rgb(${chartColors.roseRGB})`} stopOpacity="0" />
         </linearGradient>
         
-        <linearGradient id="orange-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgb(251, 146, 60)" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="rgb(251, 146, 60)" stopOpacity="0.1" />
+        <linearGradient id="orange-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor={`rgb(${chartColors.orangeRGB})`} stopOpacity="0.6" />
+          <stop offset="95%" stopColor={`rgb(${chartColors.orangeRGB})`} stopOpacity="0" />
         </linearGradient>
       </defs>
     </svg>
@@ -455,17 +473,39 @@ export default function FitnessData() {
                 {/* Recovery trend chart */}
                 <div className="mt-6 pt-6 border-t border-white/10">
                   <Text className="text-sm text-muted-foreground mb-4">Тренд восстановления</Text>
-                  <AreaChart
-                    data={adaptMetricsToTremor(processedMetrics.recovery)}
-                    index="date"
-                    categories={['value']}
-                    colors={['emerald']}
-                    showLegend={false}
-                    showGridLines={true}
-                    className="h-40"
-                    curveType="natural"
-                    valueFormatter={(value) => `${value}%`}
-                  />
+                  <ResponsiveContainer width="100%" height={160}>
+                    <RechartsAreaChart data={processedMetrics.recovery}>
+                      <CartesianGrid 
+                        strokeDasharray="3 3" 
+                        stroke="hsl(var(--muted-foreground) / 0.12)"
+                      />
+                      <XAxis 
+                        dataKey="date"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
+                        }}
+                        formatter={(value: number) => [`${value}%`, 'Recovery']}
+                      />
+                      <Area 
+                        type="monotone"
+                        dataKey="value"
+                        stroke={chartColors.emerald}
+                        strokeWidth={2}
+                        fill="url(#emerald-gradient)"
+                      />
+                    </RechartsAreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </FitnessCard>
@@ -544,19 +584,37 @@ export default function FitnessData() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <BarChart
-                    data={adaptStrainToTremor(processedMetrics.strain)}
-                    index="date"
-                    categories={['Strain']}
-                    colors={['orange']}
-                    showGridLines={true}
-                    className="h-80"
-                    valueFormatter={valueFormatters.decimal}
-                    showAnimation={true}
-                    animationDuration={800}
-                    showLegend={false}
-                    enableLegendSlider={false}
-                  />
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RechartsBarChart data={processedMetrics.strain}>
+                      <CartesianGrid 
+                        strokeDasharray="3 3" 
+                        stroke="hsl(var(--muted-foreground) / 0.12)"
+                      />
+                      <XAxis 
+                        dataKey="date"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
+                        }}
+                        formatter={(value: number) => [value.toFixed(1), 'Strain']}
+                      />
+                      <Bar 
+                        dataKey="value"
+                        fill={chartColors.orange}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </RechartsBarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </FitnessCard>
             )}
@@ -574,20 +632,39 @@ export default function FitnessData() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <AreaChart
-                    data={processedMetrics.heartRate.map(d => ({ date: d.date, 'Heart Rate': d.value }))}
-                    index="date"
-                    categories={['Heart Rate']}
-                    colors={['rose']}
-                    showGridLines={true}
-                    className="h-80"
-                    valueFormatter={valueFormatters.bpm}
-                    showAnimation={true}
-                    animationDuration={800}
-                    curveType="natural"
-                    connectNulls={true}
-                    showLegend={false}
-                  />
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RechartsAreaChart data={processedMetrics.heartRate}>
+                      <CartesianGrid 
+                        strokeDasharray="3 3" 
+                        stroke="hsl(var(--muted-foreground) / 0.12)"
+                      />
+                      <XAxis 
+                        dataKey="date"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        className="text-xs"
+                      />
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
+                        }}
+                        formatter={(value: number) => [`${Math.round(value)} bpm`, 'Heart Rate']}
+                      />
+                      <Area 
+                        type="monotone"
+                        dataKey="value"
+                        stroke={chartColors.rose}
+                        strokeWidth={2}
+                        fill="url(#rose-gradient)"
+                      />
+                    </RechartsAreaChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </FitnessCard>
             )}
@@ -613,21 +690,25 @@ export default function FitnessData() {
                 </div>
               </CardHeader>
               <CardContent>
-                <BarChart
-                  className="h-96"
-                  data={adaptSleepToTremor(processedMetrics.sleep)}
-                  index="date"
-                  categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
-                  colors={['indigo', 'sky', 'purple', 'amber']}
-                  stack={true}
-                  valueFormatter={valueFormatters.minutes}
-                  showLegend={true}
-                  showGridLines={true}
-                  showAnimation={true}
-                  animationDuration={800}
-                  showXAxis={true}
-                  showYAxis={true}
-                />
+                <Suspense fallback={<Skeleton className="w-full h-[384px] rounded-lg" />}>
+                  <StackedBarChartWrapper
+                    data={processedMetrics.sleep.map(s => ({
+                      date: s.date,
+                      'Deep Sleep': Math.round(s.deep || 0),
+                      'Light Sleep': Math.round(s.light || 0),
+                      'REM Sleep': Math.round(s.rem || 0),
+                      'Awake': Math.round(s.awake || 0),
+                    }))}
+                    indexKey="date"
+                    categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
+                    colors={[sleepColors.deep, sleepColors.light, sleepColors.rem, sleepColors.awake]}
+                    height={384}
+                    showGrid={true}
+                    showTooltip={true}
+                    showLegend={true}
+                    stackId="sleep"
+                  />
+                </Suspense>
               </CardContent>
             </FitnessCard>
           )}

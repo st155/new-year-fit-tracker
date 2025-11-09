@@ -900,79 +900,15 @@ All colors MUST be HSL.
     opacity: 0.9 !important;
   }
 
-  /* Ensure chart bars are visible in dark mode with brighter colors */
-  .dark .tremor-BarChart-bar[fill="#4f46e5"] { /* indigo */
-    fill: #6366f1 !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#3b82f6"] { /* blue */
-    fill: #60a5fa !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#8b5cf6"] { /* purple */
-    fill: #a78bfa !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#64748b"] { /* slate */
-    fill: #94a3b8 !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#8b5cf6"] { /* violet */
-    fill: #c084fc !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#06b6d4"] { /* cyan */
-    fill: #22d3ee !important;
-  }
-
-  .dark .tremor-BarChart-bar[fill="#d946ef"] { /* fuchsia */
-    fill: #e879f9 !important;
-  }
-
-  /* Improve area chart visibility */
-  .dark .tremor-AreaChart-area[fill*="orange"],
-  .dark .tremor-AreaChart-area[fill*="amber"] {
-    fill: #fb923c !important;
-    fill-opacity: 0.3 !important;
-  }
-
-  .dark .tremor-AreaChart-area[fill*="rose"],
-  .dark .tremor-AreaChart-area[fill*="pink"] {
-    fill: #fb7185 !important;
-    fill-opacity: 0.3 !important;
-  }
-
-  /* Chart lines should be brighter */
-  .dark .tremor-AreaChart-line,
-  .dark .recharts-line-curve {
-    stroke-width: 2.5px !important;
-  }
-
-  /* Grid lines for better readability */
-  .dark .tremor-AreaChart-gridLine,
-  .dark .tremor-BarChart-gridLine,
+  /* Recharts grid and axis improvements */
   .dark .recharts-cartesian-grid-horizontal line,
   .dark .recharts-cartesian-grid-vertical line {
-    stroke: rgba(255, 255, 255, 0.1) !important;
+    stroke: hsl(var(--muted-foreground) / 0.12) !important;
   }
 
-  /* Chart tooltips */
-  .dark .tremor-Tooltip-root {
-    background: rgba(0, 0, 0, 0.9) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  }
-
-  /* Fix black bars in dark mode - replace with bright colors */
-  .dark .tremor-BarChart-bar[fill="#000000"],
-  .dark .tremor-BarChart-bar[fill="#000"],
-  .dark .tremor-BarChart-bar[fill="rgb(0, 0, 0)"] {
-    fill: #94a3b8 !important; /* slate-400 */
-  }
-
-  /* Enhance all bar colors for better visibility */
-  .dark .tremor-BarChart-bar {
-    filter: brightness(1.3) !important;
-    opacity: 0.95 !important;
+  /* Recharts tooltips */
+  .dark .recharts-tooltip-wrapper {
+    outline: none !important;
   }
 
 .modern-habit-card {
@@ -1008,23 +944,9 @@ All colors MUST be HSL.
   opacity: 1;
 }
 
-/* Dark mode chart fixes */
-
-  /* Special styling for Sleep Stages categories */
-  .dark [data-name="Deep Sleep"] {
-    fill: #8b5cf6 !important; /* violet-500 */
-  }
-
-  .dark [data-name="Light Sleep"] {
-    fill: #06b6d4 !important; /* cyan-500 */
-  }
-
-  .dark [data-name="REM Sleep"] {
-    fill: #d946ef !important; /* fuchsia-500 */
-  }
-
-  .dark [data-name="Awake"] {
-    fill: #f59e0b !important; /* amber-500 */
+/* Recharts accessibility and animations */
+  .recharts-surface {
+    overflow: visible;
   }
 
   /* Habit 3.0 utilities */
