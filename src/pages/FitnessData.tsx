@@ -95,6 +95,20 @@ export default function FitnessData() {
     },
   });
 
+  // Calculate trend between last two values
+  const calculateTrend = useCallback((history: any[]) => {
+    if (history.length < 2) return undefined;
+    
+    const current = history[history.length - 1].value;
+    const previous = history[history.length - 2].value;
+    const change = ((current - previous) / previous) * 100;
+    
+    return {
+      value: Math.round(Math.abs(change)),
+      direction: change > 1 ? 'up' : change < -1 ? 'down' : 'neutral' as const
+    };
+  }, []);
+
   // Process metrics for display
   const processedMetrics = useMemo(() => {
     const metrics = {
@@ -291,21 +305,7 @@ export default function FitnessData() {
     }
 
     return metrics;
-  }, [metricsData, qualitySummary]);
-
-  // Calculate trend between last two values
-  const calculateTrend = useCallback((history: any[]) => {
-    if (history.length < 2) return undefined;
-    
-    const current = history[history.length - 1].value;
-    const previous = history[history.length - 2].value;
-    const change = ((current - previous) / previous) * 100;
-    
-    return {
-      value: Math.round(Math.abs(change)),
-      direction: change > 1 ? 'up' : change < -1 ? 'down' : 'neutral' as const
-    };
-  }, []);
+  }, [metricsData, qualitySummary, calculateTrend]);
 
   const getDateLabel = () => {
     const { start, end } = calculateDateRange;
