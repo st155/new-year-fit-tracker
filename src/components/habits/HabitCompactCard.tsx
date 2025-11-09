@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
+import { useDeleteHabit } from "@/hooks/useDeleteHabit";
 import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils";
 import { CheckCircle2, Flame, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
     minutes: number;
   } | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const Icon = getHabitIcon(habit);
@@ -46,6 +48,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
   const fastingWindow = useFastingWindow(habit.id, userId);
   const { stats } = useHabitMeasurements(habit.id, userId);
   const { currentAttempt } = useHabitAttempts(habit.id, userId);
+  const { deleteHabit, archiveHabit } = useDeleteHabit();
 
   // Update elapsed time for duration counters
   useEffect(() => {
@@ -90,21 +93,24 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       )
     : null;
 
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from("habits")
-        .update({ is_active: false })
-        .eq("id", habit.id);
+  const handleArchive = () => {
+    setShowArchiveDialog(true);
+  };
 
-      if (error) throw error;
+  const handleArchiveConfirm = () => {
+    archiveHabit(habit.id);
+    setShowArchiveDialog(false);
+    onCompleted?.();
+  };
 
-      toast.success("Привычка архивирована");
-      onCompleted?.();
-    } catch (error) {
-      console.error("Error archiving habit:", error);
-      toast.error("Ошибка при архивировании");
-    }
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteHabit(habit.id);
+    setShowDeleteDialog(false);
+    onCompleted?.();
   };
 
   // FASTING TRACKER - Modern design
@@ -134,7 +140,8 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
               <HabitOptionsMenu
                 onEdit={() => setShowEditDialog(true)}
-                onDelete={() => setShowDeleteDialog(true)}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
               />
             </div>
 
@@ -180,23 +187,53 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
         onSuccess={onCompleted}
       />
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
             <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
             <AlertDialogDescription>
-              Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+              Привычка будет скрыта из списка активных, но все данные сохранятся.
+              Вы сможете восстановить её позже.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
               Отмена
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
+            <AlertDialogAction onClick={handleArchiveConfirm}>
+              Архивировать
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить. Будут удалены:
+              <ul className="mt-2 list-disc list-inside text-sm">
+                <li>Все логи выполнения</li>
+                <li>Вся статистика и история</li>
+                <li>Все измерения и попытки</li>
+              </ul>
+              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
+                <p className="text-sm font-semibold text-destructive">
+                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Архивировать
+              Удалить навсегда
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -222,7 +259,8 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
               <HabitOptionsMenu
                 onEdit={() => setShowEditDialog(true)}
-                onDelete={() => setShowDeleteDialog(true)}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
               />
             </div>
 
@@ -269,23 +307,53 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
         onSuccess={onCompleted}
       />
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
             <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
             <AlertDialogDescription>
-              Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+              Привычка будет скрыта из списка активных, но все данные сохранятся.
+              Вы сможете восстановить её позже.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
               Отмена
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
+            <AlertDialogAction onClick={handleArchiveConfirm}>
+              Архивировать
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить. Будут удалены:
+              <ul className="mt-2 list-disc list-inside text-sm">
+                <li>Все логи выполнения</li>
+                <li>Вся статистика и история</li>
+                <li>Все измерения и попытки</li>
+              </ul>
+              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
+                <p className="text-sm font-semibold text-destructive">
+                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Архивировать
+              Удалить навсегда
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -314,7 +382,8 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
             <h3 className="text-base font-bold truncate flex-1">{habit.name}</h3>
             <HabitOptionsMenu
               onEdit={() => setShowEditDialog(true)}
-              onDelete={() => setShowDeleteDialog(true)}
+              onArchive={handleArchive}
+              onDelete={handleDelete}
             />
           </div>
 
@@ -385,23 +454,53 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       onSuccess={onCompleted}
     />
 
-    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+    <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
       <AlertDialogContent className="glass-strong border-white/20">
         <AlertDialogHeader>
           <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
           <AlertDialogDescription>
-            Привычка "{habit.name}" будет перемещена в архив. Вы сможете восстановить её позже.
+            Привычка будет скрыта из списка активных, но все данные сохранятся.
+            Вы сможете восстановить её позже.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="glass-card border-white/20">
             Отмена
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
+          <AlertDialogAction onClick={handleArchiveConfirm}>
+            Архивировать
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent className="glass-strong border-white/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Это действие нельзя отменить. Будут удалены:
+            <ul className="mt-2 list-disc list-inside text-sm">
+              <li>Все логи выполнения</li>
+              <li>Вся статистика и история</li>
+              <li>Все измерения и попытки</li>
+            </ul>
+            <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
+              <p className="text-sm font-semibold text-destructive">
+                ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
+              </p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="glass-card border-white/20">
+            Отмена
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDeleteConfirm}
             className="bg-destructive hover:bg-destructive/90"
           >
-            Архивировать
+            Удалить навсегда
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

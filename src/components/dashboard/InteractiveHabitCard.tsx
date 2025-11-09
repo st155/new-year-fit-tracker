@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
+import { useDeleteHabit } from "@/hooks/useDeleteHabit";
 import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils";
 import { CheckCircle2, Flame, ArrowRight, RotateCcw, Play, Square, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { motion } from "framer-motion";
 import { CircularProgress } from "./CircularProgress";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { HabitOptionsMenu } from "@/components/habits/HabitOptionsMenu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +40,8 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
   } | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetReason, setResetReason] = useState("");
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const Icon = getHabitIcon(habit);
   const sentiment = getHabitSentiment(habit);
@@ -46,6 +50,7 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
   const fastingWindow = useFastingWindow(habit.id, userId);
   const { stats, addMeasurement } = useHabitMeasurements(habit.id, userId);
   const { currentAttempt, resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
+  const { deleteHabit, archiveHabit, isDeleting, isArchiving } = useDeleteHabit();
 
   // Update elapsed time for duration counters
   useEffect(() => {
@@ -110,6 +115,26 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
     addMeasurement({ value: newValue });
   };
 
+  const handleArchive = () => {
+    setShowArchiveDialog(true);
+  };
+
+  const handleArchiveConfirm = () => {
+    archiveHabit(habit.id);
+    setShowArchiveDialog(false);
+    onCompleted?.();
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteHabit(habit.id);
+    setShowDeleteDialog(false);
+    onCompleted?.();
+  };
+
   // FASTING TRACKER
   if (habit.habit_type === "fasting_tracker") {
     const { status, startEating, endEating, startFasting, isStarting, isEnding, isFastingStarting } = fastingWindow;
@@ -121,30 +146,37 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
     const progress = (currentDuration || 0) / (targetHours * 60);
 
     return (
-      <Card className="modern-habit-card group p-6 h-full relative overflow-hidden">
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center ring-2 shadow-lg transition-all",
-                status.isFasting 
-                  ? "bg-gradient-to-br from-emerald-500/30 to-green-500/40 ring-emerald-500/40"
-                  : "bg-gradient-to-br from-orange-500/30 to-yellow-500/40 ring-orange-500/40"
-              )}>
-                <Icon className="h-6 w-6" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
+      <>
+        <Card className="modern-habit-card group p-6 h-full relative overflow-hidden">
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center ring-2 shadow-lg transition-all",
+                  status.isFasting 
+                    ? "bg-gradient-to-br from-emerald-500/30 to-green-500/40 ring-emerald-500/40"
+                    : "bg-gradient-to-br from-orange-500/30 to-yellow-500/40 ring-orange-500/40"
+                )}>
+                  <Icon className="h-6 w-6" style={{ color: status.isFasting ? "#10b981" : "#f97316" }} />
+                </div>
+                <h3 className="text-sm font-bold truncate">{habit.name}</h3>
               </div>
-              <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+              <div className="flex items-center gap-1">
+                <HabitOptionsMenu
+                  onArchive={handleArchive}
+                  onDelete={handleDelete}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 opacity-50 hover:opacity-100"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate(); }}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-50 hover:opacity-100"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate(); }}
-            >
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
 
           {/* Circular Progress */}
           <div className="flex justify-center py-2">
@@ -223,6 +255,59 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
           </div>
         </div>
       </Card>
+
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Привычка будет скрыта из списка активных, но все данные сохранятся.
+              Вы сможете восстановить её позже.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchiveConfirm}>
+              Архивировать
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="glass-strong border-white/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие нельзя отменить. Будут удалены:
+              <ul className="mt-2 list-disc list-inside text-sm">
+                <li>Все логи выполнения</li>
+                <li>Вся статистика и история</li>
+                <li>Все измерения и попытки</li>
+              </ul>
+              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
+                <p className="text-sm font-semibold text-destructive">
+                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass-card border-white/20">
+              Отмена
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Удалить навсегда
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
     );
   }
 
@@ -237,12 +322,17 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
           <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/30 to-pink-500/40 flex items-center justify-center ring-2 ring-rose-500/40 shadow-lg">
-                  <Icon className="h-6 w-6" style={{ color: neonColor }} />
-                </div>
-                <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/30 to-pink-500/40 flex items-center justify-center ring-2 ring-rose-500/40 shadow-lg">
+                <Icon className="h-6 w-6" style={{ color: neonColor }} />
               </div>
+              <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+            </div>
+            <div className="flex items-center gap-1">
+              <HabitOptionsMenu
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
               <Button
                 variant="ghost"
                 size="icon"
@@ -252,6 +342,7 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
+          </div>
 
             {/* Circular Progress */}
             <div className="flex justify-center py-2">
@@ -345,13 +436,18 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
       <Card className="modern-habit-card group p-6 h-full relative overflow-hidden">
         <div className="space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg">
-                <Icon className="h-6 w-6" style={{ color: neonColor }} />
-              </div>
-              <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg">
+              <Icon className="h-6 w-6" style={{ color: neonColor }} />
             </div>
+            <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+          </div>
+          <div className="flex items-center gap-1">
+            <HabitOptionsMenu
+              onArchive={handleArchive}
+              onDelete={handleDelete}
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -361,6 +457,7 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+        </div>
 
           {/* Circular Progress */}
           <div className="flex justify-center py-2">
@@ -420,21 +517,27 @@ export function InteractiveHabitCard({ habit, userId, onNavigate, onCompleted }:
     <Card className="modern-habit-card group p-6 h-full relative overflow-hidden">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg">
-              <Icon className="h-6 w-6" style={{ color: neonColor }} />
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-purple-500/40 flex items-center justify-center ring-2 ring-primary/40 shadow-lg">
+                <Icon className="h-6 w-6" style={{ color: neonColor }} />
+              </div>
+              <h3 className="text-sm font-bold truncate">{habit.name}</h3>
             </div>
-            <h3 className="text-sm font-bold truncate">{habit.name}</h3>
+            <div className="flex items-center gap-1">
+              <HabitOptionsMenu
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 opacity-50 hover:opacity-100"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate(); }}
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-50 hover:opacity-100"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate(); }}
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
 
         {isCompletedToday ? (
           <div className="flex flex-col items-center py-8">

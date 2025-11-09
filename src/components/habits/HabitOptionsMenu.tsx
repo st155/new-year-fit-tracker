@@ -13,6 +13,7 @@ interface HabitOptionsMenuProps {
   onArchive?: () => void;
   onDelete?: () => void;
   onViewHistory?: () => void;
+  onDeletePermanent?: () => void;
 }
 
 export function HabitOptionsMenu({
@@ -20,6 +21,7 @@ export function HabitOptionsMenu({
   onArchive,
   onDelete,
   onViewHistory,
+  onDeletePermanent,
 }: HabitOptionsMenuProps) {
   return (
     <DropdownMenu>
@@ -77,6 +79,10 @@ export function HabitOptionsMenu({
           </DropdownMenuItem>
         )}
         
+        {(onArchive || onDelete) && onDeletePermanent && (
+          <DropdownMenuSeparator className="bg-white/10" />
+        )}
+        
         {onDelete && (
           <DropdownMenuItem 
             onClick={(e) => {
@@ -86,7 +92,20 @@ export function HabitOptionsMenu({
             className="text-destructive hover:bg-destructive/10 cursor-pointer"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            <span>Удалить</span>
+            <span>Удалить навсегда</span>
+          </DropdownMenuItem>
+        )}
+        
+        {onDeletePermanent && (
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeletePermanent();
+            }}
+            className="text-destructive hover:bg-destructive/10 cursor-pointer"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>Удалить навсегда</span>
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
