@@ -239,7 +239,15 @@ function Step3SwipeGestures() {
         <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
           <Target className="h-5 w-5 text-blue-500 flex-shrink-0" />
           <div>
-            <p className="font-medium">Нажатие</p>
+            <p className="font-medium">Короткое нажатие</p>
+            <p className="text-sm text-muted-foreground">Раскрыть виджет для быстрых действий</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+          <Target className="h-5 w-5 text-purple-500 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Долгое нажатие (0.8с)</p>
             <p className="text-sm text-muted-foreground">Просмотр деталей и статистики</p>
           </div>
         </div>

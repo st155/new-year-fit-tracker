@@ -1,17 +1,20 @@
-import { motion, PanInfo } from 'framer-motion';
-import { useState, useCallback, memo, useEffect } from 'react';
+import { motion, PanInfo, AnimatePresence } from 'framer-motion';
+import { useState, useCallback, memo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTimeBasedTheme, getStateStyles, formatDuration, getDifficultyBadge, TimeOfDay } from '@/lib/habit-utils-v3';
 import { haptics } from '@/lib/haptics';
 import { useHabitCardState } from '@/hooks/useHabitCardState';
 import { HabitCelebration } from '@/components/habits/HabitCelebration';
 import { HabitOptionsMenu } from '@/components/habits/HabitOptionsMenu';
-import { Flame, Calendar, Target, Clock, Coins } from 'lucide-react';
+import { Flame, Calendar, Target, Clock, Coins, ChevronDown, ChevronUp } from 'lucide-react';
 import { getHabitIcon } from '@/lib/habit-utils';
 import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from '@/lib/duration-utils';
+import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HabitCardV3Props {
   habit: any;
@@ -40,10 +43,13 @@ export function HabitCardV3({
   compact = false,
   className
 }: HabitCardV3Props) {
-  const { state, expanded, showCelebration, celebrate } = useHabitCardState(habit);
+  const { state, expanded, showCelebration, celebrate, toggle } = useHabitCardState(habit);
   const [dragX, setDragX] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+  const [isLongPress, setIsLongPress] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout>();
+  const { user } = useAuth();
 
   const theme = getTimeBasedTheme(habit.time_of_day as TimeOfDay);
   const stateStyles = getStateStyles(state);
@@ -92,10 +98,34 @@ export function HabitCardV3({
     setShowSwipeHint(false);
   }, [onSwipeRight, onComplete, onSwipeLeft, celebrate]);
 
-  const handleTap = useCallback(() => {
-    haptics.tap();
-    onTap?.();
+  const handlePointerDown = useCallback(() => {
+    setIsLongPress(false);
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+      haptics.tap();
+      onTap?.(); // Navigate to details on long press
+    }, 800);
   }, [onTap]);
+
+  const handlePointerUp = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    
+    if (!isLongPress) {
+      // Short tap → toggle expanded
+      haptics.tap();
+      toggle();
+    }
+    setIsLongPress(false);
+  }, [isLongPress, toggle]);
+
+  const handlePointerCancel = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    setIsLongPress(false);
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     switch (e.key) {
@@ -187,9 +217,12 @@ export function HabitCardV3({
             stateStyles.className,
             state !== 'completed' && theme.glow,
             stateStyles.glow,
-            compact ? "p-3" : "p-4"
+            compact ? "p-3" : "p-4",
+            isLongPress && "ring-2 ring-primary/50"
           )}
-          onClick={handleTap}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
         >
           <CardHeader className={cn("p-0", compact ? "pb-2" : "pb-3")}>
             <div className="flex items-start justify-between gap-2">
@@ -225,6 +258,26 @@ export function HabitCardV3({
               )}>
                 <span>{theme.icon}</span>
               </Badge>
+
+              {/* Expand/Collapse button */}
+              {(habit.habit_type === 'fasting_tracker' || 
+                habit.habit_type === 'duration_counter' || 
+                habit.habit_type === 'numeric_counter' || 
+                habit.habit_type === 'daily_measurement') && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                >
+                  {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              )}
 
               {/* Options Menu */}
               <HabitOptionsMenu
@@ -334,6 +387,39 @@ export function HabitCardV3({
                 ⚠️ Требует внимания
               </div>
             )}
+
+            {/* Inline Widgets - показывать только когда expanded */}
+            <AnimatePresence>
+              {expanded && user?.id && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                    {habit.habit_type === 'fasting_tracker' && (
+                      <FastingInlineWidget habit={habit} userId={user.id} compact={compact} />
+                    )}
+                    {habit.habit_type === 'duration_counter' && (
+                      <DurationCounterInlineWidget habit={habit} compact={compact} />
+                    )}
+                    {habit.habit_type === 'numeric_counter' && (
+                      <NumericCounterInlineWidget habit={habit} compact={compact} />
+                    )}
+                    {habit.habit_type === 'daily_measurement' && (
+                      <DailyMeasurementInlineWidget habit={habit} compact={compact} />
+                    )}
+                    {(!habit.habit_type || habit.habit_type === 'checkbox') && (
+                      <div className="text-sm text-muted-foreground text-center py-3 px-4 bg-muted/20 rounded-lg border border-muted-foreground/20">
+                        💡 Свайпните вправо для отметки выполнения →
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
       </motion.div>
