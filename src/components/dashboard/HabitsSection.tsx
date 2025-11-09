@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { InteractiveHabitCard } from "./InteractiveHabitCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
 import { HabitCompactCard } from "@/components/habits/HabitCompactCard";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 export function HabitsSection() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { habits, isLoading, error, refetch } = useHabits(user?.id);
 
@@ -126,25 +128,23 @@ export function HabitsSection() {
       {/* Modern Habit Grid */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {displayHabits.map((habit, index) => (
-          <Link
+          <motion.div
             key={habit.id}
-            to={`/habits/${habit.id}`}
-            className="block"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.3, 
+              delay: index * 0.1,
+              ease: "easeOut"
+            }}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.3, 
-                delay: index * 0.1,
-                ease: "easeOut"
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <HabitCompactCard habit={habit} userId={user?.id} />
-            </motion.div>
-          </Link>
+            <InteractiveHabitCard
+              habit={habit}
+              userId={user?.id}
+              onNavigate={() => navigate(`/habits/${habit.id}`)}
+              onCompleted={refetch}
+            />
+          </motion.div>
         ))}
       </div>
     </div>
