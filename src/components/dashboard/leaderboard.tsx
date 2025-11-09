@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trophy, Medal, Award, CheckCircle2 } from "lucide-react";
+import { Trophy, Medal, Award, CheckCircle2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
 export function Leaderboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { leaderboard, loading } = useLeaderboard({ limit: 5, timePeriod: 'overall' });
+  const { leaderboard, loading, error, refresh } = useLeaderboard({ limit: 5, timePeriod: 'overall' });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
 
@@ -35,6 +36,31 @@ export function Leaderboard() {
     return <LeaderboardSkeleton />;
   }
 
+  if (error) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+            {t('leaderboard.team')} {t('leaderboard.title')}
+          </h3>
+        </div>
+        <Card className="border-2 border-destructive/20 bg-card/40 backdrop-blur-sm">
+          <CardContent className="p-8 text-center space-y-3">
+            <p className="text-sm text-destructive font-medium">
+              Ошибка загрузки лидерборда
+            </p>
+            <p className="text-xs text-muted-foreground">{error}</p>
+            <Button onClick={() => refresh()} variant="outline" size="sm">
+              <RefreshCw className="mr-2 h-3 w-3" />
+              Повторить
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!loading && leaderboard.length === 0) {
     return (
       <div className="space-y-4 animate-fade-in">
@@ -45,16 +71,17 @@ export function Leaderboard() {
           </h3>
         </div>
         <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm">
-          <CardContent className="p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              No leaderboard data available
+          <CardContent className="p-8 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Нет данных лидерборда
             </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-            >
-              Refresh page
-            </button>
+            <p className="text-xs text-muted-foreground">
+              Начните участвовать в челленджах для отображения в таблице
+            </p>
+            <Button onClick={() => refresh()} variant="outline" size="sm">
+              <RefreshCw className="mr-2 h-3 w-3" />
+              Обновить
+            </Button>
           </CardContent>
         </Card>
       </div>

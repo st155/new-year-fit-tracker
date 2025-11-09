@@ -118,6 +118,12 @@ export function useLeaderboardQuery(
           limit_n: limit
         });
 
+      console.log('[useLeaderboardQuery] RPC response:', { 
+        dataLength: rpcData?.length, 
+        error: rpcError,
+        data: rpcData 
+      });
+
       if (rpcError) {
         console.error('[useLeaderboardQuery] RPC error:', rpcError);
         console.debug('[useLeaderboardQuery] Attempting fallback query');

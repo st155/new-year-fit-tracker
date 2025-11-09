@@ -102,7 +102,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
 
     setExecuting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('trainer-ai-execute', {
+      const { data, error } = await supabase.functions.invoke('execute-ai-actions', {
         body: {
           pendingActionId,
           conversationId,

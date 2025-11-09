@@ -5,6 +5,7 @@ import { staggerContainer, staggerItem } from "@/lib/animations";
 import { HoverBorderGradient } from "@/components/aceternity";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Medal, Award, Flame, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ const Leaderboard = () => {
   
   // Map activeTab to timePeriod for the hook
   const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
-  const { leaderboard, loading, userEntry, refresh } = useLeaderboard({ timePeriod });
+  const { leaderboard, loading, userEntry, error, refresh } = useLeaderboard({ timePeriod });
 
   // Auto-refresh when tab changes
   useEffect(() => {
@@ -75,14 +76,30 @@ const Leaderboard = () => {
       {/* Leaderboard Tabs */}
       {activeTab !== 'achievements' && (
         <>
-          {leaderboard.length === 0 ? (
+          {error ? (
             <Card>
-              <CardContent className="p-12 text-center">
+              <CardContent className="p-12 text-center space-y-4">
+                <Trophy className="h-16 w-16 mx-auto mb-4 text-destructive" />
+                <h3 className="text-xl font-semibold mb-2">Ошибка загрузки</h3>
+                <p className="text-muted-foreground">{error}</p>
+                <Button onClick={() => refresh()} variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Повторить попытку
+                </Button>
+              </CardContent>
+            </Card>
+          ) : leaderboard.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center space-y-4">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">{t('leaderboard.noChallenge')}</h3>
                 <p className="text-muted-foreground">
                   {t('leaderboard.noChallengeDesc')}
                 </p>
+                <Button onClick={() => refresh()} variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Обновить
+                </Button>
               </CardContent>
             </Card>
           ) : (
