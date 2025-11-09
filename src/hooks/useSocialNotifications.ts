@@ -1,8 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitNotificationsRealtime } from '@/hooks/composite/realtime';
 import { supabase } from '@/integrations/supabase/client';
+import type { NotificationPreferences } from '@/components/habits-v3/settings/NotificationSettings';
+
+const DEFAULT_PREFERENCES: NotificationPreferences = {
+  friend_completions: true,
+  reactions: true,
+  team_invites: true,
+  achievements: true,
+  reminders: true,
+  quiet_mode: false,
+};
 
 /**
  * Hook for showing toast notifications for important social events
@@ -29,7 +39,7 @@ export function useSocialNotifications(enabled = true) {
           .single();
 
         if (data?.notification_preferences) {
-          setPreferences({ ...DEFAULT_PREFERENCES, ...data.notification_preferences });
+          setPreferences({ ...DEFAULT_PREFERENCES, ...(data.notification_preferences as any) });
         }
       } catch (error) {
         console.error('Error loading notification preferences:', error);
@@ -62,9 +72,16 @@ export function useSocialNotifications(enabled = true) {
           
           const notification = payload.new as any;
           
+          // Check quiet mode first
+          if (preferences.quiet_mode) {
+            console.log('🔕 [SocialNotifications] Quiet mode enabled, skipping toast');
+            return;
+          }
+          
           // Show toast based on notification type
           switch (notification.notification_type) {
             case 'friend_completion':
+              if (!preferences.friend_completions) return;
               toast.success('🎉 Друг выполнил привычку!', {
                 description: notification.message,
                 duration: 4000,
@@ -133,5 +150,5 @@ export function useSocialNotifications(enabled = true) {
       console.log('[SocialNotifications] Cleaning up subscription');
       supabase.removeChannel(channel);
     };
-  }, [enabled, user?.id]);
+  }, [enabled, user?.id, preferences]);
 }

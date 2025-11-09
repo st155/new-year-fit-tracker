@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useHabitNotificationsRealtime } from "@/hooks/composite/realtime";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function HabitSocialWidget() {
   const { user } = useAuth();
@@ -39,7 +40,11 @@ export function HabitSocialWidget() {
     return (
       <Card className="overflow-hidden">
         <CardContent className="p-4">
-          <Skeleton className="h-20 w-full" />
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -77,11 +82,23 @@ export function HabitSocialWidget() {
           </div>
         ) : (
           <div className="space-y-2">
-            {recentEvents.map((event) => (
-              <div
-                key={event.id}
-                className="flex items-start gap-2 p-2 rounded-lg bg-background/50 hover:bg-background transition-colors"
-              >
+            <AnimatePresence mode="popLayout">
+              {recentEvents.map((event, index) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: 0,
+                    transition: {
+                      delay: index * 0.1,
+                      duration: 0.3
+                    }
+                  }}
+                  exit={{ opacity: 0, x: 20 }}
+                  layout
+                >
+                  <div className="flex items-start gap-2 p-2 rounded-lg bg-background/50 hover:bg-background transition-colors">
                 <span className="text-base flex-shrink-0">
                   {event.event_type === 'completion' ? '✓' : 
                    event.event_type === 'streak' ? '🔥' : 
@@ -104,8 +121,10 @@ export function HabitSocialWidget() {
                     locale: ru 
                   })}
                 </span>
-              </div>
-            ))}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
             <p className="text-xs text-muted-foreground text-center pt-2">
               Нажмите для просмотра всех событий
             </p>

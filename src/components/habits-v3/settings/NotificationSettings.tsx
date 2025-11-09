@@ -54,7 +54,7 @@ export function NotificationSettings() {
       if (error) throw error;
 
       if (data?.notification_preferences) {
-        setPreferences({ ...DEFAULT_PREFERENCES, ...data.notification_preferences });
+        setPreferences({ ...DEFAULT_PREFERENCES, ...(data.notification_preferences as any) });
       }
     } catch (error) {
       console.error('Error loading notification preferences:', error);
@@ -68,7 +68,7 @@ export function NotificationSettings() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ notification_preferences: preferences })
+        .update({ notification_preferences: preferences as any })
         .eq('id', user?.id);
 
       if (error) throw error;

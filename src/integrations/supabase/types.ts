@@ -1628,6 +1628,38 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_reactions: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          reaction_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          reaction_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          reaction_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_reactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "habit_feed_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           accepted_at: string | null
@@ -2308,6 +2340,39 @@ export type Database = {
           },
         ]
       }
+      habit_feed_events: {
+        Row: {
+          comments_count: number | null
+          created_at: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          likes_count: number | null
+          user_id: string
+          visibility: string | null
+        }
+        Insert: {
+          comments_count?: number | null
+          created_at?: string | null
+          event_data: Json
+          event_type: string
+          id?: string
+          likes_count?: number | null
+          user_id: string
+          visibility?: string | null
+        }
+        Update: {
+          comments_count?: number | null
+          created_at?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          likes_count?: number | null
+          user_id?: string
+          visibility?: string | null
+        }
+        Relationships: []
+      }
       habit_journal_entries: {
         Row: {
           created_at: string | null
@@ -2410,6 +2475,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      habit_notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       habit_stats: {
         Row: {
@@ -3499,6 +3600,7 @@ export type Database = {
           email_updates: boolean | null
           full_name: string | null
           id: string
+          notification_preferences: Json | null
           notifications_enabled: boolean | null
           progress_sharing: boolean | null
           total_xp: number | null
@@ -3514,6 +3616,7 @@ export type Database = {
           email_updates?: boolean | null
           full_name?: string | null
           id?: string
+          notification_preferences?: Json | null
           notifications_enabled?: boolean | null
           progress_sharing?: boolean | null
           total_xp?: number | null
@@ -3529,6 +3632,7 @@ export type Database = {
           email_updates?: boolean | null
           full_name?: string | null
           id?: string
+          notification_preferences?: Json | null
           notifications_enabled?: boolean | null
           progress_sharing?: boolean | null
           total_xp?: number | null
