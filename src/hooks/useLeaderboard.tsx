@@ -11,12 +11,12 @@ interface UseLeaderboardOptions {
 }
 
 export function useLeaderboard(options: UseLeaderboardOptions = {}) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall' } = options;
   
   const { 
     data: leaderboard = [], 
-    isLoading: loading, 
+    isLoading: queryLoading, 
     error: queryError,
     refetch 
   } = useLeaderboardQuery(user?.id, { limit, timePeriod });
@@ -29,39 +29,66 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, refetch]);
 
-  // Subscribe to real-time metric updates
+  // Subscribe to real-time updates for challenge points
   useEffect(() => {
-    if (!user || leaderboard.length === 0) return;
+    if (!user) return;
 
-    const challengeId = leaderboard[0]?.userId;
-    console.log('[Leaderboard] Setting up real-time subscription for challenge:', challengeId);
-
-    const channel = supabase
-      .channel(`leaderboard_${challengeId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'metric_values',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          console.log('[Leaderboard] Metrics updated, refreshing...');
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('[Leaderboard] Cleaning up subscription');
-      supabase.removeChannel(channel);
+    // Get user's current challenge_id
+    const getChallengeId = async () => {
+      const { data } = await supabase
+        .from('challenge_participants')
+        .select('challenge_id')
+        .eq('user_id', user.id)
+        .order('joined_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      return data?.challenge_id;
     };
-  }, [user, leaderboard, refetch]);
+
+    getChallengeId().then((challengeId) => {
+      if (!challengeId) {
+        console.log('[Leaderboard] No challenge found for realtime subscription');
+        return;
+      }
+
+      console.log('[Leaderboard] Setting up realtime subscription for challenge:', challengeId);
+
+      const channel = supabase
+        .channel(`leaderboard_challenge_${challengeId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'challenge_points',
+            filter: `challenge_id=eq.${challengeId}`
+          },
+          () => {
+            console.log('[Leaderboard] Challenge points updated, refreshing...');
+            refetch();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        console.log('[Leaderboard] Cleaning up subscription');
+        supabase.removeChannel(channel);
+      };
+    });
+  }, [user, refetch]);
+
+  console.log('[useLeaderboard] State:', {
+    authLoading,
+    queryLoading,
+    userId: user?.id,
+    leaderboardLength: leaderboard.length,
+    finalLoading: authLoading || (queryLoading && !!user?.id)
+  });
 
   return {
     leaderboard,
-    loading,
+    loading: authLoading || (queryLoading && !!user?.id),
     error: queryError?.message || null,
     challengeId: leaderboard[0]?.userId || null,
     refresh: refetch,

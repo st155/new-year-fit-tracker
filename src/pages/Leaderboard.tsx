@@ -13,6 +13,7 @@ import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from "@/lib/translations";
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useAuth } from "@/hooks/useAuth";
 import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
 import { PersonalStatsCard } from "@/components/leaderboard/PersonalStatsCard";
 import { LeaderboardTabs } from "@/components/leaderboard/LeaderboardTabs";
@@ -26,6 +27,7 @@ import { getUserLevel } from "@/lib/gamification";
 
 const Leaderboard = () => {
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeTab, setActiveTab] = useState('overall');
@@ -33,7 +35,18 @@ const Leaderboard = () => {
   
   // Map activeTab to timePeriod for the hook
   const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
-  const { leaderboard, loading, userEntry, error, refresh } = useLeaderboard({ timePeriod });
+  const { leaderboard, loading: leaderboardLoading, userEntry, error, refresh } = useLeaderboard({ timePeriod });
+  
+  const isLoading = authLoading || leaderboardLoading;
+
+  console.log('[Leaderboard Page] State:', {
+    authLoading,
+    leaderboardLoading,
+    isLoading,
+    userId: user?.id,
+    timePeriod,
+    leaderboardLength: leaderboard.length
+  });
 
   // Auto-refresh when tab changes
   useEffect(() => {
@@ -42,7 +55,7 @@ const Leaderboard = () => {
     }
   }, [activeTab]);
 
-  if (loading) {
+  if (isLoading) {
     return <PageLoader message="Loading leaderboard..." />;
   }
 
@@ -56,11 +69,11 @@ const Leaderboard = () => {
         </div>
         <button
           onClick={() => refresh()}
-          disabled={loading}
+          disabled={isLoading}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
           title="Refresh data"
         >
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           <span className="text-sm font-medium">Refresh</span>
         </button>
       </div>
