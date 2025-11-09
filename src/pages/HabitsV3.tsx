@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
 import { useHabitCompletion } from '@/hooks/useHabitCompletion';
+import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
 import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announcement';
+import { HabitsInsightBanner } from '@/components/habits-v3/HabitsInsightBanner';
 
 // Lazy load heavy components
 const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
@@ -31,6 +33,13 @@ export default function HabitsV3() {
   const navigate = useNavigate();
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
   const { completeHabit, isCompleting } = useHabitCompletion();
+  
+  // Get habit insights
+  const { all: insights, isLoading: insightsLoading } = useHabitInsights({
+    userId: user?.id,
+    habits: habits || [],
+    enabled: !!user?.id && habits.length > 0,
+  });
   
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('habitsV3_onboarding_completed');
@@ -112,6 +121,18 @@ export default function HabitsV3() {
             Добавить
           </Button>
         </div>
+
+        {/* Insights Banner */}
+        {!insightsLoading && insights.length > 0 && (
+          <HabitsInsightBanner
+            insights={insights}
+            onAction={(insight) => {
+              if (insight.action?.type === 'navigate' && insight.action.path) {
+                navigate(insight.action.path);
+              }
+            }}
+          />
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="smart" className="space-y-6">

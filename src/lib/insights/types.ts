@@ -13,7 +13,11 @@ export type InsightType =
   | 'prediction'
   | 'social'
   | 'trainer'
-  | 'temporal';
+  | 'temporal'
+  | 'habit_pattern'
+  | 'habit_risk'
+  | 'habit_optimization'
+  | 'habit_chain';
 
 export interface SmartInsight {
   id: string;

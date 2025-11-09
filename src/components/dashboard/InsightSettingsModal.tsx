@@ -40,6 +40,10 @@ const INSIGHT_TYPE_LABELS: Record<InsightType, string> = {
   social: 'Социальные',
   trainer: 'От тренера',
   temporal: 'Временные паттерны',
+  habit_pattern: 'Паттерны привычек',
+  habit_risk: 'Риски привычек',
+  habit_optimization: 'Оптимизация привычек',
+  habit_chain: 'Связи привычек',
 };
 
 const INSIGHT_TYPE_DESCRIPTIONS: Record<InsightType, string> = {
@@ -54,6 +58,10 @@ const INSIGHT_TYPE_DESCRIPTIONS: Record<InsightType, string> = {
   social: 'Челленджи и сравнения',
   trainer: 'Сообщения от вашего тренера',
   temporal: 'Временные закономерности',
+  habit_pattern: 'Оптимальные времена и паттерны',
+  habit_risk: 'Привычки под угрозой',
+  habit_optimization: 'Рекомендации по улучшению',
+  habit_chain: 'Связи между привычками',
 };
 
 export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalProps) {

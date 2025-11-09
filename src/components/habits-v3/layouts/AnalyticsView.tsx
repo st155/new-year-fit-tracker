@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, Zap, Target, Calendar } from 'lucide-react';
+import { TrendingUp, Zap, Target, Calendar, Lightbulb } from 'lucide-react';
 import { useHabitAnalytics } from '@/hooks/useHabitAnalytics';
+import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { 
   calculateAnalytics, 
   calculateCompletionTrend, 
@@ -11,6 +13,7 @@ import {
   calculateCategoryStats,
   getTopHabits 
 } from '@/lib/analytics-utils';
+import { InsightCard } from '../analytics/InsightCard';
 
 interface AnalyticsViewProps {
   habits: any[];
@@ -19,6 +22,20 @@ interface AnalyticsViewProps {
 
 export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
   const { completions, xpHistory, isLoading } = useHabitAnalytics(userId, 30);
+  
+  // Get habit insights
+  const { 
+    patterns, 
+    risks, 
+    optimizations, 
+    achievements, 
+    recommendations,
+    isLoading: insightsLoading 
+  } = useHabitInsights({
+    userId,
+    habits,
+    enabled: !!userId && habits.length > 0,
+  });
 
   const analytics = useMemo(() => 
     calculateAnalytics(habits, completions),
@@ -89,6 +106,86 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-6">
+        {/* Smart Insights Section */}
+        {!insightsLoading && (patterns.length > 0 || risks.length > 0 || optimizations.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5" />
+                Smart Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="all">Все</TabsTrigger>
+                  <TabsTrigger value="patterns">Паттерны</TabsTrigger>
+                  <TabsTrigger value="risks">Риски</TabsTrigger>
+                  <TabsTrigger value="optimize">Оптимизация</TabsTrigger>
+                  <TabsTrigger value="achieve">Достижения</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="all" className="space-y-3 mt-4">
+                  {[...patterns, ...risks, ...optimizations, ...achievements, ...recommendations]
+                    .sort((a, b) => b.priority - a.priority)
+                    .slice(0, 6)
+                    .map(insight => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))}
+                </TabsContent>
+
+                <TabsContent value="patterns" className="space-y-3 mt-4">
+                  {patterns.length > 0 ? (
+                    patterns.map(insight => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Недостаточно данных для анализа паттернов
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="risks" className="space-y-3 mt-4">
+                  {risks.length > 0 ? (
+                    risks.map(insight => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Все привычки в безопасности! 🎉
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="optimize" className="space-y-3 mt-4">
+                  {optimizations.length > 0 ? (
+                    optimizations.map(insight => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Нет рекомендаций по оптимизации
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="achieve" className="space-y-3 mt-4">
+                  {achievements.length > 0 ? (
+                    achievements.map(insight => (
+                      <InsightCard key={insight.id} insight={insight} />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Продолжайте работать над привычками для достижений!
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
