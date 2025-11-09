@@ -116,6 +116,11 @@ export default {
         'glow-negative': 'var(--shadow-glow-negative)',
         'glow-positive': 'var(--shadow-glow-positive)',
         'glow-neutral': 'var(--shadow-glow-neutral)',
+        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.5)',
+        'glow-green': '0 0 20px rgba(16, 185, 129, 0.5)',
+        'glow-orange': '0 0 20px rgba(249, 115, 22, 0.5)',
+        'glow-rose': '0 0 20px rgba(244, 63, 94, 0.5)',
+        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.5)',
         'card': 'var(--shadow-card)',
       },
       colors: {

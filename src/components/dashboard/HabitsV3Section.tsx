@@ -11,6 +11,8 @@ import { Target, Plus, ArrowRight, Flame, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useHabitFeed } from "@/hooks/useHabitFeed";
+import { HabitWidgetCard } from "@/components/habits-v3/widgets/HabitWidgetCard";
+import { useMemo } from "react";
 
 export function HabitsV3Section() {
   const navigate = useNavigate();
@@ -26,10 +28,27 @@ export function HabitsV3Section() {
     levelInfo,
   });
 
-  // Show top 3 active habits (smart sort: incomplete first, then by priority)
-  const displayHabits = habits
-    ?.filter(h => !h.completed_today)
-    .slice(0, 3) || [];
+  // Smart display logic - show ALL habits with intelligent sorting
+  const displayHabits = useMemo(() => {
+    if (!habits) return [];
+    
+    return habits
+      .sort((a, b) => {
+        // 1. Incomplete habits first
+        if (!a.completed_today && b.completed_today) return -1;
+        if (a.completed_today && !b.completed_today) return 1;
+        
+        // 2. Duration counters higher (always active)
+        if (a.habit_type === 'duration_counter' && b.habit_type !== 'duration_counter') return -1;
+        if (a.habit_type !== 'duration_counter' && b.habit_type === 'duration_counter') return 1;
+        
+        // 3. By streak (higher = higher priority)
+        const streakA = (a as any).current_streak || (a as any).streak || 0;
+        const streakB = (b as any).current_streak || (b as any).streak || 0;
+        return streakB - streakA;
+      })
+      .slice(0, 6); // Show up to 6 widgets
+  }, [habits]);
 
   // Show loading skeleton
   if (habitsLoading || levelLoading || (user?.id && !habits)) {
@@ -157,32 +176,32 @@ export function HabitsV3Section() {
         </div>
       </div>
 
-      {/* Top 3 Habits Grid */}
+      {/* Apple Health Style Habit Widgets - Up to 6 */}
       {displayHabits.length > 0 ? (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {displayHabits.map((habit, index) => (
             <motion.div
               key={habit.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ 
                 duration: 0.3, 
-                delay: index * 0.1,
+                delay: index * 0.05,
                 ease: "easeOut"
               }}
             >
-              <HabitCardV3
+              <HabitWidgetCard
                 habit={habit}
-                onComplete={refetch}
-                onTap={() => navigate(`/habits/${habit.id}`)}
+                onClick={() => navigate(`/habits/${habit.id}`)}
               />
             </motion.div>
           ))}
         </div>
       ) : (
         <Card className="p-6 text-center border-dashed">
+          <div className="text-4xl mb-2">🎉</div>
           <p className="text-muted-foreground">
-            🎉 Все привычки на сегодня выполнены!
+            Все привычки на сегодня выполнены!
           </p>
         </Card>
       )}
