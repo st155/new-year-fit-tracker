@@ -198,8 +198,25 @@ export default function FitnessData() {
 
     // Create metric cards
     const latestMetrics = Object.entries(grouped).map(([name, values]) => {
-      const latest = values[values.length - 1];
-      return { name, latest, history: values };
+      // Sort explicitly by measurement_date DESC (newest first) for consistency
+      const sortedValues = values.sort((a, b) => 
+        new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
+      );
+      
+      // Take first element (newest) since data is sorted DESC
+      const latest = sortedValues[0];
+      
+      // Debug logging for Recovery Score
+      if (import.meta.env.DEV && name === 'Recovery Score') {
+        console.log('[FitnessData] Recovery Score:', {
+          latest: latest.value,
+          date: latest.measurement_date,
+          source: latest.source,
+          total: sortedValues.length
+        });
+      }
+      
+      return { name, latest, history: sortedValues };
     });
 
     // Recovery card
@@ -212,7 +229,7 @@ export default function FitnessData() {
         icon: Activity,
         color: 'bg-gradient-to-br from-green-400 to-emerald-500',
         source: recovery.latest.source,
-        sparkline: recovery.history.slice(-7).map(h => ({ value: h.value })),
+        sparkline: recovery.history.slice(0, 7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Recovery Score')?.confidence || 0,
         trend: calculateTrend(recovery.history),
       });
@@ -227,7 +244,7 @@ export default function FitnessData() {
         icon: Zap,
         color: 'bg-gradient-to-br from-orange-400 to-red-500',
         source: strain.latest.source,
-        sparkline: strain.history.slice(-7).map(h => ({ value: h.value })),
+        sparkline: strain.history.slice(0, 7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Day Strain')?.confidence || 0,
         trend: calculateTrend(strain.history),
       });
@@ -249,7 +266,7 @@ export default function FitnessData() {
         color: 'bg-gradient-to-br from-red-400 to-pink-500',
         source: hr.latest.source,
         isStale: age > 24 * 60 * 60 * 1000,
-        sparkline: hr.history.slice(-20).map(h => ({ value: h.value })),
+        sparkline: hr.history.slice(0, 20).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => 
           q.metricName === 'Average Heart Rate' || 
           q.metricName === 'Heart Rate' || 
@@ -272,7 +289,7 @@ export default function FitnessData() {
         icon: Moon,
         color: 'bg-gradient-to-br from-blue-400 to-indigo-500',
         source: sleep.latest.source,
-        sparkline: sleep.history.slice(-7).map(h => ({ value: h.value })),
+        sparkline: sleep.history.slice(0, 7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => 
           q.metricName === 'Sleep Performance' || 
           q.metricName === 'Sleep Efficiency'
@@ -290,7 +307,7 @@ export default function FitnessData() {
         icon: Footprints,
         color: 'bg-gradient-to-br from-cyan-400 to-blue-500',
         source: steps.latest.source,
-        sparkline: steps.history.slice(-7).map(h => ({ value: h.value })),
+        sparkline: steps.history.slice(0, 7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Steps')?.confidence || 0,
         trend: calculateTrend(steps.history),
       });
@@ -309,7 +326,7 @@ export default function FitnessData() {
         icon: Flame,
         color: 'bg-gradient-to-br from-orange-400 to-red-400',
         source: calories.latest.source,
-        sparkline: calories.history.slice(-7).map(h => ({ value: h.value })),
+        sparkline: calories.history.slice(0, 7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => 
           q.metricName === 'Active Calories' || 
           q.metricName === 'Workout Calories'
