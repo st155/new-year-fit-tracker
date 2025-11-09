@@ -50,6 +50,7 @@ import { ClientHealthScore } from './client-detail/ClientHealthScore';
 import { AdvancedFilters, FilterState } from './client-detail/AdvancedFilters';
 import { ClientDetailSkeleton } from './client-detail/ClientDetailSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { ClientProgressVisualization } from './client-detail/visualization/ClientProgressVisualization';
 
 interface Client {
   id: string;
@@ -342,8 +343,9 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
       />
 
       <Tabs defaultValue="goals" className="space-y-4">
-        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-7 bg-muted/50 p-1 gap-1">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
+          <TabsTrigger value="progress" className="whitespace-nowrap flex-shrink-0">Прогресс</TabsTrigger>
           <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
           <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
           <TabsTrigger value="automation" className="whitespace-nowrap flex-shrink-0">Автоматизация</TabsTrigger>
@@ -638,6 +640,13 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="progress" className="space-y-4">
+          <ClientProgressVisualization
+            clientId={client.user_id}
+            unifiedMetrics={unifiedMetrics}
+          />
         </TabsContent>
 
         <TabsContent value="workouts" className="space-y-4">
