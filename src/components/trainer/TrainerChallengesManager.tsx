@@ -17,7 +17,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle, Sparkles, FileText, Save } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle, Sparkles, FileText, Save, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -85,6 +96,31 @@ export function TrainerChallengesManager() {
       toast({
         title: "Ошибка",
         description: "Не удалось завершить челлендж",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReactivateChallenge = async (challengeId: string) => {
+    try {
+      const { error } = await supabase
+        .from("challenges")
+        .update({ is_active: true })
+        .eq("id", challengeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Успех",
+        description: "Челлендж активирован",
+      });
+
+      refetch();
+    } catch (error: any) {
+      console.error("Error reactivating challenge:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось активировать челлендж",
         variant: "destructive",
       });
     }
@@ -225,13 +261,28 @@ export function TrainerChallengesManager() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleCompleteChallenge(challenge.id)}
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Завершить челлендж?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Челлендж станет неактивным и не будет отображаться для участников. 
+                              Вы сможете активировать его снова из раздела "Завершенные".
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleCompleteChallenge(challenge.id)}>
+                              Завершить
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
@@ -293,7 +344,7 @@ export function TrainerChallengesManager() {
               <Card key={challenge.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle>{challenge.title}</CardTitle>
                         <Badge variant="secondary">Завершен</Badge>
@@ -302,6 +353,14 @@ export function TrainerChallengesManager() {
                         {challenge.description}
                       </CardDescription>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleReactivateChallenge(challenge.id)}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Активировать
+                    </Button>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
                     <div className="flex items-center gap-1">
