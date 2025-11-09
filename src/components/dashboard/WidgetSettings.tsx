@@ -33,6 +33,11 @@ interface WidgetSettingsProps {
 
 // Available metrics (source is selected automatically)
 const AVAILABLE_METRICS = [
+  // Habits 3.0 виджеты
+  '🏆 Habit Level',
+  '🔥 Habit Streaks',
+  '🤝 Habit Social',
+  // Обычные метрики
   'Steps',
   'Active Calories',
   'Sleep Duration',

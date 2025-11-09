@@ -160,8 +160,15 @@ const Index = () => {
   const processedWidgets = useMemo(() => {
     const sorted = [...widgets].sort((a, b) => a.position - b.position);
     
-    // Filter out widgets without data
+    // Habits 3.0 widgets don't need metrics data
+    const habitsWidgets = ['🏆 Habit Level', '🔥 Habit Streaks', '🤝 Habit Social'];
+    
+    // Filter out widgets without data (except Habits 3.0 widgets)
     return sorted.filter(widget => {
+      if (habitsWidgets.includes(widget.metric_name)) {
+        return true; // Always show Habits 3.0 widgets
+      }
+      
       const isSingleMode = widget.display_mode !== 'multi';
       const hasData = isSingleMode 
         ? smartData?.has(widget.id)

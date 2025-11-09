@@ -21,6 +21,9 @@ import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { HabitLevelWidget } from './widgets/HabitLevelWidget';
+import { HabitStreakWidget } from './widgets/HabitStreakWidget';
+import { HabitSocialWidget } from './widgets/HabitSocialWidget';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -356,6 +359,17 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const metricName = widget.metric_name;
   const source = data?.source || 'unknown';
   const isMultiMode = widget.display_mode === 'multi' && multiSourceData;
+
+  // Render special Habits 3.0 widgets
+  if (metricName === '🏆 Habit Level') {
+    return <HabitLevelWidget />;
+  }
+  if (metricName === '🔥 Habit Streaks') {
+    return <HabitStreakWidget />;
+  }
+  if (metricName === '🤝 Habit Social') {
+    return <HabitSocialWidget />;
+  }
 
 
   const handleCardClick = useCallback(() => {
