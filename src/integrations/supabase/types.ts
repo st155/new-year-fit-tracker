@@ -1766,6 +1766,108 @@ export type Database = {
           },
         ]
       }
+      habit_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_name: string
+          achievement_type: string
+          earned_at: string | null
+          habit_id: string | null
+          icon: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_name: string
+          achievement_type: string
+          earned_at?: string | null
+          habit_id?: string | null
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_name?: string
+          achievement_type?: string
+          earned_at?: string | null
+          habit_id?: string | null
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_achievements_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      habit_ai_insights: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          habit_id: string | null
+          id: string
+          insight_text: string
+          insight_type: string
+          is_read: boolean | null
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          habit_id?: string | null
+          id?: string
+          insight_text: string
+          insight_type: string
+          is_read?: boolean | null
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          habit_id?: string | null
+          id?: string
+          insight_text?: string
+          insight_type?: string
+          is_read?: boolean | null
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_ai_insights_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_ai_insights_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       habit_attempts: {
         Row: {
           created_at: string | null
@@ -1807,6 +1909,153 @@ export type Database = {
           },
         ]
       }
+      habit_bundle_items: {
+        Row: {
+          bundle_id: string
+          created_at: string | null
+          habit_id: string
+          id: string
+          position: number
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          position: number
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "habit_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_bundle_items_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habit_bundles: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          estimated_duration_minutes: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          time_of_day: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          time_of_day?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          time_of_day?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_bundles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      habit_collaborations: {
+        Row: {
+          can_edit: boolean | null
+          can_log: boolean | null
+          can_view: boolean | null
+          collaborator_user_id: string
+          created_at: string | null
+          habit_id: string
+          id: string
+          owner_user_id: string
+          role: string
+        }
+        Insert: {
+          can_edit?: boolean | null
+          can_log?: boolean | null
+          can_view?: boolean | null
+          collaborator_user_id: string
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          owner_user_id: string
+          role: string
+        }
+        Update: {
+          can_edit?: boolean | null
+          can_log?: boolean | null
+          can_view?: boolean | null
+          collaborator_user_id?: string
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          owner_user_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_collaborations_collaborator_user_id_fkey"
+            columns: ["collaborator_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "habit_collaborations_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_collaborations_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -1836,6 +2085,96 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      habit_dependencies: {
+        Row: {
+          created_at: string | null
+          dependency_type: string | null
+          depends_on_habit_id: string
+          habit_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_habit_id: string
+          habit_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_habit_id?: string
+          habit_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_dependencies_depends_on_habit_id_fkey"
+            columns: ["depends_on_habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_dependencies_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habit_journal_entries: {
+        Row: {
+          created_at: string | null
+          energy_level: number | null
+          entry_date: string
+          habit_id: string
+          id: string
+          mood: string | null
+          notes: string | null
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          energy_level?: number | null
+          entry_date: string
+          habit_id: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          energy_level?: number | null
+          entry_date?: string
+          habit_id?: string
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_journal_entries_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_journal_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       habit_measurements: {
         Row: {
@@ -1914,6 +2253,167 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_streak_history: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          habit_id: string
+          id: string
+          recovery_used_at: string | null
+          start_date: string
+          streak_length: number | null
+          user_id: string
+          was_recovered: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          habit_id: string
+          id?: string
+          recovery_used_at?: string | null
+          start_date: string
+          streak_length?: number | null
+          user_id: string
+          was_recovered?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          habit_id?: string
+          id?: string
+          recovery_used_at?: string | null
+          start_date?: string
+          streak_length?: number | null
+          user_id?: string
+          was_recovered?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_streak_history_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_streak_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      habit_template_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          rating: number
+          review: string | null
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rating: number
+          review?: string | null
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rating?: number
+          review?: string | null
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_template_ratings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "habit_templates_community"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_template_ratings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      habit_templates_community: {
+        Row: {
+          ai_motivation: Json | null
+          category: string | null
+          color: string | null
+          created_at: string | null
+          creator_user_id: string | null
+          custom_settings: Json | null
+          description: string | null
+          habit_type: string
+          icon: string | null
+          id: string
+          is_verified: boolean | null
+          name: string
+          rating_avg: number | null
+          rating_count: number | null
+          tags: string[] | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          ai_motivation?: Json | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          creator_user_id?: string | null
+          custom_settings?: Json | null
+          description?: string | null
+          habit_type: string
+          icon?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name: string
+          rating_avg?: number | null
+          rating_count?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          ai_motivation?: Json | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          creator_user_id?: string | null
+          custom_settings?: Json | null
+          description?: string | null
+          habit_type?: string
+          icon?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name?: string
+          rating_avg?: number | null
+          rating_count?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_templates_community_creator_user_id_fkey"
+            columns: ["creator_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       habits: {
         Row: {
           ai_motivation: Json | null
@@ -1922,6 +2422,8 @@ export type Database = {
           created_at: string
           custom_settings: Json | null
           description: string | null
+          difficulty_level: number | null
+          estimated_duration_minutes: number | null
           frequency: string
           habit_type: string | null
           icon: string | null
@@ -1934,8 +2436,11 @@ export type Database = {
           start_date: string | null
           target_count: number
           target_value: number | null
+          time_of_day: string | null
           updated_at: string
           user_id: string
+          visibility: string | null
+          xp_reward: number | null
         }
         Insert: {
           ai_motivation?: Json | null
@@ -1944,6 +2449,8 @@ export type Database = {
           created_at?: string
           custom_settings?: Json | null
           description?: string | null
+          difficulty_level?: number | null
+          estimated_duration_minutes?: number | null
           frequency?: string
           habit_type?: string | null
           icon?: string | null
@@ -1956,8 +2463,11 @@ export type Database = {
           start_date?: string | null
           target_count?: number
           target_value?: number | null
+          time_of_day?: string | null
           updated_at?: string
           user_id: string
+          visibility?: string | null
+          xp_reward?: number | null
         }
         Update: {
           ai_motivation?: Json | null
@@ -1966,6 +2476,8 @@ export type Database = {
           created_at?: string
           custom_settings?: Json | null
           description?: string | null
+          difficulty_level?: number | null
+          estimated_duration_minutes?: number | null
           frequency?: string
           habit_type?: string | null
           icon?: string | null
@@ -1978,8 +2490,11 @@ export type Database = {
           start_date?: string | null
           target_count?: number
           target_value?: number | null
+          time_of_day?: string | null
           updated_at?: string
           user_id?: string
+          visibility?: string | null
+          xp_reward?: number | null
         }
         Relationships: [
           {
