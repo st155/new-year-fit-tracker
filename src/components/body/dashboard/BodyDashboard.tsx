@@ -3,7 +3,7 @@ import { LatestBodyReportCard } from './LatestBodyReportCard';
 import { SourceStatsGrid } from './SourceStatsGrid';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, TrendingUp } from 'lucide-react';
-import { BodyDataCurrent, BodyReport, SourceStats } from '@/hooks/composite/data/useMultiSourceBodyData';
+import { BodyDataCurrent, BodyReport, SourceStats, TimelineEntry } from '@/hooks/composite/data/useMultiSourceBodyData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -11,6 +11,7 @@ interface BodyDashboardProps {
   current: BodyDataCurrent;
   latestReport?: BodyReport;
   sourceStats: Record<string, SourceStats>;
+  timeline: TimelineEntry[];
   isLoading?: boolean;
   onUploadReport?: () => void;
   onManualEntry?: () => void;
@@ -21,6 +22,7 @@ export function BodyDashboard({
   current,
   latestReport,
   sourceStats,
+  timeline,
   isLoading,
   onUploadReport,
   onManualEntry,
@@ -78,24 +80,32 @@ export function BodyDashboard({
             icon={<span className="text-lg">⚖️</span>}
             data={current.weight}
             unit="kg"
+            timeline={timeline}
+            metricKey="weight"
           />
           <MultiSourceMetricCard
             title="Body Fat"
             icon={<span className="text-lg">📊</span>}
             data={current.bodyFat}
             unit="%"
+            timeline={timeline}
+            metricKey="bodyFat"
           />
           <MultiSourceMetricCard
             title="Muscle Mass"
             icon={<span className="text-lg">💪</span>}
             data={current.muscleMass}
             unit="kg"
+            timeline={timeline}
+            metricKey="muscleMass"
           />
           <MultiSourceMetricCard
             title="BMI"
             icon={<span className="text-lg">📏</span>}
             data={current.bmi}
             unit=""
+            timeline={timeline}
+            metricKey="bmi"
           />
         </div>
       </div>
@@ -111,6 +121,8 @@ export function BodyDashboard({
                 icon={<span className="text-lg">🔥</span>}
                 data={current.bmr}
                 unit="kcal"
+                timeline={timeline}
+                metricKey="bmr"
               />
             )}
             {current.visceralFat && (
@@ -119,6 +131,8 @@ export function BodyDashboard({
                 icon={<span className="text-lg">⚠️</span>}
                 data={current.visceralFat}
                 unit=""
+                timeline={timeline}
+                metricKey="visceralFat"
               />
             )}
             {current.bodyWater && (
@@ -127,6 +141,8 @@ export function BodyDashboard({
                 icon={<span className="text-lg">💧</span>}
                 data={current.bodyWater}
                 unit="L"
+                timeline={timeline}
+                metricKey="bodyWater"
               />
             )}
             {current.protein && (
@@ -135,6 +151,8 @@ export function BodyDashboard({
                 icon={<span className="text-lg">🥩</span>}
                 data={current.protein}
                 unit="kg"
+                timeline={timeline}
+                metricKey="protein"
               />
             )}
           </div>

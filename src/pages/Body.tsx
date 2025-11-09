@@ -55,6 +55,7 @@ export default function Body() {
             current={current}
             latestReport={latestReport}
             sourceStats={sourceStats}
+            timeline={timeline}
             isLoading={isLoading}
             onUploadReport={() => setActiveTab("reports")}
             onViewReport={() => setActiveTab("reports")}

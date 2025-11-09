@@ -2,14 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Info, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MetricValue } from '@/hooks/composite/data/useMultiSourceBodyData';
+import { MetricValue, TimelineEntry } from '@/hooks/composite/data/useMultiSourceBodyData';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { useMemo } from 'react';
+import { ResponsiveContainer, AreaChart, Area, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 
 interface MultiSourceMetricCardProps {
   title: string;
@@ -17,6 +19,8 @@ interface MultiSourceMetricCardProps {
   data?: MetricValue;
   unit?: string;
   allSources?: MetricValue[]; // All available sources for this metric
+  timeline?: TimelineEntry[]; // Historical data for sparkline
+  metricKey?: 'weight' | 'bodyFat' | 'muscleMass' | 'bmi' | 'bmr' | 'visceralFat' | 'bodyWater' | 'protein';
   trend?: {
     value: number;
     percentage: number;
@@ -39,8 +43,22 @@ export function MultiSourceMetricCard({
   data,
   unit = '',
   allSources = [],
+  timeline = [],
+  metricKey,
   trend,
 }: MultiSourceMetricCardProps) {
+  // Extract sparkline data from timeline for this specific metric
+  const sparklineData = useMemo(() => {
+    if (!timeline || !metricKey) return [];
+    
+    return timeline
+      .filter(entry => entry[metricKey] !== undefined && entry[metricKey] !== null)
+      .slice(-7) // Last 7 measurements
+      .map(entry => ({
+        date: entry.date,
+        value: entry[metricKey] as number,
+      }));
+  }, [timeline, metricKey]);
   if (!data) {
     return (
       <Card>
@@ -120,25 +138,73 @@ export function MultiSourceMetricCard({
           </div>
         </div>
 
-        {/* Confidence Score */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Confidence</span>
-            <span className="font-semibold">{data.confidence}%</span>
+        {/* Sparkline Chart or Confidence Score */}
+        {sparklineData.length >= 2 ? (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Last 7 measurements</span>
+              <span className="font-semibold">{data.confidence}%</span>
+            </div>
+            <div className="h-16 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={sparklineData}>
+                  <defs>
+                    <linearGradient id={`gradient-${metricKey}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <YAxis domain={['dataMin - 5', 'dataMax + 5']} hide />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const value = typeof payload[0].value === 'number' ? payload[0].value : 0;
+                        return (
+                          <div className="bg-popover border border-border rounded-lg px-2 py-1 shadow-lg">
+                            <p className="text-xs font-semibold">
+                              {value.toFixed(1)}{unit}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(parseISO(payload[0].payload.date), 'MMM dd')}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fill={`url(#gradient-${metricKey})`}
+                    animationDuration={300}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className={cn(
-                'h-full transition-all',
-                data.confidence >= 90 ? 'bg-green-500' :
-                data.confidence >= 70 ? 'bg-blue-500' :
-                data.confidence >= 50 ? 'bg-yellow-500' :
-                'bg-red-500'
-              )}
-              style={{ width: `${data.confidence}%` }}
-            />
+        ) : (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Confidence</span>
+              <span className="font-semibold">{data.confidence}%</span>
+            </div>
+            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  'h-full transition-all',
+                  data.confidence >= 90 ? 'bg-green-500' :
+                  data.confidence >= 70 ? 'bg-blue-500' :
+                  data.confidence >= 50 ? 'bg-yellow-500' :
+                  'bg-red-500'
+                )}
+                style={{ width: `${data.confidence}%` }}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* All Sources */}
         {allSources.length > 1 && (
