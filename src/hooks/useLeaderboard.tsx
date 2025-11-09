@@ -72,7 +72,16 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
     effectiveChallengeId,
     challengeTitle,
     leaderboardLength: leaderboard.length,
-    finalLoading: authLoading || challengesLoading || (queryLoading && !!user?.id)
+    finalLoading: authLoading || challengesLoading || (queryLoading && !!user?.id),
+    dataSample: leaderboard.slice(0, 3).map(e => ({
+      username: e.username,
+      steps_last_7d: e.steps_last_7d,
+      avg_strain_last_7d: e.avg_strain_last_7d,
+      avg_sleep_last_7d: e.avg_sleep_last_7d,
+      avg_recovery_last_7d: e.avg_recovery_last_7d,
+      avgSleepEfficiency: e.avgSleepEfficiency,
+      streakDays: e.streakDays
+    }))
   });
 
   return {

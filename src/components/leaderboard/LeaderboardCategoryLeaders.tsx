@@ -45,36 +45,67 @@ interface CategoryLeader extends CategoryInfo {
   value: string;
   secondaryValue?: string;
   user: LeaderboardEntry | null;
+  hasData: boolean;
 }
 
 export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: LeaderboardCategoryLeadersProps) {
+  // Early return for empty/invalid leaderboard
+  if (!leaderboard || leaderboard.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-muted-foreground">Недостаточно данных для отображения лидеров</p>
+      </Card>
+    );
+  }
+
   const getCategoryLeaders = (): CategoryLeader[] => {
-    const stepsLeader = leaderboard.reduce((max, user) => 
-      (user.steps_last_7d || 0) > (max.steps_last_7d || 0) ? user : max
-    , leaderboard[0]);
+    // Filter users with valid data for each category
+    const usersWithSteps = leaderboard.filter(u => (u.steps_last_7d || 0) > 0);
+    const usersWithSleep = leaderboard.filter(u => (u.avgSleepEfficiency || 0) > 0);
+    const usersWithStrain = leaderboard.filter(u => (u.avg_strain_last_7d || 0) > 0);
+    const usersWithRecovery = leaderboard.filter(u => (u.avg_recovery_last_7d || 0) > 0);
+    const usersWithStreak = leaderboard.filter(u => (u.streakDays || 0) > 0);
 
-    const sleepLeader = leaderboard.reduce((max, user) => 
-      (user.avgSleepEfficiency || 0) > (max.avgSleepEfficiency || 0) ? user : max
-    , leaderboard[0]);
+    // Find leaders only from users with valid data, fallback to first user
+    const stepsLeader = usersWithSteps.length > 0
+      ? usersWithSteps.reduce((max, user) => 
+          (user.steps_last_7d || 0) > (max.steps_last_7d || 0) ? user : max
+        )
+      : leaderboard[0];
 
-    const strainLeader = leaderboard.reduce((max, user) => 
-      (user.avg_strain_last_7d || 0) > (max.avg_strain_last_7d || 0) ? user : max
-    , leaderboard[0]);
+    const sleepLeader = usersWithSleep.length > 0
+      ? usersWithSleep.reduce((max, user) => 
+          (user.avgSleepEfficiency || 0) > (max.avgSleepEfficiency || 0) ? user : max
+        )
+      : leaderboard[0];
 
-    const recoveryLeader = leaderboard.reduce((max, user) => 
-      (user.avg_recovery_last_7d || 0) > (max.avg_recovery_last_7d || 0) ? user : max
-    , leaderboard[0]);
+    const strainLeader = usersWithStrain.length > 0
+      ? usersWithStrain.reduce((max, user) => 
+          (user.avg_strain_last_7d || 0) > (max.avg_strain_last_7d || 0) ? user : max
+        )
+      : leaderboard[0];
 
-    const streakLeader = leaderboard.reduce((max, user) => 
-      (user.streakDays || 0) > (max.streakDays || 0) ? user : max
-    , leaderboard[0]);
+    const recoveryLeader = usersWithRecovery.length > 0
+      ? usersWithRecovery.reduce((max, user) => 
+          (user.avg_recovery_last_7d || 0) > (max.avg_recovery_last_7d || 0) ? user : max
+        )
+      : leaderboard[0];
+
+    const streakLeader = usersWithStreak.length > 0
+      ? usersWithStreak.reduce((max, user) => 
+          (user.streakDays || 0) > (max.streakDays || 0) ? user : max
+        )
+      : leaderboard[0];
 
     return [
       {
         icon: Footprints,
         title: "Most Steps",
-        value: `${Math.round(stepsLeader?.steps_last_7d || 0).toLocaleString()}`,
+        value: usersWithSteps.length > 0 
+          ? `${Math.round(stepsLeader?.steps_last_7d || 0).toLocaleString()}`
+          : "No data",
         user: stepsLeader,
+        hasData: usersWithSteps.length > 0,
         color: "text-chart-1",
         metricKey: 'steps_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val).toLocaleString()}`,
@@ -83,9 +114,14 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       {
         icon: Moon,
         title: "Best Sleep",
-        value: `${Math.round(sleepLeader?.avgSleepEfficiency || 0)}%`,
-        secondaryValue: `${(sleepLeader?.avg_sleep_last_7d || 0).toFixed(1)}h`,
+        value: usersWithSleep.length > 0
+          ? `${Math.round(sleepLeader?.avgSleepEfficiency || 0)}%`
+          : "No data",
+        secondaryValue: usersWithSleep.length > 0
+          ? `${(sleepLeader?.avg_sleep_last_7d || 0).toFixed(1)}h`
+          : undefined,
         user: sleepLeader,
+        hasData: usersWithSleep.length > 0,
         color: "text-chart-2",
         metricKey: 'avgSleepEfficiency' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val)}%`,
@@ -97,8 +133,11 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       {
         icon: Zap,
         title: "Highest Strain",
-        value: `${(strainLeader?.avg_strain_last_7d || 0).toFixed(1)}`,
+        value: usersWithStrain.length > 0
+          ? `${(strainLeader?.avg_strain_last_7d || 0).toFixed(1)}`
+          : "No data",
         user: strainLeader,
+        hasData: usersWithStrain.length > 0,
         color: "text-chart-5",
         metricKey: 'avg_strain_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${val.toFixed(1)}`,
@@ -107,8 +146,11 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       {
         icon: Heart,
         title: "Best Recovery",
-        value: `${Math.round(recoveryLeader?.avg_recovery_last_7d || 0)}%`,
+        value: usersWithRecovery.length > 0
+          ? `${Math.round(recoveryLeader?.avg_recovery_last_7d || 0)}%`
+          : "No data",
         user: recoveryLeader,
+        hasData: usersWithRecovery.length > 0,
         color: "text-chart-3",
         metricKey: 'avg_recovery_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val)}%`,
@@ -117,8 +159,11 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
       {
         icon: Flame,
         title: "Longest Streak",
-        value: `${Math.round(streakLeader?.streakDays || 0)} 🔥`,
+        value: usersWithStreak.length > 0
+          ? `${Math.round(streakLeader?.streakDays || 0)} 🔥`
+          : "No data",
         user: streakLeader,
+        hasData: usersWithStreak.length > 0,
         color: "text-chart-4",
         metricKey: 'streakDays' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val)} 🔥`,
@@ -138,8 +183,13 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
         return (
           <Card 
             key={category.title} 
-            className="p-4 space-y-3 cursor-pointer hover:scale-105 hover:shadow-lg transition-all duration-200 hover:border-primary/50"
-            onClick={() => onCategoryClick?.(category)}
+            className={cn(
+              "p-4 space-y-3 transition-all duration-200",
+              category.hasData 
+                ? "cursor-pointer hover:scale-105 hover:shadow-lg hover:border-primary/50" 
+                : "opacity-50 cursor-default"
+            )}
+            onClick={() => category.hasData && onCategoryClick?.(category)}
           >
             {/* Icon at top - centered */}
             <div className="flex justify-center">
@@ -150,7 +200,12 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
             
             {/* Large value - centered */}
             <div className="text-center space-y-1">
-              <p className={cn("text-2xl font-bold", category.color)}>{category.value}</p>
+              <p className={cn(
+                "text-2xl font-bold", 
+                category.hasData ? category.color : "text-muted-foreground"
+              )}>
+                {category.value}
+              </p>
               {category.secondaryValue && (
                 <p className="text-xs text-muted-foreground">
                   {category.secondaryValue} {category.secondaryLabel}
