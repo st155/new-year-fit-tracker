@@ -254,28 +254,272 @@ serve(async (req) => {
       }
     }
     
-    // Handle fuzzy matching for mentioned names
+    // ====== ENHANCED CLIENT RECOGNITION FROM FREE TEXT ======
+    // Helper: Normalize text for matching
+    function normalizeText(text: string): string {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\u0400-\u04FFa-z0-9@\s]/gi, '') // Keep Cyrillic, Latin, @, spaces
+        .replace(/\s+/g, ' ');
+    }
+
+    // Helper: Generate Russian name declension stems for matching
+    function generateRussianStems(name: string): string[] {
+      const normalized = normalizeText(name);
+      const stems: string[] = [normalized];
+      
+      // For names ending in typical Russian patterns, create stem variants
+      if (normalized.length >= 4) {
+        // Remove common endings to create base stem
+        const patterns = [
+          { regex: /(ей|ий|ой|ая|яя|ое|ее)$/i, stem: (n: string) => n.slice(0, -2) },
+          { regex: /(а|я|у|ю|е|и|ы|ом|ем|ам|ям)$/i, stem: (n: string) => n.slice(0, -1) },
+        ];
+        
+        for (const pattern of patterns) {
+          if (pattern.regex.test(normalized)) {
+            const stem = pattern.stem(normalized);
+            if (stem.length >= 3) {
+              stems.push(stem);
+            }
+          }
+        }
+      }
+      
+      return stems;
+    }
+
+    // Helper: Score and match clients from free text
+    async function matchClientsFromFreeText(text: string): Promise<{
+      matches: Array<{ client_id: string; score: number; matchType: string }>;
+      needsDisambiguation: boolean;
+    }> {
+      const normalizedText = normalizeText(text);
+      
+      // Load all active clients
+      const { data: candidates } = await supabaseClient
+        .from('trainer_clients')
+        .select(`
+          client_id,
+          profiles!trainer_clients_client_id_fkey (
+            user_id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('trainer_id', user.id)
+        .eq('active', true);
+      
+      if (!candidates || candidates.length === 0) {
+        return { matches: [], needsDisambiguation: false };
+      }
+
+      // Load all aliases
+      const { data: aliases } = await supabaseClient
+        .from('client_aliases')
+        .select('client_id, alias_name')
+        .eq('trainer_id', user.id);
+      
+      const aliasMap = new Map<string, string[]>();
+      if (aliases) {
+        for (const alias of aliases) {
+          const existing = aliasMap.get(alias.client_id) || [];
+          existing.push(normalizeText(alias.alias_name));
+          aliasMap.set(alias.client_id, existing);
+        }
+      }
+
+      // Build scoring for each client
+      const scoredMatches: Array<{ 
+        client_id: string; 
+        score: number; 
+        matchType: string;
+        profile: any;
+      }> = [];
+
+      for (const candidate of candidates) {
+        const profile = candidate.profiles as any;
+        if (!profile) continue;
+
+        const fullName = normalizeText(profile.full_name || '');
+        const username = normalizeText(profile.username || '');
+        const clientAliases = aliasMap.get(profile.user_id) || [];
+        
+        let score = 0;
+        let matchType = '';
+
+        // 1. Exact alias match (highest priority: 100 points)
+        for (const alias of clientAliases) {
+          if (normalizedText.includes(alias) || alias.includes(normalizedText)) {
+            score = Math.max(score, 100);
+            matchType = 'alias';
+            break;
+          }
+        }
+
+        // 2. Full name exact match (90 points)
+        if (score < 90 && fullName && normalizedText.includes(fullName)) {
+          score = 90;
+          matchType = 'full_name_exact';
+        }
+
+        // 3. Username match (80 points)
+        if (score < 80 && username && (normalizedText.includes(username) || normalizedText.includes(`@${username}`))) {
+          score = 80;
+          matchType = 'username';
+        }
+
+        // 4. First name or last name match (70 points)
+        if (score < 70 && fullName) {
+          const nameParts = fullName.split(/\s+/);
+          for (const part of nameParts) {
+            if (part.length >= 3 && normalizedText.includes(part)) {
+              score = 70;
+              matchType = 'name_part';
+              break;
+            }
+          }
+        }
+
+        // 5. Russian name stem matching (50 points)
+        if (score < 50 && fullName) {
+          const nameParts = fullName.split(/\s+/);
+          for (const part of nameParts) {
+            const stems = generateRussianStems(part);
+            for (const stem of stems) {
+              if (stem.length >= 4 && normalizedText.includes(stem)) {
+                score = 50;
+                matchType = 'name_stem';
+                break;
+              }
+            }
+            if (score >= 50) break;
+          }
+        }
+
+        if (score > 0) {
+          scoredMatches.push({
+            client_id: profile.user_id,
+            score,
+            matchType,
+            profile
+          });
+        }
+      }
+
+      // Sort by score descending
+      scoredMatches.sort((a, b) => b.score - a.score);
+
+      // Deduplicate by client_id (keep highest score)
+      const uniqueMatches = new Map<string, typeof scoredMatches[0]>();
+      for (const match of scoredMatches) {
+        if (!uniqueMatches.has(match.client_id)) {
+          uniqueMatches.set(match.client_id, match);
+        }
+      }
+
+      const finalMatches = Array.from(uniqueMatches.values());
+      
+      console.log(`📝 Free text matching results: ${finalMatches.length} unique matches from "${text}"`);
+      for (const m of finalMatches.slice(0, 3)) {
+        console.log(`  - ${m.profile.full_name}: score=${m.score}, type=${m.matchType}`);
+      }
+
+      return {
+        matches: finalMatches.map(m => ({ 
+          client_id: m.client_id, 
+          score: m.score, 
+          matchType: m.matchType 
+        })),
+        needsDisambiguation: finalMatches.length > 1 && finalMatches[0].score === finalMatches[1].score
+      };
+    }
+
+    // Extract potential client mentions from free text (not @-mentions)
+    const freeTextMessage = message.replace(/@\w+/g, ''); // Remove @mentions
+    if (freeTextMessage.length > 5 && !contextClientId && mentionedNames.length === 0) {
+      console.log('🔍 Attempting free-text client recognition...');
+      const freeTextResult = await matchClientsFromFreeText(freeTextMessage);
+      
+      if (freeTextResult.matches.length === 1) {
+        // Single high-confidence match
+        const match = freeTextResult.matches[0];
+        if (match.score >= 70) { // Only auto-match if score is good
+          console.log(`✅ Auto-matched from free text: client_id=${match.client_id}, score=${match.score}`);
+          mentionedClients.push(match.client_id);
+        }
+      } else if (freeTextResult.matches.length > 1 && freeTextResult.matches[0].score >= 50) {
+        // Multiple matches - need disambiguation
+        console.log(`⚠️ Multiple clients matched from free text, needs disambiguation`);
+        
+        // Load full profiles for disambiguation
+        const topMatches = freeTextResult.matches.slice(0, 3);
+        const matchedProfiles = await Promise.all(
+          topMatches.map(async (m) => {
+            const { data } = await supabaseClient
+              .from('profiles')
+              .select('user_id, username, full_name, avatar_url')
+              .eq('user_id', m.client_id)
+              .single();
+            return data;
+          })
+        );
+
+        disambiguationNeeded.push({
+          mentionedName: 'упомянутый клиент',
+          candidates: matchedProfiles.filter(p => p !== null).map(p => ({
+            user_id: p.user_id,
+            username: p.username,
+            full_name: p.full_name,
+            avatar_url: p.avatar_url
+          }))
+        });
+      } else {
+        console.log('ℹ️ No client matched from free text');
+      }
+    }
+
+    // Handle fuzzy matching for explicit @-mentioned names
     if (mentionedNames.length > 0) {
-      console.log('Fuzzy matching for names:', mentionedNames);
+      console.log('🔎 Fuzzy matching for explicit mentions:', mentionedNames);
       
       for (const mentionedName of mentionedNames) {
-        // Check for exact alias match first
-        const { data: aliasMatch } = await supabaseClient
+        const normalized = normalizeText(mentionedName);
+        
+        // Check for partial alias match (updated with better pattern)
+        const { data: aliasMatches } = await supabaseClient
           .from('client_aliases')
           .select('client_id, alias_name, profiles!client_aliases_client_id_fkey(user_id, username, full_name, avatar_url)')
-          .eq('trainer_id', user.id)
-          .ilike('alias_name', mentionedName)
-          .single();
+          .eq('trainer_id', user.id);
         
-        if (aliasMatch) {
-          // Found exact alias match - use it
-          console.log(`Alias match found for "${mentionedName}":`, aliasMatch);
-          mentionedClients.push(aliasMatch.client_id);
-          
-          // Note: used_count increment removed to prevent edge function crashes
-          // TODO: Implement safe counter increment via RPC or trigger
+        // Filter aliases that partially match
+        const matchingAliases = aliasMatches?.filter(a => {
+          const aliasNorm = normalizeText(a.alias_name);
+          return aliasNorm.includes(normalized) || normalized.includes(aliasNorm);
+        }) || [];
+        
+        if (matchingAliases.length === 1) {
+          // Found single alias match
+          console.log(`✅ Alias match found for "${mentionedName}":`, matchingAliases[0]);
+          mentionedClients.push(matchingAliases[0].client_id);
+        } else if (matchingAliases.length > 1) {
+          // Multiple alias matches - disambiguation needed
+          disambiguationNeeded.push({
+            mentionedName,
+            candidates: matchingAliases.map(a => {
+              const p = a.profiles as any;
+              return {
+                user_id: p.user_id,
+                username: p.username,
+                full_name: p.full_name,
+                avatar_url: p.avatar_url
+              };
+            })
+          });
         } else {
-          // No exact match - perform fuzzy search
+          // No alias match - perform fuzzy search on profiles
           const { data: candidates } = await supabaseClient
             .from('trainer_clients')
             .select(`
@@ -291,40 +535,32 @@ serve(async (req) => {
             .eq('active', true);
           
           if (candidates && candidates.length > 0) {
-            // Enhanced fuzzy matching: check if mentioned name is contained in full_name or username
-            // Also handle partial matches like "Aleksandar" matching "Aleksandar B"
-            const nameToMatch = mentionedName.toLowerCase().trim();
             const matches = candidates
               .filter(c => {
                 const profile = c.profiles as any;
                 if (!profile) return false;
-                const fullName = profile.full_name?.toLowerCase() || '';
-                const username = profile.username?.toLowerCase() || '';
+                const fullName = normalizeText(profile.full_name || '');
+                const username = normalizeText(profile.username || '');
                 
-                // Split names into parts to handle "Aleksandar" matching "Aleksandar B"
+                // Check for partial matches
+                if (fullName.includes(normalized) || normalized.includes(fullName)) return true;
+                if (username.includes(normalized) || normalized.includes(username)) return true;
+                
+                // Check name parts
                 const fullNameParts = fullName.split(/\s+/);
-                const nameToMatchParts = nameToMatch.split(/\s+/);
-                
-                // Check for exact substring match
-                if (fullName.includes(nameToMatch) || nameToMatch.includes(fullName)) return true;
-                if (username.includes(nameToMatch) || nameToMatch.includes(username)) return true;
-                
-                // Check if mentioned name matches any part of full name (e.g., "Aleksandar" matches first part of "Aleksandar B")
-                const matchesFirstPart = fullNameParts[0] && fullNameParts[0].includes(nameToMatch);
-                const mentionMatchesStart = fullName.startsWith(nameToMatch);
+                const matchesFirstPart = fullNameParts[0] && fullNameParts[0].includes(normalized);
+                const mentionMatchesStart = fullName.startsWith(normalized);
                 
                 return matchesFirstPart || mentionMatchesStart;
               })
-              .slice(0, 3); // Top 3 candidates
+              .slice(0, 3);
             
             if (matches.length === 1) {
-              // Single match - use it automatically
               const profile = matches[0].profiles as any;
-              console.log(`Auto-matched "${mentionedName}" to ${profile.full_name}`);
+              console.log(`✅ Auto-matched "${mentionedName}" to ${profile.full_name}`);
               mentionedClients.push(profile.user_id);
             } else if (matches.length > 1) {
-              // Multiple matches - need disambiguation
-              console.log(`Multiple matches for "${mentionedName}":`, matches.length);
+              console.log(`⚠️ Multiple matches for "${mentionedName}":`, matches.length);
               disambiguationNeeded.push({
                 mentionedName,
                 candidates: matches.map(m => {
@@ -338,7 +574,7 @@ serve(async (req) => {
                 })
               });
             } else {
-              console.warn(`No matches found for "${mentionedName}"`);
+              console.warn(`❌ No matches found for "${mentionedName}"`);
             }
           }
         }
