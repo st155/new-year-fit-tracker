@@ -266,6 +266,99 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_goal_suggestions: {
+        Row: {
+          applied_at: string | null
+          client_id: string
+          confidence_score: number | null
+          created_at: string | null
+          current_progress: number | null
+          dismissed_reason: string | null
+          goal_id: string | null
+          id: string
+          priority: number | null
+          progress_trend: string | null
+          recommendation_text: string
+          status: string | null
+          suggested_action: Json | null
+          suggestion_type: string
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          client_id: string
+          confidence_score?: number | null
+          created_at?: string | null
+          current_progress?: number | null
+          dismissed_reason?: string | null
+          goal_id?: string | null
+          id?: string
+          priority?: number | null
+          progress_trend?: string | null
+          recommendation_text: string
+          status?: string | null
+          suggested_action?: Json | null
+          suggestion_type: string
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          client_id?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          current_progress?: number | null
+          dismissed_reason?: string | null
+          goal_id?: string | null
+          id?: string
+          priority?: number | null
+          progress_trend?: string | null
+          recommendation_text?: string
+          status?: string | null
+          suggested_action?: Json | null
+          suggestion_type?: string
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_goal_suggestions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_goal_suggestions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "ai_goal_suggestions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal_current_values"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "ai_goal_suggestions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_goal_suggestions_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       ai_messages: {
         Row: {
           content: string

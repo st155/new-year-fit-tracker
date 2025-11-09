@@ -51,6 +51,8 @@ import { AdvancedFilters, FilterState } from './client-detail/AdvancedFilters';
 import { ClientDetailSkeleton } from './client-detail/ClientDetailSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ClientProgressVisualization } from './client-detail/visualization/ClientProgressVisualization';
+import { AIGoalSuggestions } from './client-detail/AIGoalSuggestions';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Client {
   id: string;
@@ -162,6 +164,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const navigate = useNavigate();
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('goals');
   
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -342,7 +346,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         onReset={handleResetFilters}
       />
 
-      <Tabs defaultValue="goals" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="goals" className="space-y-4">
         <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">
           <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
           <TabsTrigger value="progress" className="whitespace-nowrap flex-shrink-0">Прогресс</TabsTrigger>
@@ -355,6 +359,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
+          <AIGoalSuggestions 
+            clientId={client.user_id}
+            trainerId={user?.id || ''}
+            onOpenChat={() => setActiveTab('ai-chat')}
+          />
           {goals.length > 0 ? (
             <>
               {/* Beautiful Progress Overview */}
