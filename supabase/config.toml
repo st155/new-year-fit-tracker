@@ -107,3 +107,9 @@ verify_jwt = false
 
 [functions.generate-trainer-notifications.cron]
 schedule = "0 */6 * * *"
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.execute-ai-actions]
+verify_jwt = true
