@@ -2508,6 +2508,45 @@ export type Database = {
           },
         ]
       }
+      habit_teams: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          member_limit: number | null
+          name: string
+          total_xp: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          member_limit?: number | null
+          name: string
+          total_xp?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          member_limit?: number | null
+          name?: string
+          total_xp?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       habit_template_ratings: {
         Row: {
           created_at: string | null
@@ -3562,6 +3601,91 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      team_challenges: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string
+          goal_target: number
+          goal_type: string
+          id: string
+          name: string
+          reward_description: string | null
+          start_date: string
+          status: string | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          goal_target: number
+          goal_type: string
+          id?: string
+          name: string
+          reward_description?: string | null
+          start_date: string
+          status?: string | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          goal_target?: number
+          goal_type?: string
+          id?: string
+          name?: string
+          reward_description?: string | null
+          start_date?: string
+          status?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_challenges_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "habit_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          contribution_xp: number | null
+          id: string
+          joined_at: string | null
+          role: string | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          contribution_xp?: number | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          contribution_xp?: number | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "habit_teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       terra_backfill_jobs: {
         Row: {
