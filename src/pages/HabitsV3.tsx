@@ -17,6 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
@@ -322,6 +328,43 @@ export default function HabitsV3() {
         onOpenChange={setCreateDialogOpen}
         onHabitCreated={refetch}
       />
+
+      {/* Dev Mode Tools */}
+      {import.meta.env.DEV && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="shadow-lg">
+                🛠️ Dev Tools
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={async () => {
+                  if (user?.id) {
+                    const { generateDemoTeams } = await import('@/lib/test-data/habit-social-demo');
+                    await generateDemoTeams(user.id);
+                    await refetch();
+                  }
+                }}
+              >
+                Создать демо команды
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  if (user?.id && habits.length > 0) {
+                    const { generateDemoFeedEvents } = await import('@/lib/test-data/habit-social-demo');
+                    await generateDemoFeedEvents(user.id, habits[0].id, habits[0].name);
+                  }
+                }}
+                disabled={!habits.length}
+              >
+                Создать демо события
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </>
   );
 }

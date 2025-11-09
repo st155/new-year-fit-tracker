@@ -15,6 +15,7 @@ import { getHabitIcon } from '@/lib/habit-utils';
 import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from '@/lib/duration-utils';
 import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface HabitCardV3Props {
   habit: any;
@@ -48,7 +49,9 @@ export function HabitCardV3({
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
+  const [swipeLeftCount, setSwipeLeftCount] = useState(0);
   const longPressTimer = useRef<NodeJS.Timeout>();
+  const swipeResetTimer = useRef<NodeJS.Timeout>();
   const { user } = useAuth();
 
   const theme = getTimeBasedTheme(habit.time_of_day as TimeOfDay);
@@ -81,6 +84,7 @@ export function HabitCardV3({
 
   const handleDragEnd = useCallback((event: any, info: PanInfo) => {
     const swipeThreshold = 100;
+    const deleteThreshold = 150;
     
     if (info.offset.x > swipeThreshold) {
       // Swipe right → Complete
@@ -88,15 +92,30 @@ export function HabitCardV3({
       celebrate();
       onSwipeRight?.();
       onComplete?.();
+      setSwipeLeftCount(0);
+    } else if (info.offset.x < -deleteThreshold) {
+      // Strong swipe left → Quick delete (if confirmed)
+      if (swipeLeftCount > 0) {
+        haptics.error();
+        onDelete?.();
+      } else {
+        setSwipeLeftCount(1);
+        toast('Свайпните еще раз для удаления', { duration: 2000 });
+        
+        // Reset after 3 seconds
+        if (swipeResetTimer.current) clearTimeout(swipeResetTimer.current);
+        swipeResetTimer.current = setTimeout(() => setSwipeLeftCount(0), 3000);
+      }
     } else if (info.offset.x < -swipeThreshold) {
-      // Swipe left → Quick menu
+      // Normal swipe left → Options menu
       haptics.swipe();
       onSwipeLeft?.();
+      setSwipeLeftCount(0);
     }
     
     setDragX(0);
     setShowSwipeHint(false);
-  }, [onSwipeRight, onComplete, onSwipeLeft, celebrate]);
+  }, [onSwipeRight, onComplete, onSwipeLeft, onDelete, celebrate, swipeLeftCount]);
 
   const handlePointerDown = useCallback(() => {
     setIsLongPress(false);
@@ -197,17 +216,45 @@ export function HabitCardV3({
         {/* Swipe indicators */}
         <motion.div
           className="absolute left-4 top-1/2 -translate-y-1/2 z-0"
-          animate={{ opacity: dragX < -20 ? 1 : 0 }}
+          animate={{ 
+            opacity: dragX < -20 ? 1 : 0,
+            scale: dragX < -100 ? 1.2 : 1,
+          }}
         >
-          <div className="text-2xl">⚙️</div>
+          <div className="text-2xl">
+            {swipeLeftCount > 0 ? '🗑️' : '⚙️'}
+          </div>
         </motion.div>
         
         <motion.div
           className="absolute right-4 top-1/2 -translate-y-1/2 z-0"
-          animate={{ opacity: dragX > 20 ? 1 : 0 }}
+          animate={{ 
+            opacity: dragX > 20 ? 1 : 0,
+            scale: dragX > 100 ? 1.3 : 1,
+          }}
         >
-          <div className="text-2xl">✓</div>
+          <div className="text-2xl">✅</div>
         </motion.div>
+
+        {/* Swipe progress bar */}
+        {Math.abs(dragX) > 20 && (
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 h-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div 
+              className={cn(
+                "h-full transition-colors",
+                dragX > 0 ? "bg-green-500" : "bg-red-500"
+              )}
+              style={{ 
+                width: `${Math.min(100, Math.abs(dragX))}%`,
+                marginLeft: dragX > 0 ? 0 : 'auto',
+              }}
+            />
+          </motion.div>
+        )}
 
         <Card
           className={cn(

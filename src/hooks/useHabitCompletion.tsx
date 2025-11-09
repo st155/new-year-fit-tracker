@@ -139,24 +139,56 @@ export function useHabitCompletion() {
       const newTotalXP = oldTotalXP + xpEarned;
       const newLevel = calculateLevel(newTotalXP);
 
-      // Create feed event for habit completion
+      // Create feed event for habit completion (with duplicate prevention)
       try {
-        await supabase
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Check if event already exists for this habit today
+        const { data: existingEvent } = await supabase
           .from('habit_feed_events' as any)
-          .insert({
-            user_id: user.id,
-            habit_id: habitId,
-            event_type: newStreak >= 7 ? 'streak_milestone' : 'habit_completion',
-            event_data: {
-              habit_name: habit.name,
-              habit_icon: habit.icon,
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('habit_id', habitId)
+          .gte('created_at', `${today}T00:00:00`)
+          .lt('created_at', `${today}T23:59:59`)
+          .single();
+
+        if (!existingEvent) {
+          // Create event only if it doesn't exist
+          const { error: feedError } = await supabase
+            .from('habit_feed_events' as any)
+            .insert({
+              user_id: user.id,
+              habit_id: habitId,
+              event_type: newStreak >= 7 ? 'streak_milestone' : 'habit_completion',
+              event_data: {
+                habit_name: habit.name,
+                habit_icon: habit.icon,
+                streak: newStreak,
+                xp_earned: xpEarned,
+              },
+              visibility: 'public',
+            });
+
+          if (feedError) {
+            console.error('[HabitCompletion] Failed to create feed event:', {
+              habitId,
+              habitName: habit.name,
+              error: feedError,
+            });
+          } else {
+            console.log('[HabitCompletion] Feed event created:', {
+              habitId,
+              eventType: newStreak >= 7 ? 'streak_milestone' : 'habit_completion',
               streak: newStreak,
-              xp_earned: xpEarned,
-            },
-            visibility: 'public',
-          });
+            });
+          }
+        } else {
+          console.log('[HabitCompletion] Feed event already exists for today');
+        }
       } catch (feedError) {
-        console.error('Error creating feed event:', feedError);
+        console.error('[HabitCompletion] Error handling feed event:', feedError);
+        // Don't interrupt habit completion due to feed error
       }
 
       // 5. Check for new achievements

@@ -52,6 +52,43 @@ export function SocialView() {
         {/* Show onboarding if no events and no teams */}
         {shouldShowOnboarding && <SocialOnboarding />}
 
+        {/* Debug Info in Dev Mode */}
+        {import.meta.env.DEV && (
+          <Card className="p-4 bg-muted/30 border-dashed">
+            <div className="flex items-center justify-between text-sm">
+              <div className="space-y-1">
+                <p className="font-semibold">🛠️ Debug Info:</p>
+                <p>События в ленте: {feedEvents?.length || 0}</p>
+                <p>Команды: {myTeams?.length || 0}</p>
+                <p>Активная вкладка: {activeTab}</p>
+                {selectedTeamId && <p>Выбранная команда: {selectedTeamId}</p>}
+              </div>
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    console.log('=== SOCIAL FEED DEBUG ===');
+                    console.log('Feed Events:', feedEvents);
+                    console.log('My Teams:', myTeams);
+                    console.log('Active Tab:', activeTab);
+                    console.log('Selected Team:', selectedTeamId);
+                  }}
+                >
+                  📋 Log
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetch()}
+                >
+                  🔄 Refetch
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Социальная активность</h2>
           <Button variant="ghost" size="icon" onClick={() => refetch()}>

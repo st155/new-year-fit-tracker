@@ -38,8 +38,12 @@ export function useHabitFeed(teamId?: string) {
   return useQuery({
     queryKey: ['habit-feed', teamId],
     queryFn: async () => {
+      const startTime = Date.now();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!user) {
+        console.log('[useHabitFeed] No authenticated user');
+        return [];
+      }
 
       let query = supabase
         .from('habit_feed_events' as any)
@@ -53,17 +57,22 @@ export function useHabitFeed(teamId?: string) {
 
       if (teamId) {
         query = query.eq('team_id', teamId);
+        console.log('[useHabitFeed] Filtering by team:', teamId);
       } else {
         // Show public events and user's own events
         query = query.or(`visibility.eq.public,user_id.eq.${user.id}`);
+        console.log('[useHabitFeed] Fetching public + user events');
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useHabitFeed] Query error:', error);
+        throw error;
+      }
 
       // Process reactions
-      return (data as any[]).map(event => {
+      const events = (data as any[]).map(event => {
         const reactions = event.feed_reactions || [];
         const reactionCounts: Record<string, number> = {};
         
@@ -80,6 +89,22 @@ export function useHabitFeed(teamId?: string) {
           user_reaction: userReaction,
         };
       }) as HabitFeedEvent[];
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[useHabitFeed] Loaded ${events.length} events in ${elapsed}ms`);
+
+      // Log sample events in dev mode
+      if (import.meta.env.DEV && events.length > 0) {
+        console.table(events.slice(0, 5).map(e => ({
+          type: e.event_type,
+          habit: e.event_data?.habit_name,
+          user: e.profiles?.username,
+          reactions: Object.keys(e.reaction_counts || {}).join(', ') || 'none',
+          created: new Date(e.created_at).toLocaleString(),
+        })));
+      }
+
+      return events;
     },
     staleTime: 10000, // Consider data fresh for 10 seconds
   });
