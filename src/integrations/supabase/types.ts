@@ -1592,6 +1592,13 @@ export type Database = {
             foreignKeyName: "fasting_windows_habit_id_fkey"
             columns: ["habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fasting_windows_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
           },
@@ -1805,6 +1812,13 @@ export type Database = {
             foreignKeyName: "habit_achievements_habit_id_fkey"
             columns: ["habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_achievements_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
           },
@@ -1852,6 +1866,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "habit_ai_insights_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "habit_ai_insights_habit_id_fkey"
             columns: ["habit_id"]
@@ -1904,6 +1925,13 @@ export type Database = {
             foreignKeyName: "habit_attempts_habit_id_fkey"
             columns: ["habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_attempts_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
           },
@@ -1937,6 +1965,13 @@ export type Database = {
             columns: ["bundle_id"]
             isOneToOne: false
             referencedRelation: "habit_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_bundle_items_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
             referencedColumns: ["id"]
           },
           {
@@ -2044,6 +2079,13 @@ export type Database = {
             foreignKeyName: "habit_collaborations_habit_id_fkey"
             columns: ["habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_collaborations_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
           },
@@ -2113,7 +2155,21 @@ export type Database = {
             foreignKeyName: "habit_dependencies_depends_on_habit_id_fkey"
             columns: ["depends_on_habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_dependencies_depends_on_habit_id_fkey"
+            columns: ["depends_on_habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_dependencies_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
             referencedColumns: ["id"]
           },
           {
@@ -2164,6 +2220,13 @@ export type Database = {
             foreignKeyName: "habit_journal_entries_habit_id_fkey"
             columns: ["habit_id"]
             isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_journal_entries_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
           },
@@ -2205,6 +2268,13 @@ export type Database = {
           value?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "habit_measurements_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "habit_measurements_habit_id_fkey"
             columns: ["habit_id"]
@@ -2288,6 +2358,13 @@ export type Database = {
           was_recovered?: boolean | null
         }
         Relationships: [
+          {
+            foreignKeyName: "habit_streak_history_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "habit_streak_history_habit_id_fkey"
             columns: ["habit_id"]
@@ -4524,6 +4601,51 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_history: {
+        Row: {
+          created_at: string | null
+          earned_at: string | null
+          habit_id: string | null
+          id: string
+          reason: string | null
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          created_at?: string | null
+          earned_at?: string | null
+          habit_id?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          created_at?: string | null
+          earned_at?: string | null
+          habit_id?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_history_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_history_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       activity_summary_view: {
@@ -4887,6 +5009,27 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      habit_analytics: {
+        Row: {
+          avg_completion_hour: number | null
+          category: string | null
+          color: string | null
+          completion_rate: number | null
+          completions_last_30_days: number | null
+          completions_last_7_days: number | null
+          current_streak: number | null
+          days_completed: number | null
+          icon: string | null
+          id: string | null
+          last_completed_at: string | null
+          longest_streak: number | null
+          name: string | null
+          time_of_day: string | null
+          total_completions: number | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       job_processing_stats: {
         Row: {
