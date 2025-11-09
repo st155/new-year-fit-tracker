@@ -19,7 +19,7 @@ import { useWidgetHistory } from '@/hooks/metrics/useWidgetHistory';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
-import { HabitsSection } from '@/components/dashboard/HabitsSection';
+import { HabitsV3Section } from '@/components/dashboard/HabitsV3Section';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DataQualityWidget } from '@/components/dashboard/DataQualityWidget';
@@ -346,13 +346,13 @@ const Index = () => {
         )}
         </motion.div>
 
-        {/* Habits Section - MOVED ABOVE LEADERBOARD */}
+        {/* Habits V3 Section */}
         <ErrorBoundary fallback={
           <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
             <p className="text-sm text-destructive">❌ Habits section failed to load</p>
           </div>
         }>
-          <HabitsSection />
+          <HabitsV3Section />
         </ErrorBoundary>
 
         {/* Leaderboard Section */}

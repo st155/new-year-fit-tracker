@@ -72,7 +72,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const secondaryNavItems = [
     { path: "/leaderboard", label: 'Рейтинг' },
     { path: "/body", label: 'Тело' },
-    { path: "/habits", label: 'Привычки' },
+    { path: "/habits-v3", label: 'Привычки' },
     { path: "/fitness-data", label: 'Фитнес дата' },
   ];
 
@@ -84,7 +84,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
     { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
     { type: 'activity' as const, path: "/body", label: 'Тело' },
-    { type: 'habits' as const, path: "/habits", label: 'Привычки' },
+    { type: 'habits' as const, path: "/habits-v3", label: 'Привычки' },
     { type: 'connections' as const, path: "/fitness-data", label: 'Фитнес дата' },
   ];
 

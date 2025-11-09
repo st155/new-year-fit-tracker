@@ -175,7 +175,8 @@ export const AppRoutes = () => {
             </ModernAppLayout>
           </ProtectedRoute>
         } />
-        <Route path="/habits" element={
+        <Route path="/habits" element={<Navigate to="/habits-v3" replace />} />
+        <Route path="/habits-legacy" element={
           <ProtectedRoute>
             <ModernAppLayout>
               <Habits />
