@@ -1,5 +1,5 @@
 import { motion, PanInfo } from 'framer-motion';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -77,6 +77,9 @@ export function HabitCardV3({
         onDragEnd={handleDragEnd}
         whileTap={{ scale: 0.98 }}
         className={cn("relative touch-none", className)}
+        role="article"
+        aria-label={`Привычка: ${habit.name}`}
+        tabIndex={0}
       >
         {/* Swipe indicators */}
         <motion.div
@@ -202,3 +205,16 @@ export function HabitCardV3({
     </>
   );
 }
+
+// Memoize component for performance
+export default memo(HabitCardV3, (prev, next) => {
+  // Custom comparison for optimal re-rendering
+  return (
+    prev.habit.id === next.habit.id &&
+    prev.habit.completed_today === next.habit.completed_today &&
+    prev.habit.streak === next.habit.streak &&
+    prev.habit.name === next.habit.name &&
+    prev.compact === next.compact
+  );
+});
+

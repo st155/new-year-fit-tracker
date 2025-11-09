@@ -8,6 +8,7 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'navigation.progress': 'Progress',
     'navigation.goals': 'Goals',
     'navigation.habits': 'Habits',
+    'navigation.habitsV3': 'Привычки 3.0',
     'navigation.body': 'Body',
     'navigation.fitnessData': 'Fitness Data',
     'navigation.integrations': 'Integrations',

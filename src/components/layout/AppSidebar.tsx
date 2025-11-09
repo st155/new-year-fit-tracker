@@ -75,6 +75,7 @@ export function AppSidebar() {
     { title: "navigation.dashboard", url: "/dashboard", iconType: "home" as const },
     { title: "navigation.progress", url: "/progress", iconType: "stats" as const },
     { title: "navigation.habits", url: "/habits", iconType: "habits" as const },
+    { title: "navigation.habitsV3", url: "/habits-v3", iconType: "habits" as const, badge: "NEW" },
     { title: "navigation.body", url: "/body", iconType: "activity" as const },
     { title: "navigation.challenges", url: "/challenges", iconType: "challenges" as const },
     { title: "navigation.goals", url: "/goals", iconType: "activity" as const },
@@ -147,7 +148,16 @@ export function AppSidebar() {
                       isActive={isActive(item.url)}
                       className="scale-75"
                     />
-                    {!isCollapsed && <span>{t(item.title)}</span>}
+                    {!isCollapsed && (
+                      <span className="flex items-center gap-2">
+                        {t(item.title)}
+                        {'badge' in item && item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

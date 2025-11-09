@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
@@ -16,8 +17,9 @@ import { HabitCalendarHeatmap } from "@/components/habits/HabitCalendarHeatmap";
 import { IntermittentFastingWidget } from "@/components/habits/IntermittentFastingWidget";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Target, LayoutGrid, List, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { Plus, Target, LayoutGrid, List, Clock, Calendar as CalendarIcon, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHabitProgress } from "@/hooks/useHabitProgress";
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
@@ -30,6 +32,7 @@ type ViewMode = 'cards' | 'charts';
 
 export default function Habits() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { habits, isLoading, refetch } = useHabits(user?.id);
   
   // Enable auto-logging for goal-habit integration
@@ -142,6 +145,26 @@ export default function Habits() {
 
   return (
     <AnimatedPage className="container py-6 space-y-8">
+      {/* Habits V3 Banner */}
+      <Alert className="border-primary/50 bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <AlertTitle className="text-lg">Новое! Привычки 3.0 доступны</AlertTitle>
+        <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-2">
+          <span className="flex-1">
+            Попробуйте улучшенную версию с умной организацией по времени суток, 
+            свайп-жестами и системой XP/уровней
+          </span>
+          <Button 
+            size="sm" 
+            onClick={() => navigate('/habits-v3')}
+            className="gap-2 shrink-0"
+          >
+            <Sparkles className="h-4 w-4" />
+            Попробовать
+          </Button>
+        </AlertDescription>
+      </Alert>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-glow bg-gradient-to-r from-primary to-primary-end bg-clip-text text-transparent">

@@ -7,6 +7,7 @@ import {
   Dumbbell, 
   Camera,
   Link,
+  Sparkles,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,6 +40,16 @@ export const QuickActionsPanel = () => {
         setIsOpen(false);
       },
       color: 'text-success'
+    },
+    {
+      icon: Sparkles,
+      label: 'Привычки 3.0',
+      onClick: () => {
+        navigate('/habits-v3');
+        setIsOpen(false);
+      },
+      color: 'text-purple-500',
+      badge: 'NEW'
     },
     {
       icon: Dumbbell,
@@ -93,8 +104,13 @@ export const QuickActionsPanel = () => {
                     variant="outline"
                   >
                     <action.icon className={`h-5 w-5 ${action.color}`} />
-                    <span className="text-sm font-medium whitespace-nowrap">
+                    <span className="text-sm font-medium whitespace-nowrap flex items-center gap-2">
                       {action.label}
+                      {'badge' in action && action.badge && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
+                          {action.badge}
+                        </span>
+                      )}
                     </span>
                   </Button>
                 </motion.div>

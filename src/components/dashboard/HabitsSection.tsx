@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InteractiveHabitCard } from "./InteractiveHabitCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
 import { HabitCompactCard } from "@/components/habits/HabitCompactCard";
-import { Target, Plus, ArrowRight, Flame } from "lucide-react";
+import { Target, Plus, ArrowRight, Flame, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
@@ -93,6 +95,43 @@ export function HabitsSection() {
 
   return (
     <div className="space-y-4">
+      {/* Habits V3 Promo Card */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/5 via-purple-500/5 to-primary/5">
+          <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(white,transparent_70%)]" />
+          <div className="relative p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold">Попробуйте Привычки 3.0</h3>
+                  <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
+                    NEW
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Умная организация, свайп-жесты, геймификация
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate('/habits-v3')}
+              size="sm"
+              className="gap-2 shrink-0"
+            >
+              Попробовать
+              <Sparkles className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+
       {/* Header with Quick Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

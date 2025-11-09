@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -133,3 +133,14 @@ export function TimeSection({
     </Card>
   );
 }
+
+// Memoize component for better performance
+export default memo(TimeSection, (prev, next) => {
+  return (
+    prev.group.title === next.group.title &&
+    prev.group.completedCount === next.group.completedCount &&
+    prev.group.totalCount === next.group.totalCount &&
+    prev.group.habits.length === next.group.habits.length
+  );
+});
+

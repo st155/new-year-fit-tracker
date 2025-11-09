@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
@@ -9,12 +9,22 @@ import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
 
 export default function HabitsV3() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
   const { completeHabit, isCompleting } = useHabitCompletion();
+  
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('habitsV3_onboarding_completed');
+  });
+  
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('habitsV3_onboarding_completed', 'true');
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -53,8 +63,14 @@ export default function HabitsV3() {
   }
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+    <>
+      <HabitsV3Onboarding
+        open={showOnboarding}
+        onComplete={handleOnboardingComplete}
+      />
+      
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -131,5 +147,6 @@ export default function HabitsV3() {
         </Tabs>
       </div>
     </PullToRefresh>
+    </>
   );
 }
