@@ -986,4 +986,39 @@ All colors MUST be HSL.
   .dark [data-name="Awake"] {
     fill: #f59e0b !important; /* amber-500 */
   }
+
+  /* Habit 3.0 utilities */
+  .habit-morning {
+    @apply bg-gradient-to-br from-cyan-400/20 to-blue-500/30;
+  }
+  
+  .habit-afternoon {
+    @apply bg-gradient-to-br from-orange-400/20 to-amber-500/30;
+  }
+  
+  .habit-evening {
+    @apply bg-gradient-to-br from-purple-400/20 to-indigo-500/30;
+  }
+  
+  .habit-night {
+    @apply bg-gradient-to-br from-indigo-500/20 to-violet-600/30;
+  }
+  
+  .habit-completed {
+    @apply bg-gradient-to-br from-green-400/20 to-emerald-500/30 
+           border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.3)];
+  }
+  
+  .habit-at-risk {
+    @apply bg-gradient-to-br from-orange-400/20 to-red-500/30 
+           border-orange-500/50 animate-pulse;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .swipe-reveal {
+    @apply transform transition-transform duration-300 ease-out;
+  }
 }
