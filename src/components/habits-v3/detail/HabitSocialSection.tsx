@@ -9,6 +9,7 @@ import { TeamHabitCard } from './TeamHabitCard';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useHabitFeedRealtime } from '@/hooks/composite/realtime';
 
 interface HabitSocialSectionProps {
   habitId: string;
@@ -17,6 +18,10 @@ interface HabitSocialSectionProps {
 
 export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionProps) {
   const navigate = useNavigate();
+  
+  // Enable real-time updates for feed
+  useHabitFeedRealtime();
+  
   const { data: friends, isLoading: friendsLoading } = useHabitFriendsWithSame(habitName);
   const { data: teams, isLoading: teamsLoading } = useTeamsWithHabit(habitName);
   const { data: feedEvents, isLoading: feedLoading } = useHabitSocialFeed(habitId);

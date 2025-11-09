@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useHabitFeedRealtime, useFeedReactionsRealtime } from '@/hooks/composite/realtime';
 
 export interface HabitFeedEvent {
   id: string;
@@ -30,6 +31,10 @@ export interface FeedReaction {
 }
 
 export function useHabitFeed(teamId?: string) {
+  // Enable real-time subscriptions
+  useHabitFeedRealtime();
+  useFeedReactionsRealtime();
+
   return useQuery({
     queryKey: ['habit-feed', teamId],
     queryFn: async () => {
@@ -76,7 +81,7 @@ export function useHabitFeed(teamId?: string) {
         };
       }) as HabitFeedEvent[];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 10000, // Consider data fresh for 10 seconds
   });
 }
 
@@ -97,6 +102,38 @@ export function useAddReaction() {
         });
 
       if (error) throw error;
+    },
+    onMutate: async ({ eventId, reactionType }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['habit-feed'] });
+      
+      const previousData = queryClient.getQueryData(['habit-feed']);
+      
+      queryClient.setQueryData(['habit-feed'], (old: any) => {
+        if (!old) return old;
+        return old.map((event: HabitFeedEvent) => {
+          if (event.id === eventId) {
+            return {
+              ...event,
+              user_reaction: reactionType,
+              reaction_counts: {
+                ...event.reaction_counts,
+                [reactionType]: (event.reaction_counts?.[reactionType] || 0) + 1,
+              },
+            };
+          }
+          return event;
+        });
+      });
+      
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['habit-feed'], context.previousData);
+      }
+      toast.error('Не удалось добавить реакцию');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
@@ -120,6 +157,42 @@ export function useRemoveReaction() {
 
       if (error) throw error;
     },
+    onMutate: async (eventId) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['habit-feed'] });
+      
+      const previousData = queryClient.getQueryData(['habit-feed']);
+      
+      queryClient.setQueryData(['habit-feed'], (old: any) => {
+        if (!old) return old;
+        return old.map((event: HabitFeedEvent) => {
+          if (event.id === eventId && event.user_reaction) {
+            const newCounts = { ...event.reaction_counts };
+            if (newCounts[event.user_reaction]) {
+              newCounts[event.user_reaction] -= 1;
+              if (newCounts[event.user_reaction] === 0) {
+                delete newCounts[event.user_reaction];
+              }
+            }
+            return {
+              ...event,
+              user_reaction: null,
+              reaction_counts: newCounts,
+            };
+          }
+          return event;
+        });
+      });
+      
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['habit-feed'], context.previousData);
+      }
+      toast.error('Не удалось удалить реакцию');
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
     },
@@ -127,6 +200,10 @@ export function useRemoveReaction() {
 }
 
 export function useHabitNotifications(userId?: string) {
+  // Enable real-time subscription
+  const { useHabitNotificationsRealtime } = require('@/hooks/composite/realtime');
+  useHabitNotificationsRealtime(!!userId);
+
   return useQuery({
     queryKey: ['habit-notifications', userId],
     queryFn: async () => {
@@ -143,6 +220,7 @@ export function useHabitNotifications(userId?: string) {
       return data;
     },
     enabled: !!userId,
+    staleTime: 10000, // Consider data fresh for 10 seconds
   });
 }
 

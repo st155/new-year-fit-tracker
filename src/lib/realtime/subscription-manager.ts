@@ -21,7 +21,10 @@ type RealtimeTable =
   | 'challenge_participants'
   | 'ai_pending_actions'
   | 'habits'
-  | 'habit_attempts';
+  | 'habit_attempts'
+  | 'habit_feed_events'
+  | 'habit_notifications'
+  | 'feed_reactions';
 
 interface SubscriptionConfig {
   table: RealtimeTable;
@@ -146,6 +149,22 @@ export class SubscriptionManager {
       case 'ai_pending_actions':
         this.queryClient.invalidateQueries({
           queryKey: queryKeys.trainer.all,
+        });
+        break;
+      
+      case 'habit_feed_events':
+      case 'feed_reactions':
+        this.queryClient.invalidateQueries({
+          queryKey: ['habit-feed'],
+        });
+        break;
+      
+      case 'habit_notifications':
+        this.queryClient.invalidateQueries({
+          queryKey: ['habit-notifications'],
+        });
+        this.queryClient.invalidateQueries({
+          queryKey: ['habits-notifications-unread'],
         });
         break;
     }

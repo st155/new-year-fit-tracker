@@ -33,7 +33,10 @@ type RealtimeTable =
   | 'challenge_participants'
   | 'ai_pending_actions'
   | 'habits'
-  | 'habit_attempts';
+  | 'habit_attempts'
+  | 'habit_feed_events'
+  | 'habit_notifications'
+  | 'feed_reactions';
 
 type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
@@ -142,6 +145,39 @@ export function useAIActionsRealtime(enabled = true) {
   return useRealtimeSubscription({
     table: 'ai_pending_actions',
     events: ['INSERT'],
+    enabled,
+  });
+}
+
+/**
+ * Convenience: Habit feed realtime
+ */
+export function useHabitFeedRealtime(enabled = true) {
+  return useRealtimeSubscription({
+    table: 'habit_feed_events',
+    events: ['INSERT', 'UPDATE', 'DELETE'],
+    enabled,
+  });
+}
+
+/**
+ * Convenience: Habit notifications realtime
+ */
+export function useHabitNotificationsRealtime(enabled = true) {
+  return useRealtimeSubscription({
+    table: 'habit_notifications',
+    events: ['INSERT', 'UPDATE'],
+    enabled,
+  });
+}
+
+/**
+ * Convenience: Feed reactions realtime
+ */
+export function useFeedReactionsRealtime(enabled = true) {
+  return useRealtimeSubscription({
+    table: 'feed_reactions',
+    events: ['INSERT', 'DELETE'],
     enabled,
   });
 }

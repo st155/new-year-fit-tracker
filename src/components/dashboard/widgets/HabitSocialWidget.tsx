@@ -9,11 +9,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { useHabitNotificationsRealtime } from "@/hooks/composite/realtime";
 
 export function HabitSocialWidget() {
   const { user } = useAuth();
   const { data: feedEvents = [], isLoading } = useHabitFeed();
   const navigate = useNavigate();
+
+  // Enable real-time for notifications
+  useHabitNotificationsRealtime(!!user?.id);
 
   // Get unread notifications count
   const { data: unreadCount = 0 } = useQuery({
@@ -24,10 +28,11 @@ export function HabitSocialWidget() {
         .from('habit_notifications' as any)
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('read', false);
+        .eq('is_read', false);
       return count || 0;
     },
     enabled: !!user?.id,
+    staleTime: 10000, // Real-time updates will refresh this
   });
 
   if (isLoading) {

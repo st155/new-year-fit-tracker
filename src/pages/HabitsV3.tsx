@@ -5,6 +5,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { useUserLevel } from '@/hooks/useUserLevel';
+import { useSocialNotifications } from '@/hooks/useSocialNotifications';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
@@ -40,6 +41,9 @@ export default function HabitsV3() {
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
   const { completeHabit, isCompleting } = useHabitCompletion();
   const { levelInfo } = useUserLevel();
+  
+  // Enable social notifications
+  useSocialNotifications(!!user?.id);
   
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(0);

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useHabitNotificationsRealtime } from "@/hooks/composite/realtime";
 
 interface TopNavigationProps {
   userName?: string;
@@ -65,6 +66,9 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     console.error('💥 [TopNavigation] useAuth error:', error);
   }
 
+  // Enable real-time for notifications
+  useHabitNotificationsRealtime(!!user?.id);
+
   // Fetch unread notifications count for Habits 3.0
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['habits-notifications-unread', user?.id],
@@ -78,7 +82,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
       return count || 0;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    staleTime: 10000, // Real-time updates will refresh this
   });
 
   // Main navigation items for mobile (4 items)

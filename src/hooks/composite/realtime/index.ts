@@ -9,4 +9,7 @@ export {
   useChallengeRealtime,
   useHabitsRealtime,
   useAIActionsRealtime,
+  useHabitFeedRealtime,
+  useHabitNotificationsRealtime,
+  useFeedReactionsRealtime,
 } from './useRealtimeSubscription';
