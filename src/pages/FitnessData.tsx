@@ -186,6 +186,7 @@ export default function FitnessData() {
         source: recovery.latest.source,
         sparkline: recovery.history.slice(-7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Recovery Score')?.confidence || 0,
+        trend: calculateTrend(recovery.history),
       });
     }
 
@@ -200,6 +201,7 @@ export default function FitnessData() {
         source: strain.latest.source,
         sparkline: strain.history.slice(-7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Day Strain')?.confidence || 0,
+        trend: calculateTrend(strain.history),
       });
     }
 
@@ -225,6 +227,7 @@ export default function FitnessData() {
           q.metricName === 'Heart Rate' || 
           q.metricName === 'Resting Heart Rate'
         )?.confidence || 0,
+        trend: calculateTrend(hr.history),
       });
     }
 
@@ -246,6 +249,7 @@ export default function FitnessData() {
           q.metricName === 'Sleep Performance' || 
           q.metricName === 'Sleep Efficiency'
         )?.confidence || 0,
+        trend: calculateTrend(sleep.history),
       });
     }
 
@@ -260,6 +264,7 @@ export default function FitnessData() {
         source: steps.latest.source,
         sparkline: steps.history.slice(-7).map(h => ({ value: h.value })),
         confidence: qualitySummary?.find(q => q.metricName === 'Steps')?.confidence || 0,
+        trend: calculateTrend(steps.history),
       });
     }
 
@@ -281,11 +286,26 @@ export default function FitnessData() {
           q.metricName === 'Active Calories' || 
           q.metricName === 'Workout Calories'
         )?.confidence || 0,
+        trend: calculateTrend(calories.history),
       });
     }
 
     return metrics;
   }, [metricsData, qualitySummary]);
+
+  // Calculate trend between last two values
+  const calculateTrend = useCallback((history: any[]) => {
+    if (history.length < 2) return undefined;
+    
+    const current = history[history.length - 1].value;
+    const previous = history[history.length - 2].value;
+    const change = ((current - previous) / previous) * 100;
+    
+    return {
+      value: Math.round(Math.abs(change)),
+      direction: change > 1 ? 'up' : change < -1 ? 'down' : 'neutral' as const
+    };
+  }, []);
 
   const getDateLabel = () => {
     const { start, end } = calculateDateRange;
