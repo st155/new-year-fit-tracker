@@ -36,7 +36,7 @@ export const QuickActionsPanel = () => {
       icon: CheckCircle2,
       label: 'Complete Habit',
       onClick: () => {
-        navigate('/habits');
+        navigate('/habits-v3');
         setIsOpen(false);
       },
       color: 'text-success'

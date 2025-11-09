@@ -4,6 +4,7 @@ import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "@/lib/translations";
@@ -20,6 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TopNavigationProps {
   userName?: string;
@@ -37,6 +40,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   // Safe hooks with fallbacks
   let profile = null;
   let isTrainer = false;
+  let user = null;
   let t = (key: string) => key; // Fallback translation function
   
   try {
@@ -56,9 +60,26 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   try {
     const authData = useAuth();
     isTrainer = authData?.isTrainer ?? false;
+    user = authData?.user;
   } catch (error) {
     console.error('💥 [TopNavigation] useAuth error:', error);
   }
+
+  // Fetch unread notifications count for Habits 3.0
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['habits-notifications-unread', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count } = await supabase
+        .from('habit_notifications' as any)
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
 
   // Main navigation items for mobile (4 items)
   const mainNavItems = [
@@ -169,18 +190,26 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     Профиль
                   </Button>
                   
-                  {/* Secondary nav items */}
+                   {/* Secondary nav items */}
                   {secondaryNavItems.map((item) => (
                     <Button
                       key={item.path}
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start text-lg h-14",
+                        "w-full justify-start text-lg h-14 relative",
                         isActive(item.path) && "bg-accent/30 text-primary"
                       )}
                       onClick={() => navigate(item.path)}
                     >
                       {item.label}
+                      {item.path === '/habits-v3' && unreadCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto h-5 min-w-[20px] px-1.5 text-xs"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </Button>
                   ))}
                   
@@ -237,16 +266,24 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     prefetch.route(item.path);
                   }}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 h-auto py-3 px-4 min-h-[56px] min-w-[60px] touch-friendly hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95 md:py-2 md:px-3 md:min-h-[unset]",
+                    "flex flex-col items-center gap-1.5 h-auto py-3 px-4 min-h-[56px] min-w-[60px] touch-friendly hover:bg-accent/50 transition-all duration-300 hover:scale-110 active:scale-95 md:py-2 md:px-3 md:min-h-[unset] relative",
                     isActive(item.path) && "bg-accent/30"
                   )}
                 >
-                  <div className="transition-all duration-300 hover:animate-bounce">
+                  <div className="transition-all duration-300 hover:animate-bounce relative">
                     <CustomNavigationIcon 
                       type={item.type} 
                       isActive={isActive(item.path)}
                       className="h-6 w-6 md:h-5 md:w-5"
                     />
+                    {item.path === '/habits-v3' && unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 h-4 min-w-[16px] px-1 text-[10px] p-0 flex items-center justify-center"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </div>
                   <span className={cn(
                     "text-xs md:text-[10px] font-medium transition-colors",

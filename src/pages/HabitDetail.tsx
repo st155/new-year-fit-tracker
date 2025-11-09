@@ -57,7 +57,7 @@ export default function HabitDetail() {
       <div className="container py-6">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">Привычка не найдена</h1>
-          <Button onClick={() => navigate('/habits')}>
+          <Button onClick={() => navigate('/habits-v3')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Вернуться к привычкам
           </Button>
@@ -148,7 +148,7 @@ export default function HabitDetail() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate('/habits')}
+            onClick={() => navigate('/habits-v3')}
             className="glass-card border-white/20"
           >
             <ArrowLeft className="h-4 w-4" />
