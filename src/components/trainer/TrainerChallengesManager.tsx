@@ -9,7 +9,15 @@ import { ChallengeParticipantsList } from "./ChallengeParticipantsList";
 import { CreateChallengeDialog } from "./CreateChallengeDialog";
 import { CreateChallengeDialogAI } from "./CreateChallengeDialogAI";
 import { EditChallengeDialog } from "./EditChallengeDialog";
-import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle, Sparkles } from "lucide-react";
+import { TemplateManager } from "./templates/TemplateManager";
+import { SaveAsTemplateDialog } from "./templates/SaveAsTemplateDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Trophy, Users, Target, Calendar, Plus, Edit, CheckCircle, Sparkles, FileText, Save } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +32,9 @@ export function TrainerChallengesManager() {
   const [createAIDialogOpen, setCreateAIDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [challengeToEdit, setChallengeToEdit] = useState<any>(null);
+  const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [challengeToSaveAsTemplate, setChallengeToSaveAsTemplate] = useState<any>(null);
 
   // Real-time updates for challenge participants с правильной очисткой
   useEffect(() => {
@@ -84,6 +95,11 @@ export function TrainerChallengesManager() {
     setEditDialogOpen(true);
   };
 
+  const handleSaveAsTemplate = (challenge: any) => {
+    setChallengeToSaveAsTemplate(challenge);
+    setSaveTemplateDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -107,6 +123,10 @@ export function TrainerChallengesManager() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setTemplateManagerOpen(true)}>
+            <FileText className="h-4 w-4 mr-2" />
+            Templates
+          </Button>
           <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Classic
@@ -188,13 +208,23 @@ export function TrainerChallengesManager() {
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditChallenge(challenge)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditChallenge(challenge)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Challenge
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSaveAsTemplate(challenge)}>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save as Template
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         size="sm"
                         variant="outline"
@@ -305,6 +335,22 @@ export function TrainerChallengesManager() {
         challenge={challengeToEdit}
         onSuccess={refetch}
       />
+
+      <TemplateManager
+        open={templateManagerOpen}
+        onOpenChange={setTemplateManagerOpen}
+        onSuccess={refetch}
+      />
+
+      {challengeToSaveAsTemplate && (
+        <SaveAsTemplateDialog
+          open={saveTemplateDialogOpen}
+          onOpenChange={setSaveTemplateDialogOpen}
+          challengeId={challengeToSaveAsTemplate.id}
+          challengeTitle={challengeToSaveAsTemplate.title}
+          onSuccess={refetch}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, FileText } from 'lucide-react';
 import { CHALLENGE_PRESETS, ChallengePreset } from '@/lib/challenge-presets';
 import { PresetCard } from './challenge-ai/PresetCard';
 import { SettingsPanel } from './challenge-ai/SettingsPanel';
@@ -9,6 +9,7 @@ import { PreviewPanel } from './challenge-ai/PreviewPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { BENCHMARK_STANDARDS, calculateStandardBenchmark, AUDIENCE_LEVEL_LABELS } from '@/lib/benchmark-standards';
+import { TemplateManager } from './templates/TemplateManager';
 
 interface CreateChallengeDialogAIProps {
   open: boolean;
@@ -30,6 +31,7 @@ export const CreateChallengeDialogAI = ({
   const [disciplineCount, setDisciplineCount] = useState(3);
   const [targetAudience, setTargetAudience] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
 
   const difficultyMultipliers = [0.7, 1.0, 1.4, 1.8];
   const audienceMultipliers = [0.8, 1.0, 1.3, 1.6];
@@ -178,6 +180,14 @@ export const CreateChallengeDialogAI = ({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Template Loader */}
+          <div className="flex justify-center pb-4 border-b">
+            <Button variant="outline" onClick={() => setTemplateManagerOpen(true)}>
+              <FileText className="w-4 h-4 mr-2" />
+              Load from Template
+            </Button>
+          </div>
+
           {/* Step 1: Select Preset */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">1. Choose a Preset</h3>
@@ -245,6 +255,15 @@ export const CreateChallengeDialogAI = ({
           )}
         </div>
       </DialogContent>
+
+      <TemplateManager
+        open={templateManagerOpen}
+        onOpenChange={setTemplateManagerOpen}
+        onSuccess={() => {
+          onSuccess?.();
+          onOpenChange(false);
+        }}
+      />
     </Dialog>
   );
 };

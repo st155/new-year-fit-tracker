@@ -1012,6 +1012,57 @@ export type Database = {
           },
         ]
       }
+      challenge_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          difficulty_level: number | null
+          duration_weeks: number | null
+          id: string
+          is_public: boolean | null
+          preset_id: string | null
+          target_audience: number | null
+          template_data: Json
+          template_name: string
+          updated_at: string | null
+          use_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          difficulty_level?: number | null
+          duration_weeks?: number | null
+          id?: string
+          is_public?: boolean | null
+          preset_id?: string | null
+          target_audience?: number | null
+          template_data: Json
+          template_name: string
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          difficulty_level?: number | null
+          duration_weeks?: number | null
+          id?: string
+          is_public?: boolean | null
+          preset_id?: string | null
+          target_audience?: number | null
+          template_data?: Json
+          template_name?: string
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Relationships: []
+      }
       challenge_trainers: {
         Row: {
           added_at: string | null
