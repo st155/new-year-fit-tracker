@@ -87,10 +87,24 @@ serve(async (req) => {
             throw new Error(`Unknown action type: ${action.type}`);
         }
 
+        // Build detailed result message
+        let resultMessage = '';
+        if (action.type === 'add_measurement' && result) {
+          const operation = result._operation || 'created';
+          if (operation === 'updated' && result._old_value !== null) {
+            resultMessage = `Измерение обновлено: ${result._old_value} → ${result.value} ${result.unit}`;
+          } else {
+            resultMessage = `Измерение добавлено: ${result.value} ${result.unit}`;
+          }
+        } else if (action.type === 'update_goal' && result) {
+          resultMessage = `Цель обновлена: target = ${result.target_value} ${result.target_unit}`;
+        }
+        
         executionResults.push({
           action: action.type,
           success: true,
-          data: result
+          data: result,
+          message: resultMessage
         });
 
         // Log successful action
@@ -142,16 +156,27 @@ serve(async (req) => {
         .eq('id', pendingActionId);
     }
 
-    // Add completion message to conversation if not auto-executed
-    // (auto-executed actions add their own message in trainer-ai-chat)
+    // Add detailed completion message to conversation
     if (conversationId && !autoExecuted) {
       const successCount = executionResults.filter(r => r.success).length;
       const failCount = executionResults.filter(r => !r.success).length;
       
+      // Build detailed message
+      let detailedMessage = `✅ Выполнено действий: ${successCount}${failCount > 0 ? `, ошибок: ${failCount}` : ''}.\n\n`;
+      
+      // Add details for each successful action
+      const successfulActions = executionResults.filter(r => r.success && r.message);
+      if (successfulActions.length > 0) {
+        detailedMessage += 'Детали:\n';
+        successfulActions.forEach((result, idx) => {
+          detailedMessage += `${idx + 1}. ${result.message}\n`;
+        });
+      }
+      
       await supabaseClient.from('ai_messages').insert({
         conversation_id: conversationId,
         role: 'system',
-        content: `✅ Выполнено ${successCount} действий${failCount > 0 ? `, ${failCount} с ошибками` : ''}.`
+        content: detailedMessage.trim()
       });
     }
 
@@ -294,7 +319,7 @@ async function executeCreateGoal(supabase: any, trainerId: string, data: any) {
 async function executeAddMeasurement(supabase: any, data: any) {
   const { goal_id, user_id, client_id, goal_name, value, unit, measurement_date, notes } = data;
   
-  console.log(`Adding measurement:`, { goal_id, goal_name, client_id, value, unit });
+  console.log(`📊 Adding/updating measurement:`, { goal_id, goal_name, client_id, value, unit, measurement_date });
   
   let finalGoalId = goal_id;
   let finalUserId = user_id || client_id;
@@ -305,19 +330,20 @@ async function executeAddMeasurement(supabase: any, data: any) {
       .from('goals')
       .select('id, user_id, goal_name, target_unit')
       .eq('user_id', finalUserId)
-      .eq('goal_name', goal_name)
-      .order('created_at', { ascending: false })
+      .ilike('goal_name', goal_name)
+      .order('is_personal', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (goalError || !goalData) {
-      console.error(`Goal not found: ${goal_name} for user ${finalUserId}`);
+      console.error(`❌ Goal not found: ${goal_name} for user ${finalUserId}`);
       throw new Error(`Goal "${goal_name}" not found for user ${finalUserId}`);
     }
     
     finalGoalId = goalData.id;
     finalUserId = goalData.user_id;
-    console.log(`Found goal: ${goalData.goal_name} (${finalGoalId})`);
+    console.log(`✅ Found goal: ${goalData.goal_name} (${finalGoalId})`);
   }
   
   // Validate that goal exists and belongs to user
@@ -326,7 +352,7 @@ async function executeAddMeasurement(supabase: any, data: any) {
       .from('goals')
       .select('id, user_id, goal_name')
       .eq('id', finalGoalId)
-      .single();
+      .maybeSingle();
       
     if (goalCheckError || !goal) {
       throw new Error(`Goal ${finalGoalId} not found`);
@@ -339,28 +365,87 @@ async function executeAddMeasurement(supabase: any, data: any) {
     finalUserId = goal.user_id;
   }
   
-  const { data: result, error } = await supabase
+  // Calculate measurement date (default to today if not provided)
+  const finalMeasurementDate = measurement_date || new Date().toISOString().split('T')[0];
+  
+  // Check if measurement already exists for this date
+  const { data: existing, error: checkError } = await supabase
     .from('measurements')
-    .insert({
-      goal_id: finalGoalId,
-      user_id: finalUserId,
-      value,
-      unit,
-      measurement_date: measurement_date || new Date().toISOString().split('T')[0],
-      source: 'ai_trainer',
-      verified_by_trainer: true,
-      ...(notes && { notes })
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error adding measurement:', error);
-    throw error;
+    .select('id, value, unit')
+    .eq('goal_id', finalGoalId)
+    .eq('user_id', finalUserId)
+    .eq('measurement_date', finalMeasurementDate)
+    .maybeSingle();
+  
+  if (checkError) {
+    console.error('❌ Error checking existing measurement:', checkError);
   }
   
-  console.log(`✅ Added measurement: ${value} ${unit} for goal ${finalGoalId}`);
-  return result;
+  let result;
+  let operationType: 'created' | 'updated' = 'created';
+  let oldValue = null;
+  
+  if (existing) {
+    // Update existing measurement
+    oldValue = existing.value;
+    console.log(`🔄 Updating existing measurement for ${finalMeasurementDate}: ${oldValue} → ${value}`);
+    
+    const { data: updated, error: updateError } = await supabase
+      .from('measurements')
+      .update({
+        value,
+        unit,
+        source: 'ai_trainer',
+        verified_by_trainer: true,
+        ...(notes && { notes }),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existing.id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('❌ Error updating measurement:', updateError);
+      throw updateError;
+    }
+    
+    result = updated;
+    operationType = 'updated';
+    
+  } else {
+    // Insert new measurement
+    console.log(`➕ Creating new measurement for ${finalMeasurementDate}: ${value}`);
+    
+    const { data: inserted, error: insertError } = await supabase
+      .from('measurements')
+      .insert({
+        goal_id: finalGoalId,
+        user_id: finalUserId,
+        value,
+        unit,
+        measurement_date: finalMeasurementDate,
+        source: 'ai_trainer',
+        verified_by_trainer: true,
+        ...(notes && { notes })
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('❌ Error inserting measurement:', insertError);
+      throw insertError;
+    }
+    
+    result = inserted;
+  }
+  
+  console.log(`✅ Measurement ${operationType}: ${value} ${unit} for goal ${finalGoalId} on ${finalMeasurementDate}`);
+  
+  return {
+    ...result,
+    _operation: operationType,
+    _old_value: oldValue
+  };
 }
 
 async function executeCreateTask(supabase: any, trainerId: string, data: any) {

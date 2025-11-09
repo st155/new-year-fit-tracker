@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface AIPendingAction {
   id: string;
@@ -19,6 +20,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const loadPendingActions = async () => {
     if (!userId) return;
@@ -110,15 +112,43 @@ export const useAIPendingActions = (userId: string | undefined) => {
 
       if (error) throw error;
 
-      // Reload to ensure consistency
+      // Invalidate all related queries to refresh UI
+      const clientId = actions[0]?.data?.client_id || actions[0]?.data?.user_id;
+      
+      if (clientId) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['goals', clientId] }),
+          queryClient.invalidateQueries({ queryKey: ['goal-progress', clientId] }),
+          queryClient.invalidateQueries({ queryKey: ['measurements', clientId] }),
+          queryClient.invalidateQueries({ queryKey: ['client-detail', clientId] }),
+          queryClient.invalidateQueries({ queryKey: ['unified-metrics', clientId] })
+        ]);
+        console.log('✅ Invalidated queries for client:', clientId);
+      }
+      
+      // Also invalidate trainer-level queries
+      await queryClient.invalidateQueries({ queryKey: ['trainer-clients'] });
+
+      // Reload pending actions
       await loadPendingActions();
 
       const successCount = data.results.filter((r: any) => r.success).length;
       const failCount = data.results.filter((r: any) => !r.success).length;
+      
+      // Build detailed toast message
+      let description = `Выполнено действий: ${successCount}${failCount > 0 ? `, ошибок: ${failCount}` : ''}`;
+      
+      const successMessages = data.results
+        .filter((r: any) => r.success && r.message)
+        .map((r: any) => r.message);
+      
+      if (successMessages.length > 0) {
+        description += '\n\n' + successMessages.join('\n');
+      }
 
       toast({
         title: 'Готово',
-        description: `Выполнено действий: ${successCount}${failCount > 0 ? `, ошибок: ${failCount}` : ''}`
+        description: description
       });
 
       return data;

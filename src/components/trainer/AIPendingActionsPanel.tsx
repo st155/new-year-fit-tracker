@@ -34,14 +34,17 @@ export const AIPendingActionsPanel = ({
 
       const result = await onExecute(action.id, action.conversation_id, actions);
       
+      // Extract client_id from actions
+      const clientId = actions[0]?.data?.client_id || actions[0]?.data?.user_id;
+      
       // Show success toast with navigation option
-      if (result?.client_id) {
+      if (clientId) {
         toast.success("Действие выполнено", {
           action: {
             label: "Открыть клиента",
             onClick: () => {
-              // Navigate to client
-              navigate(`/trainer-dashboard?tab=clients&client=${result.client_id}`);
+              setSelectedClient(clientId);
+              navigate(`/trainer-dashboard?tab=clients&client=${clientId}`);
             }
           }
         });
@@ -49,11 +52,13 @@ export const AIPendingActionsPanel = ({
         toast.success("Действие выполнено");
       }
     } catch (error: any) {
-      // Handle AI rate limit errors
+      // Handle specific errors
       if (error.message?.includes('AI rate limit exceeded') || error.message?.includes('429')) {
         toast.error("AI rate limit exceeded. Please wait a few minutes and try again.");
       } else if (error.message?.includes('AI credits exhausted') || error.message?.includes('402')) {
         toast.error("AI credits exhausted. Please add more credits to your Lovable workspace to continue.");
+      } else if (error.message?.includes('duplicate key value') || error.message?.includes('23505')) {
+        toast.error("Measurement already exists for this date. Please update the existing one.");
       } else {
         toast.error("Failed to execute actions. Please try again.");
       }
