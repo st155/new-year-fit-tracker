@@ -14,6 +14,10 @@ interface TimeSectionProps {
   group: HabitGroup;
   onHabitComplete?: (habitId: string) => void;
   onHabitTap?: (habitId: string) => void;
+  onHabitArchive?: (habitId: string) => void;
+  onHabitDelete?: (habitId: string) => void;
+  onHabitEdit?: (habitId: string) => void;
+  onHabitViewHistory?: (habitId: string) => void;
   onStartAll?: () => void;
   variant?: 'default' | 'warning' | 'success';
   defaultExpanded?: boolean;
@@ -23,6 +27,10 @@ export function TimeSection({
   group,
   onHabitComplete,
   onHabitTap,
+  onHabitArchive,
+  onHabitDelete,
+  onHabitEdit,
+  onHabitViewHistory,
   onStartAll,
   variant = 'default',
   defaultExpanded = true
@@ -124,6 +132,10 @@ export function TimeSection({
                   habit={habit}
                   onComplete={() => onHabitComplete?.(habit.id)}
                   onTap={() => onHabitTap?.(habit.id)}
+                  onArchive={() => onHabitArchive?.(habit.id)}
+                  onDelete={() => onHabitDelete?.(habit.id)}
+                  onEdit={() => onHabitEdit?.(habit.id)}
+                  onViewHistory={() => onHabitViewHistory?.(habit.id)}
                 />
               ))}
             </CardContent>

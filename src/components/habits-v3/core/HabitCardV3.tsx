@@ -7,6 +7,7 @@ import { getTimeBasedTheme, getStateStyles, formatDuration, getDifficultyBadge, 
 import { haptics } from '@/lib/haptics';
 import { useHabitCardState } from '@/hooks/useHabitCardState';
 import { HabitCelebration } from '@/components/habits/HabitCelebration';
+import { HabitOptionsMenu } from '@/components/habits/HabitOptionsMenu';
 import { Flame, Calendar, Target } from 'lucide-react';
 import { getHabitIcon } from '@/lib/habit-utils';
 
@@ -16,6 +17,10 @@ interface HabitCardV3Props {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   onTap?: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
+  onEdit?: () => void;
+  onViewHistory?: () => void;
   compact?: boolean;
   className?: string;
 }
@@ -26,6 +31,10 @@ export function HabitCardV3({
   onSwipeLeft,
   onSwipeRight,
   onTap,
+  onArchive,
+  onDelete,
+  onEdit,
+  onViewHistory,
   compact = false,
   className
 }: HabitCardV3Props) {
@@ -190,6 +199,14 @@ export function HabitCardV3({
               )}>
                 <span>{theme.icon}</span>
               </Badge>
+
+              {/* Options Menu */}
+              <HabitOptionsMenu
+                onEdit={onEdit}
+                onArchive={onArchive}
+                onDelete={onDelete}
+                onViewHistory={onViewHistory}
+              />
             </div>
           </CardHeader>
 

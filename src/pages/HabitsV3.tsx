@@ -6,6 +6,17 @@ import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { useSocialNotifications } from '@/hooks/useSocialNotifications';
+import { useDeleteHabit } from '@/hooks/useDeleteHabit';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
@@ -41,6 +52,7 @@ export default function HabitsV3() {
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
   const { completeHabit, isCompleting } = useHabitCompletion();
   const { levelInfo } = useUserLevel();
+  const { deleteHabit, archiveHabit, isDeleting, isArchiving } = useDeleteHabit();
   
   // Enable social notifications
   useSocialNotifications(!!user?.id);
@@ -48,6 +60,8 @@ export default function HabitsV3() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(0);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Get habit insights
   const { all: insights, isLoading: insightsLoading } = useHabitInsights({
@@ -94,6 +108,23 @@ export default function HabitsV3() {
 
   const handleHabitTap = (habitId: string) => {
     navigate(`/habits/${habitId}`);
+  };
+
+  const handleArchive = (habitId: string) => {
+    archiveHabit(habitId);
+  };
+
+  const handleDelete = (habitId: string) => {
+    setHabitToDelete(habitId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (habitToDelete) {
+      deleteHabit(habitToDelete);
+      setHabitToDelete(null);
+      setShowDeleteDialog(false);
+    }
   };
 
   const handleRefresh = async () => {
@@ -189,11 +220,15 @@ export default function HabitsV3() {
           </TabsList>
 
           <TabsContent value="smart">
-            <SmartView
-              habits={habits}
-              onHabitComplete={handleHabitComplete}
-              onHabitTap={handleHabitTap}
-            />
+              <SmartView
+                habits={habits}
+                onHabitComplete={handleHabitComplete}
+                onHabitTap={handleHabitTap}
+                onHabitArchive={handleArchive}
+                onHabitDelete={handleDelete}
+                onHabitEdit={(id) => navigate(`/habits/${id}`)}
+                onHabitViewHistory={(id) => navigate(`/habits/${id}`)}
+              />
           </TabsContent>
 
           <TabsContent value="compact">
@@ -238,6 +273,30 @@ export default function HabitsV3() {
             <SocialView />
           </TabsContent>
         </Tabs>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent className="glass-card">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Это действие нельзя отменить. Все данные о привычке будут удалены безвозвратно.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Отмена</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Удалить
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Screen reader announcements */}
+        <ScreenReaderAnnouncement message={announcement} />
       </div>
     </PullToRefresh>
     </>

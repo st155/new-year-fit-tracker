@@ -8,9 +8,21 @@ interface SmartViewProps {
   habits: any[];
   onHabitComplete?: (habitId: string) => void;
   onHabitTap?: (habitId: string) => void;
+  onHabitArchive?: (habitId: string) => void;
+  onHabitDelete?: (habitId: string) => void;
+  onHabitEdit?: (habitId: string) => void;
+  onHabitViewHistory?: (habitId: string) => void;
 }
 
-export function SmartView({ habits, onHabitComplete, onHabitTap }: SmartViewProps) {
+export function SmartView({ 
+  habits, 
+  onHabitComplete, 
+  onHabitTap,
+  onHabitArchive,
+  onHabitDelete,
+  onHabitEdit,
+  onHabitViewHistory
+}: SmartViewProps) {
   const grouped = useHabitGrouping(habits);
 
   // Calculate overview stats
@@ -47,30 +59,50 @@ export function SmartView({ habits, onHabitComplete, onHabitTap }: SmartViewProp
           group={grouped.morning}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
         />
         
         <TimeSection
           group={grouped.afternoon}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
         />
         
         <TimeSection
           group={grouped.evening}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
         />
         
         <TimeSection
           group={grouped.night}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
         />
         
         <TimeSection
           group={grouped.anytime}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
         />
       </div>
 
@@ -88,6 +120,10 @@ export function SmartView({ habits, onHabitComplete, onHabitTap }: SmartViewProp
           }}
           onHabitComplete={onHabitComplete}
           onHabitTap={onHabitTap}
+          onHabitArchive={onHabitArchive}
+          onHabitDelete={onHabitDelete}
+          onHabitEdit={onHabitEdit}
+          onHabitViewHistory={onHabitViewHistory}
           variant="warning"
           defaultExpanded={true}
         />
