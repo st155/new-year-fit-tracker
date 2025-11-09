@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, Zap, Target, Calendar, Lightbulb } from 'lucide-react';
+import { TrendingUp, Zap, Target, Calendar, Lightbulb, Trophy } from 'lucide-react';
 import { useHabitAnalytics } from '@/hooks/useHabitAnalytics';
 import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { 
@@ -14,6 +14,9 @@ import {
   getTopHabits 
 } from '@/lib/analytics-utils';
 import { InsightCard } from '../analytics/InsightCard';
+import { StreakMilestoneTimeline } from '../analytics/StreakMilestoneTimeline';
+import { AchievementProgress } from '../analytics/AchievementProgress';
+import { ACHIEVEMENT_DEFINITIONS } from '@/lib/gamification/achievement-definitions';
 
 interface AnalyticsViewProps {
   habits: any[];
@@ -185,6 +188,46 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
             </CardContent>
           </Card>
         )}
+
+        {/* Rewards & Achievements Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5" />
+              Rewards & Achievements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Streak Milestones */}
+            <div>
+              <h4 className="text-sm font-semibold mb-4">🔥 Streak Milestones</h4>
+              <StreakMilestoneTimeline currentStreak={analytics.currentStreak} />
+            </div>
+
+            {/* Achievement Progress */}
+            <div>
+              <h4 className="text-sm font-semibold mb-4">📊 Achievement Progress</h4>
+              <AchievementProgress
+                items={[
+                  // Mock data - in real app, calculate from user data
+                  {
+                    achievement: ACHIEVEMENT_DEFINITIONS[0],
+                    progress: Math.min(100, (analytics.currentStreak / 7) * 100),
+                    currentValue: analytics.currentStreak,
+                    targetValue: 7,
+                  },
+                  {
+                    achievement: ACHIEVEMENT_DEFINITIONS[6],
+                    progress: Math.min(100, (analytics.totalCompletions / 50) * 100),
+                    currentValue: analytics.totalCompletions,
+                    targetValue: 50,
+                  },
+                ].filter(item => item.progress >= 40 && item.progress < 100)}
+                maxItems={5}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
