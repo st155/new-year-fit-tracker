@@ -42,7 +42,10 @@ export const SettingsPanel = ({
             min={2}
             max={24}
             step={1}
-            className="w-full"
+            className="w-full [&_[role=slider]]:border-blue-500 [&_[role=slider]]:shadow-blue-500/20"
+            style={{
+              '--slider-gradient': 'linear-gradient(to right, rgb(59, 130, 246), rgb(147, 51, 234))'
+            } as any}
           />
         </div>
       </Card>
@@ -61,7 +64,10 @@ export const SettingsPanel = ({
             min={0}
             max={3}
             step={1}
-            className="w-full"
+            className="w-full [&_[role=slider]]:border-orange-500 [&_[role=slider]]:shadow-orange-500/20"
+            style={{
+              '--slider-gradient': 'linear-gradient(to right, rgb(34, 197, 94), rgb(251, 146, 60), rgb(239, 68, 68))'
+            } as any}
           />
           <div className="flex justify-between text-sm text-foreground/70">
             {DIFFICULTY_LABELS.map((label, idx) => (
@@ -88,7 +94,10 @@ export const SettingsPanel = ({
             min={1}
             max={maxDisciplines}
             step={1}
-            className="w-full"
+            className="w-full [&_[role=slider]]:border-purple-500 [&_[role=slider]]:shadow-purple-500/20"
+            style={{
+              '--slider-gradient': 'linear-gradient(to right, rgb(168, 85, 247), rgb(236, 72, 153))'
+            } as any}
           />
         </div>
       </Card>
@@ -107,7 +116,10 @@ export const SettingsPanel = ({
             min={0}
             max={3}
             step={1}
-            className="w-full"
+            className="w-full [&_[role=slider]]:border-amber-500 [&_[role=slider]]:shadow-amber-500/20"
+            style={{
+              '--slider-gradient': 'linear-gradient(to right, rgb(56, 189, 248), rgb(251, 191, 36), rgb(234, 179, 8))'
+            } as any}
           />
           <div className="flex justify-between text-sm text-foreground/70">
             {AUDIENCE_LABELS.map((label, idx) => (

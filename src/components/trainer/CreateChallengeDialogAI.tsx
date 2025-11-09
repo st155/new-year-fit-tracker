@@ -226,6 +226,7 @@ export const CreateChallengeDialogAI = ({
                     category={selectedPreset.category}
                     duration={duration}
                     disciplines={generateDisciplines()}
+                    audienceLevel={targetAudience}
                   />
                 </div>
               </div>

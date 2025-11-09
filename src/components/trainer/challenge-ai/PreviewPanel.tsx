@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
+import { AUDIENCE_LEVEL_LABELS } from '@/lib/benchmark-standards';
 
 interface PreviewPanelProps {
   name: string;
@@ -13,6 +14,7 @@ interface PreviewPanelProps {
     benchmarkValue: number;
     unit: string;
   }>;
+  audienceLevel: number;
 }
 
 export const PreviewPanel = ({
@@ -21,7 +23,10 @@ export const PreviewPanel = ({
   category,
   duration,
   disciplines,
+  audienceLevel,
 }: PreviewPanelProps) => {
+  const levelLabels = ['Beginner', 'Intermediate', 'Advanced', 'Elite'];
+  const levelName = levelLabels[audienceLevel] || 'Unknown';
   return (
     <Card className="p-6 bg-card border-2 border-primary/50 shadow-xl">
       <div className="space-y-4">
@@ -56,9 +61,14 @@ export const PreviewPanel = ({
                   className="flex justify-between items-center p-3 rounded-lg bg-primary/10 border border-primary/20"
                 >
                   <span className="text-sm font-medium text-foreground">{discipline.name}</span>
-                  <span className="text-sm font-bold text-primary">
-                    {discipline.benchmarkValue} {discipline.unit}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-primary">
+                      {discipline.benchmarkValue} {discipline.unit}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({levelName})
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
