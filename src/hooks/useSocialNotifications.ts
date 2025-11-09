@@ -14,6 +14,30 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export function useSocialNotifications(enabled = true) {
   const { user } = useAuth();
+  const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
+
+  // Load notification preferences
+  useEffect(() => {
+    if (!user) return;
+
+    const loadPreferences = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('notification_preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (data?.notification_preferences) {
+          setPreferences({ ...DEFAULT_PREFERENCES, ...data.notification_preferences });
+        }
+      } catch (error) {
+        console.error('Error loading notification preferences:', error);
+      }
+    };
+
+    loadPreferences();
+  }, [user]);
   
   // Enable real-time subscription
   useHabitNotificationsRealtime(enabled && !!user?.id);
@@ -48,6 +72,7 @@ export function useSocialNotifications(enabled = true) {
               break;
               
             case 'reaction':
+              if (!preferences.reactions) return;
               toast('❤️ Новая реакция!', {
                 description: notification.message,
                 duration: 3000,
@@ -55,6 +80,7 @@ export function useSocialNotifications(enabled = true) {
               break;
               
             case 'team_invite':
+              if (!preferences.team_invites) return;
               toast.success('👥 Приглашение в команду!', {
                 description: notification.message,
                 duration: 5000,
@@ -69,6 +95,7 @@ export function useSocialNotifications(enabled = true) {
               break;
               
             case 'achievement':
+              if (!preferences.achievements) return;
               toast.success('🏆 Новое достижение!', {
                 description: notification.message,
                 duration: 5000,
@@ -76,6 +103,7 @@ export function useSocialNotifications(enabled = true) {
               break;
               
             case 'milestone':
+              if (!preferences.achievements) return;
               toast('⭐ Важная веха!', {
                 description: notification.message,
                 duration: 4000,
@@ -83,6 +111,7 @@ export function useSocialNotifications(enabled = true) {
               break;
               
             case 'streak':
+              if (!preferences.achievements) return;
               toast.success('🔥 Новая серия!', {
                 description: notification.message,
                 duration: 4000,

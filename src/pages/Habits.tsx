@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -44,6 +44,20 @@ export default function Habits() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
   const [dateOffset, setDateOffset] = useState(0);
   const [detailView, setDetailView] = useState<ViewMode>('cards');
+  const [showMigrationBanner, setShowMigrationBanner] = useState(true);
+
+  // Load banner preference from localStorage
+  useEffect(() => {
+    const dismissed = localStorage.getItem('habits_legacy_banner_dismissed');
+    if (dismissed === 'true') {
+      setShowMigrationBanner(false);
+    }
+  }, []);
+
+  const handleDismissBanner = () => {
+    localStorage.setItem('habits_legacy_banner_dismissed', 'true');
+    setShowMigrationBanner(false);
+  };
 
   // Group habits by category
   const habitsByCategory = {
@@ -145,25 +159,34 @@ export default function Habits() {
 
   return (
     <AnimatedPage className="container py-6 space-y-8">
-      {/* Habits V3 Banner */}
-      <Alert className="border-primary/50 bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <AlertTitle className="text-lg">Новое! Привычки 3.0 доступны</AlertTitle>
-        <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-2">
-          <span className="flex-1">
-            Попробуйте улучшенную версию с умной организацией по времени суток, 
-            свайп-жестами и системой XP/уровней
-          </span>
-          <Button 
-            size="sm" 
-            onClick={() => navigate('/habits-v3')}
-            className="gap-2 shrink-0"
-          >
-            <Sparkles className="h-4 w-4" />
-            Попробовать
-          </Button>
-        </AlertDescription>
-      </Alert>
+      {/* Enhanced Migration Banner */}
+      {showMigrationBanner && (
+        <Alert className="border-primary/30 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <AlertTitle className="text-xl font-bold">Доступна новая версия Habits 3.0! 🎉</AlertTitle>
+          <AlertDescription>
+            <p className="mb-3 text-foreground">
+              Улучшенная система отслеживания с новыми возможностями:
+            </p>
+            <ul className="list-disc list-inside space-y-1 mb-4 text-sm text-muted-foreground">
+              <li>🎯 Умная организация по времени суток</li>
+              <li>⚡ Быстрые свайп-жесты для отметки</li>
+              <li>✨ Система уровней и XP за выполнение</li>
+              <li>👥 Социальные функции и командные челленджи</li>
+              <li>📊 Улучшенная аналитика и инсайты</li>
+            </ul>
+            <div className="flex gap-3 flex-wrap">
+              <Button onClick={() => navigate('/habits-v3')} className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Попробовать Habits 3.0
+              </Button>
+              <Button variant="ghost" onClick={handleDismissBanner}>
+                Напомнить позже
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex items-center justify-between">
         <div>

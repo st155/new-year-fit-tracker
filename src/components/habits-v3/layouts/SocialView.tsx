@@ -6,9 +6,11 @@ import { FeedEvent } from '../social/FeedEvent';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Users, RefreshCw } from 'lucide-react';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function SocialView() {
   const { user } = useAuth();
@@ -61,13 +63,36 @@ export function SocialView() {
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="h-24 animate-pulse" />
+                  <Skeleton key={i} className="h-24" />
                 ))}
               </div>
             ) : feedEvents && feedEvents.length > 0 ? (
-              feedEvents.map((event) => (
-                <FeedEvent key={event.id} event={event} />
-              ))
+              <AnimatePresence mode="popLayout">
+                {feedEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0, 
+                      scale: 1,
+                      transition: {
+                        delay: index * 0.05,
+                        duration: 0.3,
+                        ease: "easeOut"
+                      }
+                    }}
+                    exit={{ 
+                      opacity: 0, 
+                      scale: 0.9,
+                      transition: { duration: 0.2 }
+                    }}
+                    layout
+                  >
+                    <FeedEvent event={event} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             ) : (
               <Card className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -103,13 +128,36 @@ export function SocialView() {
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
-                  <Card key={i} className="h-24 animate-pulse" />
+                  <Skeleton key={i} className="h-24" />
                 ))}
               </div>
             ) : feedEvents && feedEvents.length > 0 ? (
-              feedEvents.map((event) => (
-                <FeedEvent key={event.id} event={event} />
-              ))
+              <AnimatePresence mode="popLayout">
+                {feedEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0, 
+                      scale: 1,
+                      transition: {
+                        delay: index * 0.05,
+                        duration: 0.3,
+                        ease: "easeOut"
+                      }
+                    }}
+                    exit={{ 
+                      opacity: 0, 
+                      scale: 0.9,
+                      transition: { duration: 0.2 }
+                    }}
+                    layout
+                  >
+                    <FeedEvent event={event} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             ) : (
               <Card className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
