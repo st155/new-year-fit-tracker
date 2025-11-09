@@ -156,22 +156,34 @@ export const AUDIENCE_LEVEL_LABELS: Record<number, AudienceLevel> = {
  * @param standard - The benchmark standard to use
  * @param audienceLevel - Target audience level (0-3)
  * @param difficultyLevel - Challenge difficulty (0-3)
+ * @param direction - Direction of metric ('higher', 'lower', 'target')
  * @returns Calculated benchmark value
  */
 export function calculateStandardBenchmark(
   standard: BenchmarkStandard,
   audienceLevel: number,
-  difficultyLevel: number
+  difficultyLevel: number,
+  direction: 'higher' | 'lower' | 'target' = 'higher'
 ): number {
   const levelKey = AUDIENCE_LEVEL_LABELS[audienceLevel];
   const range = standard[levelKey];
   
-  // Difficulty affects where in the range we target
-  // 0 = min, 1 = closer to min, 2 = closer to max, 3 = max
   const rangeSpan = range.max - range.min;
   const difficultyRatio = difficultyLevel / 3; // 0.0 to 1.0
   
-  const value = range.min + (rangeSpan * difficultyRatio);
+  let value: number;
+  
+  if (direction === 'lower') {
+    // For "lower is better": higher difficulty = lower value (closer to min)
+    // Invert logic: start from max and move to min
+    value = range.max - (rangeSpan * difficultyRatio);
+  } else if (direction === 'target') {
+    // For "target": always use target value regardless of difficulty
+    value = range.target;
+  } else {
+    // For "higher is better": higher difficulty = higher value (closer to max)
+    value = range.min + (rangeSpan * difficultyRatio);
+  }
   
   return Math.round(value * 10) / 10;
 }

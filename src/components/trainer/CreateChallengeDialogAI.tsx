@@ -54,7 +54,8 @@ export const CreateChallengeDialogAI = ({
       return calculateStandardBenchmark(
         BENCHMARK_STANDARDS[disc.benchmarkKey],
         audienceLevel,
-        difficultyLevel
+        difficultyLevel,
+        disc.direction
       );
     }
     
