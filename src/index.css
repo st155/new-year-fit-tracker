@@ -1027,15 +1027,44 @@ All colors MUST be HSL.
   .habit-card:focus-visible,
   [role="article"]:focus-visible {
     @apply outline-none ring-2 ring-offset-2;
-    ring-color: hsl(var(--primary));
-    ring-offset-color: hsl(var(--background));
+    --tw-ring-color: hsl(var(--primary));
+    --tw-ring-offset-color: hsl(var(--background));
   }
 
   button:focus-visible,
   a:focus-visible {
     @apply outline-none ring-2 ring-offset-2;
-    ring-color: hsl(var(--primary));
-    ring-offset-color: hsl(var(--background));
+    --tw-ring-color: hsl(var(--primary));
+    --tw-ring-offset-color: hsl(var(--background));
+  }
+  
+  /* Text contrast utilities for accessibility */
+  .text-contrast {
+    color: hsl(var(--foreground));
+  }
+  
+  .text-contrast-muted {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .gradient-text-safe {
+    background: linear-gradient(to right, 
+      hsl(var(--foreground)) 0%, 
+      hsl(var(--primary)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Dark mode specific adjustments */
+  .dark .habit-card-glow {
+    opacity: 0.6;
+  }
+  
+  .dark .glass-card {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
   }
 }
 

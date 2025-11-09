@@ -62,6 +62,39 @@ export function HabitCardV3({
     onTap?.();
   }, [onTap]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (!habit.completed_today) {
+          haptics.complete();
+          celebrate();
+          onComplete?.();
+        }
+        break;
+      case 'e':
+      case 'E':
+        e.preventDefault();
+        onTap?.();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        if (!habit.completed_today) {
+          haptics.complete();
+          celebrate();
+          onSwipeRight?.();
+          onComplete?.();
+        }
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        haptics.swipe();
+        onSwipeLeft?.();
+        break;
+    }
+  }, [habit.completed_today, onComplete, onTap, onSwipeRight, onSwipeLeft, celebrate]);
+
   return (
     <>
       <motion.div
@@ -78,9 +111,24 @@ export function HabitCardV3({
         whileTap={{ scale: 0.98 }}
         className={cn("relative touch-none", className)}
         role="article"
-        aria-label={`Привычка: ${habit.name}`}
+        aria-label={`Привычка: ${habit.name}. ${
+          habit.completed_today 
+            ? 'Завершена' 
+            : `Не завершена. Streak: ${(habit as any).current_streak || (habit as any).streak || 0} дней`
+        }`}
+        aria-describedby={`habit-desc-${habit.id}`}
         tabIndex={0}
+        onKeyDown={handleKeyDown}
       >
+        {/* Hidden description for screen readers */}
+        <div id={`habit-desc-${habit.id}`} className="sr-only">
+          {habit.category && `Категория: ${habit.category}. `}
+          {habit.xp_reward && `Награда: ${habit.xp_reward} XP. `}
+          {habit.estimated_duration_minutes && 
+            `Длительность: ${formatDuration(habit.estimated_duration_minutes)}. `}
+          Нажмите Enter или пробел для завершения, E для редактирования, 
+          стрелки влево/вправо для жестов.
+        </div>
         {/* Swipe indicators */}
         <motion.div
           className="absolute left-4 top-1/2 -translate-y-1/2 z-0"

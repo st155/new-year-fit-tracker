@@ -1,15 +1,28 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
 import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SmartView, CompactListView, FocusMode } from '@/components/habits-v3/layouts';
+import { SmartView } from '@/components/habits-v3/layouts';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
+import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announcement';
+
+// Lazy load heavy components
+const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
+const FocusMode = lazy(() => import('@/components/habits-v3/layouts/FocusMode').then(m => ({ default: m.FocusMode })));
+
+const LoadingSkeleton = () => (
+  <div className="space-y-4">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <Skeleton key={i} className="h-32 w-full" />
+    ))}
+  </div>
+);
 
 export default function HabitsV3() {
   const { user } = useAuth();
@@ -20,6 +33,7 @@ export default function HabitsV3() {
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('habitsV3_onboarding_completed');
   });
+  const [announcement, setAnnouncement] = useState('');
   
   const handleOnboardingComplete = () => {
     localStorage.setItem('habitsV3_onboarding_completed', 'true');
@@ -38,6 +52,13 @@ export default function HabitsV3() {
 
     const result = await completeHabit(habitId, habit);
     if (result?.success) {
+      const habitData = habit as any;
+      const streak = habitData.current_streak || habitData.streak || 0;
+      setAnnouncement(
+        `Привычка "${habit.name}" выполнена. ` +
+        `Получено ${result.xpEarned || habit.xp_reward || 10} XP. ` +
+        `${streak > 1 ? `Streak: ${streak} дней!` : ''}`
+      );
       await refetch();
     }
   };
@@ -68,6 +89,7 @@ export default function HabitsV3() {
         open={showOnboarding}
         onComplete={handleOnboardingComplete}
       />
+      <ScreenReaderAnnouncement message={announcement} />
       
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -118,19 +140,23 @@ export default function HabitsV3() {
           </TabsContent>
 
           <TabsContent value="compact">
-            <CompactListView
-              habits={habits}
-              onHabitComplete={handleHabitComplete}
-              onHabitTap={handleHabitTap}
-            />
+            <Suspense fallback={<LoadingSkeleton />}>
+              <CompactListView
+                habits={habits}
+                onHabitComplete={handleHabitComplete}
+                onHabitTap={handleHabitTap}
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="focus">
-            <FocusMode
-              habits={habits.filter(h => !h.completed_today)}
-              onHabitComplete={handleHabitComplete}
-              onExit={() => navigate('/habits-v3')}
-            />
+            <Suspense fallback={<LoadingSkeleton />}>
+              <FocusMode
+                habits={habits.filter(h => !h.completed_today)}
+                onHabitComplete={handleHabitComplete}
+                onExit={() => navigate('/habits-v3')}
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="timeline">
