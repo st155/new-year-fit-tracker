@@ -39,17 +39,66 @@ export default function Goals() {
       const challengeGoals = goals.filter(g => !g.is_personal && g.challenge_id);
       if (challengeGoals.length === 0) return;
 
-      const { data: baselines } = await supabase
-        .from('goal_baselines')
-        .select('goal_id')
-        .eq('user_id', user.id);
+      const goalIds = challengeGoals.map(g => g.id);
 
-      const baselineGoalIds = new Set(baselines?.map(b => b.goal_id) || []);
-      const needsBaseline = challengeGoals.filter(g => !baselineGoalIds.has(g.id));
+      // Проверяем 3 источника данных параллельно
+      const [baselinesResult, measurementsResult, currentValuesResult] = await Promise.all([
+        supabase
+          .from('goal_baselines')
+          .select('goal_id')
+          .eq('user_id', user.id)
+          .in('goal_id', goalIds),
+        
+        supabase
+          .from('measurements')
+          .select('goal_id')
+          .eq('user_id', user.id)
+          .in('goal_id', goalIds),
+        
+        supabase
+          .from('goal_current_values')
+          .select('goal_id, current_value')
+          .in('goal_id', goalIds)
+      ]);
 
+      // Собираем ID целей, которые УЖЕ имеют данные
+      const goalsWithData = new Set<string>();
+      
+      // 1. Из goal_baselines
+      baselinesResult.data?.forEach(b => goalsWithData.add(b.goal_id));
+      
+      // 2. Из measurements
+      measurementsResult.data?.forEach(m => goalsWithData.add(m.goal_id));
+      
+      // 3. Из unified_metrics (через goal_current_values)
+      currentValuesResult.data?.forEach(cv => {
+        if (cv.current_value && cv.current_value > 0) {
+          goalsWithData.add(cv.goal_id);
+        }
+      });
+
+      // Фильтруем цели, которые РЕАЛЬНО не имеют никаких данных
+      const needsBaseline = challengeGoals.filter(g => !goalsWithData.has(g.id));
+
+      // Логирование для отладки
+      if (import.meta.env.DEV) {
+        console.log('🔍 [FirstMeasurementDialog] Check results:', {
+          totalChallengeGoals: challengeGoals.length,
+          goalsWithBaselines: baselinesResult.data?.length || 0,
+          goalsWithMeasurements: measurementsResult.data?.length || 0,
+          goalsWithUnifiedMetrics: currentValuesResult.data?.filter(cv => cv.current_value > 0).length || 0,
+          goalsWithAnyData: goalsWithData.size,
+          needsBaseline: needsBaseline.length,
+          needsBaselineNames: needsBaseline.map(g => g.goal_name)
+        });
+      }
+
+      // Показываем диалог ТОЛЬКО если есть цели без данных
       if (needsBaseline.length > 0) {
         setGoalsNeedingBaseline(needsBaseline);
         setShowFirstMeasurement(true);
+      } else {
+        setShowFirstMeasurement(false);
       }
     };
 
