@@ -64,12 +64,73 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number, challeng
     .select('user_id, username, full_name, avatar_url')
     .in('user_id', userIds);
 
+  // Get weekly metrics from unified_metrics
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+  const { data: weeklyMetrics } = await supabase
+    .from('unified_metrics')
+    .select('user_id, metric_name, value, measurement_date')
+    .in('user_id', userIds)
+    .in('metric_name', ['Steps', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Sleep Efficiency'])
+    .gte('measurement_date', sevenDaysAgoStr);
+
   console.debug('[useLeaderboardQuery] Fallback returned:', pointsData.length, 'entries');
+
+  // Calculate weekly averages for each user
+  const metricsMap = new Map<string, {
+    avgSleep: number;
+    avgRecovery: number;
+    avgStrain: number;
+    avgSleepEfficiency: number;
+    steps: number;
+    activeDays: number;
+  }>();
+
+  if (weeklyMetrics) {
+    userIds.forEach(uid => {
+      const userMetrics = weeklyMetrics.filter(m => m.user_id === uid);
+      if (userMetrics.length > 0) {
+        const sleepMetrics = userMetrics.filter(m => m.metric_name === 'Sleep Duration');
+        const recoveryMetrics = userMetrics.filter(m => m.metric_name === 'Recovery Score');
+        const strainMetrics = userMetrics.filter(m => m.metric_name === 'Day Strain');
+        const stepMetrics = userMetrics.filter(m => m.metric_name === 'Steps');
+        const sleepEffMetrics = userMetrics.filter(m => m.metric_name === 'Sleep Efficiency');
+        
+        const avgSleep = sleepMetrics.length > 0 
+          ? sleepMetrics.reduce((sum, m) => sum + (m.value || 0), 0) / sleepMetrics.length 
+          : 0;
+        const avgRecovery = recoveryMetrics.length > 0 
+          ? recoveryMetrics.reduce((sum, m) => sum + (m.value || 0), 0) / recoveryMetrics.length 
+          : 0;
+        const avgStrain = strainMetrics.length > 0 
+          ? strainMetrics.reduce((sum, m) => sum + (m.value || 0), 0) / strainMetrics.length 
+          : 0;
+        const avgSleepEfficiency = sleepEffMetrics.length > 0 
+          ? sleepEffMetrics.reduce((sum, m) => sum + (m.value || 0), 0) / sleepEffMetrics.length 
+          : 0;
+        const steps = stepMetrics.reduce((sum, m) => sum + (m.value || 0), 0);
+        const activeDays = new Set(userMetrics.map(m => m.measurement_date)).size;
+        
+        metricsMap.set(uid, {
+          avgSleep: Math.round(avgSleep * 10) / 10,
+          avgRecovery: Math.round(avgRecovery),
+          avgStrain: Math.round(avgStrain * 10) / 10,
+          avgSleepEfficiency: Math.round(avgSleepEfficiency),
+          steps,
+          activeDays
+        });
+      }
+    });
+  }
 
   const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
   return pointsData.map((entry, index) => {
     const profile = profileMap.get(entry.user_id);
+    const metrics = metricsMap.get(entry.user_id);
+    
     const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
       userId: entry.user_id,
       username: profile?.username || profile?.full_name || 'Unknown',
@@ -77,24 +138,23 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number, challeng
       avatarUrl: profile?.avatar_url || null,
       totalPoints: entry.points || 0,
       streakDays: entry.streak_days || 0,
-      activeDays: 0,
+      activeDays: metrics?.activeDays || 0,
       lastActivityDate: entry.last_activity_date,
       isUser: entry.user_id === userId,
-      // Minimal data for fallback
-      totalSteps: null,
-      avgStrain: null,
-      avgSleep: null,
-      avgSleepEfficiency: null,
+      totalSteps: metrics?.steps || null,
+      avgStrain: metrics?.avgStrain || null,
+      avgSleep: metrics?.avgSleep || null,
+      avgSleepEfficiency: metrics?.avgSleepEfficiency || null,
       avgRestingHr: null,
       avgHrv: null,
       totalActiveCalories: null,
-      steps_last_7d: null,
-      avg_strain_last_7d: null,
-      avg_sleep_last_7d: null,
-      avg_recovery_last_7d: null,
+      steps_last_7d: metrics?.steps || null,
+      avg_strain_last_7d: metrics?.avgStrain || null,
+      avg_sleep_last_7d: metrics?.avgSleep || null,
+      avg_recovery_last_7d: metrics?.avgRecovery || null,
       workouts_last_7d: null,
       weekly_consistency: null,
-      avgRecovery: null,
+      avgRecovery: metrics?.avgRecovery || null,
       performancePoints: 0,
       recoveryPoints: 0,
       synergyPoints: 0,
@@ -160,7 +220,15 @@ export function useLeaderboardQuery(
           console.log('[useLeaderboardQuery] After challenge filter:', { 
             original: rpcData.length, 
             filtered: filteredData.length,
-            challengeId 
+            challengeId,
+            sampleData: filteredData.slice(0, 2).map((e: any) => ({
+              username: e.full_name,
+              days_with_data: e.days_with_data,
+              avg_recovery_last_7d: e.avg_recovery_last_7d,
+              avg_sleep_last_7d: e.avg_sleep_last_7d,
+              steps_last_7d: e.steps_last_7d,
+              streak_days: e.streak_days
+            }))
           });
 
           if (filteredData.length === 0) {
@@ -188,9 +256,9 @@ export function useLeaderboardQuery(
               activeDays: entry.days_with_data || entry.active_days || 0,
               lastActivityDate: entry.last_activity_date,
               streakDays: entry.streak_days || 0,
-              avgRecovery: Math.round(entry.avg_recovery || 0),
-              avgStrain: Math.round((entry.avg_strain || 0) * 10) / 10,
-              avgSleep: Math.round((entry.avg_sleep || 0) * 10) / 10,
+              avgRecovery: Math.round(entry.avg_recovery_last_7d || entry.avg_recovery || 0),
+              avgStrain: Math.round((entry.avg_strain_last_7d || entry.avg_strain || 0) * 10) / 10,
+              avgSleep: Math.round((entry.avg_sleep_last_7d || entry.avg_sleep || 0) * 10) / 10,
               avgSleepEfficiency: Math.round(entry.avg_sleep_efficiency || 0),
               avgRestingHr: Math.round(entry.avg_resting_hr || 0),
               avgHrv: Math.round(entry.avg_hrv || 0),
@@ -270,7 +338,7 @@ export function useLeaderboardQuery(
       return fallbackData;
 
     },
-    enabled: !!userId && !!options?.challengeId,
+    enabled: !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
