@@ -30,6 +30,7 @@ interface HabitCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   linkedGoalId?: string;
   prefilledName?: string;
+  onHabitCreated?: () => void;
 }
 
 const categories = [
@@ -54,7 +55,7 @@ const habitTypes = [
   { value: "daily_measurement", label: "Daily Measurement", description: "Track daily values (e.g., pages read)", icon: "📊" },
 ];
 
-export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName }: HabitCreateDialogProps) {
+export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName, onHabitCreated }: HabitCreateDialogProps) {
   const { user } = useAuth();
   const { personalGoals } = useGoals(user?.id);
   const [name, setName] = useState(prefilledName || "");
@@ -155,8 +156,6 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
       toast.success("Привычка создана! 🎉");
       
-      onOpenChange(false);
-      
       // Reset form
       setName("");
       setDescription("");
@@ -168,6 +167,9 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       setMeasurementUnit("");
       setCostPerDay("");
       setSelectedTemplate("");
+      
+      onOpenChange(false);
+      onHabitCreated?.();
     } catch (error) {
       console.error("Error creating habit:", error);
       toast.error("Ошибка при создании привычки");

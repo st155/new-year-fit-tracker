@@ -3,6 +3,7 @@ import { TimeSection } from './TimeSection';
 import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { HabitsProgressSection } from '@/components/habits-v3/sections/HabitsProgressSection';
 
 interface SmartViewProps {
   habits: any[];
@@ -41,6 +42,12 @@ export function SmartView({
         weekStreak={weekStreak}
         totalXP={totalXP}
         level={level}
+      />
+
+      {/* Habits Progress Section */}
+      <HabitsProgressSection 
+        habits={habits}
+        onHabitClick={onHabitTap}
       />
 
       {/* At Risk Habits Alert */}

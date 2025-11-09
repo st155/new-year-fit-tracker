@@ -306,6 +306,7 @@ export default function HabitsV3() {
       <HabitCreateDialog 
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onHabitCreated={refetch}
       />
     </>
   );

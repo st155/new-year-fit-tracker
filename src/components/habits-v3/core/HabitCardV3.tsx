@@ -1,15 +1,17 @@
 import { motion, PanInfo } from 'framer-motion';
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { getTimeBasedTheme, getStateStyles, formatDuration, getDifficultyBadge, TimeOfDay } from '@/lib/habit-utils-v3';
 import { haptics } from '@/lib/haptics';
 import { useHabitCardState } from '@/hooks/useHabitCardState';
 import { HabitCelebration } from '@/components/habits/HabitCelebration';
 import { HabitOptionsMenu } from '@/components/habits/HabitOptionsMenu';
-import { Flame, Calendar, Target } from 'lucide-react';
+import { Flame, Calendar, Target, Clock, Coins } from 'lucide-react';
 import { getHabitIcon } from '@/lib/habit-utils';
+import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from '@/lib/duration-utils';
 
 interface HabitCardV3Props {
   habit: any;
@@ -41,11 +43,35 @@ export function HabitCardV3({
   const { state, expanded, showCelebration, celebrate } = useHabitCardState(habit);
   const [dragX, setDragX] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
 
   const theme = getTimeBasedTheme(habit.time_of_day as TimeOfDay);
   const stateStyles = getStateStyles(state);
   const difficulty = getDifficultyBadge(habit.difficulty_level);
   const HabitIcon = getHabitIcon(habit);
+
+  // Calculate elapsed time for duration_counter
+  useEffect(() => {
+    if (habit.habit_type === 'duration_counter' && habit.current_attempt?.start_date) {
+      const updateElapsed = () => {
+        const elapsed = calculateElapsedTime(habit.current_attempt.start_date);
+        setElapsedTime(elapsed);
+      };
+      
+      updateElapsed();
+      const interval = setInterval(updateElapsed, 60000); // Update every minute
+      
+      return () => clearInterval(interval);
+    } else {
+      setElapsedTime(null);
+    }
+  }, [habit.habit_type, habit.current_attempt?.start_date]);
+
+  // Calculate milestone progress
+  const milestone = elapsedTime ? getMilestoneProgress(elapsedTime.days) : null;
+  const moneySaved = elapsedTime && habit.custom_settings?.cost_per_day 
+    ? calculateMoneySaved(elapsedTime.days, habit.custom_settings.cost_per_day)
+    : null;
 
   const handleDragEnd = useCallback((event: any, info: PanInfo) => {
     const swipeThreshold = 100;
@@ -211,7 +237,41 @@ export function HabitCardV3({
           </CardHeader>
 
           <CardContent className="p-0">
-            {!compact && (
+            {/* Duration Counter Timer (large) */}
+            {!compact && habit.habit_type === 'duration_counter' && elapsedTime && (
+              <div className="mt-3 space-y-2">
+                {/* Large timer display */}
+                <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <div className="text-2xl font-bold text-primary">
+                    {formatElapsedTime(elapsedTime.days, elapsedTime.hours, elapsedTime.minutes)}
+                  </div>
+                </div>
+
+                {/* Milestone progress */}
+                {milestone && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">До {milestone.label}</span>
+                      <span className="font-medium">{Math.round(milestone.progress)}%</span>
+                    </div>
+                    <Progress value={milestone.progress} className="h-2" />
+                  </div>
+                )}
+
+                {/* Money saved */}
+                {moneySaved !== null && moneySaved > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Coins className="w-4 h-4 text-amber-500" />
+                    <span className="text-muted-foreground">Сэкономлено:</span>
+                    <span className="font-semibold text-amber-500">{moneySaved.toLocaleString()}₽</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Regular habit info */}
+            {!compact && habit.habit_type !== 'duration_counter' && (
               <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
                 {/* Streak */}
                 {habit.streak > 0 && (
@@ -243,6 +303,22 @@ export function HabitCardV3({
                     <Target className="w-4 h-4 text-amber-500" />
                     <span>+{habit.xp_reward} XP</span>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Duration Counter Badge (compact) */}
+            {habit.habit_type === 'duration_counter' && elapsedTime && (
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {elapsedTime.days} {elapsedTime.days === 1 ? 'день' : 'дней'}
+                </Badge>
+                {moneySaved !== null && moneySaved > 0 && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Coins className="w-3 h-3 text-amber-500" />
+                    {moneySaved.toLocaleString()}₽
+                  </Badge>
                 )}
               </div>
             )}
