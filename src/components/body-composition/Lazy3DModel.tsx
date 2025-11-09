@@ -16,7 +16,7 @@ interface SegmentData {
 }
 
 interface Props {
-  segmentData: SegmentData;
+  segmentData?: SegmentData;
   interactive?: boolean;
   showTooltips?: boolean;
 }
