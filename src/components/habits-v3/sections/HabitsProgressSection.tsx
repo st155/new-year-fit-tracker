@@ -13,11 +13,16 @@ interface HabitsProgressSectionProps {
 export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSectionProps) {
   // Get top 3 habits by completion rate
   const topHabits = useMemo(() => {
+    // Guard against undefined/null habits array
+    if (!Array.isArray(habits) || habits.length === 0) {
+      return [];
+    }
+    
     return habits
-      .filter(h => h.stats?.total_completions > 3) // At least 3 completions
+      .filter(h => h?.stats && h.stats.total_completions > 3)
       .sort((a, b) => {
-        const rateA = a.stats?.completion_rate || 0;
-        const rateB = b.stats?.completion_rate || 0;
+        const rateA = a?.stats?.completion_rate || 0;
+        const rateB = b?.stats?.completion_rate || 0;
         return rateB - rateA;
       })
       .slice(0, 3);

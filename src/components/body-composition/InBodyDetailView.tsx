@@ -61,9 +61,19 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   
   console.log('[InBodyDetailView] Enhanced data:', enhancedData);
 
-  // Early return if no enhanced data
-  if (!enhancedData || !enhancedData.segmental || !enhancedData.overall) {
-    console.warn('[InBodyDetailView] Missing enhanced data, showing skeleton');
+  // Strict validation of enhanced data
+  if (!enhancedData || 
+      !enhancedData.segmental || 
+      !enhancedData.overall ||
+      !enhancedData.hasSufficientData ||
+      enhancedData.segmental.source === 'none') {
+    console.warn('[InBodyDetailView] Insufficient data for display', {
+      hasEnhancedData: !!enhancedData,
+      hasSegmental: !!enhancedData?.segmental,
+      hasOverall: !!enhancedData?.overall,
+      hasSufficientData: enhancedData?.hasSufficientData,
+      segmentalSource: enhancedData?.segmental?.source
+    });
     return <InBodyDetailViewSkeleton />;
   }
   
@@ -75,15 +85,15 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   const bodyFatStatus = getBodyFatStatus(analysis.percent_body_fat);
   const visceralFatStatus = getVisceralFatStatus(analysis.visceral_fat_area);
 
-  // Use enhanced segmental data if viewing current analysis
+  // Use enhanced segmental data if viewing current analysis (with null-safe fallbacks)
   const segmentData = selectedDate && enhancedData?.segmental?.data
     ? enhancedData.segmental.data 
     : {
-        rightArmPercent: analysis.right_arm_percent,
-        leftArmPercent: analysis.left_arm_percent,
-        trunkPercent: analysis.trunk_percent,
-        rightLegPercent: analysis.right_leg_percent,
-        leftLegPercent: analysis.left_leg_percent,
+        rightArmPercent: analysis.right_arm_percent ?? null,
+        leftArmPercent: analysis.left_arm_percent ?? null,
+        trunkPercent: analysis.trunk_percent ?? null,
+        rightLegPercent: analysis.right_leg_percent ?? null,
+        leftLegPercent: analysis.left_leg_percent ?? null,
       };
 
   const inbodyDates = allAnalyses.map(a => new Date(a.test_date));

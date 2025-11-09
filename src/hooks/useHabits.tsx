@@ -60,6 +60,15 @@ export function useHabits(userId?: string) {
             .eq("user_id", profile.user_id)
             .gte("completed_at", today);
 
+          // Get last 30 days of completions for charts (fallback)
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const { data: allCompletions } = await supabase
+            .from("habit_completions")
+            .select("habit_id, completed_at")
+            .eq("user_id", profile.user_id)
+            .gte("completed_at", thirtyDaysAgo.toISOString());
+
           const { data: measurements } = await supabase
             .from("habit_measurements")
             .select("*")
@@ -100,6 +109,7 @@ export function useHabits(userId?: string) {
               ...habit,
               completed_today: completedToday || false,
               stats: habitStats || null,
+              completions: allCompletions?.filter(c => c.habit_id === habit.id) || [],
               ...customData,
             };
           });
@@ -124,6 +134,15 @@ export function useHabits(userId?: string) {
         .select("habit_id, completed_at")
         .eq("user_id", userId)
         .gte("completed_at", today);
+
+      // Get last 30 days of completions for charts
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const { data: allCompletions } = await supabase
+        .from("habit_completions")
+        .select("habit_id, completed_at")
+        .eq("user_id", userId)
+        .gte("completed_at", thirtyDaysAgo.toISOString());
 
       // Get measurements for numeric and daily habits
       const { data: measurements } = await supabase
@@ -170,6 +189,7 @@ export function useHabits(userId?: string) {
           ...habit,
           completed_today: completedToday || false,
           stats: habitStats || null,
+          completions: allCompletions?.filter(c => c.habit_id === habit.id) || [],
           ...customData,
         };
       });

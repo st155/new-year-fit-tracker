@@ -10,6 +10,9 @@ interface HabitMiniChartProps {
 }
 
 export function HabitMiniChart({ completions, days = 7, className }: HabitMiniChartProps) {
+  // Null-safe guard against undefined/null completions
+  const safeCompletions = Array.isArray(completions) ? completions : [];
+  
   const chartData = useMemo(() => {
     const today = startOfDay(new Date());
     const data = [];
@@ -17,8 +20,8 @@ export function HabitMiniChart({ completions, days = 7, className }: HabitMiniCh
     for (let i = days - 1; i >= 0; i--) {
       const date = subDays(today, i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      const hasCompletion = completions.some(c => 
-        format(new Date(c.completed_at), 'yyyy-MM-dd') === dateStr
+      const hasCompletion = safeCompletions.some(c => 
+        c?.completed_at && format(new Date(c.completed_at), 'yyyy-MM-dd') === dateStr
       );
       
       data.push({
@@ -29,7 +32,7 @@ export function HabitMiniChart({ completions, days = 7, className }: HabitMiniCh
     }
     
     return data;
-  }, [completions, days]);
+  }, [safeCompletions, days]);
 
   const completionRate = useMemo(() => {
     const completed = chartData.filter(d => d.completed).length;
