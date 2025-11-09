@@ -52,6 +52,8 @@ import PrivacyPolicySync from "@/pages/PrivacyPolicy";
 import HealthSync from "@/pages/Health";
 import NotFoundSync from "@/pages/NotFound";
 import WithingsDebugSync from "@/pages/WithingsDebug";
+import HabitTeamsSync from "@/pages/HabitTeams";
+import HabitTeamDetailSync from "@/pages/HabitTeamDetail";
 import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
@@ -83,6 +85,8 @@ const Health = lazySafe(HealthSync, () => import("@/pages/Health"));
 const NotFound = lazySafe(NotFoundSync, () => import("@/pages/NotFound"));
 const WithingsDebug = lazySafe(WithingsDebugSync, () => import("@/pages/WithingsDebug"));
 const MetricDetail = lazySafe(MetricDetailSync, () => import("@/pages/MetricDetail"));
+const HabitTeams = lazySafe(HabitTeamsSync, () => import("@/pages/HabitTeams"));
+const HabitTeamDetail = lazySafe(HabitTeamDetailSync, () => import("@/pages/HabitTeamDetail"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -190,6 +194,16 @@ export const AppRoutes = () => {
             <ModernAppLayout>
               <HabitDetail />
             </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/habits-v3/teams" element={
+          <ProtectedRoute>
+            <HabitTeams />
+          </ProtectedRoute>
+        } />
+        <Route path="/habits-v3/teams/:id" element={
+          <ProtectedRoute>
+            <HabitTeamDetail />
           </ProtectedRoute>
         } />
         <Route path="/feed" element={

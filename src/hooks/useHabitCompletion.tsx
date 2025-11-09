@@ -139,6 +139,26 @@ export function useHabitCompletion() {
       const newTotalXP = oldTotalXP + xpEarned;
       const newLevel = calculateLevel(newTotalXP);
 
+      // Create feed event for habit completion
+      try {
+        await supabase
+          .from('habit_feed_events' as any)
+          .insert({
+            user_id: user.id,
+            habit_id: habitId,
+            event_type: newStreak >= 7 ? 'streak_milestone' : 'habit_completion',
+            event_data: {
+              habit_name: habit.name,
+              habit_icon: habit.icon,
+              streak: newStreak,
+              xp_earned: xpEarned,
+            },
+            visibility: 'public',
+          });
+      } catch (feedError) {
+        console.error('Error creating feed event:', feedError);
+      }
+
       // 5. Check for new achievements
       const checkParams: AchievementCheckParams = {
         userId: user.id,

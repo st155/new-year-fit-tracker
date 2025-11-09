@@ -7,6 +7,7 @@ import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
+import { SocialView } from '@/components/habits-v3/layouts/SocialView';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,6 +18,7 @@ import { HabitsInsightBanner } from '@/components/habits-v3/HabitsInsightBanner'
 import { LevelProgressBar } from '@/components/habits-v3/gamification/LevelProgressBar';
 import { LevelUpCelebration } from '@/components/habits-v3/gamification/LevelUpCelebration';
 import { AchievementsModal } from '@/components/habits-v3/gamification/AchievementsModal';
+import { NotificationCenter } from '@/components/habits-v3/social/NotificationCenter';
 
 // Lazy load heavy components
 const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
@@ -124,6 +126,7 @@ export default function HabitsV3() {
             <h1 className="text-3xl font-bold">Привычки 3.0</h1>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationCenter />
             <Button variant="outline" size="icon" onClick={() => setShowAchievements(true)}>
               <Trophy className="w-5 h-5" />
             </Button>
@@ -160,21 +163,24 @@ export default function HabitsV3() {
 
         {/* Tabs */}
         <Tabs defaultValue="smart" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="smart" className="text-xs sm:text-sm">
-              🧠 Умный вид
+              🧠 Умный
             </TabsTrigger>
             <TabsTrigger value="compact" className="text-xs sm:text-sm">
               📋 Список
+            </TabsTrigger>
+            <TabsTrigger value="social" className="text-xs sm:text-sm">
+              🤝 Соц
             </TabsTrigger>
             <TabsTrigger value="focus" className="text-xs sm:text-sm hidden lg:block">
               🎯 Фокус
             </TabsTrigger>
             <TabsTrigger value="timeline" className="text-xs sm:text-sm hidden lg:block">
-              ⏰ Таймлайн
+              ⏰ График
             </TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm hidden lg:block">
-              📊 Аналитика
+              📊 Данные
             </TabsTrigger>
           </TabsList>
 
@@ -222,6 +228,10 @@ export default function HabitsV3() {
                 userId={user?.id}
               />
             </Suspense>
+          </TabsContent>
+
+          <TabsContent value="social">
+            <SocialView />
           </TabsContent>
         </Tabs>
       </div>
