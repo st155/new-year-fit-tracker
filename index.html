@@ -158,11 +158,12 @@
         }
       }, 10000);
       
-      // Hide boot loader when React mounts
+      // Hide boot loader when React mounts (immediately, even if showing PageLoader)
       window.addEventListener('DOMContentLoaded', () => {
         const checkMount = setInterval(() => {
           const root = document.getElementById('root');
-          if (root && root.children.length > 0 && window.__react_mounted__) {
+          // Hide as soon as React mounts, regardless of content
+          if (root && window.__react_mounted__) {
             const loader = document.getElementById('boot-loader');
             if (loader) {
               loader.classList.add('hidden');

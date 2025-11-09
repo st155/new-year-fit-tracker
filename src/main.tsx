@@ -656,12 +656,31 @@ async function boot() {
     );
     
     (window as any).__react_mounted__ = true;
+    
+    // Принудительно скрыть boot loader из index.html
+    const bootLoader = document.getElementById('boot-loader');
+    if (bootLoader) {
+      console.log('🧹 [Boot] Removing boot loader from index.html');
+      bootLoader.classList.add('hidden');
+      setTimeout(() => bootLoader.remove(), 300);
+    }
+    
     console.log('✅ [Boot] App rendered successfully');
     console.timeEnd('boot');
     
     // 🔥 Boot watchdog: detect if app fails to render content
     setTimeout(() => {
       const rootEl = document.getElementById('root');
+      const bootLoader = document.getElementById('boot-loader');
+      
+      // Если boot loader всё ещё виден через 3 секунды - принудительно удалить
+      if (bootLoader && !bootLoader.classList.contains('hidden')) {
+        console.error('🚨 [Boot Watchdog] Boot loader still visible after 3s!');
+        bootLoader.classList.add('hidden');
+        setTimeout(() => bootLoader.remove(), 300);
+      }
+      
+      // Проверка контента
       if (!rootEl || rootEl.children.length === 0 || rootEl.textContent?.trim() === '') {
         console.error('🚨 [Boot Watchdog] No content detected after 3 seconds!');
         console.error('Root element:', rootEl);

@@ -65,6 +65,9 @@ export const ROUTE_SMOKE = getUrlParam('smoke') ||
 
 export const SMOKE_MODE = ROUTE_SMOKE;
 
+// Preview окружение: пропустить проверку ролей, сразу показать контент
+export const FORCE_CLIENT_ROLE = isPreview || getUrlParam('force-client');
+
 // Enable safe mode programmatically
 export const enableSafeMode = () => {
   setStorageFlag('SAFE_MODE', true);
@@ -92,6 +95,7 @@ export const getSafeFlagsInfo = () => ({
   LAYOUT_SAFE_MODE,
   ROUTE_SMOKE,
   SMOKE_MODE,
+  FORCE_CLIENT_ROLE,
 });
 
 // Log flags on startup

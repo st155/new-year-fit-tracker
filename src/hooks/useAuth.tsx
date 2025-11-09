@@ -331,7 +331,7 @@ export const useAuth = () => {
       const timeout = setTimeout(() => {
         console.warn('⚠️ [useAuth] Roles loading timeout, forcing default role');
         setForceLoaded(true);
-      }, 3000);
+      }, 2000);
       
       return () => clearTimeout(timeout);
     }
