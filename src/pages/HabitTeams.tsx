@@ -107,15 +107,21 @@ export default function HabitTeams() {
                 />
               ))
             ) : (
-              <Card className="p-8 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">У вас пока нет команд</h3>
-                <p className="text-muted-foreground mb-4">
-                  Создайте свою команду или присоединитесь к существующей
+              <Card className="p-8 text-center bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+                <Users className="h-16 w-16 mx-auto mb-4 text-primary" />
+                <h3 className="text-xl font-bold mb-2">Создайте свою первую команду! 🚀</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Соберите команду единомышленников, соревнуйтесь вместе и достигайте целей быстрее
                 </p>
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  Создать первую команду
-                </Button>
+                <div className="flex flex-col gap-3 max-w-sm mx-auto">
+                  <Button size="lg" onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Создать команду
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    или найдите существующую команду во вкладке "Публичные команды"
+                  </p>
+                </div>
               </Card>
             )}
           </TabsContent>
@@ -146,16 +152,22 @@ export default function HabitTeams() {
                 />
               ))
             ) : (
-              <Card className="p-8 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <Card className="p-8 text-center bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+                <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
                 <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery ? 'Команды не найдены' : 'Нет доступных команд'}
+                  {searchQuery ? 'Команды не найдены' : 'Пока нет публичных команд'}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground mb-4">
                   {searchQuery
-                    ? 'Попробуйте изменить поисковый запрос'
-                    : 'Будьте первым, кто создаст публичную команду!'}
+                    ? 'Попробуйте изменить поисковый запрос или создайте свою команду'
+                    : 'Будьте первым, кто создаст публичную команду и пригласит участников!'}
                 </p>
+                {!searchQuery && (
+                  <Button onClick={() => setShowCreateDialog(true)} variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать публичную команду
+                  </Button>
+                )}
               </Card>
             )}
           </TabsContent>

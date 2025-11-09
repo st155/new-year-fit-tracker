@@ -7,69 +7,64 @@ export function useDeleteHabit() {
 
   const deleteHabit = useMutation({
     mutationFn: async (habitId: string) => {
-      // Delete related data in order
-      const { error: completionsError } = await supabase
-        .from("habit_completions")
-        .delete()
-        .eq("habit_id", habitId);
+      // First, delete all related data in the correct order
+      // 1. Delete feed events
+      await supabase.from('habit_feed_events' as any).delete().eq('habit_id', habitId);
       
-      if (completionsError) throw completionsError;
-
-      const { error: measurementsError } = await supabase
-        .from("habit_measurements")
-        .delete()
-        .eq("habit_id", habitId);
+      // 2. Delete completions
+      await supabase.from('habit_completions').delete().eq('habit_id', habitId);
       
-      if (measurementsError) throw measurementsError;
-
-      const { error: attemptsError } = await supabase
-        .from("habit_attempts")
-        .delete()
-        .eq("habit_id", habitId);
+      // 3. Delete measurements
+      await supabase.from('habit_measurements').delete().eq('habit_id', habitId);
       
-      if (attemptsError) throw attemptsError;
-
-      const { error: statsError } = await supabase
-        .from("habit_stats")
-        .delete()
-        .eq("habit_id", habitId);
+      // 4. Delete attempt history
+      await supabase.from('habit_attempts').delete().eq('habit_id', habitId);
       
-      if (statsError) throw statsError;
+      // 5. Delete stats
+      await supabase.from('habit_stats').delete().eq('habit_id', habitId);
+      
+      // 6. Delete streak history
+      await supabase.from('habit_streak_history').delete().eq('habit_id', habitId);
 
-      // Finally delete the habit itself
-      const { error: habitError } = await supabase
-        .from("habits")
+      // Finally, delete the habit itself
+      const { error } = await supabase
+        .from('habits')
         .delete()
-        .eq("id", habitId);
+        .eq('id', habitId);
 
-      if (habitError) throw habitError;
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["habits"] });
-      toast.success("Привычка удалена навсегда");
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-stats'] });
+      toast.success('Привычка успешно удалена');
     },
     onError: (error) => {
-      console.error("Error deleting habit:", error);
-      toast.error("Ошибка при удалении привычки");
+      console.error('Error deleting habit:', error);
+      toast.error('Не удалось удалить привычку');
     },
   });
 
   const archiveHabit = useMutation({
     mutationFn: async (habitId: string) => {
       const { error } = await supabase
-        .from("habits")
+        .from('habits')
         .update({ is_active: false })
-        .eq("id", habitId);
+        .eq('id', habitId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["habits"] });
-      toast.success("Привычка архивирована");
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
+      toast.success('Привычка архивирована');
     },
     onError: (error) => {
-      console.error("Error archiving habit:", error);
-      toast.error("Ошибка при архивировании");
+      console.error('Error archiving habit:', error);
+      toast.error('Не удалось архивировать привычку');
     },
   });
 

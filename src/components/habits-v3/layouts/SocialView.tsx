@@ -3,17 +3,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHabitFeed } from '@/hooks/useHabitFeed';
 import { useHabitTeams } from '@/hooks/useHabitTeams';
 import { FeedEvent } from '../social/FeedEvent';
+import { SocialOnboarding } from '../social/SocialOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, RefreshCw } from 'lucide-react';
+import { Users, RefreshCw, Plus, Search, Sparkles } from 'lucide-react';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export function SocialView() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'team'>('all');
   const [selectedTeamId, setSelectedTeamId] = useState<string>();
   
@@ -27,6 +30,10 @@ export function SocialView() {
     toast.success('Лента обновлена');
   };
 
+  const hasTeams = myTeams && myTeams.length > 0;
+  const hasEvents = feedEvents && feedEvents.length > 0;
+  const shouldShowOnboarding = !hasEvents && !hasTeams;
+
   if (!user) {
     return (
       <Card className="p-8 text-center">
@@ -39,11 +46,12 @@ export function SocialView() {
     );
   }
 
-  const hasTeams = myTeams && myTeams.length > 0;
-
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="space-y-4">
+        {/* Show onboarding if no events and no teams */}
+        {shouldShowOnboarding && <SocialOnboarding />}
+
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Социальная активность</h2>
           <Button variant="ghost" size="icon" onClick={() => refetch()}>
@@ -94,15 +102,37 @@ export function SocialView() {
                 ))}
               </AnimatePresence>
             ) : (
-              <Card className="p-8 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Пока нет активности</h3>
-                <p className="text-muted-foreground mb-4">
-                  Вступите в команду или добавьте друзей, чтобы видеть их прогресс
-                </p>
-                <Button onClick={() => window.location.href = '/habits-v3/teams'}>
-                  Найти команду
-                </Button>
+              <Card className="p-8 text-center bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="relative mb-4">
+                    <Sparkles className="h-12 w-12 mx-auto text-primary animate-pulse" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">Начните свой путь! 🚀</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Завершайте привычки, чтобы они появлялись в ленте активности. 
+                    Создавайте команды и следите за прогрессом друзей!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <Button 
+                      onClick={() => navigate('/habits-v3/teams')}
+                      variant="default"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Создать команду
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/habits-v3/teams')}
+                      variant="outline"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Найти команду
+                    </Button>
+                  </div>
+                </motion.div>
               </Card>
             )}
           </TabsContent>

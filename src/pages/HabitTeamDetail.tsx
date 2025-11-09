@@ -1,23 +1,28 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitTeams, useTeamMembers, useLeaveTeam } from '@/hooks/useHabitTeams';
 import { useHabitFeed } from '@/hooks/useHabitFeed';
 import { FeedEvent } from '@/components/habits-v3/social/FeedEvent';
+import { AddTeamMemberDialog } from '@/components/habits-v3/social/AddTeamMemberDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Users, LogOut, Crown, Globe, Lock } from 'lucide-react';
+import { ArrowLeft, Users, LogOut, Crown, Globe, Lock, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function HabitTeamDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
 
   const { data: myTeams } = useHabitTeams(user?.id);
-  const { data: members } = useTeamMembers(id);
+  const { data: members, refetch: refetchMembers } = useTeamMembers(id);
   const { data: feedEvents } = useHabitFeed(id);
   const leaveTeam = useLeaveTeam();
 
@@ -25,6 +30,8 @@ export default function HabitTeamDetail() {
   const membersList = members || [];
   const currentMember = membersList?.find((m) => m.user_id === user?.id);
   const isOwner = currentMember?.role === 'owner';
+  const currentMemberCount = team?.member_count || membersList.length;
+  const canAddMembers = isOwner && currentMemberCount < (team?.member_limit || 10);
 
   const handleLeaveTeam = async () => {
     if (!id) return;
@@ -92,12 +99,20 @@ export default function HabitTeamDetail() {
               </div>
             </div>
           </div>
-          {!isOwner && (
-            <Button variant="destructive" onClick={handleLeaveTeam}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Покинуть
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {canAddMembers && (
+              <Button onClick={() => setShowAddMemberDialog(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Пригласить
+              </Button>
+            )}
+            {!isOwner && (
+              <Button variant="destructive" onClick={handleLeaveTeam}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Покинуть
+              </Button>
+            )}
+          </div>
         </div>
 
         <Tabs defaultValue="feed" className="space-y-4">
@@ -172,6 +187,19 @@ export default function HabitTeamDetail() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Add Member Dialog */}
+        <AddTeamMemberDialog
+          open={showAddMemberDialog}
+          onOpenChange={setShowAddMemberDialog}
+          teamId={id || ''}
+          currentMemberCount={currentMemberCount}
+          memberLimit={team?.member_limit || 10}
+          onSuccess={() => {
+            refetchMembers();
+            queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
+          }}
+        />
       </div>
     </div>
   );

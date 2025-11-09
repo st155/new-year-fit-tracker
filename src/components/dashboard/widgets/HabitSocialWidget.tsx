@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabitFeed } from "@/hooks/useHabitFeed";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Bell } from "lucide-react";
+import { Users, Bell, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -77,8 +77,10 @@ export function HabitSocialWidget() {
         </div>
 
         {recentEvents.length === 0 ? (
-          <div className="text-center py-4 text-sm text-muted-foreground">
-            <p>Присоединитесь к команде чтобы видеть активность!</p>
+          <div className="text-center py-4 text-sm text-muted-foreground space-y-2">
+            <Sparkles className="h-8 w-8 mx-auto text-primary/50 animate-pulse" />
+            <p className="font-medium">Завершайте привычки и вступайте в команды!</p>
+            <p className="text-xs">Ваша активность появится здесь 🚀</p>
           </div>
         ) : (
           <div className="space-y-2">
