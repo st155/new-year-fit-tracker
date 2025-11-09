@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Camera, Save, User, ArrowLeft, Shield, Bell, Mail, Share, Settings, RefreshCw } from "lucide-react";
+import { Save, User, Shield, Bell, Mail, Share, Settings, RefreshCw } from "lucide-react";
+import { ProfileHero } from "@/components/profile/ProfileHero";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { RecentActivity } from "@/components/profile/RecentActivity";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,16 +184,16 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="space-y-8">
-        {/* Header с градиентом */}
+      <div className="space-y-6">
+        {/* Header */}
         <div className="px-4 py-6 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b border-border/50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                Profile
+                Профиль
               </h1>
               <p className="text-muted-foreground">
-                Manage your data and account settings
+                Управляйте своими данными и настройками
               </p>
             </div>
             <Button
@@ -206,7 +209,21 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <div className="px-4 max-w-7xl mx-auto">
+        <div className="px-4 max-w-7xl mx-auto space-y-6">
+          {/* Hero Section with Avatar + Level */}
+          <ProfileHero
+            username={profile.username || user?.email?.split('@')[0] || 'user'}
+            fullName={profile.full_name}
+            avatarUrl={profile.avatar_url}
+            userInitials={getUserInitials()}
+          />
+
+          {/* Stats Grid */}
+          <ProfileStats />
+
+          {/* Recent Activity */}
+          <RecentActivity />
+
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
             <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
@@ -224,29 +241,8 @@ const ProfilePage = () => {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Аватар с градиентом */}
-              <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5 shadow-glow-primary">
-                <CardHeader className="text-center">
-                  <div className="inline-block p-1 bg-gradient-primary rounded-full mx-auto mb-2">
-                    <Camera className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="text-lg">Profile Photo</CardTitle>
-                  <CardDescription>
-                    Upload your photo or choose an avatar
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center">
-                  <AvatarUpload
-                    currentAvatarUrl={profile.avatar_url}
-                    onAvatarUpdate={(url) => setProfile(prev => ({ ...prev, avatar_url: url }))}
-                    userInitials={getUserInitials()}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Основная информация с градиентом */}
-              <Card className="lg:col-span-2 border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 shadow-glow-secondary">
+            {/* Основная информация */}
+            <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 shadow-glow-secondary">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-gradient-secondary rounded-lg">
@@ -349,7 +345,6 @@ const ProfilePage = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">

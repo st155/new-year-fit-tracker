@@ -3,6 +3,7 @@ import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
 import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
@@ -26,9 +27,10 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
       <MetricsViewProvider>
         <div className="min-h-screen flex flex-col w-full bg-background">
           <TopNavigation />
-          <main className="flex-1 overflow-auto pt-16">
+          <main className="flex-1 overflow-auto pt-16 pb-20 md:pb-4">
             {children}
           </main>
+          <MobileBottomNav />
         </div>
       </MetricsViewProvider>
     </SafeProfileProvider>

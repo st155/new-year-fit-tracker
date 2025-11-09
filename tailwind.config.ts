@@ -122,6 +122,12 @@ export default {
         'glow-rose': '0 0 20px rgba(244, 63, 94, 0.5)',
         'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.5)',
         'card': 'var(--shadow-card)',
+        'glow-primary': '0 0 30px hsl(var(--primary) / 0.4)',
+      },
+      dropShadow: {
+        'glow': '0 0 15px hsl(var(--primary) / 0.5)',
+        'glow-secondary': '0 0 15px hsl(var(--secondary) / 0.5)',
+        'glow-primary': '0 0 15px hsl(var(--primary) / 0.5)',
       },
       colors: {
         habit: {

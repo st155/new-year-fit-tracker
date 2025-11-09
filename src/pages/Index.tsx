@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
+import { useProgressiveLoad } from '@/hooks/useProgressiveLoad';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
 import { MobileDebugOverlay } from '@/components/debug/MobileDebugOverlay';
@@ -39,6 +40,9 @@ import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
+  const { shouldLoad } = useProgressiveLoad();
+  const leaderboardRef = useRef<HTMLDivElement>(null);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   // Health Score data
   const { 
@@ -47,6 +51,25 @@ const Index = () => {
     isLoading: healthLoading 
   } = useDataQuality();
   const { recalculate, isRecalculating } = useConfidenceRecalculation();
+
+  // Intersection Observer for Leaderboard lazy loading
+  useEffect(() => {
+    if (!shouldLoad('low') || !leaderboardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setShowLeaderboard(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '100px' }
+    );
+
+    observer.observe(leaderboardRef.current);
+
+    return () => observer.disconnect();
+  }, [shouldLoad]);
 
   const handleHealthRefresh = () => {
     if (user?.id) {
@@ -283,32 +306,34 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Enhanced AI Insights with Health Score */}
-        <ErrorBoundary>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <EnhancedAIInsights 
-              userId={user?.id}
-              healthScore={{
-                averageConfidence,
-                metricsByQuality,
-                isLoading: healthLoading,
-                isRecalculating,
-                onRefresh: handleHealthRefresh,
-              }}
-            />
-          </motion.div>
-        </ErrorBoundary>
+        {/* Critical: AI Insights + Widgets */}
+        {shouldLoad('critical') && (
+          <>
+            <ErrorBoundary>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <EnhancedAIInsights 
+                  userId={user?.id}
+                  healthScore={{
+                    averageConfidence,
+                    metricsByQuality,
+                    isLoading: healthLoading,
+                    isRecalculating,
+                    onRefresh: handleHealthRefresh,
+                  }}
+                />
+              </motion.div>
+            </ErrorBoundary>
 
-        {/* Widgets Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+            {/* Widgets Grid */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
           {widgets.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
             <p className="text-muted-foreground mb-4">
@@ -352,31 +377,39 @@ const Index = () => {
           </div>
         )}
         </motion.div>
+          </>
+        )}
 
-        {/* Habits V3 Section */}
-        <ErrorBoundary fallback={
-          <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
-            <p className="text-sm text-destructive">❌ Habits section failed to load</p>
-          </div>
-        }>
-          <HabitsV3Section />
-        </ErrorBoundary>
+        {/* High Priority: Habits V3 Section */}
+        {shouldLoad('high') && (
+          <ErrorBoundary fallback={
+            <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
+              <p className="text-sm text-destructive">❌ Habits section failed to load</p>
+            </div>
+          }>
+            <HabitsV3Section />
+          </ErrorBoundary>
+        )}
 
-        {/* Leaderboard Section */}
-        <ErrorBoundary fallback={
-          <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
-            <p className="text-sm text-destructive">❌ Leaderboard failed to load</p>
-          </div>
-        }>
-          <motion.div 
-            className="mt-8"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
-            <Leaderboard />
-          </motion.div>
-        </ErrorBoundary>
+        {/* Low Priority: Leaderboard Section (lazy loaded on scroll) */}
+        <div ref={leaderboardRef} className="min-h-[200px]">
+          {shouldLoad('low') && showLeaderboard && (
+            <ErrorBoundary fallback={
+              <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
+                <p className="text-sm text-destructive">❌ Leaderboard failed to load</p>
+              </div>
+            }>
+              <motion.div 
+                className="mt-8"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+                <Leaderboard />
+              </motion.div>
+            </ErrorBoundary>
+          )}
+        </div>
       </div>
 
       {/* Quick Actions Panel */}
