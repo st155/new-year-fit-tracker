@@ -2,24 +2,30 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useLeaderboardQuery } from './core/useLeaderboardQuery';
+import { usePreferredChallenge } from './usePreferredChallenge';
 
 interface UseLeaderboardOptions {
   limit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
   timePeriod?: 'overall' | 'week' | 'month';
+  challengeId?: string; // Allow manual override
 }
 
 export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   const { user, loading: authLoading } = useAuth();
-  const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall' } = options;
+  const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall', challengeId: manualChallengeId } = options;
   
+  // Get preferred challenge if no manual override
+  const { challengeId: preferredChallengeId, title: challengeTitle } = usePreferredChallenge(user?.id);
+  const effectiveChallengeId = manualChallengeId || preferredChallengeId;
+
   const { 
     data: leaderboard = [], 
     isLoading: queryLoading, 
     error: queryError,
     refetch 
-  } = useLeaderboardQuery(user?.id, { limit, timePeriod });
+  } = useLeaderboardQuery(user?.id, { limit, timePeriod, challengeId: effectiveChallengeId || undefined });
 
   // Auto-refresh interval
   useEffect(() => {
@@ -31,57 +37,39 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
 
   // Subscribe to real-time updates for challenge points
   useEffect(() => {
-    if (!user) return;
+    if (!user || !effectiveChallengeId) return;
 
-    // Get user's current challenge_id
-    const getChallengeId = async () => {
-      const { data } = await supabase
-        .from('challenge_participants')
-        .select('challenge_id')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      return data?.challenge_id;
+    console.log('[Leaderboard] Setting up realtime subscription for challenge:', effectiveChallengeId);
+
+    const channel = supabase
+      .channel(`leaderboard_challenge_${effectiveChallengeId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'challenge_points',
+          filter: `challenge_id=eq.${effectiveChallengeId}`
+        },
+        () => {
+          console.log('[Leaderboard] Challenge points updated, refreshing...');
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[Leaderboard] Cleaning up subscription');
+      supabase.removeChannel(channel);
     };
-
-    getChallengeId().then((challengeId) => {
-      if (!challengeId) {
-        console.log('[Leaderboard] No challenge found for realtime subscription');
-        return;
-      }
-
-      console.log('[Leaderboard] Setting up realtime subscription for challenge:', challengeId);
-
-      const channel = supabase
-        .channel(`leaderboard_challenge_${challengeId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'challenge_points',
-            filter: `challenge_id=eq.${challengeId}`
-          },
-          () => {
-            console.log('[Leaderboard] Challenge points updated, refreshing...');
-            refetch();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        console.log('[Leaderboard] Cleaning up subscription');
-        supabase.removeChannel(channel);
-      };
-    });
-  }, [user, refetch]);
+  }, [user, effectiveChallengeId, refetch]);
 
   console.log('[useLeaderboard] State:', {
     authLoading,
     queryLoading,
     userId: user?.id,
+    effectiveChallengeId,
+    challengeTitle,
     leaderboardLength: leaderboard.length,
     finalLoading: authLoading || (queryLoading && !!user?.id)
   });
@@ -90,7 +78,8 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
     leaderboard,
     loading: authLoading || (queryLoading && !!user?.id),
     error: queryError?.message || null,
-    challengeId: leaderboard[0]?.userId || null,
+    challengeId: effectiveChallengeId,
+    challengeTitle,
     refresh: refetch,
     userEntry: leaderboard.find(entry => entry.isUser),
     topThree: leaderboard.slice(0, 3),

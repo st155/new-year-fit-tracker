@@ -8,22 +8,31 @@ export const leaderboardQueryKeys = {
 };
 
 // Fallback query for basic leaderboard data when views fail
-async function fetchFallbackLeaderboard(userId: string, limit?: number) {
-  console.debug('[useLeaderboardQuery] Using fallback query');
+async function fetchFallbackLeaderboard(userId: string, limit?: number, challengeId?: string) {
+  console.debug('[useLeaderboardQuery] Using fallback query', { challengeId });
   
-  // Get user's most recent challenge (handles multiple participations)
-  const { data: participation } = await supabase
-    .from('challenge_participants')
-    .select('challenge_id')
-    .eq('user_id', userId)
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  let targetChallengeId = challengeId;
 
-  if (!participation?.challenge_id) {
-    console.debug('[useLeaderboardQuery] No challenge found for user');
-    return [];
+  // If no challengeId provided, find user's challenge
+  if (!targetChallengeId) {
+    // Get user's most recent challenge (handles multiple participations)
+    const { data: participation } = await supabase
+      .from('challenge_participants')
+      .select('challenge_id')
+      .eq('user_id', userId)
+      .order('joined_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!participation?.challenge_id) {
+      console.debug('[useLeaderboardQuery] No challenge found for user');
+      return [];
+    }
+    
+    targetChallengeId = participation.challenge_id;
   }
+
+  console.log('[useLeaderboardQuery] Fetching fallback for challenge:', targetChallengeId);
 
   // Get basic leaderboard data from challenge_points
   const query = supabase
@@ -34,7 +43,7 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number) {
       streak_days,
       last_activity_date
     `)
-    .eq('challenge_id', participation.challenge_id)
+    .eq('challenge_id', targetChallengeId)
     .order('points', { ascending: false });
 
   if (limit) {
@@ -100,7 +109,7 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number) {
 
 export function useLeaderboardQuery(
   userId: string | undefined,
-  options?: { limit?: number; timePeriod?: 'overall' | 'week' | 'month' }
+  options?: { limit?: number; timePeriod?: 'overall' | 'week' | 'month'; challengeId?: string }
 ) {
   const queryClient = useQueryClient();
   
@@ -111,7 +120,14 @@ export function useLeaderboardQuery(
 
       const timePeriod = options?.timePeriod || 'overall';
       const limit = options?.limit || 100;
+      const challengeId = options?.challengeId;
       const queryKey = leaderboardQueryKeys.list(userId, limit, timePeriod);
+
+      // If challengeId is provided, skip RPC and use fallback directly
+      if (challengeId) {
+        console.log('[useLeaderboardQuery] Using direct fallback for challenge:', challengeId);
+        return fetchFallbackLeaderboard(userId, limit, challengeId);
+      }
 
       console.log('[useLeaderboardQuery] Fetching via RPC:', { userId, timePeriod, limit });
 
@@ -225,7 +241,7 @@ export function useLeaderboardQuery(
 
       // RPC timed out, fetch fallback immediately
       console.log('[useLeaderboardQuery] Returning fallback (fast path)');
-      const fallbackData = await fetchFallbackLeaderboard(userId, limit);
+      const fallbackData = await fetchFallbackLeaderboard(userId, limit, challengeId);
 
       // Continue RPC in background and update when ready
       rpcPromise.then((lateRpcResult) => {

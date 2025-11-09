@@ -16,7 +16,7 @@ import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
 export function Leaderboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { leaderboard, loading, error, refresh } = useLeaderboard({ limit: 5, timePeriod: 'overall' });
+  const { leaderboard, loading, error, refresh, challengeTitle } = useLeaderboard({ limit: 5, timePeriod: 'overall' });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
 
@@ -92,14 +92,21 @@ export function Leaderboard() {
     <TooltipProvider>
       <div className="space-y-4 animate-fade-in">
         <div
-          className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity group"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
           onClick={() => navigate('/leaderboard')}
         >
-          <div className="flex items-center gap-2">
-            <Award className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              {t('leaderboard.team')} {t('leaderboard.title')}
-            </h3>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                {t('leaderboard.team')} {t('leaderboard.title')}
+              </h3>
+            </div>
+            {challengeTitle && (
+              <span className="text-xs text-muted-foreground ml-6">
+                {challengeTitle}
+              </span>
+            )}
           </div>
           <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
             {t('leaderboard.viewFull')} →

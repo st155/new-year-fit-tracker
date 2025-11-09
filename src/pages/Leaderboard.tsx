@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Medal, Award, Flame, RefreshCw } from "lucide-react";
+import { Trophy, Medal, Award, Flame, RefreshCw, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from "@/lib/translations";
@@ -24,6 +24,7 @@ import { LeaderboardCategoryLeaders, CategoryInfo } from "@/components/leaderboa
 import { CategoryLeaderboardDialog } from "@/components/leaderboard/CategoryLeaderboardDialog";
 import { LeaderboardUserCard } from "@/components/leaderboard/LeaderboardUserCard";
 import { getUserLevel } from "@/lib/gamification";
+import { LeaveOtherChallengesButton } from "@/components/leaderboard/LeaveOtherChallengesButton";
 
 const Leaderboard = () => {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ const Leaderboard = () => {
   
   // Map activeTab to timePeriod for the hook
   const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
-  const { leaderboard, loading: leaderboardLoading, userEntry, error, refresh } = useLeaderboard({ timePeriod });
+  const { leaderboard, loading: leaderboardLoading, userEntry, error, refresh, challengeTitle, challengeId } = useLeaderboard({ timePeriod });
   
   const isLoading = authLoading || leaderboardLoading;
 
@@ -62,20 +63,39 @@ const Leaderboard = () => {
   return (
     <AnimatedPage className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Trophy className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">{t('leaderboard.title')}</h1>
+          <div>
+            <h1 className="text-3xl font-bold">{t('leaderboard.title')}</h1>
+            {challengeTitle && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <Info className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  Источник: <span className="font-medium text-foreground">{challengeTitle}</span>
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-        <button
-          onClick={() => refresh()}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
-          title="Refresh data"
-        >
-          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-          <span className="text-sm font-medium">Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {user?.id && challengeId && challengeTitle && (
+            <LeaveOtherChallengesButton
+              userId={user.id}
+              currentChallengeId={challengeId}
+              challengeTitle={challengeTitle}
+            />
+          )}
+          <button
+            onClick={() => refresh()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <span className="text-sm font-medium">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
