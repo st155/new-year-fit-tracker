@@ -2033,6 +2033,106 @@ export type Database = {
           },
         ]
       }
+      habit_challenge_goals: {
+        Row: {
+          challenge_id: string
+          created_at: string | null
+          goal_description: string
+          goal_metric: string
+          goal_target: number
+          habit_template_id: string | null
+          id: string
+          points_reward: number | null
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string | null
+          goal_description: string
+          goal_metric: string
+          goal_target: number
+          habit_template_id?: string | null
+          id?: string
+          points_reward?: number | null
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string | null
+          goal_description?: string
+          goal_metric?: string
+          goal_target?: number
+          habit_template_id?: string | null
+          id?: string
+          points_reward?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_challenge_goals_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_challenge_goals_habit_template_id_fkey"
+            columns: ["habit_template_id"]
+            isOneToOne: false
+            referencedRelation: "habit_templates_community"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habit_challenges: {
+        Row: {
+          challenge_id: string
+          created_at: string | null
+          goal_target: number | null
+          goal_type: string | null
+          habit_id: string
+          id: string
+          xp_multiplier: number | null
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string | null
+          goal_target?: number | null
+          goal_type?: string | null
+          habit_id: string
+          id?: string
+          xp_multiplier?: number | null
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string | null
+          goal_target?: number | null
+          goal_type?: string | null
+          habit_id?: string
+          id?: string
+          xp_multiplier?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_challenges_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habit_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_challenges_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_collaborations: {
         Row: {
           can_edit: boolean | null
