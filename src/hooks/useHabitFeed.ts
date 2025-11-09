@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useHabitFeedRealtime, useFeedReactionsRealtime } from '@/hooks/composite/realtime';
+import { useHabitFeedRealtime, useFeedReactionsRealtime, useHabitNotificationsRealtime } from '@/hooks/composite/realtime';
 
 export interface HabitFeedEvent {
   id: string;
@@ -201,7 +201,6 @@ export function useRemoveReaction() {
 
 export function useHabitNotifications(userId?: string) {
   // Enable real-time subscription
-  const { useHabitNotificationsRealtime } = require('@/hooks/composite/realtime');
   useHabitNotificationsRealtime(!!userId);
 
   return useQuery({
