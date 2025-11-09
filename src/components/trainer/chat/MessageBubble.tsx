@@ -9,6 +9,7 @@ import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useState } from 'react';
+import { RecognizedClientBadge } from '@/components/trainer/ai/RecognizedClientBadge';
 
 interface MessageBubbleProps {
   message: AIMessage;
@@ -317,6 +318,18 @@ export const MessageBubble = memo(({
           <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
           </div>
+          
+          {/* Recognized Client Badge */}
+          {message.metadata?.recognizedClient && (
+            <div className="flex justify-end mt-1">
+              <RecognizedClientBadge
+                recognizedClient={message.metadata.recognizedClient}
+                clients={clients}
+                onNavigateToClient={onNavigateToClient}
+              />
+            </div>
+          )}
+          
           <div className="flex items-center justify-end gap-1 mt-1">
             <span className="text-xs text-muted-foreground">
               {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: ru })}

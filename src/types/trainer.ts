@@ -50,7 +50,23 @@ export interface AIMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   created_at: string;
-  metadata?: Record<string, any>;
+  metadata?: {
+    isOptimistic?: boolean;
+    status?: string;
+    recognizedClient?: {
+      client_id: string;
+      recognition_method: 'alias' | 'full_name_exact' | 'username' | 'name_part' | 'name_stem' | 'context';
+      confidence_score: number;
+      recognized_from_text?: string;
+    };
+    contextClientId?: string;
+    hasPendingAction?: boolean;
+    needsApproval?: boolean;
+    suggestedActions?: any[];
+    autoExecuted?: boolean;
+    results?: any[];
+    [key: string]: any;
+  };
 }
 
 export interface AIPendingAction {

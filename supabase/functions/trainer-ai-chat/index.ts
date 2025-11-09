@@ -255,6 +255,14 @@ serve(async (req) => {
     }
     
     // ====== ENHANCED CLIENT RECOGNITION FROM FREE TEXT ======
+    // Track recognized client info for UI display
+    let recognizedClient: {
+      client_id: string;
+      recognition_method: string;
+      confidence_score: number;
+      recognized_from_text: string;
+    } | null = null;
+    
     // Helper: Normalize text for matching
     function normalizeText(text: string): string {
       return text
@@ -449,6 +457,14 @@ serve(async (req) => {
         if (match.score >= 70) { // Only auto-match if score is good
           console.log(`✅ Auto-matched from free text: client_id=${match.client_id}, score=${match.score}`);
           mentionedClients.push(match.client_id);
+          
+          // Save recognition info for UI
+          recognizedClient = {
+            client_id: match.client_id,
+            recognition_method: match.matchType,
+            confidence_score: match.score,
+            recognized_from_text: freeTextMessage.trim()
+          };
         }
       } else if (freeTextResult.matches.length > 1 && freeTextResult.matches[0].score >= 50) {
         // Multiple matches - need disambiguation
@@ -504,6 +520,16 @@ serve(async (req) => {
           // Found single alias match
           console.log(`✅ Alias match found for "${mentionedName}":`, matchingAliases[0]);
           mentionedClients.push(matchingAliases[0].client_id);
+          
+          // Save recognition info for UI
+          if (!recognizedClient) {
+            recognizedClient = {
+              client_id: matchingAliases[0].client_id,
+              recognition_method: 'alias',
+              confidence_score: 100,
+              recognized_from_text: mentionedName
+            };
+          }
         } else if (matchingAliases.length > 1) {
           // Multiple alias matches - disambiguation needed
           disambiguationNeeded.push({
@@ -559,6 +585,30 @@ serve(async (req) => {
               const profile = matches[0].profiles as any;
               console.log(`✅ Auto-matched "${mentionedName}" to ${profile.full_name}`);
               mentionedClients.push(profile.user_id);
+              
+              // Save recognition info for UI
+              if (!recognizedClient) {
+                const fullName = normalizeText(profile.full_name || '');
+                const username = normalizeText(profile.username || '');
+                
+                let method = 'name_part';
+                let score = 70;
+                
+                if (fullName === normalized) {
+                  method = 'full_name_exact';
+                  score = 90;
+                } else if (username === normalized || normalized === `@${username}`) {
+                  method = 'username';
+                  score = 80;
+                }
+                
+                recognizedClient = {
+                  client_id: profile.user_id,
+                  recognition_method: method,
+                  confidence_score: score,
+                  recognized_from_text: mentionedName
+                };
+              }
             } else if (matches.length > 1) {
               console.log(`⚠️ Multiple matches for "${mentionedName}":`, matches.length);
               disambiguationNeeded.push({
@@ -1797,10 +1847,17 @@ ${idx + 1}. [${s.suggestion_type.toUpperCase()}] ${goal.goal_name || 'Unknown go
         content: message,
         metadata: { 
           mentioned_clients: mentionedClients,
-          optimisticId: optimisticUserId // Store for deduplication
+          optimisticId: optimisticUserId, // Store for deduplication
+          recognizedClient: recognizedClient || (contextClientId ? {
+            client_id: contextClientId,
+            recognition_method: 'context',
+            confidence_score: 100,
+            recognized_from_text: ''
+          } : null),
+          contextClientId: contextClientId || null
         }
       });
-      console.log('✅ Saved user message to database');
+      console.log('✅ Saved user message to database', recognizedClient ? 'with recognized client' : '');
     } else {
       console.log('⏭️ User message already exists, skipping insert');
     }
