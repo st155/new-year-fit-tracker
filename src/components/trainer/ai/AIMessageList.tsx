@@ -25,6 +25,31 @@ interface AIMessageListProps {
   } | null;
 }
 
+// Helper function to format error messages
+function formatErrorMessage(error: string | undefined): string {
+  if (!error) return 'Неизвестная ошибка';
+  
+  const errorLower = error.toLowerCase();
+  
+  if (errorLower.includes('duplicate key') || errorLower.includes('unique constraint')) {
+    return 'Запись с такими данными уже существует';
+  }
+  if (errorLower.includes('foreign key violation') || errorLower.includes('foreign key constraint')) {
+    return 'Связанная запись не найдена';
+  }
+  if (errorLower.includes('not found')) {
+    return 'Запись не найдена';
+  }
+  if (errorLower.includes('permission denied') || errorLower.includes('unauthorized')) {
+    return 'Недостаточно прав для выполнения операции';
+  }
+  if (errorLower.includes('null value') || errorLower.includes('not-null constraint')) {
+    return 'Отсутствуют обязательные данные';
+  }
+  
+  return error;
+}
+
 export function AIMessageList({ selectedClient }: AIMessageListProps) {
   const { messages, sending, sendingState, loading, currentConversation } = useAIChat();
   const { user } = useAuth();
@@ -135,7 +160,9 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                           key={idx}
                           action={{
                             type: result.action || result.action_type || 'Unknown',
-                            description: result.message || JSON.stringify(result.data || {}),
+                            description: result.success 
+                              ? (result.message || JSON.stringify(result.data || {}))
+                              : formatErrorMessage(result.error || result.message),
                             status: result.success ? 'success' : 'failed',
                             result: result.data
                           }}
