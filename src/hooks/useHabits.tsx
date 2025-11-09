@@ -42,7 +42,8 @@ export function useHabits(userId?: string) {
 
           if (fallbackError) {
             console.error('❌ [useHabits] Fallback query failed:', fallbackError);
-            throw fallbackError;
+            console.log('⚠️ [useHabits] Returning empty array due to fallback error');
+            return [];
           }
           
           console.log('✅ [useHabits] Fallback successful, habits found:', fallbackHabits?.length || 0);
@@ -206,8 +207,13 @@ export function useHabits(userId?: string) {
     userId 
   });
 
+  // Warn if data is undefined after loading
+  if (!isLoading && !data) {
+    console.warn('⚠️ [useHabits] Data is undefined after loading completed!', { error, userId });
+  }
+
   return {
-    habits: data,
+    habits: data || [],
     isLoading,
     error,
     refetch,

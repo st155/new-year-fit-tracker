@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy } from 'lucide-react';
 import { HabitCreateDialog } from '@/components/habits/HabitCreateDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
 import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announcement';
@@ -50,7 +51,8 @@ const LoadingSkeleton = () => (
 export default function HabitsV3() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { habits, isLoading, refetch } = useHabits(user?.id || '');
+  const { habits: habitsData = [], isLoading, error, refetch } = useHabits(user?.id || '');
+  const habits = Array.isArray(habitsData) ? habitsData : [];
   const { completeHabit, isCompleting } = useHabitCompletion();
   const { levelInfo } = useUserLevel();
   const { deleteHabit, archiveHabit, isDeleting, isArchiving } = useDeleteHabit();
@@ -141,6 +143,18 @@ export default function HabitsV3() {
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
+      </div>
+    );
+  }
+
+  if (error && habits.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <ErrorState
+          title="Не удалось загрузить привычки"
+          message="Произошла ошибка при загрузке данных. Попробуйте обновить страницу."
+          onRetry={refetch}
+        />
       </div>
     );
   }
