@@ -51,6 +51,35 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        tremor: {
+          brand: {
+            faint: "hsl(var(--primary) / 0.05)",
+            muted: "hsl(var(--primary) / 0.3)",
+            subtle: "hsl(var(--primary) / 0.4)",
+            DEFAULT: "hsl(var(--primary) / 0.6)",
+            emphasis: "hsl(var(--primary) / 0.8)",
+            inverted: "hsl(var(--primary-foreground))",
+          },
+          background: {
+            muted: "hsl(var(--muted) / 0.4)",
+            subtle: "hsl(var(--muted) / 0.2)",
+            DEFAULT: "hsl(var(--background))",
+            emphasis: "hsl(var(--muted))",
+          },
+          border: {
+            DEFAULT: "hsl(var(--border) / 0.3)",
+          },
+          ring: {
+            DEFAULT: "hsl(var(--ring))",
+          },
+          content: {
+            subtle: "hsl(var(--muted-foreground) / 0.6)",
+            DEFAULT: "hsl(var(--foreground) / 0.8)",
+            emphasis: "hsl(var(--foreground))",
+            strong: "hsl(var(--foreground))",
+            inverted: "hsl(var(--background))",
+          },
+        },
         metric: {
           "body-fat": "hsl(var(--metric-body-fat))",
           weight: "hsl(var(--metric-weight))",

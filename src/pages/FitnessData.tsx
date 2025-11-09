@@ -328,8 +328,32 @@ export default function FitnessData() {
     ? processedMetrics.recovery[processedMetrics.recovery.length - 1] 
     : null;
 
+  // SVG градиенты для графиков
+  const chartGradients = (
+    <svg width="0" height="0" style={{ position: 'absolute' }}>
+      <defs>
+        <linearGradient id="emerald-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgb(52, 211, 153)" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="rgb(52, 211, 153)" stopOpacity="0.1" />
+        </linearGradient>
+        
+        <linearGradient id="rose-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgb(251, 113, 133)" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="rgb(251, 113, 133)" stopOpacity="0.1" />
+        </linearGradient>
+        
+        <linearGradient id="orange-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgb(251, 146, 60)" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="rgb(251, 146, 60)" stopOpacity="0.1" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+
   return (
-    <AnimatedPage className="container mx-auto p-4 md:p-6 space-y-6">
+    <>
+      {chartGradients}
+      <AnimatedPage className="container mx-auto p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -507,10 +531,10 @@ export default function FitnessData() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {processedMetrics.strain.length > 0 && (
-              <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
+              <FitnessCard variant="gradient" className="hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/5 to-red-500/5">
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/50 animate-pulse-slow">
                       <Zap className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -526,17 +550,21 @@ export default function FitnessData() {
                     categories={['Strain']}
                     colors={['orange']}
                     showGridLines={true}
-                    className="h-64"
+                    className="h-80"
                     valueFormatter={valueFormatters.decimal}
+                    showAnimation={true}
+                    animationDuration={800}
+                    showLegend={false}
+                    enableLegendSlider={false}
                   />
                 </CardContent>
               </FitnessCard>
             )}
             {processedMetrics.heartRate.length > 0 && (
-              <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
+              <FitnessCard variant="gradient" className="hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-red-500/5 to-pink-500/5">
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/50 animate-pulse-slow">
                       <Heart className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -552,8 +580,13 @@ export default function FitnessData() {
                     categories={['Heart Rate']}
                     colors={['rose']}
                     showGridLines={true}
-                    className="h-64"
+                    className="h-80"
                     valueFormatter={valueFormatters.bpm}
+                    showAnimation={true}
+                    animationDuration={800}
+                    curveType="natural"
+                    connectNulls={true}
+                    showLegend={false}
                   />
                 </CardContent>
               </FitnessCard>
@@ -561,30 +594,39 @@ export default function FitnessData() {
           </div>
 
           {processedMetrics.sleep.length > 0 && (
-            <FitnessCard variant="gradient" className="hover:scale-[1.01] transition-all">
+            <FitnessCard variant="gradient" className="hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/50 animate-pulse-slow">
                     <Moon className="h-5 w-5 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-lg">Sleep Stages</CardTitle>
                     <CardDescription className="text-xs">Фазы сна за выбранный период</CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Среднее</p>
+                    <p className="text-lg font-bold">
+                      {Math.round(processedMetrics.sleep.reduce((sum, s) => sum + (s.total || 0), 0) / processedMetrics.sleep.length / 60)}h
+                    </p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <BarChart
-                  className="h-72"
+                  className="h-96"
                   data={adaptSleepToTremor(processedMetrics.sleep)}
                   index="date"
                   categories={['Deep Sleep', 'Light Sleep', 'REM Sleep', 'Awake']}
-                  colors={['violet', 'cyan', 'fuchsia', 'amber']}
+                  colors={['indigo', 'sky', 'purple', 'amber']}
                   stack={true}
                   valueFormatter={valueFormatters.minutes}
                   showLegend={true}
                   showGridLines={true}
                   showAnimation={true}
+                  animationDuration={800}
+                  showXAxis={true}
+                  showYAxis={true}
                 />
               </CardContent>
             </FitnessCard>
@@ -607,5 +649,6 @@ export default function FitnessData() {
         </TabsContent>
       </Tabs>
     </AnimatedPage>
+    </>
   );
 }

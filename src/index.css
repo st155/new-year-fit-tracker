@@ -107,6 +107,45 @@ All colors MUST be HSL.
     }
   }
 
+  /* Tremor Charts Enhancements */
+  .tremor-AreaChart-area,
+  .tremor-BarChart-bar {
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .tremor-AreaChart-area:hover,
+  .tremor-BarChart-bar:hover {
+    opacity: 1;
+  }
+
+  /* Улучшить видимость grid lines */
+  .tremor-AreaChart-gridLine,
+  .tremor-BarChart-gridLine {
+    stroke: hsl(var(--border));
+    opacity: 0.15;
+  }
+
+  /* Улучшить видимость axis */
+  .tremor-AreaChart-axis,
+  .tremor-BarChart-axis {
+    stroke: hsl(var(--muted-foreground));
+    opacity: 0.5;
+  }
+
+  /* Улучшить видимость text labels */
+  .tremor-AreaChart-text,
+  .tremor-BarChart-text {
+    fill: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+  }
+
+  /* Добавить glow эффект для графиков */
+  .tremor-AreaChart-line,
+  .tremor-BarChart-bar {
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+
   /* Animations */
   @keyframes fade-in {
     from {
