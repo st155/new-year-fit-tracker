@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAIActionsHistory } from '@/hooks/useAIActionsHistory';
+import { useAIPendingActions } from '@/hooks/useAIPendingActions';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Target, 
   TrendingUp, 
@@ -12,7 +17,8 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  User
+  User,
+  Filter
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -109,8 +115,11 @@ const getActionDescription = (action: any) => {
 
 export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
   const { actions, loading } = useAIActionsHistory(userId);
+  const { user } = useAuth();
+  const { pendingActions, loading: pendingLoading } = useAIPendingActions(user?.id);
+  const [activeTab, setActiveTab] = useState<'executed' | 'pending' | 'rejected' | 'all'>('executed');
 
-  if (loading) {
+  if (loading || pendingLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -118,30 +127,156 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
     );
   }
 
-  if (actions.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <h3 className="text-lg font-medium mb-2">История пуста</h3>
-        <p className="text-sm">
-          Здесь будут отображаться все действия, выполненные AI помощником
-        </p>
-      </div>
-    );
-  }
+  // Filter based on active tab
+  const displayedActions = activeTab === 'executed' ? actions : [];
+  const displayedPending = ['pending', 'all'].includes(activeTab) 
+    ? pendingActions.filter(pa => pa.status === 'pending')
+    : [];
+  const displayedRejected = ['rejected', 'all'].includes(activeTab)
+    ? pendingActions.filter(pa => pa.status === 'rejected')
+    : [];
+
+  const totalCount = activeTab === 'all' 
+    ? actions.length + displayedPending.length + displayedRejected.length
+    : activeTab === 'pending'
+    ? displayedPending.length
+    : activeTab === 'rejected'
+    ? displayedRejected.length
+    : actions.length;
 
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">История действий AI</h2>
-        <Badge variant="outline">
-          {actions.length} {actions.length === 1 ? 'действие' : 'действий'}
-        </Badge>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="space-y-3">
-          {actions.map((action) => {
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="executed" className="text-xs">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Выполненные
+            {actions.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {actions.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            Ожидают
+            {pendingActions.filter(pa => pa.status === 'pending').length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {pendingActions.filter(pa => pa.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="text-xs">
+            <XCircle className="h-3 w-3 mr-1" />
+            Отклонённые
+            {pendingActions.filter(pa => pa.status === 'rejected').length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {pendingActions.filter(pa => pa.status === 'rejected').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="all" className="text-xs">
+            <Filter className="h-3 w-3 mr-1" />
+            Все
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-4">
+          {totalCount === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">
+                {activeTab === 'executed' && 'Нет выполненных действий'}
+                {activeTab === 'pending' && 'Нет ожидающих действий'}
+                {activeTab === 'rejected' && 'Нет отклонённых действий'}
+                {activeTab === 'all' && 'История пуста'}
+              </h3>
+              <p className="text-sm">
+                {activeTab === 'executed' && 'Выполненные действия появятся здесь'}
+                {activeTab === 'pending' && 'Планы, ожидающие подтверждения, появятся здесь'}
+                {activeTab === 'rejected' && 'Отклонённые планы появятся здесь'}
+                {activeTab === 'all' && 'Все действия AI помощника будут отображаться здесь'}
+              </p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[calc(100vh-280px)]">
+              <div className="space-y-3">
+                {/* Pending Actions */}
+                {displayedPending.map((action) => (
+                  <Card 
+                    key={action.id} 
+                    className="p-4 border border-amber-500/30 bg-amber-500/5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-amber-500/10">
+                        <Clock className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <Badge variant="outline" className="text-xs bg-amber-500/10">
+                            Ожидает подтверждения
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(action.created_at).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        <p className="text-sm mb-2 font-medium">
+                          {action.action_plan}
+                        </p>
+                        <details className="text-xs">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                            Детали действия
+                          </summary>
+                          <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
+                            {JSON.stringify(action.action_data, null, 2)}
+                          </pre>
+                        </details>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                {/* Rejected Actions */}
+                {displayedRejected.map((action) => (
+                  <Card 
+                    key={action.id} 
+                    className="p-4 border border-red-500/30 bg-red-500/5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="shrink-0 mt-0.5 p-2 rounded-lg bg-red-500/10">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <Badge variant="outline" className="text-xs bg-red-500/10">
+                            Отклонено
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(action.created_at).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        <p className="text-sm mb-2 font-medium">
+                          {action.action_plan}
+                        </p>
+                        <details className="text-xs">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                            Детали действия
+                          </summary>
+                          <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
+                            {JSON.stringify(action.action_data, null, 2)}
+                          </pre>
+                        </details>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                {/* Executed Actions */}
+                {displayedActions.map((action) => {
             const Icon = getActionIcon(action.action_type);
             
             return (
@@ -249,10 +384,13 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                   </div>
                 </div>
               </Card>
-            );
-          })}
-        </div>
-      </ScrollArea>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

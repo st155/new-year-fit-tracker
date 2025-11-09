@@ -252,6 +252,8 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   const pendingAction = pendingActions.find(pa => pa.id === msg.metadata?.pendingActionId);
                   if (!pendingAction) return null;
                   
+                  const isPreparing = pendingAction.status === 'preparing';
+                  
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -261,11 +263,20 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                       <Card className="border-amber-500/50 bg-amber-500/10 overflow-hidden">
                         <div className="p-4 space-y-3">
                           <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
-                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            <div className={cn(
+                              "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                              isPreparing ? "bg-amber-500/20 animate-pulse" : "bg-amber-500/20"
+                            )}>
+                              {isPreparing ? (
+                                <Loader2 className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                              ) : (
+                                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              )}
                             </div>
                             <div className="flex-1 space-y-1">
-                              <div className="font-medium text-sm">План действий</div>
+                              <div className="font-medium text-sm">
+                                {isPreparing ? 'Готовлю план действий...' : 'План действий'}
+                              </div>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {pendingAction.action_plan}
                               </p>
@@ -276,13 +287,18 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                             <Button
                               size="sm"
                               onClick={() => handleExecute(pendingAction.id)}
-                              disabled={executing}
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                              disabled={executing || isPreparing}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                             >
                               {executing ? (
                                 <>
                                   <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                                   Выполняю...
+                                </>
+                              ) : isPreparing ? (
+                                <>
+                                  <Clock className="h-3 w-3 mr-2" />
+                                  Подготовка...
                                 </>
                               ) : (
                                 <>
@@ -295,8 +311,8 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                               size="sm"
                               variant="outline"
                               onClick={() => rejectAction(pendingAction.id)}
-                              disabled={executing}
-                              className="flex-1 border-red-500/50 text-red-600 hover:bg-red-500/10"
+                              disabled={executing || isPreparing}
+                              className="flex-1 border-red-500/50 text-red-600 hover:bg-red-500/10 disabled:opacity-50"
                             >
                               <XCircle className="h-3 w-3 mr-2" />
                               Отклонить

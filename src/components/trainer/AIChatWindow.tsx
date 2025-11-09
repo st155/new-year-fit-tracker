@@ -5,6 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, Sparkles, CheckCircle, FileText, ChevronDown, ChevronUp, AlertCircle, XCircle, ArrowDown, Zap } from 'lucide-react';
 import { AIMessage, AIConversation } from '@/types/trainer';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
@@ -72,6 +74,7 @@ export const AIChatWindow = ({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isSelectingMention, setIsSelectingMention] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [requireConfirmation, setRequireConfirmation] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -447,7 +450,7 @@ export const AIChatWindow = ({
     }
 
     try {
-      const response = await onSendMessage(textToSend, 'general', clientIds, names, selectedClient?.user_id, true);
+      const response = await onSendMessage(textToSend, 'general', clientIds, names, selectedClient?.user_id, !requireConfirmation);
       
       // Check if disambiguation is needed
       if (response?.needsDisambiguation) {
@@ -1161,7 +1164,20 @@ export const AIChatWindow = ({
             )}
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-end">
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              id="require-confirmation-chat" 
+              checked={requireConfirmation}
+              onCheckedChange={(checked) => setRequireConfirmation(checked as boolean)}
+            />
+            <Label 
+              htmlFor="require-confirmation-chat" 
+              className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+            >
+              Требовать подтверждение
+            </Label>
+          </div>
           <Button
             size="icon"
             onClick={() => handleSend()}

@@ -87,10 +87,12 @@ serve(async (req) => {
       mentionedClients = [],
       mentionedNames = [], // Raw names mentioned (for fuzzy matching)
       contextClientId, // Client selected in UI context
-      autoExecute = true, // Auto-execute simple actions by default
+      autoExecute = false, // Require confirmation by default
       optimisticUserId, // User message optimisticId for deduplication
       optimisticAssistantId // Assistant preparing message id to update
     } = await req.json();
+    
+    console.log(`🎛️ Request params: autoExecute=${autoExecute}, contextMode=${contextMode}`);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

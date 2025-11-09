@@ -9,7 +9,7 @@ export interface AIPendingAction {
   action_type: string;
   action_plan: string;
   action_data: any;
-  status: 'pending' | 'approved' | 'rejected' | 'executed';
+  status: 'pending' | 'preparing' | 'approved' | 'rejected' | 'executed';
   executed_at: string | null;
   created_at: string;
 }
@@ -28,7 +28,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
         .from('ai_pending_actions')
         .select('*')
         .eq('trainer_id', userId)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'preparing'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -171,7 +171,6 @@ export const useAIPendingActions = (userId: string | undefined) => {
     if (!userId) return;
 
     let debounceTimer: NodeJS.Timeout;
-    let previousCount = pendingActions.length;
 
     const channel = supabase
       .channel('ai_pending_actions')
@@ -187,14 +186,11 @@ export const useAIPendingActions = (userId: string | undefined) => {
           // Immediate reload for new actions
           await loadPendingActions();
           
-          // Show toast for new pending action
-          if (pendingActions.length === 0) {
-            toast({
-              title: '✨ Новый план готов',
-              description: 'Перейдите на вкладку "Ожидают"',
-              duration: 5000
-            });
-          }
+          toast({
+            title: '✨ Новый план готов',
+            description: 'Перейдите на вкладку "Ожидают"',
+            duration: 5000
+          });
         }
       )
       .on(
