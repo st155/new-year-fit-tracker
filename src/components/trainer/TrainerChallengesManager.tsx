@@ -162,17 +162,17 @@ export function TrainerChallengesManager() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего целей</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {challenges.reduce((sum, c) => sum + c.totalGoals, 0)}
-            </div>
-          </CardContent>
-        </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Всего дисциплин</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {challenges.reduce((sum, c) => sum + ((c as any).totalDisciplines || 0), 0)}
+                    </div>
+                  </CardContent>
+                </Card>
       </div>
 
       {/* Список челленджей */}
@@ -244,10 +244,10 @@ export function TrainerChallengesManager() {
                       <Users className="h-4 w-4" />
                       {challenge.participants.length} участников
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Target className="h-4 w-4" />
-                      {challenge.totalGoals} целей
-                    </div>
+                        <div className="flex items-center gap-1">
+                          <Target className="h-4 w-4" />
+                          {(challenge as any).totalDisciplines || 0} дисциплин
+                        </div>
                   </div>
                 </CardHeader>
                 <CardContent>

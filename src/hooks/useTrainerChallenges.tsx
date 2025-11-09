@@ -52,10 +52,16 @@ export function useTrainerChallenges(trainerId?: string) {
             .eq("challenge_id", challenge.id)
             .eq("is_personal", false);
 
+          const { data: disciplines } = await supabase
+            .from("challenge_disciplines")
+            .select("*")
+            .eq("challenge_id", challenge.id);
+
           return {
             ...challenge,
             participants: participants || [],
-            totalGoals: goals?.length || 0
+            totalGoals: goals?.length || 0,
+            totalDisciplines: disciplines?.length || 0
           };
         })
       );
