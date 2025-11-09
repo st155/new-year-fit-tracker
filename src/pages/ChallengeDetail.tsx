@@ -108,24 +108,55 @@ export default function ChallengeDetail() {
     mutationFn: async () => {
       if (!user || !id) throw new Error("Missing user or challenge ID");
       
-      const { error } = await supabase
+      const { data, error, count } = await supabase
         .from("challenge_participants")
-        .delete()
+        .delete({ count: 'exact' })
         .eq("challenge_id", id)
         .eq("user_id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [leaveMutation] Delete failed:', error);
+        throw error;
+      }
+      
+      if (count === 0) {
+        throw new Error("Не удалось найти участие в челлендже");
+      }
+      
+      console.log('✅ [leaveMutation] Delete successful:', { count });
+      return { count };
     },
     onSuccess: () => {
       toast.success("Вы вышли из челленджа");
+      
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["is-participant"] });
+      queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      
+      // Force refetch participation status
       refetchParticipation();
-      navigate("/challenges");
+      
+      // Navigate with a small delay to ensure queries are invalidated
+      setTimeout(() => {
+        navigate("/challenges");
+      }, 100);
     },
-    onError: (error) => {
-      toast.error("Не удалось выйти из челленджа");
-      console.error(error);
+    onError: (error: any) => {
+      console.error('❌ [leaveMutation] Failed:', {
+        error: error,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
+      
+      const errorMessage = error?.message || "Не удалось выйти из челленджа";
+      toast.error(errorMessage, {
+        description: import.meta.env.DEV ? `Error: ${error?.code || 'unknown'}` : 'Проверьте права доступа'
+      });
     },
   });
 
