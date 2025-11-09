@@ -4,15 +4,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
 import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { useHabitInsights } from '@/hooks/useHabitInsights';
+import { useUserLevel } from '@/hooks/useUserLevel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft, Trophy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
 import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announcement';
 import { HabitsInsightBanner } from '@/components/habits-v3/HabitsInsightBanner';
+import { LevelProgressBar } from '@/components/habits-v3/gamification/LevelProgressBar';
+import { LevelUpCelebration } from '@/components/habits-v3/gamification/LevelUpCelebration';
+import { AchievementsModal } from '@/components/habits-v3/gamification/AchievementsModal';
 
 // Lazy load heavy components
 const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
@@ -33,6 +37,11 @@ export default function HabitsV3() {
   const navigate = useNavigate();
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
   const { completeHabit, isCompleting } = useHabitCompletion();
+  const { levelInfo } = useUserLevel();
+  
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(0);
+  const [showAchievements, setShowAchievements] = useState(false);
   
   // Get habit insights
   const { all: insights, isLoading: insightsLoading } = useHabitInsights({
@@ -63,13 +72,16 @@ export default function HabitsV3() {
 
     const result = await completeHabit(habitId, habit);
     if (result?.success) {
-      const habitData = habit as any;
-      const streak = habitData.current_streak || habitData.streak || 0;
       setAnnouncement(
-        `Привычка "${habit.name}" выполнена. ` +
-        `Получено ${result.xpEarned || habit.xp_reward || 10} XP. ` +
-        `${streak > 1 ? `Streak: ${streak} дней!` : ''}`
+        `Привычка "${habit.name}" выполнена. +${result.xpEarned} XP. ${result.streakCount > 1 ? `${result.streakCount} дней подряд!` : ''}`
       );
+      
+      // Show level up celebration
+      if (result.newLevel) {
+        setNewLevel(result.newLevel);
+        setShowLevelUp(true);
+      }
+      
       await refetch();
     }
   };
@@ -96,10 +108,9 @@ export default function HabitsV3() {
 
   return (
     <>
-      <HabitsV3Onboarding
-        open={showOnboarding}
-        onComplete={handleOnboardingComplete}
-      />
+      <HabitsV3Onboarding open={showOnboarding} onComplete={handleOnboardingComplete} />
+      <LevelUpCelebration open={showLevelUp} onOpenChange={setShowLevelUp} newLevel={newLevel} />
+      <AchievementsModal open={showAchievements} onOpenChange={setShowAchievements} />
       <ScreenReaderAnnouncement message={announcement} />
       
       <PullToRefresh onRefresh={handleRefresh}>
@@ -107,20 +118,33 @@ export default function HabitsV3() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard')}
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <h1 className="text-3xl font-bold">Привычки 3.0</h1>
           </div>
-          <Button onClick={() => navigate('/habits/new')} size="lg">
-            <Plus className="w-5 h-5 mr-2" />
-            Добавить
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setShowAchievements(true)}>
+              <Trophy className="w-5 h-5" />
+            </Button>
+            <Button onClick={() => navigate('/habits/new')} size="lg">
+              <Plus className="w-5 h-5 mr-2" />
+              Добавить
+            </Button>
+          </div>
         </div>
+
+        {/* Level Progress */}
+        {levelInfo && (
+          <div className="mb-6">
+            <LevelProgressBar
+              level={levelInfo.level}
+              totalXP={levelInfo.totalXP}
+              xpToNext={levelInfo.xpToNext}
+              progressPercent={levelInfo.progressPercent}
+            />
+          </div>
+        )}
 
         {/* Insights Banner */}
         {!insightsLoading && insights.length > 0 && (

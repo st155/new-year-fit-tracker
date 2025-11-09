@@ -1,38 +1,40 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
+import { calculateHabitXP, calculateStreakXPMultiplier, calculateLevel } from '@/lib/gamification/level-system';
+import { checkAndAwardAchievements, type AchievementCheckParams } from '@/lib/gamification/achievement-checker';
+import { AchievementUnlockedToast } from '@/components/habits-v3/gamification/AchievementUnlockedToast';
+import { isNewMilestone } from '@/lib/gamification/streak-rewards';
 
 interface CompletionResult {
   success: boolean;
   xpEarned: number;
   newLevel?: number;
-  celebrationType: 'completion' | 'streak' | 'milestone';
+  oldLevel?: number;
+  celebrationType: 'completion' | 'streak' | 'milestone' | 'level_up';
   streakCount: number;
+  newAchievements?: any[];
 }
 
 export function useHabitCompletion() {
   const [isCompleting, setIsCompleting] = useState(false);
   const { toast } = useToast();
 
-  const calculateXP = (habit: any, streak: number): number => {
-    let baseXP = habit.xp_reward || 10;
-    let multiplier = 1.0;
+  // Calculate XP using new gamification system
+  const calculateHabitCompletionXP = (habit: any, streak: number, isFirstToday: boolean, isPerfectDay: boolean): number => {
+    const streakBonus = calculateStreakXPMultiplier(streak);
+    const difficultyBonus = habit.difficulty_level === 'hard' ? 5 : 0;
+    const firstCompletionBonus = isFirstToday ? 5 : 0;
+    const perfectDayBonus = isPerfectDay ? 20 : 0;
 
-    // Streak bonus
-    if (streak > 90) multiplier += 0.30;
-    else if (streak > 30) multiplier += 0.15;
-    else if (streak > 7) multiplier += 0.05;
-
-    // Difficulty bonus
-    if (habit.difficulty_level === 'hard') multiplier *= 1.5;
-    else if (habit.difficulty_level === 'medium') multiplier *= 1.2;
-
-    // Consistency bonus (if completion_rate > 90%)
-    if (habit.completion_rate && habit.completion_rate > 90) {
-      multiplier *= 1.2;
-    }
-
-    return Math.round(baseXP * multiplier);
+    return calculateHabitXP({
+      baseXP: habit.xp_reward || 10,
+      streakBonus,
+      difficultyBonus,
+      firstCompletionBonus,
+      perfectDayBonus,
+    });
   };
 
   const completeHabit = async (habitId: string, habit: any): Promise<CompletionResult | null> => {
@@ -83,32 +85,73 @@ export function useHabitCompletion() {
         }
       }
 
-      // 3. Calculate and award XP
-      const xpEarned = calculateXP(habit, newStreak);
-
-      // 4. Update user profile with XP
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('total_xp, current_level')
+      // 3. Check if this is first completion today and if perfect day
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayCompletions } = await supabase
+        .from('habit_completions')
+        .select('id')
         .eq('user_id', user.id)
-        .single();
+        .gte('completed_at', `${today}T00:00:00`)
+        .lt('completed_at', `${today}T23:59:59`);
 
-      if (profileError) throw profileError;
+      const isFirstToday = !todayCompletions || todayCompletions.length === 1;
+      
+      // Check if all habits are now completed today (perfect day)
+      const { data: userHabits } = await supabase
+        .from('habits' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('archived', false);
+      
+      const isPerfectDay = userHabits && todayCompletions && 
+        todayCompletions.length >= userHabits.length;
 
-      const oldLevel = profile?.current_level || 1;
-      const newTotalXP = (profile?.total_xp || 0) + xpEarned;
+      // 4. Calculate and award XP using new system
+      const xpEarned = calculateHabitCompletionXP(habit, newStreak, isFirstToday, isPerfectDay);
 
-      const { error: xpError } = await supabase
-        .from('profiles')
-        .update({ total_xp: newTotalXP })
+      // Get current total XP
+      const { data: xpData } = await supabase
+        .from('xp_history' as any)
+        .select('amount')
         .eq('user_id', user.id);
+      
+      const oldTotalXP = (xpData || []).reduce((sum: number, record: any) => sum + (record.amount || 0), 0);
+      const oldLevel = calculateLevel(oldTotalXP);
+
+      // Award XP
+      const { error: xpError } = await supabase
+        .from('xp_history' as any)
+        .insert({
+          user_id: user.id,
+          amount: xpEarned,
+          source: 'habit_completion',
+          source_id: habitId,
+          metadata: {
+            habit_name: habit.name,
+            streak: newStreak,
+            is_first_today: isFirstToday,
+            is_perfect_day: isPerfectDay,
+          },
+        });
 
       if (xpError) throw xpError;
 
-      const newLevel = Math.floor(newTotalXP / 1000) + 1;
+      const newTotalXP = oldTotalXP + xpEarned;
+      const newLevel = calculateLevel(newTotalXP);
 
-      // 5. Save streak history (only if starting/ending a streak)
-      const today = new Date().toISOString().split('T')[0];
+      // 5. Check for new achievements
+      const checkParams: AchievementCheckParams = {
+        userId: user.id,
+        streak: newStreak,
+        totalCompletions: oldTotalXP / 10, // Rough estimate
+        dailyCompletions: todayCompletions?.length || 1,
+        perfectDay: isPerfectDay,
+        completionTime: new Date().toTimeString().split(' ')[0],
+      };
+
+      const newAchievements = await checkAndAwardAchievements(checkParams);
+
+      // 6. Save streak history
       await supabase
         .from('habit_streak_history')
         .upsert({
@@ -121,24 +164,47 @@ export function useHabitCompletion() {
         });
 
       // Determine celebration type
-      let celebrationType: 'completion' | 'streak' | 'milestone' = 'completion';
+      let celebrationType: 'completion' | 'streak' | 'milestone' | 'level_up' = 'completion';
       if (newLevel > oldLevel) {
-        celebrationType = 'milestone';
-      } else if (newStreak % 7 === 0 || newStreak % 30 === 0) {
-        celebrationType = 'streak';
+        celebrationType = 'level_up';
+      } else {
+        const streakMilestone = isNewMilestone(newStreak - 1, newStreak);
+        if (streakMilestone) {
+          celebrationType = 'milestone';
+        } else if (newStreak % 7 === 0) {
+          celebrationType = 'streak';
+        }
       }
 
+      // Show achievement toasts
+      if (newAchievements.length > 0) {
+        newAchievements.forEach(({ achievement, xpAwarded }) => {
+          sonnerToast.custom((t) => (
+            <div className="bg-card border border-border rounded-lg shadow-lg p-4">
+              <AchievementUnlockedToast achievement={achievement} />
+            </div>
+          ), { duration: 5000 });
+        });
+      }
+
+      // Show completion toast
+      let description = `+${xpEarned} XP`;
+      if (newStreak > 1) description += ` • ${newStreak} дней подряд`;
+      if (isPerfectDay) description += ` • 🌟 Идеальный день!`;
+      
       toast({
         title: "Привычка выполнена!",
-        description: `+${xpEarned} XP ${newStreak > 1 ? `• ${newStreak} дней подряд` : ''}`,
+        description,
       });
 
       return {
         success: true,
         xpEarned,
+        oldLevel,
         newLevel: newLevel > oldLevel ? newLevel : undefined,
         celebrationType,
-        streakCount: newStreak
+        streakCount: newStreak,
+        newAchievements,
       };
 
     } catch (error) {
