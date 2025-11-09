@@ -123,7 +123,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             {analysis.ai_summary}
           </p>
           
-          {analysis.ai_insights && analysis.ai_insights.length > 0 && (
+          {Array.isArray(analysis.ai_insights) && analysis.ai_insights.length > 0 && (
             <div className="mt-4 space-y-2">
               <h3 className="text-sm font-semibold text-primary">Ключевые выводы:</h3>
               <ul className="space-y-2">

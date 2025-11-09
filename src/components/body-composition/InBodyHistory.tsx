@@ -147,7 +147,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         onProgress: (current, total) => console.log(`PDF conversion progress: ${current}/${total}`),
       });
       
-      if (!images || images.length === 0) {
+      if (!images || !Array.isArray(images) || images.length === 0) {
         throw new Error('Не удалось конвертировать PDF в изображения');
       }
 

@@ -113,7 +113,7 @@ export default function Habits() {
 
       while (currentDate <= endDate) {
         const dateStr = currentDate.toISOString().split('T')[0];
-        const dayCompletions = completions?.filter(c => c.completed_at.startsWith(dateStr)).length || 0;
+        const dayCompletions = completions?.filter(c => c.completed_at.startsWith(dateStr))?.length ?? 0;
         dailyRates[dateStr] = habits.length > 0 ? (dayCompletions / habits.length) * 100 : 0;
         currentDate.setDate(currentDate.getDate() + 1);
       }
@@ -123,7 +123,7 @@ export default function Habits() {
         rate,
       }));
 
-      const avgRate = Object.values(dailyRates).reduce((a, b) => a + b, 0) / Object.values(dailyRates).length || 0;
+      const avgRate = Object.values(dailyRates).reduce((a, b) => a + b, 0) / (Object.values(dailyRates).length || 1);
 
       return { rate: avgRate, history };
     },
