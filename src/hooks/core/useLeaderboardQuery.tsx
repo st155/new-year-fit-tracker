@@ -4,7 +4,7 @@ import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/lib/challenge-s
 
 export const leaderboardQueryKeys = {
   all: ['leaderboard'] as const,
-  list: (userId?: string, limit?: number, timePeriod?: string) => [...leaderboardQueryKeys.all, 'list', userId, limit, timePeriod] as const,
+  list: (userId?: string, limit?: number, timePeriod?: string, challengeId?: string) => [...leaderboardQueryKeys.all, 'list', userId, limit, timePeriod, challengeId] as const,
 };
 
 // Fallback query for basic leaderboard data when views fail
@@ -114,22 +114,16 @@ export function useLeaderboardQuery(
   const queryClient = useQueryClient();
   
   return useQuery({
-    queryKey: leaderboardQueryKeys.list(userId, options?.limit, options?.timePeriod),
+    queryKey: leaderboardQueryKeys.list(userId, options?.limit, options?.timePeriod, options?.challengeId),
     queryFn: async () => {
       if (!userId) return [];
 
       const timePeriod = options?.timePeriod || 'overall';
       const limit = options?.limit || 100;
       const challengeId = options?.challengeId;
-      const queryKey = leaderboardQueryKeys.list(userId, limit, timePeriod);
+      const queryKey = leaderboardQueryKeys.list(userId, limit, timePeriod, challengeId);
 
-      // If challengeId is provided, skip RPC and use fallback directly
-      if (challengeId) {
-        console.log('[useLeaderboardQuery] Using direct fallback for challenge:', challengeId);
-        return fetchFallbackLeaderboard(userId, limit, challengeId);
-      }
-
-      console.log('[useLeaderboardQuery] Fetching via RPC:', { userId, timePeriod, limit });
+      console.log('[useLeaderboardQuery] Starting fetch:', { userId, timePeriod, limit, challengeId });
 
       const startTime = Date.now();
       let rpcFinished = false;
@@ -158,15 +152,31 @@ export function useLeaderboardQuery(
             return null;
           }
 
+          // Filter by challengeId if provided
+          const filteredData = challengeId 
+            ? rpcData.filter((entry: any) => entry.challenge_id === challengeId)
+            : rpcData;
+
+          console.log('[useLeaderboardQuery] After challenge filter:', { 
+            original: rpcData.length, 
+            filtered: filteredData.length,
+            challengeId 
+          });
+
+          if (filteredData.length === 0) {
+            console.log('[useLeaderboardQuery] No data after challenge filter, using fallback');
+            return null;
+          }
+
           // Fetch points breakdown separately
-          const userIds = rpcData.map((entry: any) => entry.user_id);
+          const userIds = filteredData.map((entry: any) => entry.user_id);
           const { data: pointsData } = await supabase
             .from('challenge_points')
             .select('user_id, performance_points, recovery_points, synergy_points, points_breakdown')
             .in('user_id', userIds);
 
           // Process and enrich data
-          const enrichedData = rpcData.map((entry: any, index: number) => {
+          const enrichedData = filteredData.map((entry: any, index: number) => {
             const points = pointsData?.find((p: any) => p.user_id === entry.user_id);
             
             const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
@@ -175,7 +185,7 @@ export function useLeaderboardQuery(
               fullName: entry.full_name,
               avatarUrl: entry.avatar_url,
               totalPoints: entry.total_points || 0,
-              activeDays: entry.days_with_data || 0,
+              activeDays: entry.days_with_data || entry.active_days || 0,
               lastActivityDate: entry.last_activity_date,
               streakDays: entry.streak_days || 0,
               avgRecovery: Math.round(entry.avg_recovery || 0),
@@ -208,11 +218,15 @@ export function useLeaderboardQuery(
           // Re-sort after badge bonus
           const sortedData = enrichedData.sort((a, b) => b.totalPoints - a.totalPoints);
           
-          console.log('✅ [Leaderboard] RPC enriched data:', sortedData.slice(0, 3).map(e => ({
-            username: e.username,
-            badges: e.badges.length,
-            finalPoints: e.totalPoints
-          })));
+          console.log('✅ [useLeaderboardQuery] RPC enriched data:', {
+            total: sortedData.length,
+            sample: sortedData.slice(0, 3).map(e => ({
+              username: e.username,
+              activeDays: e.activeDays,
+              badges: e.badges.length,
+              finalPoints: e.totalPoints
+            }))
+          });
           
           // Update ranks after re-sorting
           return sortedData.map((entry, index) => ({
@@ -236,11 +250,12 @@ export function useLeaderboardQuery(
       if (rpcResult !== null) {
         // RPC finished quickly
         rpcFinished = true;
+        console.log('[useLeaderboardQuery] Using RPC data (fast path)');
         return rpcResult;
       }
 
       // RPC timed out, fetch fallback immediately
-      console.log('[useLeaderboardQuery] Returning fallback (fast path)');
+      console.log('[useLeaderboardQuery] RPC timeout -> returning fallback (fast path)');
       const fallbackData = await fetchFallbackLeaderboard(userId, limit, challengeId);
 
       // Continue RPC in background and update when ready
@@ -251,6 +266,7 @@ export function useLeaderboardQuery(
         }
       });
 
+      console.log('[useLeaderboardQuery] Returning fallback data:', { count: fallbackData.length });
       return fallbackData;
 
     },
