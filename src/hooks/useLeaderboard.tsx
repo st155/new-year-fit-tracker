@@ -17,7 +17,7 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall', challengeId: manualChallengeId } = options;
   
   // Get preferred challenge if no manual override
-  const { challengeId: preferredChallengeId, title: challengeTitle } = usePreferredChallenge(user?.id);
+  const { challengeId: preferredChallengeId, title: challengeTitle, isLoading: challengesLoading } = usePreferredChallenge(user?.id);
   const effectiveChallengeId = manualChallengeId || preferredChallengeId;
 
   const { 
@@ -66,17 +66,18 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
 
   console.log('[useLeaderboard] State:', {
     authLoading,
+    challengesLoading,
     queryLoading,
     userId: user?.id,
     effectiveChallengeId,
     challengeTitle,
     leaderboardLength: leaderboard.length,
-    finalLoading: authLoading || (queryLoading && !!user?.id)
+    finalLoading: authLoading || challengesLoading || (queryLoading && !!user?.id)
   });
 
   return {
     leaderboard,
-    loading: authLoading || (queryLoading && !!user?.id),
+    loading: authLoading || challengesLoading || (queryLoading && !!user?.id),
     error: queryError?.message || null,
     challengeId: effectiveChallengeId,
     challengeTitle,

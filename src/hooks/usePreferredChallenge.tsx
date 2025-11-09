@@ -19,6 +19,12 @@ export function usePreferredChallenge(userId?: string): PreferredChallenge {
   const [preferredChallengeId, setPreferredChallengeId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for challenges to load before determining preferred challenge
+    if (isLoading) {
+      console.log('[usePreferredChallenge] Still loading challenges...');
+      return;
+    }
+
     if (!challenges || challenges.length === 0 || !userId) {
       console.log('[usePreferredChallenge] No challenges available');
       setPreferredChallengeId(null);
@@ -63,7 +69,7 @@ export function usePreferredChallenge(userId?: string): PreferredChallenge {
     console.log('[usePreferredChallenge] Using latest challenge:', latestChallenge.title);
     setPreferredChallengeId(latestChallenge.id);
     localStorage.setItem(STORAGE_KEY, latestChallenge.id);
-  }, [challenges, userId]);
+  }, [challenges, userId, isLoading]);
 
   const setPreferred = (challengeId: string) => {
     console.log('[usePreferredChallenge] Manually setting preferred challenge:', challengeId);

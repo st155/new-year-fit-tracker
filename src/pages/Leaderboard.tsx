@@ -137,7 +137,7 @@ const Leaderboard = () => {
                 </Button>
               </CardContent>
             </Card>
-          ) : leaderboard.length === 0 ? (
+          ) : leaderboard.length === 0 && !isLoading ? (
             <Card>
               <CardContent className="p-12 text-center space-y-4">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
