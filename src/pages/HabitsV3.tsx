@@ -22,6 +22,7 @@ import { SmartView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy } from 'lucide-react';
+import { HabitCreateDialog } from '@/components/habits/HabitCreateDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
@@ -74,6 +75,7 @@ export default function HabitsV3() {
     return !localStorage.getItem('habitsV3_onboarding_completed');
   });
   const [announcement, setAnnouncement] = useState('');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   const handleOnboardingComplete = () => {
     localStorage.setItem('habitsV3_onboarding_completed', 'true');
@@ -165,7 +167,7 @@ export default function HabitsV3() {
             <Button variant="outline" size="icon" onClick={() => setShowAchievements(true)}>
               <Trophy className="w-5 h-5" />
             </Button>
-            <Button onClick={() => navigate('/habits/new')} size="lg">
+            <Button onClick={() => setCreateDialogOpen(true)} size="lg">
               <Plus className="w-5 h-5 mr-2" />
               Добавить
             </Button>
@@ -299,6 +301,12 @@ export default function HabitsV3() {
         <ScreenReaderAnnouncement message={announcement} />
       </div>
     </PullToRefresh>
+
+      {/* Create Habit Dialog */}
+      <HabitCreateDialog 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </>
   );
 }
