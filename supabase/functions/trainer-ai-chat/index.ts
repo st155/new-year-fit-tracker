@@ -594,7 +594,15 @@ IMPORTANT INSTRUCTIONS:
    - If user confirms with words like "да", "confirm", "давай", "ок" - IMMEDIATELY create a structured plan with tool calls
    - If you detect confirmation intent - DO NOT ask more questions, CREATE THE PLAN NOW
    - User confirmation = instant action plan with function calls
-   - After user says "да/yes/confirm" - your NEXT response MUST contain tool calls`;
+   - After user says "да/yes/confirm" - your NEXT response MUST contain tool calls
+
+13. GOAL SUGGESTIONS TOOL USAGE:
+   - When trainer asks "какие рекомендации?", "что посоветуешь?", "как корректировать цели?", "покажи suggestions" - use get_goal_suggestions tool
+   - After receiving suggestions data, analyze them and provide clear explanations
+   - Prioritize suggestions by priority (1 = highest)
+   - Explain WHY each suggestion was made based on progress_trend and confidence_score
+   - If trainer wants to apply a suggestion, create appropriate action (create_goal, update_goal, add_measurement)
+   - If no suggestions exist, inform trainer they can generate them via UI`;
 
     // Add eager mode instruction
     if (eagerMode) {
@@ -833,6 +841,32 @@ IMPORTANT INSTRUCTIONS:
             required: ["client_id", "plan_name", "workouts"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_goal_suggestions",
+          description: "Get AI-generated suggestions for goal adjustments based on client progress analysis. Use this when trainer asks about recommendations, suggestions, or what to do with client goals.",
+          parameters: {
+            type: "object",
+            properties: {
+              client_id: {
+                type: "string",
+                description: "UUID of the client (use the CLIENT_ID value from context, NOT the client name)"
+              },
+              status: {
+                type: "string",
+                description: "Filter by status: 'pending' (default), 'accepted', 'rejected', 'dismissed', or 'all'",
+                enum: ["pending", "accepted", "rejected", "dismissed", "all"]
+              },
+              limit: {
+                type: "number",
+                description: "Maximum number of suggestions to return (default: 5)"
+              }
+            },
+            required: ["client_id"]
+          }
+        }
       }
     ];
 
@@ -1064,6 +1098,86 @@ IMPORTANT INSTRUCTIONS:
               workouts: args.workouts
             }
           });
+        } else if (functionName === 'get_goal_suggestions') {
+          // This is an informational tool - it returns data but doesn't create actions
+          console.log('📊 Fetching goal suggestions for client:', args.client_id);
+          
+          // Query the ai_goal_suggestions table
+          let query = supabaseClient
+            .from('ai_goal_suggestions')
+            .select(`
+              id,
+              goal_id,
+              suggestion_type,
+              current_progress,
+              progress_trend,
+              recommendation_text,
+              suggested_action,
+              confidence_score,
+              priority,
+              status,
+              created_at,
+              goals (
+                goal_name,
+                target_value,
+                target_unit
+              )
+            `)
+            .eq('client_id', args.client_id)
+            .order('priority', { ascending: true })
+            .order('created_at', { ascending: false });
+          
+          // Filter by status
+          if (args.status && args.status !== 'all') {
+            query = query.eq('status', args.status);
+          } else if (!args.status) {
+            // Default to pending only
+            query = query.eq('status', 'pending');
+          }
+          
+          // Limit results
+          const limit = args.limit || 5;
+          query = query.limit(limit);
+          
+          const { data: suggestions, error } = await query;
+          
+          if (error) {
+            console.error('Error fetching suggestions:', error);
+            assistantMessage += `\n\n⚠️ Не удалось загрузить рекомендации: ${error.message}`;
+          } else if (suggestions && suggestions.length > 0) {
+            console.log(`✅ Found ${suggestions.length} suggestions`);
+            
+            // Format suggestions for AI context
+            const suggestionsContext = suggestions.map((s, idx) => {
+              const goal = (s.goals as any) || {};
+              return `
+${idx + 1}. [${s.suggestion_type.toUpperCase()}] ${goal.goal_name || 'Unknown goal'}
+   Priority: ${s.priority}/5 | Confidence: ${s.confidence_score}%
+   Progress: ${s.current_progress}% (${s.progress_trend})
+   
+   💡 Recommendation:
+   ${s.recommendation_text}
+   
+   🎯 Suggested Action:
+   ${JSON.stringify(s.suggested_action, null, 2)}
+   
+   Status: ${s.status} | Created: ${new Date(s.created_at).toLocaleDateString('ru')}
+   Suggestion ID: ${s.id}
+              `.trim();
+            }).join('\n\n---\n\n');
+            
+            // Add suggestions to assistant message context
+            assistantMessage += `\n\n📊 **AI-рекомендации для клиента (${suggestions.length}):**\n\n${suggestionsContext}`;
+            
+            // Store suggestions in metadata for potential use
+            suggestedActions = {
+              type: 'goal_suggestions',
+              data: suggestions
+            };
+          } else {
+            console.log('ℹ️ No suggestions found');
+            assistantMessage += `\n\nℹ️ У этого клиента пока нет AI-рекомендаций. Вы можете запустить анализ, нажав кнопку "🤖 Анализировать прогресс" в карточке клиента.`;
+          }
         }
       }
       
