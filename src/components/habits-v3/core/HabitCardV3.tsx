@@ -211,28 +211,44 @@ export function HabitCardV3({
 
         <Card
           className={cn(
-            "relative z-10 transition-all duration-300 hover:shadow-lg cursor-pointer",
+            "relative z-10 transition-all duration-300 hover:shadow-lg cursor-pointer habit-card-compact",
             "bg-gradient-to-br glass-card",
             theme.gradient,
             stateStyles.className,
             state !== 'completed' && theme.glow,
             stateStyles.glow,
-            compact ? "p-3" : "p-4",
+            compact ? "p-2" : "p-3",
             isLongPress && "ring-2 ring-primary/50"
           )}
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
         >
-          <CardHeader className={cn("p-0", compact ? "pb-2" : "pb-3")}>
+          {/* Mini progress bar */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-lg">
+            <div
+              className={cn(
+                "h-full transition-all duration-500",
+                state === 'completed' && "bg-gradient-to-r from-emerald-500 to-green-500",
+                state === 'in_progress' && "bg-gradient-to-r from-blue-500 to-cyan-500",
+                state === 'not_started' && "bg-muted/50"
+              )}
+              style={{ 
+                width: state === 'completed' ? '100%' : 
+                       state === 'in_progress' ? '50%' : '0%' 
+              }}
+            />
+          </div>
+          <CardHeader className={cn("p-0", compact ? "pb-1.5" : "pb-2")}>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
                 {/* Icon */}
                 <div className={cn(
-                  "flex items-center justify-center rounded-lg p-2",
+                  "flex items-center justify-center rounded-lg",
+                  compact ? "p-1.5" : "p-2",
                   "bg-background/50"
                 )}>
-                  <HabitIcon className={cn("w-5 h-5", theme.textColor)} />
+                  <HabitIcon className={cn(compact ? "w-4 h-4" : "w-5 h-5", theme.textColor)} />
                 </div>
 
                 {/* Title */}
@@ -325,38 +341,30 @@ export function HabitCardV3({
 
             {/* Regular habit info */}
             {!compact && habit.habit_type !== 'duration_counter' && (
-              <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1.5">
                 {/* Streak */}
                 {habit.streak > 0 && (
                   <div className="flex items-center gap-1">
-                    <Flame className="w-4 h-4 text-orange-500" />
-                    <span>{habit.streak} дней</span>
-                  </div>
-                )}
-
-                {/* Estimated duration */}
-                {habit.estimated_duration_minutes && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDuration(habit.estimated_duration_minutes)}</span>
-                  </div>
-                )}
-
-                {/* Difficulty */}
-                {difficulty && (
-                  <div className="flex items-center gap-1">
-                    <span>{difficulty.icon}</span>
-                    <span>{difficulty.label}</span>
+                    <Flame className="w-3.5 h-3.5 text-orange-500" />
+                    <span className="text-xs">{habit.streak}</span>
                   </div>
                 )}
 
                 {/* XP Reward */}
                 {habit.xp_reward && (
                   <div className="flex items-center gap-1">
-                    <Target className="w-4 h-4 text-amber-500" />
-                    <span>+{habit.xp_reward} XP</span>
+                    <Target className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-xs">+{habit.xp_reward}</span>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Compact mode - only show streak */}
+            {compact && habit.streak > 0 && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                <Flame className="w-3 h-3 text-orange-500" />
+                <span>{habit.streak}</span>
               </div>
             )}
 

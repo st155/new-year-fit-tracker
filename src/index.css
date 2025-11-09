@@ -1114,5 +1114,38 @@ All colors MUST be HSL.
   .timeline-night {
     @apply bg-gradient-to-r from-indigo-500/5 to-slate-500/10;
   }
+
+  /* Habits glow effects */
+  .glow-positive {
+    box-shadow: 0 0 20px hsl(var(--habit-positive) / 0.3);
+  }
+
+  .glow-at-risk {
+    box-shadow: 0 0 20px hsl(var(--habit-at-risk) / 0.3);
+  }
+
+  /* Chart improvements */
+  .chart-glow {
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+
+  .chart-area-gradient {
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .chart-area-gradient:hover {
+    opacity: 1;
+  }
+
+  /* Compact card animations */
+  .habit-card-compact {
+    transition: all 0.2s ease;
+  }
+
+  .habit-card-compact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px hsl(var(--primary) / 0.15);
+  }
 }
 

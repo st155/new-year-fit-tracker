@@ -48,25 +48,25 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
             className={cn(
-              "p-4 rounded-lg border bg-card/50 cursor-pointer transition-all hover:shadow-lg",
-              index === 0 && "border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-transparent"
+              "p-3 rounded-lg border bg-card/50 cursor-pointer transition-all hover:shadow-lg",
+              index === 0 && "border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-transparent"
             )}
             onClick={() => onHabitClick?.(habit.id)}
           >
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
                 {index === 0 && (
-                  <Award className="w-5 h-5 text-amber-500" />
+                  <Award className="w-4 h-4 text-amber-500" />
                 )}
                 <div>
-                  <h3 className="font-semibold">{habit.name}</h3>
+                  <h3 className="font-semibold text-sm">{habit.name}</h3>
                   <p className="text-xs text-muted-foreground">
                     {habit.category || 'Привычка'}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-xl font-bold text-primary">
                   {Math.round(habit.stats?.completion_rate || 0)}%
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -82,13 +82,15 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
             />
 
             {/* Stats row */}
-            <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-              <div>
-                🔥 Streak: <span className="font-medium text-foreground">{habit.streak || 0}</span>
+            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <span>🔥</span>
+                <span className="font-medium text-foreground">{habit.streak || 0}</span>
               </div>
               {habit.xp_reward && (
-                <div>
-                  ⭐ XP: <span className="font-medium text-amber-500">+{habit.xp_reward}</span>
+                <div className="flex items-center gap-1">
+                  <span>⭐</span>
+                  <span className="font-medium text-amber-500">+{habit.xp_reward}</span>
                 </div>
               )}
             </div>

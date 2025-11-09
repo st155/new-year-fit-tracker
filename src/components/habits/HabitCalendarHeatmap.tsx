@@ -64,11 +64,11 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
   }, [dateRange, completionData]);
 
   const getIntensityClass = (count: number) => {
-    if (count === 0) return 'bg-white/5 hover:bg-white/10';
-    if (count === 1) return 'bg-habit-positive/20 hover:bg-habit-positive/30';
-    if (count === 2) return 'bg-habit-positive/40 hover:bg-habit-positive/50';
-    if (count === 3) return 'bg-habit-positive/60 hover:bg-habit-positive/70';
-    return 'bg-habit-positive hover:bg-habit-positive/90';
+    if (count === 0) return 'bg-muted/20 hover:bg-muted/30';
+    if (count === 1) return 'bg-gradient-to-br from-primary/30 to-primary/20 hover:from-primary/40 hover:to-primary/30 shadow-sm';
+    if (count === 2) return 'bg-gradient-to-br from-primary/50 to-primary/40 hover:from-primary/60 hover:to-primary/50 shadow-md';
+    if (count === 3) return 'bg-gradient-to-br from-primary/70 to-primary/60 hover:from-primary/80 hover:to-primary/70 shadow-lg';
+    return 'bg-gradient-to-br from-primary to-primary/90 hover:from-primary/95 hover:to-primary shadow-glow';
   };
 
   // Group days by week
@@ -100,11 +100,11 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Меньше</span>
           <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-sm bg-white/5" />
-            <div className="w-3 h-3 rounded-sm bg-habit-positive/20" />
-            <div className="w-3 h-3 rounded-sm bg-habit-positive/40" />
-            <div className="w-3 h-3 rounded-sm bg-habit-positive/60" />
-            <div className="w-3 h-3 rounded-sm bg-habit-positive" />
+            <div className="w-3 h-3 rounded-sm bg-muted/20" />
+            <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary/30 to-primary/20" />
+            <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary/50 to-primary/40" />
+            <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary/70 to-primary/60" />
+            <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary to-primary/90" />
           </div>
           <span>Больше</span>
         </div>

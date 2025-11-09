@@ -39,25 +39,58 @@ export function HabitMiniChart({ completions, days = 7, className }: HabitMiniCh
     return Math.round((completed / chartData.length) * 100);
   }, [chartData]);
 
+  const sparklinePath = useMemo(() => {
+    const values = chartData.map(d => d.completed ? 1 : 0);
+    const width = 100;
+    const height = 20;
+    const stepX = width / (values.length - 1 || 1);
+    
+    const points = values.map((value, index) => {
+      const x = index * stepX;
+      const y = height - (value * height * 0.8);
+      return { x, y };
+    });
+    
+    const path = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
+    const gradientId = `mini-grad-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return { path, points, gradientId };
+  }, [chartData]);
+
   return (
     <div className={cn("space-y-2", className)}>
-      {/* Heatmap */}
-      <div className="flex gap-1 justify-between">
-        {chartData.map((day, index) => (
-          <div key={index} className="flex flex-col items-center gap-1">
-            <div
-              className={cn(
-                "w-8 h-8 rounded transition-all duration-200",
-                day.completed
-                  ? "bg-primary shadow-glow"
-                  : "bg-muted/30 hover:bg-muted/50"
-              )}
-              title={`${day.label}: ${day.completed ? 'Выполнено' : 'Не выполнено'}`}
-            />
-            <span className="text-[10px] text-muted-foreground">{day.label}</span>
-          </div>
+      {/* Sparkline Chart */}
+      <svg viewBox="0 0 100 20" className="w-full h-6">
+        <defs>
+          <linearGradient id={sparklinePath.gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.5"/>
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.1"/>
+          </linearGradient>
+        </defs>
+        <path
+          d={`${sparklinePath.path} L 100,20 L 0,20 Z`}
+          fill={`url(#${sparklinePath.gradientId})`}
+        />
+        <path
+          d={sparklinePath.path}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ filter: 'drop-shadow(0 0 3px hsl(var(--primary)))' }}
+        />
+        {sparklinePath.points.map((point, i) => (
+          <circle
+            key={i}
+            cx={point.x}
+            cy={point.y}
+            r="2"
+            fill="hsl(var(--primary))"
+            opacity={chartData[i].completed ? 1 : 0.3}
+          />
         ))}
-      </div>
+      </svg>
       
       {/* Stats */}
       <div className="text-center">

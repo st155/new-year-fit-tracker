@@ -37,26 +37,26 @@ export function OverviewStats({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0 }}
       >
-        <Card className="glass-card hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between mb-4">
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-cyan-500/10 to-blue-500/5">
+          <CardContent className="p-3">
+            <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Сегодня</p>
-                <p className="text-3xl font-bold">
-                  {todayCompleted}<span className="text-muted-foreground">/{todayTotal}</span>
+                <p className="text-xs text-muted-foreground mb-1">Сегодня</p>
+                <p className="text-2xl font-bold">
+                  {todayCompleted}<span className="text-muted-foreground text-lg">/{todayTotal}</span>
                 </p>
               </div>
               <CircularProgress 
                 value={todayProgress} 
-                size={60} 
-                strokeWidth={6}
+                size={48} 
+                strokeWidth={5}
                 showValue={false}
               />
             </div>
             
             {/* Mini sparkline */}
-            <div className="mb-2">
-              <SparklineChart data={weekData} height={30} />
+            <div className="mb-1.5">
+              <SparklineChart data={weekData} height={24} />
             </div>
             
             <p className="text-xs text-muted-foreground">
@@ -72,14 +72,14 @@ export function OverviewStats({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="glass-card hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between mb-3">
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-500/10 to-red-500/5">
+          <CardContent className="p-3">
+            <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Серия</p>
+                <p className="text-xs text-muted-foreground mb-1">Серия</p>
                 <div className="flex items-center gap-2">
-                  <Flame className="w-7 h-7 text-orange-500 animate-pulse" />
-                  <p className="text-3xl font-bold">{weekStreak}</p>
+                  <Flame className="w-6 h-6 text-orange-500 animate-pulse" />
+                  <p className="text-2xl font-bold">{weekStreak}</p>
                 </div>
               </div>
               {weekTrend !== 0 && (
@@ -101,7 +101,7 @@ export function OverviewStats({
             </div>
             
             {/* Streak progress bar */}
-            <div className="mb-2">
+            <div className="mb-1.5">
               <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-gradient-to-r from-orange-500 to-red-500"
@@ -127,18 +127,18 @@ export function OverviewStats({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="glass-card hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between mb-3">
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
+          <CardContent className="p-3">
+            <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Опыт</p>
+                <p className="text-xs text-muted-foreground mb-1">Опыт</p>
                 <div className="flex items-center gap-2">
-                  <Trophy className="w-7 h-7 text-amber-500" />
-                  <p className="text-3xl font-bold">{totalXP.toLocaleString()}</p>
+                  <Trophy className="w-6 h-6 text-amber-500" />
+                  <p className="text-2xl font-bold">{totalXP.toLocaleString()}</p>
                 </div>
               </div>
               <motion.div 
-                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 text-sm font-bold"
+                className="px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 text-xs font-bold"
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
@@ -147,10 +147,10 @@ export function OverviewStats({
             </div>
             
             {/* XP sparkline */}
-            <div className="mb-2">
+            <div className="mb-1.5">
               <SparklineChart 
                 data={xpData} 
-                height={30}
+                height={24}
                 color="hsl(38, 92%, 50%)"
               />
             </div>
@@ -158,7 +158,7 @@ export function OverviewStats({
             <div className="space-y-1">
               <Progress 
                 value={((totalXP % 1000) / 1000) * 100} 
-                className="h-2"
+                className="h-1.5"
               />
               <p className="text-xs text-muted-foreground">
                 {totalXP % 1000}/1000 до уровня {level + 1}

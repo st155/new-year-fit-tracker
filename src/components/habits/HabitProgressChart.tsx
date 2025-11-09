@@ -37,13 +37,14 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
         <CardTitle className="text-lg">Прогресс: {habitName}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={300}>
           {isDurationCounter ? (
             // Area chart для duration counter (показывает накопление дней)
             <ComposedChart data={chartData}>
               <defs>
                 <linearGradient id={`streakGradient-${habitName}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--habit-positive))" stopOpacity={0.8}/>
+                  <stop offset="5%" stopColor="hsl(var(--habit-positive))" stopOpacity={0.6}/>
+                  <stop offset="50%" stopColor="hsl(var(--habit-positive))" stopOpacity={0.2}/>
                   <stop offset="95%" stopColor="hsl(var(--habit-positive))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
@@ -58,12 +59,27 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'hsl(var(--background))',
+                  backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
               />
+              {/* Milestone reference lines */}
+              {[7, 30, 90].map(milestone => {
+                const hasMilestone = chartData.some(d => d.streakValue >= milestone && d.streakValue < milestone + 5);
+                if (!hasMilestone) return null;
+                return (
+                  <ReferenceLine 
+                    key={milestone}
+                    y={milestone}
+                    stroke="hsl(var(--primary))"
+                    strokeDasharray="3 3"
+                    label={{ value: `${milestone} дней`, position: "right", fill: "hsl(var(--primary))", fontSize: 11 }}
+                  />
+                );
+              })}
               {/* Показываем линии сброса */}
               {chartData.map((d, i) => 
                 d.hasReset ? (
@@ -80,14 +96,24 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
                 type="monotone" 
                 dataKey="streakValue" 
                 stroke="hsl(var(--habit-positive))" 
+                strokeWidth={3}
                 fillOpacity={1} 
                 fill={`url(#streakGradient-${habitName})`}
                 name="Дни стрика"
+                dot={{ fill: 'hsl(var(--habit-positive))', r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                activeDot={{ r: 6, fill: 'hsl(var(--habit-positive))' }}
+                style={{ filter: 'drop-shadow(0 2px 8px hsla(var(--primary), 0.4))' }}
               />
             </ComposedChart>
           ) : (
-            // Line chart для daily_check (точки = выполнения)
+            // Area chart для daily_check с градиентом
             <ComposedChart data={chartData}>
+              <defs>
+                <linearGradient id={`dailyGradient-${habitName}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--habit-positive))" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="hsl(var(--habit-positive))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
               <XAxis 
                 dataKey="date" 
                 stroke="hsl(var(--muted-foreground))"
@@ -102,24 +128,28 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'hsl(var(--background))',
+                  backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
                 formatter={(value: any) => [value === 1 ? 'Выполнено' : 'Пропущено', 'Статус']}
               />
-              <Line 
-                type="stepAfter" 
-                dataKey="value" 
-                stroke="hsl(var(--habit-positive))" 
-                strokeWidth={2}
+              <Area
+                type="stepAfter"
+                dataKey="value"
+                stroke="hsl(var(--habit-positive))"
+                strokeWidth={3}
+                fill={`url(#dailyGradient-${habitName})`}
                 dot={{ 
                   fill: 'hsl(var(--habit-positive))', 
-                  r: 4,
+                  r: 6,
                   strokeWidth: 2,
                   stroke: 'hsl(var(--background))'
                 }}
+                activeDot={{ r: 8, fill: 'hsl(var(--habit-positive))' }}
+                style={{ filter: 'drop-shadow(0 2px 8px hsla(var(--primary), 0.4))' }}
               />
             </ComposedChart>
           )}

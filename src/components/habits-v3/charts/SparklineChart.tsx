@@ -14,8 +14,8 @@ export function SparklineChart({
   color = "hsl(var(--primary))",
   height = 40 
 }: SparklineChartProps) {
-  const { path, max, min } = useMemo(() => {
-    if (data.length === 0) return { path: '', max: 0, min: 0 };
+  const { path, max, min, lastPoint, gradientId } = useMemo(() => {
+    if (data.length === 0) return { path: '', max: 0, min: 0, lastPoint: null, gradientId: '' };
     
     const max = Math.max(...data);
     const min = Math.min(...data);
@@ -27,12 +27,14 @@ export function SparklineChart({
     const points = data.map((value, index) => {
       const x = index * stepX;
       const y = height - ((value - min) / range) * height;
-      return `${x},${y}`;
+      return { x, y };
     });
     
-    const path = `M ${points.join(' L ')}`;
+    const path = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
+    const lastPoint = points[points.length - 1];
+    const gradientId = `sparkline-gradient-${Math.random().toString(36).substr(2, 9)}`;
     
-    return { path, max, min };
+    return { path, max, min, lastPoint, gradientId };
   }, [data, height]);
 
   if (data.length === 0) {
@@ -49,20 +51,35 @@ export function SparklineChart({
       className={cn("w-full", className)}
       preserveAspectRatio="none"
     >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.5"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
       <path
         d={path}
         fill="none"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         className="transition-all duration-300"
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
       />
       <path
         d={`${path} L 100,${height} L 0,${height} Z`}
-        fill={color}
-        opacity="0.1"
+        fill={`url(#${gradientId})`}
       />
+      {lastPoint && (
+        <circle
+          cx={lastPoint.x}
+          cy={lastPoint.y}
+          r="2.5"
+          fill={color}
+          className="animate-pulse"
+        />
+      )}
     </svg>
   );
 }
