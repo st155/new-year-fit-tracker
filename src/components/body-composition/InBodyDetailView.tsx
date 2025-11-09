@@ -61,21 +61,20 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   
   console.log('[InBodyDetailView] Enhanced data:', enhancedData);
 
-  // Strict validation of enhanced data
-  if (!enhancedData || 
-      !enhancedData.segmental || 
-      !enhancedData.overall ||
-      !enhancedData.hasSufficientData ||
-      enhancedData.segmental.source === 'none') {
-    console.warn('[InBodyDetailView] Insufficient data for display', {
-      hasEnhancedData: !!enhancedData,
-      hasSegmental: !!enhancedData?.segmental,
-      hasOverall: !!enhancedData?.overall,
-      hasSufficientData: enhancedData?.hasSufficientData,
-      segmentalSource: enhancedData?.segmental?.source
-    });
+  // Check if we have actual InBody data (prioritize real data over enhanced data)
+  const hasInBodyData = analysis.right_arm_percent !== null 
+    || analysis.left_arm_percent !== null 
+    || analysis.trunk_percent !== null;
+
+  if (!hasInBodyData) {
+    console.warn('[InBodyDetailView] No InBody segmental data available');
     return <InBodyDetailViewSkeleton />;
   }
+
+  console.log('[InBodyDetailView] Using InBody analysis data', {
+    hasEnhancedData: !!enhancedData,
+    hasSegmentalData: hasInBodyData
+  });
   
   const weightChange = calculateMetricChange(analysis.weight, previousAnalysis?.weight ?? null);
   const smmChange = calculateMetricChange(analysis.skeletal_muscle_mass, previousAnalysis?.skeletal_muscle_mass ?? null);
@@ -85,16 +84,19 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
   const bodyFatStatus = getBodyFatStatus(analysis.percent_body_fat);
   const visceralFatStatus = getVisceralFatStatus(analysis.visceral_fat_area);
 
-  // Use enhanced segmental data if viewing current analysis (with null-safe fallbacks)
-  const segmentData = selectedDate && enhancedData?.segmental?.data
+  // Always prioritize real InBody data
+  const segmentData = {
+    rightArmPercent: analysis.right_arm_percent ?? null,
+    leftArmPercent: analysis.left_arm_percent ?? null,
+    trunkPercent: analysis.trunk_percent ?? null,
+    rightLegPercent: analysis.right_leg_percent ?? null,
+    leftLegPercent: analysis.left_leg_percent ?? null,
+  };
+
+  // Use enhanced data for timeline if available
+  const displaySegmentData = (selectedDate && enhancedData?.segmental?.data)
     ? enhancedData.segmental.data 
-    : {
-        rightArmPercent: analysis.right_arm_percent ?? null,
-        leftArmPercent: analysis.left_arm_percent ?? null,
-        trunkPercent: analysis.trunk_percent ?? null,
-        rightLegPercent: analysis.right_leg_percent ?? null,
-        leftLegPercent: analysis.left_leg_percent ?? null,
-      };
+    : segmentData;
 
   const inbodyDates = allAnalyses.map(a => new Date(a.test_date));
 
@@ -200,16 +202,16 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             
             {/* Data Source Indicator */}
               <BodyDataSourceIndicator
-                source={enhancedData?.segmental?.source ?? 'none'}
-                confidence={enhancedData?.confidence ?? 'low'}
-                lastInBodyDate={enhancedData?.lastInBodyDate ?? null}
-                lastUpdated={enhancedData?.segmental?.lastUpdated ?? null}
-                weightSource={enhancedData?.overall?.weight?.source ?? 'none'}
-                bodyFatSource={enhancedData?.overall?.bodyFat?.source ?? 'none'}
+                source={enhancedData?.segmental?.source ?? 'inbody'}
+                confidence={enhancedData?.confidence ?? 'high'}
+                lastInBodyDate={new Date(analysis.test_date)}
+                lastUpdated={new Date(analysis.test_date)}
+                weightSource={enhancedData?.overall?.weight?.source ?? 'inbody'}
+                bodyFatSource={enhancedData?.overall?.bodyFat?.source ?? 'inbody'}
               />
           </div>
           <HumanBodyModel 
-            segmentData={segmentData} 
+            segmentData={displaySegmentData} 
             interactive={true}
             showTooltips={true}
           />

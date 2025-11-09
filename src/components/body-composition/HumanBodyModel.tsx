@@ -400,13 +400,15 @@ export function HumanBodyModel({
 
           {/* Bloom effect for high quality */}
           {quality === 'high' && (
-            <EffectComposer>
-              <Bloom 
-                luminanceThreshold={0.2}
-                luminanceSmoothing={0.9}
-                intensity={0.5}
-              />
-            </EffectComposer>
+            <Suspense fallback={null}>
+              <EffectComposer>
+                <Bloom 
+                  luminanceThreshold={0.2}
+                  luminanceSmoothing={0.9}
+                  intensity={0.5}
+                />
+              </EffectComposer>
+            </Suspense>
           )}
         </Canvas>
       </Suspense>
