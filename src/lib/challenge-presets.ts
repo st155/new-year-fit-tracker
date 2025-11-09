@@ -17,6 +17,7 @@ export interface ChallengePreset {
     direction: 'higher' | 'lower' | 'target'; // higher = better with increase, lower = better with decrease, target = optimal value
     min?: number; // minimum physiological value
     max?: number; // maximum physiological value
+    benchmarkKey?: string; // key to lookup in BENCHMARK_STANDARDS for scientifically accurate targets
   }>;
 }
 
@@ -77,6 +78,7 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         direction: 'target',
         min: 6,
         max: 10,
+        benchmarkKey: 'sleep',
       },
       {
         name: 'Recovery Score',
@@ -87,16 +89,29 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         direction: 'higher',
         min: 50,
         max: 100,
+        benchmarkKey: 'recovery_score',
       },
       {
         name: 'Resting Heart Rate',
         type: 'recovery',
-        baseValue: 75,
+        baseValue: 68,
         unit: 'bpm',
         scalingFactor: 1.0,
         direction: 'lower',
         min: 40,
         max: 90,
+        benchmarkKey: 'rhr',
+      },
+      {
+        name: 'HRV (Heart Rate Variability)',
+        type: 'recovery',
+        baseValue: 60,
+        unit: 'ms',
+        scalingFactor: 1.3,
+        direction: 'higher',
+        min: 30,
+        max: 150,
+        benchmarkKey: 'hrv',
       },
     ],
   },
@@ -159,6 +174,7 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         direction: 'lower',
         min: 15,
         max: 45,
+        benchmarkKey: 'run_5k',
       },
       {
         name: 'VO2 Max',
@@ -169,6 +185,7 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         direction: 'higher',
         min: 30,
         max: 80,
+        benchmarkKey: 'vo2max_male',
       },
       {
         name: 'Weekly Distance',

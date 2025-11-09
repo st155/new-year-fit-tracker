@@ -8,6 +8,7 @@ import { SettingsPanel } from './challenge-ai/SettingsPanel';
 import { PreviewPanel } from './challenge-ai/PreviewPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { BENCHMARK_STANDARDS, calculateStandardBenchmark, AUDIENCE_LEVEL_LABELS } from '@/lib/benchmark-standards';
 
 interface CreateChallengeDialogAIProps {
   open: boolean;
@@ -48,21 +49,31 @@ export const CreateChallengeDialogAI = ({
   };
 
   const calculateBenchmark = (disc: any, difficultyLevel: number, audienceLevel: number) => {
+    // Use scientifically-backed standards if available
+    if (disc.benchmarkKey && BENCHMARK_STANDARDS[disc.benchmarkKey]) {
+      return calculateStandardBenchmark(
+        BENCHMARK_STANDARDS[disc.benchmarkKey],
+        audienceLevel,
+        difficultyLevel
+      );
+    }
+    
+    // Fallback to legacy calculation for custom metrics
     const baseMult = difficultyMultipliers[difficultyLevel];
     const audienceMult = audienceMultipliers[audienceLevel];
     
     let value: number;
     
     if (disc.direction === 'lower') {
-      // For "lower is better" metrics (RHR, 5K time) - inverse the multipliers
+      // For "lower is better" metrics - inverse the multipliers
       const inverseMult = 1 / (baseMult * audienceMult);
       value = disc.baseValue * inverseMult;
     } else if (disc.direction === 'target') {
-      // For "target" metrics (Sleep Hours) - minimal variation, slightly increase with audience
+      // For "target" metrics - minimal variation, slightly increase with audience
       const targetVariation = 1 + (audienceMult - 1) * 0.15;
       value = disc.baseValue * targetVariation;
     } else {
-      // For "higher is better" metrics (Recovery Score, VO2 Max, strength)
+      // For "higher is better" metrics
       value = disc.baseValue * disc.scalingFactor * baseMult * audienceMult;
     }
     
