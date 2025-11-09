@@ -2,19 +2,19 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
+import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SmartView } from '@/components/habits-v3/layouts';
+import { SmartView, CompactListView, FocusMode } from '@/components/habits-v3/layouts';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
-import { useToast } from '@/hooks/use-toast';
 
 export default function HabitsV3() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { habits, isLoading, refetch } = useHabits(user?.id || '');
+  const { completeHabit, isCompleting } = useHabitCompletion();
 
   useEffect(() => {
     if (!user) {
@@ -23,12 +23,13 @@ export default function HabitsV3() {
   }, [user, navigate]);
 
   const handleHabitComplete = async (habitId: string) => {
-    // TODO: Implement habit completion logic
-    toast({
-      title: "Привычка выполнена!",
-      description: "Отличная работа! Продолжайте в том же духе.",
-    });
-    await refetch();
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const result = await completeHabit(habitId, habit);
+    if (result?.success) {
+      await refetch();
+    }
   };
 
   const handleHabitTap = (habitId: string) => {
@@ -101,15 +102,19 @@ export default function HabitsV3() {
           </TabsContent>
 
           <TabsContent value="compact">
-            <div className="glass-card p-6 text-center text-muted-foreground">
-              📋 Компактный вид в разработке
-            </div>
+            <CompactListView
+              habits={habits}
+              onHabitComplete={handleHabitComplete}
+              onHabitTap={handleHabitTap}
+            />
           </TabsContent>
 
           <TabsContent value="focus">
-            <div className="glass-card p-6 text-center text-muted-foreground">
-              🎯 Режим фокуса в разработке
-            </div>
+            <FocusMode
+              habits={habits.filter(h => !h.completed_today)}
+              onHabitComplete={handleHabitComplete}
+              onExit={() => navigate('/habits-v3')}
+            />
           </TabsContent>
 
           <TabsContent value="timeline">

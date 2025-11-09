@@ -3252,11 +3252,13 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_level: number | null
           email_updates: boolean | null
           full_name: string | null
           id: string
           notifications_enabled: boolean | null
           progress_sharing: boolean | null
+          total_xp: number | null
           trainer_role: boolean | null
           updated_at: string
           user_id: string
@@ -3265,11 +3267,13 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_level?: number | null
           email_updates?: boolean | null
           full_name?: string | null
           id?: string
           notifications_enabled?: boolean | null
           progress_sharing?: boolean | null
+          total_xp?: number | null
           trainer_role?: boolean | null
           updated_at?: string
           user_id: string
@@ -3278,11 +3282,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_level?: number | null
           email_updates?: boolean | null
           full_name?: string | null
           id?: string
           notifications_enabled?: boolean | null
           progress_sharing?: boolean | null
+          total_xp?: number | null
           trainer_role?: boolean | null
           updated_at?: string
           user_id?: string
