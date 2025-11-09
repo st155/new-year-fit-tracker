@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Info, TrendingUp, TrendingDown } from 'lucide-react';
+import { rechartsTooltipStyle } from '@/lib/chart-styles';
 import { cn } from '@/lib/utils';
 import { MetricValue, TimelineEntry } from '@/hooks/composite/data/useMultiSourceBodyData';
 import {
@@ -142,15 +143,17 @@ export function MultiSourceMetricCard({
                   </defs>
                   <YAxis domain={['dataMin - 5', 'dataMax + 5']} hide />
                   <RechartsTooltip
+                    contentStyle={rechartsTooltipStyle}
+                    wrapperStyle={{ zIndex: 1000 }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const value = typeof payload[0].value === 'number' ? payload[0].value : 0;
                         return (
-                          <div className="bg-popover border border-border rounded-lg px-2 py-1 shadow-lg">
-                            <p className="text-xs font-semibold">
+                          <div style={rechartsTooltipStyle}>
+                            <p className="text-xs font-semibold text-popover-foreground">
                               {value.toFixed(1)}{unit}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-popover-foreground/70">
                               {format(parseISO(payload[0].payload.date), 'MMM dd')}
                             </p>
                           </div>

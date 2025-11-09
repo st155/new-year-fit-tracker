@@ -29,6 +29,7 @@ import {
 import { lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { chartColors, sleepColors } from '@/lib/chart-colors';
+import { rechartsTooltipStyle, rechartsTooltipLabelStyle } from '@/lib/chart-styles';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
@@ -489,12 +490,9 @@ export default function FitnessData() {
                         className="text-xs"
                       />
                       <RechartsTooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))',
-                        }}
+                        contentStyle={rechartsTooltipStyle}
+                        labelStyle={rechartsTooltipLabelStyle}
+                        wrapperStyle={{ zIndex: 1000 }}
                         formatter={(value: number) => [`${value}%`, 'Recovery']}
                       />
                       <Area 
@@ -600,12 +598,9 @@ export default function FitnessData() {
                         className="text-xs"
                       />
                       <RechartsTooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))',
-                        }}
+                        contentStyle={rechartsTooltipStyle}
+                        labelStyle={rechartsTooltipLabelStyle}
+                        wrapperStyle={{ zIndex: 1000 }}
                         formatter={(value: number) => [value.toFixed(1), 'Strain']}
                       />
                       <Bar 
@@ -648,12 +643,9 @@ export default function FitnessData() {
                         className="text-xs"
                       />
                       <RechartsTooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          color: 'hsl(var(--foreground))',
-                        }}
+                        contentStyle={rechartsTooltipStyle}
+                        labelStyle={rechartsTooltipLabelStyle}
+                        wrapperStyle={{ zIndex: 1000 }}
                         formatter={(value: number) => [`${Math.round(value)} bpm`, 'Heart Rate']}
                       />
                       <Area 

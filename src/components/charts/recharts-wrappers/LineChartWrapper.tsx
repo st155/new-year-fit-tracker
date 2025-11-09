@@ -9,6 +9,7 @@ import {
   Legend 
 } from 'recharts';
 import type { ChartConfig } from '../OptimizedChart';
+import { rechartsTooltipStyle } from '@/lib/chart-styles';
 
 interface Props {
   data: any[];
@@ -28,11 +29,9 @@ export default function LineChartWrapper({ data, config, height }: Props) {
         <YAxis className="text-xs text-muted-foreground" />
         {config.showTooltip && (
           <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '0.5rem',
-            }}
+            contentStyle={rechartsTooltipStyle}
+            wrapperStyle={{ zIndex: 1000 }}
+            cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
           />
         )}
         {config.showLegend && <Legend />}

@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Legend 
 } from 'recharts';
+import { rechartsTooltipStyle, rechartsTooltipLabelStyle } from '@/lib/chart-styles';
 
 interface StackedBarChartWrapperProps {
   data: any[];
@@ -52,13 +53,10 @@ export default function StackedBarChartWrapper({
         />
         {showTooltip && (
           <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              color: 'hsl(var(--foreground))',
-            }}
-            labelStyle={{ color: 'hsl(var(--foreground))' }}
+            contentStyle={rechartsTooltipStyle}
+            labelStyle={rechartsTooltipLabelStyle}
+            wrapperStyle={{ zIndex: 1000 }}
+            cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
           />
         )}
         {showLegend && (
