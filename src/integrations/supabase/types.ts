@@ -5040,77 +5040,24 @@ export type Database = {
           active_days: number | null
           avatar_url: string | null
           avg_hrv: number | null
-          avg_recovery: number | null
-          avg_recovery_last_7d: number | null
+          avg_recovery_last_30d: number | null
           avg_resting_hr: number | null
-          avg_sleep: number | null
           avg_sleep_efficiency: number | null
-          avg_sleep_last_7d: number | null
-          avg_strain: number | null
-          avg_strain_last_7d: number | null
+          avg_sleep_last_30d: number | null
+          avg_strain_last_30d: number | null
           challenge_id: string | null
           days_with_data: number | null
           full_name: string | null
           last_activity_date: string | null
           latest_body_fat: number | null
           latest_weight: number | null
-          steps_last_7d: number | null
+          monthly_consistency: number | null
+          steps_last_30d: number | null
           streak_days: number | null
-          total_calories: number | null
           total_points: number | null
-          total_steps: number | null
-          total_workouts: number | null
           user_id: string | null
           username: string | null
-          weekly_consistency: number | null
-          workouts_last_7d: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "challenge_participants_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "challenges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenge_participants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      challenge_leaderboard_v2: {
-        Row: {
-          active_days: number | null
-          avatar_url: string | null
-          avg_hrv: number | null
-          avg_recovery: number | null
-          avg_recovery_last_7d: number | null
-          avg_resting_hr: number | null
-          avg_sleep: number | null
-          avg_sleep_efficiency: number | null
-          avg_sleep_last_7d: number | null
-          avg_strain: number | null
-          avg_strain_last_7d: number | null
-          challenge_id: string | null
-          days_with_data: number | null
-          full_name: string | null
-          last_activity_date: string | null
-          latest_body_fat: number | null
-          latest_weight: number | null
-          steps_last_7d: number | null
-          streak_days: number | null
-          total_calories: number | null
-          total_points: number | null
-          total_steps: number | null
-          total_workouts: number | null
-          user_id: string | null
-          username: string | null
-          weekly_consistency: number | null
-          workouts_last_7d: number | null
+          workouts_last_30d: number | null
         }
         Relationships: [
           {
@@ -5150,7 +5097,6 @@ export type Database = {
           latest_weight: number | null
           steps_last_7d: number | null
           streak_days: number | null
-          total_active_calories: number | null
           total_calories: number | null
           total_points: number | null
           total_steps: number | null
