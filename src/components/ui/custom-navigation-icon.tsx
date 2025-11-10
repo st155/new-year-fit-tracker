@@ -2,7 +2,7 @@ import { Home, TrendingUp, Trophy, Activity, Zap, Layers, Settings, Users, Dumbb
 import { cn } from "@/lib/utils";
 
 interface CustomNavigationIconProps {
-  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body' | 'habits' | 'leaderboard';
+  type: 'home' | 'stats' | 'challenges' | 'activity' | 'integrations' | 'connections' | 'settings' | 'trainer' | 'data' | 'feed' | 'goals' | 'body' | 'habits' | 'leaderboard' | 'workouts';
   isActive?: boolean;
   className?: string;
 }
@@ -92,6 +92,12 @@ const iconConfig = {
     glow: 'drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]',
     activeGlow: 'drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]'
   },
+  workouts: { 
+    icon: Dumbbell, 
+    gradient: 'from-cyan-400 to-blue-500',
+    glow: 'drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]',
+    activeGlow: 'drop-shadow-[0_0_20px_rgba(34,211,238,0.8)]'
+  },
 };
 
 export function CustomNavigationIcon({ type, isActive = false, className }: CustomNavigationIconProps) {
@@ -113,6 +119,7 @@ export function CustomNavigationIcon({ type, isActive = false, className }: Cust
     'from-fuchsia-400 to-violet-500': { from: '#e879f9', to: '#8b5cf6' },
     'from-amber-400 to-yellow-500': { from: '#fbbf24', to: '#eab308' },
     'from-yellow-400 to-amber-500': { from: '#facc15', to: '#f59e0b' },
+    'from-cyan-400 to-blue-500': { from: '#22d3ee', to: '#3b82f6' },
   };
   
   const colors = gradientColors[config.gradient] ?? { from: '#a3a3a3', to: '#737373' };

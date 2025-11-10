@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Menu, Home, TrendingUp, Target, Trophy } from "lucide-react";
+import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -90,11 +90,12 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'home' as const, path: "/dashboard", icon: Home, label: 'Главная' },
     { type: 'stats' as const, path: "/progress", icon: TrendingUp, label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", icon: Target, label: 'Цели' },
-    { type: 'challenges' as const, path: "/challenges", icon: Trophy, label: 'Челленджи' },
+    { type: 'workouts' as const, path: "/workouts", icon: Dumbbell, label: 'Тренировки' },
   ];
 
   // Secondary navigation items for "More" menu
   const secondaryNavItems = [
+    { path: "/challenges", label: 'Челленджи' },
     { path: "/leaderboard", label: 'Рейтинг' },
     { path: "/body", label: 'Тело' },
     { path: "/habits-v3", label: 'Привычки' },
@@ -106,16 +107,15 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'home' as const, path: "/", label: 'Главная' },
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
-    { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
-    { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
-    { type: 'activity' as const, path: "/body", label: 'Тело' },
+    { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
+    { type: 'body' as const, path: "/body", label: 'Тело' },
     { type: 'habits' as const, path: "/habits-v3", label: 'Привычки' },
-    { type: 'connections' as const, path: "/fitness-data", label: 'Фитнес дата' },
+    { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
   ];
 
   const trainerNavItems = [
     { type: 'home' as const, path: "/trainer-dashboard", label: 'Тренерский кабинет' },
-    { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
+    { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
     { type: 'stats' as const, path: "/progress", label: 'Мой прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Мои цели' },
   ];
