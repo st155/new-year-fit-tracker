@@ -2,8 +2,9 @@ import { useHabitGrouping } from '@/hooks/useHabitGrouping';
 import { TimeSection } from './TimeSection';
 import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Plus } from 'lucide-react';
 import { HabitsProgressSection } from '@/components/habits-v3/sections/HabitsProgressSection';
+import { EmptyStateV3 } from '@/components/ui/empty-state-v3';
 
 interface SmartViewProps {
   habits: any[];
@@ -25,6 +26,19 @@ export function SmartView({
   onHabitViewHistory
 }: SmartViewProps) {
   const grouped = useHabitGrouping(habits);
+
+  // Show empty state when no habits
+  if (habits.length === 0) {
+    return (
+      <EmptyStateV3
+        variant="habits"
+        title="Нет привычек"
+        description="Создайте свою первую привычку и начните строить лучшую версию себя каждый день"
+        illustration="animated-icon"
+        motivationalQuote="Привычки - это сложные проценты самосовершенствования"
+      />
+    );
+  }
 
   // Calculate overview stats
   const todayCompleted = habits.filter(h => h.completed_today).length;

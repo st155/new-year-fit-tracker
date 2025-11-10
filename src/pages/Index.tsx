@@ -26,7 +26,8 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DataQualityWidget } from '@/components/dashboard/DataQualityWidget';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Plug } from 'lucide-react';
+import { RefreshCw, Plug, Target, CheckCircle, Trophy, Activity } from 'lucide-react';
+import { FAB } from '@/components/ui/fab';
 import { useNavigate } from 'react-router-dom';
 import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
@@ -414,6 +415,32 @@ const Index = () => {
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel />
+      
+      {/* Floating Action Button */}
+      <FAB
+        actions={[
+          {
+            label: 'Создать цель',
+            icon: Target,
+            onClick: () => navigate('/goals?action=create'),
+          },
+          {
+            label: 'Добавить привычку',
+            icon: CheckCircle,
+            onClick: () => navigate('/habits-v3?action=create'),
+          },
+          {
+            label: 'Новый челлендж',
+            icon: Trophy,
+            onClick: () => navigate('/challenges?action=create'),
+          },
+          {
+            label: 'Внести данные',
+            icon: Activity,
+            onClick: () => navigate('/fitness-data?tab=manual'),
+          },
+        ]}
+      />
       </div>
     </AnimatedPage>
   );

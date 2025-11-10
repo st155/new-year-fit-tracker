@@ -7,7 +7,7 @@ import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
 import { EnhancedGoalCard } from "@/components/goals/EnhancedGoalCard";
 import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
 import { FirstMeasurementDialog } from "@/components/goals/FirstMeasurementDialog";
@@ -240,37 +240,56 @@ export default function Goals() {
 
       {/* Goals Grid */}
       {filteredGoals.length === 0 ? (
-        <EmptyState
-          icon={filter === 'personal' ? <Target className="h-12 w-12" /> : <Trophy className="h-12 w-12" />}
+        <EmptyStateV3
+          variant={
+            searchQuery.trim() 
+              ? 'search' 
+              : filter === 'personal' 
+                ? 'goals' 
+                : filter === 'challenges'
+                  ? 'challenges'
+                  : 'goals'
+          }
           title={
             searchQuery.trim() 
               ? "Ничего не найдено" 
               : filter === 'personal' 
-                ? "No personal goals yet" 
+                ? "Нет личных целей" 
                 : filter === 'challenges'
                   ? "Нет целей челленджа"
-                  : "No goals yet"
+                  : "Нет целей"
           }
           description={
             searchQuery.trim()
-              ? "Попробуйте изменить поисковый запрос"
+              ? "Попробуйте изменить поисковый запрос или добавьте новую цель"
               : filter === 'personal'
-                ? "Create your first goal to start tracking your progress"
+                ? "Создайте свою первую цель и начните отслеживать прогресс"
                 : filter === 'challenges'
                   ? "Присоединитесь к челленджу, чтобы получить цели автоматически"
-                  : "Create your first goal or join a challenge"
+                  : "Создайте личную цель или присоединитесь к челленджу"
           }
+          illustration="animated-icon"
           action={
             !searchQuery.trim() && filter === 'challenges'
               ? {
                   label: "Найти челленджи",
-                  onClick: () => navigate('/challenges')
+                  onClick: () => navigate('/challenges'),
+                  icon: Trophy
                 }
               : !searchQuery.trim() && filter !== 'challenges'
                 ? {
-                    label: "Create Goal",
-                    onClick: () => setCreateDialogOpen(true)
+                    label: "Создать цель",
+                    onClick: () => setCreateDialogOpen(true),
+                    icon: Plus
                   }
+              : undefined
+          }
+          secondaryAction={
+            !searchQuery.trim() && filter === 'all'
+              ? {
+                  label: "Смотреть челленджи",
+                  onClick: () => navigate('/challenges')
+                }
               : undefined
           }
         />

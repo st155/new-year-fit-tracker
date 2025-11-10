@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { CreateChallengeDialog } from "@/components/trainer/CreateChallengeDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -169,43 +170,46 @@ export default function Challenges() {
 
       {/* Challenges Grid */}
       {error ? (
-        <Card className="border-destructive/50">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="rounded-full bg-destructive/10 p-3 mb-4">
-              <Trophy className="h-8 w-8 text-destructive" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Ошибка загрузки челленджей</h3>
-            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
-              {error.message || 'Не удалось загрузить челленджи'}
-            </p>
-            {import.meta.env.DEV && (
-              <pre className="text-xs text-left bg-muted p-4 rounded mb-4 max-w-2xl overflow-auto w-full">
-                userId: {user?.id || 'missing'}{'\n'}
-                error: {JSON.stringify(error, null, 2)}
-              </pre>
-            )}
-            <Button onClick={() => refetch()} variant="outline" className="gap-2">
-              <Trophy className="h-4 w-4" />
-              Обновить
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateV3
+          variant="default"
+          title="Ошибка загрузки челленджей"
+          description={error.message || 'Не удалось загрузить челленджи. Попробуйте обновить страницу.'}
+          illustration="animated-icon"
+          action={{
+            label: "Обновить",
+            onClick: () => refetch(),
+            icon: Trophy
+          }}
+        />
       ) : !challenges || challenges.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="rounded-full bg-primary/10 p-3 mb-4">
-              <Trophy className="h-12 w-12 text-primary" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Нет активных челленджей</h3>
-            <p className="text-sm text-muted-foreground text-center mb-6">
-              Создайте свой челлендж или дождитесь новых от других участников
-            </p>
-            <Button onClick={() => refetch()} variant="outline" className="gap-2">
-              <Trophy className="h-4 w-4" />
-              Обновить
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStateV3
+          variant="challenges"
+          title="Нет активных челленджей"
+          description="Создайте свой челлендж и пригласите друзей, или дождитесь новых от других участников"
+          illustration="animated-icon"
+          action={{
+            label: "Создать челлендж",
+            onClick: () => setShowCreateDialog(true),
+            icon: Plus
+          }}
+          secondaryAction={{
+            label: "Обновить",
+            onClick: () => refetch()
+          }}
+          motivationalQuote="Каждый челлендж - это шаг к лучшей версии себя!"
+        />
+      ) : filteredChallenges.length === 0 ? (
+        <EmptyStateV3
+          variant="search"
+          title="Нет челленджей в этой категории"
+          description={`Попробуйте выбрать другой фильтр или создайте новый челлендж`}
+          illustration="animated-icon"
+          action={{
+            label: "Сбросить фильтр",
+            onClick: () => setFilter('all'),
+            icon: Target
+          }}
+        />
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
