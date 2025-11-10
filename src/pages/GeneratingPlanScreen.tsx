@@ -29,7 +29,7 @@ export default function GeneratingPlanScreen() {
     
     // Navigate after completion
     const timer = setTimeout(() => {
-      navigate('/workouts');
+      navigate('/workouts/plan-ready');
     }, 15000);
     
     return () => {
