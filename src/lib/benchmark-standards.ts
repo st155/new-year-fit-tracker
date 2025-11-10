@@ -24,10 +24,10 @@ export interface BenchmarkStandard {
  * Lower is better - indicates better cardiovascular fitness
  */
 export const RHR_STANDARDS: BenchmarkStandard = {
-  beginner: { min: 65, target: 68, max: 72 },
-  intermediate: { min: 58, target: 62, max: 65 },
-  advanced: { min: 50, target: 54, max: 58 },
-  elite: { min: 40, target: 45, max: 50 }
+  beginner: { min: 58, target: 60, max: 65 },
+  intermediate: { min: 52, target: 55, max: 58 },
+  advanced: { min: 45, target: 48, max: 52 },
+  elite: { min: 40, target: 41, max: 45 }
 };
 
 /**
@@ -75,7 +75,7 @@ export const RECOVERY_SCORE_STANDARDS: BenchmarkStandard = {
   beginner: { min: 60, target: 65, max: 70 },
   intermediate: { min: 70, target: 75, max: 80 },
   advanced: { min: 80, target: 85, max: 90 },
-  elite: { min: 90, target: 93, max: 97 }
+  elite: { min: 90, target: 95, max: 100 }
 };
 
 /**
@@ -87,7 +87,19 @@ export const SLEEP_STANDARDS: BenchmarkStandard = {
   beginner: { min: 6.5, target: 7.0, max: 7.5 },
   intermediate: { min: 7.0, target: 7.5, max: 8.0 },
   advanced: { min: 7.5, target: 8.0, max: 8.5 },
-  elite: { min: 8.0, target: 8.5, max: 9.0 }
+  elite: { min: 8.0, target: 8.25, max: 8.5 }
+};
+
+/**
+ * Daily Steps
+ * Source: WHO guidelines, fitness tracking research
+ * Higher is better - daily activity level
+ */
+export const STEPS_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 7000, target: 8000, max: 9000 },
+  intermediate: { min: 10000, target: 12000, max: 14000 },
+  advanced: { min: 14000, target: 16000, max: 18000 },
+  elite: { min: 18000, target: 20000, max: 22000 }
 };
 
 /**
@@ -136,6 +148,7 @@ export const BENCHMARK_STANDARDS: Record<string, BenchmarkStandard> = {
   vo2max_female: VO2MAX_FEMALE_STANDARDS,
   recovery_score: RECOVERY_SCORE_STANDARDS,
   sleep: SLEEP_STANDARDS,
+  steps: STEPS_STANDARDS,
   run_5k: RUN_5K_STANDARDS,
   bodyfat_male: BODYFAT_MALE_STANDARDS,
   bodyfat_female: BODYFAT_FEMALE_STANDARDS
