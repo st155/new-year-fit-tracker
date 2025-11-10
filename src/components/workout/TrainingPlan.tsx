@@ -4,12 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Calendar, Target, Dumbbell } from "lucide-react";
+import { Sparkles, Calendar, Target, Dumbbell, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import AIOnboarding from "./AIOnboarding";
+import LogWorkout from "./LogWorkout";
 
 export default function TrainingPlan() {
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeExercise, setActiveExercise] = useState<any>(null);
 
   const { data: activePlan, isLoading, refetch } = useQuery({
     queryKey: ['active-training-plan'],
@@ -55,6 +60,26 @@ export default function TrainingPlan() {
         workouts: workouts || []
       };
     }
+  });
+
+  // Get today's logged workouts for progress tracking
+  const { data: todayLogs, refetch: refetchLogs } = useQuery({
+    queryKey: ['today-workout-logs'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('workout_logs')
+        .select('exercise_name, set_number')
+        .eq('user_id', user.id)
+        .gte('performed_at', today)
+        .lte('performed_at', today + 'T23:59:59');
+
+      return data || [];
+    },
+    enabled: !!activePlan
   });
 
   const { data: preferences } = useQuery({
@@ -144,6 +169,28 @@ export default function TrainingPlan() {
     return acc;
   }, {} as Record<number, any[]>);
 
+  // Calculate exercise completion for today
+  const getExerciseCompletion = (exerciseName: string) => {
+    if (!todayLogs) return { completed: false, setsLogged: 0 };
+    const logs = todayLogs.filter(log => log.exercise_name === exerciseName);
+    return {
+      completed: logs.length > 0,
+      setsLogged: logs.length
+    };
+  };
+
+  // Calculate today's progress
+  const todayWorkouts = activePlan.workouts.filter(w => w.day_of_week === new Date().getDay());
+  const totalExercisesToday = todayWorkouts.reduce((sum, w) => {
+    const exercises = Array.isArray(w.exercises) ? w.exercises : [];
+    return sum + exercises.length;
+  }, 0);
+  const completedExercisesToday = todayWorkouts.reduce((sum, w) => {
+    const exercises = Array.isArray(w.exercises) ? w.exercises : [];
+    return sum + exercises.filter((ex: any) => getExerciseCompletion(ex.name).completed).length;
+  }, 0);
+  const progressPercent = totalExercisesToday > 0 ? (completedExercisesToday / totalExercisesToday) * 100 : 0;
+
   return (
     <div className="space-y-6">
       {/* Plan Header */}
@@ -169,7 +216,7 @@ export default function TrainingPlan() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -180,6 +227,19 @@ export default function TrainingPlan() {
               {activePlan.workouts.length} workouts
             </span>
           </div>
+
+          {/* Today's Progress */}
+          {totalExercisesToday > 0 && (
+            <div className="space-y-2 pt-4 border-t">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Today's Progress</span>
+                <span className="text-muted-foreground">
+                  {completedExercisesToday}/{totalExercisesToday} exercises
+                </span>
+              </div>
+              <Progress value={progressPercent} className="h-2" />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -196,15 +256,39 @@ export default function TrainingPlan() {
                 {workouts.map((workout, idx) => (
                   <div key={idx} className="space-y-2">
                     <h3 className="font-semibold">{workout.workout_name}</h3>
-                    <div className="space-y-1 text-sm">
-                      {workout.exercises?.map((exercise: any, exerciseIdx: number) => (
-                        <div key={exerciseIdx} className="flex items-center justify-between py-1 border-b last:border-0">
-                          <span className="font-medium">{exercise.name}</span>
-                          <span className="text-muted-foreground">
-                            {exercise.sets}×{exercise.reps} @ RPE {exercise.rpe}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      {workout.exercises?.map((exercise: any, exerciseIdx: number) => {
+                        const completion = getExerciseCompletion(exercise.name);
+                        return (
+                          <div key={exerciseIdx} className="flex items-center justify-between gap-2 py-2 border-b last:border-0">
+                            <div className="flex items-center gap-2 flex-1">
+                              {completion.completed && (
+                                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                              )}
+                              <div className="flex-1">
+                                <div className="font-medium">{exercise.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {exercise.sets}×{exercise.reps} @ RPE {exercise.rpe}
+                                  {completion.setsLogged > 0 && (
+                                    <span className="ml-2">({completion.setsLogged} sets logged)</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant={completion.completed ? "outline" : "default"}
+                              onClick={() => setActiveExercise({
+                                ...exercise,
+                                dayOfWeek: parseInt(day),
+                                workoutName: workout.workout_name
+                              })}
+                            >
+                              {completion.completed ? "Log More" : "Log Workout"}
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -213,6 +297,30 @@ export default function TrainingPlan() {
           ))}
         </div>
       </div>
+
+      {/* Log Workout Sheet */}
+      <Sheet open={!!activeExercise} onOpenChange={() => setActiveExercise(null)}>
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Log Exercise</SheetTitle>
+          </SheetHeader>
+          {activeExercise && (
+            <div className="mt-6">
+              <LogWorkout 
+                exercise={activeExercise}
+                assignedPlanId={activePlan.id}
+                dayOfWeek={activeExercise.dayOfWeek}
+                workoutName={activeExercise.workoutName}
+                onComplete={() => {
+                  setActiveExercise(null);
+                  refetchLogs();
+                  toast.success("Exercise completed!");
+                }}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
