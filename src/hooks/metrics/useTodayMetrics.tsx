@@ -32,15 +32,15 @@ export function useTodayMetrics(userId: string | undefined) {
     // Fallback for workout count: count unique workouts if "Workout Count" metric is missing
     let workoutCount = grouped.get('Workout Count')?.value || 0;
     if (workoutCount === 0) {
+      // Count unique workout metrics (Workout Strain or Workout Calories)
       const workoutMetrics = metrics.filter(m => 
         m.metric_name === 'Workout Strain' || m.metric_name === 'Workout Calories'
       );
+      // Count unique combinations of source and date as proxy for workout count
       const uniqueWorkouts = new Set(
-        workoutMetrics
-          .map(m => m.source_data?.external_id)
-          .filter(Boolean)
+        workoutMetrics.map(m => `${m.source}_${m.measurement_date}`)
       );
-      workoutCount = uniqueWorkouts.size;
+      workoutCount = Math.max(uniqueWorkouts.size, workoutMetrics.length > 0 ? 1 : 0);
     }
 
     return {
