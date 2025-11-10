@@ -84,34 +84,8 @@ serve(
 
     console.log(`[get-daily-ai-workout] Fetching workout for user ${targetUserId}, day ${dayOfWeek}, date ${targetDate.toISOString()}`);
 
-    // First check how many active plans exist
-    const { data: allWorkouts, error: checkError } = await supabase
-      .from("training_plan_workouts")
-      .select(`
-        id,
-        workout_name,
-        training_plans!inner(
-          id,
-          name,
-          created_at,
-          assigned_training_plans!inner(
-            client_id,
-            status
-          )
-        )
-      `)
-      .eq("training_plans.assigned_training_plans.client_id", targetUserId)
-      .eq("training_plans.assigned_training_plans.status", "active")
-      .eq("day_of_week", dayOfWeek);
-
-    console.log(`[get-daily-ai-workout] Found ${allWorkouts?.length || 0} active workouts for day ${dayOfWeek}`);
-    
-    if (allWorkouts && allWorkouts.length > 1) {
-      console.warn(`[get-daily-ai-workout] Multiple active plans detected (${allWorkouts.length}). Using newest plan.`);
-    }
-
-    // Step 1: Fetch today's planned workout (get newest if multiple exist)
-    const { data: plannedWorkout, error: workoutError } = await supabase
+    // Step 1: Fetch all active workouts for this day and select newest
+    const { data: allWorkouts, error: workoutError } = await supabase
       .from("training_plan_workouts")
       .select(`
         id,
@@ -132,10 +106,22 @@ serve(
       `)
       .eq("training_plans.assigned_training_plans.client_id", targetUserId)
       .eq("training_plans.assigned_training_plans.status", "active")
-      .eq("day_of_week", dayOfWeek)
-      .order("training_plans.created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq("day_of_week", dayOfWeek);
+
+    console.log(`[get-daily-ai-workout] Found ${allWorkouts?.length || 0} workouts for day ${dayOfWeek}`);
+
+    // Sort by created_at in JavaScript (newest first)
+    const sortedWorkouts = allWorkouts?.sort((a, b) => {
+      const dateA = new Date(a.training_plans.created_at).getTime();
+      const dateB = new Date(b.training_plans.created_at).getTime();
+      return dateB - dateA;
+    }) || [];
+
+    const plannedWorkout = sortedWorkouts[0] || null;
+    
+    if (sortedWorkouts.length > 1) {
+      console.warn(`[get-daily-ai-workout] Multiple plans found (${sortedWorkouts.length}), selected: ${plannedWorkout?.training_plans?.name}`);
+    }
 
     if (workoutError) {
       console.error("[get-daily-ai-workout] Error fetching workout:", {
@@ -144,15 +130,6 @@ serve(
         details: workoutError.details,
         hint: workoutError.hint
       });
-      
-      // Special handling for multiple rows error
-      if (workoutError.code === 'PGRST116') {
-        throw new EdgeFunctionError(
-          "У вас несколько активных планов тренировок. Пожалуйста, деактивируйте старые планы в настройках.",
-          ErrorCode.VALIDATION_ERROR,
-          400
-        );
-      }
       
       throw new EdgeFunctionError(
         "Failed to fetch workout plan",
