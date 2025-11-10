@@ -51,6 +51,11 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return { ...state, isGenerating: action.value };
     
     case 'ADD_MESSAGE':
+      // Проверка на дубликаты по id
+      const exists = state.chatHistory.some(msg => msg.id === action.message.id);
+      if (exists) {
+        return state; // Не добавляем дубликат
+      }
       return {
         ...state,
         chatHistory: [...state.chatHistory, action.message]
@@ -76,17 +81,22 @@ export default function AITrainingOnboarding() {
 
   useEffect(() => {
     if (currentStep) {
-      dispatch({
-        type: 'ADD_MESSAGE',
-        message: {
-          id: currentStep.id,
-          type: 'ai',
-          content: currentStep.aiMessage,
-          timestamp: new Date()
-        }
-      });
+      // Проверяем, что сообщение с таким id еще не добавлено
+      const messageExists = state.chatHistory.some(msg => msg.id === currentStep.id);
+      
+      if (!messageExists) {
+        dispatch({
+          type: 'ADD_MESSAGE',
+          message: {
+            id: currentStep.id,
+            type: 'ai',
+            content: currentStep.aiMessage,
+            timestamp: new Date()
+          }
+        });
+      }
     }
-  }, [state.currentStepIndex]);
+  }, [state.currentStepIndex, currentStep?.id, state.chatHistory]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -234,9 +244,9 @@ export default function AITrainingOnboarding() {
         <ScrollArea ref={scrollRef} className="flex-1 px-4">
           <div className="container mx-auto max-w-2xl py-6 space-y-6">
             <AnimatePresence mode="popLayout">
-              {state.chatHistory.map((message) => (
+              {state.chatHistory.map((message, index) => (
                 <motion.div
-                  key={message.id}
+                  key={`${message.id}-${index}`}
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
