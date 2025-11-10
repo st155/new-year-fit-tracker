@@ -441,37 +441,52 @@ export type Database = {
       ai_training_preferences: {
         Row: {
           created_at: string | null
+          current_1rm: Json | null
           days_per_week: number
           equipment: Json
           experience_level: string
+          focus_areas: Json | null
           id: string
           injuries_limitations: string | null
+          lifting_styles: Json | null
           preferred_workout_duration: number | null
           primary_goal: string
+          recovery_profile: Json | null
+          training_days: number[] | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          current_1rm?: Json | null
           days_per_week: number
           equipment?: Json
           experience_level: string
+          focus_areas?: Json | null
           id?: string
           injuries_limitations?: string | null
+          lifting_styles?: Json | null
           preferred_workout_duration?: number | null
           primary_goal: string
+          recovery_profile?: Json | null
+          training_days?: number[] | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          current_1rm?: Json | null
           days_per_week?: number
           equipment?: Json
           experience_level?: string
+          focus_areas?: Json | null
           id?: string
           injuries_limitations?: string | null
+          lifting_styles?: Json | null
           preferred_workout_duration?: number | null
           primary_goal?: string
+          recovery_profile?: Json | null
+          training_days?: number[] | null
           updated_at?: string | null
           user_id?: string
         }
@@ -4950,10 +4965,12 @@ export type Database = {
       workout_logs: {
         Row: {
           actual_reps: number
+          actual_rir: number | null
           actual_rpe: number
           actual_weight: number
           assigned_plan_id: string | null
           created_at: string | null
+          day_of_week: number | null
           exercise_category: string | null
           exercise_name: string
           id: string
@@ -4961,18 +4978,22 @@ export type Database = {
           performed_at: string
           prescribed_reps: number | null
           prescribed_rest_seconds: number | null
+          prescribed_rir: number | null
           prescribed_rpe: number | null
           prescribed_weight: number | null
           set_number: number
           superset_group: string | null
           user_id: string
+          workout_name: string | null
         }
         Insert: {
           actual_reps: number
+          actual_rir?: number | null
           actual_rpe: number
           actual_weight: number
           assigned_plan_id?: string | null
           created_at?: string | null
+          day_of_week?: number | null
           exercise_category?: string | null
           exercise_name: string
           id?: string
@@ -4980,18 +5001,22 @@ export type Database = {
           performed_at?: string
           prescribed_reps?: number | null
           prescribed_rest_seconds?: number | null
+          prescribed_rir?: number | null
           prescribed_rpe?: number | null
           prescribed_weight?: number | null
           set_number: number
           superset_group?: string | null
           user_id: string
+          workout_name?: string | null
         }
         Update: {
           actual_reps?: number
+          actual_rir?: number | null
           actual_rpe?: number
           actual_weight?: number
           assigned_plan_id?: string | null
           created_at?: string | null
+          day_of_week?: number | null
           exercise_category?: string | null
           exercise_name?: string
           id?: string
@@ -4999,11 +5024,13 @@ export type Database = {
           performed_at?: string
           prescribed_reps?: number | null
           prescribed_rest_seconds?: number | null
+          prescribed_rir?: number | null
           prescribed_rpe?: number | null
           prescribed_weight?: number | null
           set_number?: number
           superset_group?: string | null
           user_id?: string
+          workout_name?: string | null
         }
         Relationships: [
           {
