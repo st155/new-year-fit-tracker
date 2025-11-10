@@ -438,6 +438,45 @@ export type Database = {
           },
         ]
       }
+      ai_training_preferences: {
+        Row: {
+          created_at: string | null
+          days_per_week: number
+          equipment: Json
+          experience_level: string
+          id: string
+          injuries_limitations: string | null
+          preferred_workout_duration: number | null
+          primary_goal: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          days_per_week: number
+          equipment?: Json
+          experience_level: string
+          id?: string
+          injuries_limitations?: string | null
+          preferred_workout_duration?: number | null
+          primary_goal: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          days_per_week?: number
+          equipment?: Json
+          experience_level?: string
+          id?: string
+          injuries_limitations?: string | null
+          preferred_workout_duration?: number | null
+          primary_goal?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_rate_limits: {
         Row: {
           created_at: string
@@ -4403,30 +4442,39 @@ export type Database = {
       }
       training_plans: {
         Row: {
+          ai_metadata: Json | null
           created_at: string | null
           description: string | null
           duration_weeks: number | null
+          generation_prompt: string | null
           id: string
+          is_ai_generated: boolean | null
           is_template: boolean | null
           name: string
           trainer_id: string
           updated_at: string | null
         }
         Insert: {
+          ai_metadata?: Json | null
           created_at?: string | null
           description?: string | null
           duration_weeks?: number | null
+          generation_prompt?: string | null
           id?: string
+          is_ai_generated?: boolean | null
           is_template?: boolean | null
           name: string
           trainer_id: string
           updated_at?: string | null
         }
         Update: {
+          ai_metadata?: Json | null
           created_at?: string | null
           description?: string | null
           duration_weeks?: number | null
+          generation_prompt?: string | null
           id?: string
+          is_ai_generated?: boolean | null
           is_template?: boolean | null
           name?: string
           trainer_id?: string
@@ -4898,6 +4946,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      workout_logs: {
+        Row: {
+          actual_reps: number
+          actual_rpe: number
+          actual_weight: number
+          assigned_plan_id: string | null
+          created_at: string | null
+          exercise_category: string | null
+          exercise_name: string
+          id: string
+          notes: string | null
+          performed_at: string
+          prescribed_reps: number | null
+          prescribed_rest_seconds: number | null
+          prescribed_rpe: number | null
+          prescribed_weight: number | null
+          set_number: number
+          superset_group: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_reps: number
+          actual_rpe: number
+          actual_weight: number
+          assigned_plan_id?: string | null
+          created_at?: string | null
+          exercise_category?: string | null
+          exercise_name: string
+          id?: string
+          notes?: string | null
+          performed_at?: string
+          prescribed_reps?: number | null
+          prescribed_rest_seconds?: number | null
+          prescribed_rpe?: number | null
+          prescribed_weight?: number | null
+          set_number: number
+          superset_group?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_reps?: number
+          actual_rpe?: number
+          actual_weight?: number
+          assigned_plan_id?: string | null
+          created_at?: string | null
+          exercise_category?: string | null
+          exercise_name?: string
+          id?: string
+          notes?: string | null
+          performed_at?: string
+          prescribed_reps?: number | null
+          prescribed_rest_seconds?: number | null
+          prescribed_rpe?: number | null
+          prescribed_weight?: number | null
+          set_number?: number
+          superset_group?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_logs_assigned_plan_id_fkey"
+            columns: ["assigned_plan_id"]
+            isOneToOne: false
+            referencedRelation: "assigned_training_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workouts: {
         Row: {

@@ -1,5 +1,8 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.generate-ai-training-plan]
+verify_jwt = true
+
 [functions.trainer-ai-chat]
 verify_jwt = true
 

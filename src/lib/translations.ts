@@ -10,6 +10,7 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'navigation.habits': 'Habits',
     'navigation.habitsV3': 'Привычки 3.0',
     'navigation.body': 'Body',
+    'navigation.workouts': 'Workouts',
     'navigation.fitnessData': 'Fitness Data',
     'navigation.integrations': 'Integrations',
     'navigation.feed': 'Feed',
