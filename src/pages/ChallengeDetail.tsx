@@ -8,6 +8,7 @@ import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
 import { ChallengeLeaderboard } from "@/components/challenge/ChallengeLeaderboard";
 import { ChallengeProgressDashboard } from "@/components/challenges/ChallengeProgressDashboard";
+import { ChallengeInfoBlock } from "@/components/challenges/ChallengeInfoBlock";
 import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOverview";
 import { DifficultySelectorDialog } from "@/components/challenge/DifficultySelectorDialog";
 import { DifficultyBadge } from "@/components/challenge/DifficultyBadge";
@@ -222,7 +223,7 @@ export default function ChallengeDetail() {
                   onClick={() => setShowDifficultyDialog(true)}
                   disabled={joinMutation.isPending}
                   size="lg"
-                  className="bg-white text-primary hover:bg-white/90 shrink-0"
+                  className="bg-white text-gray-900 hover:bg-white/90 shrink-0 font-semibold"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
@@ -320,25 +321,11 @@ export default function ChallengeDetail() {
               onRefresh={() => queryClient.invalidateQueries({ queryKey: ["challenge-detail", id] })}
             />
           ) : (
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Присоединяйтесь к челленджу</CardTitle>
-                <CardDescription>
-                  Присоединитесь к челленджу, чтобы отслеживать свой прогресс и соревноваться с другими
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => setShowDifficultyDialog(true)}
-                  disabled={joinMutation.isPending}
-                  size="lg"
-                  className="bg-gradient-primary"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
-                </Button>
-              </CardContent>
-            </Card>
+            <ChallengeInfoBlock 
+              challengeId={id!}
+              onJoinClick={() => setShowDifficultyDialog(true)}
+              isJoining={joinMutation.isPending}
+            />
           )}
         </TabsContent>
 
