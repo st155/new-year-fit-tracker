@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 
 interface ExerciseIconProps {
-  name: string;
+  name?: string;
   className?: string;
 }
 
-export default function ExerciseIcon({ name, className = "" }: ExerciseIconProps) {
+export default function ExerciseIcon({ name = "", className = "" }: ExerciseIconProps) {
   const exerciseName = name.toLowerCase();
   
   let IconComponent = X; // Default

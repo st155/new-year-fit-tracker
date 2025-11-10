@@ -322,15 +322,30 @@ export default function WorkoutToday() {
         
         {/* Exercise List */}
         <div className="space-y-3 pb-8">
-          {data.adjusted_exercises?.map((exercise: AdjustedExercise, idx: number) => (
-            <MinimalistExerciseCard
-              key={idx}
-              exercise={exercise}
-              index={idx}
-              onInfoClick={() => setSelectedExercise(exercise)}
-              onStartClick={() => handleStartExercise(exercise)}
-            />
-          ))}
+          {(data.adjusted_exercises ?? [])
+            .filter((e) => e && typeof e.name === 'string' && e.name.trim() !== '')
+            .map((exercise: AdjustedExercise, idx: number) => (
+              <MinimalistExerciseCard
+                key={idx}
+                exercise={exercise}
+                index={idx}
+                onInfoClick={() => setSelectedExercise(exercise)}
+                onStartClick={() => handleStartExercise(exercise)}
+              />
+            ))}
+          
+          {/* Empty state if no valid exercises */}
+          {data.adjusted_exercises && 
+           (data.adjusted_exercises ?? []).filter((e) => e && typeof e.name === 'string' && e.name.trim() !== '').length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center"
+            >
+              <p className="text-gray-300 mb-4">На сегодня упражнений нет</p>
+              <p className="text-sm text-gray-400">Загляните в План или сгенерируйте новый</p>
+            </motion.div>
+          )}
         </div>
       </div>
       

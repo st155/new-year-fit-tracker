@@ -36,9 +36,9 @@ export default function MinimalistExerciseCard({
       "
     >
       <div className="flex items-center gap-4 flex-1">
-        <ExerciseIcon name={exercise.name} />
+        <ExerciseIcon name={exercise?.name} />
         <div className="flex-1">
-          <h3 className="text-base font-medium text-gray-200">{exercise.name}</h3>
+          <h3 className="text-base font-medium text-gray-200">{exercise?.name || 'Упражнение'}</h3>
           <p className="text-sm text-gray-400">
             {exercise.sets} × {exercise.reps}
             {exercise.weight && ` @ ${exercise.weight}kg`}
