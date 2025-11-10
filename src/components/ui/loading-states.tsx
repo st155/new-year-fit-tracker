@@ -1,5 +1,47 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+/**
+ * Unified Loading States Components
+ * Standardized loading indicators for consistent UX
+ */
+
+// Unified Spinner component
+interface SpinnerProps {
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+
+export function Spinner({ size = 'md', className }: SpinnerProps) {
+  const sizeClasses = {
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
+  };
+  
+  return (
+    <Loader2 
+      className={cn('animate-spin text-primary', sizeClasses[size], className)} 
+    />
+  );
+}
+
+// Inline loading (for buttons)
+interface InlineLoadingProps {
+  text?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function InlineLoading({ text = 'Loading...', size = 'sm' }: InlineLoadingProps) {
+  return (
+    <span className="flex items-center gap-2">
+      <Spinner size={size} />
+      <span className="animate-pulse">{text}</span>
+    </span>
+  );
+}
 
 export function CardSkeleton() {
   return (

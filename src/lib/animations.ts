@@ -1,6 +1,16 @@
 /**
  * Framer Motion Animation Library
  * Reusable animation variants for consistent micro-interactions
+ * 
+ * @deprecated This file is being phased out in favor of animations-v3.ts
+ * Please use src/lib/animations-v3.ts for new code.
+ * This file is kept for backward compatibility with existing components.
+ * 
+ * Migration guide:
+ * - fadeInUp -> animations.fadeIn()
+ * - scaleIn -> animations.scaleIn()
+ * - slideInRight -> animations.slideIn('right')
+ * - Use ANIMATION_DURATION and ANIMATION_EASING constants from animations-v3
  */
 
 import { Variants } from 'framer-motion';

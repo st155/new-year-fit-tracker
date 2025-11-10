@@ -20,6 +20,7 @@ import { ROUTE_SMOKE } from "@/lib/safe-flags";
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
 import SmokeHome from "@/pages/SmokeHome";
+import ComponentLibrary from "@/pages/ComponentLibrary";
 
 // Sync imports for all pages
 import LandingSync from "@/pages/Landing";
@@ -292,6 +293,11 @@ export const AppRoutes = () => {
         {/* Test page only in development */}
         {import.meta.env.DEV && (
           <Route path="/trainer-test" element={<TrainerTestPage />} />
+        )}
+        
+        {/* Component Library - Development only */}
+        {import.meta.env.DEV && (
+          <Route path="/components" element={<ComponentLibrary />} />
         )}
         
         {/* OAuth callbacks */}
