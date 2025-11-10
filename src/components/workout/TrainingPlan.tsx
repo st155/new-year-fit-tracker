@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import AIOnboarding from "./AIOnboarding";
+import AITrainingOnboarding from "./AITrainingOnboarding";
 import LogWorkout from "./LogWorkout";
 
 export default function TrainingPlan() {
@@ -147,14 +147,14 @@ export default function TrainingPlan() {
           </CardContent>
         </Card>
 
-        <AIOnboarding 
-          open={showOnboarding} 
-          onOpenChange={setShowOnboarding}
-          onSuccess={() => {
-            setShowOnboarding(false);
-            refetch();
-          }}
-        />
+          <AITrainingOnboarding 
+            open={showOnboarding} 
+            onOpenChange={setShowOnboarding}
+            onSuccess={() => {
+              setShowOnboarding(false);
+              refetch();
+            }}
+          />
       </>
     );
   }
