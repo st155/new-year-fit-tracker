@@ -23,6 +23,8 @@ export default function WorkoutToday() {
 
   const { data, isLoading, error } = useDailyWorkout(userId || undefined);
 
+  console.log("[WorkoutToday] Data:", data, "Loading:", isLoading, "Error:", error);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -33,6 +35,7 @@ export default function WorkoutToday() {
   }
 
   if (error) {
+    console.error("[WorkoutToday] Error:", error);
     return (
       <Card className="border-destructive">
         <CardHeader>
@@ -44,11 +47,17 @@ export default function WorkoutToday() {
             {error instanceof Error ? error.message : "Failed to load today's workout"}
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button onClick={() => window.location.reload()}>
+            Reload Page
+          </Button>
+        </CardContent>
       </Card>
     );
   }
 
   if (!data?.success) {
+    console.warn("[WorkoutToday] No success flag in data:", data);
     return (
       <Card className="border-dashed">
         <CardHeader className="text-center pb-4">

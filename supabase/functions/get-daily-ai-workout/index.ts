@@ -118,9 +118,11 @@ serve(
     // No workout today = rest day
     if (!plannedWorkout) {
       return jsonResponse({
+        success: true,
         is_rest_day: true,
         day_of_week: dayOfWeek,
         message: "No workout scheduled for today",
+        readiness: readiness,
       });
     }
 
@@ -280,6 +282,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
 
     // Step 6: Build final response
     const response = {
+      success: true,
       is_rest_day: false,
       day_of_week: dayOfWeek,
       workout_id: plannedWorkout.id,
@@ -287,6 +290,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
       original_exercises: exercises,
       adjusted_exercises: adjustedWorkout.adjusted_exercises,
       ai_rationale: adjustedWorkout.ai_rationale,
+      readiness: readiness,
       readiness_snapshot: readiness,
       performance_history: exerciseHistory,
       adjustment_summary: {
@@ -301,6 +305,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
       generated_at: new Date().toISOString()
     };
 
+    console.log(`[get-daily-ai-workout] Success! Returning ${adjustedWorkout.adjusted_exercises.length} exercises`);
     return jsonResponse(response);
   })
 );
