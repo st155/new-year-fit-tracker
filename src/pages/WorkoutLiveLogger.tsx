@@ -42,6 +42,13 @@ export default function WorkoutLiveLogger() {
   const [restTimeRemaining, setRestTimeRemaining] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   
+  // Track workout start time
+  useEffect(() => {
+    if (!sessionStorage.getItem('workoutStartTime')) {
+      sessionStorage.setItem('workoutStartTime', new Date().toISOString());
+    }
+  }, []);
+  
   // Load workout data from sessionStorage
   useEffect(() => {
     const data = sessionStorage.getItem('activeWorkout');
@@ -136,12 +143,16 @@ export default function WorkoutLiveLogger() {
         description: workoutData.exercises[currentExerciseIndex + 1].name
       });
     } else {
-      // Workout complete
+      // Workout complete - navigate to summary
+      const workoutSummaryData = {
+        planId: workoutData.planId,
+        weekNumber: workoutData.weekNumber,
+        dayOfWeek: workoutData.dayOfWeek,
+        workoutName: workoutData.workoutName,
+      };
+      sessionStorage.setItem('workoutSummary', JSON.stringify(workoutSummaryData));
       sessionStorage.removeItem('activeWorkout');
-      toast.success('Workout Complete! 🎉', {
-        description: 'Great job finishing your workout!'
-      });
-      navigate('/workouts');
+      navigate('/workouts/summary');
     }
   };
 
