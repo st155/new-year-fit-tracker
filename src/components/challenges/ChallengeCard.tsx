@@ -39,11 +39,17 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
 
   return (
     <motion.div whileHover={hoverLift.whileHover} className="pointer-events-auto">
-    <Card className={`glass-card group overflow-hidden relative cursor-pointer ${
-      challenge.isParticipant 
-        ? "border-2 border-primary shadow-glow-primary" 
-        : "border-primary/20"
-    }`}>
+      <Card className={`glass-card group overflow-hidden relative cursor-pointer ${
+        challenge.isParticipant 
+          ? "border-2 border-primary shadow-glow-primary" 
+          : "border-primary/20"
+      }`}>
+        <Link
+          to={`/challenges/${challenge.id}`}
+          aria-label={`Open challenge: ${challenge.title}`}
+          className="absolute inset-0 z-20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          tabIndex={0}
+        />
       {/* Background Gradient */}
       <div className={`absolute inset-0 bg-gradient-primary transition-opacity pointer-events-none ${
         challenge.isParticipant 
@@ -159,14 +165,15 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
         )}
 
         <Button 
-          asChild 
           className={challenge.isParticipant 
             ? "w-full bg-gradient-primary hover:opacity-90" 
             : "w-full bg-gradient-primary hover:opacity-90 shadow-glow-primary"
           }
           size="lg"
+          tabIndex={-1}
+          aria-hidden="true"
         >
-          <Link to={`/challenges/${challenge.id}`} className="flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+          <span className="flex items-center justify-center gap-2">
             {challenge.isParticipant ? (
               <>
                 <Trophy className="h-4 w-4" />
@@ -178,7 +185,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
                 Присоединиться к челленджу
               </>
             )}
-          </Link>
+          </span>
         </Button>
       </CardContent>
     </Card>
