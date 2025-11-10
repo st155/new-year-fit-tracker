@@ -7,6 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DifficultyCard } from "./DifficultyCard";
+import { 
+  BENCHMARK_STANDARDS, 
+  AUDIENCE_LEVEL_LABELS
+} from '@/lib/benchmark-standards';
 
 interface DifficultySelectorDialogProps {
   open: boolean;
@@ -54,6 +58,20 @@ const DIFFICULTY_LEVELS = [
   },
 ];
 
+const DISCIPLINE_TO_STANDARD: Record<string, {
+  key: string;
+  direction: 'higher' | 'lower' | 'target';
+}> = {
+  'Шаги': { key: 'steps', direction: 'higher' },
+  'Сон': { key: 'sleep', direction: 'target' },
+  'Recovery': { key: 'recovery_score', direction: 'higher' },
+  'RHR': { key: 'rhr', direction: 'lower' },
+  'HRV': { key: 'hrv', direction: 'higher' },
+  'VO2 Max': { key: 'vo2max_male', direction: 'higher' },
+  '5K Run': { key: 'run_5k', direction: 'lower' },
+  'Body Fat': { key: 'bodyfat_male', direction: 'lower' },
+};
+
 export function DifficultySelectorDialog({
   open,
   onOpenChange,
@@ -63,20 +81,52 @@ export function DifficultySelectorDialog({
   const [selectedLevel, setSelectedLevel] = useState(0);
 
   const getExamples = (level: number) => {
-    const multiplier = 1.0 + level * 0.3;
-    
     if (disciplines.length > 0) {
       return disciplines.slice(0, 3).map((d) => {
-        const value = Math.round(d.benchmark_value * multiplier * 10) / 10;
+        const mapping = DISCIPLINE_TO_STANDARD[d.discipline_name];
+        
+        if (mapping && BENCHMARK_STANDARDS[mapping.key]) {
+          // Используем правильные стандарты из benchmark-standards.ts
+          const standard = BENCHMARK_STANDARDS[mapping.key];
+          const audienceLevel = level; // 0=beginner, 1=intermediate, 2=advanced, 3=elite
+          const levelKey = AUDIENCE_LEVEL_LABELS[audienceLevel];
+          const range = standard[levelKey];
+          
+          // Для difficulty используем target значение из соответствующего уровня
+          const value = range.target;
+          
+          return `${d.discipline_name}: ${value} ${d.unit}`;
+        }
+        
+        // Fallback: используем старую логику с ограничениями
+        const multiplier = 1.0 + level * 0.3;
+        let value = d.benchmark_value * multiplier;
+        
+        // Применяем ограничения
+        if (d.discipline_name.includes('Recovery')) {
+          value = Math.min(value, 100); // Максимум 100%
+        } else if (d.discipline_name.includes('Сон') || d.discipline_name.includes('Sleep')) {
+          value = Math.min(value, 8.5); // Максимум 8.5 часов
+        } else if (d.discipline_name.includes('RHR')) {
+          value = Math.max(value, 40); // Минимум 40 для elite
+        }
+        
+        value = Math.round(value * 10) / 10;
         return `${d.discipline_name}: ${value} ${d.unit}`;
       });
     }
 
-    // Default examples
+    // Default examples - используем правильные стандарты
+    const audienceLevel = level;
+    const levelKey = AUDIENCE_LEVEL_LABELS[audienceLevel];
+    const stepsValue = BENCHMARK_STANDARDS.steps[levelKey].target;
+    const sleepValue = BENCHMARK_STANDARDS.sleep[levelKey].target;
+    const recoveryValue = BENCHMARK_STANDARDS.recovery_score[levelKey].target;
+    
     return [
-      `Шаги: ${Math.round(8000 * multiplier)} в день`,
-      `Сон: ${Math.round(7.5 * multiplier * 10) / 10} часов`,
-      `Recovery: ${Math.round(70 * multiplier)}%`,
+      `Шаги: ${stepsValue} в день`,
+      `Сон: ${sleepValue} часов`,
+      `Recovery: ${recoveryValue}%`,
     ];
   };
 
