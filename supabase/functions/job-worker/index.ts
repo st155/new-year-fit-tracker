@@ -223,6 +223,33 @@ async function processTerraWebhookData(
         });
       }
     }
+
+    // Count workouts per day and create "Workout Count" metric
+    const workoutCountsByDate = new Map<string, number>();
+    for (const activity of data) {
+      if (activity.active_durations) {
+        for (const workout of activity.active_durations) {
+          const workoutDate = workout.start_time?.split('T')[0] || date;
+          workoutCountsByDate.set(
+            workoutDate, 
+            (workoutCountsByDate.get(workoutDate) || 0) + 1
+          );
+        }
+      }
+    }
+    
+    // Insert "Workout Count" metrics
+    for (const [workoutDate, count] of workoutCountsByDate) {
+      metricsToInsert.push({
+        metric_name: 'Workout Count',
+        category: 'activity',
+        value: count,
+        measurement_date: workoutDate,
+        source: provider,
+        external_id: `terra_${provider}_workout_count_${workoutDate}`,
+        user_id,
+      });
+    }
   }
 
   if (type === 'body' && data) {

@@ -29,10 +29,24 @@ export function useTodayMetrics(userId: string | undefined) {
       }
     });
 
+    // Fallback for workout count: count unique workouts if "Workout Count" metric is missing
+    let workoutCount = grouped.get('Workout Count')?.value || 0;
+    if (workoutCount === 0) {
+      const workoutMetrics = metrics.filter(m => 
+        m.metric_name === 'Workout Strain' || m.metric_name === 'Workout Calories'
+      );
+      const uniqueWorkouts = new Set(
+        workoutMetrics
+          .map(m => m.source_data?.external_id)
+          .filter(Boolean)
+      );
+      workoutCount = uniqueWorkouts.size;
+    }
+
     return {
       steps: grouped.get('Steps')?.value || 0,
-      sleepHours: grouped.get('Sleep Duration')?.value || 0, // Already in hours
-      workouts: grouped.get('Workout Count')?.value || 0,
+      sleepHours: grouped.get('Sleep Duration')?.value || 0,
+      workouts: workoutCount,
       recovery: grouped.get('Recovery Score')?.value || 0,
       strain: grouped.get('Day Strain')?.value || 0
     };

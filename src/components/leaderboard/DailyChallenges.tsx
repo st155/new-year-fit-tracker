@@ -10,13 +10,18 @@ import { useTodayMetrics } from "@/hooks/metrics/useTodayMetrics";
 import { useChallengeHistory } from "@/hooks/metrics/useChallengeHistory";
 import { useMetricsRealtime } from "@/hooks/metrics/useMetricsRealtime";
 import { ChallengeCelebration } from "./ChallengeCelebration";
+import { LogWorkoutDialog } from "./LogWorkoutDialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { metricsQueryKeys } from "@/hooks/metrics";
 
 export function DailyChallenges() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { metrics: todayMetrics, loading } = useTodayMetrics(user?.id);
   const stats = useChallengeHistory(user?.id);
   const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
   const [celebrationChallenge, setCelebrationChallenge] = useState<DailyChallenge | null>(null);
+  const [showLogWorkoutDialog, setShowLogWorkoutDialog] = useState(false);
   const prevChallengesRef = useRef<DailyChallenge[]>([]);
 
   // Enable real-time updates
@@ -140,12 +145,20 @@ export function DailyChallenges() {
           )}
         {challenges.map((challenge) => {
           const progress = Math.min(100, (challenge.currentValue / challenge.targetValue) * 100);
+          const isWorkoutChallenge = challenge.type === 'workout';
+          const isClickable = isWorkoutChallenge && !challenge.completed;
           
           return (
             <div
               key={challenge.id}
+              onClick={() => {
+                if (isClickable) {
+                  setShowLogWorkoutDialog(true);
+                }
+              }}
               className={cn(
                 "p-4 rounded-lg border-2 transition-all",
+                isClickable && "cursor-pointer hover:border-primary hover:bg-primary/5",
                 challenge.completed 
                   ? "bg-green-500/10 border-green-500/30" 
                   : "bg-muted/50 border-muted"
@@ -202,6 +215,17 @@ export function DailyChallenges() {
         )}
         </CardContent>
       </Card>
+
+      <LogWorkoutDialog 
+        isOpen={showLogWorkoutDialog}
+        onClose={() => setShowLogWorkoutDialog(false)}
+        onSuccess={() => {
+          // Invalidate metrics query to refresh the data
+          queryClient.invalidateQueries({ 
+            queryKey: metricsQueryKeys.filtered(user?.id, {}) 
+          });
+        }}
+      />
     </>
   );
 }
