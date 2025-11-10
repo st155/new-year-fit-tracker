@@ -63,6 +63,7 @@ import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
 const Landing = lazySafe(LandingSync, () => import("@/pages/Landing"));
+// AI Coach landing page
 const LandingAI = lazySafe(LandingAISync, () => import("@/pages/LandingAI"));
 const Index = lazySafe(IndexSync, () => import("@/pages/Index"));
 const Progress = lazySafe(ProgressSync, () => import("@/pages/Progress"));

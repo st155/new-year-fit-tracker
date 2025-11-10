@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, lazy, Suspense, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
