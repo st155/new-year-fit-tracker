@@ -14,7 +14,8 @@ interface Exercise {
   name: string;
   sets: number;
   reps: number;
-  rpe: number;
+  rpe?: number;
+  rir?: number;
   rest_seconds?: number;
 }
 
@@ -31,6 +32,7 @@ interface SetLog {
   actual_weight: number;
   actual_reps: number;
   actual_rpe: number;
+  actual_rir: number;
   logged: boolean;
 }
 
@@ -41,12 +43,14 @@ export default function LogWorkout({
   workoutName,
   onComplete 
 }: LogWorkoutProps) {
+  const [useRIR, setUseRIR] = useState(exercise.rir !== undefined);
   const [setLogs, setSetLogs] = useState<SetLog[]>(
     Array.from({ length: exercise.sets }, (_, i) => ({
       set_number: i + 1,
       actual_weight: 0,
       actual_reps: exercise.reps,
-      actual_rpe: exercise.rpe,
+      actual_rpe: exercise.rpe || 7,
+      actual_rir: exercise.rir || 3,
       logged: false
     }))
   );
@@ -85,9 +89,11 @@ export default function LogWorkout({
         workout_name: workoutName,
         prescribed_reps: exercise.reps,
         prescribed_rpe: exercise.rpe,
+        prescribed_rir: exercise.rir,
         actual_weight: setData.actual_weight,
         actual_reps: setData.actual_reps,
-        actual_rpe: setData.actual_rpe,
+        actual_rpe: useRIR ? null : setData.actual_rpe,
+        actual_rir: useRIR ? setData.actual_rir : null,
         set_number: setNumber,
         notes: notes || null,
         performed_at: new Date().toISOString()
@@ -124,17 +130,26 @@ export default function LogWorkout({
       {/* Header */}
       <div>
         <h3 className="text-2xl font-bold">{exercise.name}</h3>
-        <div className="flex gap-4 text-sm text-muted-foreground mt-2">
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
           <span>Prescribed: {exercise.sets} sets × {exercise.reps} reps</span>
-          <span>RPE Target: {exercise.rpe}</span>
+          {exercise.rpe && <span>RPE Target: {exercise.rpe}</span>}
+          {exercise.rir !== undefined && <span>RIR Target: {exercise.rir}</span>}
           {exercise.rest_seconds && (
             <span>Rest: {exercise.rest_seconds}s</span>
           )}
         </div>
-        <div className="mt-2">
+        <div className="mt-2 flex items-center gap-2">
           <Badge variant={allSetsLogged ? "default" : "secondary"}>
             {completedSets}/{exercise.sets} sets logged
           </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setUseRIR(!useRIR)}
+            className="h-7 text-xs"
+          >
+            {useRIR ? "Switch to RPE" : "Switch to RIR"}
+          </Button>
         </div>
       </div>
 
@@ -193,21 +208,39 @@ export default function LogWorkout({
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label>RPE (Rate of Perceived Exertion): {set.actual_rpe}</Label>
-                    <Slider
-                      value={[set.actual_rpe]}
-                      onValueChange={([value]) => handleSetChange(set.set_number, 'actual_rpe', value)}
-                      min={1}
-                      max={10}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Easy (1)</span>
-                      <span>Max Effort (10)</span>
+                  {useRIR ? (
+                    <div className="space-y-2">
+                      <Label>RIR (Reps In Reserve): {set.actual_rir}</Label>
+                      <Slider
+                        value={[set.actual_rir]}
+                        onValueChange={([value]) => handleSetChange(set.set_number, 'actual_rir', value)}
+                        min={0}
+                        max={10}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Failure (0)</span>
+                        <span>Many Reps Left (10)</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>RPE (Rate of Perceived Exertion): {set.actual_rpe}</Label>
+                      <Slider
+                        value={[set.actual_rpe]}
+                        onValueChange={([value]) => handleSetChange(set.set_number, 'actual_rpe', value)}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Easy (1)</span>
+                        <span>Max Effort (10)</span>
+                      </div>
+                    </div>
+                  )}
 
                   <Button 
                     onClick={() => handleSaveSet(set.set_number)}
@@ -228,8 +261,8 @@ export default function LogWorkout({
                     <span className="font-medium">{set.actual_reps}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">RPE:</span>
-                    <span className="font-medium">{set.actual_rpe}</span>
+                    <span className="text-muted-foreground">{useRIR ? 'RIR:' : 'RPE:'}</span>
+                    <span className="font-medium">{useRIR ? set.actual_rir : set.actual_rpe}</span>
                   </div>
                 </div>
               )}
