@@ -38,8 +38,8 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
   const completedGoals = challenge.completedGoals || 0;
 
   return (
-    <motion.div whileHover={hoverLift.whileHover}>
-    <Card className={`glass-card group overflow-hidden relative ${
+    <motion.div whileHover={hoverLift.whileHover} className="pointer-events-auto">
+    <Card className={`glass-card group overflow-hidden relative cursor-pointer ${
       challenge.isParticipant 
         ? "border-2 border-primary shadow-glow-primary" 
         : "border-primary/20"
@@ -166,7 +166,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           }
           size="lg"
         >
-          <Link to={`/challenges/${challenge.id}`} className="flex items-center justify-center gap-2">
+          <Link to={`/challenges/${challenge.id}`} className="flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {challenge.isParticipant ? (
               <>
                 <Trophy className="h-4 w-4" />

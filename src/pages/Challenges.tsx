@@ -111,7 +111,7 @@ export default function Challenges() {
       <div className="container py-6 space-y-8">
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-8 md:p-12">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 pointer-events-none" />
         <div className="relative z-10 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
