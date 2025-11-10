@@ -82,9 +82,35 @@ serve(
     const targetDate = date ? new Date(date) : new Date();
     const dayOfWeek = targetDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    console.log(`[get-daily-ai-workout] Fetching workout for user ${targetUserId}, day ${dayOfWeek}`);
+    console.log(`[get-daily-ai-workout] Fetching workout for user ${targetUserId}, day ${dayOfWeek}, date ${targetDate.toISOString()}`);
 
-    // Step 1: Fetch today's planned workout
+    // First check how many active plans exist
+    const { data: allWorkouts, error: checkError } = await supabase
+      .from("training_plan_workouts")
+      .select(`
+        id,
+        workout_name,
+        training_plans!inner(
+          id,
+          name,
+          created_at,
+          assigned_training_plans!inner(
+            client_id,
+            status
+          )
+        )
+      `)
+      .eq("training_plans.assigned_training_plans.client_id", targetUserId)
+      .eq("training_plans.assigned_training_plans.status", "active")
+      .eq("day_of_week", dayOfWeek);
+
+    console.log(`[get-daily-ai-workout] Found ${allWorkouts?.length || 0} active workouts for day ${dayOfWeek}`);
+    
+    if (allWorkouts && allWorkouts.length > 1) {
+      console.warn(`[get-daily-ai-workout] Multiple active plans detected (${allWorkouts.length}). Using newest plan.`);
+    }
+
+    // Step 1: Fetch today's planned workout (get newest if multiple exist)
     const { data: plannedWorkout, error: workoutError } = await supabase
       .from("training_plan_workouts")
       .select(`
@@ -97,6 +123,7 @@ serve(
           id,
           name,
           duration_weeks,
+          created_at,
           assigned_training_plans!inner(
             client_id,
             status
@@ -106,29 +133,37 @@ serve(
       .eq("training_plans.assigned_training_plans.client_id", targetUserId)
       .eq("training_plans.assigned_training_plans.status", "active")
       .eq("day_of_week", dayOfWeek)
+      .order("training_plans.created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (workoutError) {
-      console.error("[get-daily-ai-workout] Error fetching workout:", workoutError);
+      console.error("[get-daily-ai-workout] Error fetching workout:", {
+        code: workoutError.code,
+        message: workoutError.message,
+        details: workoutError.details,
+        hint: workoutError.hint
+      });
+      
+      // Special handling for multiple rows error
+      if (workoutError.code === 'PGRST116') {
+        throw new EdgeFunctionError(
+          "У вас несколько активных планов тренировок. Пожалуйста, деактивируйте старые планы в настройках.",
+          ErrorCode.VALIDATION_ERROR,
+          400
+        );
+      }
+      
       throw new EdgeFunctionError(
         "Failed to fetch workout plan",
-        ErrorCode.DATABASE_ERROR,
+        ErrorCode.INTERNAL_ERROR,
         500
       );
     }
+    
+    console.log(`[get-daily-ai-workout] Selected workout: ${plannedWorkout?.workout_name || 'none'} from plan: ${plannedWorkout?.training_plans?.name || 'N/A'}`);
 
-    // No workout today = rest day
-    if (!plannedWorkout) {
-      return jsonResponse({
-        success: true,
-        is_rest_day: true,
-        day_of_week: dayOfWeek,
-        message: "No workout scheduled for today",
-        readiness: readiness,
-      });
-    }
-
-    // Step 2: Fetch user readiness data
+    // Step 2: Fetch user readiness data (before rest day check so we can return it)
     const { data: readinessData, error: readinessError } = await supabase
       .from("client_health_scores")
       .select("recovery_score, sleep_score, activity_score, total_health_score")
@@ -141,6 +176,17 @@ serve(
       activity_score: 50,
       total_health_score: 70,
     };
+
+    // No workout today = rest day
+    if (!plannedWorkout) {
+      return jsonResponse({
+        success: true,
+        is_rest_day: true,
+        day_of_week: dayOfWeek,
+        message: "No workout scheduled for today",
+        readiness: readiness,
+      });
+    }
 
     console.log("[get-daily-ai-workout] Readiness:", readiness);
 
