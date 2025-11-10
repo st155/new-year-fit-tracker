@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { safeStorage } from '@/lib/safeStorage';
 
 export function MobileDebugOverlay() {
   const { user, loading, isTrainer, role } = useAuth();
   const [screenInfo, setScreenInfo] = useState('');
+  const [isVisible, setIsVisible] = useState(() => {
+    const hidden = safeStorage.getItem('debug-overlay-hidden');
+    return hidden !== 'true';
+  });
+  
+  const handleClose = () => {
+    setIsVisible(false);
+    safeStorage.setItem('debug-overlay-hidden', 'true');
+  };
   
   useEffect(() => {
     const updateInfo = () => {
@@ -30,9 +40,22 @@ export function MobileDebugOverlay() {
     return null;
   }
   
+  if (!isVisible) {
+    return null;
+  }
+  
   return (
     <div className="fixed top-0 left-0 z-[9999] bg-red-500 text-white p-2 text-xs font-mono max-w-full overflow-auto shadow-lg">
-      <div className="font-bold mb-1">🔍 DEBUG INFO</div>
+      <div className="flex items-start justify-between mb-1">
+        <div className="font-bold">🔍 DEBUG INFO</div>
+        <button 
+          onClick={handleClose}
+          className="text-white hover:text-red-200 text-lg leading-none ml-2"
+          aria-label="Close debug overlay"
+        >
+          ×
+        </button>
+      </div>
       <pre className="whitespace-pre-wrap">{screenInfo}</pre>
     </div>
   );
