@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+import { hoverLift } from '@/lib/animations-v3';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +38,8 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
   const completedGoals = challenge.completedGoals || 0;
 
   return (
-    <Card className={`glass-card hover-lift group overflow-hidden relative ${
+    <motion.div {...hoverLift}>
+    <Card className={`glass-card group overflow-hidden relative ${
       challenge.isParticipant 
         ? "border-2 border-primary shadow-glow-primary" 
         : "border-primary/20"
@@ -179,5 +182,6 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
         </Button>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }

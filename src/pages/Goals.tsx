@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
+import { FAB } from '@/components/ui/fab';
+import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
@@ -25,6 +27,7 @@ export default function Goals() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [showFirstMeasurement, setShowFirstMeasurement] = useState(false);
   const [goalsNeedingBaseline, setGoalsNeedingBaseline] = useState<any[]>([]);
+  const [quickMeasurementGoal, setQuickMeasurementGoal] = useState<any>(null);
   
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = (searchParams.get('filter') as FilterType) || 'all';
@@ -327,6 +330,42 @@ export default function Goals() {
           setGoalsNeedingBaseline([]);
         }}
       />
+
+      {/* FAB for quick actions */}
+      <FAB
+        actions={[
+          {
+            label: 'Создать цель',
+            icon: Plus,
+            onClick: () => setCreateDialogOpen(true),
+            color: 'text-primary'
+          },
+          {
+            label: 'Добавить замер',
+            icon: Target,
+            onClick: () => {
+              const firstGoal = filteredGoals[0];
+              if (firstGoal) {
+                setQuickMeasurementGoal(firstGoal);
+              }
+            },
+            color: 'text-secondary'
+          }
+        ]}
+      />
+
+      {/* Quick measurement dialog */}
+      {quickMeasurementGoal && (
+        <QuickMeasurementDialog
+          goal={quickMeasurementGoal}
+          isOpen={!!quickMeasurementGoal}
+          onOpenChange={(open) => !open && setQuickMeasurementGoal(null)}
+          onMeasurementAdded={() => {
+            setQuickMeasurementGoal(null);
+            refetch();
+          }}
+        />
+      )}
     </AnimatedPage>
   );
 }

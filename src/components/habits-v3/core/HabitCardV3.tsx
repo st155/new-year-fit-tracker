@@ -1,4 +1,8 @@
 import { motion, PanInfo, AnimatePresence } from 'framer-motion';
+import { 
+  fadeIn, 
+  ANIMATION_DURATION 
+} from '@/lib/animations-v3';
 import { useState, useCallback, memo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -450,7 +454,7 @@ export function HabitCardV3({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.15 }}
                   className="overflow-hidden"
                 >
                   <div className="mt-3" onClick={(e) => e.stopPropagation()}>

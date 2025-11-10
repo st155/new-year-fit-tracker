@@ -1,4 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { motion } from 'framer-motion';
+import { hoverLift } from '@/lib/animations-v3';
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -170,8 +172,9 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
 
   return (
     <>
+      <motion.div {...hoverLift}>
       <Card className={cn(
-        "overflow-hidden hover:shadow-lg transition-all hover:scale-[1.01] group relative h-full",
+        "overflow-hidden hover:shadow-lg transition-all group relative h-full",
         readonly && "bg-muted/20 border-muted-foreground/20"
       )}>
         {/* Color bar */}
@@ -375,6 +378,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {!readonly && (
         <>

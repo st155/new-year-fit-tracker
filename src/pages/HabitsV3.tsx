@@ -27,7 +27,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, Trophy } from 'lucide-react';
+import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
+import { FAB } from '@/components/ui/fab';
 import { HabitCreateDialog } from '@/components/habits/HabitCreateDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -187,10 +188,6 @@ export default function HabitsV3() {
             <Button variant="outline" size="icon" onClick={() => setShowAchievements(true)}>
               <Trophy className="w-5 h-5" />
             </Button>
-            <Button onClick={() => setCreateDialogOpen(true)} size="lg">
-              <Plus className="w-5 h-5 mr-2" />
-              Добавить
-            </Button>
           </div>
         </div>
 
@@ -327,6 +324,36 @@ export default function HabitsV3() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onHabitCreated={refetch}
+      />
+
+      {/* FAB for quick actions */}
+      <FAB
+        actions={[
+          {
+            label: 'Новая привычка',
+            icon: Plus,
+            onClick: () => setCreateDialogOpen(true),
+            color: 'text-primary'
+          },
+          {
+            label: 'Быстрое выполнение',
+            icon: Zap,
+            onClick: () => {
+              const firstUncompleted = habits.find(h => !h.completed_today);
+              if (firstUncompleted) {
+                handleHabitComplete(firstUncompleted.id);
+              }
+            },
+            badge: habits.filter(h => !h.completed_today).length,
+            color: 'text-warning'
+          },
+          {
+            label: 'Статистика',
+            icon: BarChart3,
+            onClick: () => navigate('/habits-v3'),
+            color: 'text-info'
+          }
+        ]}
       />
 
       {/* Dev Mode Tools */}

@@ -6,6 +6,8 @@ import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { ShortcutsHintPanel } from "@/components/ui/shortcuts-hint-panel";
+import { useState, useEffect } from "react";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
@@ -14,6 +16,20 @@ interface ModernAppLayoutProps {
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
   console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');
   const { open, setOpen } = useCommandPalette();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Listen for '?' key to show shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '?' && !open) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
   
   if (LAYOUT_SAFE_MODE) {
     return (
@@ -35,6 +51,7 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
           </main>
           <MobileBottomNav />
           <CommandPalette open={open} onOpenChange={setOpen} />
+          <ShortcutsHintPanel open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
         </div>
       </MetricsViewProvider>
     </SafeProfileProvider>

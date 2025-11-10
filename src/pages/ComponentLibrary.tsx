@@ -18,6 +18,10 @@ import {
 } from 'lucide-react';
 import { ButtonShowcase } from '@/components/docs/showcases/ButtonShowcase';
 import { CardShowcase } from '@/components/docs/showcases/CardShowcase';
+import { FormShowcase } from '@/components/docs/showcases/FormShowcase';
+import { FeedbackShowcase } from '@/components/docs/showcases/FeedbackShowcase';
+import { DataDisplayShowcase } from '@/components/docs/showcases/DataDisplayShowcase';
+import { AnimationShowcase } from '@/components/docs/showcases/AnimationShowcase';
 
 interface Category {
   id: string;
@@ -28,8 +32,9 @@ interface Category {
 const categories: Category[] = [
   { id: 'buttons', label: 'Buttons', icon: Square },
   { id: 'cards', label: 'Cards', icon: Box },
-  { id: 'colors', label: 'Colors', icon: Palette },
-  { id: 'typography', label: 'Typography', icon: Type },
+  { id: 'forms', label: 'Forms', icon: Type },
+  { id: 'feedback', label: 'Feedback', icon: Circle },
+  { id: 'data', label: 'Data Display', icon: Palette },
   { id: 'animations', label: 'Animations', icon: Zap },
   { id: 'layout', label: 'Layout', icon: Layout },
 ];
@@ -43,6 +48,14 @@ export default function ComponentLibrary() {
         return <ButtonShowcase />;
       case 'cards':
         return <CardShowcase />;
+      case 'forms':
+        return <FormShowcase />;
+      case 'feedback':
+        return <FeedbackShowcase />;
+      case 'data':
+        return <DataDisplayShowcase />;
+      case 'animations':
+        return <AnimationShowcase />;
       default:
         return (
           <div className="flex items-center justify-center h-[400px] text-muted-foreground">
