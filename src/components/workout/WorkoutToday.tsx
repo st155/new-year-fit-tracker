@@ -58,9 +58,18 @@ export default function WorkoutToday() {
   };
 
   const handleStartTraining = () => {
-    if (data?.adjusted_exercises?.[0]) {
-      handleStartExercise(data.adjusted_exercises[0]);
-    }
+    if (!data) return;
+    
+    const workoutData = {
+      planId: data.assigned_plan_id || '',
+      weekNumber: data.week_number || 1,
+      dayOfWeek: data.day_of_week || 0,
+      workoutName: data.workout_name || '',
+      exercises: data.adjusted_exercises || []
+    };
+    
+    sessionStorage.setItem('activeWorkout', JSON.stringify(workoutData));
+    window.location.href = '/workouts/live-logger';
   };
 
   const handleStartExercise = (exercise: AdjustedExercise) => {

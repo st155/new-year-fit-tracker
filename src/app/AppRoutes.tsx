@@ -57,6 +57,7 @@ import NotFoundSync from "@/pages/NotFound";
 import WithingsDebugSync from "@/pages/WithingsDebug";
 import HabitTeamsSync from "@/pages/HabitTeams";
 import HabitTeamDetailSync from "@/pages/HabitTeamDetail";
+import WorkoutLiveLoggerSync from "@/pages/WorkoutLiveLogger";
 import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
@@ -94,6 +95,7 @@ const WithingsDebug = lazySafe(WithingsDebugSync, () => import("@/pages/Withings
 const MetricDetail = lazySafe(MetricDetailSync, () => import("@/pages/MetricDetail"));
 const HabitTeams = lazySafe(HabitTeamsSync, () => import("@/pages/HabitTeams"));
 const HabitTeamDetail = lazySafe(HabitTeamDetailSync, () => import("@/pages/HabitTeamDetail"));
+const WorkoutLiveLogger = lazySafe(WorkoutLiveLoggerSync, () => import("@/pages/WorkoutLiveLogger"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -194,6 +196,11 @@ export const AppRoutes = () => {
         <Route path="/workouts/plan-ready" element={
           <ProtectedRoute>
             <AIGeneratedPlanReady />
+          </ProtectedRoute>
+        } />
+        <Route path="/workouts/live-logger" element={
+          <ProtectedRoute>
+            <WorkoutLiveLogger />
           </ProtectedRoute>
         } />
         <Route path="/challenges" element={
