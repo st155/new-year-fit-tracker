@@ -24,6 +24,7 @@ import ComponentLibrary from "@/pages/ComponentLibrary";
 
 // Sync imports for all pages
 import LandingSync from "@/pages/Landing";
+import LandingAISync from "@/pages/LandingAI";
 import IndexSync from "@/pages/Index";
 import ProgressSync from "@/pages/Progress";
 import GoalsSync from "@/pages/Goals";
@@ -62,6 +63,7 @@ import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
 // Safe lazy wrappers (bypass lazy on dev/preview)
 const Landing = lazySafe(LandingSync, () => import("@/pages/Landing"));
+const LandingAI = lazySafe(LandingAISync, () => import("@/pages/LandingAI"));
 const Index = lazySafe(IndexSync, () => import("@/pages/Index"));
 const Progress = lazySafe(ProgressSync, () => import("@/pages/Progress"));
 const Goals = lazySafe(GoalsSync, () => import("@/pages/Goals"));
@@ -368,7 +370,14 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         } />
         
-          <Route path="*" element={<NotFound />} />
+        {/* AI Coach Landing Page */}
+        <Route path="/features/ai-coach" element={
+          <ProtectedRoute>
+            <LandingAI />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="*" element={<NotFound />} />
         </Routes>
         <DevDebugBar />
         <Sonner />
