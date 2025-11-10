@@ -95,6 +95,12 @@ const navigationItems: NavigationItemExtended[] = [
     description: "Body composition tracking",
   },
   {
+    title: "Тренировки",
+    href: "/workouts",
+    iconType: "activity",
+    description: "AI-powered training plans",
+  },
+  {
     title: "navigation.challenges",
     href: "/challenges",
     iconType: "challenges",
