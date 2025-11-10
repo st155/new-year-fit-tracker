@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,10 +12,14 @@ import { HoverBorderGradient } from '@/components/aceternity/hover-border-gradie
 import { Button } from '@/components/ui/button';
 import { PageLoader } from '@/components/ui/page-loader';
 import { AreaChart } from '@tremor/react';
-import { Sparkles, TrendingUp, Target, Zap, Shield, Activity, Brain } from 'lucide-react';
+import { Sparkles, TrendingUp, Target, Zap, Shield, Activity, Brain, Users, Award, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { BodyModel3D } from '@/components/body-composition/BodyModel3D';
+import confetti from 'canvas-confetti';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+
+const BodyModel3D = lazy(() => import('@/components/body-composition/BodyModel3D').then(m => ({ default: m.BodyModel3D })));
 
 // Animated Counter Component
 const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
@@ -88,25 +92,57 @@ const InsightCard = ({ insight, index }: { insight: any; index: number }) => {
   );
 };
 
-// Stat Card Component
-const StatCard = ({ value, label, index }: { value: number; label: string; index: number }) => (
+// Stat Card Component with Icons
+const StatCard = ({ icon: Icon, value, label, index, color }: { 
+  icon: any; 
+  value: number; 
+  label: string; 
+  index: number;
+  color: string;
+}) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.5 }}
     animate={{ opacity: 1, scale: 1 }}
+    whileHover={{ scale: 1.1, y: -5 }}
     transition={{ duration: 0.5, delay: index * 0.1 }}
-    className="text-center"
+    className="text-center relative group cursor-pointer"
   >
-    <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
+    <Icon className={`h-10 w-10 mx-auto mb-3 text-${color}-400 group-hover:text-${color}-300 transition-colors`} />
+    <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform">
       <AnimatedCounter value={value} />
       {value >= 1000000 && '+'}
     </div>
     <div className="text-sm text-muted-foreground">{label}</div>
+    
+    {/* Hover Glow */}
+    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-purple-500/20 to-pink-500/0 
+      opacity-0 group-hover:opacity-100 transition-opacity blur-xl -z-10" />
   </motion.div>
 );
+
+// Testimonials data
+const testimonials = [
+  {
+    name: "Алексей М.",
+    role: "Триатлет",
+    quote: "AI точно предсказал мою перетренированность за 2 дня до травмы. Спасибо!"
+  },
+  {
+    name: "Мария К.",
+    role: "Фитнес-тренер",
+    quote: "Клиенты теперь получают персонализированные планы автоматически. Революция!"
+  },
+  {
+    name: "Дмитрий С.",
+    role: "Бодибилдер",
+    quote: "3D анализ тела показал дисбаланс, о котором я не знал. Результаты улучшились!"
+  }
+];
 
 export default function LandingAI() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4000, stopOnInteraction: false })]);
 
   // Fetch all data
   const { insights, isLoading: insightsLoading } = useSmartInsights({ maxInsights: 6 });
@@ -203,6 +239,43 @@ export default function LandingAI() {
           />
         </div>
 
+        {/* Floating Elements - Hidden on mobile */}
+        <div className="hidden lg:block">
+          <motion.div
+            animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-20 left-10 opacity-20"
+          >
+            <Brain className="h-24 w-24 text-cyan-400" />
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="absolute bottom-40 right-10 opacity-20"
+          >
+            <Zap className="h-32 w-32 text-purple-400" />
+          </motion.div>
+
+          {/* Floating Stats */}
+          {[
+            { value: "92%", label: "Точность", top: "15%", left: "5%" },
+            { value: "24/7", label: "Мониторинг", top: "60%", right: "5%" },
+            { value: "1M+", label: "Данных", bottom: "20%", left: "10%" }
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, delay: i * 1.5 }}
+              className="absolute glass-card p-4 rounded-xl border border-primary/20"
+              style={{ top: stat.top, left: stat.left, right: stat.right, bottom: stat.bottom }}
+            >
+              <div className="text-2xl font-bold text-primary">{stat.value}</div>
+              <div className="text-xs text-muted-foreground">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+
         {/* Content */}
         <div className="relative z-10 w-full max-w-7xl mx-auto">
           <motion.div
@@ -211,20 +284,29 @@ export default function LandingAI() {
             transition={{ duration: 0.8 }}
             className="text-center mb-12"
           >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Elite10: Ваш AI-тренер
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
               Отдыхайте умнее. Тренируйтесь эффективнее. Достигайте большего.
             </p>
           </motion.div>
+
+          {/* Pulsing Background Glow */}
+          <div className="absolute inset-0 max-w-5xl mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 
+              blur-3xl animate-pulse opacity-50 rounded-3xl" />
+          </div>
 
           {/* Central Glass Window - Live Dashboard Demo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="glass-card backdrop-blur-2xl p-8 md:p-12 lg:p-16 rounded-3xl border border-border/50 shadow-2xl max-w-5xl mx-auto"
+            className="relative glass-card backdrop-blur-3xl p-4 sm:p-8 md:p-12 lg:p-16 rounded-3xl 
+              border-2 border-primary/20 shadow-[0_0_50px_rgba(6,182,212,0.3)] 
+              bg-gradient-to-br from-background/80 via-background/60 to-background/80
+              max-w-5xl mx-auto"
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-foreground">
               Привет, {user?.user_metadata?.full_name || 'Спортсмен'}! 👋
@@ -236,7 +318,9 @@ export default function LandingAI() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20"
+                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 
+                  border-2 border-cyan-500/30 hover:border-cyan-400/60 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)]
+                  transition-all duration-300"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Brain className="h-6 w-6 text-cyan-400" />
@@ -250,7 +334,9 @@ export default function LandingAI() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
-                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20"
+                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 
+                  border-2 border-green-500/30 hover:border-green-400/60 hover:shadow-[0_0_30px_rgba(34,197,94,0.4)]
+                  transition-all duration-300"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Shield className="h-6 w-6 text-green-400" />
@@ -267,7 +353,9 @@ export default function LandingAI() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
-                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20"
+                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 
+                  border-2 border-orange-500/30 hover:border-orange-400/60 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]
+                  transition-all duration-300"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Target className="h-6 w-6 text-orange-400" />
@@ -286,7 +374,9 @@ export default function LandingAI() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 }}
-                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20"
+                className="glass-medium p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 
+                  border-2 border-purple-500/30 hover:border-purple-400/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]
+                  transition-all duration-300"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <TrendingUp className="h-6 w-6 text-purple-400" />
@@ -318,11 +408,35 @@ export default function LandingAI() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="glass-card backdrop-blur-xl p-8 rounded-2xl border border-border/50">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <StatCard value={platformStats?.challenges || 1204} label="Активных челленджей" index={0} />
-              <StatCard value={platformStats?.workouts || 8500} label="Тренировок завершено" index={1} />
-              <StatCard value={platformStats?.metrics || 1000000} label="Метрик синхронизировано" index={2} />
-              <StatCard value={platformStats?.insights || 5200} label="AI-советов сгенерировано" index={3} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              <StatCard 
+                icon={Target}
+                value={platformStats?.challenges || 1204} 
+                label="Активных челленджей" 
+                index={0}
+                color="cyan"
+              />
+              <StatCard 
+                icon={Zap}
+                value={platformStats?.workouts || 8500} 
+                label="Тренировок завершено" 
+                index={1}
+                color="purple"
+              />
+              <StatCard 
+                icon={Activity}
+                value={platformStats?.metrics || 1000000} 
+                label="Метрик синхронизировано" 
+                index={2}
+                color="green"
+              />
+              <StatCard 
+                icon={Brain}
+                value={platformStats?.insights || 5200} 
+                label="AI-советов сгенерировано" 
+                index={3}
+                color="orange"
+              />
             </div>
           </div>
         </div>
@@ -345,10 +459,14 @@ export default function LandingAI() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {insights.slice(0, 6).map((insight, index) => (
-              <InsightCard key={index} insight={insight} index={index} />
-            ))}
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-6">
+              {insights.slice(0, 6).map((insight, index) => (
+                <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0">
+                  <InsightCard insight={insight} index={index} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -379,7 +497,13 @@ export default function LandingAI() {
                 <h3 className="text-xl font-semibold text-foreground">3D Анализ тела</h3>
                 <Activity className="h-6 w-6 text-primary" />
               </div>
-              <BodyModel3D segmentalData={segmentalArray} />
+              <Suspense fallback={
+                <div className="h-64 flex items-center justify-center">
+                  <PageLoader size="sm" />
+                </div>
+              }>
+                <BodyModel3D segmentalData={segmentalArray} />
+              </Suspense>
               <div className="mt-4 p-3 glass-medium rounded-lg">
                 <p className="text-sm text-muted-foreground text-center">
                   Muscle Mass: {bodyData?.muscleMass?.toFixed(1) || '--'} kg
@@ -447,6 +571,51 @@ export default function LandingAI() {
         </div>
       </section>
 
+      {/* Social Proof Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-background to-background/50">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+              Что говорят пользователи
+            </h2>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="glass-card p-6 rounded-2xl border border-border/50 hover:border-primary/50 transition-all"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">{t.name}</div>
+                    <div className="text-sm text-muted-foreground">{t.role}</div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground italic mb-4">"{t.quote}"</p>
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, starIndex) => (
+                    <Star key={starIndex} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -454,12 +623,12 @@ export default function LandingAI() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="glass-card backdrop-blur-xl p-12 rounded-3xl border border-border/50 text-center"
+            className="glass-card backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-border/50 text-center"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Готовы перейти от данных к действиям?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Активируйте AI Juggernaut Engine и получите персонализированный тренировочный план за 2 минуты
             </p>
 
@@ -471,7 +640,14 @@ export default function LandingAI() {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/workouts/ai-onboarding')}
+                onClick={() => {
+                  confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                  });
+                  navigate('/workouts/ai-onboarding');
+                }}
               >
                 Начать AI Онбординг
                 <Sparkles className="ml-2 h-5 w-5" />
