@@ -147,7 +147,68 @@ export function useChallengeGoals(userId?: string) {
                                       goalNameLower.includes('мышц') || 
                                       goalNameLower.includes('muscle');
         
-        if (goalNameLower.includes('вес') || goalNameLower.includes('weight')) {
+        // Special handling for Recovery & Sleep metrics
+        if (goalNameLower === 'recovery score' || goalNameLower.includes('recovery score')) {
+          const recoveryMetrics = allUnifiedHistory?.filter(h => 
+            h.metric_name === 'Recovery Score' || h.metric_name === 'Recovery'
+          ).slice(0, 14) || [];
+          
+          if (recoveryMetrics.length > 0) {
+            currentValue = recoveryMetrics[0].value;
+            source = 'whoop' as any;
+            sparklineData = recoveryMetrics.map(d => ({
+              goal_id: goal.id,
+              value: d.value,
+              measurement_date: d.measurement_date
+            }));
+            baselineValue = recoveryMetrics[recoveryMetrics.length - 1].value;
+          }
+        } else if (goalNameLower === 'hrv' || goalNameLower === 'hrv (heart rate variability)') {
+          const hrvMetrics = allUnifiedHistory?.filter(h => 
+            h.metric_name === 'HRV' || h.metric_name === 'Heart Rate Variability'
+          ).slice(0, 14) || [];
+          
+          if (hrvMetrics.length > 0) {
+            currentValue = hrvMetrics[0].value;
+            source = 'whoop' as any;
+            sparklineData = hrvMetrics.map(d => ({
+              goal_id: goal.id,
+              value: d.value,
+              measurement_date: d.measurement_date
+            }));
+            baselineValue = hrvMetrics[hrvMetrics.length - 1].value;
+          }
+        } else if (goalNameLower === 'resting heart rate' || goalNameLower.includes('resting heart rate')) {
+          const rhrMetrics = allUnifiedHistory?.filter(h => 
+            h.metric_name === 'Resting Heart Rate' || h.metric_name === 'Resting HR' || h.metric_name === 'RHR'
+          ).slice(0, 14) || [];
+          
+          if (rhrMetrics.length > 0) {
+            currentValue = rhrMetrics[0].value;
+            source = 'whoop' as any;
+            sparklineData = rhrMetrics.map(d => ({
+              goal_id: goal.id,
+              value: d.value,
+              measurement_date: d.measurement_date
+            }));
+            baselineValue = rhrMetrics[rhrMetrics.length - 1].value;
+          }
+        } else if (goalNameLower === 'sleep hours' || goalNameLower.includes('sleep hours')) {
+          const sleepMetrics = allUnifiedHistory?.filter(h => 
+            h.metric_name === 'Sleep Duration' || h.metric_name === 'Sleep Hours'
+          ).slice(0, 14) || [];
+          
+          if (sleepMetrics.length > 0) {
+            currentValue = sleepMetrics[0].value;
+            source = 'whoop' as any;
+            sparklineData = sleepMetrics.map(d => ({
+              goal_id: goal.id,
+              value: d.value,
+              measurement_date: d.measurement_date
+            }));
+            baselineValue = sleepMetrics[sleepMetrics.length - 1].value;
+          }
+        } else if (goalNameLower.includes('вес') || goalNameLower.includes('weight')) {
           currentValue = bodyMetrics.weight?.value || allMeasurements[0]?.value || 0;
           source = bodyMetrics.weight?.source;
           if (bodyMetrics.weight?.sparklineData) {
