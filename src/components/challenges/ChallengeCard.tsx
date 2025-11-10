@@ -38,14 +38,14 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
   const completedGoals = challenge.completedGoals || 0;
 
   return (
-    <motion.div {...hoverLift}>
+    <motion.div whileHover={hoverLift.whileHover}>
     <Card className={`glass-card group overflow-hidden relative ${
       challenge.isParticipant 
         ? "border-2 border-primary shadow-glow-primary" 
         : "border-primary/20"
     }`}>
       {/* Background Gradient */}
-      <div className={`absolute inset-0 bg-gradient-primary transition-opacity ${
+      <div className={`absolute inset-0 bg-gradient-primary transition-opacity pointer-events-none ${
         challenge.isParticipant 
           ? "opacity-5" 
           : "opacity-0 group-hover:opacity-5"
