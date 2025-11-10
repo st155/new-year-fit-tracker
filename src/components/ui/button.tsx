@@ -38,10 +38,12 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  loading?: boolean;
+  loadingText?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, loadingText, disabled, children, ...props }, ref) => {
     if (asChild) {
       return <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
     }
@@ -50,12 +52,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <MotionButton
         className={cn(buttonVariants({ variant, size, className }))} 
-        ref={ref} 
+        ref={ref}
+        disabled={disabled || loading}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.1 }}
-        {...props} 
-      />
+        {...props}
+      >
+        {loading ? (loadingText || children) : children}
+      </MotionButton>
     );
   },
 );

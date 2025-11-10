@@ -4,6 +4,8 @@ import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
 import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { CommandPalette } from "@/components/ui/command-palette";
+import { useCommandPalette } from "@/hooks/useCommandPalette";
 
 interface ModernAppLayoutProps {
   children: ReactNode;
@@ -11,6 +13,7 @@ interface ModernAppLayoutProps {
 
 export const ModernAppLayout = memo(function ModernAppLayout({ children }: ModernAppLayoutProps) {
   console.log('🏗️ [ModernAppLayout] Rendering layout (SAFE_MODE:', LAYOUT_SAFE_MODE, ')');
+  const { open, setOpen } = useCommandPalette();
   
   if (LAYOUT_SAFE_MODE) {
     return (
@@ -31,6 +34,7 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
             {children}
           </main>
           <MobileBottomNav />
+          <CommandPalette open={open} onOpenChange={setOpen} />
         </div>
       </MetricsViewProvider>
     </SafeProfileProvider>
