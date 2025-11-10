@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 type Status = 'processing' | 'success' | 'error';
 
@@ -58,7 +59,6 @@ export default function TerraCallback() {
       // Если Terra вернула terra_user_id прямо в редиректе, связываем пользователя без ожидания вебхука
       if (terraUserId) {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
           const { data: userRes } = await supabase.auth.getUser();
           const uid = userRes.user?.id;
           if (uid) {
@@ -132,7 +132,6 @@ export default function TerraCallback() {
       if (widgetSuccess) {
         // Создаем запись в terra_tokens сразу же
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
           const { data: userRes } = await supabase.auth.getUser();
           const uid = userRes.user?.id;
           
@@ -206,7 +205,6 @@ export default function TerraCallback() {
         
         // Автоматически запускаем синхронизацию данных после подключения
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
           setMessage('Синхронизируем данные...');
           
           const { data, error } = await supabase.functions.invoke('terra-integration', {
@@ -233,7 +231,6 @@ export default function TerraCallback() {
       try {
         setStatus('processing');
         setMessage('Проверяем подключение...');
-        const { supabase } = await import('@/integrations/supabase/client');
         const { data: userRes } = await supabase.auth.getUser();
         const userId = userRes.user?.id;
 
