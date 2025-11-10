@@ -5576,6 +5576,23 @@ export type Database = {
           jobs_created: number
         }[]
       }
+      get_aggregated_workouts: {
+        Args: { p_user_id: string }
+        Returns: {
+          assigned_plan_id: string
+          day_of_week: number
+          duration_minutes: number
+          estimated_calories: number
+          id: string
+          performed_at: string
+          source: string
+          total_exercises: number
+          total_sets: number
+          total_volume: number
+          user_id: string
+          workout_name: string
+        }[]
+      }
       get_challenge_participant_goals_with_progress: {
         Args: { p_challenge_id: string; p_user_id: string }
         Returns: {
