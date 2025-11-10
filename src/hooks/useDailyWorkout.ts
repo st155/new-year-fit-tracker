@@ -19,6 +19,9 @@ export interface DailyWorkoutResponse {
   is_rest_day: boolean;
   workout_name?: string;
   day_of_week?: number;
+  week_number?: number;
+  plan_name?: string;
+  total_weeks?: number;
   original_exercises?: any[];
   adjusted_exercises?: AdjustedExercise[];
   ai_rationale?: string;

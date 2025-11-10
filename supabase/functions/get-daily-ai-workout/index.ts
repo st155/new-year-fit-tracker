@@ -90,11 +90,13 @@ serve(
       .select(`
         id,
         day_of_week,
+        week_number,
         workout_name,
         exercises,
         training_plans!inner(
           id,
           name,
+          duration_weeks,
           assigned_training_plans!inner(
             client_id,
             status
@@ -285,6 +287,9 @@ ${JSON.stringify(exerciseHistory, null, 2)}
       success: true,
       is_rest_day: false,
       day_of_week: dayOfWeek,
+      week_number: plannedWorkout.week_number,
+      plan_name: plannedWorkout.training_plans.name,
+      total_weeks: plannedWorkout.training_plans.duration_weeks,
       workout_id: plannedWorkout.id,
       workout_name: plannedWorkout.workout_name,
       original_exercises: exercises,
@@ -302,6 +307,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
                          readiness.total_health_score >= 60 ? "good" :
                          readiness.total_health_score >= 40 ? "fair" : "poor"
       },
+      assigned_plan_id: plannedWorkout.training_plans.assigned_training_plans[0]?.client_id,
       generated_at: new Date().toISOString()
     };
 
