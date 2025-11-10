@@ -48,6 +48,8 @@ import TrainerAnalyticsDashboardSync from "@/pages/TrainerAnalyticsDashboard";
 import AdminSync from "@/pages/Admin";
 import MetricDetailSync from "@/pages/MetricDetail";
 import TerraCallbackSync from "@/pages/TerraCallback";
+import AITrainingOnboardingSync from "@/pages/AITrainingOnboarding";
+import GeneratingPlanScreenSync from "@/pages/GeneratingPlanScreen";
 import PrivacyPolicySync from "@/pages/PrivacyPolicy";
 import HealthSync from "@/pages/Health";
 import NotFoundSync from "@/pages/NotFound";
@@ -64,6 +66,8 @@ const Goals = lazySafe(GoalsSync, () => import("@/pages/Goals"));
 const GoalDetail = lazySafe(GoalDetailSync, () => import("@/pages/GoalDetail"));
 const Body = lazySafe(BodySync, () => import("@/pages/Body"));
 const WorkoutTab = lazySafe(WorkoutTabSync, () => import("@/pages/WorkoutTab"));
+const AITrainingOnboarding = lazySafe(AITrainingOnboardingSync, () => import("@/pages/AITrainingOnboarding"));
+const GeneratingPlanScreen = lazySafe(GeneratingPlanScreenSync, () => import("@/pages/GeneratingPlanScreen"));
 const Challenges = lazySafe(ChallengesSync, () => import("@/pages/Challenges"));
 const ChallengeDetail = lazySafe(ChallengeDetailSync, () => import("@/pages/ChallengeDetail"));
 const Habits = lazySafe(HabitsSync, () => import("@/pages/Habits"));
@@ -173,6 +177,16 @@ export const AppRoutes = () => {
             <ModernAppLayout>
               <WorkoutTab />
             </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/workouts/ai-onboarding" element={
+          <ProtectedRoute>
+            <AITrainingOnboarding />
+          </ProtectedRoute>
+        } />
+        <Route path="/workouts/generating" element={
+          <ProtectedRoute>
+            <GeneratingPlanScreen />
           </ProtectedRoute>
         } />
         <Route path="/challenges" element={

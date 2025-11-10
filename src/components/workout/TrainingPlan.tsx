@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,11 +10,10 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import AITrainingOnboarding from "./AITrainingOnboarding";
 import LogWorkout from "./LogWorkout";
 
 export default function TrainingPlan() {
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const navigate = useNavigate();
   const [activeExercise, setActiveExercise] = useState<any>(null);
 
   const { data: activePlan, isLoading, refetch } = useQuery({
@@ -139,22 +139,13 @@ export default function TrainingPlan() {
             <Button 
               size="lg" 
               className="mt-4"
-              onClick={() => setShowOnboarding(true)}
+              onClick={() => navigate('/workouts/ai-onboarding')}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Generate My Training Plan
             </Button>
           </CardContent>
         </Card>
-
-          <AITrainingOnboarding 
-            open={showOnboarding} 
-            onOpenChange={setShowOnboarding}
-            onSuccess={() => {
-              setShowOnboarding(false);
-              refetch();
-            }}
-          />
       </>
     );
   }
