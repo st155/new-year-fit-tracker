@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { InsightDetailModal } from './InsightDetailModal';
 import { InsightSettingsModal } from './InsightSettingsModal';
 import type { SmartInsight } from '@/lib/insights/types';
+import { UnifiedNotificationCenter } from '@/components/notifications/UnifiedNotificationCenter';
 
 const getBadgeVariant = (type: string) => {
   switch (type) {
@@ -129,7 +130,9 @@ export function DashboardHeader() {
   return (
     <>
       <div className="space-y-3">
-        {!isLoading && displayedInsights.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {!isLoading && displayedInsights.length > 0 && (
           <div className="relative w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 md:py-2.5 overflow-hidden">
             <div className="absolute inset-0 w-full h-full">
               <SparklesCore
@@ -223,7 +226,10 @@ export function DashboardHeader() {
               </Button>
             </div>
           </div>
-        )}
+            )}
+          </div>
+          <UnifiedNotificationCenter />
+        </div>
       </div>
 
       <InsightDetailModal

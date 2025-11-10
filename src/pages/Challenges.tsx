@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CreateChallengeDialog } from "@/components/trainer/CreateChallengeDialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export default function Challenges() {
   const isOnboarding = searchParams.get('onboarding') === 'true';
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'mine' | 'active' | 'completed'>('all');
 
   // Показать приветственное модальное окно для новых пользователей
   useEffect(() => {
@@ -39,6 +41,20 @@ export default function Challenges() {
 
   const activeCount = challenges?.length || 0;
   const participatingCount = challenges?.filter(c => c.isParticipant).length || 0;
+
+  // Filter challenges
+  const filteredChallenges = challenges?.filter(challenge => {
+    if (filter === 'mine') return challenge.isParticipant;
+    if (filter === 'active') {
+      const endDate = new Date(challenge.end_date);
+      return endDate.getTime() > new Date().getTime();
+    }
+    if (filter === 'completed') {
+      const endDate = new Date(challenge.end_date);
+      return endDate.getTime() <= new Date().getTime();
+    }
+    return true;
+  }) || [];
 
   if (isLoading) {
     return (
@@ -192,17 +208,27 @@ export default function Challenges() {
         </Card>
       ) : (
         <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Available Challenges</h2>
-            <p className="text-muted-foreground">Choose a challenge and start your journey</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Available Challenges</h2>
+              <p className="text-muted-foreground">Choose a challenge and start your journey</p>
+            </div>
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
+              <TabsList>
+                <TabsTrigger value="all">Все</TabsTrigger>
+                <TabsTrigger value="mine">Мои</TabsTrigger>
+                <TabsTrigger value="active">Активные</TabsTrigger>
+                <TabsTrigger value="completed">Завершенные</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <motion.div 
+          <motion.div
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             variants={staggerContainer}
             initial="initial"
             animate="animate"
           >
-            {challenges.map((challenge) => (
+            {filteredChallenges.map((challenge) => (
               <motion.div key={challenge.id} variants={staggerItem}>
                 <ChallengeCard challenge={challenge} />
               </motion.div>
