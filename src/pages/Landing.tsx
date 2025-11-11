@@ -18,14 +18,12 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
   const handleGetStarted = () => {
-    navigate('/auth');
+    if (user) {
+      navigate('/');
+    } else {
+      navigate('/auth');
+    }
   };
 
   const handleCTAClick = async () => {
@@ -35,7 +33,12 @@ const Landing = () => {
       spread: 70,
       origin: { y: 0.6 }
     });
-    navigate('/auth');
+    
+    if (user) {
+      navigate('/');
+    } else {
+      navigate('/auth');
+    }
   };
 
   const testimonials = [
@@ -81,7 +84,7 @@ const Landing = () => {
               onClick={handleGetStarted}
               className="bg-gradient-primary text-primary-foreground hover:shadow-glow"
             >
-              {t('landing.getStarted')}
+              {user ? 'Перейти в приложение' : t('landing.getStarted')}
             </Button>
           </div>
         </div>
@@ -205,7 +208,7 @@ const Landing = () => {
                 onClick={handleGetStarted}
               >
                 <span className="flex items-center gap-2">
-                  {t('landing.startFreeTrial')}
+                  {user ? 'Перейти в приложение' : t('landing.startFreeTrial')}
                   <ArrowRight className="h-5 w-5" />
                 </span>
               </HoverBorderGradient>
@@ -589,7 +592,7 @@ const Landing = () => {
                   onClick={handleCTAClick}
                 >
                   <span className="flex items-center gap-2">
-                    {t('landing.getStartedForFree')}
+                    {user ? 'Перейти в приложение' : t('landing.getStartedForFree')}
                     <ArrowRight className="h-5 w-5" />
                   </span>
                 </HoverBorderGradient>
