@@ -95,7 +95,7 @@ export const AppRoutes = () => {
         <Route path="/__smoke" element={<SmokeHome />} />
         
         <Route path="/auth" element={<Auth />} />
-        <Route path="/landing" element={<Landing />} />
+        <Route path="/landing" element={<Landing key="landing-v2" />} />
         
         {/* Home route - conditional smoke mode */}
         <Route path="/" element={
