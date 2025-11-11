@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AdjustedExercise } from "@/hooks/useDailyWorkout";
 
 interface TodaysPlanCardProps {
@@ -8,13 +10,26 @@ interface TodaysPlanCardProps {
 }
 
 export function TodaysPlanCard({ exercises, workoutName }: TodaysPlanCardProps) {
+  const navigate = useNavigate();
+  
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
       <CardHeader>
-        <CardTitle className="text-lg">
-          {workoutName || "План на сегодня"} 
-          <span className="text-sm text-cyan-400 ml-2">(AI Скорректирован)</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">
+            {workoutName || "План на сегодня"} 
+            <span className="text-sm text-cyan-400 ml-2">(AI Скорректирован)</span>
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/workouts/manage')}
+            className="border-neutral-700 hover:border-neutral-600"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Управить
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

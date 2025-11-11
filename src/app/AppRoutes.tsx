@@ -153,6 +153,13 @@ export const AppRoutes = () => {
         <Route path="/workouts" element={
           <ProtectedRoute>
             <ModernAppLayout>
+              <WorkoutV31 />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/workouts/manage" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
               <WorkoutTab />
             </ModernAppLayout>
           </ProtectedRoute>
@@ -180,13 +187,6 @@ export const AppRoutes = () => {
         <Route path="/workouts/summary" element={
           <ProtectedRoute>
             <WorkoutSummary />
-          </ProtectedRoute>
-        } />
-        <Route path="/workout-v31" element={
-          <ProtectedRoute>
-            <ModernAppLayout>
-              <WorkoutV31 />
-            </ModernAppLayout>
           </ProtectedRoute>
         } />
         <Route path="/challenges" element={

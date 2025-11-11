@@ -154,7 +154,7 @@ export default function WorkoutV31() {
             </p>
             <Button 
               className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
-              onClick={() => navigate('/workouts?tab=plan')}
+              onClick={() => navigate('/workouts/manage')}
             >
               Создать план
             </Button>
