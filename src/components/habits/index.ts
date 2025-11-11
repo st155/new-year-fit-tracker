@@ -27,6 +27,3 @@ export { DurationCounter } from './DurationCounter';
 export { NumericCounter } from './NumericCounter';
 export { DailyMeasurement } from './DailyMeasurement';
 export { AIMotivation } from './AIMotivation';
-
-// Migration
-export { HabitMigrationButton } from './HabitMigrationButton';

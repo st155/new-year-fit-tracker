@@ -30,14 +30,12 @@ const Progress = lazy(() => import("@/pages/Progress"));
 const Goals = lazy(() => import("@/pages/Goals"));
 const GoalDetail = lazy(() => import("@/pages/GoalDetail"));
 const Body = lazy(() => import("@/pages/Body"));
-const WorkoutTab = lazy(() => import("@/pages/WorkoutTab"));
 const AITrainingOnboarding = lazy(() => import("@/pages/AITrainingOnboarding"));
 const GeneratingPlanScreen = lazy(() => import("@/pages/GeneratingPlanScreen"));
 const AIGeneratedPlanReady = lazy(() => import("@/pages/AIGeneratedPlanReady"));
 const Challenges = lazy(() => import("@/pages/Challenges"));
 const ChallengeDetail = lazy(() => import("@/pages/ChallengeDetail"));
 const Habits = lazy(() => import("@/pages/Habits"));
-const HabitsV3 = lazy(() => import("@/pages/HabitsV3"));
 const HabitDetail = lazy(() => import("@/pages/HabitDetail"));
 const Feed = lazy(() => import("@/pages/Feed"));
 const FitnessData = lazy(() => import("@/pages/FitnessData"));
@@ -59,6 +57,7 @@ const HabitTeams = lazy(() => import("@/pages/HabitTeams"));
 const HabitTeamDetail = lazy(() => import("@/pages/HabitTeamDetail"));
 const WorkoutLiveLogger = lazy(() => import("@/pages/WorkoutLiveLogger"));
 const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
+const WorkoutManagement = lazy(() => import("@/pages/WorkoutManagement"));
 const WorkoutV31 = lazy(() => import("@/pages/WorkoutV31"));
 
 export const AppRoutes = () => {
@@ -95,16 +94,16 @@ export const AppRoutes = () => {
       >
         <Suspense fallback={<PageLoader message="Loading..." />}>
           <Routes>
-        {/* Debug route - no auth, no lazy, no providers */}
-        <Route path="/__debug" element={<DebugPage />} />
+        {/* Debug/test routes - DEV only */}
+        {import.meta.env.DEV && (
+          <>
+            <Route path="/__debug" element={<DebugPage />} />
+            <Route path="/__smoke" element={<SmokeHome />} />
+          </>
+        )}
         
-        {/* Smoke test route - minimal component */}
-        <Route path="/__smoke" element={<SmokeHome />} />
-        
-        {/* Landing routes - redirect to working version */}
-        <Route path="/landing" element={<Navigate to="/landing-plain" replace />} />
-        <Route path="/landing-public" element={<Landing key="landing-public-v1" />} />
-        <Route path="/landing-plain" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold bg-green-500/20">Landing Plain OK ✅</div>} />
+        {/* Landing page - public */}
+        <Route path="/landing" element={<Landing />} />
         
         <Route path="/auth" element={<Auth />} />
         
@@ -160,7 +159,7 @@ export const AppRoutes = () => {
         <Route path="/workouts/manage" element={
           <ProtectedRoute>
             <ModernAppLayout>
-              <WorkoutTab />
+              <WorkoutManagement />
             </ModernAppLayout>
           </ProtectedRoute>
         } />
@@ -203,18 +202,10 @@ export const AppRoutes = () => {
             </ModernAppLayout>
           </ProtectedRoute>
         } />
-        <Route path="/habits" element={<Navigate to="/habits-v3" replace />} />
-        <Route path="/habits-legacy" element={
+        <Route path="/habits" element={
           <ProtectedRoute>
             <ModernAppLayout>
               <Habits />
-            </ModernAppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/habits-v3" element={
-          <ProtectedRoute>
-            <ModernAppLayout>
-              <HabitsV3 />
             </ModernAppLayout>
           </ProtectedRoute>
         } />
@@ -225,12 +216,12 @@ export const AppRoutes = () => {
             </ModernAppLayout>
           </ProtectedRoute>
         } />
-        <Route path="/habits-v3/teams" element={
+        <Route path="/habits/teams" element={
           <ProtectedRoute>
             <HabitTeams />
           </ProtectedRoute>
         } />
-        <Route path="/habits-v3/teams/:id" element={
+        <Route path="/habits/teams/:id" element={
           <ProtectedRoute>
             <HabitTeamDetail />
           </ProtectedRoute>

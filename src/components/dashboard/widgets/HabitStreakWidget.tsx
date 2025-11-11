@@ -37,7 +37,7 @@ export function HabitStreakWidget() {
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer border-orange-500/30"
-      onClick={() => navigate('/habits-v3')}
+      onClick={() => navigate('/habits')}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">

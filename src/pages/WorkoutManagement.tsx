@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dumbbell, BookOpen, Sparkles, Calendar, ArrowLeft } from "lucide-react";
+import { Dumbbell, BookOpen, Calendar, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import Logbook from "@/components/workout/Logbook";
 import TrainingPlan from "@/components/workout/TrainingPlan";
-import WorkoutToday from "@/components/workout/WorkoutToday";
 
-export default function WorkoutTab() {
-  const [activeTab, setActiveTab] = useState<"today" | "plan" | "logbook">("plan");
+export default function WorkoutManagement() {
+  const [activeTab, setActiveTab] = useState<"plan" | "logbook">("plan");
   const navigate = useNavigate();
 
   return (
@@ -24,15 +23,11 @@ export default function WorkoutTab() {
       
       <div className="flex items-center gap-3 mb-6">
         <Dumbbell className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold">Управление тренировками</h1>
+        <h1 className="text-3xl font-bold">Планы и История</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "today" | "plan" | "logbook")}>
-        <TabsList className="grid w-full max-w-3xl grid-cols-3">
-          <TabsTrigger value="today" className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            Сегодня
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "plan" | "logbook")}>
+        <TabsList className="grid w-full max-w-2xl grid-cols-2">
           <TabsTrigger value="plan" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             План
@@ -42,10 +37,6 @@ export default function WorkoutTab() {
             Журнал
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="today" className="mt-6">
-          <WorkoutToday />
-        </TabsContent>
 
         <TabsContent value="plan" className="mt-6">
           <TrainingPlan />

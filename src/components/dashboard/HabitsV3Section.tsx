@@ -94,7 +94,7 @@ export function HabitsV3Section() {
         <p className="text-muted-foreground mb-4 max-w-md mx-auto">
           Создайте свою первую привычку и начните путь к лучшей версии себя
         </p>
-        <Button onClick={() => navigate('/habits-v3')} className="gap-2">
+        <Button onClick={() => navigate('/habits')} className="gap-2">
           <Plus className="h-4 w-4" />
           Создать первую привычку
         </Button>
@@ -156,7 +156,7 @@ export function HabitsV3Section() {
         </div>
         <div className="flex items-center gap-2">
           <Button 
-            onClick={() => navigate('/habits-v3/teams')} 
+            onClick={() => navigate('/habits/teams')} 
             variant="outline" 
             size="sm" 
             className="gap-2"
@@ -165,7 +165,7 @@ export function HabitsV3Section() {
             Команды
           </Button>
           <Button 
-            onClick={() => navigate('/habits-v3')} 
+            onClick={() => navigate('/habits')} 
             variant="outline" 
             size="sm" 
             className="gap-2"
@@ -220,7 +220,7 @@ export function HabitsV3Section() {
                 <h3 className="font-semibold">Активность команды</h3>
               </div>
               <Button
-                onClick={() => navigate('/habits-v3?tab=social')}
+                onClick={() => navigate('/habits?tab=social')}
                 variant="ghost"
                 size="sm"
                 className="gap-2 h-8"

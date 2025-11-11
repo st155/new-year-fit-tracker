@@ -37,7 +37,7 @@ export function HabitLevelWidget() {
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
-      onClick={() => navigate('/habits-v3')}
+      onClick={() => navigate('/habits')}
       style={{ borderColor: `${color}30` }}
     >
       <CardContent className="p-4">

@@ -75,7 +75,6 @@ export function AppSidebar() {
     { title: "navigation.dashboard", url: "/dashboard", iconType: "home" as const },
     { title: "navigation.progress", url: "/progress", iconType: "stats" as const },
     { title: "navigation.habits", url: "/habits", iconType: "habits" as const },
-    { title: "navigation.habitsV3", url: "/habits-v3", iconType: "habits" as const, badge: "NEW" },
     { title: "navigation.body", url: "/body", iconType: "activity" as const },
     { title: "navigation.workouts", url: "/workouts", iconType: "activity" as const, badge: "AI" },
     { title: "navigation.challenges", url: "/challenges", iconType: "challenges" as const },

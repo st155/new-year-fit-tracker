@@ -55,7 +55,7 @@ export function HabitSocialWidget() {
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer border-primary/30"
-      onClick={() => navigate('/habits-v3?tab=social')}
+      onClick={() => navigate('/habits?tab=social')}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">

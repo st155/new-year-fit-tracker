@@ -99,7 +99,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { path: "/challenges", label: 'Челленджи' },
     { path: "/leaderboard", label: 'Рейтинг' },
     { path: "/body", label: 'Тело' },
-    { path: "/habits-v3", label: 'Привычки' },
+    { path: "/habits", label: 'Привычки' },
     { path: "/fitness-data", label: 'Фитнес дата' },
   ];
 
@@ -110,7 +110,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
     { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
     { type: 'body' as const, path: "/body", label: 'Тело' },
-    { type: 'habits' as const, path: "/habits-v3", label: 'Привычки' },
+    { type: 'habits' as const, path: "/habits", label: 'Привычки' },
     { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
   ];
 
@@ -207,7 +207,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                       onClick={() => navigate(item.path)}
                     >
                       {item.label}
-                      {item.path === '/habits-v3' && unreadCount > 0 && (
+                      {item.path === '/habits' && unreadCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="ml-auto h-5 min-w-[20px] px-1.5 text-xs"
@@ -281,7 +281,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                       isActive={isActive(item.path)}
                       className="h-6 w-6 md:h-5 md:w-5"
                     />
-                    {item.path === '/habits-v3' && unreadCount > 0 && (
+                    {item.path === '/habits' && unreadCount > 0 && (
                       <Badge 
                         variant="destructive" 
                         className="absolute -top-2 -right-2 h-4 min-w-[16px] px-1 text-[10px] p-0 flex items-center justify-center"

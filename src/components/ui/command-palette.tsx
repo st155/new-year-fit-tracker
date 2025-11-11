@@ -51,7 +51,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <Plus className="mr-2 h-4 w-4" />
             Создать цель
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => navigate('/habits-v3'))}>
+          <CommandItem onSelect={() => runCommand(() => navigate('/habits'))}>
             <Plus className="mr-2 h-4 w-4" />
             Создать привычку
           </CommandItem>
@@ -72,7 +72,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <Target className="mr-2 h-4 w-4" />
             Цели
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => navigate('/habits-v3'))}>
+          <CommandItem onSelect={() => runCommand(() => navigate('/habits'))}>
             <CheckCircle className="mr-2 h-4 w-4" />
             Привычки
           </CommandItem>
