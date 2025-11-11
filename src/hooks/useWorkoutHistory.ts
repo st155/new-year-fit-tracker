@@ -54,26 +54,38 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
       // Fetch tracker workouts if needed
       if (filter === 'all' || filter === 'tracker') {
         const { data: trackerWorkouts, error: trackerError } = await supabase
-          .from('unified_metrics')
+          .from('workouts')
           .select('*')
           .eq('user_id', user.id)
-          .eq('metric_category', 'workout')
-          .order('measurement_date', { ascending: false })
+          .neq('source', 'manual')
+          .order('start_time', { ascending: false })
           .limit(50);
 
         if (trackerError) throw trackerError;
 
         if (trackerWorkouts) {
           trackerWorkouts.forEach((workout: any) => {
-            const sourceData = workout.source_data || {};
+            // Import workout type mapping
+            const { getWorkoutTypeName } = require('@/lib/workout-types');
+            const { mapTerraActivityType } = require('@/lib/terra-activity-types');
+            
+            // Determine workout name based on source
+            let workoutName = 'Тренировка';
+            if (workout.source?.toLowerCase() === 'whoop') {
+              workoutName = getWorkoutTypeName(workout.workout_type);
+            } else if (workout.workout_type !== null && workout.workout_type !== undefined) {
+              // For other providers (Garmin, Withings, etc.), use Terra mapping
+              workoutName = mapTerraActivityType(workout.workout_type, workout.source);
+            }
+            
             allWorkouts.push({
               id: workout.id,
-              date: new Date(workout.measurement_date),
-              name: workout.metric_name || 'Активность',
-              duration: sourceData.duration_minutes || 0,
-              calories: Math.round(workout.value) || 0,
-              distance: sourceData.distance_km,
-              source: workout.source.toLowerCase() as any,
+              date: new Date(workout.start_time),
+              name: workoutName,
+              duration: workout.duration_minutes || 0,
+              calories: workout.calories_burned || 0,
+              distance: workout.distance_km,
+              source: workout.source?.toLowerCase() as any,
               sourceLabel: getSourceLabel(workout.source),
             });
           });
