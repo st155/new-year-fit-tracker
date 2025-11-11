@@ -9,7 +9,6 @@ import { registerServiceWorker, setupVersionCheck } from "@/lib/pwa-utils";
 import { initInvalidator } from "@/lib/query-invalidation";
 import { initPrefetcher } from "@/lib/prefetch-strategy";
 import { initWebVitals } from "@/lib/web-vitals";
-import { initSentry } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
 import { DISABLE_SW } from "@/lib/safe-flags";
 import { AppRoutes } from "./app/AppRoutes";
@@ -48,7 +47,12 @@ const AppContent = () => {
     const timer = setTimeout(() => {
       initInvalidator(queryClient);
       initWebVitals();
-      initSentry();
+      // Dynamically import sentry to avoid build warnings
+      import('@/lib/sentry').then(({ initSentry }) => {
+        initSentry();
+      }).catch(err => {
+        logger.warn('Failed to initialize Sentry', err);
+      });
       setupVersionCheck(); // Auto-detect new app versions
       logger.info('[App] Query strategies, monitoring, and version check initialized');
     }, 100);

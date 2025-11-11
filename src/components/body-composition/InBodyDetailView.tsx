@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { format } from "date-fns";
 import { User, Bell, Activity, Dumbbell, Heart } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 import { CircularProgress } from "./CircularProgress";
 import { WaveChart } from "./WaveChart";
-import { HumanBodyModel } from "./HumanBodyModel";
 import { InBodyAIChat } from "./InBodyAIChat";
 import { InBodyProgressChart } from "./InBodyProgressChart";
 import { InBodyInsights } from "./InBodyInsights";
@@ -22,6 +21,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useInBodyAnalyses } from "@/hooks/useInBodyAnalyses";
 import { useAuth } from "@/hooks/useAuth";
 import { useEnhancedBodyModel } from "@/hooks/useEnhancedBodyModel";
+
+// Lazy load the 3D model
+const HumanBodyModel = lazy(() => import("./HumanBodyModel").then(m => ({ default: m.HumanBodyModel })));
 
 interface InBodyAnalysis {
   id: string;
@@ -210,11 +212,17 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
                 bodyFatSource={enhancedData?.overall?.bodyFat?.source ?? 'inbody'}
               />
           </div>
-          <HumanBodyModel 
-            segmentData={displaySegmentData} 
-            interactive={true}
-            showTooltips={true}
-          />
+          <Suspense fallback={
+            <div className="h-96 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          }>
+            <HumanBodyModel 
+              segmentData={displaySegmentData} 
+              interactive={true}
+              showTooltips={true}
+            />
+          </Suspense>
           
           {/* Segment Details */}
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/10">
