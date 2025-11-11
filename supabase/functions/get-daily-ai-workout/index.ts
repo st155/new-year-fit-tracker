@@ -84,63 +84,67 @@ serve(
 
     console.log(`[get-daily-ai-workout] Fetching workout for user ${targetUserId}, day ${dayOfWeek}, date ${targetDate.toISOString()}`);
 
-    // Step 1: Fetch all active workouts for this day and select newest
-    const { data: allWorkouts, error: workoutError } = await supabase
-      .from("training_plan_workouts")
+    // Step 1: Get active assigned plan for user (simplified query)
+    const { data: assignedPlan, error: assignError } = await supabase
+      .from("assigned_training_plans")
       .select(`
-        id,
-        day_of_week,
-        week_number,
-        workout_name,
-        exercises,
-        training_plans!inner(
+        plan_id,
+        training_plans(
           id,
           name,
           duration_weeks,
-          created_at,
-          assigned_training_plans!inner(
-            client_id,
-            status
-          )
+          created_at
         )
       `)
-      .eq("training_plans.assigned_training_plans.client_id", targetUserId)
-      .eq("training_plans.assigned_training_plans.status", "active")
-      .eq("day_of_week", dayOfWeek);
+      .eq("client_id", targetUserId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    console.log(`[get-daily-ai-workout] Found ${allWorkouts?.length || 0} workouts for day ${dayOfWeek}`);
-
-    // Sort by created_at in JavaScript (newest first)
-    const sortedWorkouts = allWorkouts?.sort((a, b) => {
-      const dateA = new Date(a.training_plans.created_at).getTime();
-      const dateB = new Date(b.training_plans.created_at).getTime();
-      return dateB - dateA;
-    }) || [];
-
-    const plannedWorkout = sortedWorkouts[0] || null;
-    
-    if (sortedWorkouts.length > 1) {
-      console.warn(`[get-daily-ai-workout] Multiple plans found (${sortedWorkouts.length}), selected: ${plannedWorkout?.training_plans?.name}`);
-    }
-
-    if (workoutError) {
-      console.error("[get-daily-ai-workout] Error fetching workout:", {
-        code: workoutError.code,
-        message: workoutError.message,
-        details: workoutError.details,
-        hint: workoutError.hint
-      });
-      
+    if (assignError) {
+      console.error("[get-daily-ai-workout] Error fetching assigned plan:", assignError);
       throw new EdgeFunctionError(
-        "Failed to fetch workout plan",
+        "Failed to fetch training plan",
         ErrorCode.INTERNAL_ERROR,
         500
       );
     }
-    
-    console.log(`[get-daily-ai-workout] Selected workout: ${plannedWorkout?.workout_name || 'none'} from plan: ${plannedWorkout?.training_plans?.name || 'N/A'}`);
 
-    // Step 2: Fetch user readiness data (before rest day check so we can return it)
+    if (!assignedPlan) {
+      console.log("[get-daily-ai-workout] No active plan found");
+    }
+
+    // Step 2: Get workout for this day (if plan exists)
+    let plannedWorkout = null;
+    if (assignedPlan) {
+      const { data: workouts, error: workoutError } = await supabase
+        .from("training_plan_workouts")
+        .select("*")
+        .eq("plan_id", assignedPlan.plan_id)
+        .eq("day_of_week", dayOfWeek)
+        .limit(1);
+
+      if (workoutError) {
+        console.error("[get-daily-ai-workout] Error fetching workout:", workoutError);
+        throw new EdgeFunctionError(
+          "Failed to fetch workout",
+          ErrorCode.INTERNAL_ERROR,
+          500
+        );
+      }
+
+      plannedWorkout = workouts?.[0] || null;
+      
+      if (plannedWorkout) {
+        // Attach plan info to workout
+        plannedWorkout.training_plans = assignedPlan.training_plans;
+      }
+      
+      console.log(`[get-daily-ai-workout] Found workout: ${plannedWorkout?.workout_name || 'none'} from plan: ${assignedPlan.training_plans?.name}`);
+    }
+
+    // Step 3: Fetch user readiness data (before rest day check so we can return it)
     const { data: readinessData, error: readinessError } = await supabase
       .from("client_health_scores")
       .select("recovery_score, sleep_score, activity_score, total_health_score")
@@ -167,7 +171,7 @@ serve(
 
     console.log("[get-daily-ai-workout] Readiness:", readiness);
 
-    // Step 3: Fetch last performance logs
+    // Step 4: Fetch last performance logs
     const exercises = plannedWorkout.exercises as PlannedExercise[];
     const exerciseNames = exercises.map((e) => e.name);
 
@@ -197,7 +201,7 @@ serve(
 
     console.log("[get-daily-ai-workout] Performance history:", exerciseHistory);
 
-    // Step 4: Build AI adjustment prompt
+    // Step 5: Build AI adjustment prompt
     const aiPrompt = `Ты опытный тренер по силовой подготовке. Проанализируй запланированную тренировку и адаптируй её под текущее состояние спортсмена.
 
 **ЗАПЛАНИРОВАННАЯ ТРЕНИРОВКА:**
@@ -234,7 +238,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
 **ЗАДАЧА:**
 Отрегулируй тренировку, изменив количество подходов, повторений, время отдыха или упражнения. Объясни свои решения на русском языке.`;
 
-    // Step 5: Call Lovable AI with tool calling
+    // Step 6: Call Lovable AI with tool calling
     let adjustedWorkout: AIAdjustmentResponse;
     
     try {
@@ -305,7 +309,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
       };
     }
 
-    // Step 6: Build final response
+    // Step 7: Build final response
     const response = {
       success: true,
       is_rest_day: false,
@@ -330,7 +334,7 @@ ${JSON.stringify(exerciseHistory, null, 2)}
                          readiness.total_health_score >= 60 ? "good" :
                          readiness.total_health_score >= 40 ? "fair" : "poor"
       },
-      assigned_plan_id: plannedWorkout.training_plans.assigned_training_plans[0]?.client_id,
+      assigned_plan_id: assignedPlan?.plan_id,
       generated_at: new Date().toISOString()
     };
 

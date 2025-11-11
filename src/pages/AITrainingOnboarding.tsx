@@ -100,9 +100,13 @@ export default function AITrainingOnboarding() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Smooth scroll to bottom with animation
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
-  }, [state.chatHistory]);
+  }, [state.chatHistory, currentStep]);
 
   const handleAnswer = (answer: any) => {
     if (currentStep?.saveKey) {

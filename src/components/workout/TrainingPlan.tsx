@@ -22,7 +22,7 @@ export default function TrainingPlan() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get active assigned plan
+      // Step 1: Get active assigned plan
       const { data: assigned, error: assignError } = await supabase
         .from('assigned_training_plans')
         .select(`
@@ -40,19 +40,25 @@ export default function TrainingPlan() {
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (assignError) return null;
+      if (assignError) {
+        console.error('[TrainingPlan] Error fetching assigned plan:', assignError);
+        return null;
+      }
       if (!assigned) return null;
 
-      // Get workouts for this plan
+      // Step 2: Get workouts for this plan
       const { data: workouts, error: workoutsError } = await supabase
         .from('training_plan_workouts')
         .select('*')
         .eq('plan_id', assigned.training_plans.id)
         .order('day_of_week', { ascending: true });
 
-      if (workoutsError) throw workoutsError;
+      if (workoutsError) {
+        console.error('[TrainingPlan] Error fetching workouts:', workoutsError);
+        throw workoutsError;
+      }
 
       return {
         ...assigned,

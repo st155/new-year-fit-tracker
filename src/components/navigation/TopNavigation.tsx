@@ -100,6 +100,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { path: "/body", label: 'Тело' },
     { path: "/habits-v3", label: 'Привычки' },
     { path: "/fitness-data", label: 'Фитнес дата' },
+    { path: "/landing", label: 'О приложении' },
   ];
 
   // Desktop navigation items (full list)
