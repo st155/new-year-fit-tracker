@@ -21,7 +21,7 @@ import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
 import { HabitsV3Section } from '@/components/dashboard/HabitsV3Section';
-import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DataQualityWidget } from '@/components/dashboard/DataQualityWidget';
 import { Skeleton } from '@/components/ui/skeleton';
