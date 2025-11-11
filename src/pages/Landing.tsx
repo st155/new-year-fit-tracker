@@ -14,13 +14,20 @@ const SparklesCore = lazy(() => import('@/components/aceternity/sparkles').then(
 
 
 const Landing = () => {
+  console.log('🎬 [Landing] Component FUNCTION CALLED - BEFORE HOOKS');
+  
   const { user } = useAuth();
+  console.log('🎬 [Landing] After useAuth hook', { hasUser: !!user, userId: user?.id });
+  
   const navigate = useNavigate();
+  console.log('🎬 [Landing] After useNavigate hook');
+  
   const { t } = useTranslation();
+  console.log('🎬 [Landing] After useTranslation hook');
 
   // 🔍 Diagnostic: Component lifecycle logging
   useEffect(() => {
-    console.log('🎬 [Landing] Component MOUNTED', { 
+    console.log('🎬 [Landing] Component MOUNTED (useEffect)', { 
       userId: user?.id, 
       hasUser: !!user,
       path: window.location.pathname 
@@ -83,8 +90,10 @@ const Landing = () => {
     }
   ];
 
+  console.log('🎬 [Landing] About to RETURN JSX');
+  
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-landing-component="true">
       {/* Header */}
       <header className="border-b border-border/30 bg-card/30 backdrop-blur-sm sticky top-0 z-[9999]">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

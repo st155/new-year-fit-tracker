@@ -22,8 +22,8 @@ import SmokeHome from "@/pages/SmokeHome";
 import ComponentLibrary from "@/pages/ComponentLibrary";
 import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
 
-// Lazy loaded pages - single import pattern to avoid build warnings
-const Landing = lazy(() => import("@/pages/Landing"));
+// 🔍 DIAGNOSTIC: Landing imported directly (not lazy) to debug black screen
+import Landing from "@/pages/Landing";
 const LandingAI = lazy(() => import("@/pages/LandingAI"));
 const Index = lazy(() => import("@/pages/Index"));
 const Progress = lazy(() => import("@/pages/Progress"));
@@ -101,9 +101,22 @@ export const AppRoutes = () => {
         <Route path="/__smoke" element={<SmokeHome />} />
         
         {/* Landing routes - FIRST public routes for diagnostics */}
-        <Route path="/landing" element={<Landing key="landing-v2" />} />
+        <Route path="/landing" element={
+          <AsyncErrorBoundary 
+            errorFallback={
+              <div className="min-h-screen flex items-center justify-center bg-red-500/10 border-2 border-red-500">
+                <div className="text-center p-8">
+                  <h1 className="text-3xl font-bold text-red-500 mb-4">Landing Error Caught 🚨</h1>
+                  <p className="text-foreground">Check console for details</p>
+                </div>
+              </div>
+            }
+          >
+            <Landing key="landing-v2" />
+          </AsyncErrorBoundary>
+        } />
         <Route path="/landing-public" element={<Landing key="landing-public-v1" />} />
-        <Route path="/landing-plain" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold">Landing Plain OK ✅</div>} />
+        <Route path="/landing-plain" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold bg-green-500/20">Landing Plain OK ✅</div>} />
         
         <Route path="/auth" element={<Auth />} />
         
