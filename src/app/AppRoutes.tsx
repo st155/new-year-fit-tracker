@@ -59,6 +59,7 @@ const HabitTeams = lazy(() => import("@/pages/HabitTeams"));
 const HabitTeamDetail = lazy(() => import("@/pages/HabitTeamDetail"));
 const WorkoutLiveLogger = lazy(() => import("@/pages/WorkoutLiveLogger"));
 const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
+const WorkoutV31 = lazy(() => import("@/pages/WorkoutV31"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -179,6 +180,13 @@ export const AppRoutes = () => {
         <Route path="/workouts/summary" element={
           <ProtectedRoute>
             <WorkoutSummary />
+          </ProtectedRoute>
+        } />
+        <Route path="/workout-v31" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <WorkoutV31 />
+            </ModernAppLayout>
           </ProtectedRoute>
         } />
         <Route path="/challenges" element={

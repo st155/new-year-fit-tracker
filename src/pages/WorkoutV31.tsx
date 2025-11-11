@@ -1,101 +1,207 @@
 import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Dumbbell } from "lucide-react";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useAuth } from "@/hooks/useAuth";
 import { useDailyWorkout } from "@/hooks/useDailyWorkout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import { useProgressMetrics } from "@/hooks/useProgressMetrics";
-import { useAuth } from "@/hooks/useAuth";
-import { format, subDays } from "date-fns";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { toast } from "sonner";
+import { format, addDays } from "date-fns";
 import { ru } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import WorkoutDayNavigator from "@/components/workout/WorkoutDayNavigator";
 
-// Widgets
 import { AIInsightCard } from "@/components/workout-v31/widgets/AIInsightCard";
 import { CTAButtons } from "@/components/workout-v31/widgets/CTAButtons";
 import { TodaysPlanCard } from "@/components/workout-v31/widgets/TodaysPlanCard";
-import { WeeklySplitCard } from "@/components/workout-v31/widgets/WeeklySplitCard";
 import { ProgressChartCard } from "@/components/workout-v31/widgets/ProgressChartCard";
 import { MicroTrackerCard } from "@/components/workout-v31/widgets/MicroTrackerCard";
+import { WeeklySplitCard } from "@/components/workout-v31/widgets/WeeklySplitCard";
 import { LogbookSnippetCard } from "@/components/workout-v31/widgets/LogbookSnippetCard";
 
 export default function WorkoutV31() {
-  const [activeTab, setActiveTab] = useState<"today" | "progress" | "logbook">("today");
+  const [activeTab, setActiveTab] = useState("today");
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
-  
-  const { data: dailyWorkout, isLoading: isDailyLoading } = useDailyWorkout(user?.id);
-  const { workouts } = useWorkoutHistory();
-  const { selectedMetric, setSelectedMetric, availableMetrics, chartData, metrics } = useProgressMetrics();
+  const navigate = useNavigate();
 
-  // Column 1: Today's Data
-  const todayData = useMemo(() => {
-    const recoveryScore = dailyWorkout?.readiness?.recovery_score || 85;
-    const aiMessage = dailyWorkout?.ai_rationale || "Отличное восстановление! Можно увеличить интенсивность.";
-    const exercises = dailyWorkout?.adjusted_exercises || [];
-    
-    return { recoveryScore, aiMessage, exercises };
-  }, [dailyWorkout]);
+  // Calculate date for selected day
+  const getDateForDay = (dayOfWeek: number): Date => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const diff = dayOfWeek - currentDay;
+    return addDays(today, diff);
+  };
 
-  // Weekly split mock data
-  const weeklyDays = useMemo(() => [
-    { name: "Пн: Грудь/Спина", completed: true, isToday: false },
-    { name: "Вт: Ноги", completed: true, isToday: false },
-    { name: "Ср: Отдых", completed: true, isToday: false },
-    { name: "Чт: Плечи/Руки", completed: false, isToday: true },
-    { name: "Пт: Кардио", completed: false, isToday: false },
-    { name: "Сб: Ноги", completed: false, isToday: false },
-    { name: "Вс: Отдых", completed: false, isToday: false },
-  ], []);
+  const targetDate = getDateForDay(selectedDay);
 
-  // Column 2: Micro Tracker (7-day vitals)
-  const vitalData = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => ({
-      date: format(subDays(new Date(), 6 - i), 'EEE', { locale: ru }),
-      value: Math.floor(60 + Math.random() * 40)
-    }));
-  }, []);
+  // Fetch data
+  const { data: dailyWorkout, isLoading: isDailyLoading } = useDailyWorkout(
+    user?.id, 
+    format(targetDate, 'yyyy-MM-dd')
+  );
+  const { workouts, isLoading: isHistoryLoading } = useWorkoutHistory("all");
+  const { 
+    selectedMetric, 
+    setSelectedMetric, 
+    availableMetrics, 
+    chartData, 
+    metrics 
+  } = useProgressMetrics(user?.id);
 
-  // Column 3: Logbook entries
-  const logbookEntries = useMemo(() => {
-    return workouts.slice(0, 5).map(w => ({
-      date: format(new Date(w.date), 'dd MMM', { locale: ru }),
-      workout: w.name || "Тренировка",
-      hasPR: Math.random() > 0.7,
-      prDetails: "Жим лёжа 105 кг → 107.5 кг"
-    }));
-  }, [workouts]);
-
+  // Button handlers
   const handleStartWorkout = () => {
-    console.log("Starting workout...");
+    if (!dailyWorkout?.success || dailyWorkout.is_rest_day) {
+      toast.error("Невозможно начать тренировку", {
+        description: dailyWorkout?.is_rest_day ? "Сегодня день отдыха" : "Нет активного плана тренировок"
+      });
+      return;
+    }
+    
+    const workoutData = {
+      planId: dailyWorkout.assigned_plan_id || '',
+      weekNumber: dailyWorkout.week_number || 1,
+      dayOfWeek: dailyWorkout.day_of_week || 0,
+      workoutName: dailyWorkout.workout_name || '',
+      exercises: dailyWorkout.adjusted_exercises || []
+    };
+    
+    sessionStorage.setItem('activeWorkout', JSON.stringify(workoutData));
+    navigate('/workouts/live-logger');
   };
 
   const handleSkipWorkout = () => {
-    console.log("Skipping workout...");
+    toast.info("Тренировка пропущена", {
+      description: "Старайтесь быть последовательным в тренировках!"
+    });
   };
 
   const handlePreviewWorkout = () => {
-    console.log("Previewing workout...");
+    toast.success("Режим просмотра", {
+      description: "Ознакомьтесь со всеми упражнениями перед началом"
+    });
   };
 
-  if (isDailyLoading) {
+  // Prepare data for widgets
+  const todayData = useMemo(() => {
+    if (!dailyWorkout) return { exercises: [], recoveryScore: 0, message: "" };
+    
+    return {
+      exercises: dailyWorkout.adjusted_exercises || [],
+      recoveryScore: dailyWorkout.readiness?.total_score || 0,
+      message: dailyWorkout.ai_rationale || "AI анализирует ваше восстановление"
+    };
+  }, [dailyWorkout]);
+
+  const weeklyDays = useMemo(() => {
+    const today = new Date().getDay();
+    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    
+    return daysOfWeek.map((day, index) => ({
+      name: `${day}: ${index === 0 || index === 3 || index === 6 ? 'Отдых' : 'Тренировка'}`,
+      completed: index < today,
+      isToday: index === today
+    }));
+  }, []);
+
+  const vitalData = useMemo(() => [
+    { date: "Пн", value: 85 },
+    { date: "Вт", value: 78 },
+    { date: "Ср", value: 92 },
+    { date: "Чт", value: 88 },
+    { date: "Пт", value: 75 },
+    { date: "Сб", value: 90 },
+    { date: "Вс", value: 87 }
+  ], []);
+
+  const logbookEntries = useMemo(() => {
+    return workouts.slice(0, 5).map(w => {
+      const hasPR = w.volume ? w.volume > 5000 : false;
+      
+      return {
+        date: format(new Date(w.date), 'dd MMM', { locale: ru }),
+        workout: w.name || "Тренировка",
+        hasPR,
+        prDetails: hasPR ? `Объём ${w.volume?.toFixed(0)} кг` : undefined
+      };
+    });
+  }, [workouts]);
+
+  // Loading state
+  if (isDailyLoading || isHistoryLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <Dumbbell className="w-12 h-12 animate-pulse text-cyan-400" />
+      </div>
+    );
+  }
+
+  // No active plan state
+  if (!dailyWorkout?.success) {
     return (
       <div className="min-h-screen bg-neutral-950 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <Dumbbell className="w-12 h-12 text-cyan-400 animate-pulse mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка...</p>
+        <Card className="max-w-md bg-neutral-900 border-neutral-800">
+          <CardHeader>
+            <CardTitle>Нет активного плана</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Создайте тренировочный план для начала работы
+            </p>
+            <Button 
+              className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
+              onClick={() => navigate('/workouts?tab=plan')}
+            >
+              Создать план
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Rest day state
+  if (dailyWorkout.is_rest_day) {
+    return (
+      <div className="min-h-screen bg-neutral-950 p-6">
+        <div className="max-w-4xl mx-auto">
+          <WorkoutDayNavigator
+            planName={dailyWorkout.plan_name || "План тренировок"}
+            weekNumber={dailyWorkout.week_number || 1}
+            dayOfWeek={selectedDay}
+            onDayChange={setSelectedDay}
+          />
+          <Card className="mt-6 bg-neutral-900 border-neutral-800">
+            <CardHeader>
+              <CardTitle className="text-2xl">День отдыха 🧘</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-4 md:p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Dumbbell className="w-8 h-8 text-cyan-400" />
-        <h1 className="text-3xl font-bold">Тренировки</h1>
+    <div className="min-h-screen bg-neutral-950 p-6">
+      <div className="max-w-[1800px] mx-auto mb-6">
+        <WorkoutDayNavigator
+          planName={dailyWorkout.plan_name || "План тренировок"}
+          weekNumber={dailyWorkout.week_number || 1}
+          dayOfWeek={selectedDay}
+          onDayChange={setSelectedDay}
+        />
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-[1800px] mx-auto">
         <TabsList className="bg-neutral-900 border border-neutral-800 mb-6">
           <TabsTrigger 
             value="today"
@@ -124,9 +230,9 @@ export default function WorkoutV31() {
             <div className="space-y-6">
               <AIInsightCard 
                 recoveryScore={todayData.recoveryScore} 
-                message={todayData.aiMessage}
+                message={todayData.message}
               />
-              <CTAButtons
+              <CTAButtons 
                 onStart={handleStartWorkout}
                 onSkip={handleSkipWorkout}
                 onPreview={handlePreviewWorkout}
@@ -166,9 +272,9 @@ export default function WorkoutV31() {
             <TabsContent value="today" className="space-y-6 mt-0">
               <AIInsightCard 
                 recoveryScore={todayData.recoveryScore} 
-                message={todayData.aiMessage}
+                message={todayData.message}
               />
-              <CTAButtons
+              <CTAButtons 
                 onStart={handleStartWorkout}
                 onSkip={handleSkipWorkout}
                 onPreview={handlePreviewWorkout}
