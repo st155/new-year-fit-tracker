@@ -253,16 +253,18 @@ const Index = () => {
       <MobileDebugOverlay />
       <div className="min-h-screen bg-background p-4 md:p-6 pb-24 md:pb-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
-        {/* Compact Dashboard Header with AI Insights + Quality - Instant Loading */}
+        {/* Compact Dashboard Header with AI Insights + Quality - Hidden on mobile */}
         <Suspense fallback={
-          <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 animate-pulse">
+          <div className="hidden md:block w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3 animate-pulse">
             <div className="flex items-center gap-3 px-4">
               <div className="h-4 w-4 bg-primary/20 rounded" />
               <div className="h-4 w-48 bg-muted rounded" />
             </div>
           </div>
         }>
-          <DashboardHeader />
+          <div className="hidden md:block">
+            <DashboardHeader />
+          </div>
         </Suspense>
         
         {/* Controls Bar - Compact */}
@@ -274,16 +276,17 @@ const Index = () => {
           
           {/* Right: Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Refresh Button */}
+            {/* Refresh Button - icon only on mobile */}
             <Button
               variant="outline"
-              size="default"
+              size="icon"
               onClick={handleRefresh}
               disabled={isSyncing}
-              className="gap-2 h-10 md:h-9"
+              className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
+              title="Обновить"
             >
               <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="md:hidden">Обновить</span>
+              <span className="hidden md:inline">Обновить</span>
             </Button>
             
             {/* Widget Settings */}
@@ -294,15 +297,16 @@ const Index = () => {
               onReorder={reorderWidgets}
             />
             
-            {/* Integrations Button */}
+            {/* Integrations Button - icon only on mobile */}
             <Button
               variant="outline"
-              size="default"
+              size="icon"
               onClick={() => navigate('/fitness-data?tab=connections')}
-              className="gap-2 min-w-[120px] h-10 md:h-9"
+              className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
+              title="Интеграции"
             >
               <Plug className="h-4 w-4" />
-              <span>Интеграции</span>
+              <span className="hidden md:inline">Интеграции</span>
             </Button>
           </div>
         </div>

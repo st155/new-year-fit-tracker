@@ -132,9 +132,14 @@ export function WidgetSettings({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button 
+          variant="outline" 
+          size="icon"
+          className="md:w-auto md:px-3 md:gap-2 h-10 md:h-9"
+          title="Настроить виджеты"
+        >
           <Settings className="h-4 w-4" />
-          Настроить виджеты
+          <span className="hidden md:inline">Настроить виджеты</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

@@ -131,9 +131,9 @@ const EnhancedAIInsightsComponent = ({ userId, healthScore }: EnhancedAIInsights
   ];
   
   return (
-    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-      <CardContent className="p-2">
-        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
+    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden w-full">
+      <CardContent className="p-2 w-full">
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar w-full">
           <div className="flex items-center gap-1.5 shrink-0">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-medium text-muted-foreground">Мои метрики:</span>
