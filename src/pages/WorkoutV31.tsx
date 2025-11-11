@@ -205,67 +205,69 @@ export default function WorkoutV31() {
         <TabsList className="bg-neutral-900 border border-neutral-800 mb-6">
           <TabsTrigger 
             value="today"
-            className="data-[state=active]:bg-neutral-800 data-[state=active]:shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+            className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
             Сегодня
           </TabsTrigger>
           <TabsTrigger 
             value="progress"
-            className="data-[state=active]:bg-neutral-800 data-[state=active]:shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+            className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
             Прогресс
           </TabsTrigger>
           <TabsTrigger 
             value="logbook"
-            className="data-[state=active]:bg-neutral-800 data-[state=active]:shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+            className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
             Журнал
           </TabsTrigger>
         </TabsList>
 
         {isDesktop ? (
-          // Desktop: 3-column grid layout
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Column 1: Today */}
-            <div className="space-y-6">
-              <AIInsightCard 
-                recoveryScore={todayData.recoveryScore} 
-                message={todayData.message}
-              />
-              <CTAButtons 
-                onStart={handleStartWorkout}
-                onSkip={handleSkipWorkout}
-                onPreview={handlePreviewWorkout}
-              />
-              <TodaysPlanCard 
-                exercises={todayData.exercises}
-                workoutName={dailyWorkout?.workout_name}
-              />
-            </div>
+          // Desktop: 3-column grid inside "today" tab
+          <TabsContent value="today" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Column 1: Today */}
+              <div className="space-y-6">
+                <AIInsightCard 
+                  recoveryScore={todayData.recoveryScore} 
+                  message={todayData.message}
+                />
+                <CTAButtons 
+                  onStart={handleStartWorkout}
+                  onSkip={handleSkipWorkout}
+                  onPreview={handlePreviewWorkout}
+                />
+                <TodaysPlanCard 
+                  exercises={todayData.exercises}
+                  workoutName={dailyWorkout?.workout_name}
+                />
+              </div>
 
-            {/* Column 2: Progress */}
-            <div className="space-y-6">
-              <ProgressChartCard
-                selectedMetric={selectedMetric}
-                onMetricChange={setSelectedMetric}
-                chartData={chartData}
-                metrics={metrics}
-                availableMetrics={availableMetrics}
-              />
-              <MicroTrackerCard
-                title="Показатели за 7 дней"
-                data={vitalData}
-                color="purple"
-                valueFormatter={(v) => `${v}%`}
-              />
-            </div>
+              {/* Column 2: Progress */}
+              <div className="space-y-6">
+                <ProgressChartCard
+                  selectedMetric={selectedMetric}
+                  onMetricChange={setSelectedMetric}
+                  chartData={chartData}
+                  metrics={metrics}
+                  availableMetrics={availableMetrics}
+                />
+                <MicroTrackerCard
+                  title="Показатели за 7 дней"
+                  data={vitalData}
+                  color="purple"
+                  valueFormatter={(v) => `${v}%`}
+                />
+              </div>
 
-            {/* Column 3: Logbook */}
-            <div className="space-y-6">
-              <WeeklySplitCard days={weeklyDays} />
-              <LogbookSnippetCard entries={logbookEntries} />
+              {/* Column 3: Logbook */}
+              <div className="space-y-6">
+                <WeeklySplitCard days={weeklyDays} />
+                <LogbookSnippetCard entries={logbookEntries} />
+              </div>
             </div>
-          </div>
+          </TabsContent>
         ) : (
           // Mobile: Tab-based content switching
           <>
