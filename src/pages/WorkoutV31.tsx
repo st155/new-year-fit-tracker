@@ -253,6 +253,7 @@ export default function WorkoutV31() {
                   chartData={chartData}
                   metrics={metrics}
                   availableMetrics={availableMetrics}
+                  workouts={workouts}
                 />
                 <MicroTrackerCard
                   title="Показатели за 7 дней"
@@ -328,6 +329,7 @@ export default function WorkoutV31() {
                 chartData={chartData}
                 metrics={metrics}
                 availableMetrics={availableMetrics}
+                workouts={workouts}
               />
               <MicroTrackerCard
                 title="Показатели за 7 дней"
