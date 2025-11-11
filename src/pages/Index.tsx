@@ -417,8 +417,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Quick Actions Panel */}
-      <QuickActionsPanel />
       
       {/* Floating Action Button */}
       <FAB
