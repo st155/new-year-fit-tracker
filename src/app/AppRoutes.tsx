@@ -350,7 +350,7 @@ export const AppRoutes = () => {
         
         <Route path="*" element={<NotFound />} />
         </Routes>
-        <DevDebugBar />
+        {/* <DevDebugBar /> */}
         <Sonner />
         <InstallPrompt />
         <UpdatePrompt />

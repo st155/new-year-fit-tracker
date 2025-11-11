@@ -3,7 +3,7 @@ import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
 import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+
 import { CommandPalette } from "@/components/ui/command-palette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { ShortcutsHintPanel } from "@/components/ui/shortcuts-hint-panel";
@@ -46,10 +46,9 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
       <MetricsViewProvider>
         <div className="min-h-screen flex flex-col w-full bg-background">
           <TopNavigation />
-          <main className="flex-1 overflow-auto pt-16 pb-20 md:pb-4">
+          <main className="flex-1 overflow-auto pt-16 md:pb-4">
             {children}
           </main>
-          <MobileBottomNav />
           <CommandPalette open={open} onOpenChange={setOpen} />
           <ShortcutsHintPanel open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
         </div>
