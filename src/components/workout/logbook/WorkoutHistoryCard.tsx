@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch } from "lucide-react";
 import { WorkoutHistoryItem } from "@/hooks/useWorkoutHistory";
+import { useNavigate } from "react-router-dom";
 
 interface WorkoutHistoryCardProps {
   workout: WorkoutHistoryItem;
@@ -10,6 +11,8 @@ interface WorkoutHistoryCardProps {
 }
 
 export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCardProps) {
+  const navigate = useNavigate();
+  
   const getSourceIcon = () => {
     switch (workout.source) {
       case 'manual':
@@ -31,11 +34,14 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
       transition={{ delay: index * 0.05 }}
       className="group relative"
     >
-      <div className="
-        p-6 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10
-        hover:bg-white/10 hover:border-white/20 transition-all duration-300
-        cursor-pointer
-      ">
+      <div 
+        className="
+          p-6 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10
+          hover:bg-white/10 hover:border-white/20 transition-all duration-300
+          cursor-pointer
+        "
+        onClick={() => navigate(`/workouts/${workout.id}`)}
+      >
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>

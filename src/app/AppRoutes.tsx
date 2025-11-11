@@ -59,6 +59,7 @@ const WorkoutLiveLogger = lazy(() => import("@/pages/WorkoutLiveLogger"));
 const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
 const WorkoutManagement = lazy(() => import("@/pages/WorkoutManagement"));
 const WorkoutV31 = lazy(() => import("@/pages/WorkoutV31"));
+const WorkoutDetail = lazy(() => import("@/pages/WorkoutDetail"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -154,6 +155,11 @@ export const AppRoutes = () => {
             <ModernAppLayout>
               <WorkoutV31 />
             </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/workouts/:workoutId" element={
+          <ProtectedRoute>
+            <WorkoutDetail />
           </ProtectedRoute>
         } />
         <Route path="/workouts/manage" element={
