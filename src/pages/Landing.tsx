@@ -18,7 +18,21 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // 🔍 Diagnostic: Component lifecycle logging
+  useEffect(() => {
+    console.log('🎬 [Landing] Component MOUNTED', { 
+      userId: user?.id, 
+      hasUser: !!user,
+      path: window.location.pathname 
+    });
+    
+    return () => {
+      console.log('💀 [Landing] Component UNMOUNTED');
+    };
+  }, [user]);
+
   const handleGetStarted = () => {
+    console.log('🚀 [Landing] handleGetStarted clicked', { hasUser: !!user, navigatingTo: user ? '/' : '/auth' });
     if (user) {
       navigate('/');
     } else {
@@ -27,12 +41,16 @@ const Landing = () => {
   };
 
   const handleCTAClick = async () => {
+    console.log('🎯 [Landing] handleCTAClick triggered', { hasUser: !!user });
+    
     const confetti = (await import('canvas-confetti')).default;
     confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 }
     });
+    
+    console.log('🎊 [Landing] Confetti done, navigating...', { navigatingTo: user ? '/' : '/auth' });
     
     if (user) {
       navigate('/');

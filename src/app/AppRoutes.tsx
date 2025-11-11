@@ -1,5 +1,5 @@
 import { Suspense, useEffect, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { MotionProvider } from "@/providers/MotionProvider";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -62,6 +62,12 @@ const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // 🔍 Diagnostic: Route changes logging
+  useEffect(() => {
+    console.log('🧭 [Router] Current path:', location.pathname, { hasUser: !!user, userId: user?.id });
+  }, [location.pathname, user]);
 
   // Prefetch critical data after login
   useEffect(() => {
@@ -94,8 +100,12 @@ export const AppRoutes = () => {
         {/* Smoke test route - minimal component */}
         <Route path="/__smoke" element={<SmokeHome />} />
         
-        <Route path="/auth" element={<Auth />} />
+        {/* Landing routes - FIRST public routes for diagnostics */}
         <Route path="/landing" element={<Landing key="landing-v2" />} />
+        <Route path="/landing-public" element={<Landing key="landing-public-v1" />} />
+        <Route path="/landing-plain" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold">Landing Plain OK ✅</div>} />
+        
+        <Route path="/auth" element={<Auth />} />
         
         {/* Home route - conditional smoke mode */}
         <Route path="/" element={
