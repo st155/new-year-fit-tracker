@@ -95,7 +95,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   // Secondary navigation items for "More" menu
   const secondaryNavItems = [
-    { path: "/landing", label: 'О приложении' },
+    { path: "/landing-plain", label: 'О приложении' },
     { path: "/challenges", label: 'Челленджи' },
     { path: "/leaderboard", label: 'Рейтинг' },
     { path: "/body", label: 'Тело' },

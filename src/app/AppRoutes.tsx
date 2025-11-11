@@ -100,21 +100,8 @@ export const AppRoutes = () => {
         {/* Smoke test route - minimal component */}
         <Route path="/__smoke" element={<SmokeHome />} />
         
-        {/* Landing routes - FIRST public routes for diagnostics */}
-        <Route path="/landing" element={
-          <AsyncErrorBoundary 
-            errorFallback={
-              <div className="min-h-screen flex items-center justify-center bg-red-500/10 border-2 border-red-500">
-                <div className="text-center p-8">
-                  <h1 className="text-3xl font-bold text-red-500 mb-4">Landing Error Caught 🚨</h1>
-                  <p className="text-foreground">Check console for details</p>
-                </div>
-              </div>
-            }
-          >
-            <Landing key="landing-v2" />
-          </AsyncErrorBoundary>
-        } />
+        {/* Landing routes - redirect to working version */}
+        <Route path="/landing" element={<Navigate to="/landing-plain" replace />} />
         <Route path="/landing-public" element={<Landing key="landing-public-v1" />} />
         <Route path="/landing-plain" element={<div className="min-h-screen flex items-center justify-center text-2xl font-bold bg-green-500/20">Landing Plain OK ✅</div>} />
         
