@@ -79,6 +79,17 @@ export default function AITrainingOnboarding() {
 
   const currentStep: OnboardingStep | undefined = ONBOARDING_FLOW[state.currentStepIndex];
 
+  // Auto-transition from message-only steps
+  useEffect(() => {
+    if (!currentStep) return;
+    if (currentStep.type === 'message') {
+      const timer = setTimeout(() => {
+        dispatch({ type: 'NEXT_STEP' });
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep?.id, currentStep?.type]);
+
   useEffect(() => {
     if (currentStep) {
       // Проверяем, что сообщение с таким id еще не добавлено
@@ -290,6 +301,24 @@ export default function AITrainingOnboarding() {
                   className="flex justify-center"
                 >
                   {renderComponent()}
+                </motion.div>
+              )}
+
+              {/* Fallback Continue Button for Message Steps */}
+              {currentStep && currentStep.type === 'message' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex justify-center"
+                >
+                  <Button 
+                    onClick={() => dispatch({ type: 'NEXT_STEP' })} 
+                    variant="default"
+                    size="lg"
+                  >
+                    Продолжить
+                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>
