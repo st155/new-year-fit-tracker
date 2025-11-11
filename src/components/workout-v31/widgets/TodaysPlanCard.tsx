@@ -32,34 +32,48 @@ export function TodaysPlanCard({ exercises, workoutName }: TodaysPlanCardProps) 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {exercises.map((exercise, idx) => (
-            <div key={idx} className="border-l-2 border-neutral-700 pl-4 py-2">
-              <div className="font-semibold text-foreground">{exercise.name}</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                {exercise.sets} x {exercise.reps} повторений
-                {exercise.weight && (
-                  <span className={exercise.was_modified ? "text-cyan-400 ml-2 font-medium" : "ml-2"}>
-                    @ {exercise.weight} кг
-                    {exercise.was_modified && (
-                      <Sparkles className="w-3 h-3 inline ml-1 text-cyan-400" />
-                    )}
-                  </span>
+        {exercises.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">План не назначен</p>
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/workouts/manage')}
+              className="border-neutral-700 hover:border-cyan-500"
+            >
+              Создать план
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {exercises.map((exercise, idx) => (
+              <div key={idx} className="border-l-2 border-neutral-700 pl-4 py-2">
+                <div className="font-semibold text-foreground">{exercise.name}</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {exercise.sets} x {exercise.reps} повторений
+                  {exercise.weight && (
+                    <span className={exercise.was_modified ? "text-cyan-400 ml-2 font-medium" : "ml-2"}>
+                      @ {exercise.weight} кг
+                      {exercise.was_modified && (
+                        <Sparkles className="w-3 h-3 inline ml-1 text-cyan-400" />
+                      )}
+                    </span>
+                  )}
+                </div>
+                {exercise.rir && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    RIR: {exercise.rir}
+                  </div>
+                )}
+                {exercise.adjustment_reason && exercise.was_modified && (
+                  <div className="text-xs text-cyan-400/70 mt-1 italic">
+                    {exercise.adjustment_reason}
+                  </div>
                 )}
               </div>
-              {exercise.rir && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  RIR: {exercise.rir}
-                </div>
-              )}
-              {exercise.adjustment_reason && exercise.was_modified && (
-                <div className="text-xs text-cyan-400/70 mt-1 italic">
-                  {exercise.adjustment_reason}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -140,55 +140,24 @@ export default function WorkoutV31() {
     );
   }
 
-  // No active plan state
-  if (!dailyWorkout?.success) {
-    return (
-      <div className="min-h-screen bg-neutral-950 p-6 flex items-center justify-center">
-        <Card className="max-w-md bg-neutral-900 border-neutral-800">
-          <CardHeader>
-            <CardTitle>Нет активного плана</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Создайте тренировочный план для начала работы
-            </p>
-            <Button 
-              className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
-              onClick={() => navigate('/workouts/manage')}
-            >
-              Создать план
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Determine plan and rest day status
+  const hasPlan = !!dailyWorkout?.assigned_plan_id || !!dailyWorkout?.success;
+  const isRestDay = !!dailyWorkout?.is_rest_day;
 
-  // Rest day state
-  if (dailyWorkout.is_rest_day) {
-    return (
-      <div className="min-h-screen bg-neutral-950 p-6">
-        <div className="max-w-4xl mx-auto">
-          <WorkoutDayNavigator
-            planName={dailyWorkout.plan_name || "План тренировок"}
-            weekNumber={dailyWorkout.week_number || 1}
-            dayOfWeek={selectedDay}
-            onDayChange={setSelectedDay}
-          />
-          <Card className="mt-6 bg-neutral-900 border-neutral-800">
-            <CardHeader>
-              <CardTitle className="text-2xl">День отдыха 🧘</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Dynamic CTA button props
+  const startLabel = !hasPlan ? "Создать план" : isRestDay ? "День отдыха" : "Начать тренировку";
+  const startDisabled = !hasPlan || isRestDay;
+  const handleStartClick = () => {
+    if (!hasPlan) {
+      navigate('/workouts/manage');
+    } else if (isRestDay) {
+      toast.info("Сегодня день отдыха", {
+        description: "Используйте это время для восстановления"
+      });
+    } else {
+      handleStartWorkout();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 p-6">
@@ -229,15 +198,47 @@ export default function WorkoutV31() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Column 1: Today */}
               <div className="space-y-6">
+                {isRestDay && (
+                  <Card className="bg-neutral-900 border border-blue-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        🧘 День отдыха
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
                 <AIInsightCard 
                   recoveryScore={todayData.recoveryScore} 
                   message={todayData.message}
                 />
                 <CTAButtons 
-                  onStart={handleStartWorkout}
+                  onStart={handleStartClick}
                   onSkip={handleSkipWorkout}
                   onPreview={handlePreviewWorkout}
+                  startLabel={startLabel}
+                  startDisabled={startDisabled}
                 />
+                {!hasPlan && (
+                  <Card className="bg-gradient-to-br from-green-900/20 to-cyan-900/20 border border-green-500/30">
+                    <CardContent className="pt-6">
+                      <h3 className="text-lg font-semibold mb-2">Нет активного плана</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Создайте тренировочный план для начала работы
+                      </p>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
+                        onClick={() => navigate('/workouts/manage')}
+                      >
+                        Создать план
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
                 <TodaysPlanCard 
                   exercises={todayData.exercises}
                   workoutName={dailyWorkout?.workout_name}
@@ -272,15 +273,47 @@ export default function WorkoutV31() {
           // Mobile: Tab-based content switching
           <>
             <TabsContent value="today" className="space-y-6 mt-0">
+              {isRestDay && (
+                <Card className="bg-neutral-900 border border-blue-500/30">
+                  <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      🧘 День отдыха
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               <AIInsightCard 
                 recoveryScore={todayData.recoveryScore} 
                 message={todayData.message}
               />
               <CTAButtons 
-                onStart={handleStartWorkout}
+                onStart={handleStartClick}
                 onSkip={handleSkipWorkout}
                 onPreview={handlePreviewWorkout}
+                startLabel={startLabel}
+                startDisabled={startDisabled}
               />
+              {!hasPlan && (
+                <Card className="bg-gradient-to-br from-green-900/20 to-cyan-900/20 border border-green-500/30">
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-semibold mb-2">Нет активного плана</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Создайте тренировочный план для начала работы
+                    </p>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
+                      onClick={() => navigate('/workouts/manage')}
+                    >
+                      Создать план
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
               <TodaysPlanCard 
                 exercises={todayData.exercises}
                 workoutName={dailyWorkout?.workout_name}
