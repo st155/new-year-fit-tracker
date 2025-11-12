@@ -266,7 +266,7 @@ export default function WorkoutV31() {
               {/* Column 3: Logbook */}
               <div className="space-y-6">
                 <WeeklySplitCard days={weeklyDays} />
-                <LogbookSnippetCard entries={logbookEntries} />
+                <LogbookSnippetCard workouts={workouts} />
               </div>
             </div>
           </TabsContent>
@@ -340,7 +340,7 @@ export default function WorkoutV31() {
             </TabsContent>
 
             <TabsContent value="logbook" className="space-y-6 mt-0">
-              <LogbookSnippetCard entries={logbookEntries} />
+              <LogbookSnippetCard workouts={workouts} />
             </TabsContent>
           </>
         )}
