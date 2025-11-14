@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -244,43 +245,21 @@ RULES:
 
     console.log('[AI Suggest] Calling Lovable AI...');
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
-
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      }),
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiData = await aiClient.complete({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'user', content: prompt }
+      ]
     });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('[AI Suggest] AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const aiContent = aiData.choices[0].message.content;
     
-    console.log('[AI Suggest] AI response:', aiContent);
+    console.log('[AI Suggest] AI response:', aiData.content);
 
     // Parse AI response
     let parsedResponse;
     try {
       // Remove markdown code blocks if present
-      const cleanedContent = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanedContent = aiData.content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       parsedResponse = JSON.parse(cleanedContent);
     } catch (e) {
       console.error('[AI Suggest] Failed to parse AI response:', e);

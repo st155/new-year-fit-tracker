@@ -1225,91 +1225,25 @@ IMPORTANT INSTRUCTIONS:
       }
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiData = await aiClient.complete({
+      model: requestBody.model,
+      messages: requestBody.messages,
+      tools: requestBody.tools,
+      tool_choice: requestBody.tool_choice
     });
 
-    if (!response.ok) {
-      // Handle rate limiting
-      if (response.status === 429) {
-        console.error('⚠️ AI rate limit exceeded (429)');
-        
-        // Save user message with error info
-        await supabaseClient.from('ai_messages').insert({
-          conversation_id: conversation.id,
-          role: 'user',
-          content: message,
-          metadata: { optimisticId: optimisticUserId }
-        });
-        
-        // Save error message
-        await supabaseClient.from('ai_messages').insert({
-          conversation_id: conversation.id,
-          role: 'system',
-          content: '⚠️ Превышен лимит запросов к AI. Пожалуйста, попробуйте через несколько минут.',
-          metadata: { error: 'rate_limit', status: 429 }
-        });
-        
-        return new Response(
-          JSON.stringify({
-            conversationId: conversation.id,
-            message: 'Превышен лимит запросов к AI. Пожалуйста, попробуйте через несколько минут.',
-            error: 'rate_limit'
-          }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Handle payment required
-      if (response.status === 402) {
-        console.error('⚠️ AI credits exhausted (402)');
-        
-        // Save user message with error info
-        await supabaseClient.from('ai_messages').insert({
-          conversation_id: conversation.id,
-          role: 'user',
-          content: message,
-          metadata: { optimisticId: optimisticUserId }
-        });
-        
-        // Save error message
-        await supabaseClient.from('ai_messages').insert({
-          conversation_id: conversation.id,
-          role: 'system',
-          content: '⚠️ Кредиты AI исчерпаны. Пожалуйста, пополните баланс для продолжения работы.',
-          metadata: { error: 'credits_exhausted', status: 402 }
-        });
-        
-        return new Response(
-          JSON.stringify({
-            conversationId: conversation.id,
-            message: 'Кредиты AI исчерпаны. Пожалуйста, пополните баланс.',
-            error: 'credits_exhausted'
-          }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Handle other errors
-      const errorText = await response.text();
-      console.error('AI API error:', response.status, errorText);
-      throw new Error(`AI API error: ${response.status}`);
+    let assistantMessage = aiData.content;
+    let toolCalls = null;
+    let actionType = null;
+
+    // Handle tool calls if present
+    if (aiData.tool_calls && aiData.tool_calls.length > 0) {
+      toolCalls = aiData.tool_calls;
+      const firstTool = toolCalls[0];
+      actionType = firstTool.function.name;
+      console.log(`🔧 Tool called: ${actionType}`);
     }
-
-    // Check if streaming is enabled
-    const contentType = response.headers.get('content-type');
-    const isStreaming = contentType?.includes('text/event-stream') || contentType?.includes('text/plain');
-
-    if (!isStreaming) {
-      // Fallback to non-streaming (legacy)
-      const aiResponse = await response.json();
-      let assistantMessage = aiResponse.choices[0].message.content || '';
-      const toolCalls = aiResponse.choices[0].message.tool_calls;
 
       // NEW: Debug logging for tool call status
       console.log('🔍 DEBUG AI Response:', {
@@ -1938,27 +1872,19 @@ ${idx + 1}. [${s.suggestion_type.toUpperCase()}] ${goal.goal_name || 'Unknown go
     // Update conversation title if it's the first message
     if (!conversationId && messages?.length === 0) {
       const titlePrompt = `Generate a short title (max 5 words) for this conversation: "${message}"`;
-      const titleResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [{ role: 'user', content: titlePrompt }],
-        }),
+      
+      const aiClient = createAIClient(AIProvider.LOVABLE);
+      const titleData = await aiClient.complete({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'user', content: titlePrompt }]
       });
 
-      if (titleResponse.ok) {
-        const titleData = await titleResponse.json();
-        const title = titleData.choices[0].message.content.replace(/['"]/g, '').trim();
-        
-        await supabaseClient
-          .from('ai_conversations')
-          .update({ title })
-          .eq('id', conversation.id);
-      }
+      const title = titleData.content.replace(/['"]/g, '').trim();
+      
+      await supabaseClient
+        .from('ai_conversations')
+        .update({ title })
+        .eq('id', conversation.id);
     }
 
     return new Response(
