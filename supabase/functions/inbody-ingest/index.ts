@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { createAIClient, AIProvider } from '../_shared/ai-client.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -88,44 +89,29 @@ Expected JSON structure:
   "left_leg_percent": number as percentage
 }`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { 
-                type: 'text', 
-                text: systemPrompt + '\n\nExtract the metrics from this InBody report and return ONLY the JSON object.' 
-              },
-              {
-                type: 'image_url',
-                image_url: { 
-                  url: signedUrlData.signedUrl
-                }
+    const aiClient = createAIClient(AIProvider.LOVABLE);
+    const aiData = await aiClient.complete({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { 
+              type: 'text', 
+              text: systemPrompt + '\n\nExtract the metrics from this InBody report and return ONLY the JSON object.' 
+            },
+            {
+              type: 'image_url',
+              image_url: { 
+                url: signedUrlData.signedUrl
               }
-            ]
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 2000
-      })
+            }
+          ]
+        }
+      ]
     });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI analysis failed: ${aiResponse.statusText}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const aiContent = aiData.choices?.[0]?.message?.content;
+    
+    const aiContent = aiData.content;
     
     if (!aiContent) {
       throw new Error('No response from AI');
