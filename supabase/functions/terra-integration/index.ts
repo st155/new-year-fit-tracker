@@ -417,6 +417,38 @@ serve(async (req) => {
       );
     }
 
+    // Activate provider manually
+    if (action === 'activate-provider') {
+      console.log('🔓 Activating provider:', { userId: user.id, provider });
+      
+      if (!provider) {
+        throw new Error('Provider is required for activate-provider action');
+      }
+
+      const normalizedProvider = provider.toUpperCase();
+      
+      const { error: activateError } = await supabase
+        .from('terra_tokens')
+        .update({ 
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .eq('provider', normalizedProvider);
+
+      if (activateError) {
+        console.error('❌ Failed to activate provider:', activateError);
+        throw activateError;
+      }
+
+      console.log('✅ Successfully activated provider:', normalizedProvider);
+
+      return new Response(
+        JSON.stringify({ success: true, provider: normalizedProvider }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     throw new Error('Unknown action');
 
   } catch (error: any) {
