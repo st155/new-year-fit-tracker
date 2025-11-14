@@ -448,6 +448,154 @@ Deno.serve(
       );
     }
 
+    // Handle auth and reauth webhooks
+    if (payload.type === 'auth' || payload.type === 'reauth') {
+      logger.info(`${payload.type} webhook received`, {
+        provider: payload.user?.provider,
+        terraUserId: payload.user?.user_id,
+        referenceId: payload.user?.reference_id || payload.reference_id,
+      });
+
+      const provider = payload.user?.provider?.toUpperCase();
+      const terraUserId = payload.user?.user_id;
+      const referenceId = payload.user?.reference_id || payload.reference_id;
+
+      if (!provider || !terraUserId || !referenceId) {
+        logger.error('Missing required fields in auth webhook', {
+          provider,
+          terraUserId,
+          referenceId,
+        });
+        
+        const response = {
+          success: false,
+          message: 'Missing required fields',
+        };
+
+        await idempotency.storeResult(webhookId, response);
+
+        return new Response(
+          JSON.stringify(response),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      try {
+        // Check if token already exists
+        const { data: existingToken } = await supabase
+          .from('terra_tokens')
+          .select('id')
+          .eq('user_id', referenceId)
+          .eq('provider', provider)
+          .maybeSingle();
+
+        if (existingToken) {
+          // Update existing token
+          const { error: updateError } = await supabase
+            .from('terra_tokens')
+            .update({
+              is_active: true,
+              terra_user_id: terraUserId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingToken.id);
+
+          if (updateError) {
+            logger.error('Failed to update terra_tokens', {
+              error: updateError.message,
+              tokenId: existingToken.id,
+            });
+            throw updateError;
+          }
+
+          logger.info('Updated existing terra_tokens record', {
+            tokenId: existingToken.id,
+            provider,
+            terraUserId,
+          });
+        } else {
+          // Insert new token
+          const { error: insertError } = await supabase
+            .from('terra_tokens')
+            .insert({
+              user_id: referenceId,
+              provider: provider,
+              terra_user_id: terraUserId,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (insertError) {
+            logger.error('Failed to insert terra_tokens', {
+              error: insertError.message,
+              referenceId,
+              provider,
+            });
+            throw insertError;
+          }
+
+          logger.info('Created new terra_tokens record', {
+            userId: referenceId,
+            provider,
+            terraUserId,
+          });
+        }
+
+        // Log successful auth
+        await supabase.from('webhook_logs').insert({
+          webhook_type: 'terra',
+          event_type: payload.type,
+          terra_user_id: terraUserId,
+          user_id: referenceId,
+          payload: payload,
+          status: 'processed',
+          created_at: new Date().toISOString(),
+        });
+
+        const response = {
+          success: true,
+          message: `${payload.type} processed successfully`,
+        };
+
+        await idempotency.storeResult(webhookId, response);
+
+        return new Response(
+          JSON.stringify(response),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      } catch (error) {
+        logger.error(`Failed to process ${payload.type} webhook`, {
+          error: error instanceof Error ? error.message : String(error),
+          provider,
+          terraUserId,
+          referenceId,
+        });
+
+        const response = {
+          success: false,
+          message: 'Failed to process auth webhook',
+          error: error instanceof Error ? error.message : String(error),
+        };
+
+        await idempotency.storeResult(webhookId, response);
+
+        return new Response(
+          JSON.stringify(response),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
     // Unknown webhook type
     logger.warn('Unhandled webhook type', { type: payload.type });
 
