@@ -17,6 +17,7 @@ export interface WorkoutHistoryItem {
   exercises?: number;
   source: 'manual' | 'whoop' | 'withings' | 'terra' | 'apple_health' | 'garmin' | 'ultrahuman';
   sourceLabel: string;
+  workoutType?: string; // raw workout type for icons
 }
 
 export function useWorkoutHistory(filter: WorkoutSource = 'all') {
@@ -86,6 +87,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
               distance: workout.distance_km,
               source: workout.source?.toLowerCase() as any,
               sourceLabel: getSourceLabel(workout.source),
+              workoutType: workout.workout_type,
             });
           });
         }

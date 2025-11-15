@@ -3,6 +3,8 @@ import { Trophy, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { getWorkoutIcon } from "@/lib/workout-icons";
+import { Badge } from "@/components/ui/badge";
 
 interface LogEntry {
   id?: string;
@@ -19,6 +21,10 @@ interface WorkoutHistoryItem {
   duration: number;
   calories: number;
   volume?: number;
+  distance?: number;
+  source: string;
+  sourceLabel: string;
+  workoutType?: string;
 }
 
 interface LogbookSnippetCardProps {
@@ -33,10 +39,22 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
   const displayData = workouts 
     ? workouts.slice(0, 5).map(w => {
         const hasPR = w.volume ? w.volume > 5000 : false;
+        
+        // Format metrics line
+        const metrics = [];
+        metrics.push(`${w.duration} мин`);
+        metrics.push(`${w.calories} ккал`);
+        if (w.distance) {
+          metrics.push(`${w.distance.toFixed(1)} км`);
+        }
+        
         return {
           id: w.id,
           date: format(new Date(w.date), 'dd MMM', { locale: ru }),
-          workout: `${w.name || "Тренировка"} • ${w.duration} мин • ${w.calories} ккал`,
+          workoutName: w.name,
+          workoutIcon: getWorkoutIcon(w.workoutType || w.name),
+          metrics: metrics.join(' • '),
+          source: w.sourceLabel,
           hasPR,
           prDetails: hasPR ? `Объём ${w.volume?.toFixed(0)} кг` : undefined
         };
@@ -56,9 +74,23 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
           >
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <Calendar className="w-3 h-3" />
-              {entry.date}
+              {'date' in entry ? entry.date : entry.date}
             </div>
-            <div className="font-medium text-foreground">{entry.workout}</div>
+            
+            {'workoutName' in entry ? (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{entry.workoutIcon}</span>
+                  <span className="font-semibold text-foreground">{entry.workoutName}</span>
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    {entry.source}
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">{entry.metrics}</div>
+              </>
+            ) : (
+              <div className="font-medium text-foreground">{'workout' in entry ? entry.workout : ''}</div>
+            )}
             
             {entry.hasPR && entry.prDetails && (
               <div className="mt-2 flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
