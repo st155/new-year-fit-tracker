@@ -1,10 +1,11 @@
 import { Card } from "@tremor/react";
-import { Trophy, Calendar } from "lucide-react";
+import { Trophy, Calendar, Flame, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { getWorkoutIcon } from "@/lib/workout-icons";
 import { Badge } from "@/components/ui/badge";
+import { useState, useMemo } from "react";
 
 interface LogEntry {
   id?: string;
@@ -25,6 +26,7 @@ interface WorkoutHistoryItem {
   source: string;
   sourceLabel: string;
   workoutType?: string;
+  strain?: number;
 }
 
 interface LogbookSnippetCardProps {
@@ -34,9 +36,33 @@ interface LogbookSnippetCardProps {
 
 export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProps) {
   const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState<'recent' | 'strain' | 'duration'>('recent');
+  
+  // Sort workouts based on selected criteria
+  const sortedWorkouts = useMemo(() => {
+    if (!workouts) return [];
+    
+    const sorted = [...workouts];
+    
+    switch (sortBy) {
+      case 'strain':
+        return sorted.sort((a, b) => {
+          const strainA = a.strain ?? -1;
+          const strainB = b.strain ?? -1;
+          return strainB - strainA;
+        });
+        
+      case 'duration':
+        return sorted.sort((a, b) => b.duration - a.duration);
+        
+      case 'recent':
+      default:
+        return sorted.sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+  }, [workouts, sortBy]);
   
   // Prepare display data from workouts or fallback to entries
-  const displayData = workouts 
+  const displayData = sortedWorkouts
     ? workouts.slice(0, 5).map(w => {
         const hasPR = w.volume ? w.volume > 5000 : false;
         
@@ -63,7 +89,47 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
   
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
-      <h3 className="text-lg font-semibold mb-4">Журнал (Ключевые моменты)</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Журнал (Ключевые моменты)</h3>
+        
+        <div className="flex gap-1 bg-neutral-800/50 rounded-lg p-1">
+          <button
+            onClick={() => setSortBy('recent')}
+            className={`p-2 rounded transition-all ${
+              sortBy === 'recent' 
+                ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
+                : 'text-gray-400 hover:text-gray-200 hover:bg-neutral-700'
+            }`}
+            title="Recent"
+          >
+            <Calendar className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => setSortBy('strain')}
+            className={`p-2 rounded transition-all ${
+              sortBy === 'strain' 
+                ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
+                : 'text-gray-400 hover:text-gray-200 hover:bg-neutral-700'
+            }`}
+            title="Highest Strain"
+          >
+            <Flame className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => setSortBy('duration')}
+            className={`p-2 rounded transition-all ${
+              sortBy === 'duration' 
+                ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
+                : 'text-gray-400 hover:text-gray-200 hover:bg-neutral-700'
+            }`}
+            title="Longest Duration"
+          >
+            <Clock className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
       
       <div className="space-y-2">
         {displayData.map((entry, idx) => (

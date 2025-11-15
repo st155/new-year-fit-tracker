@@ -18,6 +18,7 @@ export interface WorkoutHistoryItem {
   source: 'manual' | 'whoop' | 'withings' | 'terra' | 'apple_health' | 'garmin' | 'ultrahuman';
   sourceLabel: string;
   workoutType?: string; // raw workout type for icons
+  strain?: number; // Whoop strain score
 }
 
 export function useWorkoutHistory(filter: WorkoutSource = 'all') {
@@ -88,6 +89,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
               source: workout.source?.toLowerCase() as any,
               sourceLabel: getSourceLabel(workout.source),
               workoutType: workout.workout_type,
+              strain: workout.source_data?.score?.strain,
             });
           });
         }
