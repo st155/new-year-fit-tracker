@@ -177,8 +177,15 @@ Generate a weekly template that will be repeated with progressive overload.`;
           program_name: nameParts.join(' • '),
           weekly_workouts: tpl.weekly_schedule.map((w: any) => ({
             day_of_week: w.day_of_week,
-            workout_name: w.workout_name,
-            exercises: w.exercises
+            workout_name: w.workout_focus || w.workout_name || 'Workout',
+            exercises: w.exercises.map((ex: any) => ({
+              exercise_name: ex.exercise_name || ex.name,
+              sets: ex.sets,
+              reps: ex.reps,
+              rpe: ex.rpe,
+              rest_seconds: ex.rest_seconds || (ex.rest_minutes ? ex.rest_minutes * 60 : 90),
+              notes: ex.notes
+            }))
           })),
           duration_weeks: 12
         };

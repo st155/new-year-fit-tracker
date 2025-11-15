@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Calendar, Target, Dumbbell, CheckCircle2 } from "lucide-react";
+import { Sparkles, Calendar, Target, Dumbbell, CheckCircle2, Clock } from "lucide-react";
+import ExerciseIcon from "./ExerciseIcon";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
@@ -192,7 +193,7 @@ export default function TrainingPlan() {
   }, 0);
   const completedExercisesToday = todayWorkouts.reduce((sum, w) => {
     const exercises = Array.isArray(w.exercises) ? w.exercises : [];
-    return sum + exercises.filter((ex: any) => getExerciseCompletion(ex.name).completed).length;
+    return sum + exercises.filter((ex: any) => getExerciseCompletion(ex.exercise_name || ex.name).completed).length;
   }, 0);
   const progressPercent = totalExercisesToday > 0 ? (completedExercisesToday / totalExercisesToday) * 100 : 0;
 
@@ -253,29 +254,61 @@ export default function TrainingPlan() {
         <h2 className="text-2xl font-bold">Weekly Schedule</h2>
         <div className="grid gap-4">
           {Object.entries(workoutsByDay).map(([day, workouts]) => (
-            <Card key={day}>
-              <CardHeader>
-                <CardTitle className="text-lg">{dayNames[parseInt(day)]}</CardTitle>
+            <Card key={day} className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    {dayNames[parseInt(day)]}
+                  </CardTitle>
+                  <Badge variant="outline">
+                    {workouts.reduce((sum, w) => sum + (w.exercises?.length || 0), 0)} exercises
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 {workouts.map((workout, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <h3 className="font-semibold">{workout.workout_name}</h3>
+                  <div key={idx} className="space-y-3 p-4 rounded-lg bg-muted/30">
+                    {/* Workout Name Header */}
+                    <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                      <Dumbbell className="w-4 h-4 text-primary" />
+                      <h3 className="font-semibold text-base">{workout.workout_name}</h3>
+                    </div>
+                    
+                    {/* Exercises List */}
                     <div className="space-y-2">
                       {workout.exercises?.map((exercise: any, exerciseIdx: number) => {
-                        const completion = getExerciseCompletion(exercise.name);
+                        const exerciseName = exercise.exercise_name || exercise.name;
+                        const completion = getExerciseCompletion(exerciseName);
                         return (
-                          <div key={exerciseIdx} className="flex items-center justify-between gap-2 py-2 border-b last:border-0">
-                            <div className="flex items-center gap-2 flex-1">
+                          <div key={exerciseIdx} className="flex items-center justify-between gap-3 py-3 border-b last:border-0 border-border/30">
+                            <div className="flex items-center gap-3 flex-1">
+                              <ExerciseIcon name={exerciseName} />
                               {completion.completed && (
                                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                               )}
-                              <div className="flex-1">
-                                <div className="font-medium">{exercise.name}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {exercise.sets}×{exercise.reps} @ RPE {exercise.rpe}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{exerciseName}</div>
+                                <div className="text-xs text-muted-foreground space-y-0.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span>{exercise.sets}×{exercise.reps}</span>
+                                    <span>•</span>
+                                    <span>RPE {exercise.rpe || 'N/A'}</span>
+                                    {exercise.rest_seconds && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          {Math.floor(exercise.rest_seconds / 60)}:{(exercise.rest_seconds % 60).toString().padStart(2, '0')}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                  {exercise.notes && (
+                                    <div className="italic text-muted-foreground/70 mt-1">💭 {exercise.notes}</div>
+                                  )}
                                   {completion.setsLogged > 0 && (
-                                    <span className="ml-2">({completion.setsLogged} sets logged)</span>
+                                    <div className="text-primary/80 mt-1">✓ {completion.setsLogged} sets logged</div>
                                   )}
                                 </div>
                               </div>
@@ -285,6 +318,8 @@ export default function TrainingPlan() {
                               variant={completion.completed ? "outline" : "default"}
                               onClick={() => setActiveExercise({
                                 ...exercise,
+                                name: exerciseName,
+                                exercise_name: exerciseName,
                                 dayOfWeek: parseInt(day),
                                 workoutName: workout.workout_name
                               })}
