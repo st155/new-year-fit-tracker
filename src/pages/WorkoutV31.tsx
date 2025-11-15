@@ -132,7 +132,7 @@ export default function WorkoutV31() {
   }, [workouts]);
 
   // Show skeleton during initial load
-  if (isDailyLoading && isHistoryLoading) {
+  if ((isDailyLoading && !dailyWorkout) || isHistoryLoading) {
     return <WorkoutV31Skeleton />;
   }
 
@@ -159,8 +159,8 @@ export default function WorkoutV31() {
     <div className="min-h-screen bg-neutral-950 p-6">
       <div className="max-w-[1800px] mx-auto mb-6">
         <WorkoutDayNavigator
-          planName={dailyWorkout.plan_name || "План тренировок"}
-          weekNumber={dailyWorkout.week_number || 1}
+          planName={dailyWorkout?.plan_name || "План тренировок"}
+          weekNumber={dailyWorkout?.week_number || 1}
           dayOfWeek={selectedDay}
           onDayChange={setSelectedDay}
         />
