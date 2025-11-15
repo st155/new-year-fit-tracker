@@ -195,6 +195,21 @@ Generate a weekly template that will be repeated with progressive overload.`;
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + (programData.duration_weeks * 7));
 
+    // Deactivate all old active plans for this user before creating new one
+    console.log('[generate-ai-training-plan] Deactivating old active plans for user:', user_id);
+    const { error: deactivateError } = await supabase
+      .from('assigned_training_plans')
+      .update({ status: 'inactive' })
+      .eq('client_id', user_id)
+      .eq('status', 'active');
+
+    if (deactivateError) {
+      console.warn('[generate-ai-training-plan] Warning - could not deactivate old plans:', deactivateError);
+      // Non-critical, continue with plan creation
+    } else {
+      console.log('[generate-ai-training-plan] Successfully deactivated old plans');
+    }
+
     const { error: assignError } = await supabase
       .from('assigned_training_plans')
       .insert({

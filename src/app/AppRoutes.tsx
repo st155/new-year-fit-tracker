@@ -60,6 +60,7 @@ const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
 const WorkoutManagement = lazy(() => import("@/pages/WorkoutManagement"));
 import WorkoutV31 from "@/pages/WorkoutV31";
 const WorkoutDetail = lazy(() => import("@/pages/WorkoutDetail"));
+const MyTrainingPlans = lazy(() => import("@/pages/MyTrainingPlans"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -192,6 +193,11 @@ export const AppRoutes = () => {
         <Route path="/workouts/summary" element={
           <ProtectedRoute>
             <WorkoutSummary />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-training-plans" element={
+          <ProtectedRoute>
+            <MyTrainingPlans />
           </ProtectedRoute>
         } />
         <Route path="/challenges" element={

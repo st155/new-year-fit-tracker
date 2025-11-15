@@ -117,6 +117,14 @@ export default function TrainingPlan() {
   if (!activePlan) {
     return (
       <>
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/my-training-plans')}
+          >
+            Мои планы
+          </Button>
+        </div>
         <Card className="border-dashed">
           <CardHeader className="text-center pb-4">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
