@@ -45,16 +45,19 @@ export function DaySelector({ onSelect }: DaySelectorProps) {
               key={day.value}
               onClick={() => toggleDay(day.value)}
               className={cn(
-                "aspect-square rounded-lg border transition-all duration-300",
+                "aspect-square rounded-lg transition-all duration-300",
                 "flex items-center justify-center text-sm font-medium",
-                "bg-background/50 backdrop-blur-sm",
-                isSelected && "bg-primary/10 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                "backdrop-blur-sm",
+                isSelected 
+                  ? "bg-gradient-to-br from-cyan-500 via-primary to-pink-500 border-2 border-cyan-400 shadow-lg shadow-cyan-500/50"
+                  : "bg-neutral-800/50 border border-neutral-700 hover:border-neutral-600"
               )}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <span className={cn(
-                isSelected ? "text-primary" : "text-muted-foreground"
+                "font-bold transition-colors",
+                isSelected ? "text-white" : "text-muted-foreground"
               )}>
                 {day.label}
               </span>

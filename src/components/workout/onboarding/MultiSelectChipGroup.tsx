@@ -44,11 +44,11 @@ export function MultiSelectChipGroup({ options, onSelect }: MultiSelectChipGroup
               key={option.value}
               onClick={() => toggleOption(option.value)}
               className={cn(
-                "px-4 py-2 rounded-full border transition-all duration-300",
-                "bg-background/50 backdrop-blur-sm",
-                "hover:bg-background/80 hover:border-primary/50",
-                "flex items-center gap-2",
-                isSelected && "bg-primary/10 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                "px-4 py-2 rounded-full transition-all duration-300",
+                "backdrop-blur-sm flex items-center gap-2",
+                isSelected 
+                  ? "bg-gradient-to-br from-cyan-500 via-primary to-pink-500 border-2 border-cyan-400 shadow-lg shadow-cyan-500/50"
+                  : "bg-neutral-800/50 border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800/70"
               )}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -56,12 +56,12 @@ export function MultiSelectChipGroup({ options, onSelect }: MultiSelectChipGroup
               {IconComponent && (
                 <IconComponent className={cn(
                   "w-4 h-4",
-                  isSelected ? "text-primary" : "text-muted-foreground"
+                  isSelected ? "text-white" : "text-muted-foreground"
                 )} />
               )}
               <span className={cn(
-                "text-sm font-medium",
-                isSelected ? "text-primary" : "text-foreground"
+                "text-sm transition-colors",
+                isSelected ? "text-white font-bold" : "text-foreground font-medium"
               )}>
                 {option.label}
               </span>
