@@ -206,18 +206,42 @@ export function getWorkoutTypeName(type: string | number | undefined | null): st
     return 'Тренировка';
   }
   
+  // If it's a string, try to parse it as a number first
+  if (typeof type === 'string') {
+    const parsed = parseInt(type, 10);
+    if (!isNaN(parsed)) {
+      return WHOOP_SPORT_NAMES[parsed] || `Активность ${parsed}`;
+    }
+    // If not a number, return as is (for text descriptions)
+    return type;
+  }
+  
+  // If it's a number, look it up directly
   if (typeof type === 'number') {
     return WHOOP_SPORT_NAMES[type] || `Активность ${type}`;
   }
   
-  // If it's already a string, return as is
-  return type;
+  return 'Тренировка';
 }
 
 /**
  * Get emoji icon for workout type
  */
 export function getWorkoutIcon(type: string | number | undefined | null): string {
-  const name = getWorkoutTypeName(type);
+  if (type === undefined || type === null) {
+    return WORKOUT_TYPE_ICONS['default'];
+  }
+  
+  // Parse string numbers first
+  let processedType = type;
+  if (typeof type === 'string') {
+    const parsed = parseInt(type, 10);
+    if (!isNaN(parsed)) {
+      processedType = parsed;
+    }
+  }
+  
+  // Get the name and then find the icon
+  const name = getWorkoutTypeName(processedType);
   return WORKOUT_TYPE_ICONS[name] || WORKOUT_TYPE_ICONS['default'];
 }
