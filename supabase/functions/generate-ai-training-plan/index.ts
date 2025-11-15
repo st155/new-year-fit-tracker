@@ -161,9 +161,35 @@ Generate a weekly template that will be repeated with progressive overload.`;
       throw new Error('AI did not return structured training program. Please try again.');
     }
 
-    // Validate required fields
+    // Adapt AI response format if needed
+    let adapted = false;
     if (!programData.program_name || !programData.weekly_workouts) {
-      console.error('[generate-ai-training-plan] Invalid program data structure:', programData);
+      const tpl = programData?.training_template;
+      if (tpl?.weekly_schedule?.length) {
+        const days = tpl.user_profile?.training_days_per_week ?? preferences.days_per_week;
+        const nameParts = [
+          preferences.primary_goal ?? 'Training',
+          preferences.experience_level ?? '',
+          days ? `${days}d/week` : ''
+        ].filter(Boolean);
+        
+        programData = {
+          program_name: nameParts.join(' • '),
+          weekly_workouts: tpl.weekly_schedule.map((w: any) => ({
+            day_of_week: w.day_of_week,
+            workout_name: w.workout_name,
+            exercises: w.exercises
+          })),
+          duration_weeks: 12
+        };
+        adapted = true;
+        console.log('[generate-ai-training-plan] Adapted AI format to expected schema');
+      }
+    }
+
+    // Re-validate required fields after adaptation
+    if (!programData.program_name || !programData.weekly_workouts || !programData.weekly_workouts.length) {
+      console.error('[generate-ai-training-plan] Invalid program data structure (after adaptation):', programData);
       throw new Error('AI returned incomplete training program data');
     }
 
@@ -218,11 +244,14 @@ Generate a weekly template that will be repeated with progressive overload.`;
     }
 
     console.log('[generate-ai-training-plan] Workouts created:', workoutsToInsert.length);
+    console.log('[generate-ai-training-plan] Plan created and assigned successfully');
 
     // Auto-assign plan to user
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + (programData.duration_weeks * 7));
+    const durationWeeks = Number(programData.duration_weeks) || 12;
+    endDate.setDate(endDate.getDate() + (durationWeeks * 7));
+    console.log('[generate-ai-training-plan] Duration:', durationWeeks, 'weeks, Start:', startDate.toISOString(), 'End:', endDate.toISOString());
 
     // Deactivate all old active plans for this user before creating new one
     console.log('[generate-ai-training-plan] Deactivating old active plans for user:', user_id);
