@@ -1,4 +1,4 @@
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   ResponsiveContainer, 
   BarChart as RechartsBarChart, 
@@ -54,9 +54,10 @@ export function MicroTrackerCard({
 
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
-      
-      <ResponsiveContainer width="100%" height={224}>
+      <CardContent className="pt-6">
+        <h3 className="text-lg font-semibold mb-4">{title}</h3>
+        
+        <ResponsiveContainer width="100%" height={224}>
         <RechartsBarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
           <XAxis 
             dataKey="date" 
@@ -80,6 +81,7 @@ export function MicroTrackerCard({
           />
         </RechartsBarChart>
       </ResponsiveContainer>
+      </CardContent>
     </Card>
   );
 }

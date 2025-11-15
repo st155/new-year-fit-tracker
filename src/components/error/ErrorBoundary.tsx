@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { ErrorFallback } from './ErrorFallback';
+import { handleChunkError } from '@/lib/chunk-error-handler';
 
 interface Props {
   children: ReactNode;
@@ -33,6 +34,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Попытка автоматической перезагрузки при ошибке загрузки чанка
+    if (handleChunkError(error)) {
+      return; // Страница перезагружается
+    }
+
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
 

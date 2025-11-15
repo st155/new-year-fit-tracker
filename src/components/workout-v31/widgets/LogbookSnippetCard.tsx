@@ -1,4 +1,4 @@
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Calendar, Flame, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -89,6 +89,7 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
   
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
+      <CardContent className="pt-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Журнал (Ключевые моменты)</h3>
         
@@ -169,6 +170,7 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
           </div>
         ))}
       </div>
+      </CardContent>
     </Card>
   );
 }

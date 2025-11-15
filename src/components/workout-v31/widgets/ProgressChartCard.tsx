@@ -1,4 +1,4 @@
-import { Card } from "@tremor/react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -152,8 +152,9 @@ export function ProgressChartCard({
 
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Прогресс</h3>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold">Прогресс</h3>
         
         <Select value={selectedMetric} onValueChange={onMetricChange}>
           <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">
@@ -222,6 +223,7 @@ export function ProgressChartCard({
           <p className="text-sm font-semibold">{formatValue(metrics.avg)}</p>
         </div>
       </div>
+      </CardContent>
     </Card>
   );
 }

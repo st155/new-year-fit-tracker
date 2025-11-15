@@ -58,7 +58,7 @@ const HabitTeamDetail = lazy(() => import("@/pages/HabitTeamDetail"));
 const WorkoutLiveLogger = lazy(() => import("@/pages/WorkoutLiveLogger"));
 const WorkoutSummary = lazy(() => import("@/pages/WorkoutSummary"));
 const WorkoutManagement = lazy(() => import("@/pages/WorkoutManagement"));
-const WorkoutV31 = lazy(() => import("@/pages/WorkoutV31"));
+import WorkoutV31 from "@/pages/WorkoutV31";
 const WorkoutDetail = lazy(() => import("@/pages/WorkoutDetail"));
 
 export const AppRoutes = () => {
