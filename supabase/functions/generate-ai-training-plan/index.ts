@@ -129,13 +129,42 @@ Generate a weekly template that will be repeated with progressive overload.`;
     });
 
     console.log('[generate-ai-training-plan] AI Response received');
+    console.log('[generate-ai-training-plan] Full AI response:', JSON.stringify(aiResponse, null, 2));
 
-    // Parse AI response
+    // Parse AI response with fallback
     let programData;
+
+    // Try parsing from tool_calls first (preferred format)
     if (aiResponse.tool_calls && aiResponse.tool_calls.length > 0) {
+      console.log('[generate-ai-training-plan] Parsing from tool_calls');
       programData = JSON.parse(aiResponse.tool_calls[0].function.arguments);
-    } else {
-      throw new Error('AI did not return structured training program');
+    }
+    // Fallback: Try parsing from content (JSON in text)
+    else if (aiResponse.content) {
+      console.log('[generate-ai-training-plan] Parsing from content');
+      try {
+        // Try to find JSON in the text response
+        const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          programData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found in AI response content');
+        }
+      } catch (parseError) {
+        console.error('[generate-ai-training-plan] Failed to parse content:', parseError);
+        throw new Error('AI returned invalid JSON format');
+      }
+    }
+    // No valid response format
+    else {
+      console.error('[generate-ai-training-plan] Invalid AI response structure:', aiResponse);
+      throw new Error('AI did not return structured training program. Please try again.');
+    }
+
+    // Validate required fields
+    if (!programData.program_name || !programData.weekly_workouts) {
+      console.error('[generate-ai-training-plan] Invalid program data structure:', programData);
+      throw new Error('AI returned incomplete training program data');
     }
 
     console.log('[generate-ai-training-plan] Template generated:', programData.program_name);
@@ -241,6 +270,18 @@ Generate a weekly template that will be repeated with progressive overload.`;
 
   } catch (error) {
     console.error('[generate-ai-training-plan] Error:', error);
+    console.error('[generate-ai-training-plan] Error stack:', error.stack);
+    
+    // Handle AI parsing/formatting errors
+    if (error.message?.includes('tool_calls') || error.message?.includes('structured') || error.message?.includes('JSON')) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'AI failed to generate properly formatted plan. Please try again.',
+          details: error.message 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (error.message?.includes('429')) {
       return new Response(
