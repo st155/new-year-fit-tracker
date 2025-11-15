@@ -17,6 +17,8 @@ export function useProgressMetrics(userId?: string) {
   // Fetch real data from unified_metrics
   const { data: metricsData } = useQuery({
     queryKey: ['progress-metrics', selectedMetric, userId],
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    placeholderData: (previousData) => previousData, // Keep old data while fetching
     queryFn: async () => {
       if (!userId) return [];
       

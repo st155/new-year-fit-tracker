@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dumbbell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDailyWorkout } from "@/hooks/useDailyWorkout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
@@ -13,6 +12,7 @@ import { format, addDays } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import WorkoutDayNavigator from "@/components/workout/WorkoutDayNavigator";
+import { WorkoutV31Skeleton } from "@/components/workout-v31/WorkoutV31Skeleton";
 
 import { AIInsightCard } from "@/components/workout-v31/widgets/AIInsightCard";
 import { CTAButtons } from "@/components/workout-v31/widgets/CTAButtons";
@@ -131,13 +131,9 @@ export default function WorkoutV31() {
     });
   }, [workouts]);
 
-  // Loading state
-  if (isDailyLoading || isHistoryLoading) {
-    return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <Dumbbell className="w-12 h-12 animate-pulse text-cyan-400" />
-      </div>
-    );
+  // Show skeleton during initial load
+  if (isDailyLoading && isHistoryLoading) {
+    return <WorkoutV31Skeleton />;
   }
 
   // Determine plan and rest day status
