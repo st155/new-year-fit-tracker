@@ -180,26 +180,10 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
   };
   
-  // Sort widgets by position and filter out empty ones
+  // Sort widgets by position - show ALL widgets even without data
   const processedWidgets = useMemo(() => {
-    const sorted = [...widgets].sort((a, b) => a.position - b.position);
-    
-    // Habits 3.0 widgets don't need metrics data
-    const habitsWidgets = ['🏆 Habit Level', '🔥 Habit Streaks', '🤝 Habit Social'];
-    
-    // Filter out widgets without data (except Habits 3.0 widgets)
-    return sorted.filter(widget => {
-      if (habitsWidgets.includes(widget.metric_name)) {
-        return true; // Always show Habits 3.0 widgets
-      }
-      
-      const isSingleMode = widget.display_mode !== 'multi';
-      const hasData = isSingleMode 
-        ? smartData?.has(widget.id)
-        : multiData?.has(widget.id) && multiData.get(widget.id)?.sources?.length > 0;
-      return hasData;
-    });
-  }, [widgets, smartData, multiData]);
+    return [...widgets].sort((a, b) => a.position - b.position);
+  }, [widgets]);
   
   // ✅ 7-day history for sparkline charts (after processedWidgets is defined)
   const { data: widgetHistory, isLoading: historyLoading } = useWidgetHistory(
