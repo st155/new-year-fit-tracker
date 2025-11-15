@@ -176,7 +176,7 @@ export default function AITrainingOnboarding() {
 
       const { error: prefError } = await supabase
         .from('ai_training_preferences')
-        .upsert(prefData);
+        .upsert(prefData, { onConflict: 'user_id' });
 
       if (prefError) throw prefError;
 
