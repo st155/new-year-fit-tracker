@@ -1,6 +1,6 @@
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Circle } from "lucide-react";
-import { Badge } from "@tremor/react";
+import { Badge } from "@/components/ui/badge";
 
 interface DayEntry {
   name: string;
@@ -15,8 +15,9 @@ interface WeeklySplitCardProps {
 export function WeeklySplitCard({ days }: WeeklySplitCardProps) {
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
-      <h3 className="text-lg font-semibold mb-4">Выполнение недели</h3>
-      <div className="space-y-3">
+      <CardContent className="pt-6">
+        <h3 className="text-lg font-semibold mb-4">Выполнение недели</h3>
+        <div className="space-y-3">
         {days.map((day, idx) => (
           <div key={idx} className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -30,13 +31,14 @@ export function WeeklySplitCard({ days }: WeeklySplitCardProps) {
               </span>
             </div>
             {day.isToday && (
-              <Badge color="cyan" size="sm">
+              <Badge variant="secondary">
                 Сегодня
               </Badge>
             )}
           </div>
         ))}
       </div>
+      </CardContent>
     </Card>
   );
 }

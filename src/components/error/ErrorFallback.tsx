@@ -37,6 +37,48 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
     const { error, errorInfo } = this.props;
     const { showDetails } = this.state;
 
+    // Специальная обработка для chunk load errors
+    const isChunkError = error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.message?.includes('Importing a module script failed') ||
+      error?.message?.includes('Failed to load module') ||
+      error?.name === 'ChunkLoadError';
+
+    if (isChunkError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
+          <Card className="max-w-md w-full glass-card animate-fade-in">
+            <CardHeader className="text-center space-y-4">
+              <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-bounce-in">
+                <RefreshCw className="h-10 w-10 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-bold">Обновление приложения</CardTitle>
+              <CardDescription className="text-base">
+                Доступна новая версия приложения. Пожалуйста, перезагрузите страницу для продолжения работы.
+              </CardDescription>
+            </CardHeader>
+
+            <CardFooter className="flex gap-3">
+              <Button 
+                onClick={() => {
+                  // Очистка всех кэшей
+                  if ('caches' in window) {
+                    caches.keys().then(names => {
+                      names.forEach(name => caches.delete(name));
+                    });
+                  }
+                  window.location.reload();
+                }}
+                className="flex-1"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Перезагрузить
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
         <Card className="max-w-2xl w-full glass-card animate-fade-in">
