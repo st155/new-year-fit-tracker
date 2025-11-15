@@ -48,7 +48,7 @@ serve(async (req) => {
       ? preferences.equipment.join(', ') 
       : 'bodyweight';
 
-    const masterPrompt = `You are an elite strength and conditioning coach. Generate a comprehensive 12-week training program.
+    const masterPrompt = `You are an elite strength coach. Generate a weekly training template.
 
 User Profile:
 - Primary Goal: ${preferences.primary_goal}
@@ -59,88 +59,73 @@ User Profile:
 - Injuries/Limitations: ${preferences.injuries_limitations || 'None'}
 
 Requirements:
-1. Create a periodized program with distinct phases (e.g., Accumulation, Intensification, Realization)
-2. Include progressive overload across the 12 weeks
-3. Balance volume, intensity, and recovery based on experience level
-4. Provide specific exercises, sets, reps, RPE targets, and rest periods
-5. Organize workouts by day of week (0=Sunday, 6=Saturday)
+1. Create ${preferences.days_per_week} weekly workouts optimized for their goal
+2. Include specific exercises with sets, reps (as ranges like "8-12"), RPE, and rest periods
+3. Balance volume and intensity for ${preferences.experience_level} level
+4. Organize by day of week (0=Sunday, 6=Saturday)
 
-Generate the complete program.`;
+Generate a weekly template that will be repeated with progressive overload.`;
 
     console.log('[generate-ai-training-plan] Calling Lovable AI...');
 
-    // Call Lovable AI with Tool Calling for structured output
+    // Call Lovable AI with simplified tool calling
     const aiClient = createAIClient(AIProvider.LOVABLE);
     const aiResponse = await aiClient.complete({
       messages: [
         {
           role: 'system',
-          content: 'You are an expert strength coach. Generate structured training programs in valid JSON format.'
+          content: 'You are an expert strength coach. Generate structured weekly training templates in valid JSON format.'
         },
         {
           role: 'user',
           content: masterPrompt
         }
       ],
-      model: 'google/gemini-2.5-pro',
-      maxTokens: 8000,
-      temperature: 0.3,
+      model: 'google/gemini-2.5-flash',
+      maxTokens: 3000,
       tools: [
         {
           type: 'function',
           function: {
-            name: 'generate_training_program',
-            description: 'Generate a complete periodized training program',
+            name: 'generate_weekly_template',
+            description: 'Generate a weekly training template',
             parameters: {
               type: 'object',
               properties: {
                 program_name: { type: 'string' },
-                duration_weeks: { type: 'number' },
-                phases: {
+                weekly_workouts: {
                   type: 'array',
                   items: {
                     type: 'object',
                     properties: {
-                      phase_name: { type: 'string' },
-                      weeks: { type: 'array', items: { type: 'number' } },
-                      focus: { type: 'string' },
-                      workouts: {
+                      day_of_week: { type: 'number' },
+                      workout_name: { type: 'string' },
+                      exercises: {
                         type: 'array',
                         items: {
                           type: 'object',
                           properties: {
-                            day_of_week: { type: 'number' },
-                            workout_name: { type: 'string' },
-                            exercises: {
-                              type: 'array',
-                              items: {
-                                type: 'object',
-                                properties: {
-                                  name: { type: 'string' },
-                                  sets: { type: 'number' },
-                                  reps: { type: 'number' },
-                                  rpe: { type: 'number' },
-                                  rest_seconds: { type: 'number' },
-                                  notes: { type: 'string' }
-                                },
-                                required: ['name', 'sets', 'reps', 'rpe', 'rest_seconds']
-                              }
-                            }
+                            name: { type: 'string' },
+                            sets: { type: 'number' },
+                            reps: { type: 'string' },
+                            rpe: { type: 'number' },
+                            rest_seconds: { type: 'number' },
+                            notes: { type: 'string' }
                           },
-                          required: ['day_of_week', 'workout_name', 'exercises']
+                          required: ['name', 'sets', 'reps']
                         }
                       }
                     },
-                    required: ['phase_name', 'weeks', 'focus', 'workouts']
+                    required: ['day_of_week', 'workout_name', 'exercises']
                   }
                 }
               },
-              required: ['program_name', 'duration_weeks', 'phases']
+              required: ['program_name', 'weekly_workouts']
             }
           }
         }
       ],
-      tool_choice: { type: 'function', function: { name: 'generate_training_program' } }
+      tool_choice: { type: 'function', function: { name: 'generate_weekly_template' } }
     });
 
     console.log('[generate-ai-training-plan] AI Response received');
@@ -153,21 +138,22 @@ Generate the complete program.`;
       throw new Error('AI did not return structured training program');
     }
 
-    console.log('[generate-ai-training-plan] Program generated:', programData.program_name);
+    console.log('[generate-ai-training-plan] Template generated:', programData.program_name);
 
-    // Save training plan to database
+    // Save training plan to database (12-week duration with auto-progression)
     const { data: newPlan, error: planError } = await supabase
       .from('training_plans')
       .insert({
         trainer_id: user_id,
         name: programData.program_name,
         description: `AI-generated ${preferences.primary_goal} program for ${preferences.experience_level} level`,
-        duration_weeks: programData.duration_weeks,
+        duration_weeks: 12,
         is_ai_generated: true,
         generation_prompt: masterPrompt,
         ai_metadata: {
           preferences,
-          phases: programData.phases.map(p => ({ name: p.phase_name, weeks: p.weeks, focus: p.focus }))
+          weekly_template: programData.weekly_workouts,
+          progression: 'auto_2.5_percent'
         }
       })
       .select()
@@ -180,14 +166,14 @@ Generate the complete program.`;
 
     console.log('[generate-ai-training-plan] Plan created:', newPlan.id);
 
-    // Save workouts
+    // Duplicate weekly template for 12 weeks with auto-progression
     const workoutsToInsert = [];
-    for (const phase of programData.phases) {
-      for (const workout of phase.workouts) {
+    for (let week = 1; week <= 12; week++) {
+      for (const workout of programData.weekly_workouts) {
         workoutsToInsert.push({
           plan_id: newPlan.id,
           day_of_week: workout.day_of_week,
-          workout_name: workout.workout_name,
+          workout_name: `Week ${week}: ${workout.workout_name}`,
           exercises: workout.exercises
         });
       }
@@ -232,7 +218,8 @@ Generate the complete program.`;
         success: true,
         plan: newPlan,
         workout_count: workoutsToInsert.length,
-        program_data: programData
+        weeks: 12,
+        template: programData
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
