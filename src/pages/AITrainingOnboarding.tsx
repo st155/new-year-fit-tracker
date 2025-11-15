@@ -180,12 +180,16 @@ export default function AITrainingOnboarding() {
 
       if (prefError) throw prefError;
 
-      const { error: funcError } = await supabase.functions.invoke(
+      const { data: fnData, error: funcError } = await supabase.functions.invoke(
         'generate-ai-training-plan',
         { body: { user_id: user.id } }
       );
 
-      if (funcError) throw funcError;
+      if (funcError) {
+        // Extract detailed error message from server response
+        const serverMsg = (fnData as any)?.error || (funcError as any)?.context?.body || funcError.message;
+        throw new Error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg));
+      }
 
       toast.success('План создан!');
       navigate('/workouts');
