@@ -38,6 +38,9 @@ export interface DailyWorkoutResponse {
 export function useDailyWorkout(userId?: string, date?: string) {
   return useQuery<DailyWorkoutResponse>({
     queryKey: ['daily-ai-workout', userId, date || format(new Date(), 'yyyy-MM-dd')],
+    staleTime: 2 * 60 * 60 * 1000, // Cache for 2 hours
+    placeholderData: (previousData) => previousData, // Show old data while fetching
+    refetchOnWindowFocus: false, // Don't refetch on window focus
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-daily-ai-workout', {
         body: { user_id: userId, date }
@@ -46,7 +49,6 @@ export function useDailyWorkout(userId?: string, date?: string) {
       if (error) throw error;
       return data;
     },
-    staleTime: 2 * 60 * 60 * 1000, // Cache for 2 hours
     enabled: !!userId
   });
 }

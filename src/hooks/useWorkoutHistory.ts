@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getWorkoutTypeName } from '@/lib/workout-types';
+import { mapTerraActivityType } from '@/lib/terra-activity-types';
 
 export type WorkoutSource = 'manual' | 'tracker' | 'all';
 
@@ -20,6 +22,7 @@ export interface WorkoutHistoryItem {
 export function useWorkoutHistory(filter: WorkoutSource = 'all') {
   const { data: workouts = [], isLoading, error } = useQuery({
     queryKey: ['workout-history', filter],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -59,16 +62,12 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
           .eq('user_id', user.id)
           .neq('source', 'manual')
           .order('start_time', { ascending: false })
-          .limit(50);
+          .limit(20);
 
         if (trackerError) throw trackerError;
 
         if (trackerWorkouts) {
           trackerWorkouts.forEach((workout: any) => {
-            // Import workout type mapping
-            const { getWorkoutTypeName } = require('@/lib/workout-types');
-            const { mapTerraActivityType } = require('@/lib/terra-activity-types');
-            
             // Determine workout name based on source
             let workoutName = 'Тренировка';
             if (workout.source?.toLowerCase() === 'whoop') {
