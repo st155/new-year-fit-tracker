@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Bot, User } from 'lucide-react';
@@ -14,6 +14,7 @@ import { MultiSelectChipGroup } from '@/components/workout/onboarding/MultiSelec
 import { NumberInputForm } from '@/components/workout/onboarding/NumberInputForm';
 import { ImageToggleGroup } from '@/components/workout/onboarding/ImageToggleGroup';
 import { GeneratePlanButton } from '@/components/workout/onboarding/GeneratePlanButton';
+import { PlanGenerationProgress } from '@/components/workout/PlanGenerationProgress';
 
 interface ChatMessage {
   id: string;
@@ -69,6 +70,7 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
 export default function AITrainingOnboarding() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showProgress, setShowProgress] = useState(false);
   
   const [state, dispatch] = useReducer(onboardingReducer, {
     currentStepIndex: 0,
@@ -141,6 +143,7 @@ export default function AITrainingOnboarding() {
 
   const handleGenerate = async () => {
     dispatch({ type: 'SET_GENERATING', value: true });
+    setShowProgress(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -171,21 +174,11 @@ export default function AITrainingOnboarding() {
         };
       }
 
-      if (state.answers.current_1rm) {
-        prefData.current_1rm = state.answers.current_1rm;
-      }
-
-      if (state.answers.lifting_styles) {
-        prefData.lifting_styles = state.answers.lifting_styles;
-      }
-
       const { error: prefError } = await supabase
         .from('ai_training_preferences')
         .upsert(prefData);
 
       if (prefError) throw prefError;
-
-      navigate('/workouts/generating');
 
       const { error: funcError } = await supabase.functions.invoke(
         'generate-ai-training-plan',
@@ -200,6 +193,7 @@ export default function AITrainingOnboarding() {
     } catch (error: any) {
       console.error('Generation error:', error);
       toast.error(error.message || 'Ошибка создания плана');
+      setShowProgress(false);
       dispatch({ type: 'SET_GENERATING', value: false });
     }
   };
@@ -236,6 +230,10 @@ export default function AITrainingOnboarding() {
         return null;
     }
   };
+
+  if (showProgress) {
+    return <PlanGenerationProgress onComplete={() => navigate('/workouts')} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
