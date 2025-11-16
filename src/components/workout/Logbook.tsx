@@ -9,11 +9,25 @@ import { StatsDashboardCard } from "./stats/StatsDashboardCard";
 import { motion } from "framer-motion";
 import { format, isSameMonth } from "date-fns";
 import { ru } from "date-fns/locale";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 export default function Logbook() {
   const [activeFilter, setActiveFilter] = useState<WorkoutSource>('all');
   const [statsPeriod, setStatsPeriod] = useState<'week' | 'month' | 'all'>('all');
   const { workouts, isLoading } = useWorkoutHistory(activeFilter);
+  const queryClient = useQueryClient();
+
+  // Pull-to-refresh
+  const { containerRef, isRefreshing, pullDistance, isAtThreshold } = usePullToRefresh({
+    onRefresh: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['workout-history'] });
+      await queryClient.invalidateQueries({ queryKey: ['workout-stats'] });
+    },
+    threshold: 80
+  });
 
   // Группировка тренировок по месяцам
   const groupedWorkouts = workouts.reduce((groups, workout) => {
@@ -50,7 +64,26 @@ export default function Logbook() {
       {workouts.length === 0 ? (
         <EmptyState filter={activeFilter} />
       ) : (
-        <ScrollArea className="h-[calc(100vh-500px)]">
+        <ScrollArea className="h-[calc(100vh-500px)]" ref={containerRef}>
+          {/* Pull-to-refresh indicator */}
+          {pullDistance > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center py-4"
+              style={{
+                transform: `translateY(${Math.min(pullDistance, 80)}px)`
+              }}
+            >
+              <Loader2 
+                className={cn(
+                  "w-6 h-6 text-primary transition-all",
+                  isRefreshing && "animate-spin",
+                  isAtThreshold && "text-success"
+                )}
+              />
+            </motion.div>
+          )}
           <div className="space-y-8 pr-4">
             {Object.entries(groupedWorkouts).map(([month, monthWorkouts], monthIndex) => (
               <motion.div
