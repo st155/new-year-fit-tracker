@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch, Share2, Repeat, Trash2, ChevronDown, Trophy } from "lucide-react";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getWorkoutColors } from "@/lib/workout-colors";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface WorkoutHistoryCardProps {
   workout: WorkoutHistoryItem;
@@ -21,6 +22,39 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   const [showActions, setShowActions] = useState(false);
   
   const colors = getWorkoutColors(workout.source);
+  
+  // Swipe gesture state
+  const x = useMotionValue(0);
+  const background = useTransform(
+    x,
+    [-100, 0, 100],
+    ['linear-gradient(90deg, hsl(var(--destructive)) 0%, transparent 100%)', 'transparent', 'linear-gradient(90deg, transparent 0%, hsl(var(--success)) 100%)']
+  );
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 100;
+    
+    if (info.offset.x > threshold) {
+      // Swipe right - Repeat
+      if ('vibrate' in navigator) navigator.vibrate(10);
+      toast({
+        title: "Тренировка повторена",
+        description: `Начните тренировку "${workout.name}"`,
+      });
+      x.set(0);
+    } else if (info.offset.x < -threshold) {
+      // Swipe left - Delete
+      if ('vibrate' in navigator) navigator.vibrate(15);
+      toast({
+        title: "Удалить тренировку?",
+        description: "Функция в разработке",
+        variant: "destructive"
+      });
+      x.set(0);
+    } else {
+      x.set(0);
+    }
+  };
   
   // Check for achievements (mock data - можно расширить)
   const achievements = [];
@@ -44,18 +78,30 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ scale: 1.01 }}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-      className={cn(
-        "glass-card p-6 rounded-xl border border-white/10 backdrop-blur-xl cursor-pointer hover:shadow-glow transition-all duration-300 relative",
-        `border-l-4 ${colors.accent}`
-      )}
-    >
+    <div className="relative" style={{ touchAction: 'pan-y' }}>
+      {/* Swipe Background */}
+      <motion.div
+        className="absolute inset-0 rounded-xl overflow-hidden"
+        style={{ background }}
+      />
+      
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+        style={{ x }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        whileHover={{ scale: 1.01 }}
+        onMouseEnter={() => setShowActions(true)}
+        onMouseLeave={() => setShowActions(false)}
+        className={cn(
+          "glass-card p-6 rounded-xl border border-white/10 backdrop-blur-xl cursor-pointer hover:shadow-glow transition-all duration-300 relative",
+          `border-l-4 ${colors.accent}`
+        )}
+      >
       {/* Achievement badges - показывать всегда, но только если achievements не пусты */}
       {achievements.length > 0 && !showActions && (
         <div className="absolute top-4 right-4 flex gap-2">
@@ -158,6 +204,7 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
           </div>
         )}
       </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
