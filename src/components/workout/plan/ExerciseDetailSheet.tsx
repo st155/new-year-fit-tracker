@@ -2,7 +2,12 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ExerciseIcon from "@/components/workout/ExerciseIcon";
-import { Target, TrendingUp, Info, Clock } from "lucide-react";
+import { Target, Info, Clock, TrendingUp } from "lucide-react";
+import { useExerciseProgress, calculateTrend } from "@/hooks/useExerciseProgress";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import ProgressChart from "@/components/workout/plan/ProgressChart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ExerciseDetailSheetProps {
   open: boolean;
@@ -22,6 +27,21 @@ export function ExerciseDetailSheet({
   onOpenChange,
   exercise,
 }: ExerciseDetailSheetProps) {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
+
+  const { data: progressData, isLoading } = useExerciseProgress(
+    exercise?.exercise_name || '',
+    userId || undefined
+  );
+
+  const trend = progressData ? calculateTrend(progressData) : { direction: 'stable' as const, percentage: 0 };
+
   if (!exercise) return null;
 
   return (
@@ -102,15 +122,29 @@ export function ExerciseDetailSheet({
             </ul>
           </div>
 
-          {/* Progress History (placeholder) */}
-          <div className="glass-card p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-success" />
+          {/* Progress History */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
               <h4 className="font-semibold">История прогресса</h4>
             </div>
-            <p className="text-sm text-muted-foreground">
-              График прогресса будет доступен после первых записей
-            </p>
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-[200px] w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            ) : progressData && progressData.length > 0 ? (
+              <ProgressChart data={progressData} trend={trend} />
+            ) : (
+              <div className="glass-card p-6 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">
+                  Недостаточно данных для отображения прогресса
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Выполните упражнение несколько раз, чтобы увидеть график
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </ScrollArea>

@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Timer, SkipForward, Plus } from 'lucide-react';
+import { Timer, SkipForward, Plus, Play, Pause, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useRestTimer } from '@/hooks/useRestTimer';
+import { requestNotificationPermission } from '@/lib/notification-utils';
 
 interface RestTimerProps {
   duration: number; // in seconds
@@ -11,29 +13,28 @@ interface RestTimerProps {
 }
 
 export default function RestTimer({ duration, onComplete, onSkip }: RestTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState(duration);
-  const progressPercent = ((duration - timeRemaining) / duration) * 100;
+  const {
+    timeRemaining,
+    isRunning,
+    progressPercent,
+    start,
+    pause,
+    reset,
+    addTime,
+    changeDuration,
+  } = useRestTimer({
+    initialDuration: duration,
+    onComplete,
+    autoStart: true,
+  });
 
   useEffect(() => {
-    setTimeRemaining(duration);
-  }, [duration]);
+    requestNotificationPermission();
+  }, []);
 
   useEffect(() => {
-    if (timeRemaining <= 0) {
-      onComplete();
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining, onComplete]);
-
-  const handleAddTime = () => {
-    setTimeRemaining((prev) => prev + 30);
-  };
+    changeDuration(duration);
+  }, [duration, changeDuration]);
 
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = timeRemaining % 60;
@@ -94,11 +95,31 @@ export default function RestTimer({ duration, onComplete, onSkip }: RestTimerPro
         {/* Progress Bar */}
         <Progress value={progressPercent} className="h-2 mb-6" />
 
+        {/* Control Buttons */}
+        <div className="flex gap-2 mb-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={isRunning ? pause : start}
+            className="flex-1 backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10"
+          >
+            {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={reset}
+            className="flex-1 backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={handleAddTime}
+            onClick={() => addTime(30)}
             className="flex-1 backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10"
           >
             <Plus className="w-4 h-4 mr-2" />
