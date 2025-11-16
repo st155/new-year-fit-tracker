@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dumbbell, BookOpen, Calendar, ArrowLeft } from "lucide-react";
+import { Dumbbell, BookOpen, Calendar, ArrowLeft, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import Logbook from "@/components/workout/Logbook";
 import TrainingPlan from "@/components/workout/TrainingPlan";
@@ -11,7 +13,11 @@ export default function WorkoutManagement() {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="container mx-auto p-6 space-y-6"
+    >
       <Button 
         variant="ghost" 
         onClick={() => navigate('/workouts')}
@@ -21,31 +27,78 @@ export default function WorkoutManagement() {
         Назад к тренировкам
       </Button>
       
-      <div className="flex items-center gap-3 mb-6">
-        <Dumbbell className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold">Планы и История</h1>
-      </div>
+      {/* Animated Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl p-8 glass-card"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/5 to-pink-500/5" />
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Dumbbell className="w-10 h-10 text-primary" />
+            </motion.div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold">Планы и История</h1>
+              <p className="text-muted-foreground mt-1">Управляй своими тренировками</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Badge variant="outline" className="text-sm">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              В процессе
+            </Badge>
+          </div>
+        </div>
+      </motion.div>
 
+      {/* Enhanced Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "plan" | "logbook")}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-2">
-          <TabsTrigger value="plan" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            План
+        <TabsList className="grid w-full max-w-2xl grid-cols-2 h-auto p-1">
+          <TabsTrigger 
+            value="plan" 
+            className="flex flex-col items-center gap-2 py-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/10 data-[state=active]:to-primary/5"
+          >
+            <Calendar className="w-5 h-5" />
+            <div className="text-center">
+              <div className="font-medium">План</div>
+              <div className="text-xs text-muted-foreground">Текущая программа</div>
+            </div>
           </TabsTrigger>
-          <TabsTrigger value="logbook" className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            Журнал
+          <TabsTrigger 
+            value="logbook" 
+            className="flex flex-col items-center gap-2 py-4 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/10 data-[state=active]:to-primary/5"
+          >
+            <BookOpen className="w-5 h-5" />
+            <div className="text-center">
+              <div className="font-medium">Журнал</div>
+              <div className="text-xs text-muted-foreground">История тренировок</div>
+            </div>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="plan" className="mt-6">
-          <TrainingPlan />
-        </TabsContent>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <TabsContent value="plan" className="mt-6">
+            <TrainingPlan />
+          </TabsContent>
 
-        <TabsContent value="logbook" className="mt-6">
-          <Logbook />
-        </TabsContent>
+          <TabsContent value="logbook" className="mt-6">
+            <Logbook />
+          </TabsContent>
+        </motion.div>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }

@@ -1,21 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Calendar, Target, Dumbbell, CheckCircle2, Clock } from "lucide-react";
-import ExerciseIcon from "./ExerciseIcon";
+import { Sparkles, Target, Calendar, Dumbbell, CheckCircle2, Clock } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { WorkoutPlanHeroCard } from "./plan/WorkoutPlanHeroCard";
+import { WeekCalendarView } from "./plan/WeekCalendarView";
+import { DayWorkoutCard } from "./plan/DayWorkoutCard";
+import { ExerciseDetailSheet } from "./plan/ExerciseDetailSheet";
+import { motion } from "framer-motion";
 import LogWorkout from "./LogWorkout";
+import ExerciseIcon from "./ExerciseIcon";
 
 export default function TrainingPlan() {
   const navigate = useNavigate();
   const [activeExercise, setActiveExercise] = useState<any>(null);
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
 
   const { data: activePlan, isLoading, refetch } = useQuery({
     queryKey: ['active-training-plan'],
