@@ -1,9 +1,14 @@
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch } from "lucide-react";
+import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch, Share2, Repeat, Trash2, ChevronDown, Trophy } from "lucide-react";
 import { WorkoutHistoryItem } from "@/hooks/useWorkoutHistory";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getWorkoutColors } from "@/lib/workout-colors";
+import { cn } from "@/lib/utils";
 
 interface WorkoutHistoryCardProps {
   workout: WorkoutHistoryItem;
@@ -12,6 +17,17 @@ interface WorkoutHistoryCardProps {
 
 export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCardProps) {
   const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  
+  const colors = getWorkoutColors(workout.source);
+  
+  // Check for achievements (mock data - можно расширить)
+  const achievements = [];
+  if (index === 0) achievements.push({ icon: '🔥', label: 'Последняя тренировка' });
+  if (workout.exercises && Array.isArray(workout.exercises) && workout.exercises.length >= 8) {
+    achievements.push({ icon: '🏆', label: 'Интенсивная' });
+  }
   
   const getSourceIcon = () => {
     switch (workout.source) {
@@ -32,94 +48,115 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group relative"
+      whileHover={{ scale: 1.01 }}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+      className={cn(
+        "glass-card p-6 rounded-xl border border-white/10 backdrop-blur-xl cursor-pointer hover:shadow-glow transition-all duration-300 relative",
+        `border-l-4 ${colors.accent}`
+      )}
     >
-      <div 
-        className="
-          p-6 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10
-          hover:bg-white/10 hover:border-white/20 transition-all duration-300
-          cursor-pointer
-        "
-        onClick={() => navigate(`/workouts/${workout.id}`)}
-      >
-        {/* Header */}
+      {/* Achievement badges - показывать всегда, но только если achievements не пусты */}
+      {achievements.length > 0 && !showActions && (
+        <div className="absolute top-4 right-4 flex gap-2">
+          {achievements.map((achievement, i) => (
+            <Badge key={i} className={colors.badge}>
+              {achievement.icon} {achievement.label}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {/* Quick actions - показывать на hover */}
+      {showActions && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute top-4 right-4 flex gap-2"
+        >
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); }}>
+            <Share2 className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); }}>
+            <Repeat className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive" onClick={(e) => { e.stopPropagation(); }}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </motion.div>
+      )}
+
+      <div onClick={() => navigate(`/workouts/${workout.id}`)}>
         <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-sm text-gray-400 mb-1">
-              {format(workout.date, 'EEEE, d MMMM yyyy', { locale: ru })}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              {getSourceIcon()}
+              <h3 className="text-xl font-bold text-white">{workout.name}</h3>
+            </div>
+            <p className="text-sm text-gray-400">
+              {format(new Date(workout.date), "EEEE, d MMMM yyyy", { locale: ru })}
             </p>
-            <h3 className="text-2xl font-bold text-gray-100">
-              {workout.name}
-            </h3>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-200 group-hover:translate-x-1 transition-all" />
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          {/* Duration */}
-          {workout.duration > 0 && (
-            <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          {workout.duration && workout.duration > 0 && (
+            <div className="flex items-center gap-2 text-gray-300">
               <Clock className="w-4 h-4 text-cyan-400" />
               <div>
-                <p className="text-sm text-gray-400">Время</p>
-                <p className="text-sm font-semibold text-gray-200">{workout.duration} мин</p>
+                <p className="text-xs text-gray-400">Время</p>
+                <p className="text-sm font-semibold">{workout.duration} мин</p>
               </div>
             </div>
           )}
-
-          {/* Calories */}
-          {workout.calories > 0 && (
-            <div className="flex items-center gap-2">
+          
+          {workout.calories && workout.calories > 0 && (
+            <div className="flex items-center gap-2 text-gray-300">
               <Flame className="w-4 h-4 text-orange-400" />
               <div>
-                <p className="text-sm text-gray-400">Калории</p>
-                <p className="text-sm font-semibold text-gray-200">{workout.calories} ккал</p>
+                <p className="text-xs text-gray-400">Калории</p>
+                <p className="text-sm font-semibold">{workout.calories} ккал</p>
               </div>
             </div>
           )}
-
-          {/* Volume (for manual workouts) */}
+          
           {workout.volume && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-gray-300">
               <Dumbbell className="w-4 h-4 text-purple-400" />
               <div>
-                <p className="text-sm text-gray-400">Объем</p>
-                <p className="text-sm font-semibold text-gray-200">{Math.round(workout.volume)} кг</p>
+                <p className="text-xs text-gray-400">Объем</p>
+                <p className="text-sm font-semibold">{Math.round(workout.volume)} кг</p>
               </div>
             </div>
           )}
-
-          {/* Distance (for tracker workouts) */}
+          
           {workout.distance && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-gray-300">
               <Activity className="w-4 h-4 text-green-400" />
               <div>
-                <p className="text-sm text-gray-400">Дистанция</p>
-                <p className="text-sm font-semibold text-gray-200">{workout.distance.toFixed(1)} км</p>
-              </div>
-            </div>
-          )}
-
-          {/* Sets & Exercises (for manual workouts) */}
-          {workout.sets && workout.exercises && (
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <div>
-                <p className="text-sm text-gray-400">Упражнений</p>
-                <p className="text-sm font-semibold text-gray-200">
-                  {workout.exercises} • {workout.sets} подходов
-                </p>
+                <p className="text-xs text-gray-400">Дистанция</p>
+                <p className="text-sm font-semibold">{workout.distance.toFixed(1)} км</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Source Badge */}
-        <div className="flex items-center gap-2 pt-3 border-t border-white/10">
-          {getSourceIcon()}
-          <span className="text-xs text-gray-400">{workout.sourceLabel}</span>
-        </div>
+        {/* Exercises - expandable */}
+        {workout.exercises && typeof workout.exercises === 'number' && workout.exercises > 0 && (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-200 transition-colors w-full"
+            >
+              <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
+              <span>{workout.exercises} упражнений {workout.sets && `• ${workout.sets} подходов`}</span>
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
