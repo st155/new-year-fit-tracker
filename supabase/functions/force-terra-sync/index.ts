@@ -50,19 +50,20 @@ Deno.serve(async (req) => {
       throw new Error(`No active ${provider} connection found`);
     }
 
-    // Calculate date range
+    // Calculate date range based on data type
     const endDate = new Date();
     const startDate = new Date();
     
-    // For daily data, fetch today + yesterday; for body data, fetch last 7 days
     if (dataType === 'daily') {
       startDate.setDate(startDate.getDate() - 1); // Yesterday
+    } else if (dataType === 'activity') {
+      startDate.setDate(startDate.getDate() - 14); // Last 14 days for workouts
     } else {
-      startDate.setDate(startDate.getDate() - 7); // Last 7 days
+      startDate.setDate(startDate.getDate() - 7); // Last 7 days for body data
     }
 
     // Determine API endpoint based on data type
-    const endpoint = dataType === 'daily' ? 'daily' : 'body';
+    const endpoint = dataType === 'daily' ? 'daily' : dataType === 'activity' ? 'activity' : 'body';
     
     // Call Terra API to get historical data
     // Note: Terra automatically sends webhooks when data changes

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 interface ForceSyncParams {
   provider: string;
-  dataType?: 'body' | 'daily';
+  dataType?: 'body' | 'daily' | 'activity';
 }
 
 export function useForceTerraSync() {
@@ -20,9 +20,9 @@ export function useForceTerraSync() {
       return data;
     },
     onSuccess: (_, { provider, dataType = 'body' }) => {
-      const dataTypeLabel = dataType === 'daily' ? 'дневных метрик' : 'данных тела';
+      const dataTypeLabel = dataType === 'daily' ? 'дневных метрик' : dataType === 'activity' ? 'тренировок' : 'данных тела';
       toast.success(`Синхронизация ${provider} (${dataTypeLabel}) запущена`, {
-        description: 'Данные обновятся в течение нескольких минут',
+        description: dataType === 'activity' ? 'Тренировки за последние 14 дней обновятся в течение минуты' : 'Данные обновятся в течение нескольких минут',
       });
       
       // Invalidate ALL relevant queries

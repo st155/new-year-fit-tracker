@@ -19,11 +19,13 @@ import {
   TrendingUp,
   Watch,
   ExternalLink,
-  Clock
+  Clock,
+  Dumbbell
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 
 interface TerraProvider {
   name: string;
@@ -80,6 +82,7 @@ export function TerraIntegration() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
+  const forceSyncMutation = useForceTerraSync();
 
 
   useEffect(() => {
@@ -403,19 +406,47 @@ export function TerraIntegration() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button onClick={syncData} disabled={syncing} className="w-full">
-              {syncing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Синхронизация...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Синхронизировать данные
-                </>
-              )}
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Button onClick={syncData} disabled={syncing} variant="default">
+                {syncing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Синхронизация...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Синхронизировать данные
+                  </>
+                )}
+              </Button>
+
+              <Button 
+                onClick={() => {
+                  status.providers.forEach(provider => {
+                    forceSyncMutation.mutate({
+                      provider: provider.name,
+                      dataType: 'activity'
+                    });
+                  });
+                }}
+                disabled={forceSyncMutation.isPending}
+                variant="outline"
+                className="gap-2"
+              >
+                {forceSyncMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Загрузка...
+                  </>
+                ) : (
+                  <>
+                    <Dumbbell className="w-4 h-4" />
+                    Синхронизировать тренировки (14 дней)
+                  </>
+                )}
+              </Button>
+            </div>
 
             <div className="space-y-2">
               {status.providers.map((provider) => {

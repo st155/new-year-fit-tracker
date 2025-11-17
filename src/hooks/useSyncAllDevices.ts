@@ -26,7 +26,7 @@ export function useSyncAllDevices() {
 
       const results: SyncResult[] = [];
 
-      // Sync each provider - both body and daily data
+      // Sync each provider - body, daily, and activity data
       for (const token of tokens) {
         const provider = token.provider.toLowerCase();
         
@@ -55,6 +55,21 @@ export function useSyncAllDevices() {
         } catch (error) {
           results.push({ 
             provider: `${token.provider} (daily)`, 
+            success: false, 
+            error: error.message 
+          });
+        }
+
+        // Sync activity data (workouts from last 14 days)
+        try {
+          const { error: activityError } = await supabase.functions.invoke('force-terra-sync', {
+            body: { provider, dataType: 'activity' },
+          });
+          if (activityError) throw activityError;
+          results.push({ provider: `${token.provider} (activity)`, success: true });
+        } catch (error) {
+          results.push({ 
+            provider: `${token.provider} (activity)`, 
             success: false, 
             error: error.message 
           });
