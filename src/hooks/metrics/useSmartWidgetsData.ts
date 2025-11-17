@@ -88,6 +88,7 @@ export function useSmartWidgetsData(userId: string | undefined, widgets: Widget[
         .order('measurement_date', { ascending: false })
         .order('priority', { ascending: true })
         .order('confidence_score', { ascending: false })
+        .order('value', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;

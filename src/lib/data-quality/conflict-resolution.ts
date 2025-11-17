@@ -95,6 +95,31 @@ export class ConflictResolver {
         this.getCategoryFromMetric(best.metric.metric_name)
       );
 
+      // If priorities are equal, use additional tiebreakers
+      if (currentPriority === bestPriority) {
+        const metricName = current.metric.metric_name.toLowerCase();
+        
+        // For sleep metrics, prefer longer duration (main sleep > nap)
+        if (metricName.includes('sleep') && metricName.includes('duration')) {
+          return current.metric.value > best.metric.value ? current : best;
+        }
+        
+        // For sleep efficiency, prefer higher percentage
+        if (metricName.includes('sleep') && metricName.includes('efficiency')) {
+          return current.metric.value > best.metric.value ? current : best;
+        }
+        
+        // Default tiebreaker: higher confidence
+        if (current.confidence !== best.confidence) {
+          return current.confidence > best.confidence ? current : best;
+        }
+        
+        // Final tiebreaker: most recent
+        return new Date(current.metric.measurement_date) > new Date(best.metric.measurement_date) 
+          ? current 
+          : best;
+      }
+
       return currentPriority > bestPriority ? current : best;
     });
   }
