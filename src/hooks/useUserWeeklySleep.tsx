@@ -16,12 +16,13 @@ export function useUserWeeklySleep(userId: string | undefined) {
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
 
-      // Try Sleep Performance first (WHOOP, Oura - percentage)
+      // Sleep Performance (WHOOP only)
       const { data: performanceData, error: perfError } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
         .eq('metric_name', 'Sleep Performance')
+        .ilike('source', 'WHOOP')
         .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
         .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date', { ascending: true });

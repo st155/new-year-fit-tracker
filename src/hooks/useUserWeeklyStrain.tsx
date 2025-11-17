@@ -16,12 +16,13 @@ export function useUserWeeklyStrain(userId: string | undefined) {
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
 
-      // Try Day Strain first (WHOOP)
+      // Day Strain (WHOOP only)
       const { data: dayStrainData, error: dayError } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
         .eq('metric_name', 'Day Strain')
+        .ilike('source', 'WHOOP')
         .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
         .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
         .order('measurement_date', { ascending: true });
