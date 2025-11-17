@@ -198,10 +198,25 @@ export default function FitnessData() {
 
     // Create metric cards
     const latestMetrics = Object.entries(grouped).map(([name, values]) => {
-      // Sort explicitly by measurement_date DESC (newest first) for consistency
-      const sortedValues = values.sort((a, b) => 
-        new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime()
-      );
+      // Sort by: 1) date DESC, 2) priority ASC (WHOOP=1 > ULTRAHUMAN=2 > OURA=3), 3) value DESC (longest sleep)
+      const sortedValues = values.sort((a, b) => {
+        // 1. Sort by date DESC (newest first)
+        const dateCompare = new Date(b.measurement_date).getTime() - new Date(a.measurement_date).getTime();
+        if (dateCompare !== 0) return dateCompare;
+        
+        // 2. Sort by priority ASC (lower number = higher priority)
+        const priorityA = a.priority || 999;
+        const priorityB = b.priority || 999;
+        const priorityCompare = priorityA - priorityB;
+        if (priorityCompare !== 0) return priorityCompare;
+        
+        // 3. For sleep metrics, sort by value DESC (longest sleep = main sleep)
+        if (name.includes('Sleep')) {
+          return b.value - a.value;
+        }
+        
+        return 0;
+      });
       
       // Take first element (newest) since data is sorted DESC
       const latest = sortedValues[0];
