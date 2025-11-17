@@ -160,12 +160,46 @@ export function useClientDetailData(clientUserId?: string) {
           
         // Sleep
         case 'Sleep Duration':
-          entry.sleep_hours = metric.value;
-          entry.sleep_hours_source = metric.source;
+          // Prioritize WHOOP over other sources, and longest sleep duration
+          {
+            const isWhoop = metric.source.toUpperCase() === 'WHOOP';
+            const existingIsWhoop = entry.sleep_hours_source?.toUpperCase() === 'WHOOP';
+            
+            if (!entry.sleep_hours) {
+              // No existing value, take this one
+              entry.sleep_hours = metric.value;
+              entry.sleep_hours_source = metric.source;
+            } else if (isWhoop && !existingIsWhoop) {
+              // WHOOP overrides non-WHOOP
+              entry.sleep_hours = metric.value;
+              entry.sleep_hours_source = metric.source;
+            } else if (isWhoop === existingIsWhoop) {
+              // Same source priority, take longest sleep
+              if (metric.value > entry.sleep_hours) {
+                entry.sleep_hours = metric.value;
+                entry.sleep_hours_source = metric.source;
+              }
+            }
+            // else: existing is WHOOP, new is not, keep existing
+          }
           break;
         case 'Sleep Efficiency':
-          entry.sleep_efficiency = metric.value;
-          entry.sleep_efficiency_source = metric.source;
+          // Prioritize WHOOP over other sources
+          {
+            const isWhoop = metric.source.toUpperCase() === 'WHOOP';
+            const existingIsWhoop = entry.sleep_efficiency_source?.toUpperCase() === 'WHOOP';
+            
+            if (!entry.sleep_efficiency) {
+              entry.sleep_efficiency = metric.value;
+              entry.sleep_efficiency_source = metric.source;
+            } else if (isWhoop && !existingIsWhoop) {
+              entry.sleep_efficiency = metric.value;
+              entry.sleep_efficiency_source = metric.source;
+            } else if (isWhoop === existingIsWhoop && metric.value > entry.sleep_efficiency) {
+              entry.sleep_efficiency = metric.value;
+              entry.sleep_efficiency_source = metric.source;
+            }
+          }
           break;
         case 'Sleep Performance':
           entry.sleep_performance = metric.value;
