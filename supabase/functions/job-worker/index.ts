@@ -218,7 +218,7 @@ async function processTerraWebhookData(
             intensity_breakdown: activity.active_durations_data
           }
         }, {
-          onConflict: 'external_id',
+          onConflict: 'user_id,external_id',
           ignoreDuplicates: false,
         })
         .select();
