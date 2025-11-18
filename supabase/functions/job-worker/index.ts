@@ -147,142 +147,166 @@ async function processTerraWebhookData(
 
   // Process different webhook types
   if (type === 'activity' && data) {
-    logger.info('Processing activity webhook', {
+    logger.info('Processing activity webhook (new Terra format)', {
       dataLength: data.length,
-      sampleData: data[0] ? {
-        hasActiveDurations: !!data[0].active_durations,
-        activeDurationsLength: data[0].active_durations?.length,
+      sampleActivity: data[0] ? {
         metadata: data[0].metadata,
+        hasStrainData: !!data[0].strain_data,
+        strainLevel: data[0].strain_data?.strain_level,
+        hasActiveDurations: !!data[0].active_durations,
         activityKeys: Object.keys(data[0]),
       } : null
     });
 
+    const workoutCountsByDate = new Map<string, number>();
+
+    // Process each activity as a single workout (new Terra format)
     for (const activity of data) {
-      const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
+      const metadata = activity.metadata;
       
-      if (activity.active_durations && activity.active_durations.length > 0) {
-        for (const workout of activity.active_durations) {
-          const workoutDate = workout.start_time?.split('T')[0] || date;
-          const workoutId = `terra_${provider}_workout_${workout.start_time}`;
-          const workoutType = mapTerraActivityType(workout.activity_type, provider);
-          const distanceKm = activity.distance_data?.distance_meters 
-            ? Math.round(activity.distance_data.distance_meters / 10) / 100
-            : null;
+      // Skip activities without proper metadata
+      if (!metadata?.start_time || !metadata?.end_time) {
+        logger.warn('Activity without start/end time', { 
+          metadata,
+          activityKeys: Object.keys(activity)
+        });
+        continue;
+      }
 
-          logger.info('Attempting to insert workout', {
-            workoutId,
-            workoutType,
-            startTime: workout.start_time,
-            provider,
-            strain: workout.strain || activity.score?.strain,
-          });
+      const workoutDate = metadata.start_time.split('T')[0];
+      const workoutId = `terra_${provider}_workout_${metadata.summary_id || metadata.start_time}`;
+      const workoutType = mapTerraActivityType(metadata.type, provider);
+      const strain = activity.strain_data?.strain_level;
+      
+      const durationMs = new Date(metadata.end_time).getTime() - new Date(metadata.start_time).getTime();
+      const durationMinutes = Math.round(durationMs / 60000);
+      const distanceKm = activity.distance_data?.distance_meters 
+        ? Math.round(activity.distance_data.distance_meters / 10) / 100
+        : null;
 
-          // Insert full workout record
-          const { error: workoutError, data: workoutData } = await supabase.from('workouts').upsert({
-            user_id: user_id,
-            workout_type: workoutType,
-            start_time: workout.start_time,
-            end_time: workout.end_time,
-            duration_minutes: workout.end_time 
-              ? Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000)
-              : null,
-            calories_burned: activity.calories_data?.total_burned_calories,
-            distance_km: distanceKm,
-            heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
-            heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
-            source: provider.toLowerCase(),
-            external_id: workoutId,
-            source_data: {
-              score: {
-                strain: workout.strain || activity.score?.strain
-              }
-            }
-          }, {
-            onConflict: 'external_id',
-            ignoreDuplicates: false,
-          })
-          .select();
+      logger.info('Inserting workout from new Terra format', {
+        workoutId,
+        workoutType,
+        name: metadata.name,
+        startTime: metadata.start_time,
+        strain,
+        durationMinutes,
+        provider,
+      });
 
-          if (workoutError) {
-            logger.error('Failed to insert workout', {
-              error: workoutError,
-              workoutId,
-              provider,
-            });
-          } else {
-            logger.info('Workout inserted successfully', {
-              workoutId,
-              workoutData,
-            });
-            processedCount++;
+      // Insert full workout record
+      const { error: workoutError, data: workoutData } = await supabase
+        .from('workouts')
+        .upsert({
+          user_id: user_id,
+          workout_type: workoutType,
+          start_time: metadata.start_time,
+          end_time: metadata.end_time,
+          duration_minutes: durationMinutes,
+          calories_burned: activity.calories_data?.total_burned_calories,
+          distance_km: distanceKm,
+          heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
+          heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
+          source: provider.toLowerCase(),
+          external_id: workoutId,
+          source_data: {
+            score: {
+              strain: strain
+            },
+            name: metadata.name,
+            type: metadata.type,
+            intensity_breakdown: activity.active_durations_data
           }
+        }, {
+          onConflict: 'external_id',
+          ignoreDuplicates: false,
+        })
+        .select();
 
-          if (activity.calories_data?.total_burned_calories) {
-            metricsToInsert.push({
-              metric_name: 'Workout Calories',
-              category: 'workout',
-              value: activity.calories_data.total_burned_calories,
-              measurement_date: workoutDate,
-              source: provider,
-              external_id: `${workoutId}_calories`,
-              user_id,
-            });
-          }
-
-          if (distanceKm) {
-            metricsToInsert.push({
-              metric_name: 'Distance',
-              category: 'workout',
-              value: distanceKm,
-              measurement_date: workoutDate,
-              source: provider,
-              external_id: `${workoutId}_distance`,
-              user_id,
-            });
-          }
-        }
+      if (workoutError) {
+        logger.error('Failed to insert workout', {
+          error: workoutError,
+          workoutId,
+          provider,
+        });
       } else {
-        logger.warn('Activity without active_durations', {
-          activityMetadata: activity.metadata,
-          activityKeys: Object.keys(activity),
-          scoreData: activity.score,
+        logger.info('Workout inserted successfully', {
+          workoutId,
+          workoutData,
+        });
+        processedCount++;
+        
+        // Count this workout
+        workoutCountsByDate.set(workoutDate, (workoutCountsByDate.get(workoutDate) || 0) + 1);
+      }
+
+      // Insert unified metrics for workout strain
+      if (strain) {
+        metricsToInsert.push({
+          metric_name: 'Workout Strain',
+          category: 'workout',
+          value: strain,
+          measurement_date: workoutDate,
+          source: provider,
+          external_id: `${workoutId}_strain`,
+          user_id,
         });
       }
-    }
 
-    // Process other activity metrics (steps, etc.)
-    for (const activity of data) {
-      const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
+      // Insert workout calories metric
+      if (activity.calories_data?.total_burned_calories) {
+        metricsToInsert.push({
+          metric_name: 'Workout Calories',
+          category: 'workout',
+          value: activity.calories_data.total_burned_calories,
+          measurement_date: workoutDate,
+          source: provider,
+          external_id: `${workoutId}_calories`,
+          user_id,
+        });
+      }
 
+      // Insert workout duration metric
+      if (durationMinutes) {
+        metricsToInsert.push({
+          metric_name: 'Workout Time',
+          category: 'workout',
+          value: durationMinutes,
+          measurement_date: workoutDate,
+          source: provider,
+          external_id: `${workoutId}_time`,
+          user_id,
+        });
+      }
+
+      // Insert distance metric
+      if (distanceKm) {
+        metricsToInsert.push({
+          metric_name: 'Distance',
+          category: 'workout',
+          value: distanceKm,
+          measurement_date: workoutDate,
+          source: provider,
+          external_id: `${workoutId}_distance`,
+          user_id,
+        });
+      }
+
+      // Insert steps if available
       if (activity.distance_data?.steps) {
         metricsToInsert.push({
           metric_name: 'Steps',
           category: 'activity',
           value: activity.distance_data.steps,
-          measurement_date: date,
+          measurement_date: workoutDate,
           source: provider,
-          external_id: `terra_${provider}_steps_${date}`,
+          external_id: `${workoutId}_steps`,
           user_id,
         });
       }
     }
 
-    // Count workouts per day and create "Workout Count" metric
-    const workoutCountsByDate = new Map<string, number>();
-    for (const activity of data) {
-      const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
-      if (activity.active_durations) {
-        for (const workout of activity.active_durations) {
-          const workoutDate = workout.start_time?.split('T')[0] || date;
-          workoutCountsByDate.set(
-            workoutDate, 
-            (workoutCountsByDate.get(workoutDate) || 0) + 1
-          );
-        }
-      }
-    }
-    
-    // Insert "Workout Count" metrics
+    // Insert workout count metrics
     for (const [workoutDate, count] of workoutCountsByDate) {
       metricsToInsert.push({
         metric_name: 'Workout Count',
