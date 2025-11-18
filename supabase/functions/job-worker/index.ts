@@ -147,10 +147,20 @@ async function processTerraWebhookData(
 
   // Process different webhook types
   if (type === 'activity' && data) {
+    logger.info('Processing activity webhook', {
+      dataLength: data.length,
+      sampleData: data[0] ? {
+        hasActiveDurations: !!data[0].active_durations,
+        activeDurationsLength: data[0].active_durations?.length,
+        metadata: data[0].metadata,
+        activityKeys: Object.keys(data[0]),
+      } : null
+    });
+
     for (const activity of data) {
       const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
       
-      if (activity.active_durations) {
+      if (activity.active_durations && activity.active_durations.length > 0) {
         for (const workout of activity.active_durations) {
           const workoutDate = workout.start_time?.split('T')[0] || date;
           const workoutId = `terra_${provider}_workout_${workout.start_time}`;
@@ -159,8 +169,16 @@ async function processTerraWebhookData(
             ? Math.round(activity.distance_data.distance_meters / 10) / 100
             : null;
 
+          logger.info('Attempting to insert workout', {
+            workoutId,
+            workoutType,
+            startTime: workout.start_time,
+            provider,
+            strain: workout.strain || activity.score?.strain,
+          });
+
           // Insert full workout record
-          const { error: workoutError } = await supabase.from('workouts').upsert({
+          const { error: workoutError, data: workoutData } = await supabase.from('workouts').upsert({
             user_id: user_id,
             workout_type: workoutType,
             start_time: workout.start_time,
@@ -174,14 +192,28 @@ async function processTerraWebhookData(
             heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
             source: provider.toLowerCase(),
             external_id: workoutId,
+            source_data: {
+              score: {
+                strain: workout.strain || activity.score?.strain
+              }
+            }
           }, {
             onConflict: 'external_id',
             ignoreDuplicates: false,
-          });
+          })
+          .select();
 
           if (workoutError) {
-            logger.error('Failed to insert workout', workoutError);
+            logger.error('Failed to insert workout', {
+              error: workoutError,
+              workoutId,
+              provider,
+            });
           } else {
+            logger.info('Workout inserted successfully', {
+              workoutId,
+              workoutData,
+            });
             processedCount++;
           }
 
@@ -209,7 +241,18 @@ async function processTerraWebhookData(
             });
           }
         }
+      } else {
+        logger.warn('Activity without active_durations', {
+          activityMetadata: activity.metadata,
+          activityKeys: Object.keys(activity),
+          scoreData: activity.score,
+        });
       }
+    }
+
+    // Process other activity metrics (steps, etc.)
+    for (const activity of data) {
+      const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
 
       if (activity.distance_data?.steps) {
         metricsToInsert.push({
@@ -227,6 +270,7 @@ async function processTerraWebhookData(
     // Count workouts per day and create "Workout Count" metric
     const workoutCountsByDate = new Map<string, number>();
     for (const activity of data) {
+      const date = activity.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
       if (activity.active_durations) {
         for (const workout of activity.active_durations) {
           const workoutDate = workout.start_time?.split('T')[0] || date;
