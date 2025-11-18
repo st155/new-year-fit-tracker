@@ -10,9 +10,12 @@ export const MetricsViewToggle = memo(function MetricsViewToggle() {
   const devices = [
     { id: 'all' as const, label: 'All Devices', icon: '🔗', color: 'from-primary to-accent' },
     { id: 'whoop' as const, label: 'Whoop', icon: '🔵', color: 'from-blue-500 to-blue-600' },
+    { id: 'oura' as const, label: 'Oura', icon: '⚫', color: 'from-gray-500 to-gray-600' },
     { id: 'withings' as const, label: 'Withings', icon: '🟢', color: 'from-green-500 to-green-600' },
     { id: 'garmin' as const, label: 'Garmin', icon: '🟡', color: 'from-yellow-500 to-yellow-600' },
     { id: 'ultrahuman' as const, label: 'Ultrahuman', icon: '🟣', color: 'from-purple-500 to-purple-600' },
+    { id: 'terra' as const, label: 'Terra', icon: '🟤', color: 'from-orange-500 to-orange-600' },
+    { id: 'apple_health' as const, label: 'Apple Health', icon: '🍎', color: 'from-red-500 to-red-600' },
   ];
 
   return (

@@ -31,7 +31,7 @@ export function useLatestMetrics(userId: string | undefined) {
 }
 
 // For device-specific filtering
-export type DeviceFilter = 'all' | 'whoop' | 'withings' | 'terra' | 'manual' | 'apple_health' | 'garmin' | 'ultrahuman';
+export type DeviceFilter = 'all' | 'whoop' | 'oura' | 'withings' | 'terra' | 'manual' | 'apple_health' | 'garmin' | 'ultrahuman';
 
 export function useDeviceMetrics(
   userId: string | undefined, 
