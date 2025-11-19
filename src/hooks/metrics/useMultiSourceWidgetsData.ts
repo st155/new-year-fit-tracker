@@ -40,8 +40,10 @@ export function useMultiSourceWidgetsData(
       }
       const metricNames = Array.from(metricNamesSet);
 
-      // Time window: only today's data
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      // Time window: last 7 days (to capture yesterday's data from WHOOP, Oura, etc.)
+      const now = new Date();
+      const fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const from = fromDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
       // Query all metrics from all sources
       const { data, error } = await supabase
@@ -49,7 +51,7 @@ export function useMultiSourceWidgetsData(
         .select('metric_name, source, value, unit, measurement_date, created_at, priority, confidence_score')
         .eq('user_id', userId)
         .in('metric_name', metricNames)
-        .gte('measurement_date', today)
+        .gte('measurement_date', from)
         .order('measurement_date', { ascending: false })
         .order('priority', { ascending: true })
         .order('confidence_score', { ascending: false });
@@ -131,9 +133,15 @@ export function useMultiSourceWidgetsData(
             };
           });
 
-          // Sort by freshness (sourceMap already ensures uniqueness per source)
+          // Sort: 1) newest measurement_date, 2) freshest sync, 3) highest confidence
           const finalSources = sources;
-          finalSources.sort((a, b) => a.age_hours - b.age_hours); // freshest first
+          finalSources.sort((a, b) => {
+            const dateA = new Date(a.measurement_date).getTime();
+            const dateB = new Date(b.measurement_date).getTime();
+            if (dateA !== dateB) return dateB - dateA; // Newest date first
+            if (a.age_hours !== b.age_hours) return a.age_hours - b.age_hours; // Freshest sync
+            return (b.confidence ?? 0) - (a.confidence ?? 0); // Highest confidence
+          });
 
           const primarySource = finalSources[0]?.source;
 
@@ -147,8 +155,8 @@ export function useMultiSourceWidgetsData(
       return result;
     },
     enabled: !!userId && widgets.length > 0,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes - optimized caching
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
     retryDelay: 500,
   });
