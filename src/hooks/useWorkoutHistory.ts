@@ -57,14 +57,14 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
       }
 
       // Fetch tracker workouts if needed
-      if (filter === 'all' || filter === 'tracker') {
-        const { data: trackerWorkouts, error: trackerError } = await supabase
-          .from('workouts')
-          .select('*')
-          .eq('user_id', user.id)
-          .neq('source', 'manual')
-          .order('start_time', { ascending: false })
-          .limit(20);
+    if (filter === 'all' || filter === 'tracker') {
+      const { data: trackerWorkouts, error: trackerError } = await supabase
+        .from('workouts')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('source', ['whoop', 'oura', 'garmin', 'withings', 'google', 'apple'])
+        .order('start_time', { ascending: false })
+        .limit(50);
 
         if (trackerError) throw trackerError;
 

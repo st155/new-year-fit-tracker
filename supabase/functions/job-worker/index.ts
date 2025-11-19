@@ -184,14 +184,18 @@ async function processTerraWebhookData(
         ? Math.round(activity.distance_data.distance_meters / 10) / 100
         : null;
 
-      logger.info('Inserting workout from new Terra format', {
+      logger.info('🏋️ Attempting to insert workout', {
         workoutId,
+        userId: user_id,
         workoutType,
         name: metadata.name,
         startTime: metadata.start_time,
+        endTime: metadata.end_time,
         strain,
         durationMinutes,
         provider,
+        distanceKm,
+        calories: activity.calories_data?.total_burned_calories,
       });
 
       // Insert full workout record
@@ -223,16 +227,37 @@ async function processTerraWebhookData(
         })
         .select();
 
+      logger.info('✅ Workout upsert result', {
+        success: !workoutError,
+        hasError: !!workoutError,
+        errorDetails: workoutError ? {
+          message: workoutError.message,
+          code: workoutError.code,
+          details: workoutError.details,
+          hint: workoutError.hint,
+        } : null,
+        dataReceived: !!workoutData,
+        dataLength: workoutData?.length,
+        workoutId,
+        userId: user_id,
+      });
+
       if (workoutError) {
-        logger.error('Failed to insert workout', {
+        logger.error('❌ Failed to insert workout', {
           error: workoutError,
+          errorMessage: workoutError.message,
+          errorCode: workoutError.code,
+          errorDetails: workoutError.details,
           workoutId,
+          userId: user_id,
           provider,
         });
       } else {
-        logger.info('Workout inserted successfully', {
+        logger.info('✅ Workout inserted successfully', {
           workoutId,
-          workoutData,
+          userId: user_id,
+          workoutDataId: workoutData?.[0]?.id,
+          source: workoutData?.[0]?.source,
         });
         processedCount++;
         
