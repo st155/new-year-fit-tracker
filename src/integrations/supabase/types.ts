@@ -3697,6 +3697,102 @@ export type Database = {
         }
         Relationships: []
       }
+      protocol_items: {
+        Row: {
+          created_at: string | null
+          daily_dosage: number
+          id: string
+          intake_times: string[]
+          notes: string | null
+          position: number | null
+          product_id: string
+          protocol_id: string
+          schedule_logic: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_dosage: number
+          id?: string
+          intake_times?: string[]
+          notes?: string | null
+          position?: number | null
+          product_id: string
+          protocol_id: string
+          schedule_logic?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_dosage?: number
+          id?: string
+          intake_times?: string[]
+          notes?: string | null
+          position?: number | null
+          product_id?: string
+          protocol_id?: string
+          schedule_logic?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "supplement_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_items_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocols: {
+        Row: {
+          ai_generated: boolean | null
+          ai_rationale: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          start_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          ai_rationale?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_generated?: boolean | null
+          ai_rationale?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           count: number | null
@@ -3757,6 +3853,117 @@ export type Database = {
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      supplement_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          inventory_id: string | null
+          notes: string | null
+          protocol_item_id: string | null
+          scheduled_time: string
+          servings_taken: number | null
+          side_effects: string[] | null
+          status: string
+          taken_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          notes?: string | null
+          protocol_item_id?: string | null
+          scheduled_time: string
+          servings_taken?: number | null
+          side_effects?: string[] | null
+          status?: string
+          taken_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          notes?: string | null
+          protocol_item_id?: string | null
+          scheduled_time?: string
+          servings_taken?: number | null
+          side_effects?: string[] | null
+          status?: string
+          taken_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_logs_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "user_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplement_logs_protocol_item_id_fkey"
+            columns: ["protocol_item_id"]
+            isOneToOne: false
+            referencedRelation: "protocol_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplement_products: {
+        Row: {
+          ai_confidence_score: number | null
+          barcode: string | null
+          brand: string
+          category: string | null
+          created_at: string | null
+          dosage_amount: number
+          dosage_unit: string
+          form: string | null
+          id: string
+          image_url: string | null
+          manufacturer: string | null
+          name: string
+          servings_per_container: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_confidence_score?: number | null
+          barcode?: string | null
+          brand: string
+          category?: string | null
+          created_at?: string | null
+          dosage_amount: number
+          dosage_unit: string
+          form?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer?: string | null
+          name: string
+          servings_per_container?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_confidence_score?: number | null
+          barcode?: string | null
+          brand?: string
+          category?: string | null
+          created_at?: string | null
+          dosage_amount?: number
+          dosage_unit?: string
+          form?: string | null
+          id?: string
+          image_url?: string | null
+          manufacturer?: string | null
+          name?: string
+          servings_per_container?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -4637,6 +4844,65 @@ export type Database = {
           widget_type?: string
         }
         Relationships: []
+      }
+      user_inventory: {
+        Row: {
+          batch_number: string | null
+          cost: number | null
+          created_at: string | null
+          current_servings: number
+          expiry_date: string | null
+          id: string
+          initial_servings: number | null
+          is_low_alert: boolean | null
+          low_stock_threshold: number | null
+          product_id: string
+          purchase_date: string | null
+          storage_location: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_number?: string | null
+          cost?: number | null
+          created_at?: string | null
+          current_servings?: number
+          expiry_date?: string | null
+          id?: string
+          initial_servings?: number | null
+          is_low_alert?: boolean | null
+          low_stock_threshold?: number | null
+          product_id: string
+          purchase_date?: string | null
+          storage_location?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_number?: string | null
+          cost?: number | null
+          created_at?: string | null
+          current_servings?: number
+          expiry_date?: string | null
+          id?: string
+          initial_servings?: number | null
+          is_low_alert?: boolean | null
+          low_stock_threshold?: number | null
+          product_id?: string
+          purchase_date?: string | null
+          storage_location?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "supplement_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_metrics: {
         Row: {
