@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 import { useSyncAllDevices } from '@/hooks/useSyncAllDevices';
+import { useWithingsBackfill } from '@/hooks/useWithingsBackfill';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, Database, Webhook } from 'lucide-react';
+import { RefreshCw, Database, Webhook, Activity, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function WithingsDebugPanel() {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<any>(null);
+  
   const forceSyncMutation = useForceTerraSync();
   const syncAllMutation = useSyncAllDevices();
+  const backfillMutation = useWithingsBackfill();
 
   // Fetch latest metrics from unified_metrics
   const { data: metrics, refetch: refetchMetrics } = useQuery({
@@ -24,7 +28,7 @@ export function WithingsDebugPanel() {
         .from('unified_metrics')
         .select('metric_name, value, unit, measurement_date, source, created_at')
         .eq('user_id', user.id)
-        .eq('source', 'withings')
+        .eq('source', 'WITHINGS')
         .in('metric_name', ['Weight', 'Body Fat Percentage'])
         .order('measurement_date', { ascending: false })
         .limit(5);
@@ -45,7 +49,7 @@ export function WithingsDebugPanel() {
         .from('terra_webhooks_raw')
         .select('id, type, provider, status, processed_count, created_at')
         .eq('user_id', user.id)
-        .eq('provider', 'withings')
+        .eq('provider', 'WITHINGS')
         .eq('type', 'body')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -54,6 +58,36 @@ export function WithingsDebugPanel() {
       return data;
     },
   });
+
+  // Check connection status
+  const checkConnectionStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: token, error } = await supabase
+      .from('terra_tokens')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('provider', 'WITHINGS')
+      .eq('is_active', true)
+      .single();
+
+    if (error || !token) {
+      setConnectionStatus({ connected: false, error: 'Token not found' });
+      return;
+    }
+
+    setConnectionStatus({
+      connected: true,
+      terraUserId: token.terra_user_id,
+      lastSync: token.last_sync_date,
+      updatedAt: token.updated_at,
+    });
+  };
+
+  useEffect(() => {
+    checkConnectionStatus();
+  }, []);
 
   const handleForceSync = async () => {
     setIsSyncing(true);
@@ -67,6 +101,7 @@ export function WithingsDebugPanel() {
       setTimeout(() => {
         refetchMetrics();
         refetchWebhooks();
+        checkConnectionStatus();
       }, 5000);
     } catch (error) {
       console.error('Force sync error:', error);
@@ -87,6 +122,7 @@ export function WithingsDebugPanel() {
       setTimeout(() => {
         refetchMetrics();
         refetchWebhooks();
+        checkConnectionStatus();
       }, 8000);
     } catch (error) {
       console.error('Sync all error:', error);
@@ -95,9 +131,24 @@ export function WithingsDebugPanel() {
     }
   };
 
+  const handleBackfill = async (days: number) => {
+    try {
+      await backfillMutation.mutateAsync({ daysBack: days });
+      
+      setTimeout(() => {
+        refetchMetrics();
+        refetchWebhooks();
+        checkConnectionStatus();
+      }, 3000);
+    } catch (error) {
+      console.error('Backfill error:', error);
+    }
+  };
+
   const handleRefresh = () => {
     refetchMetrics();
     refetchWebhooks();
+    checkConnectionStatus();
     toast.info('Данные обновлены');
   };
 
@@ -113,33 +164,109 @@ export function WithingsDebugPanel() {
             Отладка синхронизации данных от Withings
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
-            <Button 
-              onClick={handleForceSync} 
-              disabled={isSyncing}
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              Sync Withings
-            </Button>
-            <Button 
-              onClick={handleSyncAll} 
-              disabled={isSyncing}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              Sync All Devices
-            </Button>
-            <Button 
-              onClick={handleRefresh}
-              variant="outline"
-              className="gap-2"
-            >
-              <Database className="h-4 w-4" />
-              Обновить данные
-            </Button>
+        <CardContent className="space-y-6">
+          {/* Connection Status */}
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Статус подключения</h3>
+            {connectionStatus ? (
+              <div className="p-3 bg-muted rounded-lg space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={connectionStatus.connected ? 'text-green-500' : 'text-red-500'}>●</span>
+                  <span className="text-sm">{connectionStatus.connected ? 'Подключено' : 'Не подключено'}</span>
+                </div>
+                {connectionStatus.connected && (
+                  <>
+                    <div className="text-xs text-muted-foreground">
+                      <span>Terra User ID: </span>
+                      <code className="bg-background px-1 rounded">{connectionStatus.terraUserId}</code>
+                    </div>
+                    {connectionStatus.lastSync && (
+                      <div className="text-xs text-muted-foreground">
+                        Последняя синхронизация: {new Date(connectionStatus.lastSync).toLocaleString('ru-RU')}
+                      </div>
+                    )}
+                  </>
+                )}
+                {connectionStatus.error && (
+                  <div className="text-xs text-red-500">{connectionStatus.error}</div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 bg-muted rounded-lg">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Действия</h3>
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                onClick={handleForceSync} 
+                disabled={isSyncing}
+                variant="default"
+                className="gap-2"
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Activity className="h-4 w-4" />
+                )}
+                Sync Withings
+              </Button>
+              
+              <Button 
+                onClick={handleSyncAll} 
+                disabled={isSyncing}
+                variant="outline"
+                className="gap-2"
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Activity className="h-4 w-4" />
+                )}
+                Sync All Devices
+              </Button>
+
+              <Button 
+                onClick={() => handleBackfill(30)} 
+                disabled={backfillMutation.isPending}
+                variant="secondary"
+                className="gap-2"
+              >
+                {backfillMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
+                Загрузить данные (30 дней)
+              </Button>
+
+              <Button 
+                onClick={() => handleBackfill(90)} 
+                disabled={backfillMutation.isPending}
+                variant="secondary"
+                className="gap-2"
+              >
+                {backfillMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
+                Загрузить данные (90 дней)
+              </Button>
+              
+              <Button 
+                onClick={handleRefresh}
+                variant="ghost"
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Обновить данные
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -147,7 +274,7 @@ export function WithingsDebugPanel() {
             <div>
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Database className="h-4 w-4" />
-                Метрики в unified_metrics
+                Метрики в unified_metrics ({metrics?.length || 0})
               </h3>
               {metrics && metrics.length > 0 ? (
                 <div className="space-y-2">
@@ -166,7 +293,9 @@ export function WithingsDebugPanel() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Нет данных</p>
+                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg text-center">
+                  Нет данных
+                </p>
               )}
             </div>
 
@@ -174,7 +303,7 @@ export function WithingsDebugPanel() {
             <div>
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Webhook className="h-4 w-4" />
-                Последние webhook'и
+                Последние webhook'и ({webhooks?.length || 0})
               </h3>
               {webhooks && webhooks.length > 0 ? (
                 <div className="space-y-2">
@@ -197,19 +326,21 @@ export function WithingsDebugPanel() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Нет webhook'ов</p>
+                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg text-center">
+                  Нет webhook'ов
+                </p>
               )}
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground border-t pt-4 space-y-1">
+          <div className="text-xs text-muted-foreground border-t pt-4 space-y-2">
             <p>💡 <strong>Как использовать:</strong></p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Нажмите "Force Sync Withings" для запроса данных у Terra</li>
-              <li>Подождите 30-60 секунд пока Terra обработает запрос</li>
-              <li>Terra отправит webhook на наш сервер</li>
-              <li>job-worker обработает webhook и запишет в unified_metrics</li>
-              <li>Нажмите "Обновить данные" чтобы увидеть новые записи</li>
+              <li>"Sync Withings" - запрашивает последние 7 дней данных через Terra API</li>
+              <li>"Загрузить данные" - загружает исторические данные за указанный период напрямую</li>
+              <li>"Sync All Devices" - синхронизирует все подключенные устройства</li>
+              <li>После синхронизации подождите 30-60 секунд для обработки данных</li>
+              <li>Если данных нет - попробуйте использовать "Загрузить данные" или переподключить Withings</li>
             </ol>
           </div>
         </CardContent>
