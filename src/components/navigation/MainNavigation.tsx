@@ -63,6 +63,21 @@ interface NavigationItemExtended {
   trainerOnly?: boolean;
 }
 
+const biostackItems: NavigationItemExtended[] = [
+  {
+    title: "Supplements",
+    href: "/supplements",
+    iconType: "activity",
+    description: "Supplement protocols & inventory management",
+  },
+  {
+    title: "Medical Documents",
+    href: "/medical-documents",
+    iconType: "activity",
+    description: "Medical records, lab results & health data",
+  },
+];
+
 const navigationItems: NavigationItemExtended[] = [
   {
     title: "navigation.home",
@@ -93,12 +108,6 @@ const navigationItems: NavigationItemExtended[] = [
     href: "/body",
     iconType: "stats",
     description: "Body composition tracking",
-  },
-  {
-    title: "Supplements",
-    href: "/supplements",
-    iconType: "activity",
-    description: "Supplement protocols & inventory",
   },
   {
     title: "Тренировки",
@@ -224,6 +233,43 @@ export function MainNavigation() {
           {/* Desktop Navigation */}
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList>
+              {/* BioStack Section */}
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>BioStack</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[300px] gap-3 p-4 sm:w-[400px] md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    {biostackItems.map((item) => (
+                      <li key={item.href}>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to={item.href}
+                            className={cn(
+                              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                              isActiveRoute(item.href) && "bg-accent text-accent-foreground"
+                            )}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <CustomNavigationIcon 
+                                type={item.iconType} 
+                                isActive={isActiveRoute(item.href)}
+                                className="scale-75"
+                              />
+                              <div className="text-sm font-medium leading-none">
+                                {item.title}
+                              </div>
+                            </div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              {item.description}
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+              {/* Main Navigation */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger>{t('navigation.navigation')}</NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -326,6 +372,42 @@ export function MainNavigation() {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="grid gap-4 py-4">
+                  {/* BioStack Section */}
+                  <div className="space-y-2">
+                    <div className="px-3 text-xs font-semibold text-primary uppercase tracking-wide">
+                      BioStack
+                    </div>
+                    {biostackItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                          isActiveRoute(item.href) && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        <CustomNavigationIcon 
+                          type={item.iconType} 
+                          isActive={isActiveRoute(item.href)}
+                          className="scale-90"
+                        />
+                        <div>
+                          <div>{item.title}</div>
+                          {item.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-border/50" />
+
+                  {/* Main Navigation */}
                   {allItems.map((item) => (
                     <Link
                       key={item.href}

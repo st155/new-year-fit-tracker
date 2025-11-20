@@ -71,13 +71,17 @@ export function AppSidebar() {
     fetchUserData();
   }, [user]);
 
+  const biostackItems = [
+    { title: "Supplements", url: "/supplements", iconType: "activity" as const, badge: "New" },
+    { title: "Medical Documents", url: "/medical-documents", iconType: "activity" as const },
+  ];
+
   const mainItems = [
     { title: "navigation.dashboard", url: "/dashboard", iconType: "home" as const },
     { title: "navigation.progress", url: "/progress", iconType: "stats" as const },
     { title: "navigation.habits", url: "/habits", iconType: "habits" as const },
     { title: "navigation.body", url: "/body", iconType: "activity" as const },
     { title: "navigation.workouts", url: "/workouts", iconType: "activity" as const, badge: "AI" },
-    { title: "navigation.supplements", url: "/supplements", iconType: "activity" as const, badge: "New" },
     { title: "navigation.challenges", url: "/challenges", iconType: "challenges" as const },
     { title: "navigation.goals", url: "/goals", iconType: "activity" as const },
     { title: "navigation.feed", url: "/feed", iconType: "activity" as const },
@@ -92,7 +96,6 @@ export function AppSidebar() {
     { title: "navigation.profile", url: "/profile", iconType: "settings" as const },
     { title: "navigation.integrations", url: "/integrations", iconType: "integrations" as const },
     { title: "navigation.fitnessData", url: "/fitness-data", iconType: "connections" as const },
-    { title: "navigation.medicalDocuments", url: "/medical-documents", iconType: "settings" as const },
   ];
 
   const isActive = (path: string) => currentPath === path;
@@ -127,6 +130,45 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="p-2">
+        {/* BioStack Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-primary uppercase tracking-wide">
+            BioStack
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {biostackItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.url)}
+                    className={`w-full justify-start ${
+                      isActive(item.url)
+                        ? "bg-primary/10 text-primary border-primary/20 border"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <CustomNavigationIcon 
+                      type={item.iconType} 
+                      isActive={isActive(item.url)}
+                      className="scale-75"
+                    />
+                    {!isCollapsed && (
+                      <span className="flex items-center gap-2">
+                        {item.title}
+                        {'badge' in item && item.badge && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </span>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
