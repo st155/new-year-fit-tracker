@@ -3753,6 +3753,7 @@ export type Database = {
       }
       protocols: {
         Row: {
+          adherence_rate: number | null
           ai_generated: boolean | null
           ai_rationale: string | null
           created_at: string | null
@@ -3760,12 +3761,16 @@ export type Database = {
           end_date: string | null
           id: string
           is_active: boolean | null
+          last_taken_at: string | null
           name: string
           start_date: string | null
+          total_scheduled: number | null
+          total_taken: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          adherence_rate?: number | null
           ai_generated?: boolean | null
           ai_rationale?: string | null
           created_at?: string | null
@@ -3773,12 +3778,16 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean | null
+          last_taken_at?: string | null
           name: string
           start_date?: string | null
+          total_scheduled?: number | null
+          total_taken?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          adherence_rate?: number | null
           ai_generated?: boolean | null
           ai_rationale?: string | null
           created_at?: string | null
@@ -3786,8 +3795,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean | null
+          last_taken_at?: string | null
           name?: string
           start_date?: string | null
+          total_scheduled?: number | null
+          total_taken?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -4851,6 +4863,8 @@ export type Database = {
           cost: number | null
           created_at: string | null
           current_servings: number
+          daily_usage_rate: number | null
+          estimated_depletion_date: string | null
           expiry_date: string | null
           id: string
           initial_servings: number | null
@@ -4867,6 +4881,8 @@ export type Database = {
           cost?: number | null
           created_at?: string | null
           current_servings?: number
+          daily_usage_rate?: number | null
+          estimated_depletion_date?: string | null
           expiry_date?: string | null
           id?: string
           initial_servings?: number | null
@@ -4883,6 +4899,8 @@ export type Database = {
           cost?: number | null
           created_at?: string | null
           current_servings?: number
+          daily_usage_rate?: number | null
+          estimated_depletion_date?: string | null
           expiry_date?: string | null
           id?: string
           initial_servings?: number | null
@@ -5823,6 +5841,7 @@ export type Database = {
       cleanup_background_jobs: { Args: never; Returns: undefined }
       cleanup_edge_function_logs: { Args: never; Returns: undefined }
       cleanup_idempotency_keys: { Args: never; Returns: undefined }
+      cleanup_old_pending_logs: { Args: never; Returns: number }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       cleanup_terra_webhooks: { Args: never; Returns: undefined }
