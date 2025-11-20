@@ -61,6 +61,7 @@ const WorkoutManagement = lazy(() => import("@/pages/WorkoutManagement"));
 import WorkoutV31 from "@/pages/WorkoutV31";
 const WorkoutDetail = lazy(() => import("@/pages/WorkoutDetail"));
 const MyTrainingPlans = lazy(() => import("@/pages/MyTrainingPlans"));
+const Supplements = lazy(() => import("@/pages/Supplements"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -275,6 +276,13 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <MedicalDocuments />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/supplements" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <Supplements />
             </ModernAppLayout>
           </ProtectedRoute>
         } />
