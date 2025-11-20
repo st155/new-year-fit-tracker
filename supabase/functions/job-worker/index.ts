@@ -346,6 +346,21 @@ async function processTerraWebhookData(
   }
 
   if (type === 'body' && data) {
+    // Special logging for Withings
+    if (provider.toUpperCase() === 'WITHINGS') {
+      logger.info('[WITHINGS] Processing body webhook', {
+        userId: user_id,
+        dataLength: data.length,
+        webhookId,
+        dataPreview: data[0] ? {
+          hasMetadata: !!data[0].metadata,
+          hasMeasurementsData: !!data[0].measurements_data,
+          measurementCount: data[0].measurements_data?.measurements?.length,
+          firstMeasurement: data[0].measurements_data?.measurements?.[0]
+        } : null
+      });
+    }
+
     for (const body of data) {
       const date = body.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
 
@@ -376,14 +391,24 @@ async function processTerraWebhookData(
 
       // Withings format (measurements_data.measurements[])
       if (body.measurements_data?.measurements && Array.isArray(body.measurements_data.measurements)) {
-        console.log(`📊 Processing ${body.measurements_data.measurements.length} Withings body measurements for ${provider}`);
+        logger.info('[WITHINGS] Processing measurements array', {
+          measurementCount: body.measurements_data.measurements.length,
+          userId: user_id,
+          provider
+        });
         
         for (const measurement of body.measurements_data.measurements) {
           const measurementDate = measurement.measurement_time?.split('T')[0] || date;
           const measurementTime = measurement.measurement_time || `${date}T00:00:00Z`;
           const uniqueId = `terra_${provider.toLowerCase()}_${measurementDate}_${measurementTime.replace(/[:.]/g, '')}`;
 
-          console.log(`  - Measurement: weight=${measurement.weight_kg}, bodyfat=${measurement.bodyfat_percentage}, date=${measurementDate}`);
+          logger.info('[WITHINGS] Processing measurement', {
+            weight: measurement.weight_kg,
+            bodyfat: measurement.bodyfat_percentage,
+            muscle: measurement.muscle_mass_g,
+            date: measurementDate,
+            uniqueId
+          });
 
           if (measurement.weight_kg) {
             metricsToInsert.push({

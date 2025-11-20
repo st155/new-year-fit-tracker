@@ -67,13 +67,25 @@ Deno.serve(
 
     // Read raw body for signature verification
     const rawBody = await req.text();
+    const webhookType = req.headers.get('type');
+    const provider = req.headers.get('dev-id');
+    
     logger.info('Webhook received', { 
       bodyLength: rawBody.length,
       headers: {
-        provider: req.headers.get('dev-id'),
-        type: req.headers.get('type'),
+        provider,
+        type: webhookType,
       }
     });
+
+    // Special logging for Withings
+    if (provider?.toLowerCase().includes('withings') || rawBody.toLowerCase().includes('withings')) {
+      logger.info('[WITHINGS] Webhook detected', {
+        type: webhookType,
+        bodyLength: rawBody.length,
+        bodyPreview: rawBody.substring(0, 200)
+      });
+    }
 
     // Get Terra signature from headers
     const signature = req.headers.get('terra-signature') || req.headers.get('x-terra-signature');
@@ -158,12 +170,34 @@ Deno.serve(
                 error: insertError.message,
                 webhookId,
               });
+              
+              // Special logging for Withings
+              if (payload.user?.provider?.toUpperCase() === 'WITHINGS') {
+                logger.error('[WITHINGS] Failed to store webhook', {
+                  error: insertError.message,
+                  code: insertError.code,
+                  details: insertError.details,
+                  webhookId,
+                  userId: payload.user?.user_id
+                });
+              }
             } else {
               logger.info('Raw webhook stored', { 
                 webhookId, 
                 type: payload.type,
                 duration_ms: Date.now() - startTime 
               });
+              
+              // Special logging for Withings
+              if (payload.user?.provider?.toUpperCase() === 'WITHINGS') {
+                logger.info('[WITHINGS] Webhook stored successfully', {
+                  webhookId,
+                  type: payload.type,
+                  userId: payload.user?.user_id,
+                  dataLength: payload.data?.length,
+                  duration_ms: Date.now() - startTime
+                });
+              }
             }
           } catch (e) {
             logger.error('Exception storing raw webhook', {
@@ -278,6 +312,18 @@ Deno.serve(
               jobId: job.id,
               duration_ms: Date.now() - startTime
             });
+
+            // Special logging for Withings
+            if (payload.user?.provider?.toUpperCase() === 'WITHINGS') {
+              logger.info('[WITHINGS] Job enqueued', {
+                webhookId,
+                jobId: job.id,
+                type: payload.type,
+                userId: payload.user?.user_id,
+                dataCount: payload.data?.length,
+                duration_ms: Date.now() - startTime
+              });
+            }
 
             // Update webhook status
             await supabase
