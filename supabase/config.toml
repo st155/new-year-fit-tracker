@@ -1,5 +1,14 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.scan-supplement-barcode]
+verify_jwt = true
+
+[functions.search-supplement-products]
+verify_jwt = true
+
+[functions.generate-supplement-protocol]
+verify_jwt = true
+
 [functions.generate-ai-training-plan]
 verify_jwt = true
 
