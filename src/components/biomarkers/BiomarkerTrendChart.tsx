@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea, ComposedChart, Legend } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -47,22 +47,24 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
     return null;
   };
 
+  const CustomLegend = () => (
+    <div className="flex justify-center gap-6 text-xs">
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--muted))', opacity: 0.4 }} />
+        <span className="text-muted-foreground">Lab Reference Range</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 rounded bg-emerald-500" style={{ opacity: 0.5 }} />
+        <span className="text-muted-foreground">Your Optimal Range</span>
+      </div>
+    </div>
+  );
+
   return (
     <Card className="p-6">
       <h3 className="font-semibold text-lg mb-4">Тренд</h3>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={chartData}>
-          <defs>
-            <linearGradient id="normalZone" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
-              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
-            </linearGradient>
-            <linearGradient id="optimalZone" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
-            </linearGradient>
-          </defs>
-          
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           
           <XAxis 
@@ -80,13 +82,30 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
           
           <Tooltip content={<CustomTooltip />} />
           
-          {/* Optimal zone shading */}
-          {referenceRanges?.optimal_min && referenceRanges?.optimal_max && (
-            <Area
-              dataKey="optimal_max"
+          <Legend 
+            content={<CustomLegend />}
+            wrapperStyle={{ paddingTop: '10px' }}
+          />
+          
+          {/* Lab Reference Zone - Gray background */}
+          {referenceRanges?.min && referenceRanges?.max && (
+            <ReferenceArea
+              y1={referenceRanges.min}
+              y2={referenceRanges.max}
+              fill="hsl(var(--muted))"
+              fillOpacity={0.2}
               stroke="none"
-              fill="url(#optimalZone)"
-              strokeWidth={0}
+            />
+          )}
+          
+          {/* User Optimal Zone - Green background */}
+          {referenceRanges?.optimal_min && referenceRanges?.optimal_max && (
+            <ReferenceArea
+              y1={referenceRanges.optimal_min}
+              y2={referenceRanges.optimal_max}
+              fill="hsl(160, 84%, 39%)"
+              fillOpacity={0.3}
+              stroke="none"
             />
           )}
           
