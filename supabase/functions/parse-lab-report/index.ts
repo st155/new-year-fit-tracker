@@ -7,6 +7,11 @@ const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Helper function to normalize biomarker names for fuzzy matching
+function normalizeBiomarkerName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -128,6 +133,29 @@ CRITICAL INSTRUCTIONS FOR DATE EXTRACTION:
 - NEVER use today's date - only the date from the document!
 - This date is CRITICAL for tracking trends over time
 
+BIOMARKER NAME STANDARDIZATION - Return "canonical_name" field:
+Use these canonical names when you recognize them (lowercase, no special chars):
+- WBC, White Blood Cells → "wbc"
+- RBC, Red Blood Cells → "rbc"
+- Hemoglobin, HGB, Hgb → "hemoglobin"
+- Hematocrit, HCT → "hematocrit"
+- Platelets, PLT → "platelets"
+- Neutrophils → "neutrophils"
+- Lymphocytes → "lymphocytes"
+- Monocytes → "monocytes"
+- Eosinophils → "eosinophils"
+- Basophils → "basophils"
+- Glucose, Blood Sugar → "glucose"
+- Cholesterol Total, Total Cholesterol → "cholesterol_total"
+- HDL, HDL-C → "hdl"
+- LDL, LDL-C → "ldl"
+- Triglycerides → "triglycerides"
+- ALT, SGPT → "alt"
+- AST, SGOT → "ast"
+- Creatinine → "creatinine"
+- TSH → "tsh"
+- Vitamin D, 25-OH Vitamin D → "vitamin_d"
+
 Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 {
   "laboratory": "Lab name",
@@ -139,6 +167,7 @@ Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
   "biomarkers": [
     {
       "name": "Biomarker name as written in the report",
+      "canonical_name": "standardized_lowercase_name",
       "value": numeric_value,
       "unit": "unit as string",
       "reference_range_min": numeric_value_or_null,
@@ -214,6 +243,8 @@ Extract every single biomarker value you can find, even if small or in footnotes
     }
 
     const results = [];
+    let matchedCount = 0;
+    let unmatchedCount = 0;
 
     console.log('[PARSE-LAB-REPORT] 💾 Stage 4/4: Saving biomarkers to database...');
 
@@ -222,14 +253,39 @@ Extract every single biomarker value you can find, even if small or in footnotes
       try {
         console.log(`[PARSE-LAB-REPORT] Processing biomarker: ${biomarker.name}`);
 
-        // Find matching biomarker by fuzzy matching alias
-        const matchedAlias = aliases?.find(a => 
-          a.alias.toLowerCase() === biomarker.name.toLowerCase() ||
-          a.alias.toLowerCase().includes(biomarker.name.toLowerCase()) ||
-          biomarker.name.toLowerCase().includes(a.alias.toLowerCase())
-        );
+        let biomarkerMaster = null;
 
-        const biomarkerMaster = matchedAlias?.biomarker_master;
+        // Step 1: Try matching by canonical_name from Gemini
+        if (biomarker.canonical_name) {
+          const normalizedCanonical = normalizeBiomarkerName(biomarker.canonical_name);
+          const canonicalMatch = aliases?.find(a => 
+            a.alias_normalized === normalizedCanonical
+          );
+          if (canonicalMatch) {
+            biomarkerMaster = canonicalMatch.biomarker_master;
+            console.log(`[PARSE-LAB-REPORT] ✓ Matched via canonical_name: ${biomarker.name} → ${biomarker.canonical_name}`);
+          }
+        }
+
+        // Step 2: Fuzzy matching through normalized aliases
+        if (!biomarkerMaster) {
+          const normalizedInput = normalizeBiomarkerName(biomarker.name);
+          const fuzzyMatch = aliases?.find(a => 
+            a.alias_normalized === normalizedInput
+          );
+          if (fuzzyMatch) {
+            biomarkerMaster = fuzzyMatch.biomarker_master;
+            console.log(`[PARSE-LAB-REPORT] ✓ Matched via fuzzy alias: ${biomarker.name}`);
+          }
+        }
+
+        // Count match/unmatch
+        if (biomarkerMaster) {
+          matchedCount++;
+        } else {
+          unmatchedCount++;
+          console.log(`[PARSE-LAB-REPORT] ⚠️ No match found for: ${biomarker.name}`);
+        }
 
         // Normalize value to standard unit
         let normalizedValue = biomarker.value;
@@ -317,6 +373,7 @@ Extract every single biomarker value you can find, even if small or in footnotes
     }
 
     console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} biomarkers via Gemini`);
+    console.log(`[PARSE-LAB-REPORT] 📊 Match statistics: ${matchedCount} matched (${Math.round(matchedCount/results.length*100)}%), ${unmatchedCount} unmatched (${Math.round(unmatchedCount/results.length*100)}%)`);
 
     return new Response(
       JSON.stringify({

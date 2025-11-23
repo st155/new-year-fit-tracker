@@ -158,3 +158,6 @@ verify_jwt = true
 
 [functions.ai-rename-document]
 verify_jwt = true
+
+[functions.rematch-biomarkers]
+verify_jwt = true

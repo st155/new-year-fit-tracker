@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLabTestResults } from '@/hooks/useBiomarkers';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { BiomarkerCard } from '@/components/biomarkers/BiomarkerCard';
+import { BiomarkerMappingDialog } from '@/components/biomarkers/BiomarkerMappingDialog';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -20,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
+import { showSuccessToast, showErrorToast } from '@/lib/toast-utils';
 
 const processingStages = {
   'downloading': { label: '📄 Загрузка PDF', progress: 10 },
@@ -41,8 +44,11 @@ export default function MedicalDocumentDetail() {
   const [processingStage, setProcessingStage] = useState<keyof typeof processingStages | null>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [showMappingDialog, setShowMappingDialog] = useState(false);
+  const [isRematching, setIsRematching] = useState(false);
   
   const document = documents?.find(d => d.id === documentId);
+  const unmatchedResults = results?.filter(r => !r.biomarker_id) || [];
 
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
@@ -188,6 +194,30 @@ export default function MedicalDocumentDetail() {
     if (value < refMin) return 'low';
     if (value > refMax) return 'high';
     return 'normal';
+  };
+
+  const handleRematch = async () => {
+    if (!documentId) return;
+    setIsRematching(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('rematch-biomarkers', {
+        body: { documentId }
+      });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['lab-test-results', documentId] });
+      
+      showSuccessToast(
+        'Пересопоставление завершено',
+        `Сопоставлено повторно: ${data.rematchedCount} из ${data.totalUnmatched} показателей`
+      );
+    } catch (error: any) {
+      showErrorToast('Ошибка пересопоставления', error.message);
+    } finally {
+      setIsRematching(false);
+    }
   };
 
   return (
@@ -396,6 +426,39 @@ export default function MedicalDocumentDetail() {
         </div>
       ) : results && results.length > 0 ? (
         <div className="space-y-8">
+          {/* Unmatched Biomarkers Alert */}
+          {unmatchedResults.length > 0 && (
+            <Alert className="border-yellow-500/50 bg-yellow-500/10">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertTitle>Несопоставленные показатели</AlertTitle>
+              <AlertDescription className="flex items-center justify-between">
+                <span>
+                  {unmatchedResults.length} показателей не распознаны автоматически. 
+                  Помогите системе научиться их распознавать.
+                </span>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleRematch}
+                    disabled={isRematching}
+                  >
+                    {isRematching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Пересопоставить
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => setShowMappingDialog(true)}
+                  >
+                    Сопоставить вручную →
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Summary Stats */}
           <Card>
             <CardHeader>
@@ -502,6 +565,13 @@ export default function MedicalDocumentDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Biomarker Mapping Dialog */}
+      <BiomarkerMappingDialog
+        open={showMappingDialog}
+        onOpenChange={setShowMappingDialog}
+        unmatchedResults={unmatchedResults}
+      />
     </div>
   );
 }
