@@ -185,3 +185,6 @@ verify_jwt = true
 
 [functions.calculate-stack-effectiveness]
 verify_jwt = true
+
+[functions.parse-doctor-recommendations]
+verify_jwt = true
