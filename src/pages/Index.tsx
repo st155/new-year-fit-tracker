@@ -39,6 +39,7 @@ import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
+import { TopSupplementsWidget } from '@/components/biostack/TopSupplementsWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -255,6 +256,11 @@ const Index = () => {
         {/* Withings Connection Widget */}
         <ErrorBoundary>
           <WithingsConnectionWidget />
+        </ErrorBoundary>
+
+        {/* Top Supplements Widget */}
+        <ErrorBoundary>
+          <TopSupplementsWidget />
         </ErrorBoundary>
 
         {/* Controls Bar - Compact */}

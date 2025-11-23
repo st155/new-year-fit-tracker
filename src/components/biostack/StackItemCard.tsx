@@ -26,10 +26,11 @@ interface StackItemCardProps {
     };
   };
   biomarkerTrend?: number[]; // Mini sparkline data
+  servingsRemaining?: number;
   onLogIntake: (itemId: string) => void;
 }
 
-export function StackItemCard({ item, biomarkerTrend, onLogIntake }: StackItemCardProps) {
+export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIntake }: StackItemCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Determine neon border based on effectiveness_score
@@ -48,14 +49,23 @@ export function StackItemCard({ item, biomarkerTrend, onLogIntake }: StackItemCa
       ? { label: "Active", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" }
       : { label: "Monitoring", className: "bg-red-500/10 text-red-400 border-red-500/20" };
 
+  const showLowStockBadge = servingsRemaining !== undefined && servingsRemaining < 10 && servingsRemaining > 0;
+
   return (
     <Card 
       className={cn(
-        "bg-neutral-950 border transition-all duration-300 hover:scale-[1.02]",
+        "bg-neutral-950 border transition-all duration-300 hover:scale-[1.02] relative",
         borderClass
       )}
     >
       <div className="p-4 space-y-3">
+        {/* Low Stock Badge */}
+        {showLowStockBadge && (
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-orange-500/20 border border-orange-500/50 flex items-center gap-1">
+            <span className="text-xs font-semibold text-orange-400">⚠️ {servingsRemaining} left</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
