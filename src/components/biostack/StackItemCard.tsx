@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparklines, SparklinesLine } from "react-sparklines";
 import { Check, TrendingUp, Clock, Pill, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -21,7 +20,7 @@ interface StackItemCardProps {
     servings_remaining?: number;
     target_outcome?: string;
     supplement_products?: {
-      product_name: string;
+      name: string;
       brand?: string;
       form?: string;
     };
@@ -59,9 +58,9 @@ export function StackItemCard({ item, biomarkerTrend, onLogIntake }: StackItemCa
       <div className="p-4 space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate">
-              {item.supplement_products?.product_name || item.stack_name}
+              {item.supplement_products?.name || item.stack_name}
             </h3>
             {item.supplement_products?.brand && (
               <p className="text-xs text-muted-foreground">
@@ -90,15 +89,11 @@ export function StackItemCard({ item, biomarkerTrend, onLogIntake }: StackItemCa
           )}
         </div>
 
-        {/* Mini Biomarker Trend */}
-        {biomarkerTrend && biomarkerTrend.length > 0 && (
-          <div className="h-8 w-full">
-            <Sparklines data={biomarkerTrend} height={32}>
-              <SparklinesLine 
-                color={effectivenessScore >= 8 ? "#22c55e" : "#a855f7"} 
-                style={{ strokeWidth: 2 }}
-              />
-            </Sparklines>
+        {/* Effectiveness Indicator */}
+        {effectivenessScore >= 8 && (
+          <div className="flex items-center gap-2 px-2 py-1 bg-green-500/10 rounded border border-green-500/20">
+            <TrendingUp className="h-3 w-3 text-green-400" />
+            <span className="text-xs text-green-400">Proven Effective</span>
           </div>
         )}
 

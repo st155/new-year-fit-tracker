@@ -734,6 +734,56 @@ export type Database = {
           },
         ]
       }
+      biomarker_correlations: {
+        Row: {
+          biomarker_id: string | null
+          correlation_type: string
+          created_at: string | null
+          evidence_level: string | null
+          expected_change_percent: number | null
+          id: string
+          pubmed_links: string[] | null
+          research_summary: string | null
+          supplement_name: string
+          timeframe_weeks: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          biomarker_id?: string | null
+          correlation_type: string
+          created_at?: string | null
+          evidence_level?: string | null
+          expected_change_percent?: number | null
+          id?: string
+          pubmed_links?: string[] | null
+          research_summary?: string | null
+          supplement_name: string
+          timeframe_weeks?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          biomarker_id?: string | null
+          correlation_type?: string
+          created_at?: string | null
+          evidence_level?: string | null
+          expected_change_percent?: number | null
+          id?: string
+          pubmed_links?: string[] | null
+          research_summary?: string | null
+          supplement_name?: string
+          timeframe_weeks?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biomarker_correlations_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biomarker_master: {
         Row: {
           alternative_units: Json | null
@@ -3502,6 +3552,47 @@ export type Database = {
           },
         ]
       }
+      intake_logs: {
+        Row: {
+          created_at: string | null
+          felt_effect: string | null
+          id: string
+          notes: string | null
+          servings_taken: number | null
+          stack_item_id: string | null
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          felt_effect?: string | null
+          id?: string
+          notes?: string | null
+          servings_taken?: number | null
+          stack_item_id?: string | null
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          felt_effect?: string | null
+          id?: string
+          notes?: string | null
+          servings_taken?: number | null
+          stack_item_id?: string | null
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_logs_stack_item_id_fkey"
+            columns: ["stack_item_id"]
+            isOneToOne: false
+            referencedRelation: "user_stack"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lab_test_results: {
         Row: {
           biomarker_id: string | null
@@ -4216,6 +4307,78 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      stack_effectiveness: {
+        Row: {
+          ai_explanation: string | null
+          ai_verdict: string | null
+          analysis_period_end: string
+          analysis_period_start: string
+          biomarker_id: string | null
+          biomarker_value_after: number | null
+          biomarker_value_before: number | null
+          change_percent: number | null
+          consistency_percent: number | null
+          correlation_score: number | null
+          created_at: string | null
+          days_taken: number | null
+          id: string
+          stack_item_id: string | null
+          total_days: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_explanation?: string | null
+          ai_verdict?: string | null
+          analysis_period_end: string
+          analysis_period_start: string
+          biomarker_id?: string | null
+          biomarker_value_after?: number | null
+          biomarker_value_before?: number | null
+          change_percent?: number | null
+          consistency_percent?: number | null
+          correlation_score?: number | null
+          created_at?: string | null
+          days_taken?: number | null
+          id?: string
+          stack_item_id?: string | null
+          total_days?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_explanation?: string | null
+          ai_verdict?: string | null
+          analysis_period_end?: string
+          analysis_period_start?: string
+          biomarker_id?: string | null
+          biomarker_value_after?: number | null
+          biomarker_value_before?: number | null
+          change_percent?: number | null
+          consistency_percent?: number | null
+          correlation_score?: number | null
+          created_at?: string | null
+          days_taken?: number | null
+          id?: string
+          stack_item_id?: string | null
+          total_days?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stack_effectiveness_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stack_effectiveness_stack_item_id_fkey"
+            columns: ["stack_item_id"]
+            isOneToOne: false
+            referencedRelation: "user_stack"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplement_logs: {
         Row: {
@@ -5366,6 +5529,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_stack: {
+        Row: {
+          ai_rationale: string | null
+          ai_suggested: boolean | null
+          created_at: string | null
+          effectiveness_score: number | null
+          id: string
+          intake_times: string[] | null
+          is_active: boolean | null
+          linked_biomarker_ids: string[] | null
+          notes: string | null
+          position: number | null
+          product_id: string | null
+          reorder_threshold: number | null
+          schedule_cron: string | null
+          schedule_type: string
+          servings_remaining: number | null
+          stack_name: string
+          target_outcome: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_rationale?: string | null
+          ai_suggested?: boolean | null
+          created_at?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          intake_times?: string[] | null
+          is_active?: boolean | null
+          linked_biomarker_ids?: string[] | null
+          notes?: string | null
+          position?: number | null
+          product_id?: string | null
+          reorder_threshold?: number | null
+          schedule_cron?: string | null
+          schedule_type?: string
+          servings_remaining?: number | null
+          stack_name: string
+          target_outcome?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_rationale?: string | null
+          ai_suggested?: boolean | null
+          created_at?: string | null
+          effectiveness_score?: number | null
+          id?: string
+          intake_times?: string[] | null
+          is_active?: boolean | null
+          linked_biomarker_ids?: string[] | null
+          notes?: string | null
+          position?: number | null
+          product_id?: string | null
+          reorder_threshold?: number | null
+          schedule_cron?: string | null
+          schedule_type?: string
+          servings_remaining?: number | null
+          stack_name?: string
+          target_outcome?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stack_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "supplement_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       web_vitals_logs: {
         Row: {
