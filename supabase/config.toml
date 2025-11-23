@@ -161,3 +161,9 @@ verify_jwt = true
 
 [functions.rematch-biomarkers]
 verify_jwt = true
+
+[functions.batch-process-documents]
+verify_jwt = true
+
+[functions.generate-health-analysis]
+verify_jwt = true

@@ -1,21 +1,40 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Settings } from 'lucide-react';
+import { RefreshCw, Settings, Zap } from 'lucide-react';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 
 interface DocumentFiltersProps {
   filterType: string;
   onFilterChange: (value: string) => void;
   onRefresh?: () => void;
+  pendingCount?: number;
+  onBatchProcess?: () => void;
 }
 
-export const DocumentFilters = ({ filterType, onFilterChange, onRefresh }: DocumentFiltersProps) => {
+export const DocumentFilters = ({ 
+  filterType, 
+  onFilterChange, 
+  onRefresh, 
+  pendingCount = 0, 
+  onBatchProcess 
+}: DocumentFiltersProps) => {
   return (
     <div className="glass-card p-4 mb-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-xl font-bold text-foreground">🔍 Медицинские документы</h2>
         
         <div className="flex items-center gap-2">
+          {pendingCount > 0 && onBatchProcess && (
+            <Button 
+              variant="default"
+              onClick={onBatchProcess}
+              className="gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Обработать все ({pendingCount})
+            </Button>
+          )}
+
           <Select value={filterType} onValueChange={onFilterChange}>
             <SelectTrigger className="w-[200px] glass-subtle">
               <SelectValue placeholder="Все типы" />

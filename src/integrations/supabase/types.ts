@@ -3060,6 +3060,60 @@ export type Database = {
           },
         ]
       }
+      health_analyses: {
+        Row: {
+          achievements: string[] | null
+          ai_model: string | null
+          analysis_date: string
+          concerns: string[] | null
+          created_at: string | null
+          date_range_end: string | null
+          date_range_start: string | null
+          documents_analyzed: number | null
+          health_categories: Json | null
+          id: string
+          overall_score: number | null
+          recommendations: Json | null
+          summary: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievements?: string[] | null
+          ai_model?: string | null
+          analysis_date?: string
+          concerns?: string[] | null
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          documents_analyzed?: number | null
+          health_categories?: Json | null
+          id?: string
+          overall_score?: number | null
+          recommendations?: Json | null
+          summary: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievements?: string[] | null
+          ai_model?: string | null
+          analysis_date?: string
+          concerns?: string[] | null
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          documents_analyzed?: number | null
+          health_categories?: Json | null
+          id?: string
+          overall_score?: number | null
+          recommendations?: Json | null
+          summary?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_records: {
         Row: {
           created_at: string
