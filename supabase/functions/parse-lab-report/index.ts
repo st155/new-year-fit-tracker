@@ -158,7 +158,7 @@ Extract every single biomarker value you can find, even if small or in footnotes
             ]
           }
         ],
-        max_tokens: 4000,
+        max_tokens: 16000, // Increased for large lab reports with many biomarkers
         temperature: 0.1,
       }),
     });
@@ -170,15 +170,28 @@ Extract every single biomarker value you can find, even if small or in footnotes
       throw new Error('Failed to parse PDF with Gemini');
     }
 
+    const content = geminiData.choices[0].message.content;
+    const finishReason = geminiData.choices[0].finish_reason;
+
+    // Check if response was truncated
+    if (finishReason === 'length') {
+      console.warn('[PARSE-LAB-REPORT] ⚠️ Gemini response was truncated due to max_tokens limit');
+      console.warn('[PARSE-LAB-REPORT] Consider increasing max_tokens or splitting the document');
+    }
+
+    // Log response length for debugging
+    console.log(`[PARSE-LAB-REPORT] Gemini response: ${content.length} chars, finish_reason: ${finishReason}`);
+
     let extractedData;
     try {
-      const content = geminiData.choices[0].message.content;
       // Remove markdown code blocks if present
       const jsonString = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       extractedData = JSON.parse(jsonString);
       console.log(`[PARSE-LAB-REPORT] ✓ Gemini extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
     } catch (parseError) {
-      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response:', geminiData.choices[0].message.content);
+      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response:', content);
+      console.error('[PARSE-LAB-REPORT] Response finish_reason:', finishReason);
+      console.error('[PARSE-LAB-REPORT] Response length:', content.length);
       throw new Error('Failed to parse structured data from AI response');
     }
 
