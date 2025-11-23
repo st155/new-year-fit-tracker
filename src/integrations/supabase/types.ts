@@ -792,6 +792,7 @@ export type Database = {
           clinical_significance: string | null
           conversion_factors: Json | null
           created_at: string | null
+          data_type: string | null
           description: string | null
           display_name: string
           id: string
@@ -809,6 +810,7 @@ export type Database = {
           clinical_significance?: string | null
           conversion_factors?: Json | null
           created_at?: string | null
+          data_type?: string | null
           description?: string | null
           display_name: string
           id?: string
@@ -826,6 +828,7 @@ export type Database = {
           clinical_significance?: string | null
           conversion_factors?: Json | null
           created_at?: string | null
+          data_type?: string | null
           description?: string | null
           display_name?: string
           id?: string
@@ -3604,7 +3607,7 @@ export type Database = {
           laboratory_method: string | null
           laboratory_name: string | null
           normalized_unit: string
-          normalized_value: number
+          normalized_value: number | null
           outlier_reason: string | null
           quality_flag: string | null
           raw_test_name: string
@@ -3615,6 +3618,7 @@ export type Database = {
           ref_range_unit: string | null
           sample_type: string | null
           test_date: string
+          text_value: string | null
           unit: string | null
           updated_at: string | null
           user_id: string
@@ -3630,7 +3634,7 @@ export type Database = {
           laboratory_method?: string | null
           laboratory_name?: string | null
           normalized_unit: string
-          normalized_value: number
+          normalized_value?: number | null
           outlier_reason?: string | null
           quality_flag?: string | null
           raw_test_name: string
@@ -3641,6 +3645,7 @@ export type Database = {
           ref_range_unit?: string | null
           sample_type?: string | null
           test_date: string
+          text_value?: string | null
           unit?: string | null
           updated_at?: string | null
           user_id: string
@@ -3656,7 +3661,7 @@ export type Database = {
           laboratory_method?: string | null
           laboratory_name?: string | null
           normalized_unit?: string
-          normalized_value?: number
+          normalized_value?: number | null
           outlier_reason?: string | null
           quality_flag?: string | null
           raw_test_name?: string
@@ -3667,6 +3672,7 @@ export type Database = {
           ref_range_unit?: string | null
           sample_type?: string | null
           test_date?: string
+          text_value?: string | null
           unit?: string | null
           updated_at?: string | null
           user_id?: string
@@ -3816,6 +3822,7 @@ export type Database = {
           ai_extracted_data: Json | null
           ai_processed: boolean
           ai_summary: string | null
+          category: string | null
           compared_with: string[] | null
           comparison_results: Json | null
           created_at: string
@@ -3842,6 +3849,7 @@ export type Database = {
           ai_extracted_data?: Json | null
           ai_processed?: boolean
           ai_summary?: string | null
+          category?: string | null
           compared_with?: string[] | null
           comparison_results?: Json | null
           created_at?: string
@@ -3868,6 +3876,7 @@ export type Database = {
           ai_extracted_data?: Json | null
           ai_processed?: boolean
           ai_summary?: string | null
+          category?: string | null
           compared_with?: string[] | null
           comparison_results?: Json | null
           created_at?: string
@@ -3891,6 +3900,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      medical_findings: {
+        Row: {
+          body_part: string
+          created_at: string
+          document_id: string
+          finding_text: string
+          id: string
+          severity: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          body_part: string
+          created_at?: string
+          document_id: string
+          finding_text: string
+          id?: string
+          severity?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          body_part?: string
+          created_at?: string
+          document_id?: string
+          finding_text?: string
+          id?: string
+          severity?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_findings_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       metric_confidence_cache: {
         Row: {
@@ -5336,6 +5386,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_biomarker_preferences: {
+        Row: {
+          biomarker_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          optimal_max: number
+          optimal_min: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          biomarker_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          optimal_max: number
+          optimal_min: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          biomarker_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          optimal_max?: number
+          optimal_min?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_biomarker_preferences_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_habit_widgets: {
         Row: {
           config: Json | null
@@ -5536,18 +5627,23 @@ export type Database = {
           ai_suggested: boolean | null
           created_at: string | null
           effectiveness_score: number | null
+          end_action: string | null
           id: string
           intake_times: string[] | null
           is_active: boolean | null
           linked_biomarker_ids: string[] | null
           notes: string | null
+          planned_end_date: string | null
           position: number | null
           product_id: string | null
           reorder_threshold: number | null
           schedule_cron: string | null
           schedule_type: string
           servings_remaining: number | null
+          source: string | null
           stack_name: string
+          start_date: string | null
+          status: string | null
           target_outcome: string | null
           updated_at: string | null
           user_id: string
@@ -5557,18 +5653,23 @@ export type Database = {
           ai_suggested?: boolean | null
           created_at?: string | null
           effectiveness_score?: number | null
+          end_action?: string | null
           id?: string
           intake_times?: string[] | null
           is_active?: boolean | null
           linked_biomarker_ids?: string[] | null
           notes?: string | null
+          planned_end_date?: string | null
           position?: number | null
           product_id?: string | null
           reorder_threshold?: number | null
           schedule_cron?: string | null
           schedule_type?: string
           servings_remaining?: number | null
+          source?: string | null
           stack_name: string
+          start_date?: string | null
+          status?: string | null
           target_outcome?: string | null
           updated_at?: string | null
           user_id: string
@@ -5578,18 +5679,23 @@ export type Database = {
           ai_suggested?: boolean | null
           created_at?: string | null
           effectiveness_score?: number | null
+          end_action?: string | null
           id?: string
           intake_times?: string[] | null
           is_active?: boolean | null
           linked_biomarker_ids?: string[] | null
           notes?: string | null
+          planned_end_date?: string | null
           position?: number | null
           product_id?: string | null
           reorder_threshold?: number | null
           schedule_cron?: string | null
           schedule_type?: string
           servings_remaining?: number | null
+          source?: string | null
           stack_name?: string
+          start_date?: string | null
+          status?: string | null
           target_outcome?: string | null
           updated_at?: string | null
           user_id?: string
