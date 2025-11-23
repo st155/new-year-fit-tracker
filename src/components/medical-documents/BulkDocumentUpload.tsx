@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
-import { Upload, X, Check, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Upload, X, Check, Loader2, AlertCircle, Sparkles, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { calculateFileHash } from '@/lib/fileHash';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 interface FileUploadState {
   file: File;
   id: string;
-  status: 'queue' | 'classifying' | 'uploading' | 'complete' | 'error';
+  status: 'queue' | 'hashing' | 'classifying' | 'uploading' | 'complete' | 'duplicate' | 'error';
   progress: number;
   classification?: {
     document_type: DocumentType;
@@ -21,6 +23,11 @@ interface FileUploadState {
     confidence: number;
   };
   error?: string;
+  duplicateInfo?: {
+    originalFileName: string;
+    uploadedAt: string;
+    documentId: string;
+  };
 }
 
 export function BulkDocumentUpload() {
@@ -28,6 +35,7 @@ export function BulkDocumentUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const { uploadDocument } = useMedicalDocuments();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -99,6 +107,41 @@ export function BulkDocumentUpload() {
 
   const processFile = async (fileState: FileUploadState) => {
     try {
+      // Step 0: Calculate file hash and check for duplicates
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id ? { ...f, status: 'hashing', progress: 5 } : f
+      ));
+
+      console.log('[BulkUpload] Calculating file hash for:', fileState.file.name);
+      const fileHash = await calculateFileHash(fileState.file);
+      console.log('[BulkUpload] File hash:', fileHash.substring(0, 16) + '...');
+
+      // Check for duplicates
+      const { data: duplicate } = await supabase
+        .from('medical_documents')
+        .select('id, file_name, uploaded_at')
+        .eq('file_hash', fileHash)
+        .maybeSingle();
+
+      if (duplicate) {
+        console.log('[BulkUpload] Duplicate found:', duplicate.file_name);
+        setFiles(prev => prev.map(f => 
+          f.id === fileState.id 
+            ? { 
+                ...f, 
+                status: 'duplicate', 
+                progress: 100,
+                duplicateInfo: {
+                  originalFileName: duplicate.file_name,
+                  uploadedAt: duplicate.uploaded_at,
+                  documentId: duplicate.id,
+                }
+              } 
+            : f
+        ));
+        return; // Skip upload
+      }
+
       // Step 1: AI Classification
       setFiles(prev => prev.map(f => 
         f.id === fileState.id ? { ...f, status: 'classifying', progress: 10 } : f
@@ -153,6 +196,7 @@ export function BulkDocumentUpload() {
 
       await uploadDocument.mutateAsync({
         file: fileState.file,
+        fileHash,
         documentType: aiClassification.document_type,
         documentDate,
         tags: aiClassification.tags,
@@ -348,6 +392,12 @@ export function BulkDocumentUpload() {
                         <span className="text-sm text-muted-foreground">В очереди...</span>
                       </>
                     )}
+                    {fileState.status === 'hashing' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-sm text-muted-foreground">Проверка дубликатов...</span>
+                      </>
+                    )}
                     {fileState.status === 'classifying' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -364,6 +414,36 @@ export function BulkDocumentUpload() {
                       <>
                         <Check className="h-4 w-4 text-green-600" />
                         <span className="text-sm text-green-600">Загружено успешно</span>
+                      </>
+                    )}
+                    {fileState.status === 'duplicate' && (
+                      <>
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <div className="flex-1">
+                          <span className="text-sm text-amber-600 font-medium">
+                            Дубликат
+                          </span>
+                          {fileState.duplicateInfo && (
+                            <p className="text-xs text-muted-foreground">
+                              Оригинал: {fileState.duplicateInfo.originalFileName}
+                              <br />
+                              Загружен: {new Date(fileState.duplicateInfo.uploadedAt).toLocaleDateString('ru-RU', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/medical-documents/${fileState.duplicateInfo?.documentId}`)}
+                          className="gap-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Открыть
+                        </Button>
                       </>
                     )}
                     {fileState.status === 'error' && (

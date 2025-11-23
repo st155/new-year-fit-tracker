@@ -60,6 +60,7 @@ export function useMedicalDocuments(filters?: {
   const uploadDocument = useMutation({
     mutationFn: async ({
       file,
+      fileHash,
       documentType = 'other',
       documentDate,
       notes,
@@ -67,6 +68,7 @@ export function useMedicalDocuments(filters?: {
       hiddenFromTrainer = true,
     }: {
       file: File;
+      fileHash?: string;
       documentType?: DocumentType;
       documentDate?: string;
       notes?: string;
@@ -104,6 +106,7 @@ export function useMedicalDocuments(filters?: {
           notes,
           tags,
           hidden_from_trainer: hiddenFromTrainer || false,
+          file_hash: fileHash || null,
         })
         .select()
         .single();
