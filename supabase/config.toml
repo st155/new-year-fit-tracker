@@ -176,3 +176,6 @@ verify_jwt = false
 
 [functions.scan-supplement-bottle]
 verify_jwt = true
+
+[functions.calculate-correlation]
+verify_jwt = true
