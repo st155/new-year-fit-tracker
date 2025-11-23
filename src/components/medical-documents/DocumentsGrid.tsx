@@ -2,15 +2,33 @@ import { DocumentCard } from './DocumentCard';
 import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface DocumentsGridProps {
   filterType?: string;
 }
 
 export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
+  const queryClient = useQueryClient();
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
     filterType && filterType !== 'all' ? { documentType: filterType as any } : undefined
   );
+
+  // Auto-refresh for documents in processing
+  useEffect(() => {
+    const processingDocs = documents?.filter(d => 
+      d.processing_status === 'processing' || d.processing_status === 'pending'
+    );
+
+    if (processingDocs && processingDocs.length > 0) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
+      }, 3000); // Refresh every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [documents, queryClient]);
 
   const handleDownload = (storagePath: string, fileName: string) => {
     const url = getDocumentUrl(storagePath);
@@ -59,6 +77,8 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
           aiSummary={doc.ai_summary}
           hiddenFromTrainer={doc.hidden_from_trainer}
           storagePath={doc.storage_path}
+          processingStatus={doc.processing_status}
+          processingError={doc.processing_error}
           onDownload={handleDownload}
           onDelete={handleDelete}
         />

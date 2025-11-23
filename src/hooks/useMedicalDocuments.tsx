@@ -22,6 +22,10 @@ export interface MedicalDocument {
   hidden_from_trainer: boolean;
   compared_with?: string[];
   comparison_results?: any;
+  processing_status?: 'pending' | 'processing' | 'completed' | 'error' | null;
+  processing_error?: string | null;
+  processing_started_at?: string | null;
+  processing_completed_at?: string | null;
 }
 
 export function useMedicalDocuments(filters?: {
