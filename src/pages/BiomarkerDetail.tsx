@@ -239,20 +239,35 @@ export default function BiomarkerDetail() {
                       <Badge className="mb-2 bg-primary">Текущее значение</Badge>
                     )}
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-semibold">
                           {format(new Date(result.test_date), 'dd MMMM yyyy', { locale: ru })}
                         </p>
+                        {result.raw_test_name !== biomarker.display_name && (
+                          <p className="text-xs text-muted-foreground">
+                            Исходное название: {result.raw_test_name}
+                          </p>
+                        )}
                         {result.laboratory_name && (
-                          <p className="text-sm text-muted-foreground">{result.laboratory_name}</p>
+                          <Badge variant="outline" className="text-xs">
+                            🏥 {result.laboratory_name}
+                          </Badge>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-right space-y-1">
                         <p className="text-2xl font-bold">{result.normalized_value} {result.normalized_unit}</p>
                         {result.value !== result.normalized_value && (
                           <p className="text-sm text-muted-foreground">
                             (исходно: {result.value} {result.unit})
                           </p>
+                        )}
+                        {(result.ref_range_min !== null && result.ref_range_max !== null) && (
+                          <div className="mt-2">
+                            <p className="text-xs text-muted-foreground">Референс лаборатории</p>
+                            <p className="text-sm font-medium">
+                              {result.ref_range_min} - {result.ref_range_max} {result.ref_range_unit}
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
