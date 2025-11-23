@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ const documentTypeLabels: Record<DocumentType, string> = {
 };
 
 export const DocumentsList = () => {
+  const navigate = useNavigate();
   const [filterType, setFilterType] = useState<DocumentType | 'all'>('all');
   const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
@@ -127,7 +129,8 @@ export const DocumentsList = () => {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/medical-documents/${doc.id}`)}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
