@@ -58,6 +58,8 @@ serve(async (req) => {
       throw new Error('Biomarker not found');
     }
 
+    console.log(`[ANALYZE-TRENDS] Biomarker data_type: ${biomarker.data_type}`);
+
     // Fetch all test results for this biomarker
     const { data: results, error: resultsError } = await supabase
       .from('lab_test_results')
@@ -91,7 +93,48 @@ serve(async (req) => {
       });
     }
 
-    // Calculate statistics
+    // Handle qualitative data differently
+    if (biomarker.data_type === 'qualitative') {
+      console.log('[ANALYZE-TRENDS] Processing qualitative data');
+      
+      const responseData = {
+        success: true,
+        biomarker: {
+          id: biomarker.id,
+          name: biomarker.display_name,
+          category: biomarker.category,
+          unit: biomarker.standard_unit,
+          data_type: 'qualitative'
+        },
+        history: results.map(r => ({
+          date: r.test_date,
+          text_value: r.text_value,
+          laboratory: r.laboratory_name
+        })),
+        insights: 'Качественные данные не имеют числовых трендов. Просмотрите историю результатов для анализа изменений.'
+      };
+
+      // Cache the analysis
+      await supabase
+        .from('biomarker_ai_analysis')
+        .upsert({
+          biomarker_id: biomarkerId,
+          user_id: user.id,
+          analysis: responseData,
+          insights: responseData.insights,
+          results_count: results.length,
+          latest_test_date: results[results.length - 1].test_date,
+          updated_at: new Date().toISOString()
+        });
+
+      console.log('[ANALYZE-TRENDS] ✓ Qualitative analysis complete');
+      
+      return new Response(JSON.stringify(responseData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Calculate statistics (for quantitative data)
     const values = results.map(r => r.normalized_value);
     const latestValue = results[results.length - 1].normalized_value;
     const min = Math.min(...values);
