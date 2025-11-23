@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 interface FileUploadState {
   file: File;
   id: string;
-  status: 'queue' | 'hashing' | 'classifying' | 'uploading' | 'complete' | 'duplicate' | 'error';
+  status: 'queue' | 'hashing' | 'classifying' | 'renaming' | 'uploading' | 'complete' | 'duplicate' | 'error';
   progress: number;
   classification?: {
     document_type: DocumentType;
@@ -22,6 +22,7 @@ interface FileUploadState {
     suggested_date: string | null;
     confidence: number;
   };
+  renamedFileName?: string;
   error?: string;
   duplicateInfo?: {
     originalFileName: string;
@@ -189,13 +190,40 @@ export function BulkDocumentUpload() {
           : f
       ));
 
-      // Step 2: Upload to storage and database
+      // Step 2: AI Renaming
       setFiles(prev => prev.map(f => 
-        f.id === fileState.id ? { ...f, status: 'uploading', progress: 50 } : f
+        f.id === fileState.id ? { ...f, status: 'renaming', progress: 40 } : f
       ));
 
+      const { data: renameData } = await supabase.functions.invoke(
+        'ai-rename-document',
+        { 
+          body: { 
+            fileName: fileState.file.name,
+            documentType: aiClassification.document_type 
+          } 
+        }
+      );
+
+      const finalFileName = renameData?.suggestedName || fileState.file.name;
+      console.log('[BulkUpload] Renamed:', fileState.file.name, '→', finalFileName);
+
+      setFiles(prev => prev.map(f =>
+        f.id === fileState.id 
+          ? { ...f, renamedFileName: finalFileName, progress: 50 } 
+          : f
+      ));
+
+      // Step 3: Upload to storage and database
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id ? { ...f, status: 'uploading', progress: 60 } : f
+      ));
+
+      // Create a new File object with the renamed name for proper storage
+      const renamedFile = new File([fileState.file], finalFileName, { type: fileState.file.type });
+
       await uploadDocument.mutateAsync({
-        file: fileState.file,
+        file: renamedFile,
         fileHash,
         documentType: aiClassification.document_type,
         documentDate,
@@ -402,6 +430,12 @@ export function BulkDocumentUpload() {
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                         <span className="text-sm text-blue-600">AI классифицирует...</span>
+                      </>
+                    )}
+                    {fileState.status === 'renaming' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                        <span className="text-sm text-purple-600">Умное переименование...</span>
                       </>
                     )}
                     {fileState.status === 'uploading' && (
