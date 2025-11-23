@@ -14,8 +14,12 @@ import { DocumentComparison } from './DocumentComparison';
 const documentTypeLabels: Record<DocumentType, string> = {
   inbody: 'InBody',
   blood_test: 'Анализ крови',
-  medical_report: 'Мед. заключение',
+  fitness_report: 'Мед. заключение',
   progress_photo: 'Фото прогресса',
+  vo2max: 'VO2max',
+  caliper: 'Калипер',
+  prescription: 'Рецепт',
+  training_program: 'Программа',
   other: 'Другое',
 };
 
@@ -110,8 +114,12 @@ export const DocumentsList = () => {
                 <SelectItem value="all">Все типы</SelectItem>
                 <SelectItem value="inbody">InBody анализы</SelectItem>
                 <SelectItem value="blood_test">Анализы крови</SelectItem>
-                <SelectItem value="medical_report">Мед. заключения</SelectItem>
+                <SelectItem value="fitness_report">Мед. заключения</SelectItem>
                 <SelectItem value="progress_photo">Фото прогресса</SelectItem>
+                <SelectItem value="vo2max">VO2max тесты</SelectItem>
+                <SelectItem value="caliper">Калипер</SelectItem>
+                <SelectItem value="prescription">Рецепты</SelectItem>
+                <SelectItem value="training_program">Программы</SelectItem>
                 <SelectItem value="other">Другое</SelectItem>
               </SelectContent>
             </Select>

@@ -13,8 +13,12 @@ import { toast } from '@/hooks/use-toast';
 const documentTypes: { value: DocumentType; label: string }[] = [
   { value: 'inbody', label: 'InBody анализ' },
   { value: 'blood_test', label: 'Анализ крови' },
-  { value: 'medical_report', label: 'Медицинское заключение' },
+  { value: 'fitness_report', label: 'Медицинское заключение' },
   { value: 'progress_photo', label: 'Фото прогресса' },
+  { value: 'vo2max', label: 'VO2max тест' },
+  { value: 'caliper', label: 'Калипер' },
+  { value: 'prescription', label: 'Рецепт' },
+  { value: 'training_program', label: 'Программа тренировок' },
   { value: 'other', label: 'Другое' },
 ];
 

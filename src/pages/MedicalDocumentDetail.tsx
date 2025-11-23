@@ -152,8 +152,12 @@ export default function MedicalDocumentDetail() {
   const documentTypeLabels: Record<DocumentType, string> = {
     inbody: 'InBody анализ',
     blood_test: 'Анализ крови',
-    medical_report: 'Медицинское заключение',
+    fitness_report: 'Медицинское заключение',
     progress_photo: 'Фото прогресса',
+    vo2max: 'VO2max тест',
+    caliper: 'Калипер',
+    prescription: 'Рецепт',
+    training_program: 'Программа тренировок',
     other: 'Другой документ',
   };
 
@@ -277,8 +281,12 @@ export default function MedicalDocumentDetail() {
                     <SelectContent>
                       <SelectItem value="inbody">📊 InBody анализ</SelectItem>
                       <SelectItem value="blood_test">🩸 Анализ крови</SelectItem>
-                      <SelectItem value="medical_report">📋 Медицинское заключение</SelectItem>
+                      <SelectItem value="fitness_report">📋 Медицинское заключение</SelectItem>
                       <SelectItem value="progress_photo">📸 Фото прогресса</SelectItem>
+                      <SelectItem value="vo2max">🫁 VO2max тест</SelectItem>
+                      <SelectItem value="caliper">📏 Калипер</SelectItem>
+                      <SelectItem value="prescription">💊 Рецепт</SelectItem>
+                      <SelectItem value="training_program">🏋️ Программа тренировок</SelectItem>
                       <SelectItem value="other">📄 Другой документ</SelectItem>
                     </SelectContent>
                   </Select>

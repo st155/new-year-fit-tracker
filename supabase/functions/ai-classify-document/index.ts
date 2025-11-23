@@ -43,15 +43,23 @@ serve(async (req) => {
 Доступные типы:
 - inbody: InBody анализы состава тела
 - blood_test: Анализы крови
-- medical_report: Медицинские заключения, консультации врачей
+- fitness_report: Медицинские заключения, консультации врачей
 - progress_photo: Фотографии прогресса
+- vo2max: Тесты VO2max
+- caliper: Измерения калипером
+- prescription: Рецепты, назначения
+- training_program: Программы тренировок
 - other: Любой другой тип
 
 Правила:
 - Если файл содержит "InBody", "inbody", "состав тела" → type: inbody
 - Если содержит "анализ крови", "кровь", "blood test", "Synevo", "Invitro" → type: blood_test
 - Если содержит "фото", "photo", "прогресс", "progress" → type: progress_photo
-- Если содержит "заключение", "консультация", "report" → type: medical_report
+- Если содержит "заключение", "консультация", "report", "визит", "осмотр" → type: fitness_report
+- Если содержит "vo2", "VO2max" → type: vo2max
+- Если содержит "калипер", "caliper", "замер" → type: caliper
+- Если содержит "рецепт", "prescription", "назначение" → type: prescription
+- Если содержит "программа", "training", "тренировк" → type: training_program
 - В остальных случаях → type: other
 
 Извлеки дату из названия если есть (форматы: DD.MM.YYYY, YYYY-MM-DD, "январь 2024", "ноябрь" и т.д.)
@@ -75,7 +83,7 @@ serve(async (req) => {
                 properties: {
                   document_type: {
                     type: 'string',
-                    enum: ['inbody', 'blood_test', 'medical_report', 'progress_photo', 'other'],
+                    enum: ['inbody', 'blood_test', 'fitness_report', 'progress_photo', 'vo2max', 'caliper', 'prescription', 'training_program', 'other'],
                     description: 'Тип документа'
                   },
                   tags: {
@@ -140,6 +148,13 @@ serve(async (req) => {
 
     const classification = JSON.parse(toolCall.function.arguments);
     console.log('[ai-classify-document] Classification:', classification);
+
+    // Validate document type
+    const validTypes = ['inbody', 'blood_test', 'fitness_report', 'progress_photo', 'vo2max', 'caliper', 'prescription', 'training_program', 'other'];
+    if (!validTypes.includes(classification.document_type)) {
+      console.warn(`[ai-classify-document] Invalid type "${classification.document_type}", replacing with "other"`);
+      classification.document_type = 'other';
+    }
 
     return new Response(
       JSON.stringify(classification),

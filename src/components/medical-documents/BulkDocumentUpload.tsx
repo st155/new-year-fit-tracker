@@ -113,6 +113,13 @@ export function BulkDocumentUpload() {
         console.warn('[BulkUpload] Classification failed, using defaults:', classifyError);
       }
 
+      // Validate and sanitize classification
+      const validTypes: DocumentType[] = [
+        'inbody', 'blood_test', 'vo2max', 'caliper', 
+        'prescription', 'fitness_report', 'progress_photo', 
+        'training_program', 'other'
+      ];
+
       const aiClassification = classification || {
         document_type: 'other' as DocumentType,
         tags: [],
@@ -120,7 +127,20 @@ export function BulkDocumentUpload() {
         confidence: 0,
       };
 
-      setFiles(prev => prev.map(f => 
+      // Fallback for invalid types
+      if (!validTypes.includes(aiClassification.document_type)) {
+        console.warn(
+          `[BulkUpload] Invalid document_type "${aiClassification.document_type}", using "other"`
+        );
+        aiClassification.document_type = 'other';
+      }
+
+      // Handle date - treat 'null' string as null
+      const documentDate = aiClassification.suggested_date === 'null' || !aiClassification.suggested_date
+        ? undefined 
+        : aiClassification.suggested_date;
+
+      setFiles(prev => prev.map(f =>
         f.id === fileState.id 
           ? { ...f, classification: aiClassification, progress: 30 } 
           : f
@@ -134,7 +154,7 @@ export function BulkDocumentUpload() {
       await uploadDocument.mutateAsync({
         file: fileState.file,
         documentType: aiClassification.document_type,
-        documentDate: aiClassification.suggested_date || undefined,
+        documentDate,
         tags: aiClassification.tags,
         hiddenFromTrainer: true, // Default: hidden
       });
@@ -146,12 +166,31 @@ export function BulkDocumentUpload() {
 
     } catch (error) {
       console.error('[BulkUpload] Upload error:', error);
+      
+      let errorMessage = 'Ошибка загрузки';
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errMsg = (error as any).message;
+        
+        if (errMsg.includes('check constraint') || errMsg.includes('violates check')) {
+          errorMessage = 'Неподдерживаемый тип документа';
+        } else if (errMsg.includes('invalid input syntax for type date')) {
+          errorMessage = 'Неверный формат даты';
+        } else if (errMsg.includes('violates')) {
+          errorMessage = 'Ошибка валидации данных';
+        } else if (errMsg.includes('storage')) {
+          errorMessage = 'Ошибка загрузки файла';
+        } else {
+          errorMessage = errMsg.substring(0, 80); // Первые 80 символов
+        }
+      }
+      
       setFiles(prev => prev.map(f => 
         f.id === fileState.id 
           ? { 
               ...f, 
               status: 'error', 
-              error: error instanceof Error ? error.message : 'Ошибка загрузки'
+              error: errorMessage
             } 
           : f
       ));
@@ -176,11 +215,15 @@ export function BulkDocumentUpload() {
     const labels: Record<DocumentType, string> = {
       inbody: '📊 InBody',
       blood_test: '🩸 Анализ крови',
-      medical_report: '📋 Мед. заключение',
+      fitness_report: '📋 Мед. заключение',
       progress_photo: '📸 Фото прогресса',
+      vo2max: '🫁 VO2max',
+      caliper: '📏 Калипер',
+      prescription: '💊 Рецепт',
+      training_program: '🏋️ Программа',
       other: '📄 Документ',
     };
-    return labels[type];
+    return labels[type] || '📄 Документ';
   };
 
   const activeUploads = files.filter(f => f.status !== 'complete').length;
