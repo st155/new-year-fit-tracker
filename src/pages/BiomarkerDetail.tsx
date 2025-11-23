@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBiomarkerTrends, useBiomarkerHistory } from '@/hooks/useBiomarkers';
 import { BiomarkerTrendChart } from '@/components/biomarkers/BiomarkerTrendChart';
+import QualitativeTrendChart from '@/components/biomarkers/QualitativeTrendChart';
 import { BiomarkerSettingsModal } from '@/components/biomarkers/BiomarkerSettingsModal';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -50,9 +51,12 @@ export default function BiomarkerDetail() {
 
   const { biomarker, statistics, zones, reference_ranges, insights } = analysis;
 
-  // Calculate time in optimal zone
+  // Check if biomarker is qualitative (text-based data)
+  const isQualitative = biomarker.data_type === 'qualitative';
+
+  // Calculate time in optimal zone (only for quantitative data)
   const timeInOptimalZone = useMemo(() => {
-    if (!analysis?.history || !reference_ranges.optimal_min || !reference_ranges.optimal_max) {
+    if (isQualitative || !analysis?.history || !reference_ranges.optimal_min || !reference_ranges.optimal_max) {
       return null;
     }
     
@@ -61,7 +65,7 @@ export default function BiomarkerDetail() {
     ).length;
     
     return Math.round((inOptimal / analysis.history.length) * 100);
-  }, [analysis?.history, reference_ranges]);
+  }, [isQualitative, analysis?.history, reference_ranges]);
 
   const statusColor =
     statistics.latest < reference_ranges.min ? 'yellow' :
@@ -147,11 +151,22 @@ export default function BiomarkerDetail() {
         </TabsList>
 
         <TabsContent value="trend" className="space-y-6">
-          <BiomarkerTrendChart
-            data={analysis.history}
-            unit={biomarker.unit}
-            referenceRanges={reference_ranges}
-          />
+          {isQualitative ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>График изменений</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <QualitativeTrendChart history={analysis.history} />
+              </CardContent>
+            </Card>
+          ) : (
+            <BiomarkerTrendChart
+              data={analysis.history}
+              unit={biomarker.unit}
+              referenceRanges={reference_ranges}
+            />
+          )}
 
           {/* AI Insights */}
           {insights && (
@@ -237,56 +252,58 @@ export default function BiomarkerDetail() {
             </CardContent>
           </Card>
 
-          {/* Time in Optimal Zone Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
-                Время в оптимальной зоне
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {timeInOptimalZone !== null ? (
-                <>
-                  <div className="flex items-end gap-2">
-                    <span className="text-5xl font-bold text-emerald-500">
-                      {timeInOptimalZone}%
-                    </span>
-                    <span className="text-lg text-muted-foreground mb-2">
-                      ваших измерений
-                    </span>
+          {/* Time in Optimal Zone Card - only for quantitative data */}
+          {!isQualitative && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  Время в оптимальной зоне
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {timeInOptimalZone !== null ? (
+                  <>
+                    <div className="flex items-end gap-2">
+                      <span className="text-5xl font-bold text-emerald-500">
+                        {timeInOptimalZone}%
+                      </span>
+                      <span className="text-lg text-muted-foreground mb-2">
+                        ваших измерений
+                      </span>
+                    </div>
+                    <Progress 
+                      value={timeInOptimalZone} 
+                      className="h-3 [&>div]:bg-emerald-500 [&>div]:shadow-[0_0_8px_rgba(16,185,129,0.4)]" 
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {timeInOptimalZone >= 80 
+                        ? '🎉 Отлично! Большинство ваших измерений в оптимальной зоне.'
+                        : timeInOptimalZone >= 50
+                        ? '👍 Хороший результат. Продолжайте работать над улучшением.'
+                        : '⚠️ Меньше половины измерений в оптимальной зоне. Рекомендуем консультацию специалиста.'
+                      }
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Настройте оптимальный диапазон, чтобы увидеть эту статистику
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSettings(true)}
+                      className="mt-3 border-purple-500/50 hover:bg-purple-500/10"
+                    >
+                      Настроить диапазон
+                    </Button>
                   </div>
-                  <Progress 
-                    value={timeInOptimalZone} 
-                    className="h-3 [&>div]:bg-emerald-500 [&>div]:shadow-[0_0_8px_rgba(16,185,129,0.4)]" 
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {timeInOptimalZone >= 80 
-                      ? '🎉 Отлично! Большинство ваших измерений в оптимальной зоне.'
-                      : timeInOptimalZone >= 50
-                      ? '👍 Хороший результат. Продолжайте работать над улучшением.'
-                      : '⚠️ Меньше половины измерений в оптимальной зоне. Рекомендуем консультацию специалиста.'
-                    }
-                  </p>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Настройте оптимальный диапазон, чтобы увидеть эту статистику
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowSettings(true)}
-                    className="mt-3 border-purple-500/50 hover:bg-purple-500/10"
-                  >
-                    Настроить диапазон
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
