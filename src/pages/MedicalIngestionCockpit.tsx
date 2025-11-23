@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { ExtractionDashboard } from '@/components/medical-documents/ExtractionDashboard';
+import { DetectedRxPanel } from '@/components/biostack/DetectedRxPanel';
+import { useDoctorRecommendations } from '@/hooks/biostack/useDoctorRecommendations';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -12,6 +14,7 @@ import { toast } from 'sonner';
 const MedicalIngestionCockpit = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const queryClient = useQueryClient();
+  const { recommendations } = useDoctorRecommendations(documentId || '');
 
   const { data: document, isLoading, error } = useQuery({
     queryKey: ['medical-document', documentId],
@@ -88,12 +91,19 @@ const MedicalIngestionCockpit = () => {
         <PDFViewerPanel documentId={documentId!} storagePath={document.storage_path} />
       </div>
 
-      {/* Right: Extraction Dashboard (60%) */}
-      <div className="w-3/5 flex flex-col overflow-hidden">
+      {/* Right: Extraction Dashboard + DetectedRxPanel (60%) */}
+      <div className="w-3/5 flex flex-col overflow-y-auto">
         <ExtractionDashboard
           documentId={documentId!}
           category={document.category || 'lab_blood'}
         />
+        
+        {/* DetectedRxPanel (conditionally rendered) */}
+        {recommendations.length > 0 && (
+          <div className="mt-4">
+            <DetectedRxPanel documentId={documentId!} />
+          </div>
+        )}
       </div>
     </div>
   );

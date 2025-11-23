@@ -32,6 +32,29 @@ Deno.serve(async (req) => {
 
     console.log('[PARSE-RX] Starting recommendation extraction for document:', documentId);
 
+    // Check if recommendations already exist (prevent duplicates)
+    const { data: existingRecs, error: checkError } = await supabase
+      .from('doctor_recommendations')
+      .select('id')
+      .eq('document_id', documentId)
+      .limit(1);
+
+    if (checkError) {
+      console.error('[PARSE-RX] Error checking existing recommendations:', checkError);
+    }
+
+    if (existingRecs && existingRecs.length > 0) {
+      console.log('[PARSE-RX] ⏭️ Recommendations already exist for this document. Skipping extraction.');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          count: 0,
+          message: 'Recommendations already extracted for this document'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Fetch document details
     const { data: document, error: docError } = await supabase
       .from('medical_documents')
