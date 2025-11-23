@@ -179,3 +179,6 @@ verify_jwt = true
 
 [functions.calculate-correlation]
 verify_jwt = true
+
+[functions.generate-data-driven-stack]
+verify_jwt = true

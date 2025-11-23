@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill } from "lucide-react";
 import { toast } from "sonner";
 import { BottleScanner } from "./BottleScanner";
+import { AIStackGenerator } from "./AIStackGenerator";
 
 const INTAKE_TIME_GROUPS = [
   { key: 'morning', label: 'Morning Stack', icon: Sun },
@@ -21,6 +22,7 @@ export function TheStackView() {
   const queryClient = useQueryClient();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
 
   // Fetch user's stack
   const { data: stackItems, isLoading } = useQuery({
@@ -171,6 +173,7 @@ export function TheStackView() {
         <Button 
           variant="outline"
           size="lg"
+          onClick={() => setIsAIGeneratorOpen(true)}
           className="border-neutral-700 hover:border-purple-500 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         >
           <Sparkles className="h-5 w-5 mr-2" />
@@ -281,6 +284,15 @@ export function TheStackView() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['user-stack'] });
           toast.success("✅ Supplement added to your stack!");
+        }}
+      />
+
+      {/* AI Stack Generator Modal */}
+      <AIStackGenerator
+        open={isAIGeneratorOpen}
+        onOpenChange={setIsAIGeneratorOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['user-stack'] });
         }}
       />
     </div>
