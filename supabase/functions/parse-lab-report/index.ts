@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 import { corsHeaders } from '../_shared/cors.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -61,11 +62,33 @@ serve(async (req) => {
     // Fetch PDF file
     const pdfResponse = await fetch(fileData.publicUrl);
     const pdfBuffer = await pdfResponse.arrayBuffer();
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+    
+    console.log(`[PARSE-LAB-REPORT] PDF size: ${pdfBuffer.byteLength} bytes`);
+    
+    // Extract text from PDF using pdf-lib
+    console.log('[PARSE-LAB-REPORT] Extracting text from PDF');
+    let fullText = '';
+    try {
+      const pdfDoc = await PDFDocument.load(pdfBuffer);
+      const pages = pdfDoc.getPages();
+      
+      // Extract text from each page
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+      
+      console.log(`[PARSE-LAB-REPORT] Extracted ${fullText.length} characters from ${pages.length} pages`);
+    } catch (extractError) {
+      console.error('[PARSE-LAB-REPORT] PDF text extraction failed:', extractError);
+      throw new Error('Failed to extract text from PDF: ' + extractError.message);
+    }
 
-    console.log('[PARSE-LAB-REPORT] Sending to OpenAI Vision API for analysis');
+    console.log('[PARSE-LAB-REPORT] Sending to OpenAI for analysis');
 
-    // Use OpenAI Vision API to extract structured data
+    // Use regular GPT-4 with extracted text
     const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -77,7 +100,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a medical lab report parser. Extract ALL biomarkers from the lab report in JSON format.
+            content: `You are a medical lab report parser. Extract ALL biomarkers from the lab report text in JSON format.
+
+CRITICAL INSTRUCTIONS FOR DATE EXTRACTION:
+- Find the test/sample collection date in the document
+- Look for: "Date du prélèvement", "Test Date", "Collection Date", "Datum", "Date de l'examen"
+- Format as YYYY-MM-DD (e.g., if you see "14.11.2025", convert to "2025-11-14")
+- NEVER use today's date - only the date from the document!
+- This date is CRITICAL for tracking trends over time
 
 Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 {
@@ -104,18 +134,7 @@ Extract every single biomarker value you can find, even if small or in footnotes
           },
           {
             role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Parse this lab report and extract all biomarker data in the specified JSON format.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64Pdf}`
-                }
-              }
-            ]
+            content: `Parse this lab report text and extract all biomarker data:\n\n${fullText}`
           }
         ],
         max_tokens: 4000,
@@ -216,10 +235,19 @@ Extract every single biomarker value you can find, even if small or in footnotes
       }
     }
 
-    // Update medical document with AI processing flag
+    // Update medical document with REAL test date from PDF + AI processing flag
+    const testDate = extractedData.test_date || document.uploaded_at?.split('T')[0];
+    
+    if (!extractedData.test_date) {
+      console.warn('[PARSE-LAB-REPORT] ⚠️ Test date not found in document, using upload date as fallback');
+    } else {
+      console.log(`[PARSE-LAB-REPORT] ✓ Using test date from document: ${testDate}`);
+    }
+    
     await supabase
       .from('medical_documents')
       .update({
+        document_date: testDate,  // CRITICAL: Use date from document, not upload date!
         ai_processed: true,
         ai_summary: `Извлечено ${results.length} биомаркеров из ${extractedData.laboratory || 'лаборатории'}`,
         ai_extracted_data: {
