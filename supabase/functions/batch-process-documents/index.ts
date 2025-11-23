@@ -5,6 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 5000; // 5 seconds
+
+function isRetryableError(error: any): boolean {
+  const retryableMessages = [
+    'timeout',
+    'network error',
+    'connection reset',
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'rate limit',
+    'too many requests'
+  ];
+  const errorMsg = error.message?.toLowerCase() || error.toString().toLowerCase();
+  return retryableMessages.some(msg => errorMsg.includes(msg));
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -68,9 +85,58 @@ Deno.serve(async (req) => {
           })}\n\n`)
         );
 
+        // Helper to process document with retry logic
+        async function processDocumentWithRetry(doc: any, attempt = 1): Promise<any> {
+          const functionName = doc.document_type === 'blood_test' ? 'parse-lab-report' :
+                               doc.document_type === 'inbody' ? 'analyze-inbody' : 
+                               'analyze-medical-document';
+          const functionPayload = { documentId: doc.id };
+
+          try {
+            console.log(`[BATCH-PROCESS] Calling ${functionName} for ${doc.file_name} (attempt ${attempt}/${MAX_RETRIES})`);
+            
+            const { data: result, error: processError } = await supabase.functions.invoke(
+              functionName,
+              { body: functionPayload }
+            );
+
+            if (processError) {
+              // Log detailed error information
+              console.error(`[BATCH-PROCESS] Edge function ${functionName} failed:`, {
+                error: processError,
+                message: processError.message,
+                context: (processError as any).context,
+                documentId: doc.id,
+                documentType: doc.document_type,
+                fileSize: doc.file_size,
+                attempt
+              });
+              
+              throw new Error(`${functionName} failed: ${processError.message || processError.toString()}`);
+            }
+
+            return result;
+          } catch (error: any) {
+            // Retry logic for transient errors
+            if (attempt < MAX_RETRIES && isRetryableError(error)) {
+              console.log(`[BATCH-PROCESS] Retrying ${doc.file_name} in ${RETRY_DELAY * attempt}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * attempt));
+              return processDocumentWithRetry(doc, attempt + 1);
+            }
+            throw error;
+          }
+        }
+
         for (const doc of documents) {
+          let functionName = '';
           try {
             console.log(`[BATCH-PROCESS] Processing document ${processed + 1}/${documents.length}: ${doc.file_name}`);
+
+            // Check if controller is still open before enqueuing
+            if (controller.desiredSize === null) {
+              console.warn('[BATCH-PROCESS] Stream closed by client, stopping batch processing');
+              break;
+            }
 
             // Send progress update
             controller.enqueue(
@@ -93,33 +159,13 @@ Deno.serve(async (req) => {
               })
               .eq('id', doc.id);
 
-            // Determine which edge function to call based on document type
-            let functionName = '';
-            let functionPayload: any = { documentId: doc.id };
+            // Determine function name for logging
+            functionName = doc.document_type === 'blood_test' ? 'parse-lab-report' :
+                          doc.document_type === 'inbody' ? 'analyze-inbody' : 
+                          'analyze-medical-document';
 
-            switch (doc.document_type) {
-              case 'blood_test':
-                functionName = 'parse-lab-report';
-                break;
-              case 'inbody':
-                functionName = 'analyze-inbody';
-                break;
-              default:
-                functionName = 'analyze-medical-document';
-                break;
-            }
-
-            console.log(`[BATCH-PROCESS] Calling ${functionName} for document ${doc.id}`);
-
-            // Call the appropriate edge function
-            const { data: result, error: processError } = await supabase.functions.invoke(
-              functionName,
-              { body: functionPayload }
-            );
-
-            if (processError) {
-              throw processError;
-            }
+            // Process document with retry logic
+            const result = await processDocumentWithRetry(doc);
 
             // Update document status to completed
             await supabase
@@ -132,24 +178,28 @@ Deno.serve(async (req) => {
 
             succeeded++;
 
-            // Send success update
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({
-                type: 'completed',
-                current: processed + 1,
-                total: documents.length,
-                documentId: doc.id,
-                documentName: doc.file_name,
-                status: 'completed',
-                result: result
-              })}\n\n`)
-            );
+            // Check if controller is still open before enqueuing
+            if (controller.desiredSize !== null) {
+              // Send success update
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({
+                  type: 'completed',
+                  current: processed + 1,
+                  total: documents.length,
+                  documentId: doc.id,
+                  documentName: doc.file_name,
+                  status: 'completed',
+                  result: result
+                })}\n\n`)
+              );
+            }
 
             console.log(`[BATCH-PROCESS] ✓ Successfully processed: ${doc.file_name}`);
 
           } catch (error: any) {
             console.error(`[BATCH-PROCESS] ✗ Error processing ${doc.file_name}:`, {
               error: error.message,
+              stack: error.stack,
               documentId: doc.id,
               documentType: doc.document_type,
               fileSize: doc.file_size,
@@ -167,18 +217,25 @@ Deno.serve(async (req) => {
               })
               .eq('id', doc.id);
 
-            // Send error update
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({
-                type: 'error',
-                current: processed + 1,
-                total: documents.length,
-                documentId: doc.id,
-                documentName: doc.file_name,
-                status: 'error',
-                error: error.message || error.toString()
-              })}\n\n`)
-            );
+            // Check if controller is still open before enqueuing
+            if (controller.desiredSize !== null) {
+              // Send error update
+              try {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({
+                    type: 'error',
+                    current: processed + 1,
+                    total: documents.length,
+                    documentId: doc.id,
+                    documentName: doc.file_name,
+                    status: 'error',
+                    error: error.message || error.toString()
+                  })}\n\n`)
+                );
+              } catch (enqueueError) {
+                console.warn('[BATCH-PROCESS] Failed to enqueue error update:', enqueueError);
+              }
+            }
           }
 
           processed++;
@@ -189,18 +246,28 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Send completion message
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({
-            type: 'done',
-            total: documents.length,
-            succeeded,
-            failed,
-            message: `Processing complete: ${succeeded} succeeded, ${failed} failed`
-          })}\n\n`)
-        );
+        // Send completion message if controller still open
+        if (controller.desiredSize !== null) {
+          try {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({
+                type: 'done',
+                total: documents.length,
+                succeeded,
+                failed,
+                message: `Processing complete: ${succeeded} succeeded, ${failed} failed`
+              })}\n\n`)
+            );
+          } catch (enqueueError) {
+            console.warn('[BATCH-PROCESS] Failed to enqueue completion message:', enqueueError);
+          }
+        }
 
-        controller.close();
+        try {
+          controller.close();
+        } catch (closeError) {
+          console.warn('[BATCH-PROCESS] Controller already closed:', closeError);
+        }
       }
     });
 

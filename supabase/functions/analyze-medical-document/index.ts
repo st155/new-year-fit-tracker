@@ -63,8 +63,37 @@ serve(async (req) => {
     // Convert to base64 for AI processing (chunked to avoid stack overflow for large files)
     const arrayBuffer = await fileData.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
-    let binaryString = '';
     
+    // Check file size - skip AI analysis for very large files
+    const FILE_SIZE_LIMIT = 200 * 1024; // 200KB limit for AI processing
+    
+    if (uint8Array.length > FILE_SIZE_LIMIT) {
+      console.warn(`[ANALYZE-DOC] Document ${documentId} is too large (${Math.round(uint8Array.length / 1024)}KB). Skipping AI analysis.`);
+      
+      // Update with placeholder summary
+      await supabase
+        .from('medical_documents')
+        .update({
+          ai_summary: 'Document too large for automatic AI analysis. Please review manually or use specialized processing for large files.',
+          ai_processed: true,
+          processing_status: 'completed',
+          processing_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', documentId);
+        
+      return new Response(
+        JSON.stringify({
+          success: true,
+          summary: 'Document too large for AI analysis',
+          skipped: true,
+          fileSize: uint8Array.length
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+    
+    let binaryString = '';
     const CHUNK_SIZE = 8192; // 8KB chunks
     for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
       const chunk = uint8Array.subarray(i, Math.min(i + CHUNK_SIZE, uint8Array.length));
@@ -141,7 +170,11 @@ Provide a clear, structured summary.`;
     });
     
     const aiClient = createAIClient(AIProvider.LOVABLE);
-    const aiResponse = await aiClient.complete({
+    
+    // Add timeout to AI call to prevent hanging
+    const AI_TIMEOUT = 30000; // 30 seconds
+    
+    const aiResponsePromise = aiClient.complete({
       messages: [
         {
           role: 'user',
@@ -150,6 +183,12 @@ Provide a clear, structured summary.`;
       ],
       maxTokens: 2000
     });
+
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('AI analysis timeout - processing took longer than 30 seconds')), AI_TIMEOUT)
+    );
+
+    const aiResponse = await Promise.race([aiResponsePromise, timeoutPromise]) as any;
 
     const summary = aiResponse.content;
 
