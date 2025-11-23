@@ -7,6 +7,7 @@ import { StackItemCard } from "./StackItemCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill } from "lucide-react";
 import { toast } from "sonner";
+import { BottleScanner } from "./BottleScanner";
 
 const INTAKE_TIME_GROUPS = [
   { key: 'morning', label: 'Morning Stack', icon: Sun },
@@ -19,6 +20,7 @@ export function TheStackView() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Fetch user's stack
   const { data: stackItems, isLoading } = useQuery({
@@ -159,7 +161,8 @@ export function TheStackView() {
         <Button 
           variant="outline"
           size="lg"
-          className="border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+          onClick={() => setIsScannerOpen(true)}
+          className="border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
         >
           <Camera className="h-5 w-5 mr-2" />
           Scan Bottle
@@ -270,6 +273,16 @@ export function TheStackView() {
           </div>
         )}
       </div>
+
+      {/* Bottle Scanner Modal */}
+      <BottleScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['user-stack'] });
+          toast.success("✅ Supplement added to your stack!");
+        }}
+      />
     </div>
   );
 }
