@@ -85,9 +85,15 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Convert PDF to base64 for Gemini
+    // Convert PDF to base64 for Gemini (in chunks to avoid stack overflow)
     console.log('[PARSE-LAB-REPORT] Converting PDF to base64');
-    const base64Pdf = btoa(String.fromCharCode(...uint8Array));
+    const chunkSize = 8192;
+    let binaryString = '';
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      binaryString += String.fromCharCode(...chunk);
+    }
+    const base64Pdf = btoa(binaryString);
     console.log(`[PARSE-LAB-REPORT] Converted PDF to base64: ${base64Pdf.length} characters`);
 
     console.log('[PARSE-LAB-REPORT] Sending PDF to Gemini via Lovable AI Gateway');
