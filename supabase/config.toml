@@ -173,3 +173,6 @@ verify_jwt = false
 
 [functions.migrate-supplements-to-v3]
 verify_jwt = false
+
+[functions.scan-supplement-bottle]
+verify_jwt = true
