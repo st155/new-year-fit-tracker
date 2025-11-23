@@ -60,14 +60,14 @@ export function useMedicalDocuments(filters?: {
   const uploadDocument = useMutation({
     mutationFn: async ({
       file,
-      documentType,
+      documentType = 'other',
       documentDate,
       notes,
       tags,
-      hiddenFromTrainer,
+      hiddenFromTrainer = true,
     }: {
       file: File;
-      documentType: DocumentType;
+      documentType?: DocumentType;
       documentDate?: string;
       notes?: string;
       tags?: string[];

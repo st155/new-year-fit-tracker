@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DocumentUpload } from '@/components/medical-documents/DocumentUpload';
+import { BulkDocumentUpload } from '@/components/medical-documents/BulkDocumentUpload';
 import { DocumentsList } from '@/components/medical-documents/DocumentsList';
 import { MigrationStatus } from '@/components/medical-documents/MigrationStatus';
 import { DocumentTrends } from '@/components/medical-documents/DocumentTrends';
@@ -53,7 +53,7 @@ const MedicalDocuments = () => {
         </TabsContent>
 
         <TabsContent value="upload">
-          <DocumentUpload />
+          <BulkDocumentUpload />
         </TabsContent>
 
         <TabsContent value="migration">
