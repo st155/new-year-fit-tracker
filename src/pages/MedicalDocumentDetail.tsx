@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity } from 'lucide-react';
+import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLabTestResults } from '@/hooks/useBiomarkers';
-import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
+import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { BiomarkerCard } from '@/components/biomarkers/BiomarkerCard';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -14,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
 
 const processingStages = {
   'downloading': { label: '📄 Загрузка PDF', progress: 10 },
@@ -29,13 +35,34 @@ export default function MedicalDocumentDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const { documents } = useMedicalDocuments();
+  const { documents, updateDocument } = useMedicalDocuments();
   const { results, isLoading, parseDocument } = useLabTestResults(documentId);
   
   const [processingStage, setProcessingStage] = useState<keyof typeof processingStages | null>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   
   const document = documents?.find(d => d.id === documentId);
+
+  const { register, handleSubmit, setValue, watch } = useForm({
+    defaultValues: {
+      document_type: document?.document_type || 'other',
+      document_date: document?.document_date || new Date().toISOString().split('T')[0],
+      tags: document?.tags?.join(', ') || '',
+      notes: document?.notes || '',
+      hidden_from_trainer: document?.hidden_from_trainer ?? true,
+    }
+  });
+
+  useEffect(() => {
+    if (document) {
+      setValue('document_type', document.document_type);
+      setValue('document_date', document.document_date || new Date().toISOString().split('T')[0]);
+      setValue('tags', document.tags?.join(', ') || '');
+      setValue('notes', document.notes || '');
+      setValue('hidden_from_trainer', document.hidden_from_trainer);
+    }
+  }, [document, setValue]);
 
   if (!document) {
     return (
@@ -96,6 +123,38 @@ export default function MedicalDocumentDetail() {
       setProcessingStage(null);
       setProcessingProgress(0);
     }
+  };
+
+  const onSaveMetadata = async (data: any) => {
+    if (!documentId) return;
+
+    const tagsArray = data.tags
+      ? data.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+      : [];
+
+    try {
+      await updateDocument.mutateAsync({
+        documentId,
+        updates: {
+          document_type: data.document_type as DocumentType,
+          document_date: data.document_date,
+          tags: tagsArray,
+          notes: data.notes,
+          hidden_from_trainer: data.hidden_from_trainer,
+        },
+      });
+      setIsEditingMetadata(false);
+    } catch (error) {
+      // Error already handled by mutation
+    }
+  };
+
+  const documentTypeLabels: Record<DocumentType, string> = {
+    inbody: 'InBody анализ',
+    blood_test: 'Анализ крови',
+    medical_report: 'Медицинское заключение',
+    progress_photo: 'Фото прогресса',
+    other: 'Другой документ',
   };
 
   const groupedResults = results?.reduce((acc, result) => {
@@ -162,6 +221,146 @@ export default function MedicalDocumentDetail() {
           </Button>
         )}
       </div>
+
+      {/* Document Metadata Editor */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">📝 Информация о документе</CardTitle>
+            {!isEditingMetadata ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingMetadata(true)}
+              >
+                <Edit2 className="h-4 w-4 mr-2" />
+                Редактировать
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingMetadata(false)}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSubmit(onSaveMetadata)}
+                  disabled={updateDocument.isPending}
+                >
+                  {updateDocument.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Сохранить
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isEditingMetadata ? (
+            <form className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Тип документа</Label>
+                  <Select
+                    value={watch('document_type')}
+                    onValueChange={(value) => setValue('document_type', value as DocumentType)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inbody">📊 InBody анализ</SelectItem>
+                      <SelectItem value="blood_test">🩸 Анализ крови</SelectItem>
+                      <SelectItem value="medical_report">📋 Медицинское заключение</SelectItem>
+                      <SelectItem value="progress_photo">📸 Фото прогресса</SelectItem>
+                      <SelectItem value="other">📄 Другой документ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Дата документа</Label>
+                  <Input
+                    type="date"
+                    {...register('document_date')}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Теги (через запятую)</Label>
+                <Input
+                  {...register('tags')}
+                  placeholder="анализ крови, холестерин, контроль"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Заметки</Label>
+                <Textarea
+                  {...register('notes')}
+                  placeholder="Ваши заметки к документу..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="hidden-from-trainer"
+                  checked={watch('hidden_from_trainer')}
+                  onCheckedChange={(checked) => setValue('hidden_from_trainer', checked)}
+                />
+                <Label htmlFor="hidden-from-trainer" className="cursor-pointer">
+                  Скрыть от тренера
+                </Label>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Тип документа:</span>
+                <Badge variant="secondary">{documentTypeLabels[document.document_type]}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Дата документа:</span>
+                <span className="font-medium">
+                  {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: ru })}
+                </span>
+              </div>
+              {document.tags && document.tags.length > 0 && (
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-muted-foreground">Теги:</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {document.tags.map(tag => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {document.notes && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground">Заметки:</span>
+                  <p className="text-foreground whitespace-pre-wrap">{document.notes}</p>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Видимость для тренера:</span>
+                <Badge variant={document.hidden_from_trainer ? 'secondary' : 'default'}>
+                  {document.hidden_from_trainer ? '🔒 Скрыт' : '👁️ Виден'}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Processing Progress */}
       {processingStage && (

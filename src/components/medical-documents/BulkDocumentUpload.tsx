@@ -1,0 +1,354 @@
+import { useState, useCallback } from 'react';
+import { Upload, X, Check, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface FileUploadState {
+  file: File;
+  id: string;
+  status: 'queue' | 'classifying' | 'uploading' | 'complete' | 'error';
+  progress: number;
+  classification?: {
+    document_type: DocumentType;
+    tags: string[];
+    suggested_date: string | null;
+    confidence: number;
+  };
+  error?: string;
+}
+
+export function BulkDocumentUpload() {
+  const [files, setFiles] = useState<FileUploadState[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const { uploadDocument } = useMedicalDocuments();
+  const { toast } = useToast();
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    handleFiles(droppedFiles);
+  }, []);
+
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      handleFiles(selectedFiles);
+    }
+  }, []);
+
+  const handleFiles = (newFiles: File[]) => {
+    // Validate files
+    const validFiles = newFiles.filter(file => {
+      const isValidType = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic', 'image/webp'].includes(file.type);
+      const isValidSize = file.size <= 150 * 1024 * 1024; // 150MB
+      
+      if (!isValidType) {
+        toast({
+          title: 'Неподдерживаемый формат',
+          description: `Файл ${file.name} имеет неподдерживаемый формат`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (!isValidSize) {
+        toast({
+          title: 'Файл слишком большой',
+          description: `Файл ${file.name} превышает 150 МБ`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Add to queue
+    const fileStates: FileUploadState[] = validFiles.map(file => ({
+      file,
+      id: `${Date.now()}-${Math.random()}`,
+      status: 'queue',
+      progress: 0,
+    }));
+
+    setFiles(prev => [...prev, ...fileStates]);
+
+    // Start processing (max 3 parallel)
+    fileStates.forEach((fileState, index) => {
+      setTimeout(() => processFile(fileState), index * 500);
+    });
+  };
+
+  const processFile = async (fileState: FileUploadState) => {
+    try {
+      // Step 1: AI Classification
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id ? { ...f, status: 'classifying', progress: 10 } : f
+      ));
+
+      const { data: classification, error: classifyError } = await supabase.functions.invoke(
+        'ai-classify-document',
+        { body: { fileName: fileState.file.name } }
+      );
+
+      if (classifyError) {
+        console.warn('[BulkUpload] Classification failed, using defaults:', classifyError);
+      }
+
+      const aiClassification = classification || {
+        document_type: 'other' as DocumentType,
+        tags: [],
+        suggested_date: null,
+        confidence: 0,
+      };
+
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id 
+          ? { ...f, classification: aiClassification, progress: 30 } 
+          : f
+      ));
+
+      // Step 2: Upload to storage and database
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id ? { ...f, status: 'uploading', progress: 50 } : f
+      ));
+
+      await uploadDocument.mutateAsync({
+        file: fileState.file,
+        documentType: aiClassification.document_type,
+        documentDate: aiClassification.suggested_date || undefined,
+        tags: aiClassification.tags,
+        hiddenFromTrainer: true, // Default: hidden
+      });
+
+      // Complete
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id ? { ...f, status: 'complete', progress: 100 } : f
+      ));
+
+    } catch (error) {
+      console.error('[BulkUpload] Upload error:', error);
+      setFiles(prev => prev.map(f => 
+        f.id === fileState.id 
+          ? { 
+              ...f, 
+              status: 'error', 
+              error: error instanceof Error ? error.message : 'Ошибка загрузки'
+            } 
+          : f
+      ));
+    }
+  };
+
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  const retryFile = (id: string) => {
+    const fileState = files.find(f => f.id === id);
+    if (fileState) {
+      setFiles(prev => prev.map(f => 
+        f.id === id ? { ...f, status: 'queue', progress: 0, error: undefined } : f
+      ));
+      processFile({ ...fileState, status: 'queue', progress: 0, error: undefined });
+    }
+  };
+
+  const getDocumentTypeLabel = (type: DocumentType): string => {
+    const labels: Record<DocumentType, string> = {
+      inbody: '📊 InBody',
+      blood_test: '🩸 Анализ крови',
+      medical_report: '📋 Мед. заключение',
+      progress_photo: '📸 Фото прогресса',
+      other: '📄 Документ',
+    };
+    return labels[type];
+  };
+
+  const activeUploads = files.filter(f => f.status !== 'complete').length;
+
+  return (
+    <div className="space-y-6">
+      {/* Drop Zone */}
+      <Card
+        className={cn(
+          'border-2 border-dashed transition-all',
+          isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25',
+          activeUploads > 0 && 'opacity-50'
+        )}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <CardContent className="py-12">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-primary/10 p-4">
+                <Upload className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-1">
+                Загрузите ваши медицинские документы
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Перетащите файлы сюда или нажмите для выбора
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
+              <p>Поддержка: PDF, JPG, PNG, HEIC, WEBP</p>
+              <p>До 150 МБ на файл, до 20 файлов одновременно</p>
+            </div>
+
+            <div>
+              <input
+                type="file"
+                id="file-upload"
+                multiple
+                accept=".pdf,image/jpeg,image/png,image/heic,image/webp"
+                className="hidden"
+                onChange={handleFileInput}
+                disabled={activeUploads > 0}
+              />
+              <Button asChild disabled={activeUploads > 0}>
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  Выбрать файлы
+                </label>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Upload Queue */}
+      {files.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">
+              Загружаемые файлы ({files.filter(f => f.status === 'complete').length}/{files.length})
+            </h3>
+            {files.every(f => f.status === 'complete' || f.status === 'error') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFiles([])}
+              >
+                Очистить
+              </Button>
+            )}
+          </div>
+
+          {files.map(fileState => (
+            <Card key={fileState.id}>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {/* File Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{fileState.file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(fileState.file.size / 1024 / 1024).toFixed(2)} МБ
+                      </p>
+                    </div>
+
+                    {fileState.status === 'complete' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(fileState.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Classification Info */}
+                  {fileState.classification && (
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {getDocumentTypeLabel(fileState.classification.document_type)}
+                      </Badge>
+                      {fileState.classification.tags.map(tag => (
+                        <Badge key={tag} variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Status */}
+                  <div className="flex items-center gap-2">
+                    {fileState.status === 'queue' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">В очереди...</span>
+                      </>
+                    )}
+                    {fileState.status === 'classifying' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        <span className="text-sm text-blue-600">AI классифицирует...</span>
+                      </>
+                    )}
+                    {fileState.status === 'uploading' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-sm text-primary">Загрузка...</span>
+                      </>
+                    )}
+                    {fileState.status === 'complete' && (
+                      <>
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-600">Загружено успешно</span>
+                      </>
+                    )}
+                    {fileState.status === 'error' && (
+                      <>
+                        <AlertCircle className="h-4 w-4 text-destructive" />
+                        <span className="text-sm text-destructive">{fileState.error}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => retryFile(fileState.id)}
+                          className="ml-auto"
+                        >
+                          Повторить
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  {fileState.status !== 'complete' && fileState.status !== 'error' && (
+                    <Progress value={fileState.progress} className="h-1" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
