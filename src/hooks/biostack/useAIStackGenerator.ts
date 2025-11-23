@@ -1,0 +1,185 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Deficiency {
+  biomarker_id: string;
+  name: string;
+  canonical_name: string;
+  category: string;
+  current_value: number;
+  unit: string;
+  ref_min: number;
+  ref_max: number;
+  status: 'low' | 'suboptimal';
+  test_date: string;
+}
+
+interface Recommendation {
+  supplement_name: string;
+  dosage_amount: number;
+  dosage_unit: string;
+  form: string;
+  intake_times: string[];
+  target_biomarker: string;
+  expected_improvement: number;
+  timeframe_weeks: number;
+  rationale: string;
+  synergies: string[];
+}
+
+interface AnalysisResponse {
+  success: boolean;
+  no_deficiencies?: boolean;
+  error?: string;
+  message?: string;
+  analysis?: {
+    total_biomarkers: number;
+    deficiencies_count: number;
+    recommendations_count: number;
+    analysis_date: string;
+    timeframe: string;
+  };
+  deficiencies?: Deficiency[];
+  recommendations?: Recommendation[];
+}
+
+export function useGenerateRecommendations() {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (): Promise<AnalysisResponse> => {
+      const { data, error } = await supabase.functions.invoke('generate-data-driven-stack');
+
+      if (error) throw error;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to generate recommendations');
+      }
+
+      return data as AnalysisResponse;
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Ошибка анализа',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function useAddRecommendationsToStack() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      recommendations, 
+      deficiencies 
+    }: { 
+      recommendations: Recommendation[];
+      deficiencies: Deficiency[];
+    }) => {
+      const results = [];
+
+      for (const rec of recommendations) {
+        try {
+          // Find or create supplement product
+          let productId: string | null = null;
+
+          // Search for existing product
+          const { data: existingProducts } = await supabase
+            .from('supplement_products')
+            .select('id')
+            .ilike('name', `%${rec.supplement_name}%`)
+            .limit(1);
+
+          if (existingProducts && existingProducts.length > 0) {
+            productId = existingProducts[0].id;
+          } else {
+            // Create new product
+            const { data: newProduct, error: productError } = await supabase
+              .from('supplement_products')
+              .insert({
+                name: rec.supplement_name,
+                brand: 'Generic',
+                form: rec.form,
+                dosage_amount: rec.dosage_amount,
+                dosage_unit: rec.dosage_unit,
+                servings_per_container: 60,
+              })
+              .select()
+              .single();
+
+            if (productError) throw productError;
+            productId = newProduct.id;
+          }
+
+          // Find biomarker_id from canonical_name
+          const deficiency = deficiencies.find(
+            d => d.canonical_name.toLowerCase() === rec.target_biomarker.toLowerCase()
+          );
+
+          const linkedBiomarkerIds = deficiency ? [deficiency.biomarker_id] : [];
+
+          // Get authenticated user
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (!currentUser) throw new Error('Not authenticated');
+
+          // Insert into user_stack
+          const { error: stackError } = await supabase
+            .from('user_stack')
+            .insert({
+              user_id: currentUser.id,
+              product_id: productId,
+              stack_name: rec.supplement_name,
+              intake_times: rec.intake_times,
+              schedule_type: 'manual',
+              is_active: true,
+              ai_suggested: true,
+              ai_rationale: rec.rationale,
+              linked_biomarker_ids: linkedBiomarkerIds,
+              target_outcome: `Improve ${rec.target_biomarker} by ${rec.expected_improvement}% in ${rec.timeframe_weeks} weeks`,
+            });
+
+          if (stackError) throw stackError;
+
+          results.push({ success: true, name: rec.supplement_name });
+        } catch (error: any) {
+          console.error(`Failed to add ${rec.supplement_name}:`, error);
+          results.push({ success: false, name: rec.supplement_name, error: error.message });
+        }
+      }
+
+      return results;
+    },
+    onSuccess: (results) => {
+      const successCount = results.filter(r => r.success).length;
+      const failedCount = results.filter(r => !r.success).length;
+
+      queryClient.invalidateQueries({ queryKey: ['user-stack'] });
+
+      if (successCount > 0) {
+        toast({
+          title: 'Добавки добавлены в стек',
+          description: `${successCount} добавок успешно добавлено${failedCount > 0 ? `, ${failedCount} ошибок` : ''}`,
+        });
+      }
+
+      if (failedCount > 0 && successCount === 0) {
+        toast({
+          title: 'Ошибка добавления',
+          description: `Не удалось добавить ${failedCount} добавок`,
+          variant: 'destructive',
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Ошибка добавления',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
