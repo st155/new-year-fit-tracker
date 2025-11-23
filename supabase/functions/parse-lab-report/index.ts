@@ -311,7 +311,7 @@ Extract every single biomarker value you can find, even if small or in footnotes
             biomarker_id: biomarkerMaster?.id || null,
             raw_test_name: biomarker.name,
             value: biomarker.value,
-            unit: biomarker.unit,
+            unit: biomarker.unit || '-', // Handle dimensionless biomarkers
             normalized_value: normalizedValue,
             normalized_unit: normalizedUnit,
             laboratory_name: extractedData.laboratory,

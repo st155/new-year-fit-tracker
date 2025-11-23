@@ -147,8 +147,14 @@ Deno.serve(async (req) => {
 
             console.log(`[BATCH-PROCESS] ✓ Successfully processed: ${doc.file_name}`);
 
-          } catch (error) {
-            console.error(`[BATCH-PROCESS] ✗ Error processing document ${doc.id}:`, error);
+          } catch (error: any) {
+            console.error(`[BATCH-PROCESS] ✗ Error processing ${doc.file_name}:`, {
+              error: error.message,
+              documentId: doc.id,
+              documentType: doc.document_type,
+              fileSize: doc.file_size,
+              functionName: functionName
+            });
             failed++;
 
             // Update document status to error
@@ -156,7 +162,7 @@ Deno.serve(async (req) => {
               .from('medical_documents')
               .update({ 
                 processing_status: 'error',
-                processing_error: error.message,
+                processing_error: error.message || error.toString(),
                 processing_completed_at: new Date().toISOString()
               })
               .eq('id', doc.id);
@@ -170,7 +176,7 @@ Deno.serve(async (req) => {
                 documentId: doc.id,
                 documentName: doc.file_name,
                 status: 'error',
-                error: error.message
+                error: error.message || error.toString()
               })}\n\n`)
             );
           }
