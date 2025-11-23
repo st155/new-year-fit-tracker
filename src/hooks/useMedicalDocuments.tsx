@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type DocumentType = 'inbody' | 'blood_test' | 'medical_report' | 'progress_photo' | 'other';
+export type DocumentType = 'inbody' | 'blood_test' | 'fitness_report' | 'progress_photo' | 'vo2max' | 'caliper' | 'prescription' | 'training_program' | 'other';
 
 export interface MedicalDocument {
   id: string;
