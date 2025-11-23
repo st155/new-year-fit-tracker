@@ -184,6 +184,28 @@ Return ONLY valid JSON (no markdown):
       .eq('id', documentId);
 
     // ============================================================
+    // AUTO-INVOKE DOCTOR RECOMMENDATIONS PARSER
+    // ============================================================
+    if (documentCategory === 'clinical_note' || documentCategory === 'prescription') {
+      console.log('[PARSE-LAB-REPORT] 💊 Document is clinical note/prescription - invoking parse-doctor-recommendations...');
+      try {
+        const rxResponse = await supabase.functions.invoke('parse-doctor-recommendations', {
+          body: { documentId }
+        });
+        
+        if (rxResponse.error) {
+          console.error('[PARSE-LAB-REPORT] ⚠️ Rx parsing failed:', rxResponse.error);
+        } else {
+          const rxData = rxResponse.data as { count?: number };
+          console.log(`[PARSE-LAB-REPORT] ✓ Rx parsing complete: ${rxData?.count || 0} recommendations extracted`);
+        }
+      } catch (rxError) {
+        console.error('[PARSE-LAB-REPORT] ⚠️ Rx parser invocation error:', rxError);
+        // Non-blocking: continue with main document processing
+      }
+    }
+
+    // ============================================================
     // STEP 2: ROUTE TO SPECIALIZED PARSERS
     // ============================================================
     console.log(`[PARSE-LAB-REPORT] 🤖 Stage 4/5: Parsing ${documentCategory} document with specialized parser...`);

@@ -3,7 +3,8 @@ import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentsGridProps {
   filterType?: string;
@@ -14,6 +15,28 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
     filterType && filterType !== 'all' ? { documentType: filterType as any } : undefined
   );
+
+  // Query recommendations count per document
+  const { data: recommendationsCounts } = useQuery({
+    queryKey: ['recommendations-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('doctor_recommendations')
+        .select('document_id')
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      // Count recommendations per document
+      const counts: Record<string, number> = {};
+      data?.forEach(rec => {
+        counts[rec.document_id] = (counts[rec.document_id] || 0) + 1;
+      });
+
+      return counts;
+    },
+    initialData: {},
+  });
 
   // Auto-refresh for documents in processing
   useEffect(() => {
@@ -79,6 +102,7 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
           storagePath={doc.storage_path}
           processingStatus={doc.processing_status}
           processingError={doc.processing_error}
+          recommendationsCount={recommendationsCounts?.[doc.id] || 0}
           onDownload={handleDownload}
           onDelete={handleDelete}
         />

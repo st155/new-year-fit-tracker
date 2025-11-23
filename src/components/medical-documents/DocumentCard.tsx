@@ -34,6 +34,7 @@ interface DocumentCardProps {
   storagePath: string;
   processingStatus?: 'pending' | 'processing' | 'completed' | 'error' | null;
   processingError?: string | null;
+  recommendationsCount?: number;
   onDownload: (storagePath: string, fileName: string) => void;
   onDelete: (id: string) => void;
 }
@@ -76,6 +77,7 @@ export const DocumentCard = ({
   storagePath,
   processingStatus,
   processingError,
+  recommendationsCount,
   onDownload,
   onDelete,
 }: DocumentCardProps) => {
@@ -144,6 +146,13 @@ export const DocumentCard = ({
         {hiddenFromTrainer && (
           <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50/10">
             🔒 Скрыто от тренера
+          </Badge>
+        )}
+        
+        {/* Rx Detected Badge */}
+        {recommendationsCount && recommendationsCount > 0 && (
+          <Badge variant="outline" className="text-xs text-green-600 bg-green-50/10 border-green-500/20">
+            💊 Rx ({recommendationsCount})
           </Badge>
         )}
       </div>
