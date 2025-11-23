@@ -646,6 +646,56 @@ export type Database = {
           },
         ]
       }
+      biomarker_ai_analysis: {
+        Row: {
+          analysis: Json
+          biomarker_id: string
+          created_at: string | null
+          id: string
+          insights: string | null
+          latest_test_date: string
+          results_count: number
+          statistics: Json | null
+          updated_at: string | null
+          user_id: string
+          zones: Json | null
+        }
+        Insert: {
+          analysis: Json
+          biomarker_id: string
+          created_at?: string | null
+          id?: string
+          insights?: string | null
+          latest_test_date: string
+          results_count: number
+          statistics?: Json | null
+          updated_at?: string | null
+          user_id: string
+          zones?: Json | null
+        }
+        Update: {
+          analysis?: Json
+          biomarker_id?: string
+          created_at?: string | null
+          id?: string
+          insights?: string | null
+          latest_test_date?: string
+          results_count?: number
+          statistics?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          zones?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biomarker_ai_analysis_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biomarker_aliases: {
         Row: {
           alias: string
@@ -3630,6 +3680,10 @@ export type Database = {
           id: string
           mime_type: string | null
           notes: string | null
+          processing_completed_at: string | null
+          processing_error: string | null
+          processing_started_at: string | null
+          processing_status: string | null
           storage_path: string
           tags: string[] | null
           updated_at: string
@@ -3652,6 +3706,10 @@ export type Database = {
           id?: string
           mime_type?: string | null
           notes?: string | null
+          processing_completed_at?: string | null
+          processing_error?: string | null
+          processing_started_at?: string | null
+          processing_status?: string | null
           storage_path: string
           tags?: string[] | null
           updated_at?: string
@@ -3674,6 +3732,10 @@ export type Database = {
           id?: string
           mime_type?: string | null
           notes?: string | null
+          processing_completed_at?: string | null
+          processing_error?: string | null
+          processing_started_at?: string | null
+          processing_status?: string | null
           storage_path?: string
           tags?: string[] | null
           updated_at?: string

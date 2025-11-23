@@ -51,6 +51,15 @@ serve(async (req) => {
       throw new Error('Document not found');
     }
 
+    // Update processing status to "processing"
+    await supabase
+      .from('medical_documents')
+      .update({ 
+        processing_status: 'processing',
+        processing_started_at: new Date().toISOString()
+      })
+      .eq('id', documentId);
+
     console.log('[PARSE-LAB-REPORT] 📄 Stage 1/4: Downloading PDF from storage');
 
     // Download file from storage (works with private buckets)
@@ -284,6 +293,8 @@ Extract every single biomarker value you can find, even if small or in footnotes
       .update({
         document_date: testDate,  // CRITICAL: Use date from document, not upload date!
         ai_processed: true,
+        processing_status: 'completed',
+        processing_completed_at: new Date().toISOString(),
         ai_summary: `Извлечено ${results.length} биомаркеров из ${extractedData.laboratory || 'лаборатории'}`,
         ai_extracted_data: {
           laboratory: extractedData.laboratory,
@@ -293,6 +304,17 @@ Extract every single biomarker value you can find, even if small or in footnotes
         }
       })
       .eq('id', documentId);
+
+    // Invalidate AI analysis cache for all biomarkers in this document
+    const biomarkerIds = results.map(r => r.biomarker_id).filter(Boolean);
+    if (biomarkerIds.length > 0) {
+      await supabase
+        .from('biomarker_ai_analysis')
+        .delete()
+        .eq('user_id', user.id)
+        .in('biomarker_id', biomarkerIds);
+      console.log(`[PARSE-LAB-REPORT] Invalidated AI cache for ${biomarkerIds.length} biomarkers`);
+    }
 
     console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} biomarkers via Gemini`);
 
@@ -311,12 +333,26 @@ Extract every single biomarker value you can find, even if small or in footnotes
 
   } catch (error: any) {
     console.error('[PARSE-LAB-REPORT] Error:', error);
+    
+    // Update document with error status if we have documentId
+    const { documentId } = await req.json().catch(() => ({}));
+    if (documentId) {
+      await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'error',
+          processing_error: error.message,
+          processing_completed_at: new Date().toISOString()
+        })
+        .eq('id', documentId);
+    }
+    
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         error: error.message || 'Internal server error',
         details: error.toString()
       }),
-      {
+      { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

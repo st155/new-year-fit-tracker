@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BiomarkerDetail() {
   const { biomarkerId } = useParams<{ biomarkerId: string }>();
@@ -20,8 +21,13 @@ export default function BiomarkerDetail() {
 
   if (analysisLoading || historyLoading) {
     return (
-      <div className="container mx-auto py-8 px-4 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
+        <div className="space-y-4">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
       </div>
     );
   }
@@ -208,28 +214,53 @@ export default function BiomarkerDetail() {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          {history?.map(result => (
-            <Card key={result.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">
-                    {format(new Date(result.test_date), 'dd MMMM yyyy', { locale: ru })}
-                  </p>
-                  {result.laboratory_name && (
-                    <p className="text-sm text-muted-foreground">{result.laboratory_name}</p>
+          <div className="relative pl-8">
+            {history?.map((result, index) => {
+              const isLatest = index === 0;
+              return (
+                <div key={result.id} className="relative pb-8">
+                  {/* Timeline line */}
+                  {index < history.length - 1 && (
+                    <div className="absolute left-0 top-6 bottom-0 w-0.5 bg-border" />
                   )}
+                  
+                  {/* Timeline dot */}
+                  <div className={cn(
+                    "absolute left-0 top-2 w-4 h-4 rounded-full border-4 z-10",
+                    isLatest ? "bg-primary border-primary shadow-glow-primary" : "bg-background border-border"
+                  )} />
+                  
+                  {/* Content card */}
+                  <Card className={cn(
+                    "ml-6 p-4 transition-all",
+                    isLatest && "border-primary border-2 bg-primary/5"
+                  )}>
+                    {isLatest && (
+                      <Badge className="mb-2 bg-primary">Текущее значение</Badge>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">
+                          {format(new Date(result.test_date), 'dd MMMM yyyy', { locale: ru })}
+                        </p>
+                        {result.laboratory_name && (
+                          <p className="text-sm text-muted-foreground">{result.laboratory_name}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">{result.normalized_value} {result.normalized_unit}</p>
+                        {result.value !== result.normalized_value && (
+                          <p className="text-sm text-muted-foreground">
+                            (исходно: {result.value} {result.unit})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">{result.normalized_value} {result.normalized_unit}</p>
-                  {result.value !== result.normalized_value && (
-                    <p className="text-sm text-muted-foreground">
-                      (исходно: {result.value} {result.unit})
-                    </p>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+              );
+            })}
+          </div>
         </TabsContent>
 
         <TabsContent value="about">

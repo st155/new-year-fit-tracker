@@ -39,6 +39,14 @@ serve(async (req) => {
 
     console.log(`[ANALYZE-TRENDS] Analyzing biomarker ${biomarkerId} for user ${user.id}`);
 
+    // Check cache first
+    const { data: cachedAnalysis } = await supabase
+      .from('biomarker_ai_analysis')
+      .select('*')
+      .eq('biomarker_id', biomarkerId)
+      .eq('user_id', user.id)
+      .single();
+
     // Fetch biomarker master data
     const { data: biomarker, error: biomarkerError } = await supabase
       .from('biomarker_master')
@@ -62,21 +70,26 @@ serve(async (req) => {
       throw new Error('Failed to fetch test results');
     }
 
+    console.log(`[ANALYZE-TRENDS] Found ${results.length} test results`);
+
     if (!results || results.length === 0) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'No test results found for this biomarker',
-          statistics: null,
-          insights: null
-        }),
+        JSON.stringify({ success: false, error: 'No test results found' }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
 
-    console.log(`[ANALYZE-TRENDS] Found ${results.length} test results`);
+    // Check if cache is still valid
+    if (cachedAnalysis && 
+        cachedAnalysis.results_count === results.length &&
+        cachedAnalysis.latest_test_date === results[results.length - 1].test_date) {
+      console.log('[ANALYZE-TRENDS] ✓ Using cached analysis');
+      return new Response(JSON.stringify(cachedAnalysis.analysis), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Calculate statistics
     const values = results.map(r => r.normalized_value);
@@ -199,15 +212,43 @@ Keep it concise and actionable. Write in Russian.`;
 
     console.log('[ANALYZE-TRENDS] ✓ Analysis complete');
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        biomarker: {
-          id: biomarker.id,
-          name: biomarker.display_name,
-          category: biomarker.category,
-          unit: biomarker.standard_unit
-        },
+    const responseData = {
+      success: true,
+      biomarker: {
+        id: biomarker.id,
+        name: biomarker.display_name,
+        category: biomarker.category,
+        unit: biomarker.standard_unit
+      },
+      statistics: {
+        count: results.length,
+        latest: latestValue,
+        min,
+        max,
+        average: parseFloat(avg.toFixed(2)),
+        trend
+      },
+      zones: zonePercentages,
+      reference_ranges: refRanges,
+      history: results.map(r => ({
+        date: r.test_date,
+        value: r.normalized_value,
+        unit: r.normalized_unit,
+        laboratory: r.laboratory_name,
+        original_value: r.value,
+        original_unit: r.unit
+      })),
+      insights
+    };
+
+    // Cache the analysis
+    await supabase
+      .from('biomarker_ai_analysis')
+      .upsert({
+        biomarker_id: biomarkerId,
+        user_id: user.id,
+        analysis: responseData,
+        insights: insights,
         statistics: {
           count: results.length,
           latest: latestValue,
@@ -217,17 +258,15 @@ Keep it concise and actionable. Write in Russian.`;
           trend
         },
         zones: zonePercentages,
-        reference_ranges: refRanges,
-        history: results.map(r => ({
-          date: r.test_date,
-          value: r.normalized_value,
-          unit: r.normalized_unit,
-          laboratory: r.laboratory_name,
-          original_value: r.value,
-          original_unit: r.unit
-        })),
-        insights
-      }),
+        results_count: results.length,
+        latest_test_date: results[results.length - 1].test_date,
+        updated_at: new Date().toISOString()
+      });
+
+    console.log('[ANALYZE-TRENDS] ✓ Analysis cached');
+
+    return new Response(
+      JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

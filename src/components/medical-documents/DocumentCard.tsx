@@ -1,7 +1,22 @@
-import { FileText, Download, Trash2, EyeOff, Calendar, Tag, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,14 +24,16 @@ interface DocumentCardProps {
   id: string;
   fileName: string;
   documentType: DocumentType;
-  documentDate?: string;
-  fileSize?: number;
-  tags?: string[];
-  notes?: string;
-  aiProcessed?: boolean;
-  aiSummary?: string;
-  hiddenFromTrainer?: boolean;
+  documentDate: string | null;
+  fileSize: number | null;
+  tags: string[] | null;
+  notes: string | null;
+  aiProcessed: boolean;
+  aiSummary: string | null;
+  hiddenFromTrainer: boolean;
   storagePath: string;
+  processingStatus?: 'pending' | 'processing' | 'completed' | 'error' | null;
+  processingError?: string | null;
   onDownload: (storagePath: string, fileName: string) => void;
   onDelete: (id: string) => void;
 }
@@ -57,28 +74,25 @@ export const DocumentCard = ({
   aiSummary,
   hiddenFromTrainer,
   storagePath,
+  processingStatus,
+  processingError,
   onDownload,
   onDelete,
 }: DocumentCardProps) => {
   const navigate = useNavigate();
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  const formatFileSize = (bytes?: number) => {
+  const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';
     const mb = bytes / (1024 * 1024);
     return mb > 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
   };
 
   return (
-    <div
-      className={`medical-doc-card glass-card p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${documentTypeColors[documentType]}`}
+    <Card
+      className={cn(
+        'medical-doc-card glass-card p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02]',
+        documentTypeColors[documentType]
+      )}
       onClick={() => navigate(`/medical-documents/${id}`)}
     >
       {/* Header */}
@@ -86,40 +100,85 @@ export const DocumentCard = ({
         <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold truncate text-foreground">{fileName}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="secondary" className="text-xs">
-              {documentTypeLabels[documentType]}
-            </Badge>
-            {aiProcessed && (
-              <Badge variant="outline" className="text-xs text-green-600 bg-green-50/10 border-green-500/30">
-                ✓ AI
-              </Badge>
-            )}
-            {hiddenFromTrainer && (
-              <span title="Скрыто от тренера">
-                <EyeOff className="h-3 w-3 text-muted-foreground" />
-              </span>
-            )}
-          </div>
         </div>
       </div>
+
+      {/* Tags & Status */}
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        <Badge variant="outline" className="text-xs">
+          {documentTypeLabels[documentType]}
+        </Badge>
+        
+        {/* Processing Status */}
+        {processingStatus === 'pending' && (
+          <Badge variant="outline" className="text-xs text-yellow-600 bg-yellow-50/10">
+            ⏳ Ожидает обработки
+          </Badge>
+        )}
+        {processingStatus === 'processing' && (
+          <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50/10">
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            Обрабатывается AI
+          </Badge>
+        )}
+        {processingStatus === 'error' && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Badge variant="outline" className="text-xs text-red-600 bg-red-50/10 cursor-help">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Ошибка обработки
+              </Badge>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <p className="text-sm text-red-600">{processingError || 'Произошла ошибка при обработке'}</p>
+            </HoverCardContent>
+          </HoverCard>
+        )}
+        {processingStatus === 'completed' && aiProcessed && (
+          <Badge variant="outline" className="text-xs text-green-600 bg-green-50/10">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            AI обработан
+          </Badge>
+        )}
+        
+        {hiddenFromTrainer && (
+          <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50/10">
+            🔒 Скрыто от тренера
+          </Badge>
+        )}
+      </div>
+
+      {/* AI Summary Preview with HoverCard */}
+      {aiSummary && (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="group cursor-help mb-3">
+              <div className="flex items-center gap-1 mb-1">
+                <Info className="h-3 w-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">AI Анализ</span>
+              </div>
+              <p className="text-sm text-foreground/80 line-clamp-2 group-hover:text-foreground transition-colors">
+                {aiSummary}
+              </p>
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-96">
+            <h4 className="font-semibold mb-2">🤖 AI Анализ документа</h4>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {aiSummary}
+            </p>
+          </HoverCardContent>
+        </HoverCard>
+      )}
 
       {/* Tags */}
       {tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs gap-1">
-              <Tag className="h-2.5 w-2.5" />
+            <Badge key={tag} variant="outline" className="text-xs">
               {tag}
             </Badge>
           ))}
-        </div>
-      )}
-
-      {/* AI Summary Preview */}
-      {aiSummary && (
-        <div className="mb-3 p-2 bg-accent/10 rounded-lg border border-accent/20">
-          <p className="text-xs text-muted-foreground line-clamp-2">{aiSummary}</p>
         </div>
       )}
 
@@ -129,7 +188,7 @@ export const DocumentCard = ({
           {documentDate && (
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {formatDate(documentDate)}
+              {format(new Date(documentDate), 'dd MMM', { locale: ru })}
             </span>
           )}
           <span>{formatFileSize(fileSize)}</span>
@@ -177,6 +236,6 @@ export const DocumentCard = ({
           </AlertDialog>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
