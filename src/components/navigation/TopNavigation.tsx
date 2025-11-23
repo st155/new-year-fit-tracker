@@ -85,6 +85,12 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     staleTime: 10000, // Real-time updates will refresh this
   });
 
+  // BioStack navigation items
+  const biostackItems = [
+    { path: "/supplements", label: 'Добавки', badge: 'New' },
+    { path: "/medical-documents", label: 'Мед. документы' },
+  ];
+
   // Main navigation items for mobile (4 items)
   const mainNavItems = [
     { type: 'home' as const, path: "/dashboard", icon: Home, label: 'Главная' },
@@ -95,6 +101,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   // Secondary navigation items for "More" menu
   const secondaryNavItems = [
+    { path: "/supplements", label: 'Добавки', badge: 'New' },
+    { path: "/medical-documents", label: 'Мед. документы' },
     { path: "/landing-plain", label: 'О приложении' },
     { path: "/challenges", label: 'Челленджи' },
     { path: "/leaderboard", label: 'Рейтинг' },
@@ -109,6 +117,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
     { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
+    { type: 'activity' as const, path: "/supplements", label: 'Добавки', badge: 'New' },
+    { type: 'activity' as const, path: "/medical-documents", label: 'Мед. док.' },
     { type: 'body' as const, path: "/body", label: 'Тело' },
     { type: 'habits' as const, path: "/habits", label: 'Привычки' },
     { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
@@ -198,7 +208,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                   </Button>
                   
                    {/* Secondary nav items */}
-                  {secondaryNavItems.map((item) => (
+                  {secondaryNavItems.map((item: any) => (
                     <Button
                       key={item.path}
                       variant="ghost"
@@ -209,6 +219,11 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                       onClick={() => navigate(item.path)}
                     >
                       {item.label}
+                      {item.badge && (
+                        <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
+                          {item.badge}
+                        </Badge>
+                      )}
                       {item.path === '/habits' && unreadCount > 0 && (
                         <Badge 
                           variant="destructive" 
@@ -257,7 +272,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
             {/* Navigation - Center */}
             <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 justify-center px-4">
-              {navItems.map((item) => (
+              {navItems.map((item: any) => (
                 <Button
                   key={item.path}
                   variant="ghost"
@@ -293,10 +308,15 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     )}
                   </div>
                   <span className={cn(
-                    "text-xs md:text-[10px] font-medium transition-colors",
+                    "text-xs md:text-[10px] font-medium transition-colors whitespace-nowrap",
                     isActive(item.path) ? "text-primary" : "text-muted-foreground"
                   )}>
                     {item.label}
+                    {item.badge && (
+                      <Badge variant="secondary" className="ml-1 text-[8px] px-1 py-0 align-super">
+                        {item.badge}
+                      </Badge>
+                    )}
                   </span>
                 </Button>
               ))}
