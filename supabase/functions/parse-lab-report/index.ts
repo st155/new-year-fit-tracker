@@ -222,15 +222,38 @@ Extract every single biomarker value you can find, even if small or in footnotes
 
     let extractedData;
     try {
-      // Remove markdown code blocks if present
-      const jsonString = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      // Remove markdown code blocks with ALL variations (```json, ```, etc.)
+      let jsonString = content.trim();
+      
+      // Remove opening markdown tag (various formats: ```json, ```JSON, ```)
+      jsonString = jsonString.replace(/^```(?:json)?\s*/i, '');
+      
+      // Remove closing markdown tag
+      jsonString = jsonString.replace(/```\s*$/i, '');
+      
+      // Trim again after removal
+      jsonString = jsonString.trim();
+      
+      console.log(`[PARSE-LAB-REPORT] Cleaned JSON string (first 500 chars):`, jsonString.substring(0, 500));
+      
+      // Fallback: Extract JSON object from text (find first { to last })
+      if (!jsonString.startsWith('{')) {
+        const firstBrace = jsonString.indexOf('{');
+        const lastBrace = jsonString.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          jsonString = jsonString.substring(firstBrace, lastBrace + 1);
+          console.log('[PARSE-LAB-REPORT] Extracted JSON object from response using fallback');
+        }
+      }
+      
       extractedData = JSON.parse(jsonString);
       console.log(`[PARSE-LAB-REPORT] ✓ Gemini extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
     } catch (parseError) {
-      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response:', content);
+      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response (first 1000 chars):', content.substring(0, 1000));
       console.error('[PARSE-LAB-REPORT] Response finish_reason:', finishReason);
       console.error('[PARSE-LAB-REPORT] Response length:', content.length);
-      throw new Error('Failed to parse structured data from AI response');
+      console.error('[PARSE-LAB-REPORT] Parse error:', parseError.message);
+      throw new Error(`Failed to parse structured data from AI response: ${parseError.message}`);
     }
 
     // Fetch all biomarker aliases for fuzzy matching
