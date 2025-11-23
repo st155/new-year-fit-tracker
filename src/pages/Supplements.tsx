@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, History, TrendingUp } from "lucide-react";
 import { TheStackView } from "@/components/biostack/TheStackView";
+import { CorrelationEngine } from "@/components/biostack/CorrelationEngine";
 
 export default function Supplements() {
   return (
@@ -35,9 +36,7 @@ export default function Supplements() {
         </TabsContent>
 
         <TabsContent value="correlation">
-          <div className="text-center py-12 text-muted-foreground">
-            Correlation Engine - Coming in Sprint 4
-          </div>
+          <CorrelationEngine />
         </TabsContent>
 
         <TabsContent value="history">
