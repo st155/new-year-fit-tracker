@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, TrendingUp, TrendingDown, Minus, Info, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,20 @@ export default function BiomarkerDetail() {
 
   const { biomarker, statistics, zones, reference_ranges, insights } = analysis;
 
-  const statusColor = 
+  // Calculate time in optimal zone
+  const timeInOptimalZone = useMemo(() => {
+    if (!analysis?.history || !reference_ranges.optimal_min || !reference_ranges.optimal_max) {
+      return null;
+    }
+    
+    const inOptimal = analysis.history.filter(
+      (h: any) => h.value >= reference_ranges.optimal_min! && h.value <= reference_ranges.optimal_max!
+    ).length;
+    
+    return Math.round((inOptimal / analysis.history.length) * 100);
+  }, [analysis?.history, reference_ranges]);
+
+  const statusColor =
     statistics.latest < reference_ranges.min ? 'yellow' :
     statistics.latest > reference_ranges.max ? 'red' :
     statistics.latest >= reference_ranges.optimal_min && statistics.latest <= reference_ranges.optimal_max ? 'blue' :
@@ -221,6 +234,57 @@ export default function BiomarkerDetail() {
                   <p className="text-2xl font-bold">{statistics.max}</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Time in Optimal Zone Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+                Время в оптимальной зоне
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {timeInOptimalZone !== null ? (
+                <>
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-bold text-emerald-500">
+                      {timeInOptimalZone}%
+                    </span>
+                    <span className="text-lg text-muted-foreground mb-2">
+                      ваших измерений
+                    </span>
+                  </div>
+                  <Progress 
+                    value={timeInOptimalZone} 
+                    className="h-3 [&>div]:bg-emerald-500 [&>div]:shadow-[0_0_8px_rgba(16,185,129,0.4)]" 
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {timeInOptimalZone >= 80 
+                      ? '🎉 Отлично! Большинство ваших измерений в оптимальной зоне.'
+                      : timeInOptimalZone >= 50
+                      ? '👍 Хороший результат. Продолжайте работать над улучшением.'
+                      : '⚠️ Меньше половины измерений в оптимальной зоне. Рекомендуем консультацию специалиста.'
+                    }
+                  </p>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Настройте оптимальный диапазон, чтобы увидеть эту статистику
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSettings(true)}
+                    className="mt-3 border-purple-500/50 hover:bg-purple-500/10"
+                  >
+                    Настроить диапазон
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
