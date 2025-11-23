@@ -699,6 +699,7 @@ export type Database = {
       biomarker_aliases: {
         Row: {
           alias: string
+          alias_normalized: string | null
           biomarker_id: string
           created_at: string | null
           id: string
@@ -707,6 +708,7 @@ export type Database = {
         }
         Insert: {
           alias: string
+          alias_normalized?: string | null
           biomarker_id: string
           created_at?: string | null
           id?: string
@@ -715,6 +717,7 @@ export type Database = {
         }
         Update: {
           alias?: string
+          alias_normalized?: string | null
           biomarker_id?: string
           created_at?: string | null
           id?: string
@@ -6399,6 +6402,7 @@ export type Database = {
             Args: { p_challenge_id: string; p_difficulty_level?: number }
             Returns: Json
           }
+      normalize_biomarker_name: { Args: { name: string }; Returns: string }
       retry_failed_jobs: {
         Args: { p_job_type?: string }
         Returns: {
