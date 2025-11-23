@@ -52,18 +52,34 @@ serve(async (req) => {
       throw new Error('Document not found');
     }
 
-    // Get document URL from storage
-    const { data: fileData } = supabase.storage
+    console.log('[PARSE-LAB-REPORT] Downloading PDF from storage');
+
+    // Download file from storage (works with private buckets)
+    const { data: fileData, error: downloadError } = await supabase.storage
       .from('medical-documents')
-      .getPublicUrl(document.storage_path);
+      .download(document.storage_path);
 
-    console.log('[PARSE-LAB-REPORT] Fetching PDF from storage');
+    if (downloadError || !fileData) {
+      console.error('[PARSE-LAB-REPORT] Download failed:', downloadError);
+      throw new Error('Failed to download document from storage');
+    }
 
-    // Fetch PDF file
-    const pdfResponse = await fetch(fileData.publicUrl);
-    const pdfBuffer = await pdfResponse.arrayBuffer();
+    console.log(`[PARSE-LAB-REPORT] Downloaded file: ${fileData.size} bytes, type: ${fileData.type}`);
+
+    // Validate PDF file
+    if (fileData.type !== 'application/pdf') {
+      console.warn(`[PARSE-LAB-REPORT] Warning: Expected PDF but got ${fileData.type}`);
+    }
+
+    const pdfBuffer = await fileData.arrayBuffer();
+    console.log(`[PARSE-LAB-REPORT] ArrayBuffer size: ${pdfBuffer.byteLength} bytes`);
     
-    console.log(`[PARSE-LAB-REPORT] PDF size: ${pdfBuffer.byteLength} bytes`);
+    // Verify PDF header
+    const uint8Array = new Uint8Array(pdfBuffer);
+    const header = String.fromCharCode(...uint8Array.slice(0, 4));
+    if (header !== '%PDF') {
+      throw new Error(`Invalid PDF file: header is "${header}" instead of "%PDF"`);
+    }
     
     // Extract text from PDF using pdf-lib
     console.log('[PARSE-LAB-REPORT] Extracting text from PDF');
