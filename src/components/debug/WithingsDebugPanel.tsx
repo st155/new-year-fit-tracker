@@ -61,8 +61,12 @@ export function WithingsDebugPanel() {
 
   // Check connection status
   const checkConnectionStatus = async () => {
+    setConnectionStatus({ checking: true });
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setConnectionStatus({ connected: false, error: 'No user found', checking: false });
+      return;
+    }
 
     const { data: token, error } = await supabase
       .from('terra_tokens')
@@ -73,7 +77,10 @@ export function WithingsDebugPanel() {
       .single();
 
     if (error || !token) {
-      setConnectionStatus({ connected: false, error: 'Token not found' });
+      setConnectionStatus({ connected: false, error: 'Token not found', checking: false });
+      toast.error('Withings не подключен', {
+        description: 'Подключите устройство Withings в разделе Интеграции',
+      });
       return;
     }
 
@@ -82,6 +89,11 @@ export function WithingsDebugPanel() {
       terraUserId: token.terra_user_id,
       lastSync: token.last_sync_date,
       updatedAt: token.updated_at,
+      checking: false,
+    });
+    
+    toast.success('Withings подключен', {
+      description: `Terra User ID: ${token.terra_user_id}`,
     });
   };
 
@@ -203,8 +215,22 @@ export function WithingsDebugPanel() {
             <h3 className="text-sm font-semibold mb-2">Действия</h3>
             <div className="flex gap-2 flex-wrap">
               <Button 
+                onClick={checkConnectionStatus} 
+                disabled={connectionStatus?.checking}
+                variant="outline"
+                className="gap-2"
+              >
+                {connectionStatus?.checking ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="h-4 w-4" />
+                )}
+                Check Connection Status
+              </Button>
+
+              <Button 
                 onClick={handleForceSync} 
-                disabled={isSyncing}
+                disabled={isSyncing || !connectionStatus?.connected}
                 variant="default"
                 className="gap-2"
               >
@@ -336,12 +362,36 @@ export function WithingsDebugPanel() {
           <div className="text-xs text-muted-foreground border-t pt-4 space-y-2">
             <p>💡 <strong>Как использовать:</strong></p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>"Check Connection Status" - проверяет статус подключения Withings</li>
               <li>"Sync Withings" - запрашивает последние 7 дней данных через Terra API</li>
               <li>"Загрузить данные" - загружает исторические данные за указанный период напрямую</li>
               <li>"Sync All Devices" - синхронизирует все подключенные устройства</li>
               <li>После синхронизации подождите 30-60 секунд для обработки данных</li>
               <li>Если данных нет - попробуйте использовать "Загрузить данные" или переподключить Withings</li>
             </ol>
+            <p className="mt-2">🔗 <strong>Полезные ссылки:</strong></p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>
+                <a 
+                  href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/withings-backfill/logs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Логи Withings Backfill
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://supabase.com/dashboard/project/ueykmmzmguzjppdudvef/functions/force-terra-sync/logs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Логи Force Terra Sync
+                </a>
+              </li>
+            </ul>
           </div>
         </CardContent>
       </Card>
