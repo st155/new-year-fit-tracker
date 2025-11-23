@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -195,6 +195,19 @@ export const DocumentCard = ({
         </div>
 
         <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/medical-ingestion/${id}`);
+            }}
+            title="Open in Cockpit"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"
