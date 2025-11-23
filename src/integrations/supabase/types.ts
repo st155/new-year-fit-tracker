@@ -1632,6 +1632,68 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_recommendations: {
+        Row: {
+          added_to_stack_at: string | null
+          confidence_score: number | null
+          created_at: string
+          doctor_name: string | null
+          document_id: string
+          dosage: string | null
+          duration: string | null
+          frequency: string | null
+          id: string
+          prescription_date: string | null
+          rationale: string | null
+          status: string
+          supplement_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_to_stack_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          doctor_name?: string | null
+          document_id: string
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          prescription_date?: string | null
+          rationale?: string | null
+          status?: string
+          supplement_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_to_stack_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          doctor_name?: string | null
+          document_id?: string
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          prescription_date?: string | null
+          rationale?: string | null
+          status?: string
+          supplement_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_recommendations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edge_function_logs: {
         Row: {
           duration_ms: number | null
