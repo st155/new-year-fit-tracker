@@ -1,10 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 import { corsHeaders } from '../_shared/cors.ts';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -81,42 +80,31 @@ serve(async (req) => {
       throw new Error(`Invalid PDF file: header is "${header}" instead of "%PDF"`);
     }
     
-    // Extract text from PDF using pdf-lib
-    console.log('[PARSE-LAB-REPORT] Extracting text from PDF');
-    let fullText = '';
-    try {
-      const pdfDoc = await PDFDocument.load(pdfBuffer);
-      const pages = pdfDoc.getPages();
-      
-      // Extract text from each page
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i];
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(' ');
-        fullText += pageText + '\n';
-      }
-      
-      console.log(`[PARSE-LAB-REPORT] Extracted ${fullText.length} characters from ${pages.length} pages`);
-    } catch (extractError) {
-      console.error('[PARSE-LAB-REPORT] PDF text extraction failed:', extractError);
-      throw new Error('Failed to extract text from PDF: ' + extractError.message);
+    // Check LOVABLE_API_KEY
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('[PARSE-LAB-REPORT] Sending to OpenAI for analysis');
+    // Convert PDF to base64 for Gemini
+    console.log('[PARSE-LAB-REPORT] Converting PDF to base64');
+    const base64Pdf = btoa(String.fromCharCode(...uint8Array));
+    console.log(`[PARSE-LAB-REPORT] Converted PDF to base64: ${base64Pdf.length} characters`);
 
-    // Use regular GPT-4 with extracted text
-    const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('[PARSE-LAB-REPORT] Sending PDF to Gemini via Lovable AI Gateway');
+
+    // Use Gemini via Lovable AI Gateway with native PDF support
+    const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'google/gemini-2.5-pro',
         messages: [
           {
             role: 'system',
-            content: `You are a medical lab report parser. Extract ALL biomarkers from the lab report text in JSON format.
+            content: `You are a medical lab report parser. Extract ALL biomarkers from the lab report PDF in JSON format.
 
 CRITICAL INSTRUCTIONS FOR DATE EXTRACTION:
 - Find the test/sample collection date in the document
@@ -150,7 +138,18 @@ Extract every single biomarker value you can find, even if small or in footnotes
           },
           {
             role: 'user',
-            content: `Parse this lab report text and extract all biomarker data:\n\n${fullText}`
+            content: [
+              {
+                type: 'text',
+                text: 'Parse this lab report PDF and extract all biomarker data:'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${base64Pdf}`
+                }
+              }
+            ]
           }
         ],
         max_tokens: 4000,
@@ -158,25 +157,24 @@ Extract every single biomarker value you can find, even if small or in footnotes
       }),
     });
 
-    const openAiData = await openAiResponse.json();
+    const geminiData = await geminiResponse.json();
 
-    if (!openAiData.choices?.[0]?.message?.content) {
-      console.error('[PARSE-LAB-REPORT] OpenAI response error:', openAiData);
-      throw new Error('Failed to parse PDF with OpenAI');
+    if (!geminiData.choices?.[0]?.message?.content) {
+      console.error('[PARSE-LAB-REPORT] Gemini response error:', geminiData);
+      throw new Error('Failed to parse PDF with Gemini');
     }
 
     let extractedData;
     try {
-      const content = openAiData.choices[0].message.content;
+      const content = geminiData.choices[0].message.content;
       // Remove markdown code blocks if present
       const jsonString = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       extractedData = JSON.parse(jsonString);
+      console.log(`[PARSE-LAB-REPORT] ✓ Gemini extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
     } catch (parseError) {
-      console.error('[PARSE-LAB-REPORT] Failed to parse OpenAI response:', openAiData.choices[0].message.content);
+      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response:', geminiData.choices[0].message.content);
       throw new Error('Failed to parse structured data from AI response');
     }
-
-    console.log(`[PARSE-LAB-REPORT] Extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
 
     // Fetch all biomarker aliases for fuzzy matching
     const { data: aliases, error: aliasesError } = await supabase
@@ -269,12 +267,13 @@ Extract every single biomarker value you can find, even if small or in footnotes
         ai_extracted_data: {
           laboratory: extractedData.laboratory,
           test_date: extractedData.test_date,
-          biomarker_count: results.length
+          biomarker_count: results.length,
+          ai_provider: 'gemini-2.5-pro'
         }
       })
       .eq('id', documentId);
 
-    console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} biomarkers`);
+    console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} biomarkers via Gemini`);
 
     return new Response(
       JSON.stringify({
