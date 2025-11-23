@@ -100,7 +100,7 @@ serve(async (req) => {
     }
 
     // Convert PDF to base64 for Gemini (in chunks to avoid stack overflow)
-    console.log('[PARSE-LAB-REPORT] 🔄 Stage 2/4: Converting PDF to base64');
+    console.log('[PARSE-LAB-REPORT] 🔄 Stage 2/5: Converting PDF to base64');
     const chunkSize = 8192;
     let binaryString = '';
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
@@ -110,10 +110,92 @@ serve(async (req) => {
     const base64Pdf = btoa(binaryString);
     console.log(`[PARSE-LAB-REPORT] Converted PDF to base64: ${base64Pdf.length} characters`);
 
-    console.log('[PARSE-LAB-REPORT] 🤖 Stage 3/4: Analyzing document with Gemini AI...');
+    // ============================================================
+    // STEP 1: AI DOCUMENT CLASSIFIER
+    // ============================================================
+    console.log('[PARSE-LAB-REPORT] 🔍 Stage 3/5: Classifying document type...');
 
-    // Use Gemini via Lovable AI Gateway with native PDF support
-    const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const classificationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a medical document classifier. Analyze the first page of the PDF and determine its category.
+
+Categories:
+- lab_blood: Blood test results (CBC, lipid panel, chemistry panel, etc.)
+- lab_urine: Urinalysis or urine test results
+- lab_microbiome: Gut microbiome, stool analysis
+- imaging_report: MRI, CT scan, ultrasound, X-ray reports
+- clinical_note: Doctor's notes, consultation summary
+
+Return ONLY valid JSON (no markdown):
+{
+  "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "clinical_note",
+  "confidence_score": 0-100,
+  "reasoning": "Brief explanation of classification"
+}`
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Classify this medical document:' },
+              {
+                type: 'image_url',
+                image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
+              }
+            ]
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.1,
+      }),
+    });
+
+    const classificationData = await classificationResponse.json();
+    const classificationContent = classificationData.choices?.[0]?.message?.content || '{}';
+    
+    let classification;
+    try {
+      let jsonString = classificationContent.trim()
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+      classification = JSON.parse(jsonString);
+      console.log(`[PARSE-LAB-REPORT] ✓ Classified as: ${classification.category} (confidence: ${classification.confidence_score}%)`);
+      console.log(`[PARSE-LAB-REPORT] Reasoning: ${classification.reasoning}`);
+    } catch (e) {
+      console.warn('[PARSE-LAB-REPORT] Failed to parse classification, defaulting to lab_blood');
+      classification = { category: 'lab_blood', confidence_score: 50, reasoning: 'Failed to classify' };
+    }
+
+    const documentCategory = classification.category;
+
+    // Save category to medical_documents
+    await supabase
+      .from('medical_documents')
+      .update({ category: documentCategory })
+      .eq('id', documentId);
+
+    // ============================================================
+    // STEP 2: ROUTE TO SPECIALIZED PARSERS
+    // ============================================================
+    console.log(`[PARSE-LAB-REPORT] 🤖 Stage 4/5: Parsing ${documentCategory} document with specialized parser...`);
+
+    let extractedData;
+    let aiSummary = '';
+    
+    // ============================================================
+    // PARSER A: LAB BLOOD/URINE (ENHANCED)
+    // ============================================================
+    if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
+      const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -124,7 +206,13 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a medical lab report parser. Extract ALL biomarkers from the lab report PDF in JSON format.
+            content: `You are a medical lab report parser. Extract ALL biomarkers from ${documentCategory === 'lab_urine' ? 'urinalysis' : 'blood test'} report PDF in JSON format.
+
+QUALITATIVE RESULTS HANDLING:
+- For qualitative results like "Negative", "Positive", "Trace", "Present", "Absent":
+  - Set value to null
+  - Include the text result in "text_value" field
+- Examples: Glucose: "Negative", Protein: "Trace", Blood: "Positive"
 
 CRITICAL INSTRUCTIONS FOR DATE EXTRACTION:
 - Find the test/sample collection date in the document
@@ -168,7 +256,8 @@ Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
     {
       "name": "Biomarker name as written in the report",
       "canonical_name": "standardized_lowercase_name",
-      "value": numeric_value,
+      "value": numeric_value_or_null,
+      "text_value": "text result if qualitative (e.g., 'Negative', 'Trace')",
       "unit": "unit as string",
       "reference_range_min": numeric_value_or_null,
       "reference_range_max": numeric_value_or_null,
@@ -179,81 +268,145 @@ Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 }
 
 Extract every single biomarker value you can find, even if small or in footnotes.`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Parse this lab report PDF and extract all biomarker data:'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64Pdf}`
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Parse this lab report PDF and extract all biomarker data:'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64Pdf}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
-        max_tokens: 16000, // Increased for large lab reports with many biomarkers
-        temperature: 0.1,
-      }),
-    });
+              ]
+            }
+          ],
+          max_tokens: 16000,
+          temperature: 0.1,
+        }),
+      });
 
-    const geminiData = await geminiResponse.json();
+      const geminiData = await geminiResponse.json();
 
-    if (!geminiData.choices?.[0]?.message?.content) {
-      console.error('[PARSE-LAB-REPORT] Gemini response error:', geminiData);
-      throw new Error('Failed to parse PDF with Gemini');
-    }
-
-    const content = geminiData.choices[0].message.content;
-    const finishReason = geminiData.choices[0].finish_reason;
-
-    // Check if response was truncated
-    if (finishReason === 'length') {
-      console.warn('[PARSE-LAB-REPORT] ⚠️ Gemini response was truncated due to max_tokens limit');
-      console.warn('[PARSE-LAB-REPORT] Consider increasing max_tokens or splitting the document');
-    }
-
-    // Log response length for debugging
-    console.log(`[PARSE-LAB-REPORT] Gemini response: ${content.length} chars, finish_reason: ${finishReason}`);
-
-    let extractedData;
-    try {
-      // Remove markdown code blocks with ALL variations (```json, ```, etc.)
-      let jsonString = content.trim();
-      
-      // Remove opening markdown tag (various formats: ```json, ```JSON, ```)
-      jsonString = jsonString.replace(/^```(?:json)?\s*/i, '');
-      
-      // Remove closing markdown tag
-      jsonString = jsonString.replace(/```\s*$/i, '');
-      
-      // Trim again after removal
-      jsonString = jsonString.trim();
-      
-      console.log(`[PARSE-LAB-REPORT] Cleaned JSON string (first 500 chars):`, jsonString.substring(0, 500));
-      
-      // Fallback: Extract JSON object from text (find first { to last })
-      if (!jsonString.startsWith('{')) {
-        const firstBrace = jsonString.indexOf('{');
-        const lastBrace = jsonString.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-          jsonString = jsonString.substring(firstBrace, lastBrace + 1);
-          console.log('[PARSE-LAB-REPORT] Extracted JSON object from response using fallback');
-        }
+      if (!geminiData.choices?.[0]?.message?.content) {
+        console.error('[PARSE-LAB-REPORT] Gemini response error:', geminiData);
+        throw new Error('Failed to parse PDF with Gemini');
       }
-      
-      extractedData = JSON.parse(jsonString);
-      console.log(`[PARSE-LAB-REPORT] ✓ Gemini extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
-    } catch (parseError) {
-      console.error('[PARSE-LAB-REPORT] Failed to parse Gemini response (first 1000 chars):', content.substring(0, 1000));
-      console.error('[PARSE-LAB-REPORT] Response finish_reason:', finishReason);
-      console.error('[PARSE-LAB-REPORT] Response length:', content.length);
-      console.error('[PARSE-LAB-REPORT] Parse error:', parseError.message);
-      throw new Error(`Failed to parse structured data from AI response: ${parseError.message}`);
+
+      const content = geminiData.choices[0].message.content;
+      const finishReason = geminiData.choices[0].finish_reason;
+
+      if (finishReason === 'length') {
+        console.warn('[PARSE-LAB-REPORT] ⚠️ Gemini response was truncated due to max_tokens limit');
+      }
+
+      console.log(`[PARSE-LAB-REPORT] Gemini response: ${content.length} chars, finish_reason: ${finishReason}`);
+
+      try {
+        let jsonString = content.trim()
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/```\s*$/i, '')
+          .trim();
+        
+        if (!jsonString.startsWith('{')) {
+          const firstBrace = jsonString.indexOf('{');
+          const lastBrace = jsonString.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonString = jsonString.substring(firstBrace, lastBrace + 1);
+          }
+        }
+        
+        extractedData = JSON.parse(jsonString);
+        console.log(`[PARSE-LAB-REPORT] ✓ Extracted ${extractedData.biomarkers?.length || 0} biomarkers`);
+      } catch (parseError) {
+        console.error('[PARSE-LAB-REPORT] Parse error:', parseError.message);
+        throw new Error(`Failed to parse structured data: ${parseError.message}`);
+      }
+
+      aiSummary = `Извлечено ${extractedData.biomarkers?.length || 0} биомаркеров из ${extractedData.laboratory || 'лаборатории'}`;
+    }
+    
+    // ============================================================
+    // PARSER B: IMAGING REPORT (NEW)
+    // ============================================================
+    else if (documentCategory === 'imaging_report') {
+      const imagingResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-pro',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a medical imaging report analyzer. Extract summary and key findings from MRI, CT, ultrasound, or X-ray reports.
+
+Return ONLY valid JSON (no markdown):
+{
+  "report_type": "MRI" | "CT" | "Ultrasound" | "X-ray",
+  "study_date": "YYYY-MM-DD",
+  "body_regions": ["Liver", "Kidney", etc.],
+  "ai_summary": "Brief 50-100 word summary of the entire report",
+  "findings": [
+    {
+      "body_part": "Liver",
+      "finding_text": "Mild hepatic steatosis detected",
+      "severity": "normal" | "mild" | "moderate" | "severe",
+      "tags": ["liver", "fatty_liver"]
+    }
+  ]
+}`
+            },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Analyze this imaging report:' },
+                {
+                  type: 'image_url',
+                  image_url: { url: `data:application/pdf;base64,${base64Pdf}` }
+                }
+              ]
+            }
+          ],
+          max_tokens: 8000,
+          temperature: 0.1,
+        }),
+      });
+
+      const imagingData = await imagingResponse.json();
+      const imagingContent = imagingData.choices?.[0]?.message?.content || '{}';
+
+      try {
+        let jsonString = imagingContent.trim()
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/```\s*$/i, '')
+          .trim();
+        
+        if (!jsonString.startsWith('{')) {
+          const firstBrace = jsonString.indexOf('{');
+          const lastBrace = jsonString.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1) {
+            jsonString = jsonString.substring(firstBrace, lastBrace + 1);
+          }
+        }
+        
+        extractedData = JSON.parse(jsonString);
+        aiSummary = extractedData.ai_summary || 'Imaging report processed';
+        console.log(`[PARSE-LAB-REPORT] ✓ Extracted ${extractedData.findings?.length || 0} findings`);
+      } catch (e) {
+        console.error('[PARSE-LAB-REPORT] Failed to parse imaging data:', e);
+        extractedData = { findings: [] };
+        aiSummary = 'Failed to parse imaging report';
+      }
+    } else {
+      // Unsupported category
+      throw new Error(`Unsupported document category: ${documentCategory}`);
     }
 
     // Fetch all biomarker aliases for fuzzy matching
@@ -265,103 +418,159 @@ Extract every single biomarker value you can find, even if small or in footnotes
       console.error('[PARSE-LAB-REPORT] Error fetching aliases:', aliasesError);
     }
 
+    // ============================================================
+    // SAVE RESULTS TO DATABASE
+    // ============================================================
+    console.log('[PARSE-LAB-REPORT] 💾 Stage 5/5: Saving results to database...');
+
     const results = [];
     let matchedCount = 0;
     let unmatchedCount = 0;
 
-    console.log('[PARSE-LAB-REPORT] 💾 Stage 4/4: Saving biomarkers to database...');
+    // Process LAB results (blood/urine)
+    if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
+      // Fetch all biomarker aliases for fuzzy matching
+      const { data: aliases, error: aliasesError } = await supabase
+        .from('biomarker_aliases')
+        .select('*, biomarker_master(*)');
 
-    // Process each biomarker
-    for (const biomarker of extractedData.biomarkers || []) {
-      try {
-        console.log(`[PARSE-LAB-REPORT] Processing biomarker: ${biomarker.name}`);
+      if (aliasesError) {
+        console.error('[PARSE-LAB-REPORT] Error fetching aliases:', aliasesError);
+      }
 
-        let biomarkerMaster = null;
+      // Process each biomarker
+      for (const biomarker of extractedData.biomarkers || []) {
+        try {
+          console.log(`[PARSE-LAB-REPORT] Processing biomarker: ${biomarker.name}`);
 
-        // Step 1: Try matching by canonical_name from Gemini
-        if (biomarker.canonical_name) {
-          const normalizedCanonical = normalizeBiomarkerName(biomarker.canonical_name);
-          const canonicalMatch = aliases?.find(a => 
-            a.alias_normalized === normalizedCanonical
-          );
-          if (canonicalMatch) {
-            biomarkerMaster = canonicalMatch.biomarker_master;
-            console.log(`[PARSE-LAB-REPORT] ✓ Matched via canonical_name: ${biomarker.name} → ${biomarker.canonical_name}`);
+          let biomarkerMaster = null;
+          let matchedStatus = 'unmatched';
+          let confidenceScore = 0;
+
+          // Try matching by canonical_name from Gemini
+          if (biomarker.canonical_name) {
+            const normalizedCanonical = normalizeBiomarkerName(biomarker.canonical_name);
+            const canonicalMatch = aliases?.find(a => 
+              a.alias_normalized === normalizedCanonical
+            );
+            if (canonicalMatch) {
+              biomarkerMaster = canonicalMatch.biomarker_master;
+              matchedStatus = 'verified';
+              confidenceScore = 95;
+              console.log(`[PARSE-LAB-REPORT] ✓ Matched via canonical_name: ${biomarker.name} → ${biomarker.canonical_name}`);
+            }
           }
-        }
 
-        // Step 2: Fuzzy matching through normalized aliases
-        if (!biomarkerMaster) {
-          const normalizedInput = normalizeBiomarkerName(biomarker.name);
-          const fuzzyMatch = aliases?.find(a => 
-            a.alias_normalized === normalizedInput
-          );
-          if (fuzzyMatch) {
-            biomarkerMaster = fuzzyMatch.biomarker_master;
-            console.log(`[PARSE-LAB-REPORT] ✓ Matched via fuzzy alias: ${biomarker.name}`);
+          // Fuzzy matching through normalized aliases
+          if (!biomarkerMaster) {
+            const normalizedInput = normalizeBiomarkerName(biomarker.name);
+            const fuzzyMatch = aliases?.find(a => 
+              a.alias_normalized === normalizedInput
+            );
+            if (fuzzyMatch) {
+              biomarkerMaster = fuzzyMatch.biomarker_master;
+              matchedStatus = 'fuzzy_match';
+              confidenceScore = 75;
+              console.log(`[PARSE-LAB-REPORT] ✓ Matched via fuzzy alias: ${biomarker.name}`);
+            }
           }
-        }
 
-        // Count match/unmatch
-        if (biomarkerMaster) {
-          matchedCount++;
-        } else {
-          unmatchedCount++;
-          console.log(`[PARSE-LAB-REPORT] ⚠️ No match found for: ${biomarker.name}`);
-        }
-
-        // Normalize value to standard unit
-        let normalizedValue = biomarker.value;
-        let normalizedUnit = biomarker.unit;
-
-        if (biomarkerMaster) {
-          normalizedUnit = biomarkerMaster.standard_unit;
-          
-          // Apply unit conversion if needed
-          const conversionFactors = biomarkerMaster.conversion_factors || {};
-          if (biomarker.unit !== biomarkerMaster.standard_unit && conversionFactors[biomarker.unit]) {
-            normalizedValue = biomarker.value * conversionFactors[biomarker.unit];
-            console.log(`[PARSE-LAB-REPORT] Converted ${biomarker.value} ${biomarker.unit} to ${normalizedValue} ${normalizedUnit}`);
+          if (biomarkerMaster) {
+            matchedCount++;
+          } else {
+            unmatchedCount++;
+            confidenceScore = 30;
+            console.log(`[PARSE-LAB-REPORT] ⚠️ No match found for: ${biomarker.name}`);
           }
-        }
 
-        // Insert into lab_test_results
-        const { data: insertedResult, error: insertError } = await supabase
-          .from('lab_test_results')
-          .insert({
-            user_id: user.id,
-            document_id: documentId,
-            biomarker_id: biomarkerMaster?.id || null,
-            raw_test_name: biomarker.name,
-            value: biomarker.value,
-            unit: biomarker.unit || '-', // Handle dimensionless biomarkers
-            normalized_value: normalizedValue,
-            normalized_unit: normalizedUnit,
-            laboratory_name: extractedData.laboratory,
-            ref_range_min: biomarker.reference_range_min,
-            ref_range_max: biomarker.reference_range_max,
-            ref_range_unit: biomarker.unit,
-            ref_range_source: 'lab_provided',
-            test_date: extractedData.test_date,
-          })
-          .select()
-          .single();
+          // Handle qualitative vs quantitative results
+          const isQualitative = biomarker.text_value !== undefined && biomarker.text_value !== null;
+          let normalizedValue = isQualitative ? null : biomarker.value;
+          let normalizedUnit = biomarker.unit;
 
-        if (insertError) {
-          console.error(`[PARSE-LAB-REPORT] Error inserting biomarker ${biomarker.name}:`, insertError);
-        } else {
-          results.push(insertedResult);
-          console.log(`[PARSE-LAB-REPORT] ✓ Saved biomarker: ${biomarker.name}`);
+          if (biomarkerMaster && !isQualitative && biomarker.value !== null) {
+            normalizedUnit = biomarkerMaster.standard_unit;
+            
+            const conversionFactors = biomarkerMaster.conversion_factors || {};
+            if (biomarker.unit !== biomarkerMaster.standard_unit && conversionFactors[biomarker.unit]) {
+              normalizedValue = biomarker.value * conversionFactors[biomarker.unit];
+              console.log(`[PARSE-LAB-REPORT] Converted ${biomarker.value} ${biomarker.unit} to ${normalizedValue} ${normalizedUnit}`);
+            }
+          }
+
+          // Insert into lab_test_results
+          const { data: insertedResult, error: insertError } = await supabase
+            .from('lab_test_results')
+            .insert({
+              user_id: user.id,
+              document_id: documentId,
+              biomarker_id: biomarkerMaster?.id || null,
+              raw_test_name: biomarker.name,
+              value: isQualitative ? null : biomarker.value,
+              text_value: biomarker.text_value || null,
+              unit: biomarker.unit || '-',
+              normalized_value: normalizedValue,
+              normalized_unit: normalizedUnit,
+              laboratory_name: extractedData.laboratory,
+              ref_range_min: biomarker.reference_range_min,
+              ref_range_max: biomarker.reference_range_max,
+              ref_range_unit: biomarker.unit,
+              ref_range_source: 'lab_provided',
+              test_date: extractedData.test_date,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`[PARSE-LAB-REPORT] Error inserting biomarker ${biomarker.name}:`, insertError);
+          } else {
+            results.push({
+              ...insertedResult,
+              matched_status: matchedStatus,
+              confidence_score: confidenceScore,
+              is_qualitative: isQualitative
+            });
+            console.log(`[PARSE-LAB-REPORT] ✓ Saved biomarker: ${biomarker.name}`);
+          }
+        } catch (biomarkerError) {
+          console.error(`[PARSE-LAB-REPORT] Error processing biomarker ${biomarker.name}:`, biomarkerError);
         }
-      } catch (biomarkerError) {
-        console.error(`[PARSE-LAB-REPORT] Error processing biomarker ${biomarker.name}:`, biomarkerError);
+      }
+    }
+    
+    // Process IMAGING results
+    else if (documentCategory === 'imaging_report') {
+      for (const finding of extractedData.findings || []) {
+        try {
+          const { data: insertedFinding, error: insertError } = await supabase
+            .from('medical_findings')
+            .insert({
+              user_id: user.id,
+              document_id: documentId,
+              body_part: finding.body_part,
+              finding_text: finding.finding_text,
+              severity: finding.severity,
+              tags: finding.tags || []
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`[PARSE-LAB-REPORT] Error inserting finding:`, insertError);
+          } else {
+            results.push(insertedFinding);
+            console.log(`[PARSE-LAB-REPORT] ✓ Saved finding: ${finding.body_part} - ${finding.severity}`);
+          }
+        } catch (findingError) {
+          console.error(`[PARSE-LAB-REPORT] Error processing finding:`, findingError);
+        }
       }
     }
 
-    // Update medical document with REAL test date from PDF + AI processing flag
-    const testDate = extractedData.test_date || document.uploaded_at?.split('T')[0];
+    // Update medical document
+    const testDate = extractedData.test_date || extractedData.study_date || document.uploaded_at?.split('T')[0];
     
-    if (!extractedData.test_date) {
+    if (!extractedData.test_date && !extractedData.study_date) {
       console.warn('[PARSE-LAB-REPORT] ⚠️ Test date not found in document, using upload date as fallback');
     } else {
       console.log(`[PARSE-LAB-REPORT] ✓ Using test date from document: ${testDate}`);
@@ -370,41 +579,63 @@ Extract every single biomarker value you can find, even if small or in footnotes
     await supabase
       .from('medical_documents')
       .update({
-        document_date: testDate,  // CRITICAL: Use date from document, not upload date!
+        document_date: testDate,
         ai_processed: true,
         processing_status: 'completed',
         processing_completed_at: new Date().toISOString(),
-        ai_summary: `Извлечено ${results.length} биомаркеров из ${extractedData.laboratory || 'лаборатории'}`,
+        ai_summary: aiSummary,
         ai_extracted_data: {
+          category: documentCategory,
           laboratory: extractedData.laboratory,
-          test_date: extractedData.test_date,
-          biomarker_count: results.length,
+          report_type: extractedData.report_type,
+          test_date: testDate,
+          result_count: results.length,
           ai_provider: 'gemini-2.5-pro'
         }
       })
       .eq('id', documentId);
 
-    // Invalidate AI analysis cache for all biomarkers in this document
-    const biomarkerIds = results.map(r => r.biomarker_id).filter(Boolean);
-    if (biomarkerIds.length > 0) {
-      await supabase
-        .from('biomarker_ai_analysis')
-        .delete()
-        .eq('user_id', user.id)
-        .in('biomarker_id', biomarkerIds);
-      console.log(`[PARSE-LAB-REPORT] Invalidated AI cache for ${biomarkerIds.length} biomarkers`);
+    // Invalidate AI analysis cache for lab results
+    if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
+      const biomarkerIds = results.map(r => r.biomarker_id).filter(Boolean);
+      if (biomarkerIds.length > 0) {
+        await supabase
+          .from('biomarker_ai_analysis')
+          .delete()
+          .eq('user_id', user.id)
+          .in('biomarker_id', biomarkerIds);
+        console.log(`[PARSE-LAB-REPORT] Invalidated AI cache for ${biomarkerIds.length} biomarkers`);
+      }
     }
 
-    console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} biomarkers via Gemini`);
-    console.log(`[PARSE-LAB-REPORT] 📊 Match statistics: ${matchedCount} matched (${Math.round(matchedCount/results.length*100)}%), ${unmatchedCount} unmatched (${Math.round(unmatchedCount/results.length*100)}%)`);
+    console.log(`[PARSE-LAB-REPORT] ✓ Completed! Saved ${results.length} results`);
+    if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
+      console.log(`[PARSE-LAB-REPORT] 📊 Match statistics: ${matchedCount} matched (${Math.round(matchedCount/results.length*100)}%), ${unmatchedCount} unmatched (${Math.round(unmatchedCount/results.length*100)}%)`);
+    }
 
+    // Enhanced response format
     return new Response(
       JSON.stringify({
         success: true,
-        biomarkers_extracted: results.length,
-        results: results,
+        category: documentCategory,
+        ai_summary: aiSummary,
+        results: documentCategory === 'imaging_report' ? {
+          findings: results
+        } : {
+          biomarkers: results.map(r => ({
+            ...r,
+            matched_status: r.matched_status,
+            confidence_score: r.confidence_score,
+            is_qualitative: r.is_qualitative
+          }))
+        },
         laboratory: extractedData.laboratory,
-        test_date: extractedData.test_date
+        test_date: testDate,
+        statistics: {
+          total: results.length,
+          matched: matchedCount,
+          unmatched: unmatchedCount
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
