@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
+import { ArrowLeft, Loader2, TrendingUp, TrendingDown, Minus, Info, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBiomarkerTrends, useBiomarkerHistory } from '@/hooks/useBiomarkers';
 import { BiomarkerTrendChart } from '@/components/biomarkers/BiomarkerTrendChart';
+import { BiomarkerSettingsModal } from '@/components/biomarkers/BiomarkerSettingsModal';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -15,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function BiomarkerDetail() {
   const { biomarkerId } = useParams<{ biomarkerId: string }>();
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);
   
   const { analysis, isLoading: analysisLoading } = useBiomarkerTrends(biomarkerId);
   const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId!);
@@ -76,6 +79,15 @@ export default function BiomarkerDetail() {
           <h1 className="text-2xl font-bold">{biomarker.name}</h1>
           <p className="text-muted-foreground capitalize">{biomarker.category}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowSettings(true)}
+          className="border-purple-500/50 hover:bg-purple-500/10 hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Customize Optimal Range
+        </Button>
       </div>
 
       {/* Latest Value Card */}
@@ -297,6 +309,19 @@ export default function BiomarkerDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Settings Modal */}
+      <BiomarkerSettingsModal
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        biomarkerId={biomarkerId!}
+        biomarkerName={biomarker.name}
+        unit={biomarker.unit}
+        referenceMin={reference_ranges.min}
+        referenceMax={reference_ranges.max}
+        currentOptimalMin={reference_ranges.optimal_min}
+        currentOptimalMax={reference_ranges.optimal_max}
+      />
     </div>
   );
 }
