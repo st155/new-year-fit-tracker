@@ -51,7 +51,7 @@ serve(async (req) => {
       throw new Error('Document not found');
     }
 
-    console.log('[PARSE-LAB-REPORT] Downloading PDF from storage');
+    console.log('[PARSE-LAB-REPORT] 📄 Stage 1/4: Downloading PDF from storage');
 
     // Download file from storage (works with private buckets)
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -86,7 +86,7 @@ serve(async (req) => {
     }
 
     // Convert PDF to base64 for Gemini (in chunks to avoid stack overflow)
-    console.log('[PARSE-LAB-REPORT] Converting PDF to base64');
+    console.log('[PARSE-LAB-REPORT] 🔄 Stage 2/4: Converting PDF to base64');
     const chunkSize = 8192;
     let binaryString = '';
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
@@ -96,7 +96,7 @@ serve(async (req) => {
     const base64Pdf = btoa(binaryString);
     console.log(`[PARSE-LAB-REPORT] Converted PDF to base64: ${base64Pdf.length} characters`);
 
-    console.log('[PARSE-LAB-REPORT] Sending PDF to Gemini via Lovable AI Gateway');
+    console.log('[PARSE-LAB-REPORT] 🤖 Stage 3/4: Analyzing document with Gemini AI...');
 
     // Use Gemini via Lovable AI Gateway with native PDF support
     const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -205,6 +205,8 @@ Extract every single biomarker value you can find, even if small or in footnotes
     }
 
     const results = [];
+
+    console.log('[PARSE-LAB-REPORT] 💾 Stage 4/4: Saving biomarkers to database...');
 
     // Process each biomarker
     for (const biomarker of extractedData.biomarkers || []) {

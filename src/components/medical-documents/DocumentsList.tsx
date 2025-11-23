@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag, Sparkles } from 'lucide-react';
+import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,8 +148,16 @@ export const DocumentsList = () => {
                       <Badge variant="secondary">
                         {documentTypeLabels[doc.document_type]}
                       </Badge>
+                      {doc.document_type === 'blood_test' && !doc.ai_processed && (
+                        <Badge variant="outline" className="gap-1 text-yellow-600 bg-yellow-50 border-yellow-300">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Обрабатывается...
+                        </Badge>
+                      )}
                       {doc.ai_processed && (
-                        <Badge variant="outline">AI обработан</Badge>
+                        <Badge variant="outline" className="text-green-600 bg-green-50 border-green-300">
+                          ✓ AI обработан
+                        </Badge>
                       )}
                       {doc.tags?.map((tag) => (
                         <Badge key={tag} variant="outline" className="gap-1">

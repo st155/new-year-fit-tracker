@@ -1,21 +1,39 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { useLabTestResults } from '@/hooks/useBiomarkers';
 import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { BiomarkerCard } from '@/components/biomarkers/BiomarkerCard';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+
+const processingStages = {
+  'downloading': { label: '📄 Загрузка PDF', progress: 10 },
+  'converting': { label: '🔄 Конвертация в base64', progress: 20 },
+  'analyzing': { label: '🤖 Анализ с Gemini AI', progress: 50 },
+  'saving': { label: '💾 Сохранение биомаркеров', progress: 85 },
+  'complete': { label: '✅ Готово!', progress: 100 },
+} as const;
 
 export default function MedicalDocumentDetail() {
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const { documents } = useMedicalDocuments();
   const { results, isLoading, parseDocument } = useLabTestResults(documentId);
+  
+  const [processingStage, setProcessingStage] = useState<keyof typeof processingStages | null>(null);
+  const [processingProgress, setProcessingProgress] = useState(0);
   
   const document = documents?.find(d => d.id === documentId);
 
@@ -32,9 +50,51 @@ export default function MedicalDocumentDetail() {
     );
   }
 
-  const handleParse = () => {
-    if (documentId) {
-      parseDocument.mutate(documentId);
+  const handleParse = async () => {
+    if (!documentId) return;
+    
+    setProcessingStage('downloading');
+    setProcessingProgress(10);
+    
+    // Simulate progress stages
+    const progressTimer = setInterval(() => {
+      setProcessingProgress(prev => Math.min(prev + 5, 90));
+    }, 1000);
+    
+    try {
+      await parseDocument.mutateAsync(documentId);
+      
+      clearInterval(progressTimer);
+      setProcessingStage('complete');
+      setProcessingProgress(100);
+      
+      // Poll for results
+      const pollInterval = setInterval(async () => {
+        const { data: updatedDoc } = await supabase
+          .from('medical_documents')
+          .select('ai_processed, ai_summary')
+          .eq('id', documentId)
+          .single();
+          
+        if (updatedDoc?.ai_processed) {
+          clearInterval(pollInterval);
+          queryClient.invalidateQueries({ queryKey: ['lab-test-results', documentId] });
+          queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
+          
+          toast({
+            title: '✅ Обработка завершена',
+            description: updatedDoc.ai_summary || 'Биомаркеры успешно извлечены',
+          });
+          
+          setProcessingStage(null);
+          setProcessingProgress(0);
+        }
+      }, 2000);
+      
+    } catch (error) {
+      clearInterval(progressTimer);
+      setProcessingStage(null);
+      setProcessingProgress(0);
     }
   };
 
@@ -102,6 +162,26 @@ export default function MedicalDocumentDetail() {
           </Button>
         )}
       </div>
+
+      {/* Processing Progress */}
+      {processingStage && (
+        <Card className="mb-6 border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                <p className="font-medium">
+                  {processingStages[processingStage]?.label || 'Обработка документа...'}
+                </p>
+              </div>
+              <Progress value={processingProgress} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                Это может занять 10-15 секунд. Gemini анализирует весь PDF...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
