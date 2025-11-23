@@ -60,9 +60,18 @@ serve(async (req) => {
       throw new Error('Failed to download document');
     }
 
-    // Convert to base64 for AI processing
+    // Convert to base64 for AI processing (chunked to avoid stack overflow for large files)
     const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binaryString = '';
+    
+    const CHUNK_SIZE = 8192; // 8KB chunks
+    for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
+      const chunk = uint8Array.subarray(i, Math.min(i + CHUNK_SIZE, uint8Array.length));
+      binaryString += String.fromCharCode(...chunk);
+    }
+    
+    const base64 = btoa(binaryString);
     const mimeType = document.mime_type || 'application/pdf';
     const dataUrl = `data:${mimeType};base64,${base64}`;
 
