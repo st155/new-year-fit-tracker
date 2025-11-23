@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { StackItemCard } from "./StackItemCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon } from "lucide-react";
+import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill } from "lucide-react";
 import { toast } from "sonner";
 
 const INTAKE_TIME_GROUPS = [
@@ -31,7 +31,7 @@ export function TheStackView() {
         .select(`
           *,
           supplement_products (
-            product_name,
+            name,
             brand,
             form
           )

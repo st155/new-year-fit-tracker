@@ -167,3 +167,9 @@ verify_jwt = true
 
 [functions.generate-health-analysis]
 verify_jwt = true
+
+[functions.populate-biomarker-correlations]
+verify_jwt = false
+
+[functions.migrate-supplements-to-v3]
+verify_jwt = false
