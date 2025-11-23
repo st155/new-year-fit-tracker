@@ -196,7 +196,10 @@ export const DocumentsList = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleAnalyze(doc.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAnalyze(doc.id);
+                        }}
                         disabled={analyzingDoc === doc.id}
                       >
                         <Sparkles className="h-4 w-4 mr-1" />
@@ -207,19 +210,22 @@ export const DocumentsList = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDownload(doc.storage_path, doc.file_name)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(doc.storage_path, doc.file_name);
+                      }}
                       title="Скачать"
                     >
                       <Download className="h-4 w-4" />
                     </Button>
                     
                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                      <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" title="Удалить">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Удалить документ?</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -229,7 +235,10 @@ export const DocumentsList = () => {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Отмена</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => deleteDocument.mutate(doc.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteDocument.mutate(doc.id);
+                            }}
                           >
                             Удалить
                           </AlertDialogAction>
