@@ -3615,7 +3615,7 @@ export type Database = {
           ref_range_unit: string | null
           sample_type: string | null
           test_date: string
-          unit: string
+          unit: string | null
           updated_at: string | null
           user_id: string
           value: number
@@ -3641,7 +3641,7 @@ export type Database = {
           ref_range_unit?: string | null
           sample_type?: string | null
           test_date: string
-          unit: string
+          unit?: string | null
           updated_at?: string | null
           user_id: string
           value: number
@@ -3667,7 +3667,7 @@ export type Database = {
           ref_range_unit?: string | null
           sample_type?: string | null
           test_date?: string
-          unit?: string
+          unit?: string | null
           updated_at?: string | null
           user_id?: string
           value?: number
