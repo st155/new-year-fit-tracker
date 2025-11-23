@@ -646,6 +646,95 @@ export type Database = {
           },
         ]
       }
+      biomarker_aliases: {
+        Row: {
+          alias: string
+          biomarker_id: string
+          created_at: string | null
+          id: string
+          language: string | null
+          source: string | null
+        }
+        Insert: {
+          alias: string
+          biomarker_id: string
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          source?: string | null
+        }
+        Update: {
+          alias?: string
+          biomarker_id?: string
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biomarker_aliases_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biomarker_master: {
+        Row: {
+          alternative_units: Json | null
+          canonical_name: string
+          category: string
+          clinical_significance: string | null
+          conversion_factors: Json | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          interpretation_guide: string | null
+          loinc_code: string | null
+          reference_ranges: Json
+          standard_unit: string
+          updated_at: string | null
+          wiki_link: string | null
+        }
+        Insert: {
+          alternative_units?: Json | null
+          canonical_name: string
+          category: string
+          clinical_significance?: string | null
+          conversion_factors?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          interpretation_guide?: string | null
+          loinc_code?: string | null
+          reference_ranges?: Json
+          standard_unit: string
+          updated_at?: string | null
+          wiki_link?: string | null
+        }
+        Update: {
+          alternative_units?: Json | null
+          canonical_name?: string
+          category?: string
+          clinical_significance?: string | null
+          conversion_factors?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          interpretation_guide?: string | null
+          loinc_code?: string | null
+          reference_ranges?: Json
+          standard_unit?: string
+          updated_at?: string | null
+          wiki_link?: string | null
+        }
+        Relationships: []
+      }
       body_composition: {
         Row: {
           body_fat_percentage: number | null
@@ -3305,6 +3394,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lab_test_results: {
+        Row: {
+          biomarker_id: string | null
+          created_at: string | null
+          document_id: string
+          equipment_type: string | null
+          id: string
+          is_outlier: boolean | null
+          laboratory_method: string | null
+          laboratory_name: string | null
+          normalized_unit: string
+          normalized_value: number
+          outlier_reason: string | null
+          quality_flag: string | null
+          raw_test_name: string
+          reagent_lot: string | null
+          ref_range_max: number | null
+          ref_range_min: number | null
+          ref_range_source: string | null
+          ref_range_unit: string | null
+          sample_type: string | null
+          test_date: string
+          unit: string
+          updated_at: string | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          biomarker_id?: string | null
+          created_at?: string | null
+          document_id: string
+          equipment_type?: string | null
+          id?: string
+          is_outlier?: boolean | null
+          laboratory_method?: string | null
+          laboratory_name?: string | null
+          normalized_unit: string
+          normalized_value: number
+          outlier_reason?: string | null
+          quality_flag?: string | null
+          raw_test_name: string
+          reagent_lot?: string | null
+          ref_range_max?: number | null
+          ref_range_min?: number | null
+          ref_range_source?: string | null
+          ref_range_unit?: string | null
+          sample_type?: string | null
+          test_date: string
+          unit: string
+          updated_at?: string | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          biomarker_id?: string | null
+          created_at?: string | null
+          document_id?: string
+          equipment_type?: string | null
+          id?: string
+          is_outlier?: boolean | null
+          laboratory_method?: string | null
+          laboratory_name?: string | null
+          normalized_unit?: string
+          normalized_value?: number
+          outlier_reason?: string | null
+          quality_flag?: string | null
+          raw_test_name?: string
+          reagent_lot?: string | null
+          ref_range_max?: number | null
+          ref_range_min?: number | null
+          ref_range_source?: string | null
+          ref_range_unit?: string | null
+          sample_type?: string | null
+          test_date?: string
+          unit?: string
+          updated_at?: string | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_test_results_biomarker_id_fkey"
+            columns: ["biomarker_id"]
+            isOneToOne: false
+            referencedRelation: "biomarker_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_test_results_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      laboratory_profiles: {
+        Row: {
+          accreditation: string | null
+          created_at: string | null
+          equipment_list: Json | null
+          id: string
+          lab_city: string | null
+          lab_country: string | null
+          lab_name: string
+          reference_source: string | null
+          standard_methods: Json | null
+          uses_functional_ranges: boolean | null
+          website: string | null
+        }
+        Insert: {
+          accreditation?: string | null
+          created_at?: string | null
+          equipment_list?: Json | null
+          id?: string
+          lab_city?: string | null
+          lab_country?: string | null
+          lab_name: string
+          reference_source?: string | null
+          standard_methods?: Json | null
+          uses_functional_ranges?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          accreditation?: string | null
+          created_at?: string | null
+          equipment_list?: Json | null
+          id?: string
+          lab_city?: string | null
+          lab_country?: string | null
+          lab_name?: string
+          reference_source?: string | null
+          standard_methods?: Json | null
+          uses_functional_ranges?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
       }
       measurements: {
         Row: {
