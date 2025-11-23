@@ -3623,6 +3623,7 @@ export type Database = {
           created_at: string
           document_date: string | null
           document_type: string
+          file_hash: string | null
           file_name: string
           file_size: number | null
           hidden_from_trainer: boolean
@@ -3644,6 +3645,7 @@ export type Database = {
           created_at?: string
           document_date?: string | null
           document_type: string
+          file_hash?: string | null
           file_name: string
           file_size?: number | null
           hidden_from_trainer?: boolean
@@ -3665,6 +3667,7 @@ export type Database = {
           created_at?: string
           document_date?: string | null
           document_type?: string
+          file_hash?: string | null
           file_name?: string
           file_size?: number | null
           hidden_from_trainer?: boolean
