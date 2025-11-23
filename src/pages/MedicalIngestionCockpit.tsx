@@ -1,14 +1,17 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { ExtractionDashboard } from '@/components/medical-documents/ExtractionDashboard';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const MedicalIngestionCockpit = () => {
   const { documentId } = useParams<{ documentId: string }>();
+  const queryClient = useQueryClient();
 
   const { data: document, isLoading, error } = useQuery({
     queryKey: ['medical-document', documentId],
@@ -27,7 +30,39 @@ const MedicalIngestionCockpit = () => {
       return data;
     },
     enabled: !!documentId,
+    refetchInterval: (query) => {
+      const doc = query.state.data;
+      return doc?.processing_status === 'pending' || doc?.processing_status === 'processing' ? 3000 : false;
+    },
   });
+
+  // Auto-process pending documents
+  useEffect(() => {
+    if (document?.processing_status === 'pending') {
+      triggerProcessing();
+    }
+  }, [document?.id, document?.processing_status]);
+
+  const triggerProcessing = async () => {
+    if (!documentId) return;
+
+    try {
+      console.log('[Cockpit] Auto-processing pending document:', documentId);
+      
+      const { error } = await supabase.functions.invoke('parse-lab-report', {
+        body: { documentId }
+      });
+
+      if (error) throw error;
+
+      // Invalidate queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['medical-document', documentId] });
+      toast.success('Документ обрабатывается');
+    } catch (error: any) {
+      console.error('[Cockpit] Auto-processing failed:', error);
+      toast.error('Ошибка обработки', { description: error.message });
+    }
+  };
 
   if (isLoading) {
     return <PageLoader message="Loading document..." />;

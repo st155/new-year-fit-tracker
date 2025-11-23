@@ -91,19 +91,19 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-neutral-950 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
         <DialogHeader>
-          <DialogTitle>Сопоставление биомаркеров</DialogTitle>
-          <DialogDescription>
-            Выберите несопоставленный показатель слева и найдите соответствующий биомаркер справа
+          <DialogTitle className="text-purple-400">🔗 Сопоставление биомаркеров</DialogTitle>
+          <DialogDescription className="text-foreground/60">
+            Свяжите несопоставленные показатели с канонической базой биомаркеров
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 flex-1 overflow-hidden">
-          {/* Left: Unmatched results list */}
-          <div className="border rounded-lg p-4 space-y-2 overflow-y-auto">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-3">
-              Несопоставленные показатели ({unmatchedResults.length})
+          {/* Left: Unmatched Zone (Red) */}
+          <div className="border border-red-500/50 rounded-lg p-4 space-y-2 overflow-y-auto bg-red-500/5">
+            <h3 className="font-semibold text-sm text-red-400 mb-3">
+              🔴 Несопоставленные показатели ({unmatchedResults.length})
             </h3>
             {unmatchedResults.map(result => (
               <button
@@ -113,13 +113,15 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
                   setSearchQuery(result.raw_test_name);
                 }}
                 className={cn(
-                  'w-full text-left p-3 rounded-lg border transition-all hover:bg-muted',
-                  selectedResult?.id === result.id && 'bg-primary/10 border-primary'
+                  'w-full text-left p-3 rounded-lg border transition-all hover:shadow-[0_0_10px_rgba(239,68,68,0.3)]',
+                  selectedResult?.id === result.id 
+                    ? 'border-red-500 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                    : 'border-red-500/30 bg-neutral-900/50'
                 )}
               >
-                <p className="font-medium">{result.raw_test_name}</p>
+                <p className="font-medium text-foreground">{result.raw_test_name}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs border-red-500/30 text-red-400">
                     {result.value} {result.unit}
                   </Badge>
                   {result.laboratory_name && (
@@ -130,20 +132,21 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
             ))}
           </div>
 
-          {/* Right: Biomarker search */}
-          <div className="border rounded-lg p-4 flex flex-col overflow-hidden">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-3">
-              {selectedResult ? `Сопоставить с: ${selectedResult.raw_test_name}` : 'Выберите показатель слева'}
+          {/* Right: Mapping Zone (Purple) */}
+          <div className="border border-purple-500/50 rounded-lg p-4 flex flex-col overflow-hidden bg-purple-500/5">
+            <h3 className="font-semibold text-sm text-purple-400 mb-3">
+              {selectedResult ? `🔗 Сопоставить: ${selectedResult.raw_test_name}` : '👈 Выберите показатель слева'}
             </h3>
             
             {selectedResult && (
-              <Command className="flex-1 overflow-hidden">
+              <Command className="flex-1 overflow-hidden bg-neutral-900/50 border border-purple-500/30 rounded-lg">
                 <CommandInput
                   placeholder="Поиск по базе биомаркеров..."
                   value={searchQuery}
                   onValueChange={setSearchQuery}
+                  className="border-b border-purple-500/30"
                 />
-                <CommandEmpty>Биомаркеры не найдены</CommandEmpty>
+                <CommandEmpty className="text-muted-foreground py-6">Биомаркеры не найдены</CommandEmpty>
                 <CommandGroup className="overflow-y-auto max-h-[400px]">
                   {biomarkers
                     ?.filter(b => 
@@ -155,21 +158,21 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
                       <CommandItem
                         key={biomarker.id}
                         onSelect={() => handleMatch(selectedResult.id, biomarker.id, selectedResult.raw_test_name)}
-                        className="flex items-center justify-between cursor-pointer"
+                        className="flex items-center justify-between cursor-pointer hover:bg-purple-500/10 hover:shadow-[0_0_8px_rgba(168,85,247,0.2)] transition-all"
                       >
                         <div className="flex-1">
-                          <p className="font-medium">{biomarker.display_name}</p>
+                          <p className="font-medium text-foreground">{biomarker.display_name}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs bg-purple-500/10 border-purple-500/30 text-purple-400">
                               {biomarker.category}
                             </Badge>
                             <span className="text-xs text-muted-foreground">{biomarker.standard_unit}</span>
                           </div>
                         </div>
                         {isSaving ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
                         ) : (
-                          <Check className="h-4 w-4 opacity-0 group-hover:opacity-100" />
+                          <Check className="h-4 w-4 text-purple-400 opacity-0 group-hover:opacity-100" />
                         )}
                       </CommandItem>
                     ))}
@@ -179,8 +182,12 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex justify-end gap-2 pt-4 border-t border-purple-500/30">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+          >
             Закрыть
           </Button>
         </div>

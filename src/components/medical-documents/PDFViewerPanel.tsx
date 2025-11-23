@@ -18,6 +18,7 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
   const [pageNum, setPageNum] = useState(1);
   const [scale, setScale] = useState(1.5);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
   const loadPDF = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
       
       // Download PDF from storage
       const { data: fileData, error } = await supabase.storage
@@ -40,9 +42,7 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
         .download(storagePath);
 
       if (error || !fileData) {
-        toast.error('Failed to load PDF');
-        console.error('PDF download error:', error);
-        return;
+        throw new Error('Не удалось загрузить PDF из хранилища');
       }
 
       const arrayBuffer = await fileData.arrayBuffer();
@@ -51,9 +51,10 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
       
       setPdfDoc(pdf);
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading PDF:', error);
-      toast.error('Error loading PDF');
+      setLoadError(error.message || 'Ошибка загрузки PDF');
+      toast.error('Ошибка загрузки PDF');
       setIsLoading(false);
     }
   };
@@ -143,7 +144,25 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
       <div className="flex-1 overflow-auto p-4 bg-neutral-900">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-green-400" />
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto mb-2" />
+              <p className="text-sm text-green-400">Загрузка документа...</p>
+            </div>
+          </div>
+        ) : loadError ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-md">
+              <div className="mb-4 p-4 border border-red-500/50 rounded-lg bg-red-500/5">
+                <p className="text-red-400 mb-2">❌ Ошибка загрузки PDF</p>
+                <p className="text-sm text-muted-foreground">{loadError}</p>
+              </div>
+              <Button 
+                onClick={loadPDF}
+                className="bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20"
+              >
+                🔄 Попробовать снова
+              </Button>
+            </div>
           </div>
         ) : (
           <canvas
