@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BiomarkerRow } from './BiomarkerRow';
 import { FindingCard } from './FindingCard';
+import { BiomarkerMappingDialog } from '@/components/biomarkers/BiomarkerMappingDialog';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -14,6 +15,7 @@ interface ExtractionDashboardProps {
 }
 
 export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboardProps) => {
+  const [showMappingDialog, setShowMappingDialog] = useState(false);
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -182,9 +184,7 @@ export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboar
                     key={result.id}
                     result={result}
                     status="unmatched"
-                    onResolve={() => {
-                      toast.info('Biomarker mapping dialog coming soon');
-                    }}
+                    onResolve={() => setShowMappingDialog(true)}
                   />
                 ))}
               </div>
@@ -197,6 +197,13 @@ export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboar
             </div>
           )}
         </div>
+
+        {/* Biomarker Mapping Dialog */}
+        <BiomarkerMappingDialog
+          open={showMappingDialog}
+          onOpenChange={setShowMappingDialog}
+          unmatchedResults={unmatchedResults as any}
+        />
       </div>
     );
   }
