@@ -38,6 +38,7 @@ import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
+import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -251,6 +252,11 @@ const Index = () => {
           </div>
         </Suspense>
         
+        {/* Withings Connection Widget */}
+        <ErrorBoundary>
+          <WithingsConnectionWidget />
+        </ErrorBoundary>
+
         {/* Controls Bar - Compact */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Left: Title */}
