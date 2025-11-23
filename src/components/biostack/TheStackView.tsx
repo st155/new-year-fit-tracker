@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill } from "lucide-re
 import { toast } from "sonner";
 import { BottleScanner } from "./BottleScanner";
 import { AIStackGenerator } from "./AIStackGenerator";
+import { useLowStockAlerts } from "@/hooks/biostack/useLowStockAlerts";
 
 const INTAKE_TIME_GROUPS = [
   { key: 'morning', label: 'Morning Stack', icon: Sun },
@@ -24,7 +25,21 @@ export function TheStackView() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
 
-  // Fetch user's stack
+  // Low stock alerts
+  const { data: lowStockItems = [] } = useLowStockAlerts(user?.id);
+
+  // Show toast notification on mount if there are low stock items
+  useEffect(() => {
+    if (lowStockItems.length > 0) {
+      const firstItem = lowStockItems[0];
+      toast.warning('⚠️ Time to reorder!', {
+        description: `Your ${firstItem.supplement_products?.name || firstItem.stack_name} is running low (${firstItem.servings_remaining} servings left)`,
+        duration: 5000,
+      });
+    }
+  }, [lowStockItems.length]); // Only trigger when count changes
+
+  // Fetch user's stack with calculated servings remaining
   const { data: stackItems, isLoading } = useQuery({
     queryKey: ['user-stack', user?.id],
     queryFn: async () => {
@@ -37,7 +52,8 @@ export function TheStackView() {
           supplement_products (
             name,
             brand,
-            form
+            form,
+            servings_per_container
           )
         `)
         .eq('user_id', user.id)
@@ -45,7 +61,26 @@ export function TheStackView() {
         .order('position', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+
+      // Calculate servings remaining for each item
+      const itemsWithServings = await Promise.all(
+        (data || []).map(async (item) => {
+          const { count } = await supabase
+            .from('intake_logs')
+            .select('*', { count: 'exact', head: true })
+            .eq('stack_item_id', item.id);
+
+          const servingsPerContainer = item.supplement_products?.servings_per_container || 0;
+          const servingsRemaining = servingsPerContainer - (count || 0);
+
+          return {
+            ...item,
+            servingsRemaining
+          };
+        })
+      );
+
+      return itemsWithServings;
     },
     enabled: !!user?.id,
   });
@@ -65,15 +100,6 @@ export function TheStackView() {
         });
 
       if (error) throw error;
-
-      // Update servings_remaining
-      const stackItem = stackItems?.find(item => item.id === stackItemId);
-      if (stackItem?.servings_remaining) {
-        await supabase
-          .from('user_stack')
-          .update({ servings_remaining: stackItem.servings_remaining - 1 })
-          .eq('id', stackItemId);
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
@@ -103,13 +129,6 @@ export function TheStackView() {
             taken_at: new Date().toISOString(),
             servings_taken: 1,
           });
-
-        if (item.servings_remaining) {
-          await supabase
-            .from('user_stack')
-            .update({ servings_remaining: item.servings_remaining - 1 })
-            .eq('id', item.id);
-        }
       }
 
       return itemsToLog.length;
@@ -243,6 +262,7 @@ export function TheStackView() {
                     <StackItemCard
                       key={item.id}
                       item={item}
+                      servingsRemaining={item.servingsRemaining}
                       onLogIntake={(id) => logIntakeMutation.mutate(id)}
                     />
                   ))}
@@ -257,6 +277,7 @@ export function TheStackView() {
               <StackItemCard
                 key={item.id}
                 item={item}
+                servingsRemaining={item.servingsRemaining}
                 onLogIntake={(id) => logIntakeMutation.mutate(id)}
               />
             ))}
