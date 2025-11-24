@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { ExtractionDashboard } from '@/components/medical-documents/ExtractionDashboard';
 import { DetectedRxPanel } from '@/components/biostack/DetectedRxPanel';
+import { ErrorDetailsPanel } from '@/components/medical-documents/ErrorDetailsPanel';
 import { useDoctorRecommendations } from '@/hooks/biostack/useDoctorRecommendations';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -15,6 +16,7 @@ const MedicalIngestionCockpit = () => {
   const { documentId } = useParams<{ documentId: string }>();
   const queryClient = useQueryClient();
   const { recommendations } = useDoctorRecommendations(documentId || '');
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const { data: document, isLoading, error } = useQuery({
     queryKey: ['medical-document', documentId],
@@ -39,33 +41,34 @@ const MedicalIngestionCockpit = () => {
     },
   });
 
-  // Auto-process pending documents
-  useEffect(() => {
-    if (document?.processing_status === 'pending') {
-      triggerProcessing();
-    }
-  }, [document?.id, document?.processing_status]);
-
-  const triggerProcessing = async () => {
-    if (!documentId) return;
-
-    try {
-      console.log('[Cockpit] Auto-processing pending document:', documentId);
+  // Retry mutation
+  const retryMutation = useMutation({
+    mutationFn: async () => {
+      if (!documentId) throw new Error('No document ID');
+      
+      setIsRetrying(true);
       
       const { error } = await supabase.functions.invoke('parse-lab-report', {
         body: { documentId }
       });
 
       if (error) throw error;
-
-      // Invalidate queries to refresh UI
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-document', documentId] });
-      toast.success('Документ обрабатывается');
-    } catch (error: any) {
-      console.error('[Cockpit] Auto-processing failed:', error);
-      toast.error('Ошибка обработки', { description: error.message });
+      toast.success('Документ отправлен на повторную обработку');
+    },
+    onError: (error: any) => {
+      console.error('Retry failed:', error);
+      toast.error('Ошибка повторной обработки', { description: error.message });
+    },
+    onSettled: () => {
+      setIsRetrying(false);
     }
-  };
+  });
+
+  // Auto-process pending documents (removed useEffect to avoid duplicate calls)
+  // Users can manually retry via ErrorDetailsPanel if needed
 
   if (isLoading) {
     return <PageLoader message="Loading document..." />;
@@ -91,17 +94,47 @@ const MedicalIngestionCockpit = () => {
         <PDFViewerPanel documentId={documentId!} storagePath={document.storage_path} />
       </div>
 
-      {/* Right: Extraction Dashboard + DetectedRxPanel (60%) */}
+      {/* Right: Error Panel OR Extraction Dashboard + DetectedRxPanel (60%) */}
       <div className="w-3/5 flex flex-col overflow-y-auto">
-        <ExtractionDashboard
-          documentId={documentId!}
-          category={document.category || 'lab_blood'}
-        />
+        {/* Show ErrorDetailsPanel if document has error status */}
+        {document.processing_status === 'error' && (
+          <div className="p-4">
+            <ErrorDetailsPanel
+              documentId={documentId!}
+              processingError={document.processing_error || 'Unknown error'}
+              processingErrorDetails={document.processing_error_details}
+              onRetry={() => retryMutation.mutate()}
+              isRetrying={isRetrying}
+            />
+          </div>
+        )}
         
-        {/* DetectedRxPanel (conditionally rendered) */}
-        {recommendations.length > 0 && (
-          <div className="mt-4">
-            <DetectedRxPanel documentId={documentId!} />
+        {/* Show Extraction Dashboard for completed documents */}
+        {document.processing_status === 'completed' && (
+          <>
+            <ExtractionDashboard
+              documentId={documentId!}
+              category={document.category || 'lab_blood'}
+            />
+            
+            {/* DetectedRxPanel (conditionally rendered) */}
+            {recommendations.length > 0 && (
+              <div className="mt-4 px-4 pb-4">
+                <DetectedRxPanel documentId={documentId!} />
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Show loading state for pending/processing documents */}
+        {(document.processing_status === 'pending' || document.processing_status === 'processing') && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4" />
+              <p className="text-green-400 font-mono">
+                {document.processing_status === 'pending' ? 'Ожидает обработки...' : 'Обрабатывается AI...'}
+              </p>
+            </div>
           </div>
         )}
       </div>

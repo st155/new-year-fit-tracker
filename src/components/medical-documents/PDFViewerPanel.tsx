@@ -5,8 +5,11 @@ import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-reac
 import * as pdfjsLib from 'pdfjs-dist';
 import { toast } from 'sonner';
 
-// Set worker source for pdf.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker source for pdf.js from local npm package instead of CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
 
 interface PDFViewerPanelProps {
   documentId: string;
