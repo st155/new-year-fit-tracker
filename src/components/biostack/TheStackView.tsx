@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { StackItemCard } from "./StackItemCard";
+import { ProtocolCard } from "./ProtocolCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill } from "lucide-react";
+import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { BottleScanner } from "./BottleScanner";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { useLowStockAlerts } from "@/hooks/biostack/useLowStockAlerts";
+import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 
 const INTAKE_TIME_GROUPS = [
   { key: 'morning', label: 'Morning Stack', icon: Sun },
@@ -24,6 +26,15 @@ export function TheStackView() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+
+  // Protocol management
+  const { 
+    activeProtocols, 
+    isLoading: isProtocolsLoading,
+    toggleProtocolMutation,
+    deleteProtocolMutation,
+    logProtocolItemMutation
+  } = useProtocolManagement();
 
   // Low stock alerts
   const { data: lowStockItems = [] } = useLowStockAlerts(user?.id);
@@ -111,16 +122,19 @@ export function TheStackView() {
     },
   });
 
-  // Take All mutation (for a specific time)
+  // Take All mutation (for manual stack items AND protocol items)
   const takeAllMutation = useMutation({
     mutationFn: async (intakeTime: string) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      const itemsToLog = stackItems?.filter(item => 
+      let totalLogged = 0;
+
+      // 1. Log manual stack items
+      const manualItems = stackItems?.filter(item => 
         item.intake_times.includes(intakeTime)
       ) || [];
 
-      for (const item of itemsToLog) {
+      for (const item of manualItems) {
         await supabase
           .from('intake_logs')
           .insert({
@@ -130,11 +144,35 @@ export function TheStackView() {
             servings_taken: 1,
           });
       }
+      totalLogged += manualItems.length;
 
-      return itemsToLog.length;
+      // 2. Log protocol items
+      const protocolItems = activeProtocols?.flatMap(protocol => 
+        protocol.protocol_items?.filter(item => 
+          item.intake_times?.includes(intakeTime)
+        ) || []
+      ) || [];
+
+      for (const item of protocolItems) {
+        await supabase
+          .from('supplement_logs')
+          .update({ 
+            status: 'taken',
+            taken_at: new Date().toISOString(),
+            servings_taken: 1
+          })
+          .eq('protocol_item_id', item.id)
+          .eq('status', 'pending')
+          .order('scheduled_time', { ascending: true })
+          .limit(1);
+      }
+      totalLogged += protocolItems.length;
+
+      return totalLogged;
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
+      queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
       toast.success(`✅ Logged ${count} supplement(s)`);
     },
     onError: (error) => {
@@ -143,7 +181,7 @@ export function TheStackView() {
     },
   });
 
-  if (isLoading) {
+  if (isLoading || isProtocolsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex gap-4">
@@ -224,79 +262,128 @@ export function TheStackView() {
         ))}
       </div>
 
-      {/* Stack Groups */}
-      <div className="space-y-8">
-        {!selectedTime ? (
-          // Show grouped by time
-          INTAKE_TIME_GROUPS.map(({ key, label, icon: Icon }) => {
-            const items = stackItems?.filter(item => 
-              item.intake_times.includes(key)
-            ) || [];
-
-            if (items.length === 0) return null;
-
-            return (
-              <div key={key}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="text-lg font-bold text-foreground">
-                    {label}
-                  </h3>
-                  <span className="text-sm text-muted-foreground">
-                    ({items.length})
-                  </span>
-                  {key !== 'as_needed' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => takeAllMutation.mutate(key)}
-                      disabled={takeAllMutation.isPending}
-                      className="ml-auto text-xs"
-                    >
-                      Take All {label}
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {items.map(item => (
-                    <StackItemCard
-                      key={item.id}
-                      item={item}
-                      servingsRemaining={item.servingsRemaining}
-                      onLogIntake={(id) => logIntakeMutation.mutate(id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          // Show filtered results
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredItems?.map(item => (
-              <StackItemCard
-                key={item.id}
-                item={item}
-                servingsRemaining={item.servingsRemaining}
-                onLogIntake={(id) => logIntakeMutation.mutate(id)}
+      {/* Active Protocols Section */}
+      {activeProtocols.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <FileText className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">
+              Active Protocols
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              ({activeProtocols.length})
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {activeProtocols.map(protocol => (
+              <ProtocolCard
+                key={protocol.id}
+                protocol={protocol}
+                onToggleActive={() => toggleProtocolMutation.mutate(protocol.id)}
+                onDelete={() => deleteProtocolMutation.mutate(protocol.id)}
+                onLogItem={(itemId) => logProtocolItemMutation.mutate({ protocolItemId: itemId })}
               />
             ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {(!filteredItems || filteredItems.length === 0) && (
-          <div className="text-center py-12">
-            <Pill className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              No supplements in your stack yet.
-            </p>
-            <Button variant="outline" className="mt-4">
+      {/* Manual Supplements Section */}
+      {stackItems && stackItems.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Pill className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">
+              Manual Supplements
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              ({stackItems.length})
+            </span>
+          </div>
+
+          <div className="space-y-8">
+            {!selectedTime ? (
+              // Show grouped by time
+              INTAKE_TIME_GROUPS.map(({ key, label, icon: Icon }) => {
+                const items = stackItems?.filter(item => 
+                  item.intake_times.includes(key)
+                ) || [];
+
+                if (items.length === 0) return null;
+
+                return (
+                  <div key={key}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Icon className="h-5 w-5 text-muted-foreground" />
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {label}
+                      </h3>
+                      <span className="text-sm text-muted-foreground">
+                        ({items.length})
+                      </span>
+                      {key !== 'as_needed' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => takeAllMutation.mutate(key)}
+                          disabled={takeAllMutation.isPending}
+                          className="ml-auto text-xs"
+                        >
+                          Take All {label}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {items.map(item => (
+                        <StackItemCard
+                          key={item.id}
+                          item={item}
+                          servingsRemaining={item.servingsRemaining}
+                          onLogIntake={(id) => logIntakeMutation.mutate(id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              // Show filtered results
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredItems?.map(item => (
+                  <StackItemCard
+                    key={item.id}
+                    item={item}
+                    servingsRemaining={item.servingsRemaining}
+                    onLogIntake={(id) => logIntakeMutation.mutate(id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {activeProtocols.length === 0 && (!stackItems || stackItems.length === 0) && (
+        <div className="text-center py-12">
+          <Pill className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground mb-2">
+            No supplements in your stack yet.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Import a protocol or scan your first bottle to get started
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsScannerOpen(true)}
+            >
               <Camera className="h-4 w-4 mr-2" />
-              Scan your first bottle
+              Scan Bottle
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Bottle Scanner Modal */}
       <BottleScanner 

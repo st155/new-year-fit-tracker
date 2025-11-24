@@ -193,14 +193,6 @@ export function useSupplementProtocol(userId: string | undefined) {
     }) => {
       if (!userId) throw new Error('Not authenticated');
 
-      // Deactivate all existing active protocols for this user
-      console.log('🔵 [Protocol] Deactivating existing active protocols...');
-      await supabase
-        .from('protocols')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('is_active', true);
-
       // Create protocol
       console.log('🔵 [Protocol] Creating protocol:', { name, duration, userId, supplementsCount: supplements.length });
       
