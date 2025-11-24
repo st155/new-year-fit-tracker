@@ -7,44 +7,36 @@ export function useDeleteHabit() {
 
   const deleteHabit = useMutation({
     mutationFn: async (habitId: string) => {
-      // First, delete all related data in the correct order
-      // 1. Delete feed events
-      await supabase.from('habit_feed_events' as any).delete().eq('habit_id', habitId);
-      
-      // 2. Delete completions
-      await supabase.from('habit_completions').delete().eq('habit_id', habitId);
-      
-      // 3. Delete measurements
-      await supabase.from('habit_measurements').delete().eq('habit_id', habitId);
-      
-      // 4. Delete attempt history
-      await supabase.from('habit_attempts').delete().eq('habit_id', habitId);
-      
-      // 5. Delete stats
-      await supabase.from('habit_stats').delete().eq('habit_id', habitId);
-      
-      // 6. Delete streak history
-      await supabase.from('habit_streak_history').delete().eq('habit_id', habitId);
+      // Use Edge Function for reliable deletion with proper error handling
+      const { data, error } = await supabase.functions.invoke('delete-habit', {
+        body: { habitId },
+      });
 
-      // Finally, delete the habit itself
-      const { error } = await supabase
-        .from('habits')
-        .delete()
-        .eq('id', habitId);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
-      if (error) throw error;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to delete habit');
+      }
+
+      return data;
     },
-    onSuccess: () => {
-      // Invalidate all related queries
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
       queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
       queryClient.invalidateQueries({ queryKey: ['habit-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-attempts'] });
+      queryClient.invalidateQueries({ queryKey: ['habit-measurements'] });
+      
+      console.log('Deleted habit with', data.deletedCount, 'related records');
       toast.success('Привычка успешно удалена');
     },
     onError: (error) => {
       console.error('Error deleting habit:', error);
-      toast.error('Не удалось удалить привычку');
+      toast.error('Не удалось удалить привычку. Попробуйте архивировать.');
     },
   });
 

@@ -42,9 +42,9 @@ export function useHabitAttempts(habitId: string, userId?: string) {
       if (!userId) throw new Error("User not authenticated");
       if (!currentAttempt) throw new Error("No active attempt");
 
-      const endDate = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
       const daysLasted = Math.floor(
-        (new Date(endDate).getTime() - new Date(currentAttempt.start_date).getTime()) 
+        (new Date(today).getTime() - new Date(currentAttempt.start_date).getTime()) 
         / (1000 * 60 * 60 * 24)
       );
 
@@ -52,7 +52,7 @@ export function useHabitAttempts(habitId: string, userId?: string) {
       const { error: updateError } = await supabase
         .from("habit_attempts")
         .update({
-          end_date: endDate,
+          end_date: today,
           days_lasted: daysLasted,
           reset_reason: reason,
         })
@@ -66,18 +66,31 @@ export function useHabitAttempts(habitId: string, userId?: string) {
         .insert({
           habit_id: habitId,
           user_id: userId,
-          start_date: new Date().toISOString().split('T')[0],
+          start_date: today,
         })
         .select()
         .single();
 
       if (insertError) throw insertError;
+
+      // Update habit table to reset start_date
+      const { error: habitUpdateError } = await supabase
+        .from("habits")
+        .update({
+          start_date: today,
+        })
+        .eq("id", habitId);
+
+      if (habitUpdateError) throw habitUpdateError;
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["habit-attempts", habitId] });
       queryClient.invalidateQueries({ queryKey: ["habits", userId] });
-      toast.info("Habit reset, starting fresh!");
+      queryClient.invalidateQueries({ queryKey: ["habit-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["habit-measurements"] });
+      toast.info("Привычка сброшена! Начинаем заново 💪");
     },
     onError: (error) => {
       console.error("Error resetting habit:", error);
