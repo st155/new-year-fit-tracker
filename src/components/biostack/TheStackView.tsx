@@ -205,36 +205,39 @@ export function TheStackView() {
   return (
     <div className="space-y-6">
       {/* Quick Actions Bar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
         <Button 
           variant="default"
-          size="lg"
+          size="sm"
           onClick={() => takeAllMutation.mutate('morning')}
           disabled={takeAllMutation.isPending}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+          className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-[0_0_15px_rgba(34,197,94,0.4)]"
         >
-          <Zap className="h-5 w-5 mr-2" />
-          Take All Morning Stack
+          <Zap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          <span className="hidden sm:inline">Take All Morning Stack</span>
+          <span className="sm:hidden">Morning Stack</span>
         </Button>
         
         <Button 
           variant="outline"
-          size="lg"
+          size="sm"
           onClick={() => setIsScannerOpen(true)}
-          className="border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
+          className="w-full sm:w-auto border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
         >
-          <Camera className="h-5 w-5 mr-2" />
-          Scan Bottle
+          <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          <span className="hidden sm:inline">Scan Bottle</span>
+          <span className="sm:hidden">Scan</span>
         </Button>
 
         <Button 
           variant="outline"
-          size="lg"
+          size="sm"
           onClick={() => setIsAIGeneratorOpen(true)}
-          className="border-neutral-700 hover:border-purple-500 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+          className="w-full sm:w-auto border-neutral-700 hover:border-purple-500 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         >
-          <Sparkles className="h-5 w-5 mr-2" />
-          AI Stack Generator
+          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          <span className="hidden sm:inline">AI Stack Generator</span>
+          <span className="sm:hidden">AI Generator</span>
         </Button>
       </div>
 
@@ -244,7 +247,7 @@ export function TheStackView() {
           variant={selectedTime === null ? "default" : "outline"}
           size="sm"
           onClick={() => setSelectedTime(null)}
-          className="border-neutral-700"
+          className="border-neutral-700 text-xs sm:text-sm"
         >
           All
         </Button>
@@ -254,10 +257,11 @@ export function TheStackView() {
             variant={selectedTime === key ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedTime(key)}
-            className="border-neutral-700"
+            className="border-neutral-700 text-xs sm:text-sm"
           >
-            <Icon className="h-3 w-3 mr-1" />
-            {label}
+            <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{key === 'morning' ? 'AM' : key === 'afternoon' ? 'PM' : key === 'evening' ? 'Eve' : 'Need'}</span>
           </Button>
         ))}
       </div>
@@ -265,11 +269,13 @@ export function TheStackView() {
       {/* Active Protocols Section */}
       {activeProtocols.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <FileText className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">
-              Active Protocols
-            </h2>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                Active Protocols
+              </h2>
+            </div>
             <span className="text-sm text-muted-foreground">
               ({activeProtocols.length})
             </span>
@@ -291,11 +297,13 @@ export function TheStackView() {
       {/* Manual Supplements Section */}
       {stackItems && stackItems.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Pill className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">
-              Manual Supplements
-            </h2>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Pill className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                Manual Supplements
+              </h2>
+            </div>
             <span className="text-sm text-muted-foreground">
               ({stackItems.length})
             </span>
@@ -313,23 +321,26 @@ export function TheStackView() {
 
                 return (
                   <div key={key}>
-                    <div className="flex items-center gap-3 mb-4">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {label}
-                      </h3>
-                      <span className="text-sm text-muted-foreground">
-                        ({items.length})
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
+                          {label}
+                        </h3>
+                        <span className="text-sm text-muted-foreground shrink-0">
+                          ({items.length})
+                        </span>
+                      </div>
                       {key !== 'as_needed' && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => takeAllMutation.mutate(key)}
                           disabled={takeAllMutation.isPending}
-                          className="ml-auto text-xs"
+                          className="shrink-0 w-full sm:w-auto mt-2 sm:mt-0 text-xs"
                         >
-                          Take All {label}
+                          <span className="hidden sm:inline">Take All {label}</span>
+                          <span className="sm:hidden">Take All</span>
                         </Button>
                       )}
                     </div>

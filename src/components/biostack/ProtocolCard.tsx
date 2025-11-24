@@ -70,21 +70,21 @@ export function ProtocolCard({
       >
         <div className="p-4 space-y-3">
           {/* Header */}
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-foreground truncate">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate">
                   {protocol.name}
                 </h3>
                 <Badge 
                   variant={protocol.is_active ? "default" : "outline"}
-                  className="shrink-0"
+                  className="shrink-0 text-xs"
                 >
                   {protocol.is_active ? "Active" : "Inactive"}
                 </Badge>
               </div>
               {protocol.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                   {protocol.description}
                 </p>
               )}
