@@ -163,6 +163,8 @@ export function useSupplementProtocol(userId: string | undefined) {
       if (!userId) throw new Error('Not authenticated');
 
       // Create protocol
+      console.log('🔵 [Protocol] Creating protocol:', { name, duration, userId, supplementsCount: supplements.length });
+      
       const { data: protocol, error: protocolError } = await supabase
         .from('protocols')
         .insert({
@@ -177,13 +179,18 @@ export function useSupplementProtocol(userId: string | undefined) {
         .select()
         .single();
 
-      if (protocolError) throw protocolError;
-
+      if (protocolError) {
+        console.error('❌ [Protocol] Failed to create protocol:', protocolError);
+        throw protocolError;
+      }
+      
+      console.log('✅ [Protocol] Protocol created:', protocol.id);
       onProgress?.(0, supplements.length, 'Обработка добавок...');
 
       // Create protocol items for each supplement
       for (let i = 0; i < supplements.length; i++) {
         const supp = supplements[i];
+        console.log(`🔵 [Supplement ${i+1}/${supplements.length}] Processing:`, supp.supplement_name);
         
         onProgress?.(i, supplements.length, `Обработка ${supp.supplement_name}...`);
         
@@ -202,6 +209,7 @@ export function useSupplementProtocol(userId: string | undefined) {
           
           if (exactMatch) {
             productId = exactMatch.id;
+            console.log(`✅ [Supplement ${i+1}] Found exact match (name+brand):`, productId);
           }
         }
 
@@ -219,11 +227,13 @@ export function useSupplementProtocol(userId: string | undefined) {
 
           if (normalizedMatch) {
             productId = normalizedMatch.id;
+            console.log(`✅ [Supplement ${i+1}] Found normalized match:`, productId);
           }
         }
 
         // 3. Create new product if not found
         if (!productId) {
+          console.log(`🔵 [Supplement ${i+1}] Creating new product...`);
           const { data: newProduct, error: productError } = await supabase
             .from('supplement_products')
             .insert({
@@ -237,11 +247,16 @@ export function useSupplementProtocol(userId: string | undefined) {
             .select('id')
             .single();
 
-          if (productError) throw productError;
+          if (productError) {
+            console.error(`❌ [Supplement ${i+1}] Product creation failed:`, productError);
+            throw productError;
+          }
           productId = newProduct.id;
+          console.log(`✅ [Supplement ${i+1}] Product created:`, productId);
         }
 
         // Create protocol item
+        console.log(`🔵 [Supplement ${i+1}] Creating protocol item...`);
         const { error: itemError } = await supabase
           .from('protocol_items')
           .insert({
@@ -253,9 +268,14 @@ export function useSupplementProtocol(userId: string | undefined) {
             notes: supp.timing_notes || null,
           });
 
-        if (itemError) throw itemError;
+        if (itemError) {
+          console.error(`❌ [Supplement ${i+1}] Protocol item creation failed:`, itemError);
+          throw itemError;
+        }
+        console.log(`✅ [Supplement ${i+1}] Protocol item created successfully`);
       }
 
+      console.log('🎉 [Protocol] All supplements processed successfully');
       onProgress?.(supplements.length, supplements.length, 'Завершение...');
 
       return protocol;
