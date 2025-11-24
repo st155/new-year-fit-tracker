@@ -248,7 +248,7 @@ export function useSupplementProtocol(userId: string | undefined) {
               dosage_amount: supp.dosage_amount,
               dosage_unit: supp.dosage_unit,
               form: supp.form || null,
-              product_image_url: supp.photo_url || null,
+              image_url: supp.photo_url || null,
             })
             .select('id')
             .single();
