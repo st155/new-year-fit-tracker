@@ -337,10 +337,15 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       setProtocolDescription('');
       setDuration(30);
     } catch (error) {
+      console.error('❌ [Protocol UI] Creation failed:', error);
+      
       toast({
         title: "Ошибка создания протокола",
-        description: error instanceof Error ? error.message : "Попробуйте еще раз",
-        variant: "destructive"
+        description: error instanceof Error 
+          ? `${error.message}\n\n💡 Проверьте консоль браузера (F12) для деталей`
+          : "Попробуйте еще раз. Откройте консоль браузера (F12) для деталей.",
+        variant: "destructive",
+        duration: 10000
       });
     } finally {
       setCreationProgress({ step: '', current: 0, total: 0 });

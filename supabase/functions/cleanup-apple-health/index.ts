@@ -21,12 +21,12 @@ serve(async (req) => {
 
     console.log(`Cleaning up Apple Health data for user: ${userId}`);
 
-    // Delete all Apple Health metrics
+    // Delete all Apple Health metrics (supports APPLE, apple, apple_health)
     const { error: metricsError, count: metricsCount } = await supabase
       .from('unified_metrics')
       .delete({ count: 'exact' })
       .eq('user_id', userId)
-      .eq('source', 'apple_health');
+      .in('source', ['APPLE', 'apple', 'apple_health']);
 
     if (metricsError) {
       console.error('Error deleting metrics:', metricsError);
