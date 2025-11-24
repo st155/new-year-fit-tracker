@@ -17,42 +17,39 @@ Deno.serve(async (req) => {
     logger.info('Starting protocol completion check');
     const supabase = createServiceClient();
 
-    // Find active protocols that have passed their planned_end_date
+    // Find completed protocols that need retest alerts (completed by trigger or manually)
     const { data: completedProtocols, error: queryError } = await supabase
       .from('user_stack')
-      .select('id, user_id, product_id, planned_end_date, end_action, supplement_products(name)')
-      .eq('status', 'active')
-      .not('planned_end_date', 'is', null)
-      .lte('planned_end_date', new Date().toISOString().split('T')[0]);
+      .select(`
+        id, 
+        user_id, 
+        product_id, 
+        planned_end_date, 
+        end_action, 
+        supplement_products(name),
+        protocol_lifecycle_alerts(id)
+      `)
+      .eq('status', 'completed')
+      .eq('end_action', 'prompt_retest')
+      .not('planned_end_date', 'is', null);
 
     if (queryError) {
       logger.error('Failed to query completed protocols', { error: queryError });
       throw queryError;
     }
 
-    logger.info(`Found ${completedProtocols?.length || 0} protocols to complete`);
+    logger.info(`Found ${completedProtocols?.length || 0} completed protocols to check`);
 
-    let updatedCount = 0;
     let alertsCreated = 0;
 
     for (const protocol of completedProtocols || []) {
-      // Update protocol status to completed
-      const { error: updateError } = await supabase
-        .from('user_stack')
-        .update({ status: 'completed' })
-        .eq('id', protocol.id);
-
-      if (updateError) {
-        logger.error('Failed to update protocol status', { 
-          protocolId: protocol.id, 
-          error: updateError 
-        });
+      // Skip protocols that already have alerts
+      if (protocol.protocol_lifecycle_alerts && protocol.protocol_lifecycle_alerts.length > 0) {
+        logger.info('Protocol already has alert, skipping', { protocolId: protocol.id });
         continue;
       }
 
-      updatedCount++;
-
-      // Create lifecycle alert if end_action is prompt_retest
+      // Create lifecycle alert for completed protocol
       if (protocol.end_action === 'prompt_retest') {
         const { error: alertError } = await supabase
           .from('protocol_lifecycle_alerts')
@@ -76,14 +73,12 @@ Deno.serve(async (req) => {
     }
 
     logger.info('Protocol completion check finished', { 
-      updatedCount, 
       alertsCreated 
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        protocols_completed: updatedCount,
         alerts_created: alertsCreated,
       }),
       { 
