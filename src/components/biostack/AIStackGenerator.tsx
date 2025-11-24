@@ -5,10 +5,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, TrendingDown, Activity, Clock, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { Sparkles, TrendingDown, Activity, Clock, CheckCircle2, AlertCircle, Package, Library } from 'lucide-react';
 import { useGenerateRecommendations, useAddRecommendationsToStack } from '@/hooks/biostack/useAIStackGenerator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
+import { useSupplementLibrary } from '@/hooks/biostack/useSupplementLibrary';
 
 interface AIStackGeneratorProps {
   open: boolean;
@@ -22,11 +23,17 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
 
   const generateMutation = useGenerateRecommendations();
   const addToStackMutation = useAddRecommendationsToStack();
+  const { data: library } = useSupplementLibrary();
 
   const data = generateMutation.data;
   const recommendations = data?.recommendations || [];
   const deficiencies = data?.deficiencies || [];
   const analysis = data?.analysis;
+
+  // Check which recommendations are in library
+  const libraryProductNames = new Set(
+    library?.map(entry => entry.supplement_products.name.toLowerCase()) || []
+  );
 
   const handleGenerate = () => {
     setSelectedRecommendations(new Set());
@@ -256,26 +263,45 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                   </Button>
                 </div>
 
-                {recommendations.map((rec, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg border ${getEvidenceColor('high')} bg-neutral-900/50 hover:bg-neutral-900 transition-all cursor-pointer`}
-                    onClick={() => toggleSelection(idx)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedRecommendations.has(idx)}
-                        onCheckedChange={() => toggleSelection(idx)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold text-lg">{rec.supplement_name}</h4>
-                            <Badge variant="outline" className="text-xs">
-                              {rec.dosage_amount} {rec.dosage_unit}
-                            </Badge>
-                          </div>
+                {recommendations.map((rec, idx) => {
+                  const isInLibrary = libraryProductNames.has(rec.supplement_name.toLowerCase());
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-lg border ${
+                        isInLibrary 
+                          ? 'border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                          : 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                      } bg-neutral-900/50 hover:bg-neutral-900 transition-all cursor-pointer`}
+                      onClick={() => toggleSelection(idx)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedRecommendations.has(idx)}
+                          onCheckedChange={() => toggleSelection(idx)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-lg">{rec.supplement_name}</h4>
+                                {isInLibrary ? (
+                                  <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
+                                    <Library className="h-3 w-3 mr-1" />
+                                    In Library
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs border-blue-500 text-blue-500">
+                                    🆕 New
+                                  </Badge>
+                                )}
+                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                {rec.dosage_amount} {rec.dosage_unit}
+                              </Badge>
+                            </div>
                           <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                             <span className="capitalize">{rec.form}</span>
                             <span>•</span>
@@ -314,9 +340,10 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                           </div>
                         )}
                       </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

@@ -206,6 +206,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         productId = newProduct.id;
       }
 
+      // Add to library automatically
+      await supabase
+        .from('user_supplement_library')
+        .upsert({
+          user_id: user.id,
+          product_id: productId,
+        }, {
+          onConflict: 'user_id,product_id',
+        });
+
       // Insert into user_stack
       const servingsToUse = sharedUsage ? approximateServings : editedData.servings_per_container;
       const { error: stackError } = await supabase
