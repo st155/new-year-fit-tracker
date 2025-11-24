@@ -128,8 +128,9 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Parse dosage
-      const dosageMatch = extracted.dosage_per_serving.match(/^([\d.]+)\s*(.+)$/);
+      // Parse dosage with null safety
+      const dosageString = extracted.dosage_per_serving || '';
+      const dosageMatch = dosageString.match(/^([\d.]+)\s*(.+)$/);
       const dosageAmount = dosageMatch ? parseFloat(dosageMatch[1]) : 0;
       const dosageUnit = dosageMatch ? dosageMatch[2].trim() : 'mg';
 
@@ -148,12 +149,12 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         const { data: newProduct, error: productError } = await supabase
           .from('supplement_products')
           .insert({
-            name: extracted.supplement_name,
+            name: extracted.supplement_name || 'Unknown Supplement',
             brand: extracted.brand || 'Unknown',
-            dosage_amount: dosageAmount,
-            dosage_unit: dosageUnit,
-            form: extracted.form || null,
-            servings_per_container: extracted.servings_per_container || null,
+            dosage_amount: dosageAmount || 0,
+            dosage_unit: dosageUnit || 'mg',
+            form: extracted.form || 'capsules',
+            servings_per_container: extracted.servings_per_container || 30,
             recommended_daily_intake: extracted.recommended_daily_intake || null,
             ingredients: extracted.ingredients || null,
             warnings: extracted.warnings || null,
@@ -181,25 +182,49 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       // Start enrichment
       setStep('enriching');
       
-      const { data: enrichData, error: enrichError } = await supabase.functions.invoke('enrich-supplement-info', {
-        body: { productId: newProductId }
-      });
+      try {
+        const { data: enrichData, error: enrichError } = await supabase.functions.invoke('enrich-supplement-info', {
+          body: { productId: newProductId }
+        });
 
-      if (enrichError) throw enrichError;
-      if (!enrichData.success) throw new Error(enrichData.error || 'Enrichment failed');
+        if (enrichError) throw enrichError;
+        if (!enrichData.success) throw new Error(enrichData.error || 'Enrichment failed');
 
-      setEnrichedProduct(enrichData.product);
+        setEnrichedProduct(enrichData.product);
+        
+        toast({
+          title: "✅ Supplement enriched!",
+          description: "Complete product information loaded.",
+        });
+      } catch (enrichError) {
+        console.warn('⚠️ Enrichment failed, using basic data:', enrichError);
+        
+        // Fallback: use basic product data without enrichment
+        setEnrichedProduct({
+          id: newProductId,
+          name: extracted.supplement_name || 'Unknown Supplement',
+          brand: extracted.brand || 'Unknown',
+          dosage_amount: dosageAmount,
+          dosage_unit: dosageUnit,
+          form: extracted.form || 'capsules',
+          servings_per_container: extracted.servings_per_container || 30,
+        });
+        
+        toast({
+          title: "⚠️ Using basic info",
+          description: "Couldn't load enriched data, showing extracted information.",
+        });
+      }
+      
       setStep('info-card');
-
-      toast({
-        title: "✅ Supplement enriched!",
-        description: "Complete product information loaded.",
-      });
     } catch (error) {
-      console.error('Product creation/enrichment error:', error);
+      console.error('❌ Product creation/enrichment error:', error);
+      console.error('📊 Extracted data:', extracted);
+      console.error('💡 Suggestions:', suggestions);
+      
       toast({
-        title: "Failed to enrich product",
-        description: error instanceof Error ? error.message : "Please try again.",
+        title: "Failed to process supplement",
+        description: error instanceof Error ? error.message : "Please try again with better lighting or photo.",
         variant: "destructive",
       });
       setStep('preview');
