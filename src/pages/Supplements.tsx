@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, History, TrendingUp } from "lucide-react";
+import { Activity, History, TrendingUp, FileText } from "lucide-react";
 import { TheStackView } from "@/components/biostack/TheStackView";
 import { CorrelationEngine } from "@/components/biostack/CorrelationEngine";
 import { LifecycleAlertsPanel } from "@/components/biostack/LifecycleAlertsPanel";
+import { ProtocolMessageParser } from "@/components/supplements/ProtocolMessageParser";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Supplements() {
@@ -22,10 +23,14 @@ export default function Supplements() {
       </div>
 
       <Tabs defaultValue="stack" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="stack" className="gap-2">
             <Activity className="h-4 w-4" />
             The Stack
+          </TabsTrigger>
+          <TabsTrigger value="import" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Import Protocol
           </TabsTrigger>
           <TabsTrigger value="correlation" className="gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -39,6 +44,10 @@ export default function Supplements() {
 
         <TabsContent value="stack">
           <TheStackView />
+        </TabsContent>
+
+        <TabsContent value="import">
+          <ProtocolMessageParser />
         </TabsContent>
 
         <TabsContent value="correlation">

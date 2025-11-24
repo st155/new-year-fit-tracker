@@ -109,11 +109,107 @@ export function useSupplementProtocol(userId: string | undefined) {
     },
   });
 
+  const createProtocolFromParsed = useMutation({
+    mutationFn: async ({ 
+      name, 
+      description, 
+      duration, 
+      supplements 
+    }: {
+      name: string;
+      description?: string;
+      duration: number;
+      supplements: Array<{
+        supplement_name: string;
+        dosage_amount: number;
+        dosage_unit: string;
+        intake_times: string[];
+        timing_notes?: string;
+        form?: string;
+        brand?: string;
+        photo_url?: string;
+      }>;
+    }) => {
+      if (!userId) throw new Error('Not authenticated');
+
+      // Create protocol
+      const { data: protocol, error: protocolError } = await supabase
+        .from('protocols')
+        .insert({
+          user_id: userId,
+          name,
+          description: description || null,
+          duration_days: duration,
+          is_active: true,
+          ai_generated: true,
+          ai_rationale: 'Imported from doctor/family message via AI parser'
+        })
+        .select()
+        .single();
+
+      if (protocolError) throw protocolError;
+
+      // Create protocol items for each supplement
+      for (const supp of supplements) {
+        // Find or create product
+        let productId: string | null = null;
+
+        const { data: existingProduct } = await supabase
+          .from('supplement_products')
+          .select('id')
+          .ilike('name', supp.supplement_name)
+          .maybeSingle();
+
+        if (existingProduct) {
+          productId = existingProduct.id;
+        } else {
+          const { data: newProduct, error: productError } = await supabase
+            .from('supplement_products')
+            .insert({
+              name: supp.supplement_name,
+              brand: supp.brand || null,
+              dosage_amount: supp.dosage_amount,
+              dosage_unit: supp.dosage_unit,
+              form: supp.form || null,
+              product_image_url: supp.photo_url || null,
+            })
+            .select('id')
+            .single();
+
+          if (productError) throw productError;
+          productId = newProduct.id;
+        }
+
+        // Create protocol item
+        const { error: itemError } = await supabase
+          .from('protocol_items')
+          .insert({
+            protocol_id: protocol.id,
+            product_id: productId,
+            daily_dosage: supp.dosage_amount,
+            dosage_unit: supp.dosage_unit,
+            intake_times: supp.intake_times,
+            notes: supp.timing_notes || null,
+          });
+
+        if (itemError) throw itemError;
+      }
+
+      return protocol;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
+      queryClient.invalidateQueries({ queryKey: ["protocol-history"] });
+      toast({ title: "Protocol created from parsed message" });
+    },
+  });
+
   return {
     activeProtocol,
     protocolHistory,
     isLoading,
     createProtocol,
+    createProtocolFromParsed,
     activateProtocol,
     deleteProtocol,
   };
