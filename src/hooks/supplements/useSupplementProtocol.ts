@@ -6,6 +6,16 @@ export function useSupplementProtocol(userId: string | undefined) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Helper: normalize supplement name for better matching
+  const normalizeName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') // Remove special chars
+      .replace(/vitamin/g, 'vit')
+      .replace(/magnesium/g, 'mg')
+      .trim();
+  };
+
   const { data: activeProtocol, isLoading } = useQuery({
     queryKey: ["active-protocol", userId],
     queryFn: async () => {
@@ -177,10 +187,11 @@ export function useSupplementProtocol(userId: string | undefined) {
         
         onProgress?.(i, supplements.length, `Обработка ${supp.supplement_name}...`);
         
-        // Find or create product with improved duplicate search
+        // Smart duplicate search with normalization
         let productId: string | null = null;
+        const normalizedSearchName = normalizeName(supp.supplement_name);
 
-        // 1. Exact match: name + brand
+        // 1. Try exact match: name + brand
         if (supp.brand) {
           const { data: exactMatch } = await supabase
             .from('supplement_products')
@@ -194,24 +205,24 @@ export function useSupplementProtocol(userId: string | undefined) {
           }
         }
 
-        // 2. If not found, search by name only (exact match)
+        // 2. Try normalized name match (handles variations like "Vitamin D3" vs "Vitamin D-3")
         if (!productId) {
-          const { data: nameMatch } = await supabase
+          const { data: potentialMatches } = await supabase
             .from('supplement_products')
             .select('id, name, brand')
-            .eq('name', supp.supplement_name)
-            .maybeSingle();
-          
-          if (nameMatch) {
-            // Check brand compatibility
-            if (!supp.brand || !nameMatch.brand || 
-                nameMatch.brand.toLowerCase() === supp.brand.toLowerCase()) {
-              productId = nameMatch.id;
-            }
+            .ilike('name', `%${supp.supplement_name}%`);
+
+          const normalizedMatch = potentialMatches?.find(p => 
+            normalizeName(p.name) === normalizedSearchName &&
+            (!supp.brand || !p.brand || p.brand.toLowerCase() === supp.brand.toLowerCase())
+          );
+
+          if (normalizedMatch) {
+            productId = normalizedMatch.id;
           }
         }
 
-        // 3. If not found, create new product
+        // 3. Create new product if not found
         if (!productId) {
           const { data: newProduct, error: productError } = await supabase
             .from('supplement_products')

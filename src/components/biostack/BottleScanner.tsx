@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, RotateCcw, Sparkles, Loader2, Plus } from "lucide-react";
+import { Camera, RotateCcw, Sparkles, Loader2, Plus, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const [approximateServings, setApproximateServings] = useState(0);
   
   const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -93,6 +94,21 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       setCapturedImage(compressed);
       setStep('preview');
     }
+  }, []);
+
+  // Upload from gallery
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      const compressed = await compressImage(base64);
+      setCapturedImage(compressed);
+      setStep('preview');
+    };
+    reader.readAsDataURL(file);
   }, []);
 
   // Retake photo
@@ -279,10 +295,26 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   <Camera className="h-5 w-5 mr-2" />
                   Capture
                 </Button>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  size="lg"
+                  variant="outline"
+                >
+                  <Upload className="h-5 w-5 mr-2" />
+                  Upload from Gallery
+                </Button>
                 <Button onClick={handleClose} variant="outline">
                   Cancel
                 </Button>
               </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </div>
           )}
 
