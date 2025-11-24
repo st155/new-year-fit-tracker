@@ -2,10 +2,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, History, TrendingUp } from "lucide-react";
 import { TheStackView } from "@/components/biostack/TheStackView";
 import { CorrelationEngine } from "@/components/biostack/CorrelationEngine";
+import { LifecycleAlertsPanel } from "@/components/biostack/LifecycleAlertsPanel";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Supplements() {
+  const { user } = useAuth();
+  
   return (
     <div className="container mx-auto py-8 space-y-8">
+      {/* Protocol Lifecycle Alerts */}
+      {user?.id && <LifecycleAlertsPanel userId={user.id} />}
       <div>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
           BioStack V3.0

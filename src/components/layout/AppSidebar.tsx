@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/translations";
+import { useLifecycleAlerts } from "@/hooks/biostack";
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const [profile, setProfile] = useState<any>(null);
   const isCollapsed = state === "collapsed";
   const { t } = useTranslation();
+  const { unreadCount } = useLifecycleAlerts(user?.id);
 
   const currentPath = location.pathname;
 
@@ -155,6 +157,11 @@ export function AppSidebar() {
                     {!isCollapsed && (
                       <span className="flex items-center gap-2">
                         {item.title}
+                        {item.url === "/supplements" && unreadCount > 0 && (
+                          <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                            {unreadCount}
+                          </Badge>
+                        )}
                         {'badge' in item && item.badge && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
                             {item.badge}

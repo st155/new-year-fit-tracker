@@ -46,6 +46,8 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalTicker } from "@/components/ui/global-ticker";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "@/lib/translations";
+import { useLifecycleAlerts } from "@/hooks/biostack";
+import { Badge } from "@/components/ui/badge";
 
 interface NavigationItem {
   title: string;
@@ -163,6 +165,7 @@ export function MainNavigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
   const { t } = useTranslation();
+  const { unreadCount } = useLifecycleAlerts(user?.id);
 
   useEffect(() => {
     if (user) {
@@ -254,8 +257,13 @@ export function MainNavigation() {
                                 isActive={isActiveRoute(item.href)}
                                 className="scale-75"
                               />
-                              <div className="text-sm font-medium leading-none">
-                                {item.title}
+                              <div className="flex items-center gap-2 text-sm font-medium leading-none">
+                                <span>{item.title}</span>
+                                {item.href === "/supplements" && unreadCount > 0 && (
+                                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                                    {unreadCount}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -392,8 +400,15 @@ export function MainNavigation() {
                           isActive={isActiveRoute(item.href)}
                           className="scale-90"
                         />
-                        <div>
-                          <div>{item.title}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span>{item.title}</span>
+                            {item.href === "/supplements" && unreadCount > 0 && (
+                              <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                                {unreadCount}
+                              </Badge>
+                            )}
+                          </div>
                           {item.description && (
                             <div className="text-xs text-muted-foreground">
                               {item.description}

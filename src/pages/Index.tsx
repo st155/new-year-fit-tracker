@@ -39,7 +39,6 @@ import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
-import { LifecycleAlertsPanel } from '@/components/biostack/LifecycleAlertsPanel';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -253,12 +252,6 @@ const Index = () => {
           </div>
         </Suspense>
         
-        {/* Protocol Lifecycle Alerts Panel */}
-        {user?.id && (
-          <ErrorBoundary>
-            <LifecycleAlertsPanel userId={user.id} />
-          </ErrorBoundary>
-        )}
 
         {/* Controls Bar - Compact */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
