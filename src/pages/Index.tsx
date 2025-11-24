@@ -38,8 +38,6 @@ import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
-import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
-import { TopSupplementsWidget } from '@/components/biostack/TopSupplementsWidget';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
 import { LifecycleAlertsPanel } from '@/components/biostack/LifecycleAlertsPanel';
 
@@ -255,22 +253,7 @@ const Index = () => {
           </div>
         </Suspense>
         
-        {/* Withings Connection Widget */}
-        <ErrorBoundary>
-          <WithingsConnectionWidget />
-        </ErrorBoundary>
-
-        {/* Top Supplements Widget */}
-        <ErrorBoundary>
-          <TopSupplementsWidget />
-        </ErrorBoundary>
-
-        {/* Active Protocols Widget */}
-        <ErrorBoundary>
-          <ActiveProtocolsWidget />
-        </ErrorBoundary>
-
-        {/* Lifecycle Alerts Panel - Only show if unread alerts exist */}
+        {/* Protocol Lifecycle Alerts Panel */}
         {user?.id && (
           <ErrorBoundary>
             <LifecycleAlertsPanel userId={user.id} />
@@ -393,6 +376,13 @@ const Index = () => {
         )}
         </motion.div>
           </>
+        )}
+
+        {/* Active Protocols Widget */}
+        {user?.id && (
+          <ErrorBoundary>
+            <ActiveProtocolsWidget />
+          </ErrorBoundary>
         )}
 
         {/* High Priority: Habits V3 Section */}

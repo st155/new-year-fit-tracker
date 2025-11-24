@@ -33,6 +33,7 @@ import { rechartsTooltipStyle, rechartsTooltipLabelStyle } from '@/lib/chart-sty
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
+import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
 import { SystemHealthIndicator } from '@/components/integrations/SystemHealthIndicator';
 import { AutoRefreshToggle } from '@/components/integrations/AutoRefreshToggle';
 import { PageLoader } from '@/components/ui/page-loader';
@@ -421,11 +422,12 @@ export default function FitnessData() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Обзор</TabsTrigger>
           <TabsTrigger value="connections">Подключения</TabsTrigger>
           <TabsTrigger value="health">Здоровье</TabsTrigger>
           <TabsTrigger value="details">Детали</TabsTrigger>
+          <TabsTrigger value="integrations">Интеграции</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Overview */}
@@ -751,6 +753,21 @@ export default function FitnessData() {
         {/* Tab 4: Details by Device */}
         <TabsContent value="details" className="mt-6">
           <IntegrationsDataDisplay key={`details-${refreshKey}`} />
+        </TabsContent>
+
+        {/* Tab 5: Integrations */}
+        <TabsContent value="integrations" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Интеграции устройств</CardTitle>
+              <CardDescription>
+                Управление подключениями и синхронизацией данных
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {user?.id && <WithingsConnectionWidget />}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </AnimatedPage>
