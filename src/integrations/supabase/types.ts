@@ -6245,85 +6245,6 @@ export type Database = {
       }
     }
     Views: {
-      activity_summary_view: {
-        Row: {
-          active_calories: number | null
-          avg_activity_quality: number | null
-          day_strain: number | null
-          distance_km: number | null
-          measurement_date: string | null
-          steps: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      body_composition_view: {
-        Row: {
-          body_fat_percentage: number | null
-          created_at: string | null
-          id: string | null
-          measurement_date: string | null
-          measurement_method: string | null
-          migrated_photo_after_id: string | null
-          migrated_photo_before_id: string | null
-          muscle_mass: number | null
-          photo_after_url: string | null
-          photo_before_url: string | null
-          user_id: string | null
-          weight: number | null
-        }
-        Insert: {
-          body_fat_percentage?: number | null
-          created_at?: string | null
-          id?: string | null
-          measurement_date?: string | null
-          measurement_method?: string | null
-          migrated_photo_after_id?: string | null
-          migrated_photo_before_id?: string | null
-          muscle_mass?: number | null
-          photo_after_url?: string | null
-          photo_before_url?: string | null
-          user_id?: string | null
-          weight?: number | null
-        }
-        Update: {
-          body_fat_percentage?: number | null
-          created_at?: string | null
-          id?: string | null
-          measurement_date?: string | null
-          measurement_method?: string | null
-          migrated_photo_after_id?: string | null
-          migrated_photo_before_id?: string | null
-          muscle_mass?: number | null
-          photo_after_url?: string | null
-          photo_before_url?: string | null
-          user_id?: string | null
-          weight?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "body_composition_migrated_photo_after_id_fkey"
-            columns: ["migrated_photo_after_id"]
-            isOneToOne: false
-            referencedRelation: "medical_documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "body_composition_migrated_photo_before_id_fkey"
-            columns: ["migrated_photo_before_id"]
-            isOneToOne: false
-            referencedRelation: "medical_documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "body_composition_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       challenge_leaderboard_month: {
         Row: {
           active_days: number | null
@@ -6651,30 +6572,6 @@ export type Database = {
         }
         Relationships: []
       }
-      recovery_metrics_view: {
-        Row: {
-          avg_recovery_quality: number | null
-          hrv: number | null
-          measurement_date: string | null
-          recovery_score: number | null
-          resting_hr: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      sleep_analysis_view: {
-        Row: {
-          avg_sleep_quality: number | null
-          deep_sleep: number | null
-          light_sleep: number | null
-          measurement_date: string | null
-          rem_sleep: number | null
-          sleep_efficiency: number | null
-          sleep_hours: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
       trainer_client_summary: {
         Row: {
           active_clients: number | null
@@ -6743,6 +6640,20 @@ export type Database = {
           jobs_created: number
         }[]
       }
+      get_activity_summary: {
+        Args: { p_user_id?: string }
+        Returns: {
+          avg_heart_rate: number
+          date: string
+          recovery_score: number
+          sleep_hours: number
+          total_calories: number
+          total_distance_km: number
+          total_exercise_minutes: number
+          total_steps: number
+          user_id: string
+        }[]
+      }
       get_aggregated_workouts: {
         Args: { p_user_id: string }
         Returns: {
@@ -6758,6 +6669,53 @@ export type Database = {
           total_volume: number
           user_id: string
           workout_name: string
+        }[]
+      }
+      get_body_composition: {
+        Args: { p_user_id?: string }
+        Returns: {
+          bmi: number
+          body_fat_percentage: number
+          measurement_date: string
+          muscle_mass: number
+          user_id: string
+          weight: number
+        }[]
+      }
+      get_challenge_leaderboard: {
+        Args: {
+          p_challenge_id?: string
+          p_limit?: number
+          p_time_period?: string
+        }
+        Returns: {
+          active_days: number
+          avatar_url: string
+          avg_hrv: number
+          avg_recovery: number
+          avg_recovery_last_7d: number
+          avg_resting_hr: number
+          avg_sleep: number
+          avg_sleep_efficiency: number
+          avg_sleep_last_7d: number
+          avg_strain: number
+          avg_strain_last_7d: number
+          challenge_id: string
+          days_with_data: number
+          full_name: string
+          last_activity_date: string
+          latest_body_fat: number
+          latest_weight: number
+          steps_last_7d: number
+          streak_days: number
+          total_calories: number
+          total_points: number
+          total_steps: number
+          total_workouts: number
+          user_id: string
+          username: string
+          weekly_consistency: number
+          workouts_last_7d: number
         }[]
       }
       get_challenge_participant_goals_with_progress: {
@@ -6795,6 +6753,36 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_client_health_scores: {
+        Args: { p_trainer_id?: string }
+        Returns: {
+          activity_level: number
+          client_id: string
+          consistency_score: number
+          health_score: number
+          last_updated: string
+          recovery_score: number
+          sleep_quality: number
+        }[]
+      }
+      get_client_unified_metrics: {
+        Args: {
+          p_client_id?: string
+          p_end_date?: string
+          p_start_date?: string
+          p_trainer_id?: string
+        }
+        Returns: {
+          confidence_score: number
+          measurement_date: string
+          metric_category: string
+          metric_name: string
+          source: string
+          unit: string
+          user_id: string
+          value: number
+        }[]
+      }
       get_client_unified_metrics_secure: {
         Args: {
           p_end_date?: string
@@ -6811,6 +6799,54 @@ export type Database = {
           unified_category: string
           unified_metric_name: string
           unified_unit: string
+        }[]
+      }
+      get_data_quality_trends: {
+        Args: never
+        Returns: {
+          avg_confidence: number
+          date: string
+          high_quality_count: number
+          low_quality_count: number
+          medium_quality_count: number
+          total_metrics: number
+        }[]
+      }
+      get_edge_function_performance: {
+        Args: never
+        Returns: {
+          avg_duration_ms: number
+          error_count: number
+          function_name: string
+          last_called_at: string
+          success_rate: number
+          total_calls: number
+        }[]
+      }
+      get_habit_analytics: {
+        Args: { p_user_id?: string }
+        Returns: {
+          completion_rate: number
+          created_at: string
+          current_streak: number
+          habit_type: string
+          id: string
+          last_completed_at: string
+          longest_streak: number
+          name: string
+          total_completions: number
+          user_id: string
+        }[]
+      }
+      get_job_processing_stats: {
+        Args: never
+        Returns: {
+          avg_processing_time_ms: number
+          completed_jobs: number
+          date: string
+          failed_jobs: number
+          success_rate: number
+          total_jobs: number
         }[]
       }
       get_leaderboard_for_viewer: {
@@ -6856,6 +6892,32 @@ export type Database = {
           trainer_id: string
         }[]
       }
+      get_recovery_metrics: {
+        Args: { p_user_id?: string }
+        Returns: {
+          hrv: number
+          measurement_date: string
+          recovery_score: number
+          resting_heart_rate: number
+          sleep_efficiency: number
+          sleep_hours: number
+          user_id: string
+        }[]
+      }
+      get_sleep_analysis: {
+        Args: { p_user_id?: string }
+        Returns: {
+          awake_time: number
+          deep_sleep: number
+          light_sleep: number
+          measurement_date: string
+          rem_sleep: number
+          sleep_duration: number
+          sleep_efficiency: number
+          sleep_score: number
+          user_id: string
+        }[]
+      }
       get_stale_integrations: {
         Args: never
         Returns: {
@@ -6863,6 +6925,19 @@ export type Database = {
           days_stale: number
           full_name: string
           source: string
+          trainer_id: string
+        }[]
+      }
+      get_trainer_client_summary: {
+        Args: { p_trainer_id?: string }
+        Returns: {
+          avg_recovery: number
+          avg_sleep: number
+          client_id: string
+          client_name: string
+          latest_metric_date: string
+          total_metrics: number
+          total_workouts: number
           trainer_id: string
         }[]
       }
@@ -6958,6 +7033,18 @@ export type Database = {
           unified_unit: string
         }[]
       }
+      get_webhook_processing_stats: {
+        Args: never
+        Returns: {
+          avg_processing_time_ms: number
+          failed_count: number
+          last_received_at: string
+          processed_count: number
+          provider: string
+          success_rate: number
+          total_webhooks: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6974,6 +7061,7 @@ export type Database = {
         }
         Returns: Json
       }
+      is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_challenge_participant: {
         Args: { _challenge_id: string; _user_id: string }
         Returns: boolean

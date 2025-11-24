@@ -102,21 +102,24 @@ interface ClientDetailViewProps {
 
 // Health Score Component with Data Fetching
 const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
+  const { user } = useAuth();
   const { data: healthScore, isLoading, error } = useQuery({
-    queryKey: ['client-health-score', clientId],
+    queryKey: ['client-health-score', clientId, user?.id],
     queryFn: async () => {
+      if (!user?.id) return null;
+      
       const { data, error } = await supabase
-        .from('client_health_scores')
-        .select('*')
-        .eq('user_id', clientId)
-        .single();
+        .rpc('get_client_health_scores', { p_trainer_id: user.id });
       
       if (error) {
         console.warn('Health score not available:', error);
         return null;
       }
-      return data;
+      
+      // Find the specific client's health score
+      return data?.find((score: any) => score.client_id === clientId) || null;
     },
+    enabled: !!user?.id,
   });
 
   if (isLoading) {
@@ -145,15 +148,15 @@ const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
 
   return (
     <ClientHealthScore
-      totalScore={Math.round(healthScore?.total_health_score || 0)}
+      totalScore={Math.round(healthScore?.health_score || 0)}
       breakdown={{
         recovery: Math.round(healthScore?.recovery_score || 0),
-        sleep: Math.round(healthScore?.sleep_score || 0),
-        activity: Math.round(healthScore?.activity_score || 0),
+        sleep: Math.round(healthScore?.sleep_quality || 0),
+        activity: Math.round(healthScore?.activity_level || 0),
         consistency: Math.round(healthScore?.consistency_score || 0),
-        trend: Math.round(healthScore?.trend_score || 0),
+        trend: 0, // trend_score not available in new function
       }}
-      lastUpdated={healthScore?.last_measurement ? new Date(healthScore.last_measurement) : new Date()}
+      lastUpdated={healthScore?.last_updated ? new Date(healthScore.last_updated) : new Date()}
       className="hidden lg:block"
     />
   );
