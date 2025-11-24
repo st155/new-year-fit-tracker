@@ -4,13 +4,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Loader2, Upload, Camera, Trash2, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Loader2, Upload, Camera, Trash2, Check, AlertTriangle } from "lucide-react";
 import { useProtocolMessageParser, ParsedSupplement } from "@/hooks/useProtocolMessageParser";
 import { useSupplementProtocol } from "@/hooks/supplements/useSupplementProtocol";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { BottleScanner } from "@/components/biostack/BottleScanner";
 import { validateIntakeTimes } from "@/lib/supplement-validation";
+import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 
 type Step = 'input' | 'preview';
@@ -41,6 +43,47 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const parseMutation = useProtocolMessageParser();
   const { createProtocolFromParsed } = useSupplementProtocol(user?.id);
 
+  const uploadSupplementPhoto = async (
+    photoDataUrl: string, 
+    supplementName: string
+  ): Promise<string | null> => {
+    if (!user?.id) return null;
+    
+    try {
+      // Convert base64 to blob
+      const response = await fetch(photoDataUrl);
+      const blob = await response.blob();
+      
+      // Create file name
+      const timestamp = Date.now();
+      const sanitizedName = supplementName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      const fileName = `${user.id}/${timestamp}-${sanitizedName}.jpg`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('supplement-photos')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+      
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('supplement-photos')
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      return null;
+    }
+  };
+
   const handleParse = async () => {
     if (!messageText.trim()) {
       toast({
@@ -57,10 +100,14 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       const validated = supplements.map(supp => {
         const validation = validateIntakeTimes(supp.supplement_name, supp.intake_times);
         if (!validation.valid && validation.suggested) {
+          const correctedTimesText = validation.suggested
+            .map(t => INTAKE_TIME_LABELS[t as keyof typeof INTAKE_TIME_LABELS])
+            .join(', ');
+            
           toast({
-            title: `⚠️ ${supp.supplement_name}`,
-            description: validation.warning,
-            variant: "default"
+            title: `⚠️ ${supp.supplement_name}: время приема скорректировано`,
+            description: `${validation.warning}\n\nНовое время: ${correctedTimesText}`,
+            duration: 6000,
           });
           return { ...supp, intake_times: validation.suggested };
         }
@@ -331,6 +378,45 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                       </div>
                     )}
 
+                    {/* Validation Warning Badge */}
+                    {(() => {
+                      const validation = validateIntakeTimes(
+                        supp.supplement_name, 
+                        supp.intake_times
+                      );
+                      
+                      if (validation.suggested) {
+                        return (
+                          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 space-y-1">
+                              <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
+                                AI Коррекция применена
+                              </p>
+                              <p className="text-xs text-amber-700 dark:text-amber-300">
+                                {validation.warning}
+                              </p>
+                              <div className="flex gap-1 flex-wrap mt-2">
+                                <span className="text-xs text-amber-600 dark:text-amber-400">
+                                  Исходное время:
+                                </span>
+                                {supp.intake_times.map(time => (
+                                  <Badge 
+                                    key={time} 
+                                    variant="outline" 
+                                    className="text-xs border-amber-300 dark:border-amber-700"
+                                  >
+                                    {INTAKE_TIME_LABELS[time as keyof typeof INTAKE_TIME_LABELS]}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -416,7 +502,41 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             setScannerOpen(false);
             setSelectedSupplementIndex(null);
           }}
-          onSuccess={() => {
+          onSuccess={async (scannedData) => {
+            if (selectedSupplementIndex === null) return;
+            
+            let photoUrl = scannedData.photoUrl;
+            
+            // Upload photo to storage if it's a data URL
+            if (photoUrl && photoUrl.startsWith('data:')) {
+              const uploadedUrl = await uploadSupplementPhoto(
+                photoUrl, 
+                scannedData.name || parsedSupplements[selectedSupplementIndex].supplement_name
+              );
+              if (uploadedUrl) {
+                photoUrl = uploadedUrl;
+              }
+            }
+            
+            // Update supplement with scanned data
+            const updatedSupplement = {
+              ...parsedSupplements[selectedSupplementIndex],
+              supplement_name: scannedData.name || parsedSupplements[selectedSupplementIndex].supplement_name,
+              brand: scannedData.brand || parsedSupplements[selectedSupplementIndex].brand,
+              dosage_amount: scannedData.dosage || parsedSupplements[selectedSupplementIndex].dosage_amount,
+              product_id: scannedData.productId,
+              photo_url: photoUrl
+            };
+            
+            handleUpdateSupplement(selectedSupplementIndex, updatedSupplement);
+            
+            toast({
+              title: "✅ Баночка отсканирована!",
+              description: scannedData.name 
+                ? `${scannedData.name}${scannedData.brand ? ` - ${scannedData.brand}` : ''}`
+                : "Данные добавлены к добавке"
+            });
+            
             setScannerOpen(false);
             setSelectedSupplementIndex(null);
           }}
