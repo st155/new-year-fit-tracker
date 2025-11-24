@@ -48,9 +48,7 @@ export function useJobProcessingStats() {
     queryKey: ['job-processing-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('job_processing_stats')
-        .select('*')
-        .limit(30);
+        .rpc('get_job_processing_stats');
       
       if (error) throw error;
       return data;
@@ -64,9 +62,7 @@ export function useDataQualityTrends() {
     queryKey: ['data-quality-trends'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('data_quality_trends')
-        .select('*')
-        .limit(30);
+        .rpc('get_data_quality_trends');
       
       if (error) throw error;
       return data;
