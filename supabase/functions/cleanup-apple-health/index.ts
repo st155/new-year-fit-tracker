@@ -38,7 +38,7 @@ serve(async (req) => {
     // Deactivate Apple Health connection in terra_tokens
     const { error: tokenError } = await supabase
       .from('terra_tokens')
-      .update({ status: 'disconnected' })
+      .update({ is_active: false })
       .eq('user_id', userId)
       .eq('provider', 'APPLE');
 
