@@ -80,6 +80,8 @@ export function useAddRecommendationsToStack() {
       recommendations: Recommendation[];
       deficiencies: Deficiency[];
     }) => {
+      // Import validation
+      const { autoCorrectIntakeTimes } = await import('@/lib/supplement-validation');
       const results = [];
 
       for (const rec of recommendations) {
@@ -122,6 +124,18 @@ export function useAddRecommendationsToStack() {
 
           const linkedBiomarkerIds = deficiency ? [deficiency.biomarker_id] : [];
 
+          // Auto-correct intake times for critical supplements (Melatonin, etc.)
+          const corrected = autoCorrectIntakeTimes(rec.supplement_name, rec.intake_times);
+          const finalIntakeTimes = corrected.intakeTimes;
+          
+          if (corrected.warning) {
+            console.log('[AI-Validation]', corrected.warning);
+            toast({
+              title: 'Время приема скорректировано',
+              description: corrected.warning,
+            });
+          }
+
           // Get authenticated user
           const { data: { user: currentUser } } = await supabase.auth.getUser();
           if (!currentUser) throw new Error('Not authenticated');
@@ -133,7 +147,7 @@ export function useAddRecommendationsToStack() {
               user_id: currentUser.id,
               product_id: productId,
               stack_name: rec.supplement_name,
-              intake_times: rec.intake_times,
+              intake_times: finalIntakeTimes,
               schedule_type: 'manual',
               is_active: true,
               ai_suggested: true,
