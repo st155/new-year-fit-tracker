@@ -21,6 +21,10 @@ interface ExtractedData {
   dosage_per_serving: string;
   servings_per_container: number;
   form: string;
+  recommended_daily_intake?: string | null;
+  ingredients?: string[] | null;
+  warnings?: string | null;
+  expiration_info?: string | null;
 }
 
 interface ScanResult {
@@ -40,6 +44,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [editedData, setEditedData] = useState<ExtractedData | null>(null);
+  const [sharedUsage, setSharedUsage] = useState(false);
+  const [approximateServings, setApproximateServings] = useState(0);
   
   const webcamRef = useRef<Webcam>(null);
   const { toast } = useToast();
@@ -166,6 +172,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             dosage_unit: dosageUnit,
             form: editedData.form || null,
             servings_per_container: editedData.servings_per_container || null,
+            recommended_daily_intake: editedData.recommended_daily_intake || null,
+            ingredients: editedData.ingredients || null,
+            warnings: editedData.warnings || null,
+            expiration_info: editedData.expiration_info || null,
           })
           .select('id')
           .single();
@@ -175,6 +185,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       }
 
       // Insert into user_stack
+      const servingsToUse = sharedUsage ? approximateServings : editedData.servings_per_container;
       const { error: stackError } = await supabase
         .from('user_stack')
         .insert({
@@ -187,8 +198,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           target_outcome: scanResult.suggestions.target_outcome,
           ai_suggested: true,
           ai_rationale: scanResult.suggestions.ai_rationale,
-          servings_remaining: editedData.servings_per_container,
-          reorder_threshold: Math.floor(editedData.servings_per_container * 0.2),
+          servings_remaining: servingsToUse,
+          reorder_threshold: Math.floor(servingsToUse * 0.2),
+          approximate_servings: sharedUsage,
+          shared_with_others: sharedUsage,
         });
 
       if (stackError) throw stackError;
@@ -338,6 +351,80 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                           className="mt-1 bg-neutral-950"
                         />
                       </div>
+                    </div>
+
+                    {/* Recommended Daily Intake */}
+                    {editedData.recommended_daily_intake && (
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">📋 Рекомендованная доза:</p>
+                        <p className="text-sm font-medium text-foreground">{editedData.recommended_daily_intake}</p>
+                      </div>
+                    )}
+
+                    {/* Ingredients */}
+                    {editedData.ingredients && editedData.ingredients.length > 0 && (
+                      <div className="p-3 bg-muted/30 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-2">🧪 Состав:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {editedData.ingredients.map((ing, i) => (
+                            <span key={i} className="text-xs bg-background px-2 py-1 rounded-full">
+                              {ing}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Warnings */}
+                    {editedData.warnings && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-xs text-red-400 mb-1">⚠️ Предупреждения:</p>
+                        <p className="text-xs text-foreground">{editedData.warnings}</p>
+                      </div>
+                    )}
+
+                    {/* Expiration Info */}
+                    {editedData.expiration_info && (
+                      <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <p className="text-xs text-yellow-400 mb-1">📅 Срок годности:</p>
+                        <p className="text-xs text-foreground">{editedData.expiration_info}</p>
+                      </div>
+                    )}
+
+                    {/* Shared Usage Settings */}
+                    <div className="space-y-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="shared"
+                          checked={sharedUsage}
+                          onChange={(e) => setSharedUsage(e.target.checked)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="shared" className="text-sm font-medium cursor-pointer text-foreground">
+                            👥 Я делю эту баночку с кем-то еще
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Подсчет остатка будет примерным, так как несколько человек используют одну баночку
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {sharedUsage && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">
+                            Примерный остаток (порций):
+                          </Label>
+                          <Input
+                            type="number"
+                            value={approximateServings}
+                            onChange={(e) => setApproximateServings(parseInt(e.target.value) || 0)}
+                            className="w-full mt-1 px-3 py-2 bg-neutral-950 border rounded-md"
+                            placeholder="Введите примерное количество"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

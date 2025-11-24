@@ -4605,13 +4605,17 @@ export type Database = {
           created_at: string | null
           dosage_amount: number
           dosage_unit: string
+          expiration_info: string | null
           form: string | null
           id: string
           image_url: string | null
+          ingredients: string[] | null
           manufacturer: string | null
           name: string
+          recommended_daily_intake: string | null
           servings_per_container: number | null
           updated_at: string | null
+          warnings: string | null
         }
         Insert: {
           ai_confidence_score?: number | null
@@ -4621,13 +4625,17 @@ export type Database = {
           created_at?: string | null
           dosage_amount: number
           dosage_unit: string
+          expiration_info?: string | null
           form?: string | null
           id?: string
           image_url?: string | null
+          ingredients?: string[] | null
           manufacturer?: string | null
           name: string
+          recommended_daily_intake?: string | null
           servings_per_container?: number | null
           updated_at?: string | null
+          warnings?: string | null
         }
         Update: {
           ai_confidence_score?: number | null
@@ -4637,13 +4645,17 @@ export type Database = {
           created_at?: string | null
           dosage_amount?: number
           dosage_unit?: string
+          expiration_info?: string | null
           form?: string | null
           id?: string
           image_url?: string | null
+          ingredients?: string[] | null
           manufacturer?: string | null
           name?: string
+          recommended_daily_intake?: string | null
           servings_per_container?: number | null
           updated_at?: string | null
+          warnings?: string | null
         }
         Relationships: []
       }
@@ -5731,6 +5743,7 @@ export type Database = {
         Row: {
           ai_rationale: string | null
           ai_suggested: boolean | null
+          approximate_servings: boolean | null
           created_at: string | null
           effectiveness_score: number | null
           end_action: string | null
@@ -5746,6 +5759,7 @@ export type Database = {
           schedule_cron: string | null
           schedule_type: string
           servings_remaining: number | null
+          shared_with_others: boolean | null
           source: string | null
           stack_name: string
           start_date: string | null
@@ -5757,6 +5771,7 @@ export type Database = {
         Insert: {
           ai_rationale?: string | null
           ai_suggested?: boolean | null
+          approximate_servings?: boolean | null
           created_at?: string | null
           effectiveness_score?: number | null
           end_action?: string | null
@@ -5772,6 +5787,7 @@ export type Database = {
           schedule_cron?: string | null
           schedule_type?: string
           servings_remaining?: number | null
+          shared_with_others?: boolean | null
           source?: string | null
           stack_name: string
           start_date?: string | null
@@ -5783,6 +5799,7 @@ export type Database = {
         Update: {
           ai_rationale?: string | null
           ai_suggested?: boolean | null
+          approximate_servings?: boolean | null
           created_at?: string | null
           effectiveness_score?: number | null
           end_action?: string | null
@@ -5798,6 +5815,7 @@ export type Database = {
           schedule_cron?: string | null
           schedule_type?: string
           servings_remaining?: number | null
+          shared_with_others?: boolean | null
           source?: string | null
           stack_name?: string
           start_date?: string | null

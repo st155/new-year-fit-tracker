@@ -16,6 +16,10 @@ interface ExtractedData {
   dosage_per_serving: string;
   servings_per_container: number;
   form: string;
+  recommended_daily_intake?: string | null;
+  ingredients?: string[] | null;
+  warnings?: string | null;
+  expiration_info?: string | null;
 }
 
 interface AIResponse {
@@ -63,21 +67,32 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const visionPrompt = `You are analyzing a supplement bottle photo. Extract the following information:
+    const visionPrompt = `Analyze this supplement bottle photo and extract ALL available information:
 
-1. BRAND: The manufacturer/brand name
-2. SUPPLEMENT_NAME: The main supplement name (e.g., "Vitamin D3", "Magnesium Glycinate")
+REQUIRED FIELDS:
+1. BRAND: Manufacturer/brand name
+2. SUPPLEMENT_NAME: Main supplement name (e.g., "Vitamin D3", "Magnesium Glycinate")
 3. DOSAGE_PER_SERVING: Amount per serving with unit (e.g., "5000 IU", "400mg")
-4. SERVINGS_PER_CONTAINER: Total number of servings in the bottle
-5. FORM: capsule/tablet/powder/liquid/gummy
+4. SERVINGS_PER_CONTAINER: Total servings in the bottle (number)
+5. FORM: capsule/tablet/powder/liquid/gummy/softgel
 
-Return ONLY a valid JSON object with these exact keys (no markdown, no explanation):
+ADDITIONAL FIELDS (if visible on label):
+6. RECOMMENDED_DAILY_INTAKE: Manufacturer's usage instructions (e.g., "Take 1 capsule daily with food", "2 tablets twice daily")
+7. INGREDIENTS: List of active and inactive ingredients
+8. WARNINGS: Health warnings or contraindications
+9. EXPIRATION_INFO: Expiration date or "Best by" information
+
+Return ONLY valid JSON (no markdown):
 {
   "brand": "...",
   "supplement_name": "...",
   "dosage_per_serving": "...",
   "servings_per_container": number,
-  "form": "..."
+  "form": "...",
+  "recommended_daily_intake": "..." or null,
+  "ingredients": ["..."] or null,
+  "warnings": "..." or null,
+  "expiration_info": "..." or null
 }`;
 
     // Setup timeout with AbortController
