@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { BottleScanner } from "@/components/biostack/BottleScanner";
 import { validateIntakeTimes } from "@/lib/supplement-validation";
+import confetti from "canvas-confetti";
 
 type Step = 'input' | 'preview';
 
@@ -21,7 +22,11 @@ const INTAKE_TIME_LABELS: Record<string, string> = {
   before_sleep: '🌙 Перед сном'
 };
 
-export function ProtocolMessageParser() {
+interface ProtocolMessageParserProps {
+  onProtocolCreated?: () => void;
+}
+
+export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessageParserProps) {
   const [step, setStep] = useState<Step>('input');
   const [messageText, setMessageText] = useState('');
   const [parsedSupplements, setParsedSupplements] = useState<ParsedSupplement[]>([]);
@@ -127,8 +132,18 @@ export function ProtocolMessageParser() {
 
       toast({
         title: "✅ Протокол создан и активирован!",
-        description: `${parsedSupplements.length} добавок добавлено. Перейдите во вкладку History для управления протоколами.`
+        description: `${parsedSupplements.length} добавок добавлено. Протокол активен.`
       });
+
+      // Confetti effect
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      // Switch to The Stack tab
+      onProtocolCreated?.();
 
       // Reset
       setStep('input');

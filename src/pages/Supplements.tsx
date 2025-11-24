@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, History, TrendingUp, FileText } from "lucide-react";
 import { TheStackView } from "@/components/biostack/TheStackView";
@@ -9,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Supplements() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("stack");
   
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -23,7 +25,7 @@ export default function Supplements() {
         </p>
       </div>
 
-      <Tabs defaultValue="stack" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="stack" className="gap-2">
             <Activity className="h-4 w-4" />
@@ -48,7 +50,7 @@ export default function Supplements() {
         </TabsContent>
 
         <TabsContent value="import">
-          <ProtocolMessageParser />
+          <ProtocolMessageParser onProtocolCreated={() => setActiveTab("stack")} />
         </TabsContent>
 
         <TabsContent value="correlation">
