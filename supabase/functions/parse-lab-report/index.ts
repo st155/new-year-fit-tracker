@@ -336,28 +336,70 @@ CRITICAL INSTRUCTIONS FOR DATE EXTRACTION:
 - NEVER use today's date - only the date from the document!
 - This date is CRITICAL for tracking trends over time
 
-BIOMARKER NAME STANDARDIZATION - Return "canonical_name" field:
-Use these canonical names when you recognize them (lowercase, no special chars):
-- WBC, White Blood Cells → "wbc"
-- RBC, Red Blood Cells → "rbc"
-- Hemoglobin, HGB, Hgb → "hemoglobin"
-- Hematocrit, HCT → "hematocrit"
-- Platelets, PLT → "platelets"
-- Neutrophils → "neutrophils"
-- Lymphocytes → "lymphocytes"
-- Monocytes → "monocytes"
-- Eosinophils → "eosinophils"
-- Basophils → "basophils"
-- Glucose, Blood Sugar → "glucose"
-- Cholesterol Total, Total Cholesterol → "cholesterol_total"
-- HDL, HDL-C → "hdl"
-- LDL, LDL-C → "ldl"
-- Triglycerides → "triglycerides"
-- ALT, SGPT → "alt"
-- AST, SGOT → "ast"
-- Creatinine → "creatinine"
-- TSH → "tsh"
-- Vitamin D, 25-OH Vitamin D → "vitamin_d"
+BIOMARKER NAME STANDARDIZATION - CRITICAL FOR MATCHING:
+Match these EXACT canonical names when you recognize the biomarker (case-insensitive):
+
+COMPLETE BLOOD COUNT (CBC):
+- WBC, White Blood Cells, Leucocytes, Leukocytes, Globules blancs → "White Blood Cell Count"
+- RBC, Red Blood Cells, Erythrocytes, Globules rouges → "Red Blood Cell Count"
+- Hemoglobin, HGB, Hb, Hémoglobine → "Hemoglobin"
+- Hematocrit, HCT, Hématocrite → "Hematocrit"
+- Platelets, PLT, Thrombocytes, Plaquettes → "Platelet Count"
+- Neutrophils, Neutrophiles, Neutros → "Neutrophils"
+- Lymphocytes, Lymphs, Lympho → "Lymphocytes"
+- Monocytes, Mono → "Monocytes"
+- Eosinophils, Eos, Éosinophiles → "Eosinophils"
+- Basophils, Baso, Basophiles → "Basophils"
+
+METABOLIC PANEL:
+- Glucose, Blood Glucose, Blood Sugar, Glycémie → "Glucose"
+- HbA1c, Hemoglobin A1c, A1C, Hémoglobine glyquée → "HbA1c"
+- Creatinine, CREAT, Créatinine → "Creatinine"
+- BUN, Blood Urea Nitrogen, Urea, Urée → "Blood Urea Nitrogen"
+- Sodium, Na, Natrémie → "Sodium"
+- Potassium, K, Kaliémie → "Potassium"
+
+LIPID PANEL:
+- Cholesterol Total, Total Cholesterol, Cholestérol total, Cholestérol → "Cholesterol - Total"
+- HDL, HDL-C, HDL Cholesterol, Cholestérol HDL → "HDL Cholesterol"
+- LDL, LDL-C, LDL Cholesterol, Cholestérol LDL → "LDL Cholesterol"
+- Triglycerides, TG, TRIG, Triglycérides → "Triglycerides"
+
+LIVER FUNCTION:
+- ALT, SGPT, Alanine Aminotransferase, GPT, TGP, ALAT → "ALT"
+- AST, SGOT, Aspartate Aminotransferase, GOT, TGO, ASAT → "AST"
+- ALP, Alkaline Phosphatase, Phosphatase Alcaline → "Alkaline Phosphatase"
+- Bilirubin Total, Total Bilirubin, Bilirubine totale → "Bilirubin - Total"
+- GGT, Gamma-Glutamyl Transferase, Gamma GT → "GGT"
+
+THYROID FUNCTION:
+- TSH, Thyroid Stimulating Hormone, Thyréostimuline → "TSH"
+- Free T4, FT4, T4 Free, T4 Libre → "Free T4"
+- Free T3, FT3, T3 Free, T3 Libre → "Free T3"
+
+HORMONES:
+- Testosterone, Total Testosterone, Testostérone → "Testosterone"
+- Free Testosterone, Testosterone Free, Testostérone libre → "Testosterone - Free"
+- Estradiol, E2, Oestradiol, Œstradiol → "Estradiol"
+- Cortisol, CORTISOL → "Cortisol"
+- Prolactin, PROLACTIN, Prolactine → "Prolactin"
+- FSH, Follicle Stimulating Hormone, FOLLICLE STIM. HORMONE → "FSH"
+- LH, Luteinizing Hormone, LUTEINISING HORMONE → "LH"
+- SHBG, Sex Hormone Binding Globulin, SEX HORMONE BINDING GLOB → "SHBG"
+
+INFLAMMATION & CARDIAC:
+- CRP, C-Reactive Protein, CRP - High sensitivity, hs-CRP → "CRP"
+- Lp-PLA2, LP-PLA2, Lp PLA2 - Cardiac Marker → "Lipoprotein-associated phospholipase A2"
+
+VITAMINS & MINERALS:
+- Vitamin D, 25-OH Vitamin D, 25(OH)D, Vitamine D → "Vitamin D"
+- Vitamin B12, B12, Cobalamin, Vitamine B12 → "Vitamin B12"
+- Ferritin, FERRITIN, Ferritine → "Ferritin"
+- Iron, Fe, Fer sérique → "Iron"
+
+PSA (PROSTATE):
+- PSA, Prostate Specific Antigen, Prostate Specific Ag (Total), PSA (Total) → "PSA"
+- Free PSA, PSA Free, Prostate Specific Ag (Free), PSA (Free) → "PSA - Free"
 
 Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 {
