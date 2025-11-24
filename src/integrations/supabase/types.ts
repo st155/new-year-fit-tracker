@@ -3871,6 +3871,7 @@ export type Database = {
           notes: string | null
           processing_completed_at: string | null
           processing_error: string | null
+          processing_error_details: Json | null
           processing_started_at: string | null
           processing_status: string | null
           storage_path: string
@@ -3898,6 +3899,7 @@ export type Database = {
           notes?: string | null
           processing_completed_at?: string | null
           processing_error?: string | null
+          processing_error_details?: Json | null
           processing_started_at?: string | null
           processing_status?: string | null
           storage_path: string
@@ -3925,6 +3927,7 @@ export type Database = {
           notes?: string | null
           processing_completed_at?: string | null
           processing_error?: string | null
+          processing_error_details?: Json | null
           processing_started_at?: string | null
           processing_status?: string | null
           storage_path?: string

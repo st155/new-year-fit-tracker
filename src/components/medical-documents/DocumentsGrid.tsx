@@ -3,8 +3,9 @@ import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect } from 'react';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface DocumentsGridProps {
   filterType?: string;
@@ -36,6 +37,24 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
       return counts;
     },
     initialData: {},
+  });
+
+  // Retry mutation
+  const retryMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const { error } = await supabase.functions.invoke('parse-lab-report', {
+        body: { documentId }
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
+      toast.success('Документ отправлен на повторную обработку');
+    },
+    onError: (error: any) => {
+      console.error('Retry failed:', error);
+      toast.error('Не удалось повторить обработку', { description: error.message });
+    }
   });
 
   // Auto-refresh for documents in processing
@@ -105,6 +124,7 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
           recommendationsCount={recommendationsCounts?.[doc.id] || 0}
           onDownload={handleDownload}
           onDelete={handleDelete}
+          onRetry={(id) => retryMutation.mutate(id)}
         />
       ))}
     </div>

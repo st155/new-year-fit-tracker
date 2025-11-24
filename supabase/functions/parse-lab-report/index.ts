@@ -65,33 +65,94 @@ serve(async (req) => {
       })
       .eq('id', documentId);
 
+    // ============================================================
+    // STAGE 1: DOWNLOAD PDF
+    // ============================================================
     console.log('[PARSE-LAB-REPORT] 📄 Stage 1/4: Downloading PDF from storage');
 
-    // Download file from storage (works with private buckets)
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('medical-documents')
-      .download(document.storage_path);
-
-    if (downloadError || !fileData) {
-      console.error('[PARSE-LAB-REPORT] Download failed:', downloadError);
-      throw new Error('Failed to download document from storage');
-    }
-
-    console.log(`[PARSE-LAB-REPORT] Downloaded file: ${fileData.size} bytes, type: ${fileData.type}`);
-
-    // Validate PDF file
-    if (fileData.type !== 'application/pdf') {
-      console.warn(`[PARSE-LAB-REPORT] Warning: Expected PDF but got ${fileData.type}`);
-    }
-
-    const pdfBuffer = await fileData.arrayBuffer();
-    console.log(`[PARSE-LAB-REPORT] ArrayBuffer size: ${pdfBuffer.byteLength} bytes`);
+    let fileData: Blob;
+    let pdfBuffer: ArrayBuffer;
+    let uint8Array: Uint8Array;
     
-    // Verify PDF header
-    const uint8Array = new Uint8Array(pdfBuffer);
-    const header = String.fromCharCode(...uint8Array.slice(0, 4));
-    if (header !== '%PDF') {
-      throw new Error(`Invalid PDF file: header is "${header}" instead of "%PDF"`);
+    try {
+      // Download file from storage (works with private buckets)
+      const { data: downloadedFile, error: downloadError } = await supabase.storage
+        .from('medical-documents')
+        .download(document.storage_path);
+
+      if (downloadError) {
+        console.error('[PARSE-LAB-REPORT] ❌ Download error:', downloadError);
+        throw new Error(`Failed to download PDF: ${downloadError.message}`);
+      }
+      
+      if (!downloadedFile) {
+        throw new Error('Empty file data received from storage');
+      }
+      
+      fileData = downloadedFile;
+      console.log(`[PARSE-LAB-REPORT] ✓ Downloaded file: ${fileData.size} bytes, type: ${fileData.type}`);
+
+      // Validate PDF file
+      if (fileData.type !== 'application/pdf') {
+        console.warn(`[PARSE-LAB-REPORT] ⚠️ Warning: Expected PDF but got ${fileData.type}`);
+      }
+
+      pdfBuffer = await fileData.arrayBuffer();
+      console.log(`[PARSE-LAB-REPORT] ✓ ArrayBuffer size: ${pdfBuffer.byteLength} bytes`);
+      
+      // Verify PDF header
+      uint8Array = new Uint8Array(pdfBuffer);
+      const header = String.fromCharCode(...uint8Array.slice(0, 4));
+      
+      if (header !== '%PDF') {
+        const errorDetails = {
+          error_type: 'pdf_parse',
+          error_message: `Invalid PDF file: header is "${header}" instead of "%PDF"`,
+          timestamp: new Date().toISOString(),
+          pdf_info: {
+            file_size: fileData.size,
+            mime_type: fileData.type,
+            has_valid_header: false,
+          }
+        };
+        
+        await supabase
+          .from('medical_documents')
+          .update({ 
+            processing_status: 'error',
+            processing_error: 'Invalid PDF file format',
+            processing_error_details: errorDetails,
+            processing_completed_at: new Date().toISOString()
+          })
+          .eq('id', documentId);
+        
+        throw new Error(`Invalid PDF file: header is "${header}" instead of "%PDF"`);
+      }
+      
+      console.log('[PARSE-LAB-REPORT] ✓ PDF header validated');
+      
+    } catch (downloadError: any) {
+      console.error('[PARSE-LAB-REPORT] ❌ PDF Download/Validation failed:', downloadError);
+      
+      const errorDetails = {
+        error_type: downloadError.message?.includes('Invalid PDF') ? 'pdf_parse' : 'pdf_download',
+        error_message: downloadError.message,
+        stack_trace: downloadError.stack?.substring(0, 1000),
+        timestamp: new Date().toISOString(),
+        storage_path: document.storage_path,
+      };
+      
+      await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'error',
+          processing_error: downloadError.message || 'Failed to download PDF from storage',
+          processing_error_details: errorDetails,
+          processing_completed_at: new Date().toISOString()
+        })
+        .eq('id', documentId);
+      
+      throw downloadError;
     }
     
     // Check LOVABLE_API_KEY
@@ -99,16 +160,48 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Convert PDF to base64 for Gemini (in chunks to avoid stack overflow)
+    // ============================================================
+    // STAGE 2: CONVERT PDF TO BASE64
+    // ============================================================
     console.log('[PARSE-LAB-REPORT] 🔄 Stage 2/5: Converting PDF to base64');
-    const chunkSize = 8192;
-    let binaryString = '';
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      binaryString += String.fromCharCode(...chunk);
+    
+    let base64Pdf: string;
+    try {
+      // Convert PDF to base64 for Gemini (in chunks to avoid stack overflow)
+      const chunkSize = 8192;
+      let binaryString = '';
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, i + chunkSize);
+        binaryString += String.fromCharCode(...chunk);
+      }
+      base64Pdf = btoa(binaryString);
+      console.log(`[PARSE-LAB-REPORT] ✓ Converted PDF to base64: ${base64Pdf.length} characters`);
+    } catch (conversionError: any) {
+      console.error('[PARSE-LAB-REPORT] ❌ Base64 conversion failed:', conversionError);
+      
+      const errorDetails = {
+        error_type: 'pdf_parse',
+        error_message: `Failed to convert PDF to base64: ${conversionError.message}`,
+        timestamp: new Date().toISOString(),
+        pdf_info: {
+          file_size: pdfBuffer.byteLength,
+          mime_type: fileData.type,
+          has_valid_header: true,
+        }
+      };
+      
+      await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'error',
+          processing_error: 'Failed to convert PDF for AI processing',
+          processing_error_details: errorDetails,
+          processing_completed_at: new Date().toISOString()
+        })
+        .eq('id', documentId);
+      
+      throw conversionError;
     }
-    const base64Pdf = btoa(binaryString);
-    console.log(`[PARSE-LAB-REPORT] Converted PDF to base64: ${base64Pdf.length} characters`);
 
     // ============================================================
     // STEP 1: AI DOCUMENT CLASSIFIER
@@ -665,16 +758,52 @@ Return ONLY valid JSON (no markdown):
     );
 
   } catch (error: any) {
-    console.error('[PARSE-LAB-REPORT] Error:', error);
+    console.error('[PARSE-LAB-REPORT] ❌ Fatal Error:', error);
+    console.error('[PARSE-LAB-REPORT] 📊 Error type:', error.name);
+    console.error('[PARSE-LAB-REPORT] 📝 Error message:', error.message);
+    console.error('[PARSE-LAB-REPORT] 🔍 Stack trace:', error.stack);
     
-    // Update document with error status if we have documentId
-    const { documentId } = await req.json().catch(() => ({}));
+    // Determine error type
+    let errorType: string = 'unknown';
+    if (error.message?.includes('Failed to download') || error.message?.includes('download')) {
+      errorType = 'pdf_download';
+    } else if (error.message?.includes('Invalid PDF') || error.message?.includes('PDF')) {
+      errorType = 'pdf_parse';
+    } else if (error.message?.includes('Gemini') || error.message?.includes('AI') || error.message?.includes('gateway')) {
+      errorType = 'gemini_api';
+    } else if (error.message?.includes('JSON') || error.message?.includes('parse')) {
+      errorType = 'json_parse';
+    } else if (error.message?.includes('database') || error.message?.includes('Supabase')) {
+      errorType = 'database_save';
+    }
+    
+    // Build detailed error object
+    const errorDetails: any = {
+      error_type: errorType,
+      error_message: error.message || error.toString(),
+      stack_trace: error.stack?.substring(0, 1000), // Limit stack trace
+      timestamp: new Date().toISOString(),
+    };
+    
+    // Try to get documentId from request
+    let documentId: string | undefined;
+    try {
+      const body = await req.json();
+      documentId = body.documentId;
+    } catch {
+      console.error('[PARSE-LAB-REPORT] Could not parse request body for documentId');
+    }
+    
+    // Update document with detailed error
     if (documentId) {
+      console.log(`[PARSE-LAB-REPORT] 💾 Saving error details for document ${documentId}`);
+      
       await supabase
         .from('medical_documents')
         .update({ 
           processing_status: 'error',
-          processing_error: error.message,
+          processing_error: error.message || 'Unknown error occurred',
+          processing_error_details: errorDetails,
           processing_completed_at: new Date().toISOString()
         })
         .eq('id', documentId);
@@ -683,7 +812,8 @@ Return ONLY valid JSON (no markdown):
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Internal server error',
-        details: error.toString()
+        error_type: errorType,
+        details: errorDetails
       }),
       { 
         status: 500,
