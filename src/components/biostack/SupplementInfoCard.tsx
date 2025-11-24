@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Users, TrendingUp } from "lucide-react";
 import { useSupplementPopularity } from "@/hooks/biostack/useSupplementPopularity";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SupplementInfoCardProps {
   product: {
@@ -27,11 +30,49 @@ interface SupplementInfoCardProps {
     recommended_dosage?: string;
   };
   onAddToStack?: () => void;
+  onSaveToLibraryOnly?: () => void;
   onRate?: () => void;
 }
 
-export function SupplementInfoCard({ product, onAddToStack, onRate }: SupplementInfoCardProps) {
+export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly, onRate }: SupplementInfoCardProps) {
   const { data: popularity } = useSupplementPopularity(product.id);
+
+  // Check if product is in user's library
+  const { data: libraryEntry } = useQuery({
+    queryKey: ['library-check', product.id],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('user_supplement_library')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .maybeSingle();
+      
+      return data;
+    }
+  });
+
+  // Check if product is in user's active stack
+  const { data: stackEntry } = useQuery({
+    queryKey: ['stack-check', product.id],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('user_stack')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      return data;
+    }
+  });
 
   return (
     <Card className="bg-neutral-950 border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
@@ -76,6 +117,27 @@ export function SupplementInfoCard({ product, onAddToStack, onRate }: Supplement
               )}
             </div>
           </div>
+        </div>
+
+        {/* Library and Stack Badges */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {libraryEntry && (
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
+              📚 В библиотеке • сканировано {libraryEntry.scan_count}x
+            </Badge>
+          )}
+          
+          {stackEntry && (
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+              ✅ В стеке
+            </Badge>
+          )}
+          
+          {libraryEntry?.custom_rating && (
+            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
+              ⭐ Ваша оценка: {libraryEntry.custom_rating}/5
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
@@ -224,26 +286,42 @@ export function SupplementInfoCard({ product, onAddToStack, onRate }: Supplement
         </Tabs>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-6">
-          {onRate && (
-            <Button
-              variant="outline"
-              onClick={onRate}
-              className="flex-1 border-neutral-700 hover:border-yellow-500/50 hover:text-yellow-400"
-            >
-              <Star className="w-4 h-4 mr-2" />
-              Rate
-            </Button>
-          )}
-          {onAddToStack && (
-            <Button
-              onClick={onAddToStack}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-black"
-            >
-              ➕ Add to Stack
-            </Button>
-          )}
-        </div>
+        {(onAddToStack || onSaveToLibraryOnly || onRate) && (
+          <div className="flex gap-3 mt-6">
+            {onAddToStack && (
+              <Button
+                onClick={onAddToStack}
+                disabled={!!stackEntry}
+                className={`flex-1 ${
+                  stackEntry 
+                    ? 'bg-neutral-700 cursor-not-allowed' 
+                    : 'bg-green-500 hover:bg-green-600 text-black'
+                }`}
+              >
+                {stackEntry ? '✅ Уже в стеке' : '➕ Add to Stack'}
+              </Button>
+            )}
+            {onSaveToLibraryOnly && !stackEntry && (
+              <Button
+                onClick={onSaveToLibraryOnly}
+                variant="outline"
+                className="flex-1 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+              >
+                📚 Только в библиотеку
+              </Button>
+            )}
+            {onRate && (
+              <Button
+                variant="outline"
+                onClick={onRate}
+                className="flex-1 border-neutral-700 hover:border-yellow-500/50 hover:text-yellow-400"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Rate
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

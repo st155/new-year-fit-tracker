@@ -110,18 +110,24 @@ export function LibrarySupplementPicker({
                           {entry.supplement_products.brand || 'Unknown brand'}
                         </p>
                         
-                        {isDisabled && (
-                          <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            In Stack
-                          </Badge>
-                        )}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {isDisabled && (
+                            <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              In Stack
+                            </Badge>
+                          )}
 
-                        {entry.custom_rating && (
-                          <div className="text-xs text-yellow-500">
-                            ⭐ {entry.custom_rating}
-                          </div>
-                        )}
+                          {entry.custom_rating && (
+                            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50 text-xs">
+                              ⭐ {entry.custom_rating}/5
+                            </Badge>
+                          )}
+
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            Сканировано {entry.scan_count}x
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
