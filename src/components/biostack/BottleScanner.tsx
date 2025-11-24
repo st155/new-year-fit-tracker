@@ -8,6 +8,7 @@ import { Camera, RotateCcw, Sparkles, Loader2, Plus, Upload } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { SupplementInfoCard } from "./SupplementInfoCard";
 
 interface BottleScannerProps {
   isOpen: boolean;
@@ -43,13 +44,15 @@ interface ScanResult {
   };
 }
 
-type ScanStep = 'camera' | 'preview' | 'analyzing' | 'results';
+type ScanStep = 'camera' | 'preview' | 'analyzing' | 'enriching' | 'info-card';
 
 export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps) {
   const [step, setStep] = useState<ScanStep>('camera');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [editedData, setEditedData] = useState<ExtractedData | null>(null);
+  const [enrichedProduct, setEnrichedProduct] = useState<any>(null);
+  const [productId, setProductId] = useState<string | null>(null);
   const [sharedUsage, setSharedUsage] = useState(false);
   const [approximateServings, setApproximateServings] = useState(0);
   
@@ -64,6 +67,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setCapturedImage(null);
     setScanResult(null);
     setEditedData(null);
+    setEnrichedProduct(null);
+    setProductId(null);
     onClose();
   }, [onClose]);
 
@@ -117,6 +122,90 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setStep('camera');
   }, []);
 
+  // Create product and enrich
+  const createProductAndEnrich = async (extracted: ExtractedData, suggestions: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Parse dosage
+      const dosageMatch = extracted.dosage_per_serving.match(/^([\d.]+)\s*(.+)$/);
+      const dosageAmount = dosageMatch ? parseFloat(dosageMatch[1]) : 0;
+      const dosageUnit = dosageMatch ? dosageMatch[2].trim() : 'mg';
+
+      // Find or create product
+      let newProductId: string | null = null;
+      
+      const { data: existingProduct } = await supabase
+        .from('supplement_products')
+        .select('id')
+        .ilike('name', extracted.supplement_name)
+        .maybeSingle();
+
+      if (existingProduct) {
+        newProductId = existingProduct.id;
+      } else {
+        const { data: newProduct, error: productError } = await supabase
+          .from('supplement_products')
+          .insert({
+            name: extracted.supplement_name,
+            brand: extracted.brand || 'Unknown',
+            dosage_amount: dosageAmount,
+            dosage_unit: dosageUnit,
+            form: extracted.form || null,
+            servings_per_container: extracted.servings_per_container || null,
+            recommended_daily_intake: extracted.recommended_daily_intake || null,
+            ingredients: extracted.ingredients || null,
+            warnings: extracted.warnings || null,
+            expiration_info: extracted.expiration_info || null,
+          })
+          .select('id')
+          .single();
+
+        if (productError) throw productError;
+        newProductId = newProduct.id;
+      }
+
+      setProductId(newProductId);
+
+      // Add to library automatically
+      await supabase
+        .from('user_supplement_library')
+        .upsert({
+          user_id: user.id,
+          product_id: newProductId,
+        }, {
+          onConflict: 'user_id,product_id',
+        });
+
+      // Start enrichment
+      setStep('enriching');
+      
+      const { data: enrichData, error: enrichError } = await supabase.functions.invoke('enrich-supplement-info', {
+        body: { productId: newProductId }
+      });
+
+      if (enrichError) throw enrichError;
+      if (!enrichData.success) throw new Error(enrichData.error || 'Enrichment failed');
+
+      setEnrichedProduct(enrichData.product);
+      setStep('info-card');
+
+      toast({
+        title: "✅ Supplement enriched!",
+        description: "Complete product information loaded.",
+      });
+    } catch (error) {
+      console.error('Product creation/enrichment error:', error);
+      toast({
+        title: "Failed to enrich product",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+      setStep('preview');
+    }
+  };
+
   // Analyze with AI
   const handleAnalyze = useCallback(async () => {
     if (!capturedImage) return;
@@ -143,12 +232,14 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
       setScanResult(data);
       setEditedData(data.extracted);
-      setStep('results');
       
       toast({
         title: "✅ Bottle analyzed!",
         description: `Detected: ${data.extracted.supplement_name}`,
       });
+
+      // Create product and enrich immediately
+      await createProductAndEnrich(data.extracted, data.suggestions);
     } catch (error) {
       console.error('Analysis error:', error);
       toast({
@@ -160,61 +251,13 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     }
   }, [capturedImage, toast]);
 
-  // Add to stack mutation
+  // Add to stack mutation (product already created)
   const addToStackMutation = useMutation({
     mutationFn: async () => {
-      if (!scanResult || !editedData) throw new Error('No scan result');
+      if (!scanResult || !editedData || !productId) throw new Error('No product data');
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-
-      // Parse dosage_per_serving into amount and unit
-      const dosageMatch = editedData.dosage_per_serving.match(/^([\d.]+)\s*(.+)$/);
-      const dosageAmount = dosageMatch ? parseFloat(dosageMatch[1]) : 0;
-      const dosageUnit = dosageMatch ? dosageMatch[2].trim() : 'mg';
-
-      // Find or create product
-      let productId: string | null = null;
-      
-      const { data: existingProduct } = await supabase
-        .from('supplement_products')
-        .select('id')
-        .ilike('name', editedData.supplement_name)
-        .maybeSingle();
-
-      if (existingProduct) {
-        productId = existingProduct.id;
-      } else {
-        const { data: newProduct, error: productError } = await supabase
-          .from('supplement_products')
-          .insert({
-            name: editedData.supplement_name,
-            brand: editedData.brand || 'Unknown',
-            dosage_amount: dosageAmount,
-            dosage_unit: dosageUnit,
-            form: editedData.form || null,
-            servings_per_container: editedData.servings_per_container || null,
-            recommended_daily_intake: editedData.recommended_daily_intake || null,
-            ingredients: editedData.ingredients || null,
-            warnings: editedData.warnings || null,
-            expiration_info: editedData.expiration_info || null,
-          })
-          .select('id')
-          .single();
-
-        if (productError) throw productError;
-        productId = newProduct.id;
-      }
-
-      // Add to library automatically
-      await supabase
-        .from('user_supplement_library')
-        .upsert({
-          user_id: user.id,
-          product_id: productId,
-        }, {
-          onConflict: 'user_id,product_id',
-        });
 
       // Insert into user_stack
       const servingsToUse = sharedUsage ? approximateServings : editedData.servings_per_container;
@@ -367,162 +410,31 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             </div>
           )}
 
-          {/* Results View */}
-          {step === 'results' && scanResult && editedData && (
-            <div className="space-y-4">
-              <div className="p-4 bg-neutral-900 rounded-lg border border-green-500/20 space-y-3">
-                <div className="flex items-start gap-2">
-                  <Sparkles className="h-5 w-5 text-green-400 shrink-0 mt-1" />
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Supplement Name</Label>
-                      <Input
-                        value={editedData.supplement_name}
-                        onChange={(e) => setEditedData({ ...editedData, supplement_name: e.target.value })}
-                        className="mt-1 bg-neutral-950"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Brand</Label>
-                      <Input
-                        value={editedData.brand}
-                        onChange={(e) => setEditedData({ ...editedData, brand: e.target.value })}
-                        className="mt-1 bg-neutral-950"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Dosage</Label>
-                        <Input
-                          value={editedData.dosage_per_serving}
-                          onChange={(e) => setEditedData({ ...editedData, dosage_per_serving: e.target.value })}
-                          className="mt-1 bg-neutral-950"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Servings</Label>
-                        <Input
-                          type="number"
-                          value={editedData.servings_per_container}
-                          onChange={(e) => setEditedData({ ...editedData, servings_per_container: parseInt(e.target.value) })}
-                          className="mt-1 bg-neutral-950"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Recommended Daily Intake */}
-                    {editedData.recommended_daily_intake && (
-                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">📋 Рекомендованная доза:</p>
-                        <p className="text-sm font-medium text-foreground">{editedData.recommended_daily_intake}</p>
-                      </div>
-                    )}
-
-                    {/* Ingredients */}
-                    {editedData.ingredients && editedData.ingredients.length > 0 && (
-                      <div className="p-3 bg-muted/30 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-2">🧪 Состав:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {editedData.ingredients.map((ing, i) => (
-                            <span key={i} className="text-xs bg-background px-2 py-1 rounded-full">
-                              {ing}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Warnings */}
-                    {editedData.warnings && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-xs text-red-400 mb-1">⚠️ Предупреждения:</p>
-                        <p className="text-xs text-foreground">{editedData.warnings}</p>
-                      </div>
-                    )}
-
-                    {/* Expiration Info */}
-                    {editedData.expiration_info && (
-                      <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                        <p className="text-xs text-yellow-400 mb-1">📅 Срок годности:</p>
-                        <p className="text-xs text-foreground">{editedData.expiration_info}</p>
-                      </div>
-                    )}
-
-                    {/* Shared Usage Settings */}
-                    <div className="space-y-3 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          id="shared"
-                          checked={sharedUsage}
-                          onChange={(e) => setSharedUsage(e.target.checked)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <label htmlFor="shared" className="text-sm font-medium cursor-pointer text-foreground">
-                            👥 Я делю эту баночку с кем-то еще
-                          </label>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Подсчет остатка будет примерным, так как несколько человек используют одну баночку
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {sharedUsage && (
-                        <div>
-                          <Label className="text-sm text-muted-foreground">
-                            Примерный остаток (порций):
-                          </Label>
-                          <Input
-                            type="number"
-                            value={approximateServings}
-                            onChange={(e) => setApproximateServings(parseInt(e.target.value) || 0)}
-                            className="w-full mt-1 px-3 py-2 bg-neutral-950 border rounded-md"
-                            placeholder="Введите примерное количество"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+          {/* Enriching State */}
+          {step === 'enriching' && (
+            <div className="py-12 text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin text-green-400 mx-auto" />
+              <div className="space-y-2">
+                <p className="text-lg font-semibold text-foreground">🧬 Enriching supplement data...</p>
+                <p className="text-sm text-muted-foreground">Fetching detailed information, benefits, and research</p>
+                <div className="text-xs text-green-400 mt-3 space-y-1">
+                  <p>⏱️ Getting comprehensive product details...</p>
+                  <p className="text-muted-foreground">This creates a Vivino-style information card</p>
                 </div>
-
-                {/* AI Suggestions */}
-                <div className="p-3 bg-green-500/5 rounded border border-green-500/20 space-y-2">
-                  <p className="text-xs text-green-400 font-semibold">🤖 AI Suggestions:</p>
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p>⏰ Best time: <span className="text-foreground capitalize">{scanResult.suggestions.intake_times.join(', ')}</span></p>
-                    <p>🔬 Tracking: <span className="text-foreground">{scanResult.suggestions.linked_biomarkers.length} biomarker(s)</span></p>
-                    <p>🎯 Goal: <span className="text-foreground">{scanResult.suggestions.target_outcome}</span></p>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic mt-2">
-                    {scanResult.suggestions.ai_rationale}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-center">
-                <Button
-                  onClick={() => addToStackMutation.mutate()}
-                  disabled={addToStackMutation.isPending}
-                  size="lg"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                >
-                  {addToStackMutation.isPending ? (
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="h-5 w-5 mr-2" />
-                  )}
-                  Add to Stack
-                </Button>
-                <Button onClick={handleRetake} variant="outline">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Scan Another
-                </Button>
               </div>
             </div>
           )}
+
+          {/* Info Card View */}
+          {step === 'info-card' && enrichedProduct && (
+            <div className="space-y-4">
+              <SupplementInfoCard
+                product={enrichedProduct}
+                onAddToStack={() => addToStackMutation.mutate()}
+              />
+            </div>
+          )}
+
         </div>
       </DialogContent>
     </Dialog>
