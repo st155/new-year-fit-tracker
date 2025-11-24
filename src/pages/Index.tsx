@@ -42,7 +42,6 @@ import { WithingsConnectionWidget } from '@/components/withings/WithingsConnecti
 import { TopSupplementsWidget } from '@/components/biostack/TopSupplementsWidget';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
 import { LifecycleAlertsPanel } from '@/components/biostack/LifecycleAlertsPanel';
-import { ProtocolTestingPanel } from '@/components/protocols/ProtocolTestingPanel';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -275,13 +274,6 @@ const Index = () => {
         {user?.id && (
           <ErrorBoundary>
             <LifecycleAlertsPanel userId={user.id} />
-          </ErrorBoundary>
-        )}
-
-        {/* Protocol Testing Panel - Development Only */}
-        {user?.id && (
-          <ErrorBoundary>
-            <ProtocolTestingPanel />
           </ErrorBoundary>
         )}
 

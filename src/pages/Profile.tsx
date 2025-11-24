@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Save, User, Shield, Bell, Mail, Share, Settings, RefreshCw } from "lucide-react";
+import { Save, User, Shield, Bell, Mail, Share, Settings, RefreshCw, FlaskConical } from "lucide-react";
+import { ProtocolTestingPanel } from "@/components/protocols/ProtocolTestingPanel";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { RecentActivity } from "@/components/profile/RecentActivity";
@@ -225,7 +226,7 @@ const ProfilePage = () => {
           <RecentActivity />
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1">
             <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <User className="h-4 w-4" />
               Profile
@@ -237,6 +238,10 @@ const ProfilePage = () => {
             <TabsTrigger value="security" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
               <Shield className="h-4 w-4" />
               Security
+            </TabsTrigger>
+            <TabsTrigger value="tests" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
+              <FlaskConical className="h-4 w-4" />
+              Тесты
             </TabsTrigger>
           </TabsList>
 
@@ -497,6 +502,27 @@ const ProfilePage = () => {
                     </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tests" className="space-y-6">
+            <Card className="border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-yellow-500/20 rounded-lg">
+                    <FlaskConical className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <CardTitle>Инструменты тестирования</CardTitle>
+                    <CardDescription>
+                      Автоматизированные тесты для проверки системы протоколов
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ProtocolTestingPanel />
               </CardContent>
             </Card>
           </TabsContent>
