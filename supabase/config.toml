@@ -197,3 +197,6 @@ verify_jwt = false
 
 [functions.clean-protocol-tests]
 verify_jwt = false
+
+[functions.enrich-supplement-info]
+verify_jwt = true
