@@ -4,6 +4,23 @@ export interface SupplementTimeRule {
   warning: string;
 }
 
+// Russian to English supplement name mapping for validation
+const RUSSIAN_TO_ENGLISH: Record<string, string> = {
+  'мелатонин': 'melatonin',
+  'кофеин': 'caffeine',
+  'магний': 'magnesium',
+  'ашваганда': 'ashwagandha',
+  '5 нтр': '5-htp',
+  '5-нтр': '5-htp',
+  'теанин': 'l-theanine',
+  'л-теанин': 'l-theanine',
+  'витамин d': 'vitamin d',
+  'витамин д': 'vitamin d',
+  'витамин c': 'vitamin c',
+  'витамин с': 'vitamin c',
+  'витамин b': 'b12',
+};
+
 export const SUPPLEMENT_TIME_RULES: Record<string, SupplementTimeRule> = {
   melatonin: {
     allowed: ['evening'],
@@ -54,10 +71,13 @@ export function validateIntakeTimes(
   intakeTimes: string[]
 ): ValidationResult {
   const nameLower = supplementName.toLowerCase();
+  
+  // Try to convert Russian name to English for validation
+  const englishName = RUSSIAN_TO_ENGLISH[nameLower] || nameLower;
 
   // Check each rule
   for (const [keyword, rule] of Object.entries(SUPPLEMENT_TIME_RULES)) {
-    if (nameLower.includes(keyword)) {
+    if (englishName.includes(keyword)) {
       const hasInvalidTime = intakeTimes.some(
         (time) => !rule.allowed.includes(time)
       );
