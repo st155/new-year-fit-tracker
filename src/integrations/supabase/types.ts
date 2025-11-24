@@ -4303,6 +4303,50 @@ export type Database = {
           },
         ]
       }
+      protocol_lifecycle_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          dismissed_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          protocol_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          protocol_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          protocol_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_lifecycle_alerts_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "user_stack"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       protocols: {
         Row: {
           adherence_rate: number | null

@@ -125,26 +125,37 @@ export function useDoctorRecommendations(documentId?: string) {
         productId = newProduct.id;
       }
 
-      // Step 2: Create user_stack entry
+      // Step 2: Parse dates and determine protocol lifecycle
       const intakeTimes = parseFrequencyToIntakeTimes(recommendation.frequency);
       const plannedEndDate = calculateEndDate(recommendation.duration);
+      
+      const today = new Date().toISOString().split('T')[0];
+      const startDate = recommendation.prescription_date || today;
+      
+      // Status logic: if start_date is today or past, status is 'active', otherwise 'draft'
+      const protocolStatus = startDate <= today ? 'active' : 'draft';
+      
+      // End action: if we have an end date, prompt for re-test
+      const endAction = plannedEndDate ? 'prompt_retest' : 'none';
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Step 3: Create user_stack entry with time-bound protocol support
       const stackEntry = {
         user_id: user.id,
         product_id: productId,
         stack_name: recommendation.supplement_name,
         source: 'doctor_rx',
-        status: 'active',
+        status: protocolStatus,
         schedule_type: 'scheduled',
         intake_times: intakeTimes,
         ai_rationale: recommendation.rationale || 'Prescribed by doctor',
         target_outcome: recommendation.rationale || 'As prescribed',
         linked_biomarker_ids: [],
         planned_end_date: plannedEndDate,
-        start_date: new Date().toISOString(),
+        start_date: startDate,
+        end_action: endAction,
       };
 
       const { error: stackError } = await supabase
@@ -153,7 +164,7 @@ export function useDoctorRecommendations(documentId?: string) {
 
       if (stackError) throw stackError;
 
-      // Step 3: Update recommendation status
+      // Step 4: Update recommendation status
       const { error: updateError } = await supabase
         .from('doctor_recommendations')
         .update({
