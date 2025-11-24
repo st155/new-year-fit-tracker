@@ -21,6 +21,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthButton";
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -491,15 +492,18 @@ const ProfilePage = () => {
                   <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-destructive">
                     <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Signing out will remove the session on this device.
+                      Dangerous operations that cannot be undone.
                     </p>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleLogout}
-                      className="w-full"
-                    >
-                      Sign Out
-                    </Button>
+                    <div className="space-y-3">
+                      <CleanupAppleHealthButton />
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleLogout}
+                        className="w-full"
+                      >
+                        Sign Out
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
