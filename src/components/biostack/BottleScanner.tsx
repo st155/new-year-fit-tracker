@@ -12,7 +12,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface BottleScannerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (scannedData: {
+    name?: string;
+    brand?: string;
+    dosage?: number;
+    photoUrl?: string;
+    productId?: string;
+  }) => void;
 }
 
 interface ExtractedData {
@@ -205,15 +211,26 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         });
 
       if (stackError) throw stackError;
+      
+      return { productId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       toast({
         title: "✅ Added to stack!",
         description: `${editedData?.supplement_name} is now in your supplement stack.`,
       });
+      
+      // Pass scanned data to callback
+      onSuccess({
+        name: editedData?.supplement_name,
+        brand: editedData?.brand,
+        dosage: editedData?.dosage_per_serving ? parseFloat(editedData.dosage_per_serving) : undefined,
+        photoUrl: capturedImage || undefined,
+        productId: data?.productId
+      });
+      
       handleClose();
-      onSuccess();
     },
     onError: (error) => {
       console.error('Add to stack error:', error);
