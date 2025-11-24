@@ -6521,22 +6521,21 @@ export type Database = {
       }
       data_quality_trends: {
         Row: {
-          avg_quality_score: number | null
-          measurement_date: string | null
-          metric_count: number | null
-          source_count: number | null
-          user_id: string | null
+          avg_confidence: number | null
+          date: string | null
+          metric_name: string | null
+          user_count: number | null
         }
         Relationships: []
       }
       edge_function_performance: {
         Row: {
-          avg_duration_seconds: number | null
-          failed: number | null
-          function_type: string | null
-          last_execution: string | null
-          successful: number | null
-          total_executions: number | null
+          avg_duration_ms: number | null
+          date: string | null
+          error_count: number | null
+          function_name: string | null
+          invocation_count: number | null
+          max_duration_ms: number | null
         }
         Relationships: []
       }
@@ -6604,11 +6603,11 @@ export type Database = {
       }
       job_processing_stats: {
         Row: {
-          avg_duration: number | null
-          count: number | null
-          last_created: string | null
-          status: string | null
-          type: string | null
+          avg_duration_seconds: number | null
+          completed_count: number | null
+          date: string | null
+          failed_count: number | null
+          job_type: string | null
         }
         Relationships: []
       }
@@ -6647,10 +6646,10 @@ export type Database = {
       }
       webhook_processing_stats: {
         Row: {
-          count: number | null
-          last_received: string | null
-          provider: string | null
-          status: string | null
+          date: string | null
+          failed_count: number | null
+          processed_count: number | null
+          total_webhooks: number | null
         }
         Relationships: []
       }
