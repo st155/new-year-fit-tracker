@@ -45,6 +45,33 @@ export function BarcodeScanner() {
       if (data.found) {
         setScannedProduct(data.product);
         
+        // Add to library automatically
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && data.product.id) {
+          const { data: existing } = await supabase
+            .from('user_supplement_library')
+            .select('scan_count')
+            .eq('user_id', user.id)
+            .eq('product_id', data.product.id)
+            .maybeSingle();
+
+          if (existing) {
+            await supabase
+              .from('user_supplement_library')
+              .update({ scan_count: existing.scan_count + 1 })
+              .eq('user_id', user.id)
+              .eq('product_id', data.product.id);
+          } else {
+            await supabase
+              .from('user_supplement_library')
+              .insert({
+                user_id: user.id,
+                product_id: data.product.id,
+                scan_count: 1,
+              });
+          }
+        }
+        
         // Step 2: Enrich product data
         setScanStep('enriching');
         const { data: enrichData, error: enrichError } = await supabase.functions.invoke(

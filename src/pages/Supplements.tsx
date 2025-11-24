@@ -8,13 +8,14 @@ import { TheStackView } from "@/components/biostack/TheStackView";
 import { CorrelationEngine } from "@/components/biostack/CorrelationEngine";
 import { ProtocolMessageParser } from "@/components/supplements/ProtocolMessageParser";
 import { ProtocolHistory } from "@/components/supplements/ProtocolHistory";
+import { SupplementLibrary } from "@/components/biostack/SupplementLibrary";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-type ViewMode = "dashboard" | "correlation" | "history" | "import";
+type ViewMode = "dashboard" | "correlation" | "history" | "import" | "library";
 
 export default function Supplements() {
   const { user } = useAuth();
@@ -106,8 +107,21 @@ export default function Supplements() {
             onCorrelationEngine={() => setViewMode("correlation")}
             onHistory={() => setViewMode("history")}
             onImportProtocol={() => setViewMode("import")}
+            onLibrary={() => setViewMode("library")}
           />
         </>
+      )}
+
+      {viewMode === "library" && (
+        <div className="space-y-4">
+          <SupplementLibrary />
+          <SecondaryNavigation
+            onCorrelationEngine={() => setViewMode("correlation")}
+            onHistory={() => setViewMode("history")}
+            onImportProtocol={() => setViewMode("import")}
+            onLibrary={() => setViewMode("dashboard")}
+          />
+        </div>
       )}
 
       {viewMode === "correlation" && (
@@ -117,6 +131,7 @@ export default function Supplements() {
             onCorrelationEngine={() => setViewMode("dashboard")}
             onHistory={() => setViewMode("history")}
             onImportProtocol={() => setViewMode("import")}
+            onLibrary={() => setViewMode("library")}
           />
         </div>
       )}
@@ -128,6 +143,7 @@ export default function Supplements() {
             onCorrelationEngine={() => setViewMode("correlation")}
             onHistory={() => setViewMode("dashboard")}
             onImportProtocol={() => setViewMode("import")}
+            onLibrary={() => setViewMode("library")}
           />
         </div>
       )}
@@ -139,6 +155,7 @@ export default function Supplements() {
             onCorrelationEngine={() => setViewMode("correlation")}
             onHistory={() => setViewMode("history")}
             onImportProtocol={() => setViewMode("dashboard")}
+            onLibrary={() => setViewMode("library")}
           />
         </div>
       )}

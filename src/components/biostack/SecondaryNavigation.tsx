@@ -1,19 +1,27 @@
 import { motion } from "framer-motion";
-import { TrendingUp, History, FileText } from "lucide-react";
+import { TrendingUp, History, FileText, Library } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SecondaryNavigationProps {
   onCorrelationEngine: () => void;
   onHistory: () => void;
   onImportProtocol: () => void;
+  onLibrary: () => void;
 }
 
 export function SecondaryNavigation({
   onCorrelationEngine,
   onHistory,
-  onImportProtocol
+  onImportProtocol,
+  onLibrary,
 }: SecondaryNavigationProps) {
   const actions = [
+    {
+      label: "My Library",
+      icon: Library,
+      onClick: onLibrary,
+      color: "green"
+    },
     {
       label: "Correlation Engine",
       icon: TrendingUp,
@@ -30,14 +38,14 @@ export function SecondaryNavigation({
       label: "Import Protocol",
       icon: FileText,
       onClick: onImportProtocol,
-      color: "green"
+      color: "yellow"
     }
   ];
 
   return (
     <div className="mt-12 pt-8 border-t border-neutral-800">
       <h3 className="text-sm font-semibold text-muted-foreground mb-4">Advanced Tools</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {actions.map((action, index) => (
           <motion.div
             key={action.label}
