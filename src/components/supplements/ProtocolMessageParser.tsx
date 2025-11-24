@@ -126,8 +126,8 @@ export function ProtocolMessageParser() {
       });
 
       toast({
-        title: "✅ Протокол создан!",
-        description: `${parsedSupplements.length} добавок добавлено в ваш стек`
+        title: "✅ Протокол создан и активирован!",
+        description: `${parsedSupplements.length} добавок добавлено. Перейдите во вкладку History для управления протоколами.`
       });
 
       // Reset
@@ -171,7 +171,7 @@ export function ProtocolMessageParser() {
 Магний цитрат 200 мг после еды
 ...
 "
-              className="min-h-[300px] font-mono text-sm"
+              className="min-h-[500px] font-mono text-sm resize-y"
             />
           </div>
 

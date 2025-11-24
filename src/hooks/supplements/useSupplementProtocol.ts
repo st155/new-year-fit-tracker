@@ -93,6 +93,24 @@ export function useSupplementProtocol(userId: string | undefined) {
     },
   });
 
+  const deactivateProtocol = useMutation({
+    mutationFn: async (protocolId: string) => {
+      const { data, error } = await supabase
+        .from("protocols")
+        .update({ is_active: false })
+        .eq("id", protocolId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
+      toast({ title: "Protocol deactivated" });
+    },
+  });
+
   const deleteProtocol = useMutation({
     mutationFn: async (protocolId: string) => {
       const { error } = await supabase
@@ -211,6 +229,7 @@ export function useSupplementProtocol(userId: string | undefined) {
     createProtocol,
     createProtocolFromParsed,
     activateProtocol,
+    deactivateProtocol,
     deleteProtocol,
   };
 }

@@ -4,6 +4,7 @@ import { TheStackView } from "@/components/biostack/TheStackView";
 import { CorrelationEngine } from "@/components/biostack/CorrelationEngine";
 import { LifecycleAlertsPanel } from "@/components/biostack/LifecycleAlertsPanel";
 import { ProtocolMessageParser } from "@/components/supplements/ProtocolMessageParser";
+import { ProtocolHistory } from "@/components/supplements/ProtocolHistory";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Supplements() {
@@ -55,9 +56,7 @@ export default function Supplements() {
         </TabsContent>
 
         <TabsContent value="history">
-          <div className="text-center py-12 text-muted-foreground">
-            History tab - coming soon
-          </div>
+          <ProtocolHistory />
         </TabsContent>
       </Tabs>
     </div>
