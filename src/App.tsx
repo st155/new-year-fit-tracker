@@ -12,7 +12,7 @@ import { initWebVitals } from "@/lib/web-vitals";
 import { logger } from "@/lib/logger";
 import { DISABLE_SW } from "@/lib/safe-flags";
 import { AppRoutes } from "./app/AppRoutes";
-import { FixChallengeDataTrigger } from "@/components/FixChallengeDataTrigger";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,7 +86,6 @@ const AppContent = () => {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <SafeRouter>
         <AuthProvider>
-          <FixChallengeDataTrigger />
           <Suspense fallback={<PageLoader message="Loading application..." />}>
             <AppRoutes />
           </Suspense>
