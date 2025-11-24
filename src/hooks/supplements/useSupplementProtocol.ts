@@ -244,7 +244,7 @@ export function useSupplementProtocol(userId: string | undefined) {
             .from('supplement_products')
             .insert({
               name: supp.supplement_name,
-              brand: supp.brand || null,
+              brand: supp.brand || 'Unknown',
               dosage_amount: supp.dosage_amount,
               dosage_unit: supp.dosage_unit,
               form: supp.form || null,
@@ -269,7 +269,6 @@ export function useSupplementProtocol(userId: string | undefined) {
             protocol_id: protocol.id,
             product_id: productId,
             daily_dosage: supp.dosage_amount,
-            dosage_unit: supp.dosage_unit,
             intake_times: supp.intake_times,
             notes: supp.timing_notes || null,
           });
