@@ -55,6 +55,7 @@ serve(async (req) => {
     }
 
     console.log('[SCAN-BOTTLE] Starting AI analysis...');
+    console.log('[SCAN-BOTTLE] Image size:', imageBase64.length, 'bytes');
 
     // Call Lovable AI Gateway with Gemini Vision
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -79,14 +80,19 @@ Return ONLY a valid JSON object with these exact keys (no markdown, no explanati
   "form": "..."
 }`;
 
+    // Setup timeout with AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
+
     const visionResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'user',
@@ -102,6 +108,8 @@ Return ONLY a valid JSON object with these exact keys (no markdown, no explanati
         max_tokens: 1000,
       }),
     });
+
+    clearTimeout(timeoutId);
 
     if (!visionResponse.ok) {
       const error = await visionResponse.text();

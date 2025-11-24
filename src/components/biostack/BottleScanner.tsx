@@ -54,11 +54,31 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     onClose();
   }, [onClose]);
 
+  // Compress image before upload
+  const compressImage = async (base64: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = base64;
+    });
+  };
+
   // Capture photo from webcam
-  const handleCapture = useCallback(() => {
+  const handleCapture = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      setCapturedImage(imageSrc);
+      const compressed = await compressImage(imageSrc);
+      setCapturedImage(compressed);
       setStep('preview');
     }
   }, []);
@@ -76,9 +96,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setStep('analyzing');
     
     try {
-      const { data, error } = await supabase.functions.invoke('scan-supplement-bottle', {
+      // Setup 90 second timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Analysis timeout - please try again with better lighting')), 90000)
+      );
+
+      const analyzePromise = supabase.functions.invoke('scan-supplement-bottle', {
         body: { imageBase64: capturedImage },
       });
+
+      const { data, error } = await Promise.race([analyzePromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -257,9 +284,13 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           {step === 'analyzing' && (
             <div className="py-12 text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-blue-400 mx-auto" />
-              <div>
+              <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">🤖 Analyzing bottle with Gemini Vision...</p>
-                <p className="text-sm text-muted-foreground">Extracting supplement information</p>
+                <p className="text-sm text-muted-foreground">Extracting supplement information from label</p>
+                <div className="text-xs text-yellow-400 mt-3 space-y-1">
+                  <p>⏱️ This may take 10-30 seconds...</p>
+                  <p className="text-muted-foreground">Reading text, identifying brand, dosage, and servings</p>
+                </div>
               </div>
             </div>
           )}
