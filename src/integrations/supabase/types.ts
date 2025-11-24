@@ -333,13 +333,6 @@ export type Database = {
             foreignKeyName: "ai_goal_suggestions_goal_id_fkey"
             columns: ["goal_id"]
             isOneToOne: false
-            referencedRelation: "challenge_progress"
-            referencedColumns: ["goal_id"]
-          },
-          {
-            foreignKeyName: "ai_goal_suggestions_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
             referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
@@ -2031,13 +2024,6 @@ export type Database = {
             foreignKeyName: "goal_baselines_goal_id_fkey"
             columns: ["goal_id"]
             isOneToOne: false
-            referencedRelation: "challenge_progress"
-            referencedColumns: ["goal_id"]
-          },
-          {
-            foreignKeyName: "goal_baselines_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
             referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
@@ -3156,13 +3142,6 @@ export type Database = {
             foreignKeyName: "habits_linked_goal_id_fkey"
             columns: ["linked_goal_id"]
             isOneToOne: false
-            referencedRelation: "challenge_progress"
-            referencedColumns: ["goal_id"]
-          },
-          {
-            foreignKeyName: "habits_linked_goal_id_fkey"
-            columns: ["linked_goal_id"]
-            isOneToOne: false
             referencedRelation: "goal_current_values"
             referencedColumns: ["goal_id"]
           },
@@ -3849,13 +3828,6 @@ export type Database = {
           whoop_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "measurements_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "challenge_progress"
-            referencedColumns: ["goal_id"]
-          },
           {
             foreignKeyName: "measurements_goal_id_fkey"
             columns: ["goal_id"]
@@ -6287,47 +6259,147 @@ export type Database = {
       }
       body_composition_view: {
         Row: {
-          bmi: number | null
-          bmr: number | null
-          body_fat_mass: number | null
           body_fat_percentage: number | null
           created_at: string | null
-          impedance_data: Json | null
+          id: string | null
           measurement_date: string | null
+          measurement_method: string | null
+          migrated_photo_after_id: string | null
+          migrated_photo_before_id: string | null
           muscle_mass: number | null
-          research_params: Json | null
-          segmental_data: Json | null
-          skeletal_muscle_mass: number | null
-          updated_at: string | null
+          photo_after_url: string | null
+          photo_before_url: string | null
           user_id: string | null
-          visceral_fat_level: number | null
           weight: number | null
         }
-        Relationships: []
+        Insert: {
+          body_fat_percentage?: number | null
+          created_at?: string | null
+          id?: string | null
+          measurement_date?: string | null
+          measurement_method?: string | null
+          migrated_photo_after_id?: string | null
+          migrated_photo_before_id?: string | null
+          muscle_mass?: number | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          user_id?: string | null
+          weight?: number | null
+        }
+        Update: {
+          body_fat_percentage?: number | null
+          created_at?: string | null
+          id?: string | null
+          measurement_date?: string | null
+          measurement_method?: string | null
+          migrated_photo_after_id?: string | null
+          migrated_photo_before_id?: string | null
+          muscle_mass?: number | null
+          photo_after_url?: string | null
+          photo_before_url?: string | null
+          user_id?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "body_composition_migrated_photo_after_id_fkey"
+            columns: ["migrated_photo_after_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "body_composition_migrated_photo_before_id_fkey"
+            columns: ["migrated_photo_before_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "body_composition_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       challenge_leaderboard_month: {
         Row: {
           active_days: number | null
           avatar_url: string | null
           avg_hrv: number | null
-          avg_recovery_last_30d: number | null
+          avg_recovery: number | null
+          avg_recovery_last_7d: number | null
           avg_resting_hr: number | null
+          avg_sleep: number | null
           avg_sleep_efficiency: number | null
-          avg_sleep_last_30d: number | null
-          avg_strain_last_30d: number | null
+          avg_sleep_last_7d: number | null
+          avg_strain: number | null
+          avg_strain_last_7d: number | null
           challenge_id: string | null
           days_with_data: number | null
           full_name: string | null
           last_activity_date: string | null
           latest_body_fat: number | null
           latest_weight: number | null
-          monthly_consistency: number | null
-          steps_last_30d: number | null
+          steps_last_7d: number | null
           streak_days: number | null
+          total_calories: number | null
           total_points: number | null
+          total_steps: number | null
+          total_workouts: number | null
           user_id: string | null
           username: string | null
-          workouts_last_30d: number | null
+          weekly_consistency: number | null
+          workouts_last_7d: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      challenge_leaderboard_v2: {
+        Row: {
+          active_days: number | null
+          avatar_url: string | null
+          avg_hrv: number | null
+          avg_recovery: number | null
+          avg_recovery_last_7d: number | null
+          avg_resting_hr: number | null
+          avg_sleep: number | null
+          avg_sleep_efficiency: number | null
+          avg_sleep_last_7d: number | null
+          avg_strain: number | null
+          avg_strain_last_7d: number | null
+          challenge_id: string | null
+          days_with_data: number | null
+          full_name: string | null
+          last_activity_date: string | null
+          latest_body_fat: number | null
+          latest_weight: number | null
+          steps_last_7d: number | null
+          streak_days: number | null
+          total_calories: number | null
+          total_points: number | null
+          total_steps: number | null
+          total_workouts: number | null
+          user_id: string | null
+          username: string | null
+          weekly_consistency: number | null
+          workouts_last_7d: number | null
         }
         Relationships: [
           {
@@ -6375,38 +6447,6 @@ export type Database = {
           username: string | null
           weekly_consistency: number | null
           workouts_last_7d: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "challenge_participants_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "challenges"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "challenge_participants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      challenge_progress: {
-        Row: {
-          baseline_recorded_at: string | null
-          baseline_source: string | null
-          baseline_value: number | null
-          challenge_id: string | null
-          current_value: number | null
-          goal_id: string | null
-          goal_name: string | null
-          goal_type: string | null
-          progress_percent: number | null
-          target_unit: string | null
-          target_value: number | null
-          user_id: string | null
         }
         Relationships: [
           {

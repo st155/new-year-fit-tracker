@@ -26,10 +26,10 @@ export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
       if (!user?.id) return [];
       
       const { data, error } = await supabase
-        .from('body_composition_view')
-        .select('segmental_data')
+        .from('inbody_analyses')
+        .select('raw_data, right_arm_percent, left_arm_percent, trunk_percent, right_leg_percent, left_leg_percent')
         .eq('user_id', user.id)
-        .order('measurement_date', { ascending: false })
+        .order('test_date', { ascending: false })
         .limit(1)
         .maybeSingle();
       
@@ -38,9 +38,22 @@ export function CurrentMetrics({ current, isLoading }: CurrentMetricsProps) {
         return [];
       }
       
-      // Parse and validate segmental data
-      const rawData = data?.segmental_data;
-      if (!rawData || !Array.isArray(rawData)) return [];
+      // Build segmental data from individual columns or raw_data
+      let rawData: any[] = [];
+      
+      if (data?.raw_data && typeof data.raw_data === 'object' && 'segmental_data' in data.raw_data) {
+        rawData = (data.raw_data as any).segmental_data;
+      } else if (data) {
+        rawData = [
+          { name: 'Right Arm', value: data.right_arm_percent || 0 },
+          { name: 'Left Arm', value: data.left_arm_percent || 0 },
+          { name: 'Trunk', value: data.trunk_percent || 0 },
+          { name: 'Right Leg', value: data.right_leg_percent || 0 },
+          { name: 'Left Leg', value: data.left_leg_percent || 0 }
+        ];
+      }
+      
+      if (!Array.isArray(rawData)) return [];
       
       return rawData as Array<{ name: string; value: number; balanced?: boolean }>;
     },
