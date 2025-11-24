@@ -40,6 +40,7 @@ import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
 import { TopSupplementsWidget } from '@/components/biostack/TopSupplementsWidget';
+import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -261,6 +262,11 @@ const Index = () => {
         {/* Top Supplements Widget */}
         <ErrorBoundary>
           <TopSupplementsWidget />
+        </ErrorBoundary>
+
+        {/* Active Protocols Widget */}
+        <ErrorBoundary>
+          <ActiveProtocolsWidget />
         </ErrorBoundary>
 
         {/* Controls Bar - Compact */}
