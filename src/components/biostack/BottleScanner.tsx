@@ -311,6 +311,18 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     },
   });
 
+  const handleAddToStack = async () => {
+    await addToStackMutation.mutateAsync();
+  };
+
+  const handleSaveToLibraryOnly = () => {
+    toast({
+      title: "📚 Добавлено в библиотеку",
+      description: `${enrichedProduct?.name} сохранен в вашей библиотеке`,
+    });
+    handleClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl bg-neutral-950 border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
@@ -430,7 +442,9 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             <div className="space-y-4">
               <SupplementInfoCard
                 product={enrichedProduct}
-                onAddToStack={() => addToStackMutation.mutate()}
+                onAddToStack={handleAddToStack}
+                onSaveToLibraryOnly={handleSaveToLibraryOnly}
+                onRate={() => {/* future feature */}}
               />
             </div>
           )}
