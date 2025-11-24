@@ -218,7 +218,6 @@ export function useSupplementProtocol(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
       queryClient.invalidateQueries({ queryKey: ["protocol-history"] });
-      toast({ title: "Protocol created from parsed message" });
     },
   });
 
