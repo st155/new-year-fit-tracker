@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Loader2, Upload, Camera, Trash2, Check, AlertTriangle, Package } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Sparkles, Loader2, Upload, Camera, Trash2, Check, AlertTriangle, Package, ChevronDown, History } from "lucide-react";
 import { useProtocolMessageParser, ParsedSupplement } from "@/hooks/useProtocolMessageParser";
 import { useSupplementProtocol } from "@/hooks/supplements/useSupplementProtocol";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,31 @@ interface ProtocolMessageParserProps {
   onProtocolCreated?: () => void;
 }
 
+const EXAMPLE_PROTOCOLS = [
+  {
+    title: "От врача (формальный)",
+    text: `Витамин D3 5000 МЕ - утром натощак
+Магний цитрат 200 мг - 3 раза в день после еды
+Омега-3 1000 мг - утром и вечером
+Мелатонин 3 мг - за 30 минут до сна`
+  },
+  {
+    title: "От члена семьи (неформальный)",
+    text: `Купи:
+Вит Д - 5000 единиц утром
+Магний - 200мг 3 раза
+Омега3 - 1000 мг 2 раза в день
+Мелатонин 3мг на ночь`
+  },
+  {
+    title: "Список из магазина",
+    text: `Vitamin D3 (NOW Foods) - 5000 IU morning
+Magnesium Citrate (Solgar) - 200mg x3 after meals
+Omega-3 Fish Oil - 1000mg twice daily
+Melatonin 3mg before bed`
+  }
+];
+
 export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessageParserProps) {
   const [step, setStep] = useState<Step>('input');
   const [messageText, setMessageText] = useState('');
@@ -43,11 +69,47 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
     current: 0,
     total: 0
   });
+  const [examplesOpen, setExamplesOpen] = useState(false);
+  const [recentParsings, setRecentParsings] = useState<any[]>([]);
 
   const { user } = useAuth();
   const { toast } = useToast();
   const parseMutation = useProtocolMessageParser();
   const { createProtocolFromParsed } = useSupplementProtocol(user?.id);
+
+  // Load recent parsing history
+  useEffect(() => {
+    if (user?.id && step === 'input') {
+      loadRecentParsings();
+    }
+  }, [user?.id, step]);
+
+  const loadRecentParsings = async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from('protocol_parsing_history')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    if (data) {
+      setRecentParsings(data);
+    }
+  };
+
+  const loadParsingHistory = (parsing: any) => {
+    setMessageText(parsing.original_text);
+    setParsedSupplements(parsing.parsed_supplements);
+    setProtocolName(`Протокол от ${new Date(parsing.created_at).toLocaleDateString('ru-RU')}`);
+    setStep('preview');
+    
+    toast({
+      title: "История загружена",
+      description: `${parsing.parsed_supplements.length} добавок из истории`
+    });
+  };
 
   const uploadSupplementPhoto = async (
     photoDataUrl: string, 
@@ -123,6 +185,17 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       setParsedSupplements(validated);
       setProtocolName(`Протокол от ${new Date().toLocaleDateString('ru-RU')}`);
       setStep('preview');
+
+      // Save to history
+      if (user?.id) {
+        await supabase
+          .from('protocol_parsing_history')
+          .insert([{
+            user_id: user.id,
+            original_text: messageText,
+            parsed_supplements: validated as any
+          }]);
+      }
 
       toast({
         title: `✅ Найдено добавок: ${supplements.length}`,
@@ -284,6 +357,72 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
               Скопируйте текст сообщения с протоколом добавок. AI автоматически распознает все добавки, дозировки и время приема.
             </p>
           </div>
+
+          {/* Examples Section */}
+          <Collapsible open={examplesOpen} onOpenChange={setExamplesOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full">
+              <ChevronDown className={`h-4 w-4 transition-transform ${examplesOpen ? 'rotate-180' : ''}`} />
+              📝 Примеры форматов протоколов
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 mt-3">
+              {EXAMPLE_PROTOCOLS.map((example, i) => (
+                <Card key={i} className="p-3 space-y-2 bg-muted/30">
+                  <div className="flex items-start justify-between">
+                    <p className="text-xs font-medium">{example.title}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-xs"
+                      onClick={() => setMessageText(example.text)}
+                    >
+                      Использовать
+                    </Button>
+                  </div>
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                    {example.text}
+                  </pre>
+                </Card>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Recent Parsings History */}
+          {recentParsings.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <History className="h-4 w-4" />
+                🕐 Недавние парсинги
+              </Label>
+              <div className="space-y-2">
+                {recentParsings.map((parsing) => (
+                  <Card
+                    key={parsing.id}
+                    className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => loadParsingHistory(parsing)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {parsing.parsed_supplements.length} добавок
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(parsing.created_at).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        Загрузить
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Текст протокола</Label>

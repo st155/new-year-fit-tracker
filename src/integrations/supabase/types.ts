@@ -4347,6 +4347,33 @@ export type Database = {
           },
         ]
       }
+      protocol_parsing_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          original_text: string
+          parsed_supplements: Json
+          user_id: string
+          was_used: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          original_text: string
+          parsed_supplements: Json
+          user_id: string
+          was_used?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          original_text?: string
+          parsed_supplements?: Json
+          user_id?: string
+          was_used?: boolean | null
+        }
+        Relationships: []
+      }
       protocols: {
         Row: {
           adherence_rate: number | null

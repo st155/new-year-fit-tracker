@@ -162,10 +162,35 @@ serve(async (req) => {
 
     const result = JSON.parse(toolCall.function.arguments);
 
+    // Validate and sanitize each supplement
+    const validatedSupplements = result.supplements
+      .filter((s: any) => s.supplement_name && s.supplement_name.trim())
+      .map((s: any) => ({
+        supplement_name: s.supplement_name.trim(),
+        dosage_amount: Math.max(0, s.dosage_amount || 0),
+        dosage_unit: s.dosage_unit || 'mg',
+        intake_times: Array.isArray(s.intake_times) && s.intake_times.length > 0 
+          ? s.intake_times 
+          : ['morning'],
+        timing_notes: s.timing_notes?.trim() || null,
+        form: s.form?.trim() || null,
+        brand: s.brand?.trim() || null
+      }));
+
+    if (validatedSupplements.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'No valid supplements found in text. Please provide supplement names and dosages.'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        supplements: result.supplements 
+        supplements: validatedSupplements 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
