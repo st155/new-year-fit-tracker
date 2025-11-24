@@ -169,8 +169,15 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
       setProductId(newProductId);
 
-      // Add to library automatically
-      await supabase
+      // Add to library automatically with detailed logging
+      console.log('[LIBRARY] Adding supplement to library:', {
+        user_id: user.id,
+        product_id: newProductId,
+        supplement_name: extracted.supplement_name,
+        brand: extracted.brand
+      });
+      
+      const { error: libraryError } = await supabase
         .from('user_supplement_library')
         .upsert({
           user_id: user.id,
@@ -178,6 +185,28 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         }, {
           onConflict: 'user_id,product_id',
         });
+
+      if (libraryError) {
+        console.error('[LIBRARY] ❌ Failed to add to library:', {
+          error: libraryError,
+          code: libraryError.code,
+          message: libraryError.message,
+          details: libraryError.details
+        });
+        
+        toast({
+          title: "⚠️ Library warning",
+          description: "Product created but failed to add to library. You can add it manually later.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('[LIBRARY] ✅ Successfully added to library');
+        
+        toast({
+          title: "📚 Added to Library",
+          description: `${extracted.supplement_name} saved to your personal library.`,
+        });
+      }
 
       // Start enrichment
       setStep('enriching');
