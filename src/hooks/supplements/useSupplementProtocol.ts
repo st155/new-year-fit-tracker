@@ -165,13 +165,19 @@ export function useSupplementProtocol(userId: string | undefined) {
       // Create protocol
       console.log('🔵 [Protocol] Creating protocol:', { name, duration, userId, supplementsCount: supplements.length });
       
+      // Calculate start and end dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + duration);
+
       const { data: protocol, error: protocolError } = await supabase
         .from('protocols')
         .insert({
           user_id: userId,
           name,
           description: description || null,
-          duration_days: duration,
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
           is_active: true,
           ai_generated: true,
           ai_rationale: 'Imported from doctor/family message via AI parser'
