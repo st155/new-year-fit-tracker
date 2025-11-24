@@ -41,6 +41,7 @@ import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
 import { TopSupplementsWidget } from '@/components/biostack/TopSupplementsWidget';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
+import { LifecycleAlertsPanel } from '@/components/biostack/LifecycleAlertsPanel';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -268,6 +269,13 @@ const Index = () => {
         <ErrorBoundary>
           <ActiveProtocolsWidget />
         </ErrorBoundary>
+
+        {/* Lifecycle Alerts Panel - Only show if unread alerts exist */}
+        {user?.id && (
+          <ErrorBoundary>
+            <LifecycleAlertsPanel userId={user.id} />
+          </ErrorBoundary>
+        )}
 
         {/* Controls Bar - Compact */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
