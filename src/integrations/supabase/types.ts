@@ -4598,10 +4598,13 @@ export type Database = {
       supplement_products: {
         Row: {
           ai_confidence_score: number | null
+          avg_rating: number | null
           barcode: string | null
+          benefits: string[] | null
           brand: string
           category: string | null
           created_at: string | null
+          description: string | null
           dosage_amount: number
           dosage_unit: string
           expiration_info: string | null
@@ -4610,18 +4613,25 @@ export type Database = {
           image_url: string | null
           ingredients: string[] | null
           manufacturer: string | null
+          manufacturer_info: Json | null
           name: string
+          popularity_score: number | null
           recommended_daily_intake: string | null
+          research_summary: string | null
           servings_per_container: number | null
+          total_ratings: number | null
           updated_at: string | null
           warnings: string | null
         }
         Insert: {
           ai_confidence_score?: number | null
+          avg_rating?: number | null
           barcode?: string | null
+          benefits?: string[] | null
           brand: string
           category?: string | null
           created_at?: string | null
+          description?: string | null
           dosage_amount: number
           dosage_unit: string
           expiration_info?: string | null
@@ -4630,18 +4640,25 @@ export type Database = {
           image_url?: string | null
           ingredients?: string[] | null
           manufacturer?: string | null
+          manufacturer_info?: Json | null
           name: string
+          popularity_score?: number | null
           recommended_daily_intake?: string | null
+          research_summary?: string | null
           servings_per_container?: number | null
+          total_ratings?: number | null
           updated_at?: string | null
           warnings?: string | null
         }
         Update: {
           ai_confidence_score?: number | null
+          avg_rating?: number | null
           barcode?: string | null
+          benefits?: string[] | null
           brand?: string
           category?: string | null
           created_at?: string | null
+          description?: string | null
           dosage_amount?: number
           dosage_unit?: string
           expiration_info?: string | null
@@ -4650,9 +4667,13 @@ export type Database = {
           image_url?: string | null
           ingredients?: string[] | null
           manufacturer?: string | null
+          manufacturer_info?: Json | null
           name?: string
+          popularity_score?: number | null
           recommended_daily_intake?: string | null
+          research_summary?: string | null
           servings_per_container?: number | null
+          total_ratings?: number | null
           updated_at?: string | null
           warnings?: string | null
         }
