@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Upload, Camera, Trash2, Check, AlertTriangle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Sparkles, Loader2, Upload, Camera, Trash2, Check, AlertTriangle, Package } from "lucide-react";
 import { useProtocolMessageParser, ParsedSupplement } from "@/hooks/useProtocolMessageParser";
 import { useSupplementProtocol } from "@/hooks/supplements/useSupplementProtocol";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,11 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const [duration, setDuration] = useState(30);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [selectedSupplementIndex, setSelectedSupplementIndex] = useState<number | null>(null);
+  const [creationProgress, setCreationProgress] = useState({
+    step: '',
+    current: 0,
+    total: 0
+  });
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -152,29 +158,87 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
     reader.readAsDataURL(file);
   };
 
-  const handleCreateProtocol = async () => {
+  const validateProtocolData = (): { valid: boolean; error: string } => {
+    // 1. Название протокола
     if (!protocolName.trim()) {
-      toast({
-        title: "Введите название протокола",
-        variant: "destructive"
-      });
-      return;
+      return { valid: false, error: "Введите название протокола" };
     }
-
+    
+    if (protocolName.length < 3) {
+      return { valid: false, error: "Название протокола слишком короткое (минимум 3 символа)" };
+    }
+    
+    // 2. Длительность
+    if (duration < 1 || duration > 365) {
+      return { valid: false, error: "Длительность должна быть от 1 до 365 дней" };
+    }
+    
+    // 3. Количество добавок
     if (parsedSupplements.length === 0) {
+      return { valid: false, error: "Добавьте хотя бы одну добавку" };
+    }
+    
+    // 4. Валидация каждой добавки
+    for (let i = 0; i < parsedSupplements.length; i++) {
+      const supp = parsedSupplements[i];
+      const suppName = supp.supplement_name || `Добавка #${i + 1}`;
+      
+      // Название
+      if (!supp.supplement_name?.trim()) {
+        return { valid: false, error: `${suppName}: укажите название` };
+      }
+      
+      // Дозировка
+      if (!supp.dosage_amount || supp.dosage_amount <= 0) {
+        return { valid: false, error: `${suppName}: укажите корректную дозировку (больше 0)` };
+      }
+      
+      if (supp.dosage_amount > 100000) {
+        return { valid: false, error: `${suppName}: дозировка слишком большая (максимум 100,000)` };
+      }
+      
+      // Единица измерения
+      if (!supp.dosage_unit?.trim()) {
+        return { valid: false, error: `${suppName}: укажите единицу измерения (мг, мкг, МЕ...)` };
+      }
+      
+      // Время приема
+      if (!supp.intake_times || supp.intake_times.length === 0) {
+        return { valid: false, error: `${suppName}: укажите хотя бы одно время приема` };
+      }
+    }
+    
+    return { valid: true, error: '' };
+  };
+
+  const handleCreateProtocol = async () => {
+    // Запускаем валидацию
+    const validation = validateProtocolData();
+    
+    if (!validation.valid) {
       toast({
-        title: "Добавьте хотя бы одну добавку",
-        variant: "destructive"
+        title: "❌ Ошибка валидации",
+        description: validation.error,
+        variant: "destructive",
+        duration: 5000
       });
       return;
     }
 
     try {
+      setCreationProgress({
+        step: 'Создание протокола...',
+        current: 0,
+        total: parsedSupplements.length
+      });
       await createProtocolFromParsed.mutateAsync({
         name: protocolName,
         description: protocolDescription,
         duration,
-        supplements: parsedSupplements
+        supplements: parsedSupplements,
+        onProgress: (current: number, total: number, step: string) => {
+          setCreationProgress({ step, current, total });
+        }
       });
 
       toast({
@@ -205,6 +269,8 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
         description: error instanceof Error ? error.message : "Попробуйте еще раз",
         variant: "destructive"
       });
+    } finally {
+      setCreationProgress({ step: '', current: 0, total: 0 });
     }
   };
 
@@ -258,7 +324,24 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
         </Card>
       )}
 
-      {step === 'preview' && (
+      {step === 'preview' && parsedSupplements.length === 0 && (
+        <Card className="p-12 text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Package className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Нет добавок</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Все добавки были удалены. Вернитесь назад и повторите парсинг протокола.
+            </p>
+          </div>
+          <Button onClick={() => setStep('input')} variant="outline" size="lg">
+            Назад к вводу
+          </Button>
+        </Card>
+      )}
+
+      {step === 'preview' && parsedSupplements.length > 0 && (
         <div className="space-y-6">
           <Card className="p-6 space-y-4">
             <div>
@@ -503,6 +586,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             setSelectedSupplementIndex(null);
           }}
           onSuccess={async (scannedData) => {
+            setScannerOpen(false);
             if (selectedSupplementIndex === null) return;
             
             let photoUrl = scannedData.photoUrl;
@@ -541,6 +625,27 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             setSelectedSupplementIndex(null);
           }}
         />
+      )}
+
+      {/* Progress indicator overlay */}
+      {createProtocolFromParsed.isPending && creationProgress.total > 0 && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <Card className="p-6 space-y-4 max-w-md mx-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <h3 className="font-semibold">{creationProgress.step}</h3>
+              </div>
+              <Progress 
+                value={(creationProgress.current / creationProgress.total) * 100} 
+                className="h-2"
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                {creationProgress.current} из {creationProgress.total} добавок обработано
+              </p>
+            </div>
+          </Card>
+        </div>
       )}
     </div>
   );

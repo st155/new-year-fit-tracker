@@ -132,7 +132,8 @@ export function useSupplementProtocol(userId: string | undefined) {
       name, 
       description, 
       duration, 
-      supplements 
+      supplements,
+      onProgress
     }: {
       name: string;
       description?: string;
@@ -147,6 +148,7 @@ export function useSupplementProtocol(userId: string | undefined) {
         brand?: string;
         photo_url?: string;
       }>;
+      onProgress?: (current: number, total: number, step: string) => void;
     }) => {
       if (!userId) throw new Error('Not authenticated');
 
@@ -167,20 +169,50 @@ export function useSupplementProtocol(userId: string | undefined) {
 
       if (protocolError) throw protocolError;
 
+      onProgress?.(0, supplements.length, 'Обработка добавок...');
+
       // Create protocol items for each supplement
-      for (const supp of supplements) {
-        // Find or create product
+      for (let i = 0; i < supplements.length; i++) {
+        const supp = supplements[i];
+        
+        onProgress?.(i, supplements.length, `Обработка ${supp.supplement_name}...`);
+        
+        // Find or create product with improved duplicate search
         let productId: string | null = null;
 
-        const { data: existingProduct } = await supabase
-          .from('supplement_products')
-          .select('id')
-          .ilike('name', supp.supplement_name)
-          .maybeSingle();
+        // 1. Exact match: name + brand
+        if (supp.brand) {
+          const { data: exactMatch } = await supabase
+            .from('supplement_products')
+            .select('id, name, brand')
+            .ilike('name', supp.supplement_name)
+            .ilike('brand', supp.brand)
+            .maybeSingle();
+          
+          if (exactMatch) {
+            productId = exactMatch.id;
+          }
+        }
 
-        if (existingProduct) {
-          productId = existingProduct.id;
-        } else {
+        // 2. If not found, search by name only (exact match)
+        if (!productId) {
+          const { data: nameMatch } = await supabase
+            .from('supplement_products')
+            .select('id, name, brand')
+            .eq('name', supp.supplement_name)
+            .maybeSingle();
+          
+          if (nameMatch) {
+            // Check brand compatibility
+            if (!supp.brand || !nameMatch.brand || 
+                nameMatch.brand.toLowerCase() === supp.brand.toLowerCase()) {
+              productId = nameMatch.id;
+            }
+          }
+        }
+
+        // 3. If not found, create new product
+        if (!productId) {
           const { data: newProduct, error: productError } = await supabase
             .from('supplement_products')
             .insert({
@@ -212,6 +244,8 @@ export function useSupplementProtocol(userId: string | undefined) {
 
         if (itemError) throw itemError;
       }
+
+      onProgress?.(supplements.length, supplements.length, 'Завершение...');
 
       return protocol;
     },
