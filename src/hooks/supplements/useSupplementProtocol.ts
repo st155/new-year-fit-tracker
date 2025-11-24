@@ -16,6 +16,35 @@ export function useSupplementProtocol(userId: string | undefined) {
       .trim();
   };
 
+  // Helper: normalize dosage unit to match database constraints
+  const normalizeDosageUnit = (unit: string | undefined): string => {
+    if (!unit) return 'serving';
+    
+    const normalized = unit.toLowerCase().trim();
+    
+    // Миллиграммы
+    if (/^м[гg]$|миллиграмм|milligram/i.test(normalized)) return 'mg';
+    
+    // Граммы
+    if (/^г$|грамм|gram/i.test(normalized)) return 'g';
+    
+    // Микрограммы
+    if (/^мкг$|^mcg$|микрограмм|microgram|µg/i.test(normalized)) return 'mcg';
+    
+    // Международные единицы
+    if (/^ме$|^iu$|международн/i.test(normalized)) return 'IU';
+    
+    // Миллилитры
+    if (/^мл$|^ml$|миллилитр|milliliter/i.test(normalized)) return 'ml';
+    
+    // Капсулы, таблетки, порции
+    if (/капсул|таблетк|порци|serving|caps|tab|dose/i.test(normalized)) return 'serving';
+    
+    // По умолчанию
+    console.warn(`⚠️ Unknown dosage unit: "${unit}", defaulting to "serving"`);
+    return 'serving';
+  };
+
   const { data: activeProtocol, isLoading } = useQuery({
     queryKey: ["active-protocol", userId],
     queryFn: async () => {
@@ -246,7 +275,7 @@ export function useSupplementProtocol(userId: string | undefined) {
               name: supp.supplement_name,
               brand: supp.brand || 'Unknown',
               dosage_amount: supp.dosage_amount,
-              dosage_unit: supp.dosage_unit,
+              dosage_unit: normalizeDosageUnit(supp.dosage_unit),
               form: supp.form || null,
               image_url: supp.photo_url || null,
             })
