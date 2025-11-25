@@ -742,6 +742,141 @@ Return ONLY valid JSON (no markdown):
         }
       }
     }
+    
+    // ============================================================
+    // PARSER C: FITNESS REPORT (VO2max, Lactate, Heart Rate Zones)
+    // ============================================================
+    else if (documentCategory === 'fitness_report') {
+      console.log('[PARSE-LAB-REPORT] Processing fitness_report document...');
+      
+      const fitnessPrompt = `You are a fitness performance test analyzer. Extract metrics from VO2max, lactate threshold, and exercise tests.
+
+IMPORTANT: Return ONLY valid JSON (no markdown, no code blocks):
+{
+  "test_type": "VO2max" | "Lactate Threshold" | "Exercise Test",
+  "test_date": "YYYY-MM-DD",
+  "metrics": [
+    {
+      "name": "VO2max",
+      "value": 52.5,
+      "unit": "ml/kg/min",
+      "category": "cardiorespiratory"
+    },
+    {
+      "name": "Lactate Threshold HR",
+      "value": 165,
+      "unit": "bpm",
+      "category": "metabolic"
+    },
+    {
+      "name": "Anaerobic Threshold Power",
+      "value": 280,
+      "unit": "W",
+      "category": "power"
+    },
+    {
+      "name": "Max Heart Rate",
+      "value": 185,
+      "unit": "bpm",
+      "category": "cardiorespiratory"
+    }
+  ],
+  "ai_summary": "Brief performance assessment with key findings"
+}
+
+Extract all available metrics. Common metric names:
+- VO2max, VO2 Max, Maximal Oxygen Uptake
+- Lactate Threshold HR, LT Heart Rate
+- Anaerobic Threshold Power, AT Power
+- Max Heart Rate, HRmax, Maximum HR
+- Power at Lactate Threshold
+- Ventilatory Threshold`;
+
+      const fitnessResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-pro',
+          messages: [
+            { role: 'system', content: fitnessPrompt },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Extract fitness metrics from this performance test report:' },
+                { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } }
+              ]
+            }
+          ],
+          max_tokens: 8000
+        })
+      });
+
+      if (!fitnessResponse.ok) {
+        throw new Error(`Gemini API error: ${fitnessResponse.status} ${fitnessResponse.statusText}`);
+      }
+
+      const fitnessData = await fitnessResponse.json();
+      let fitnessText = fitnessData.choices[0].message.content;
+      
+      // Clean markdown wrapper
+      fitnessText = fitnessText.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+      
+      // Fallback: extract JSON from text
+      if (!fitnessText.startsWith('{')) {
+        const firstBrace = fitnessText.indexOf('{');
+        const lastBrace = fitnessText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          fitnessText = fitnessText.substring(firstBrace, lastBrace + 1);
+        }
+      }
+      
+      const fitnessExtracted = JSON.parse(fitnessText);
+      aiSummary = fitnessExtracted.ai_summary;
+      
+      console.log(`[PARSE-LAB-REPORT] Extracted ${fitnessExtracted.metrics?.length || 0} fitness metrics`);
+
+      // Save metrics to lab_test_results
+      for (const metric of fitnessExtracted.metrics || []) {
+        try {
+          // Try to match with biomarker_master
+          const { data: biomarkerMaster } = await supabase
+            .from('biomarker_master')
+            .select('*')
+            .ilike('canonical_name', metric.name.replace(/\s+/g, '_').toLowerCase())
+            .maybeSingle();
+
+          const { data: insertedResult, error: insertError } = await supabase
+            .from('lab_test_results')
+            .insert({
+              user_id: user.id,
+              document_id: documentId,
+              biomarker_id: biomarkerMaster?.id || null,
+              raw_test_name: metric.name,
+              value: metric.value,
+              text_value: null,
+              unit: metric.unit || '-',
+              normalized_value: metric.value,
+              normalized_unit: metric.unit || '-',
+              laboratory_name: 'Performance Test',
+              test_date: fitnessExtracted.test_date || document.uploaded_at?.split('T')[0]
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`[PARSE-LAB-REPORT] Error inserting fitness metric ${metric.name}:`, insertError);
+          } else {
+            results.push(insertedResult);
+            console.log(`[PARSE-LAB-REPORT] ✓ Saved fitness metric: ${metric.name} = ${metric.value} ${metric.unit}`);
+          }
+        } catch (metricError) {
+          console.error(`[PARSE-LAB-REPORT] Error processing fitness metric ${metric.name}:`, metricError);
+        }
+      }
+    }
 
     // Update medical document
     const testDate = extractedData.test_date || extractedData.study_date || document.uploaded_at?.split('T')[0];
