@@ -17,6 +17,7 @@ import '@/components/medical-documents/medical-documents.css';
 
 const MedicalDocuments = () => {
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showBatchDialog, setShowBatchDialog] = useState(false);
 
   const { data: pendingCount = 0, refetch: refetchPendingCount } = useQuery({
@@ -63,10 +64,12 @@ const MedicalDocuments = () => {
         </TabsList>
 
         <TabsContent value="documents" className="space-y-4">
-          <CategorySummaryDashboard />
+          <CategorySummaryDashboard onCategorySelect={setFilterCategory} />
           <DocumentFilters 
             filterType={filterType} 
             onFilterChange={setFilterType}
+            filterCategory={filterCategory}
+            onFilterCategoryChange={setFilterCategory}
             pendingCount={pendingCount}
             onBatchProcess={() => setShowBatchDialog(true)}
           />
@@ -74,7 +77,7 @@ const MedicalDocuments = () => {
             <DocumentStats />
             <HealthAnalysisWidget />
           </div>
-          <DocumentsGrid filterType={filterType} />
+          <DocumentsGrid filterType={filterType} filterCategory={filterCategory} />
         </TabsContent>
 
         <TabsContent value="trends">

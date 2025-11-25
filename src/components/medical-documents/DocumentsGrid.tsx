@@ -9,13 +9,19 @@ import { toast } from 'sonner';
 
 interface DocumentsGridProps {
   filterType?: string;
+  filterCategory?: string | null;
 }
 
-export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
+export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: DocumentsGridProps) => {
   const queryClient = useQueryClient();
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
     filterType && filterType !== 'all' ? { documentType: filterType as any } : undefined
   );
+
+  // Filter by category if specified
+  const filteredDocuments = filterCategory 
+    ? documents?.filter(doc => doc.category === filterCategory)
+    : documents;
 
   // Query recommendations count per document
   const { data: recommendationsCounts } = useQuery({
@@ -94,7 +100,7 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
     );
   }
 
-  if (!documents || documents.length === 0) {
+  if (!filteredDocuments || filteredDocuments.length === 0) {
     return (
       <div className="text-center py-12">
         <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
@@ -105,7 +111,7 @@ export const DocumentsGrid = ({ filterType }: DocumentsGridProps) => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-fade-in">
-      {documents.map((doc) => (
+      {filteredDocuments.map((doc) => (
         <DocumentCard
           key={doc.id}
           id={doc.id}

@@ -10,6 +10,7 @@ export interface MedicalDocument {
   file_name: string;
   storage_path: string;
   document_type: DocumentType;
+  category?: string | null;
   file_size?: number;
   mime_type?: string;
   document_date?: string;
