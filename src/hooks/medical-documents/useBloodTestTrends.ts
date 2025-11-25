@@ -17,7 +17,7 @@ export function useBloodTestTrends(canonicalNames: string[], displayNames: strin
 
       console.log('[TRENDS] Querying biomarkers:', canonicalNames);
 
-      // Fetch biomarker master data using canonical names
+      // Fetch biomarker master data using canonical names with standard_unit
       const { data: biomarkers, error: bioError } = await supabase
         .from('biomarker_master')
         .select('id, canonical_name, display_name, standard_unit, reference_ranges')
@@ -26,13 +26,14 @@ export function useBloodTestTrends(canonicalNames: string[], displayNames: strin
       if (bioError) throw bioError;
       console.log('[TRENDS] Found biomarkers:', biomarkers?.length);
 
-      // Fetch lab results
+      // Fetch lab results with normalized values
       const biomarkerIds = biomarkers?.map(b => b.id) || [];
       const { data: results, error: resError } = await supabase
         .from('lab_test_results')
         .select('biomarker_id, normalized_value, test_date')
         .eq('user_id', user.id)
         .in('biomarker_id', biomarkerIds)
+        .not('normalized_value', 'is', null) // Only get quantitative results
         .order('test_date', { ascending: true });
 
       if (resError) throw resError;
@@ -43,7 +44,7 @@ export function useBloodTestTrends(canonicalNames: string[], displayNames: strin
         canonicalNames.map((canonical, idx) => [canonical, displayNames[idx]])
       );
 
-      // Transform to chart data using display names as keys
+      // Transform to chart data using display names as keys and normalized values
       const dateMap = new Map<string, any>();
       results?.forEach(r => {
         const biomarker = biomarkers?.find(b => b.id === r.biomarker_id);
@@ -53,7 +54,7 @@ export function useBloodTestTrends(canonicalNames: string[], displayNames: strin
         if (!dateMap.has(date)) {
           dateMap.set(date, { date });
         }
-        // Use display name for chart data keys
+        // Use display name for chart data keys and normalized_value
         const displayName = canonicalToDisplay[biomarker.canonical_name] || biomarker.display_name;
         dateMap.get(date)[displayName] = r.normalized_value;
       });

@@ -200,3 +200,6 @@ verify_jwt = false
 
 [functions.enrich-supplement-info]
 verify_jwt = true
+
+[functions.fix-unit-conversions]
+verify_jwt = true
