@@ -4424,6 +4424,36 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendations_history: {
+        Row: {
+          context_snapshot: Json | null
+          created_at: string | null
+          generated_at: string | null
+          health_score: number | null
+          id: string
+          recommendations_text: string
+          user_id: string
+        }
+        Insert: {
+          context_snapshot?: Json | null
+          created_at?: string | null
+          generated_at?: string | null
+          health_score?: number | null
+          id?: string
+          recommendations_text: string
+          user_id: string
+        }
+        Update: {
+          context_snapshot?: Json | null
+          created_at?: string | null
+          generated_at?: string | null
+          health_score?: number | null
+          id?: string
+          recommendations_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           action_type: string
