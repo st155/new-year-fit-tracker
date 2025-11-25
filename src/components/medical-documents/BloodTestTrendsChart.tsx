@@ -8,6 +8,19 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useMemo, useState } from "react";
 
+// Helper function to get standard unit for selected biomarkers
+function getStandardUnit(selectedBiomarkers: string[], biomarkers?: any[]): string {
+  if (!biomarkers || biomarkers.length === 0) return '';
+  
+  // Get the first biomarker's standard unit
+  const firstBiomarker = biomarkers[0];
+  if (firstBiomarker?.standard_unit) {
+    return firstBiomarker.standard_unit;
+  }
+  
+  return '';
+}
+
 // Map display names to canonical names for database queries
 const BIOMARKER_MAP: Record<string, string> = {
   'Glucose': 'glucose',
@@ -155,17 +168,27 @@ export const BloodTestTrendsChart = () => {
                     className="text-xs"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis
-                    className="text-xs"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
+          <YAxis
+            className="text-xs"
+            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+            label={{ 
+              value: getStandardUnit(selectedBiomarkers, data?.biomarkers), 
+              angle: -90, 
+              position: 'insideLeft',
+              style: { fill: 'hsl(var(--muted-foreground))' }
+            }}
+          />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                  formatter={(value: number) => {
+                    const unit = getStandardUnit(selectedBiomarkers, data?.biomarkers);
+                    return unit ? `${value} ${unit}` : value;
+                  }}
+                />
                   <Legend />
                   {selectedBiomarkers.map((biomarker, idx) => (
                     <Line
