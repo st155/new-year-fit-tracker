@@ -4,9 +4,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useImagingTimeline } from "@/hooks/medical-documents/useImagingTimeline";
-import { Stethoscope, ChevronDown, MapPin, AlertTriangle, CheckCircle } from "lucide-react";
+import { Stethoscope, ChevronDown, MapPin, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 const severityColors = {
   normal: 'bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-300',
@@ -23,8 +26,31 @@ const severityIcons = {
 };
 
 export const ImagingTimeline = () => {
-  const { data: documents, isLoading } = useImagingTimeline();
+  const { data: documents, isLoading, refetch } = useImagingTimeline();
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
+
+  const reclassifyMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('reclassify-imaging-documents');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Переклассификация завершена",
+        description: `Найдено и обновлено: ${data.reclassified} документов`,
+      });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Ошибка переклассификации",
+        description: error.message,
+      });
+    },
+  });
 
   const toggleDoc = (docId: string) => {
     setExpandedDocs(prev => {
@@ -71,13 +97,26 @@ export const ImagingTimeline = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Stethoscope className="h-5 w-5 text-primary" />
-          Таймлайн исследований
-        </CardTitle>
-        <CardDescription>
-          {documents.length} исследований за все время
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-primary" />
+              Таймлайн исследований
+            </CardTitle>
+            <CardDescription>
+              {documents.length} исследований за все время
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => reclassifyMutation.mutate()}
+            disabled={reclassifyMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${reclassifyMutation.isPending ? 'animate-spin' : ''}`} />
+            Найти ещё
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative space-y-4 before:absolute before:left-[15px] before:top-0 before:bottom-0 before:w-[2px] before:bg-border">

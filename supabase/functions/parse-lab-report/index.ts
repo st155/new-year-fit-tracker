@@ -228,6 +228,16 @@ Categories:
 - imaging_report: MRI, CT scan, ultrasound, X-ray reports
 - clinical_note: Doctor's notes, consultation summary
 
+IMPORTANT: If the document contains ANY of these keywords, classify as imaging_report:
+- УЗИ, ультразвуковое, ultrasound, echography, эхография
+- МРТ, MRI, магнитно-резонансная, magnetic resonance
+- КТ, CT scan, компьютерная томография, computed tomography
+- Рентген, X-ray, рентгенография, radiography
+- Гастроскопия, колоноскопия, эндоскопия, gastroscopy, colonoscopy, endoscopy
+- Эхокардиография, ЭхоКГ, echocardiography, cardiac ultrasound
+- Органов, малого таза, брюшной полости, pelvis, abdomen, abdominal
+- Молочных желез, щитовидной железы, breast, thyroid
+
 Return ONLY valid JSON (no markdown):
 {
   "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "clinical_note",
