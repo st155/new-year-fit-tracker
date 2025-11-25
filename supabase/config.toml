@@ -206,3 +206,6 @@ verify_jwt = true
 
 [functions.reclassify-imaging-documents]
 verify_jwt = true
+
+[functions.reprocess-all-documents]
+verify_jwt = true
