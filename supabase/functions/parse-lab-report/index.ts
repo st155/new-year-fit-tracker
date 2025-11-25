@@ -887,7 +887,6 @@ Extract all available metrics. Common metric names:
           const { data: insertedFinding, error: insertError } = await supabase
             .from('medical_findings')
             .insert({
-              user_id: user.id,
               document_id: documentId,
               body_part: finding.body_part,
               finding_text: finding.finding_text,
