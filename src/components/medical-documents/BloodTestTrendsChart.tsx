@@ -8,10 +8,21 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useMemo, useState } from "react";
 
-const COMMON_BIOMARKERS = [
-  'Glucose', 'Total Cholesterol', 'HDL Cholesterol', 'LDL Cholesterol',
-  'Triglycerides', 'ALT (SGPT)', 'AST (SGOT)', 'Creatinine', 'TSH', 'Hemoglobin'
-];
+// Map display names to canonical names for database queries
+const BIOMARKER_MAP: Record<string, string> = {
+  'Glucose': 'glucose',
+  'Total Cholesterol': 'cholesterol_total',
+  'HDL Cholesterol': 'hdl_cholesterol',
+  'LDL Cholesterol': 'ldl_cholesterol',
+  'Triglycerides': 'triglycerides',
+  'ALT (SGPT)': 'alt',
+  'AST (SGOT)': 'ast',
+  'Creatinine': 'creatinine',
+  'TSH': 'tsh',
+  'Hemoglobin': 'hemoglobin'
+};
+
+const COMMON_BIOMARKERS = Object.keys(BIOMARKER_MAP);
 
 const CHART_COLORS = [
   'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))',
@@ -20,7 +31,9 @@ const CHART_COLORS = [
 
 export const BloodTestTrendsChart = () => {
   const [selectedBiomarkers, setSelectedBiomarkers] = useState<string[]>(['Glucose', 'Total Cholesterol']);
-  const { data, isLoading } = useBloodTestTrends(selectedBiomarkers);
+  // Convert display names to canonical names for the query
+  const canonicalNames = selectedBiomarkers.map(name => BIOMARKER_MAP[name] || name);
+  const { data, isLoading } = useBloodTestTrends(canonicalNames, selectedBiomarkers);
 
   const stats = useMemo(() => {
     if (!data?.chartData || data.chartData.length < 2) return null;

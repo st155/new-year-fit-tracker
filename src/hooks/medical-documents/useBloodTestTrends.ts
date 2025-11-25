@@ -6,22 +6,25 @@ interface BloodTestDataPoint {
   [biomarker: string]: number | string;
 }
 
-export function useBloodTestTrends(selectedBiomarkers: string[]) {
+export function useBloodTestTrends(canonicalNames: string[], displayNames: string[]) {
   return useQuery({
-    queryKey: ['blood-test-trends', selectedBiomarkers],
+    queryKey: ['blood-test-trends', canonicalNames],
     queryFn: async (): Promise<{ chartData: BloodTestDataPoint[]; biomarkers: any[] }> => {
-      if (selectedBiomarkers.length === 0) return { chartData: [], biomarkers: [] };
+      if (canonicalNames.length === 0) return { chartData: [], biomarkers: [] };
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Fetch biomarker master data
+      console.log('[TRENDS] Querying biomarkers:', canonicalNames);
+
+      // Fetch biomarker master data using canonical names
       const { data: biomarkers, error: bioError } = await supabase
         .from('biomarker_master')
         .select('id, canonical_name, display_name, standard_unit, reference_ranges')
-        .in('canonical_name', selectedBiomarkers);
+        .in('canonical_name', canonicalNames);
 
       if (bioError) throw bioError;
+      console.log('[TRENDS] Found biomarkers:', biomarkers?.length);
 
       // Fetch lab results
       const biomarkerIds = biomarkers?.map(b => b.id) || [];
@@ -33,8 +36,14 @@ export function useBloodTestTrends(selectedBiomarkers: string[]) {
         .order('test_date', { ascending: true });
 
       if (resError) throw resError;
+      console.log('[TRENDS] Found results:', results?.length);
 
-      // Transform to chart data
+      // Create mapping from canonical to display names
+      const canonicalToDisplay = Object.fromEntries(
+        canonicalNames.map((canonical, idx) => [canonical, displayNames[idx]])
+      );
+
+      // Transform to chart data using display names as keys
       const dateMap = new Map<string, any>();
       results?.forEach(r => {
         const biomarker = biomarkers?.find(b => b.id === r.biomarker_id);
@@ -44,16 +53,19 @@ export function useBloodTestTrends(selectedBiomarkers: string[]) {
         if (!dateMap.has(date)) {
           dateMap.set(date, { date });
         }
-        dateMap.get(date)[biomarker.canonical_name] = r.normalized_value;
+        // Use display name for chart data keys
+        const displayName = canonicalToDisplay[biomarker.canonical_name] || biomarker.display_name;
+        dateMap.get(date)[displayName] = r.normalized_value;
       });
 
       const chartData: BloodTestDataPoint[] = Array.from(dateMap.values());
+      console.log('[TRENDS] Chart data points:', chartData.length);
 
       return {
         chartData,
         biomarkers: biomarkers || [],
       };
     },
-    enabled: selectedBiomarkers.length > 0,
+    enabled: canonicalNames.length > 0,
   });
 }
