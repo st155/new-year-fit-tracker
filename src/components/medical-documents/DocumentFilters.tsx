@@ -1,6 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Settings, Zap, RotateCcw } from 'lucide-react';
+import { RefreshCw, Settings, Zap, RotateCcw, Sparkles } from 'lucide-react';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,7 @@ export const DocumentFilters = ({
 }: DocumentFiltersProps) => {
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
+  const [isPopulating, setIsPopulating] = useState(false);
 
   const handleResetStuck = async () => {
     setIsResetting(true);
@@ -64,6 +65,34 @@ export const DocumentFilters = ({
     }
   };
 
+  const handlePopulateCorrelations = async () => {
+    setIsPopulating(true);
+    try {
+      toast({
+        title: "Запуск заполнения",
+        description: "Заполнение корреляций добавок и биомаркеров...",
+      });
+
+      const { error } = await supabase.functions.invoke('populate-biomarker-correlations');
+
+      if (error) throw error;
+
+      toast({
+        title: "Успешно",
+        description: "Корреляции биомаркеров заполнены",
+      });
+    } catch (error: any) {
+      console.error('Failed to populate correlations:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось заполнить корреляции",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPopulating(false);
+    }
+  };
+
   return (
     <div className="glass-card p-4 mb-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -90,6 +119,17 @@ export const DocumentFilters = ({
           >
             <RotateCcw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Сбросить</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handlePopulateCorrelations}
+            disabled={isPopulating}
+            className="gap-2 border-purple-500/50 text-purple-300 hover:bg-purple-500/10"
+            title="Заполнить базу корреляций добавок и биомаркеров"
+          >
+            <Sparkles className={`h-4 w-4 ${isPopulating ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">Корреляции</span>
           </Button>
 
           <Select value={filterType} onValueChange={onFilterChange}>

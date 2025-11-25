@@ -172,7 +172,7 @@ Provide a clear, structured summary.`;
     const aiClient = createAIClient(AIProvider.LOVABLE);
     
     // Add timeout to AI call to prevent hanging
-    const AI_TIMEOUT = 30000; // 30 seconds
+    const AI_TIMEOUT = 90000; // 90 seconds
     
     const aiResponsePromise = aiClient.complete({
       messages: [
@@ -185,7 +185,7 @@ Provide a clear, structured summary.`;
     });
 
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('AI analysis timeout - processing took longer than 30 seconds')), AI_TIMEOUT)
+      setTimeout(() => reject(new Error('AI analysis timeout - processing took longer than 90 seconds')), AI_TIMEOUT)
     );
 
     const aiResponse = await Promise.race([aiResponsePromise, timeoutPromise]) as any;
