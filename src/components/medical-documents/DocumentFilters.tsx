@@ -1,7 +1,10 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Settings, Zap } from 'lucide-react';
+import { RefreshCw, Settings, Zap, RotateCcw } from 'lucide-react';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 interface DocumentFiltersProps {
   filterType: string;
@@ -18,6 +21,49 @@ export const DocumentFilters = ({
   pendingCount = 0, 
   onBatchProcess 
 }: DocumentFiltersProps) => {
+  const { toast } = useToast();
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetStuck = async () => {
+    setIsResetting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Reset documents that have been processing for more than 1 hour
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+      const { data, error } = await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'pending',
+          processing_started_at: null
+        })
+        .eq('user_id', user.id)
+        .eq('processing_status', 'processing')
+        .lt('processing_started_at', oneHourAgo.toISOString())
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Документы сброшены',
+        description: `Сброшено ${data?.length || 0} застрявших документов`,
+      });
+
+      if (onRefresh) onRefresh();
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="glass-card p-4 mb-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -34,6 +80,17 @@ export const DocumentFilters = ({
               Обработать все ({pendingCount})
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            onClick={handleResetStuck}
+            disabled={isResetting}
+            className="gap-2 glass-subtle"
+            title="Сбросить застрявшие документы в обработке"
+          >
+            <RotateCcw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Сбросить</span>
+          </Button>
 
           <Select value={filterType} onValueChange={onFilterChange}>
             <SelectTrigger className="w-[200px] glass-subtle">
