@@ -228,6 +228,18 @@ Categories:
 - imaging_report: MRI, CT scan, ultrasound, X-ray reports
 - clinical_note: Doctor's notes, consultation summary
 
+IMPORTANT: If the document contains ANY of these keywords, classify as lab_urine:
+- Общий анализ мочи, ОАМ, OAM, Urinalysis
+- Анализ мочи, исследование мочи, моча, urine, analyse d'urine
+- pH мочи, удельный вес мочи, specific gravity, плотность мочи
+- Белок в моче, protein urine, протеинурия, proteinuria
+- Глюкоза в моче, glucose urine, глюкозурия, glucosuria
+- Кетоновые тела, ketones, кетоны, ацетон
+- Лейкоциты в моче, эритроциты в моче, leukocytes, erythrocytes
+- Нитриты, уробилиноген, билирубин мочи, nitrites, urobilinogen
+- Осадок мочи, микроскопия мочи, sediment, microscopy
+- Бактерии в моче, цилиндры, кристаллы, bacteria, casts, crystals
+
 IMPORTANT: If the document contains ANY of these keywords, classify as imaging_report:
 - УЗИ, ультразвуковое, ultrasound, echography, эхография
 - МРТ, MRI, магнитно-резонансная, magnetic resonance
@@ -419,6 +431,26 @@ VITAMINS & MINERALS:
 PSA (PROSTATE):
 - PSA, Prostate Specific Antigen, Prostate Specific Ag (Total), PSA (Total) → "PSA"
 - Free PSA, PSA Free, Prostate Specific Ag (Free), PSA (Free) → "PSA - Free"
+
+URINALYSIS BIOMARKER MAPPINGS (for lab_urine documents):
+Always map these urine test names to canonical IDs:
+- pH, pH мочи, Кислотность, Acidité urinaire, Urine pH, Reaction → "urine_ph"
+- Удельный вес, Плотность, Specific gravity, SG, Densité → "urine_specific_gravity"
+- Белок, Протеин, Protein, PRO, Protéines, Proteinuria → "urine_protein"
+- Глюкоза, GLU, Glucose, Sugar, Glucosuria → "urine_glucose"
+- Кетоны, Кетоновые тела, KET, Ketones, Acetone → "urine_ketones"
+- Кровь, BLD, Blood, Скрытая кровь, Occult blood, Hematuria → "urine_blood"
+- Лейкоциты, LEU, WBC, Leukocytes, White blood cells → "urine_leukocytes"
+- Эритроциты, RBC, Erythrocytes, Red blood cells → "urine_erythrocytes"
+- Нитриты, NIT, Nitrites, Nitrite → "urine_nitrites"
+- Уробилиноген, URO, Urobilinogen, UBG → "urine_urobilinogen"
+- Билирубин, BIL, Bilirubin → "urine_bilirubin"
+- Цвет, Color, Colour, Окраска → "urine_color"
+- Прозрачность, Clarity, Appearance, Turbidity → "urine_clarity"
+- Эпителий, Эпителиальные клетки, Epithelial cells, EPI → "urine_epithelial_cells"
+- Бактерии, Bacteria, Microbes → "urine_bacteria"
+- Цилиндры, Casts, Hyaline casts → "urine_casts"
+- Кристаллы, Crystals, Соли, Salts → "urine_crystals"
 
 Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
 {
