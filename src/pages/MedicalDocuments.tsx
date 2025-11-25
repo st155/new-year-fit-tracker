@@ -6,8 +6,9 @@ import { DocumentsGrid } from '@/components/medical-documents/DocumentsGrid';
 import { DocumentFilters } from '@/components/medical-documents/DocumentFilters';
 import { DocumentStats } from '@/components/medical-documents/DocumentStats';
 import { MigrationStatus } from '@/components/medical-documents/MigrationStatus';
-import { DocumentTrends } from '@/components/medical-documents/DocumentTrends';
-import { HealthRecommendations } from '@/components/medical-documents/HealthRecommendations';
+import { UniversalTrendsView } from '@/components/medical-documents/UniversalTrendsView';
+import { RecommendationsHistory } from '@/components/medical-documents/RecommendationsHistory';
+import { CategorySummaryDashboard } from '@/components/medical-documents/CategorySummaryDashboard';
 import { BatchProcessingDialog } from '@/components/medical-documents/BatchProcessingDialog';
 import { HealthAnalysisWidget } from '@/components/medical-documents/HealthAnalysisWidget';
 import { FileText, Upload, Database, TrendingUp, Lightbulb } from 'lucide-react';
@@ -62,6 +63,7 @@ const MedicalDocuments = () => {
         </TabsList>
 
         <TabsContent value="documents" className="space-y-4">
+          <CategorySummaryDashboard />
           <DocumentFilters 
             filterType={filterType} 
             onFilterChange={setFilterType}
@@ -76,11 +78,11 @@ const MedicalDocuments = () => {
         </TabsContent>
 
         <TabsContent value="trends">
-          <DocumentTrends />
+          <UniversalTrendsView />
         </TabsContent>
 
         <TabsContent value="recommendations">
-          <HealthRecommendations />
+          <RecommendationsHistory />
         </TabsContent>
 
         <TabsContent value="upload">
