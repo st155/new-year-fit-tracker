@@ -52,12 +52,87 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
     }
   }
 
-  // Generate AI summary (combination of latest summaries)
-  const aiSummary = documents
-    ?.slice(0, 3)
-    .map(d => d.ai_summary)
-    .filter(Boolean)
-    .join(' ') || 'Нет доступного описания';
+  // Generate AI summary based on biomarker changes
+  let aiSummary = 'Нет доступного описания';
+  
+  if (categoryId === 'lab_blood' || categoryId === 'lab_urine') {
+    // Fetch latest biomarker data for intelligent summary
+    const { data: latestResults } = await supabase
+      .from('lab_test_results')
+      .select(`
+        biomarker_id,
+        normalized_value,
+        test_date,
+        biomarker_master (display_name)
+      `)
+      .eq('user_id', userId)
+      .not('biomarker_master', 'is', null)
+      .not('normalized_value', 'is', null)
+      .order('test_date', { ascending: false })
+      .limit(100);
+
+    if (latestResults && latestResults.length > 0) {
+      // Get latest test date
+      const latestDate = latestResults[0].test_date;
+      
+      // Group by biomarker to find previous values
+      const biomarkerMap = new Map<string, { current: number; previous: number | null; name: string }>();
+      
+      latestResults.forEach(result => {
+        if (!result.biomarker_id || !result.biomarker_master) return;
+        
+        const key = result.biomarker_id;
+        if (!biomarkerMap.has(key)) {
+          biomarkerMap.set(key, {
+            current: result.normalized_value!,
+            previous: null,
+            name: result.biomarker_master.display_name,
+          });
+        } else {
+          // This is a previous value
+          const existing = biomarkerMap.get(key)!;
+          if (result.test_date === latestDate) {
+            existing.current = result.normalized_value!;
+          } else if (existing.previous === null) {
+            existing.previous = result.normalized_value!;
+          }
+        }
+      });
+
+      // Calculate improvements and deteriorations
+      const changes = Array.from(biomarkerMap.entries())
+        .map(([id, data]) => {
+          if (data.previous === null) return null;
+          const change = ((data.current - data.previous) / data.previous) * 100;
+          return { name: data.name, change };
+        })
+        .filter(Boolean);
+
+      const improved = changes.filter(c => c && Math.abs(c.change) > 5 && c.change < 0).slice(0, 3);
+      const worsened = changes.filter(c => c && Math.abs(c.change) > 5 && c.change > 0).slice(0, 3);
+
+      // Generate summary
+      const dateStr = format(new Date(latestDate), 'dd MMMM yyyy', { locale: ru });
+      let summary = `По данным анализа от ${dateStr}: `;
+      
+      if (improved.length > 0) {
+        summary += `\n✅ Улучшились: ${improved.map(c => c!.name).join(', ')}`;
+      }
+      if (worsened.length > 0) {
+        summary += `\n⚠️ Требуют внимания: ${worsened.map(c => c!.name).join(', ')}`;
+      }
+      summary += `\n\n📊 Всего отслеживается ${biomarkerMap.size} показателей`;
+      
+      aiSummary = summary;
+    }
+  } else {
+    // For other categories, use document summaries
+    aiSummary = documents
+      ?.slice(0, 3)
+      .map(d => d.ai_summary)
+      .filter(Boolean)
+      .join(' ') || 'Нет доступного описания';
+  }
 
   // Fetch metrics based on category
   let metrics: CategoryMetric[] = [];
@@ -104,13 +179,14 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
       const biomarker = latest.biomarker_master;
       
       // Calculate history and trends (only for quantitative data)
+      // Keep chronological order (oldest first) for chart display
       const history = results
         .filter(r => r.normalized_value !== null)
         .map(r => ({
           date: r.test_date,
           value: r.normalized_value,
         }))
-        .reverse();
+        .reverse(); // Reverse to get chronological order (oldest → newest)
 
       const values = history.map(h => h.value).filter(v => v !== null);
       const trend = values.length > 0 ? {

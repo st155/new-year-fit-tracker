@@ -38,6 +38,77 @@ export default function BiomarkerDetail() {
     );
   }
 
+  // Show basic history if analysis failed but we have data
+  if ((!analysis || !analysis.success) && history && history.length > 0) {
+    const latestResult = history[0];
+    const biomarkerName = latestResult.biomarker_master?.display_name || 'Биомаркер';
+    
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/medical-documents')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{biomarkerName}</h1>
+            <p className="text-muted-foreground">История измерений</p>
+          </div>
+        </div>
+        
+        <Card className="mb-4 border-yellow-500/50 bg-yellow-500/5">
+          <CardContent className="pt-4">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              ⚠️ AI-анализ временно недоступен. Показаны только исторические данные.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Последнее значение</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold">{latestResult.normalized_value}</span>
+              <span className="text-lg text-muted-foreground">{latestResult.normalized_unit}</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              {format(new Date(latestResult.test_date), 'dd MMMM yyyy', { locale: ru })}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>История измерений</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {history.slice(0, 10).map((result) => (
+                <div key={result.id} className="flex justify-between items-center p-3 border-b border-border last:border-0">
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(result.test_date), 'dd MMM yyyy', { locale: ru })}
+                  </span>
+                  <span className="font-medium">
+                    {result.normalized_value} {result.normalized_unit}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+          🔄 Попробовать обновить
+        </Button>
+      </div>
+    );
+  }
+
   if (!analysis || !analysis.success) {
     return (
       <div className="container mx-auto py-8 px-4">
