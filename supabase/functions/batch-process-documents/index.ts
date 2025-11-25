@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
 
         // Helper to process document with retry logic
         async function processDocumentWithRetry(doc: any, attempt = 1): Promise<any> {
-          const functionName = doc.document_type === 'blood_test' ? 'parse-lab-report' :
-                               doc.document_type === 'inbody' ? 'analyze-inbody' : 
-                               'analyze-medical-document';
+          // FIXED: Always use parse-lab-report except for InBody
+          // parse-lab-report handles all document types with specialized parsers
+          const functionName = doc.document_type === 'inbody' ? 'analyze-inbody' : 'parse-lab-report';
           const functionPayload = { documentId: doc.id };
 
           try {
@@ -160,9 +160,7 @@ Deno.serve(async (req) => {
               .eq('id', doc.id);
 
             // Determine function name for logging
-            functionName = doc.document_type === 'blood_test' ? 'parse-lab-report' :
-                          doc.document_type === 'inbody' ? 'analyze-inbody' : 
-                          'analyze-medical-document';
+            functionName = doc.document_type === 'inbody' ? 'analyze-inbody' : 'parse-lab-report';
 
             // Process document with retry logic
             const result = await processDocumentWithRetry(doc);
