@@ -3,10 +3,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useBloodTestTrends } from "@/hooks/medical-documents/useBloodTestTrends";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea } from "recharts";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 // Helper function to get standard unit for selected biomarkers
 function getStandardUnit(selectedBiomarkers: string[], biomarkers?: any[]): string {
@@ -49,9 +53,32 @@ const CHART_COLORS = [
 
 export const BloodTestTrendsChart = () => {
   const [selectedBiomarkers, setSelectedBiomarkers] = useState<string[]>(['Glucose', 'Total Cholesterol']);
+  const { toast } = useToast();
   // Convert display names to canonical names for the query
   const canonicalNames = selectedBiomarkers.map(name => BIOMARKER_MAP[name] || name);
-  const { data, isLoading } = useBloodTestTrends(canonicalNames, selectedBiomarkers);
+  const { data, isLoading, refetch } = useBloodTestTrends(canonicalNames, selectedBiomarkers);
+
+  const recalculateUnitsMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fix-unit-conversions');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Пересчёт завершён",
+        description: `Обновлено: ${data.updated}, пропущено: ${data.skipped} из ${data.total}`,
+      });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Ошибка пересчёта",
+        description: error.message,
+      });
+    },
+  });
 
   const stats = useMemo(() => {
     if (!data?.chartData || data.chartData.length < 2) return null;
@@ -96,6 +123,19 @@ export const BloodTestTrendsChart = () => {
 
   return (
     <div className="space-y-4">
+      {/* Recalculate Button */}
+      <div className="flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => recalculateUnitsMutation.mutate()}
+          disabled={recalculateUnitsMutation.isPending}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${recalculateUnitsMutation.isPending ? 'animate-spin' : ''}`} />
+          Пересчитать единицы измерения
+        </Button>
+      </div>
+
       {/* Biomarker Selector */}
       <Card className="border-primary/20">
         <CardHeader>
