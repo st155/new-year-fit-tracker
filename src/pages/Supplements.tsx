@@ -11,6 +11,7 @@ import { ProtocolHistory } from "@/components/supplements/ProtocolHistory";
 import { SupplementLibrary } from "@/components/biostack/SupplementLibrary";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 import { useAuth } from "@/hooks/useAuth";
+import { useCheckCompletedProtocols } from "@/hooks/biostack";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -25,6 +26,9 @@ export default function Supplements() {
     deleteProtocolMutation,
     logProtocolItemMutation 
   } = useProtocolManagement();
+  
+  // Auto-check for completed protocols on mount
+  useCheckCompletedProtocols();
   
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
   const [expandedProtocol, setExpandedProtocol] = useState<any>(null);

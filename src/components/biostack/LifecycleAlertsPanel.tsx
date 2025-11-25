@@ -58,8 +58,16 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
+                className="relative"
               >
                 <Bell className="h-5 w-5 text-warning" />
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 h-3 w-3 bg-warning rounded-full border border-background"
+                  />
+                )}
               </motion.div>
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-warning" />
