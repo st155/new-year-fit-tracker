@@ -65,6 +65,7 @@ const Supplements = lazy(() => import("@/pages/Supplements"));
 const MedicalDocumentDetail = lazy(() => import("@/pages/MedicalDocumentDetail"));
 const BiomarkerDetail = lazy(() => import("@/pages/BiomarkerDetail"));
 const MedicalIngestionCockpit = lazy(() => import("@/pages/MedicalIngestionCockpit"));
+const CategoryDetailPage = lazy(() => import("@/pages/CategoryDetailPage"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -279,6 +280,13 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <MedicalDocuments />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/medical-documents/category/:categoryId" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <CategoryDetailPage />
             </ModernAppLayout>
           </ProtectedRoute>
         } />

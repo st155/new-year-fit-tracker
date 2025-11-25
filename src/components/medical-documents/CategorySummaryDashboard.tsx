@@ -36,6 +36,7 @@ interface CategorySummaryDashboardProps {
 }
 
 export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDashboardProps) => {
+  const navigate = useNavigate();
   const { data: summaries, isLoading } = useCategorySummaries();
 
   if (isLoading) {
@@ -103,7 +104,7 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
                     className="w-full gap-2 group"
                     onClick={(e) => {
                       e.preventDefault();
-                      onCategorySelect(summary.category);
+                      navigate(`/medical-documents/category/${summary.category}`);
                     }}
                   >
                     Подробнее
