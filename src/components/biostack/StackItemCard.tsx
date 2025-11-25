@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, TrendingUp, Clock, Pill, ChevronDown } from "lucide-react";
+import { Check, TrendingUp, Clock, Pill, ChevronDown, Activity } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StackItemCardProps {
   item: {
@@ -32,6 +35,26 @@ interface StackItemCardProps {
 
 export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIntake }: StackItemCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  // Fetch biomarker names for linked biomarkers
+  const { data: linkedBiomarkers } = useQuery({
+    queryKey: ['linked-biomarkers', item.linked_biomarker_ids],
+    queryFn: async () => {
+      if (!item.linked_biomarker_ids || item.linked_biomarker_ids.length === 0) {
+        return [];
+      }
+      
+      const { data, error } = await supabase
+        .from('biomarker_master')
+        .select('id, display_name')
+        .in('id', item.linked_biomarker_ids);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!item.linked_biomarker_ids && item.linked_biomarker_ids.length > 0,
+  });
   
   // Determine neon border based on effectiveness_score
   const effectivenessScore = item.effectiveness_score || 5.0;
@@ -168,12 +191,26 @@ export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIn
               )}
 
               {item.linked_biomarker_ids && item.linked_biomarker_ids.length > 0 && (
-                <div className="p-3 bg-neutral-900/50 rounded border border-neutral-800">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Tracking {item.linked_biomarker_ids.length} biomarker(s)
+                <div className="p-3 bg-neutral-900/50 rounded border border-neutral-800 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Linked Biomarkers:
                   </p>
-                  <div className="text-xs text-purple-400">
-                    Score: {effectivenessScore.toFixed(1)}/10
+                  <div className="flex flex-wrap gap-2">
+                    {linkedBiomarkers?.map((biomarker) => (
+                      <Button
+                        key={biomarker.id}
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400"
+                        onClick={() => navigate(`/biomarkers/${biomarker.id}`)}
+                      >
+                        <Activity className="h-3 w-3 mr-1" />
+                        {biomarker.display_name}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground pt-2 border-t border-neutral-800">
+                    Effectiveness Score: {effectivenessScore.toFixed(1)}/10
                   </div>
                 </div>
               )}

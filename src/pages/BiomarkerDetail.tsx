@@ -9,6 +9,8 @@ import { useBiomarkerTrends, useBiomarkerHistory } from '@/hooks/useBiomarkers';
 import { BiomarkerTrendChart } from '@/components/biomarkers/BiomarkerTrendChart';
 import QualitativeTrendChart from '@/components/biomarkers/QualitativeTrendChart';
 import { BiomarkerSettingsModal } from '@/components/biomarkers/BiomarkerSettingsModal';
+import { RecommendedSupplementsCard } from '@/components/biomarkers/RecommendedSupplementsCard';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -390,6 +392,22 @@ export default function BiomarkerDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Recommended Supplements Widget */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="mt-6"
+      >
+        <RecommendedSupplementsCard 
+          biomarkerId={biomarkerId!}
+          onAddToStack={(supplementName) => {
+            console.log('Add to stack:', supplementName);
+            // TODO: Implement add to stack functionality
+          }}
+        />
+      </motion.div>
 
       {/* Settings Modal */}
       <BiomarkerSettingsModal
