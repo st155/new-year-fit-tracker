@@ -206,8 +206,8 @@ export const DocumentCard = ({
         </div>
 
         <div className="flex gap-1">
-          {/* Retry Button (only for error status) */}
-          {processingStatus === 'error' && onRetry && (
+          {/* Retry/Reprocess Button */}
+          {onRetry && (processingStatus === 'error' || documentType === 'blood_test' || documentType === 'fitness_report') && (
             <Button
               variant="ghost"
               size="icon"
@@ -216,7 +216,7 @@ export const DocumentCard = ({
                 e.stopPropagation();
                 onRetry(id);
               }}
-              title="Повторить обработку"
+              title={processingStatus === 'error' ? 'Повторить обработку' : 'Переобработать документ'}
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
