@@ -41,13 +41,24 @@ const MedicalIngestionCockpit = () => {
     },
   });
 
-  // Retry mutation
+  // Retry/Reprocess mutation
   const retryMutation = useMutation({
     mutationFn: async () => {
       if (!documentId) throw new Error('No document ID');
       
       setIsRetrying(true);
       
+      // First reset processing status to pending
+      await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'pending',
+          processing_error: null,
+          processing_error_details: null
+        })
+        .eq('id', documentId);
+      
+      // Then invoke parse-lab-report
       const { error } = await supabase.functions.invoke('parse-lab-report', {
         body: { documentId }
       });
@@ -112,6 +123,20 @@ const MedicalIngestionCockpit = () => {
         {/* Show Extraction Dashboard for completed documents */}
         {document.processing_status === 'completed' && (
           <>
+            {/* Reprocess button for lab documents with potential missing data */}
+            {(document.category === 'lab_blood' || document.category === 'lab_urine') && (
+              <div className="px-4 pt-4">
+                <button
+                  onClick={() => retryMutation.mutate()}
+                  disabled={isRetrying}
+                  className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-neutral-800 hover:border-purple-500 transition-all disabled:opacity-50"
+                >
+                  <span>🔄</span>
+                  <span>{isRetrying ? 'Переобработка...' : 'Переобработать документ'}</span>
+                </button>
+              </div>
+            )}
+            
             <ExtractionDashboard
               documentId={documentId!}
               category={document.category || 'lab_blood'}
