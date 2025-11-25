@@ -9,8 +9,8 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const COMMON_BIOMARKERS = [
-  'Glucose', 'Cholesterol - Total', 'HDL Cholesterol', 'LDL Cholesterol',
-  'Triglycerides', 'ALT', 'AST', 'Creatinine', 'TSH', 'Hemoglobin'
+  'Glucose', 'Total Cholesterol', 'HDL Cholesterol', 'LDL Cholesterol',
+  'Triglycerides', 'ALT (SGPT)', 'AST (SGOT)', 'Creatinine', 'TSH', 'Hemoglobin'
 ];
 
 const CHART_COLORS = [
@@ -19,7 +19,7 @@ const CHART_COLORS = [
 ];
 
 export const BloodTestTrendsChart = () => {
-  const [selectedBiomarkers, setSelectedBiomarkers] = useState<string[]>(['Glucose', 'Cholesterol - Total']);
+  const [selectedBiomarkers, setSelectedBiomarkers] = useState<string[]>(['Glucose', 'Total Cholesterol']);
   const { data, isLoading } = useBloodTestTrends(selectedBiomarkers);
 
   const stats = useMemo(() => {
