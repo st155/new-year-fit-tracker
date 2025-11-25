@@ -31,7 +31,7 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
   const handleClick = () => {
     // Navigate to biomarker detail page if it's a lab result
     if (category === 'lab_blood' || category === 'lab_urine') {
-      navigate(`/biomarkers/${metric.id}`);
+      navigate(`/biomarkers/${metric.biomarkerId}`);
     }
   };
 
