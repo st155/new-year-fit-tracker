@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Upload, X, Check, Loader2, AlertCircle, Sparkles, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { calculateFileHash } from '@/lib/fileHash';
@@ -37,6 +37,7 @@ export function BulkDocumentUpload() {
   const { uploadDocument } = useMedicalDocuments();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -305,13 +306,14 @@ export function BulkDocumentUpload() {
       {/* Drop Zone */}
       <Card
         className={cn(
-          'border-2 border-dashed transition-all',
+          'border-2 border-dashed transition-all cursor-pointer',
           isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25',
-          activeUploads > 0 && 'opacity-50'
+          activeUploads > 0 && 'opacity-50 cursor-not-allowed'
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={() => activeUploads === 0 && fileInputRef.current?.click()}
       >
         <CardContent className="py-12">
           <div className="text-center space-y-4">
@@ -337,18 +339,19 @@ export function BulkDocumentUpload() {
 
             <div>
               <input
+                ref={fileInputRef}
                 type="file"
-                id="file-upload"
                 multiple
                 accept=".pdf,image/jpeg,image/png,image/heic,image/webp"
                 className="hidden"
                 onChange={handleFileInput}
                 disabled={activeUploads > 0}
               />
-              <Button asChild disabled={activeUploads > 0}>
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  Выбрать файлы
-                </label>
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={activeUploads > 0}
+              >
+                Выбрать файлы
               </Button>
             </div>
           </div>
