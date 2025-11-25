@@ -3,8 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2 } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
+import { useBackfillLibrary } from '@/hooks/biostack';
 import { SupplementInfoCard } from './SupplementInfoCard';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +17,7 @@ export function SupplementLibrary() {
 
   const { data: library, isLoading } = useSupplementLibrary();
   const removeFromLibrary = useRemoveFromLibrary();
+  const backfillLibrary = useBackfillLibrary();
 
   // Get all unique tags
   const allTags = Array.from(
@@ -52,10 +54,21 @@ export function SupplementLibrary() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Library className="h-6 w-6 text-green-500" />
-        <h2 className="text-2xl font-bold">My Library</h2>
-        <Badge variant="outline">{library?.length || 0}</Badge>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Library className="h-6 w-6 text-green-500" />
+          <h2 className="text-2xl font-bold">My Library</h2>
+          <Badge variant="outline">{library?.length || 0}</Badge>
+        </div>
+        <Button
+          onClick={() => backfillLibrary.mutate()}
+          disabled={backfillLibrary.isPending}
+          variant="outline"
+          size="sm"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${backfillLibrary.isPending ? 'animate-spin' : ''}`} />
+          Sync from Stack
+        </Button>
       </div>
 
       {/* Search and Filters */}

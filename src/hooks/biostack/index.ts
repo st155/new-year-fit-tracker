@@ -6,3 +6,4 @@ export { useLowStockAlerts } from './useLowStockAlerts';
 export { useSupplementCorrelation } from './useSupplementCorrelation';
 export { useTopSupplements } from './useTopSupplements';
 export { useCheckCompletedProtocols } from './useCheckCompletedProtocols';
+export { useBackfillLibrary } from './useBackfillLibrary';
