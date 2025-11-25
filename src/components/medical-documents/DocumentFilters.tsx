@@ -5,6 +5,7 @@ import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { ReprocessAllDocumentsDialog } from './ReprocessAllDocumentsDialog';
 
 interface DocumentFiltersProps {
   filterType: string;
@@ -113,6 +114,8 @@ export const DocumentFilters = ({
               Обработать все ({pendingCount})
             </Button>
           )}
+
+          <ReprocessAllDocumentsDialog />
 
           <Button
             variant="outline"
