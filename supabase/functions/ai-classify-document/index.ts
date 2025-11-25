@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { fileName } = await req.json();
+    const { fileName, fileContent, mimeType } = await req.json();
     
     if (!fileName) {
       return new Response(
@@ -25,7 +25,29 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('[ai-classify-document] Classifying:', fileName);
+    console.log('[ai-classify-document] Classifying:', fileName, fileContent ? 'WITH content' : 'filename only');
+
+    // Prepare user message with optional file content
+    const userMessage: any = {
+      role: 'user',
+      content: fileContent && mimeType === 'application/pdf' ? [
+        {
+          type: 'text',
+          text: `Analyze this medical document PDF and classify it.
+
+CRITICAL: Extract the TEST DATE from the document content itself!
+Look for: "Date du prélèvement", "Дата забора", "Test Date", "Collection Date", "Sample Date", "Date de l'examen"
+
+Filename for reference: "${fileName}"`
+        },
+        {
+          type: 'image_url',
+          image_url: {
+            url: `data:${mimeType};base64,${fileContent}`
+          }
+        }
+      ] : `Classify file: "${fileName}"`
+    };
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -38,39 +60,25 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ты эксперт по классификации медицинских документов. Определи тип документа и теги на основе названия файла.
+            content: `You are a medical document classifier. Analyze document CONTENT (not just filename) to determine type.
 
-Доступные типы:
-- inbody: InBody анализы состава тела
-- blood_test: Анализы крови
-- fitness_report: Медицинские заключения, консультации врачей
-- progress_photo: Фотографии прогресса
-- vo2max: Тесты VO2max
-- caliper: Измерения калипером
-- prescription: Рецепты, назначения
-- training_program: Программы тренировок
-- other: Любой другой тип
+Categories:
+- blood_test: Lab reports with CBC, lipids, hormones, biochemistry panels (Look for: "Résultats de laboratoire", "Hématologie", "Биохимия", "Blood Test", "Hemogram", "Анализ крови")
+- lab_urine: Urinalysis, urine test results (Look for: "Анализ мочи", "Urinalysis", "ОАМ", "Urine")
+- inbody: Body composition analysis (Look for: "InBody", "Состав тела", "Body Composition")
+- imaging_report: MRI, CT, ultrasound, X-ray (Look for: "МРТ", "MRI", "УЗИ", "Ultrasound", "CT", "КТ", "Рентген", "X-ray")
+- fitness_report: VO2max, lactate tests, medical clearances (Look for: "VO2max", "Лактат", "Medical Clearance", "Кардио тест")
+- prescription: Doctor's prescriptions, recommendations (Look for: "Prescription", "Рецепт", "Recommended", "Назначение")
+- progress_photo: Physique photos
+- training_program: Workout plans
+- other: Everything else
 
-Правила:
-- Если файл содержит "InBody", "inbody", "состав тела" → type: inbody
-- Если содержит "анализ крови", "кровь", "blood test", "Synevo", "Invitro" → type: blood_test
-- Если содержит "фото", "photo", "прогресс", "progress" → type: progress_photo
-- Если содержит "заключение", "консультация", "report", "визит", "осмотр" → type: fitness_report
-- Если содержит "vo2", "VO2max" → type: vo2max
-- Если содержит "калипер", "caliper", "замер" → type: caliper
-- Если содержит "рецепт", "prescription", "назначение" → type: prescription
-- Если содержит "программа", "training", "тренировк" → type: training_program
-- В остальных случаях → type: other
+CRITICAL: Extract TEST DATE from document content (sample collection date, NOT filename date)!
+Generate 2-4 relevant tags in Russian based on document content.
 
-Извлеки дату из названия если есть (форматы: DD.MM.YYYY, YYYY-MM-DD, "январь 2024", "ноябрь" и т.д.)
-Сгенерируй 2-4 релевантных тега на русском (например: ["анализ крови", "холестерин"], ["InBody", "композиция тела"])
-
-ВАЖНО: Отвечай ТОЛЬКО используя tool call, не отправляй текстовые сообщения.`
+IMPORTANT: Respond ONLY using tool call, no text messages.`
           },
-          {
-            role: 'user',
-            content: `Классифицируй файл: "${fileName}"`
-          }
+          userMessage
         ],
         tools: [
           {

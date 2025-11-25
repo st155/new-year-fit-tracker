@@ -144,6 +144,32 @@ export function BulkDocumentUpload() {
         return; // Skip upload
       }
 
+      // Step 0.5: Read file content for AI analysis (PDFs only)
+      let base64Content: string | undefined = undefined;
+      if (fileState.file.type === 'application/pdf') {
+        console.log('[BulkUpload] Reading PDF content for AI analysis...');
+        try {
+          const fileBuffer = await fileState.file.arrayBuffer();
+          const uint8Array = new Uint8Array(fileBuffer);
+          
+          // Limit to first ~2MB for classification
+          const maxBytes = 2 * 1024 * 1024;
+          const truncatedArray = uint8Array.slice(0, Math.min(uint8Array.length, maxBytes));
+          
+          // Convert to base64 (chunked to avoid stack overflow)
+          let binaryString = '';
+          const chunkSize = 8192;
+          for (let i = 0; i < truncatedArray.length; i += chunkSize) {
+            const chunk = truncatedArray.slice(i, i + chunkSize);
+            binaryString += String.fromCharCode(...chunk);
+          }
+          base64Content = btoa(binaryString);
+          console.log('[BulkUpload] PDF content prepared:', (base64Content.length / 1024).toFixed(0), 'KB');
+        } catch (err) {
+          console.warn('[BulkUpload] Failed to read PDF content, will use filename only:', err);
+        }
+      }
+
       // Step 1: AI Classification
       setFiles(prev => prev.map(f => 
         f.id === fileState.id ? { ...f, status: 'classifying', progress: 10 } : f
@@ -151,7 +177,13 @@ export function BulkDocumentUpload() {
 
       const { data: classification, error: classifyError } = await supabase.functions.invoke(
         'ai-classify-document',
-        { body: { fileName: fileState.file.name } }
+        { 
+          body: { 
+            fileName: fileState.file.name,
+            fileContent: base64Content,
+            mimeType: fileState.file.type
+          } 
+        }
       );
 
       if (classifyError) {
@@ -201,7 +233,8 @@ export function BulkDocumentUpload() {
         { 
           body: { 
             fileName: fileState.file.name,
-            documentType: aiClassification.document_type 
+            documentType: aiClassification.document_type,
+            fileContent: base64Content
           } 
         }
       );
