@@ -238,9 +238,18 @@ IMPORTANT: If the document contains ANY of these keywords, classify as imaging_r
 - Органов, малого таза, брюшной полости, pelvis, abdomen, abdominal
 - Молочных желез, щитовидной железы, breast, thyroid
 
+IMPORTANT: If the document contains ANY of these keywords, classify as fitness_report:
+- VO2max, VO2 max, МПК, maximal oxygen uptake
+- Lactate threshold, лактатный порог, lactate curve
+- Anaerobic threshold, анаэробный порог, AT, АнП
+- Heart rate zones, пульсовые зоны, HR zones
+- Exercise test, нагрузочный тест, эргометрия, ergometry
+- Blood lactate, лактат крови, lactate concentration
+- Training zones, тренировочные зоны
+
 Return ONLY valid JSON (no markdown):
 {
-  "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "clinical_note",
+  "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "fitness_report" | "clinical_note",
   "confidence_score": 0-100,
   "reasoning": "Brief explanation of classification"
 }`
@@ -743,13 +752,17 @@ Return ONLY valid JSON (no markdown):
       console.log(`[PARSE-LAB-REPORT] ✓ Using test date from document: ${testDate}`);
     }
     
+    // Update medical document - only mark as processed if we actually saved results
+    const shouldMarkProcessed = results && results.length > 0;
+    
     await supabase
       .from('medical_documents')
       .update({
         document_date: testDate,
-        ai_processed: true,
-        processing_status: 'completed',
-        processing_completed_at: new Date().toISOString(),
+        ai_processed: shouldMarkProcessed,
+        processing_status: shouldMarkProcessed ? 'completed' : 'error',
+        processing_completed_at: shouldMarkProcessed ? new Date().toISOString() : null,
+        processing_error: shouldMarkProcessed ? null : 'No data extracted from document',
         ai_summary: aiSummary,
         ai_extracted_data: {
           category: documentCategory,

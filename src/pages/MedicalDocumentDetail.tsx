@@ -131,6 +131,33 @@ export default function MedicalDocumentDetail() {
     }
   };
 
+  const handleResetAndRetry = async () => {
+    if (!documentId) return;
+    
+    try {
+      // Reset processing status in database
+      await supabase
+        .from('medical_documents')
+        .update({
+          ai_processed: false,
+          processing_status: 'pending',
+          processing_error: null,
+          processing_error_details: null
+        })
+        .eq('id', documentId);
+      
+      // Invalidate queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
+      
+      showSuccessToast('Статус сброшен', 'Документ готов к повторной обработке');
+      
+      // Trigger parsing
+      await handleParse();
+    } catch (error: any) {
+      showErrorToast('Ошибка сброса', error.message);
+    }
+  };
+
   const onSaveMetadata = async (data: any) => {
     if (!documentId) return;
 
@@ -247,7 +274,9 @@ export default function MedicalDocumentDetail() {
           </div>
         </div>
         
-        {!document.ai_processed && (
+        {(!document.ai_processed || 
+          document.processing_status === 'error' || 
+          (document.ai_processed && results?.length === 0)) && (
           <Button onClick={handleParse} disabled={parseDocument.isPending}>
             {parseDocument.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Activity className="mr-2 h-4 w-4" />
@@ -399,6 +428,27 @@ export default function MedicalDocumentDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Error Alert with Reset Button */}
+      {(document.processing_status === 'error' || 
+        (document.processing_status === 'processing' && document.ai_processed)) && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Обработка завершилась с ошибкой</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3">
+            <p>{document.processing_error || 'Неизвестная ошибка при обработке документа'}</p>
+            <Button 
+              onClick={handleResetAndRetry}
+              variant="outline"
+              size="sm"
+              className="w-fit"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Сбросить и повторить
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Processing Progress */}
       {processingStage && (
