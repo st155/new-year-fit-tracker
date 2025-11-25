@@ -151,11 +151,11 @@ serve(async (req) => {
             console.log(`[REPROCESS_ALL] New filename for ${doc.id}: ${newFileName}`);
 
             // Step 3: Update document in database
-            const updateData: any = {
-              category: classification.document_type,
-              file_name: newFileName,
-              ai_tags: classification.tags || []
-            };
+        const updateData: any = {
+          category: classification.document_type,
+          file_name: newFileName,
+          tags: classification.tags || []
+        };
 
             if (classification.suggested_date) {
               updateData.document_date = classification.suggested_date;
