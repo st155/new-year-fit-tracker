@@ -12,14 +12,19 @@ import { useMemo, useState } from "react";
 const BIOMARKER_MAP: Record<string, string> = {
   'Glucose': 'glucose',
   'Total Cholesterol': 'cholesterol_total',
-  'HDL Cholesterol': 'hdl_cholesterol',
-  'LDL Cholesterol': 'ldl_cholesterol',
+  'HDL Cholesterol': 'cholesterol_hdl',
+  'LDL Cholesterol': 'cholesterol_ldl',
   'Triglycerides': 'triglycerides',
   'ALT (SGPT)': 'alt',
   'AST (SGOT)': 'ast',
   'Creatinine': 'creatinine',
   'TSH': 'tsh',
-  'Hemoglobin': 'hemoglobin'
+  'Hemoglobin': 'hemoglobin',
+  'Cortisol': 'cortisol',
+  'Iron': 'iron',
+  'HbA1c': 'hba1c',
+  'Ferritin': 'ferritin',
+  'Vitamin D': 'vitamin_d'
 };
 
 const COMMON_BIOMARKERS = Object.keys(BIOMARKER_MAP);

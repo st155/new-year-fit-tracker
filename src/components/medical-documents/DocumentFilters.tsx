@@ -9,6 +9,8 @@ import { useState } from 'react';
 interface DocumentFiltersProps {
   filterType: string;
   onFilterChange: (value: string) => void;
+  filterCategory?: string | null;
+  onFilterCategoryChange?: (category: string | null) => void;
   onRefresh?: () => void;
   pendingCount?: number;
   onBatchProcess?: () => void;
@@ -16,7 +18,9 @@ interface DocumentFiltersProps {
 
 export const DocumentFilters = ({ 
   filterType, 
-  onFilterChange, 
+  onFilterChange,
+  filterCategory,
+  onFilterCategoryChange,
   onRefresh, 
   pendingCount = 0, 
   onBatchProcess 
@@ -131,6 +135,20 @@ export const DocumentFilters = ({
             <Sparkles className={`h-4 w-4 ${isPopulating ? 'animate-pulse' : ''}`} />
             <span className="hidden sm:inline">Корреляции</span>
           </Button>
+
+          {filterCategory && onFilterCategoryChange && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md text-sm">
+              <span>Категория: {filterCategory}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onFilterCategoryChange(null)}
+                className="h-auto p-0 hover:bg-transparent"
+              >
+                ✕
+              </Button>
+            </div>
+          )}
 
           <Select value={filterType} onValueChange={onFilterChange}>
             <SelectTrigger className="w-[200px] glass-subtle">

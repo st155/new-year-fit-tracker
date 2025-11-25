@@ -31,9 +31,12 @@ const categoryColors: Record<string, string> = {
   other: 'from-gray-500/20 to-slate-500/20 border-gray-500/30',
 };
 
-export const CategorySummaryDashboard = () => {
+interface CategorySummaryDashboardProps {
+  onCategorySelect: (category: string) => void;
+}
+
+export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDashboardProps) => {
   const { data: summaries, isLoading } = useCategorySummaries();
-  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -98,7 +101,10 @@ export const CategorySummaryDashboard = () => {
                     variant="ghost"
                     size="sm"
                     className="w-full gap-2 group"
-                    onClick={() => navigate('/medical-documents', { state: { filterCategory: summary.category } })}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onCategorySelect(summary.category);
+                    }}
                   >
                     Подробнее
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
