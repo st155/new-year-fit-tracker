@@ -6991,6 +6991,10 @@ export type Database = {
         }
         Returns: Json
       }
+      insert_biomarker_aliases: {
+        Args: { p_aliases: string[]; p_biomarker_canonical_name: string }
+        Returns: undefined
+      }
       is_admin: { Args: { p_user_id?: string }; Returns: boolean }
       is_challenge_participant: {
         Args: { _challenge_id: string; _user_id: string }
