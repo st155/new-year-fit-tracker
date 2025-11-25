@@ -5,6 +5,7 @@ import { ru } from 'date-fns/locale';
 
 export interface CategoryMetric {
   id: string;
+  biomarkerId: string; // ID биомаркера для навигации
   name: string;
   icon: string;
   currentValue: number | string;
@@ -211,6 +212,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
 
       return {
         id: biomarkerId,
+        biomarkerId: biomarkerId, // Явно указываем ID биомаркера
         name: biomarker.display_name,
         icon: getCategoryIcon(biomarker.category),
         currentValue: latest.normalized_value ?? latest.text_value ?? 'N/A',
@@ -263,6 +265,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
 
       return {
         id: bodyPart,
+        biomarkerId: bodyPart, // For imaging, use body part as identifier
         name: bodyPart,
         icon: '🔬',
         currentValue: latest.finding_text || 'Нет данных',

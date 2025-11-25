@@ -22,8 +22,22 @@ export default function BiomarkerDetail() {
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   
+  // Protection: if no biomarkerId, return early before calling hooks
+  if (!biomarkerId) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">Некорректный ID биомаркера</p>
+          <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
+            Вернуться к документам
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   const { analysis, isLoading: analysisLoading } = useBiomarkerTrends(biomarkerId);
-  const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId!);
+  const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId);
 
   if (analysisLoading || historyLoading) {
     return (
