@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -28,31 +29,39 @@ serve(async (req) => {
     console.log('[AI_RENAME] Processing file:', fileName, '| type:', documentType);
 
     // Create system prompt for intelligent file renaming
-    const systemPrompt = `You are an expert at creating clear, descriptive file names for medical documents.
-    
-Your task:
-1. Analyze the file name and document type
-2. Generate a smart, descriptive name in Russian
-3. Format: {Тип} - {Ключевая информация} - {Дата}.{расширение}
+    const systemPrompt = `Generate a SHORT English filename.
 
-Rules:
-- Use Russian language
-- Include document type (e.g., "Анализ крови", "InBody", "Фото прогресса")
-- Extract date if present in filename
-- Keep file extension
-- Maximum 100 characters
-- Clear and searchable
+Format: {Type}_{MonthYear}.{extension}
+
+Type mappings:
+- Blood test, Urine, Biochemistry, Hemogram, CBC, Анализ крови, Анализ мочи → Lab
+- MRI, МРТ, Magnetic Resonance → MRI  
+- CT, КТ, Computed Tomography → CT
+- Ultrasound, USG, УЗИ, Ультразвук → USG
+- InBody, Body composition, Состав тела → InBody
+- VO2max, Cardio test, Кардио тест → VO2
+- Progress photo, Фото прогресса → Photo
+- Prescription, Recipe, Рецепт → Rx
+- Training program, Программа → Program
+- Other → Doc
+
+Extract the TEST DATE from document content (the sample collection date, NOT the filename date).
+Month: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+Year: Last 2 digits (25, 24, 23)
 
 Examples:
-- scan_123.pdf → Анализ крови - Биохимия - 15 нояб 2024.pdf
-- IMG_4567.jpg → Фото прогресса - Передняя проекция - 20 нояб 2024.jpg
-- inbody_report.pdf → InBody - Состав тела - 10 нояб 2024.pdf`;
+- Blood test taken Nov 25, 2025 → Lab_Nov25.pdf
+- MRI from October 2024 → MRI_Oct24.pdf
+- Urine analysis December 2024 → Lab_Dec24.pdf
+- InBody scan November 2024 → InBody_Nov24.pdf
+
+CRITICAL: Output ONLY the filename, nothing else. No markdown, no explanations.`;
 
     const userPrompt = `Original filename: ${fileName}
 Document type: ${documentType}
-${fileContent ? `Content preview: ${fileContent.substring(0, 500)}` : ''}
+${fileContent ? `Content preview (first 2000 chars): ${fileContent.substring(0, 2000)}` : ''}
 
-Generate a smart filename.`;
+Generate SHORT English filename.`;
 
     // Call Lovable AI Gateway
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -67,7 +76,7 @@ Generate a smart filename.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 200,
+        max_tokens: 100,
       }),
     });
 
@@ -77,23 +86,23 @@ Generate a smart filename.`;
       
       // Fallback: simple rename based on document type
       const extension = fileName.split('.').pop();
-      const date = new Date().toLocaleDateString('ru-RU', { 
-        day: 'numeric', 
+      const date = new Date().toLocaleDateString('en-US', { 
         month: 'short', 
-        year: 'numeric' 
-      });
+        year: '2-digit' 
+      }).replace(' ', '');
+      
       const typeMap: Record<string, string> = {
-        'blood_test': 'Анализ крови',
+        'blood_test': 'Lab',
         'inbody': 'InBody',
-        'progress_photo': 'Фото прогресса',
-        'fitness_report': 'Мед. заключение',
-        'vo2max': 'VO2max',
-        'caliper': 'Калипер',
-        'prescription': 'Рецепт',
-        'training_program': 'Программа',
-        'other': 'Документ'
+        'progress_photo': 'Photo',
+        'fitness_report': 'Doc',
+        'vo2max': 'VO2',
+        'caliper': 'Doc',
+        'prescription': 'Rx',
+        'training_program': 'Program',
+        'other': 'Doc'
       };
-      const suggestedName = `${typeMap[documentType] || 'Документ'} - ${date}.${extension}`;
+      const suggestedName = `${typeMap[documentType] || 'Doc'}_${date}.${extension}`;
       
       return new Response(
         JSON.stringify({ suggestedName }),
@@ -102,7 +111,14 @@ Generate a smart filename.`;
     }
 
     const aiData = await aiResponse.json();
-    const suggestedName = aiData.choices?.[0]?.message?.content?.trim() || fileName;
+    let suggestedName = aiData.choices?.[0]?.message?.content?.trim() || fileName;
+    
+    // Clean up the suggested name (remove markdown, quotes, etc.)
+    suggestedName = suggestedName
+      .replace(/```[a-z]*\n?/gi, '')
+      .replace(/`/g, '')
+      .replace(/['"]/g, '')
+      .trim();
 
     console.log('[AI_RENAME] Success:', fileName, '→', suggestedName);
 

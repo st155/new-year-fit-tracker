@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,22 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useLabTestResults } from '@/hooks/useBiomarkers';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { BiomarkerCard } from '@/components/biomarkers/BiomarkerCard';
 import { BiomarkerMappingDialog } from '@/components/biomarkers/BiomarkerMappingDialog';
+import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -38,7 +50,7 @@ export default function MedicalDocumentDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const { documents, updateDocument } = useMedicalDocuments();
+  const { documents, updateDocument, deleteDocument } = useMedicalDocuments();
   const { results, isLoading, parseDocument } = useLabTestResults(documentId);
   
   const [processingStage, setProcessingStage] = useState<keyof typeof processingStages | null>(null);
@@ -46,6 +58,8 @@ export default function MedicalDocumentDetail() {
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const [showMappingDialog, setShowMappingDialog] = useState(false);
   const [isRematching, setIsRematching] = useState(false);
+  const [isEditingFileName, setIsEditingFileName] = useState(false);
+  const [editedFileName, setEditedFileName] = useState('');
   
   const document = documents?.find(d => d.id === documentId);
   const unmatchedResults = results?.filter(r => !r.biomarker_id) || [];
@@ -67,8 +81,34 @@ export default function MedicalDocumentDetail() {
       setValue('tags', document.tags?.join(', ') || '');
       setValue('notes', document.notes || '');
       setValue('hidden_from_trainer', document.hidden_from_trainer);
+      setEditedFileName(document.file_name);
     }
   }, [document, setValue]);
+
+  const handleDelete = async () => {
+    if (!documentId) return;
+    try {
+      await deleteDocument.mutateAsync(documentId);
+      showSuccessToast('Документ удалён', 'Документ успешно удалён');
+      navigate('/medical-documents');
+    } catch (error: any) {
+      showErrorToast('Ошибка удаления', error.message);
+    }
+  };
+
+  const handleSaveFileName = async () => {
+    if (!documentId || !editedFileName.trim()) return;
+    try {
+      await updateDocument.mutateAsync({
+        documentId,
+        updates: { file_name: editedFileName.trim() },
+      });
+      setIsEditingFileName(false);
+      showSuccessToast('Название сохранено', 'Название файла обновлено');
+    } catch (error: any) {
+      showErrorToast('Ошибка', error.message);
+    }
+  };
 
   if (!document) {
     return (
@@ -248,7 +288,7 @@ export default function MedicalDocumentDetail() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button
@@ -259,7 +299,46 @@ export default function MedicalDocumentDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{document.file_name}</h1>
+          {isEditingFileName ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={editedFileName}
+                onChange={(e) => setEditedFileName(e.target.value)}
+                className="text-xl font-bold max-w-xl"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveFileName();
+                  if (e.key === 'Escape') {
+                    setIsEditingFileName(false);
+                    setEditedFileName(document.file_name);
+                  }
+                }}
+              />
+              <Button size="sm" onClick={handleSaveFileName} disabled={updateDocument.isPending}>
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => {
+                  setIsEditingFileName(false);
+                  setEditedFileName(document.file_name);
+                }}
+              >
+                Отмена
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{document.file_name}</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditingFileName(true)}
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
@@ -274,19 +353,56 @@ export default function MedicalDocumentDetail() {
           </div>
         </div>
         
-        {(!document.ai_processed || 
-          document.processing_status === 'error' || 
-          (document.ai_processed && results?.length === 0)) && (
-          <Button onClick={handleParse} disabled={parseDocument.isPending}>
-            {parseDocument.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Activity className="mr-2 h-4 w-4" />
-            Обработать AI
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {(!document.ai_processed || 
+            document.processing_status === 'error' || 
+            (document.ai_processed && results?.length === 0)) && (
+            <Button onClick={handleParse} disabled={parseDocument.isPending}>
+              {parseDocument.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Activity className="mr-2 h-4 w-4" />
+              Обработать AI
+            </Button>
+          )}
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="icon">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удалить документ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить. Документ и все связанные данные будут удалены навсегда.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
-      {/* Document Metadata Editor */}
-      <Card className="mb-6">
+      {/* Split View: PDF + Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* PDF Viewer - Left Side (40%) */}
+        <div className="lg:col-span-2">
+          <PDFViewerPanel
+            documentId={documentId!}
+            storagePath={document.storage_path}
+          />
+        </div>
+
+        {/* Content - Right Side (60%) */}
+        <div className="lg:col-span-3 space-y-6">
+
+          {/* Document Metadata Editor */}
+          <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">📝 Информация о документе</CardTitle>
@@ -430,8 +546,7 @@ export default function MedicalDocumentDetail() {
       </Card>
 
       {/* Error Alert with Reset Button */}
-      {(document.processing_status === 'error' || 
-        (document.processing_status === 'processing' && document.ai_processed)) && (
+      {document.processing_status === 'error' && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Обработка завершилась с ошибкой</AlertTitle>
@@ -444,7 +559,6 @@ export default function MedicalDocumentDetail() {
               className="w-fit"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Сбросить и повторить
             </Button>
           </AlertDescription>
         </Alert>
@@ -622,6 +736,8 @@ export default function MedicalDocumentDetail() {
         onOpenChange={setShowMappingDialog}
         unmatchedResults={unmatchedResults}
       />
+        </div>
+      </div>
     </div>
   );
 }
