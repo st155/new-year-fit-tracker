@@ -453,7 +453,7 @@ async function processTerraWebhookData(
 
   if (type === 'sleep' && data) {
     for (const sleep of data) {
-      const date = sleep.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
+      const date = sleep.metadata?.end_time?.split('T')[0] || sleep.metadata?.start_time?.split('T')[0] || new Date().toISOString().split('T')[0];
       const durations = sleep.sleep_durations_data;
 
       if (durations?.asleep) {
@@ -742,13 +742,12 @@ async function processTerraWebhookData(
             });
           }
 
-          // Total Sleep Duration
+          // Total Sleep Duration (excluding awakeDuration - only actual sleep time)
           const deepSleep = durations.asleep.duration_deep_sleep_state_seconds || 0;
           const lightSleep = durations.asleep.duration_light_sleep_state_seconds || 0;
           const remSleep = durations.asleep.duration_REM_sleep_state_seconds || 0;
-          const awakeDuration = durations.awake?.duration_awake_state_seconds || 0;
           
-          const totalSleepSeconds = deepSleep + lightSleep + remSleep + awakeDuration;
+          const totalSleepSeconds = deepSleep + lightSleep + remSleep;
           
           if (totalSleepSeconds > 0) {
             metricsToInsert.push({
