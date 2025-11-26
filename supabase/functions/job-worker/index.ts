@@ -130,11 +130,12 @@ async function processTerraWebhookData(
 
   logger.info('Processing Terra webhook', { webhookId, type, userId: user?.user_id });
 
-  // Get user mapping
+  // Get user mapping (only active tokens)
   const { data: tokenData, error: tokenError } = await supabase
     .from('terra_tokens')
     .select('user_id, provider')
     .eq('terra_user_id', user.user_id)
+    .eq('is_active', true)
     .single();
 
   if (tokenError || !tokenData) {
