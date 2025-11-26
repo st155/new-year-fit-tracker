@@ -232,6 +232,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           console.error('[BOTTLE-SCANNER] Library update error:', updateError);
         } else {
           console.log('[BOTTLE-SCANNER] ✅ Library scan count updated');
+          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+          queryClient.invalidateQueries({ queryKey: ['library-check', newProductId] });
           toast({
             title: "📚 Library Updated",
             description: `${extracted.supplement_name} scan count updated.`,
@@ -257,6 +259,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           });
         } else {
           console.log('[BOTTLE-SCANNER] ✅ Added to library');
+          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+          queryClient.invalidateQueries({ queryKey: ['library-check', newProductId] });
           toast({
             title: "📚 Added to Library",
             description: `${extracted.supplement_name} saved to your library.`,
@@ -285,7 +289,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         }
 
         console.log('[BOTTLE-SCANNER] ✅ Enrichment successful');
-        setEnrichedProduct(enrichData.product);
+        
+        // Add serving_size info from scanned data
+        const enrichedProductData = {
+          ...enrichData.product,
+          serving_size: dosageAmount.toString(),
+          serving_unit: dosageUnit,
+          recommended_dosage: scanResult?.suggestions?.ai_rationale?.split('.')?.[0] || 'As directed',
+        };
+        
+        setEnrichedProduct(enrichedProductData);
         
         toast({
           title: "✅ Supplement enriched!",
@@ -303,6 +316,9 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           dosage_unit: dosageUnit,
           form: extracted.form || 'capsules',
           servings_per_container: extracted.servings_per_container || 30,
+          serving_size: dosageAmount.toString(),
+          serving_unit: dosageUnit,
+          recommended_dosage: scanResult?.suggestions?.ai_rationale?.split('.')?.[0] || 'As directed',
         };
         
         console.log('[BOTTLE-SCANNER] Using fallback basic product:', basicProduct);
@@ -420,6 +436,9 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
+      queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+      queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
+      queryClient.invalidateQueries({ queryKey: ['stack-check', productId] });
       toast({
         title: "✅ Added to stack!",
         description: `${editedData?.supplement_name} is now in your supplement stack.`,
@@ -460,7 +479,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl bg-neutral-950 border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-neutral-950 border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <Camera className="h-5 w-5 text-blue-400" />

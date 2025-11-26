@@ -144,20 +144,20 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
       <CardContent>
         {/* Tabs Navigation */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full bg-neutral-900 border border-neutral-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+          <TabsList className="w-full bg-neutral-900 border border-neutral-800 overflow-x-auto flex-nowrap">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-xs sm:text-sm whitespace-nowrap">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="benefits" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+            <TabsTrigger value="benefits" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-xs sm:text-sm whitespace-nowrap">
               Benefits
             </TabsTrigger>
-            <TabsTrigger value="research" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+            <TabsTrigger value="research" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-xs sm:text-sm whitespace-nowrap">
               Research
             </TabsTrigger>
-            <TabsTrigger value="manufacturer" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+            <TabsTrigger value="manufacturer" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-xs sm:text-sm whitespace-nowrap">
               Manufacturer
             </TabsTrigger>
-            <TabsTrigger value="community" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+            <TabsTrigger value="community" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 text-xs sm:text-sm whitespace-nowrap">
               Community
             </TabsTrigger>
           </TabsList>
