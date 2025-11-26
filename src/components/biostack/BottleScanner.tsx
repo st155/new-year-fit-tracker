@@ -124,42 +124,56 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
   // Create product and enrich
   const createProductAndEnrich = async (extracted: ExtractedData, suggestions: any) => {
+    console.log('[BOTTLE-SCANNER] Starting product creation with:', { extracted, suggestions });
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      console.log('[BOTTLE-SCANNER] User authenticated:', user.id);
+
       // Parse dosage with null safety
-        const dosageString = extracted.dosage_per_serving || '';
-        
-        // Step 1: Extract number and remaining string
-        const basicMatch = dosageString.match(/^([\d.]+)\s*(.*)$/);
-        const dosageAmount = basicMatch ? parseFloat(basicMatch[1]) : 0;
-        
-        // Step 2: Extract ONLY valid unit from the remaining string
-        const validUnits = ['mg', 'g', 'mcg', 'IU', 'ml', 'serving'];
-        const remainingString = basicMatch ? basicMatch[2].toLowerCase() : '';
-        
-        // Find valid unit at the start of the remaining string
-        let dosageUnit = 'mg'; // default
-        for (const unit of validUnits) {
-          if (remainingString.startsWith(unit.toLowerCase())) {
-            dosageUnit = unit;
-            break;
-          }
+      const dosageString = extracted.dosage_per_serving || '';
+      console.log('[BOTTLE-SCANNER] Parsing dosage:', dosageString);
+      
+      // Step 1: Extract number and remaining string
+      const basicMatch = dosageString.match(/^([\d.]+)\s*(.*)$/);
+      const dosageAmount = basicMatch ? parseFloat(basicMatch[1]) : 0;
+      
+      // Step 2: Extract ONLY valid unit from the remaining string
+      const validUnits = ['mg', 'g', 'mcg', 'IU', 'ml', 'serving'];
+      const remainingString = basicMatch ? basicMatch[2].toLowerCase() : '';
+      
+      // Find valid unit at the start of the remaining string
+      let dosageUnit = 'mg'; // default
+      for (const unit of validUnits) {
+        if (remainingString.startsWith(unit.toLowerCase())) {
+          dosageUnit = unit;
+          break;
         }
+      }
+
+      console.log('[BOTTLE-SCANNER] Parsed dosage:', { dosageAmount, dosageUnit });
 
       // Find or create product
       let newProductId: string | null = null;
       
-      const { data: existingProduct } = await supabase
+      console.log('[BOTTLE-SCANNER] Checking for existing product:', extracted.supplement_name);
+      const { data: existingProduct, error: checkError } = await supabase
         .from('supplement_products')
         .select('id')
         .ilike('name', extracted.supplement_name)
         .maybeSingle();
 
+      if (checkError) {
+        console.error('[BOTTLE-SCANNER] Error checking existing product:', checkError);
+      }
+
       if (existingProduct) {
+        console.log('[BOTTLE-SCANNER] Found existing product:', existingProduct.id);
         newProductId = existingProduct.id;
       } else {
+        console.log('[BOTTLE-SCANNER] Creating new product...');
         const { data: newProduct, error: productError } = await supabase
           .from('supplement_products')
           .insert({
@@ -177,33 +191,50 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           .select('id')
           .single();
 
-        if (productError) throw productError;
+        if (productError) {
+          console.error('[BOTTLE-SCANNER] ❌ Product creation failed:', productError);
+          throw productError;
+        }
+        
+        console.log('[BOTTLE-SCANNER] ✅ Product created:', newProduct.id);
         newProductId = newProduct.id;
       }
 
       setProductId(newProductId);
 
       // Add to library automatically - check if exists first
-      const { data: existingLibEntry } = await supabase
+      console.log('[BOTTLE-SCANNER] Adding to library...');
+      const { data: existingLibEntry, error: libCheckError } = await supabase
         .from('user_supplement_library')
         .select('id, scan_count')
         .eq('user_id', user.id)
         .eq('product_id', newProductId)
         .maybeSingle();
 
+      if (libCheckError) {
+        console.error('[BOTTLE-SCANNER] Error checking library:', libCheckError);
+      }
+
       if (existingLibEntry) {
         // Update scan count
-        await supabase
+        console.log('[BOTTLE-SCANNER] Updating library scan count...');
+        const { error: updateError } = await supabase
           .from('user_supplement_library')
           .update({ scan_count: existingLibEntry.scan_count + 1 })
           .eq('id', existingLibEntry.id);
-        
-        toast({
-          title: "📚 Library Updated",
-          description: `${extracted.supplement_name} scan count updated.`,
-        });
+
+        if (updateError) {
+          console.error('[BOTTLE-SCANNER] Library update error:', updateError);
+        } else {
+          console.log('[BOTTLE-SCANNER] ✅ Library scan count updated');
+          toast({
+            title: "📚 Library Updated",
+            description: `${extracted.supplement_name} scan count updated.`,
+          });
+        }
       } else {
         // Create new entry
+        console.log('[BOTTLE-SCANNER] Creating new library entry...');
         const { error: libraryError } = await supabase
           .from('user_supplement_library')
           .insert({
@@ -213,21 +244,23 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           });
 
         if (libraryError) {
-          console.error('[LIBRARY] Failed to add to library:', libraryError);
+          console.error('[BOTTLE-SCANNER] ❌ Library creation failed:', libraryError);
+          // Don't fail the whole flow, just warn
           toast({
             title: "⚠️ Library warning",
-            description: "Product created but failed to add to library.",
-            variant: "destructive",
+            description: "Product created but couldn't add to library.",
           });
         } else {
+          console.log('[BOTTLE-SCANNER] ✅ Added to library');
           toast({
             title: "📚 Added to Library",
-            description: `${extracted.supplement_name} saved to your personal library.`,
+            description: `${extracted.supplement_name} saved to your library.`,
           });
         }
       }
 
       // Start enrichment
+      console.log('[BOTTLE-SCANNER] Starting enrichment...');
       setStep('enriching');
       
       try {
@@ -235,9 +268,18 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           body: { productId: newProductId }
         });
 
-        if (enrichError) throw enrichError;
-        if (!enrichData.success) throw new Error(enrichData.error || 'Enrichment failed');
+        if (enrichError) {
+          console.error('[BOTTLE-SCANNER] Enrichment error:', enrichError);
+          throw enrichError;
+        }
+        
+        console.log('[BOTTLE-SCANNER] Enrichment response:', enrichData);
+        
+        if (!enrichData?.success) {
+          throw new Error(enrichData?.error || 'Enrichment failed');
+        }
 
+        console.log('[BOTTLE-SCANNER] ✅ Enrichment successful');
         setEnrichedProduct(enrichData.product);
         
         toast({
@@ -245,10 +287,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           description: "Complete product information loaded.",
         });
       } catch (enrichError) {
-        console.warn('⚠️ Enrichment failed, using basic data:', enrichError);
+        console.warn('[BOTTLE-SCANNER] ⚠️ Enrichment failed, using basic data:', enrichError);
         
         // Fallback: use basic product data without enrichment
-        setEnrichedProduct({
+        const basicProduct = {
           id: newProductId,
           name: extracted.supplement_name || 'Unknown Supplement',
           brand: extracted.brand || 'Unknown',
@@ -256,25 +298,40 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           dosage_unit: dosageUnit,
           form: extracted.form || 'capsules',
           servings_per_container: extracted.servings_per_container || 30,
-        });
+        };
+        
+        console.log('[BOTTLE-SCANNER] Using fallback basic product:', basicProduct);
+        setEnrichedProduct(basicProduct);
         
         toast({
-          title: "⚠️ Using basic info",
-          description: "Couldn't load enriched data, showing extracted information.",
+          title: "ℹ️ Basic info loaded",
+          description: "Showing extracted information (enrichment unavailable).",
         });
       }
       
+      console.log('[BOTTLE-SCANNER] ✅ Moving to info-card step');
       setStep('info-card');
+      
     } catch (error) {
-      console.error('❌ Product creation/enrichment error:', error);
-      console.error('📊 Extracted data:', extracted);
-      console.error('💡 Suggestions:', suggestions);
+      console.error('[BOTTLE-SCANNER] ❌ CRITICAL ERROR in product creation:', error);
+      console.error('[BOTTLE-SCANNER] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        error: error,
+        extracted,
+        suggestions
+      });
+      
+      // Show detailed error to user
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
       toast({
-        title: "Failed to process supplement",
-        description: error instanceof Error ? error.message : "Please try again with better lighting or photo.",
+        title: "❌ Failed to process supplement",
+        description: errorMessage,
         variant: "destructive",
+        duration: 5000,
       });
+      
+      // Return to preview so user can try again
       setStep('preview');
     }
   };
