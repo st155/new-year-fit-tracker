@@ -40,8 +40,9 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
         'Resting Heart Rate': ['Resting HR'],
         'Workout Calories': ['Active Calories'],
         'Active Calories': ['Workout Calories'],
-        'Workout Strain': ['Day Strain'],
-        'Day Strain': ['Workout Strain'],
+        // Day Strain and Workout Strain are DIFFERENT metrics, not aliases!
+        'Day Strain': ['Strain'],
+        'Strain': ['Day Strain'],
       };
 
       // Собираем все уникальные метрики + их алиасы
