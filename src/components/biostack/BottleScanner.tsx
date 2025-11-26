@@ -129,10 +129,24 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       if (!user) throw new Error('Not authenticated');
 
       // Parse dosage with null safety
-      const dosageString = extracted.dosage_per_serving || '';
-      const dosageMatch = dosageString.match(/^([\d.]+)\s*(.+)$/);
-      const dosageAmount = dosageMatch ? parseFloat(dosageMatch[1]) : 0;
-      const dosageUnit = dosageMatch ? dosageMatch[2].trim() : 'mg';
+        const dosageString = extracted.dosage_per_serving || '';
+        
+        // Step 1: Extract number and remaining string
+        const basicMatch = dosageString.match(/^([\d.]+)\s*(.*)$/);
+        const dosageAmount = basicMatch ? parseFloat(basicMatch[1]) : 0;
+        
+        // Step 2: Extract ONLY valid unit from the remaining string
+        const validUnits = ['mg', 'g', 'mcg', 'IU', 'ml', 'serving'];
+        const remainingString = basicMatch ? basicMatch[2].toLowerCase() : '';
+        
+        // Find valid unit at the start of the remaining string
+        let dosageUnit = 'mg'; // default
+        for (const unit of validUnits) {
+          if (remainingString.startsWith(unit.toLowerCase())) {
+            dosageUnit = unit;
+            break;
+          }
+        }
 
       // Find or create product
       let newProductId: string | null = null;
