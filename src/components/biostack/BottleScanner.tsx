@@ -138,7 +138,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       
       // Step 1: Extract number and remaining string
       const basicMatch = dosageString.match(/^([\d.]+)\s*(.*)$/);
-      const dosageAmount = basicMatch ? parseFloat(basicMatch[1]) : 0;
+      const dosageAmount = basicMatch ? parseFloat(basicMatch[1]) || 1 : 1; // Minimum 1 for CHECK constraint
       
       // Step 2: Extract ONLY valid unit from the remaining string
       const validUnits = ['mg', 'g', 'mcg', 'IU', 'ml', 'serving'];
@@ -152,8 +152,13 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           break;
         }
       }
+      
+      // Validate form field against database constraint
+      const validForms = ['capsule', 'tablet', 'powder', 'liquid', 'gummy', 'softgel', 'other'];
+      const extractedForm = (extracted.form || '').toLowerCase();
+      const validatedForm = validForms.includes(extractedForm) ? extractedForm : 'capsule';
 
-      console.log('[BOTTLE-SCANNER] Parsed dosage:', { dosageAmount, dosageUnit });
+      console.log('[BOTTLE-SCANNER] Parsed dosage:', { dosageAmount, dosageUnit, form: validatedForm });
 
       // Find or create product
       let newProductId: string | null = null;
@@ -179,10 +184,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           .insert({
             name: extracted.supplement_name || 'Unknown Supplement',
             brand: extracted.brand || 'Unknown',
-            dosage_amount: dosageAmount || 0,
+            dosage_amount: Math.max(dosageAmount, 1), // Ensure > 0 for CHECK constraint
             dosage_unit: dosageUnit || 'mg',
-            form: extracted.form || 'capsules',
-            servings_per_container: extracted.servings_per_container || 30,
+            form: validatedForm, // Use validated form
+            servings_per_container: Math.max(extracted.servings_per_container || 30, 1),
             recommended_daily_intake: extracted.recommended_daily_intake || null,
             ingredients: extracted.ingredients || null,
             warnings: extracted.warnings || null,
