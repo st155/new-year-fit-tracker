@@ -496,15 +496,20 @@ async function processTerraWebhookData(
           });
         }
 
-        // Total Sleep Duration (sum of all phases)
+        // Total Sleep Duration (sum of all sleep phases, excluding awake time)
         const deepSleep = durations.asleep.duration_deep_sleep_state_seconds || 0;
         const lightSleep = durations.asleep.duration_light_sleep_state_seconds || 0;
         const remSleep = durations.asleep.duration_REM_sleep_state_seconds || 0;
         const awakeDuration = durations.awake?.duration_awake_state_seconds || 0;
         
-        const totalSleepSeconds = deepSleep + lightSleep + remSleep + awakeDuration;
+        // Calculate total sleep time (NOT including awake time)
+        const totalSleepSeconds = deepSleep + lightSleep + remSleep;
         
-        if (totalSleepSeconds > 0) {
+        // Minimum sleep duration filter: 30 minutes (1800 seconds)
+        // This prevents naps or incomplete data from being recorded as full sleep
+        const MIN_SLEEP_SECONDS = 30 * 60;
+        
+        if (totalSleepSeconds >= MIN_SLEEP_SECONDS) {
           metricsToInsert.push({
             metric_name: 'Sleep Duration',
             category: 'sleep',
@@ -512,6 +517,19 @@ async function processTerraWebhookData(
             measurement_date: date,
             source: provider,
             external_id: `terra_${provider}_sleep_${date}`,
+            user_id,
+          });
+        }
+
+        // Record awake time during sleep as separate metric
+        if (awakeDuration > 0) {
+          metricsToInsert.push({
+            metric_name: 'Time Awake During Sleep',
+            category: 'sleep',
+            value: Math.round((awakeDuration / 3600) * 100) / 100,
+            measurement_date: date,
+            source: provider,
+            external_id: `terra_${provider}_awake_${date}`,
             user_id,
           });
         }
