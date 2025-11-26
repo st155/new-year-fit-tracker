@@ -4,9 +4,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTodaysSupplements, UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
-import { Sunrise, Sun, Moon, Pill, CheckCircle2 } from "lucide-react";
+import { Sunrise, Sun, Moon, Pill, CheckCircle2, Camera, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { BottleScanner } from "./BottleScanner";
+import { AIStackGenerator } from "./AIStackGenerator";
 
 const TIME_GROUPS = [
   { 
@@ -38,6 +40,8 @@ const TIME_GROUPS = [
 export function TodaysSupplements() {
   const { groupedSupplements, logIntakeMutation } = useTodaysSupplements();
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
 
   const handleToggleItem = (itemId: string) => {
     const newSelected = new Set(selectedItems);
@@ -97,7 +101,7 @@ export function TodaysSupplements() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Quick Actions */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -107,6 +111,29 @@ export function TodaysSupplements() {
           <p className="text-sm text-muted-foreground mt-1">
             {totalPending} pending supplements
           </p>
+        </div>
+        
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setIsScannerOpen(true)}
+            className="border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Scan Bottle
+          </Button>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAIGeneratorOpen(true)}
+            className="border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            AI Generator
+          </Button>
         </div>
       </div>
 
@@ -265,6 +292,20 @@ export function TodaysSupplements() {
           </Button>
         </div>
       )}
+
+      {/* Modals */}
+      <BottleScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSuccess={() => {
+          setIsScannerOpen(false);
+        }}
+      />
+      
+      <AIStackGenerator
+        open={isAIGeneratorOpen}
+        onOpenChange={setIsAIGeneratorOpen}
+      />
     </div>
   );
 }
