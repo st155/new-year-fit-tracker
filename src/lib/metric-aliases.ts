@@ -5,9 +5,9 @@ export const METRIC_ALIASES: Record<string, string[]> = {
   'Resting Heart Rate': ['Resting HR'],
   'Workout Calories': ['Active Calories'],
   'Active Calories': ['Workout Calories'],
-  'Workout Strain': ['Day Strain'],
-  'Day Strain': ['Workout Strain', 'Strain'],
-  'Strain': ['Day Strain', 'Workout Strain'],
+  // Day Strain and Workout Strain are DIFFERENT metrics, not aliases!
+  'Day Strain': ['Strain'],
+  'Strain': ['Day Strain'],
   'Recovery Score': ['Recovery', 'RecoveryScore'],
   'Recovery': ['Recovery Score', 'RecoveryScore'],
   'RecoveryScore': ['Recovery Score', 'Recovery'],
