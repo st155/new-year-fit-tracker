@@ -65,10 +65,11 @@ export function useWidgetsBatch(userId: string | undefined, widgets: Widget[]) {
         // ОПТИМИЗАЦИЯ: Выбираем только нужные поля и фильтруем сразу
         const metricsPromise = supabase
           .from('unified_metrics')
-          .select('metric_name, source, value, unit, measurement_date')
+          .select('metric_name, source, value, unit, measurement_date, created_at')
           .eq('user_id', userId)
           .in('metric_name', metricNames)
           .order('measurement_date', { ascending: false })
+          .order('created_at', { ascending: false }) // Always take the latest record for each date
           .limit(metricNames.length * 10); // Ограничиваем результат
         
         const confidencePromise = supabase
