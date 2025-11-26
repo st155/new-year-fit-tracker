@@ -505,9 +505,9 @@ async function processTerraWebhookData(
         // Calculate total sleep time (NOT including awake time)
         const totalSleepSeconds = deepSleep + lightSleep + remSleep;
         
-        // Minimum sleep duration filter: 30 minutes (1800 seconds)
+        // Minimum sleep duration filter: 2 hours (7200 seconds)
         // This prevents naps or incomplete data from being recorded as full sleep
-        const MIN_SLEEP_SECONDS = 30 * 60;
+        const MIN_SLEEP_SECONDS = 2 * 60 * 60;
         
         if (totalSleepSeconds >= MIN_SLEEP_SECONDS) {
           metricsToInsert.push({
