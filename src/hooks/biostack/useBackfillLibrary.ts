@@ -1,8 +1,10 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function useBackfillLibrary() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('backfill-supplement-library');
@@ -13,6 +15,10 @@ export function useBackfillLibrary() {
       return data;
     },
     onSuccess: (data) => {
+      // Invalidate library queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+      queryClient.invalidateQueries({ queryKey: ['supplement-library-stats'] });
+      
       if (data.addedCount > 0) {
         toast.success(`✅ Added ${data.addedCount} supplements to library`, {
           description: `${data.skippedCount} already existed`,
