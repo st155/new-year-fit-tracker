@@ -38,12 +38,57 @@ export function useBulkScanSupplements() {
 </svg>
   `)}`;
 
+  // Create informative HEIC placeholder with camera icon and file size
+  const createHeicPlaceholder = (file: File): string => {
+    const sizeKB = Math.round(file.size / 1024);
+    return `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect fill="#1a1a2e" width="100" height="100" rx="8"/>
+        <rect x="20" y="25" width="60" height="45" rx="4" fill="#16213e" stroke="#0f3460" stroke-width="1"/>
+        <circle cx="35" cy="42" r="6" fill="#0f3460"/>
+        <circle cx="35" cy="42" r="3" fill="#1a1a2e"/>
+        <rect x="45" y="38" width="25" height="14" rx="2" fill="#0f3460"/>
+        <text x="50" y="82" text-anchor="middle" font-size="10" fill="#10b981" font-family="system-ui" font-weight="bold">HEIC</text>
+        <text x="50" y="94" text-anchor="middle" font-size="7" fill="#666" font-family="system-ui">${sizeKB}KB</text>
+      </svg>
+    `)}`;
+  };
+
   // Helper to detect HEIC files
   const isHeicFile = (file: File): boolean => {
     return file.type === 'image/heic' || 
            file.type === 'image/heif' ||
            file.name.toLowerCase().endsWith('.heic') ||
            file.name.toLowerCase().endsWith('.heif');
+  };
+
+  // Try to create native preview (works in Safari/macOS which supports HEIC natively)
+  const tryNativePreview = async (file: File): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 200;
+        const scale = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        URL.revokeObjectURL(objectUrl);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(null); // Browser doesn't support HEIC natively
+      };
+      
+      img.src = objectUrl;
+    });
   };
 
   // Convert HEIC to JPEG blob
@@ -128,49 +173,46 @@ export function useBulkScanSupplements() {
       return;
     }
     
-    // Add files with loading state first
-    const initialItems: BulkUploadItem[] = validFiles.map((file) => ({
-      id: `${Date.now()}-${Math.random()}`,
-      file,
-      preview: PILL_PLACEHOLDER,
-      previewLoading: true, // Show spinner while creating preview
-      status: 'pending' as const,
-      isHeic: isHeicFile(file),
-    }));
-    
-    setItems(prev => [...prev, ...initialItems]);
-    
-    // Create previews asynchronously
-    for (const item of initialItems) {
-      try {
-        let previewFile = item.file;
+    // Create items with immediate previews
+    const initialItems: BulkUploadItem[] = await Promise.all(
+      validFiles.map(async (file) => {
+        const isHeic = isHeicFile(file);
         
-        // For HEIC - convert to JPEG for preview only (original HEIC sent to server)
-        if (isHeicFile(item.file)) {
-          console.log(`[BULK-SCAN] Converting HEIC to JPEG for preview: ${item.file.name}`);
-          const result = await heic2any({
-            blob: item.file,
-            toType: 'image/jpeg',
-            quality: 0.3, // Low quality for preview
-          });
-          const blob = Array.isArray(result) ? result[0] : result;
-          previewFile = new File([blob], 'preview.jpg', { type: 'image/jpeg' });
+        if (isHeic) {
+          // Try native preview first (works in Safari/macOS)
+          console.log(`[BULK-SCAN] Trying native HEIC preview for: ${file.name}`);
+          const nativePreview = await tryNativePreview(file);
+          
+          if (nativePreview) {
+            console.log(`[BULK-SCAN] ✅ Native HEIC preview created: ${file.name}`);
+          } else {
+            console.log(`[BULK-SCAN] Browser doesn't support HEIC, showing placeholder: ${file.name}`);
+          }
+          
+          return {
+            id: `${Date.now()}-${Math.random()}`,
+            file,
+            preview: nativePreview || createHeicPlaceholder(file),
+            previewLoading: false,
+            status: 'pending' as const,
+            isHeic: true,
+          };
         }
         
-        const preview = await createPreview(previewFile);
-        
-        // Update item with ready preview
-        setItems(prev => prev.map(i => 
-          i.id === item.id ? { ...i, preview, previewLoading: false } : i
-        ));
-      } catch (err) {
-        console.warn(`[BULK-SCAN] Preview creation failed for ${item.file.name}:`, err);
-        // Keep placeholder, remove spinner
-        setItems(prev => prev.map(i => 
-          i.id === item.id ? { ...i, previewLoading: false } : i
-        ));
-      }
-    }
+        // For non-HEIC files, create preview immediately
+        const preview = await createPreview(file);
+        return {
+          id: `${Date.now()}-${Math.random()}`,
+          file,
+          preview,
+          previewLoading: false,
+          status: 'pending' as const,
+          isHeic: false,
+        };
+      })
+    );
+    
+    setItems(prev => [...prev, ...initialItems]);
     
     console.log(`[BULK-SCAN] Added ${validFiles.length} files (${initialItems.filter(i => i.isHeic).length} HEIC files)`);
   }, []);
