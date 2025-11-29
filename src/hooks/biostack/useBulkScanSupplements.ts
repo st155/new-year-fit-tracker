@@ -48,11 +48,18 @@ export function useBulkScanSupplements() {
   const convertHeicToJpeg = async (file: File): Promise<File> => {
     console.log(`[BULK-SCAN] 🔄 Converting HEIC to JPEG: ${file.name}`);
     
-    const blob = await heic2any({
+    const result = await heic2any({
       blob: file,
       toType: 'image/jpeg',
       quality: 0.8,
-    }) as Blob;
+    });
+    
+    // Handle both single Blob and Blob[] (multi-image HEIC)
+    const blob = Array.isArray(result) ? result[0] : result;
+    
+    if (!blob) {
+      throw new Error('HEIC conversion returned empty result');
+    }
     
     // Create new File from blob with .jpg extension
     const newFileName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
@@ -101,31 +108,59 @@ export function useBulkScanSupplements() {
     const files = Array.from(fileList);
     console.log(`[BULK-SCAN] Adding ${files.length} files...`);
     
+    // Validate file types
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    const validFiles = files.filter(file => {
+      const isSupported = supportedTypes.includes(file.type.toLowerCase()) ||
+        file.name.toLowerCase().match(/\.(jpg|jpeg|png|webp|heic|heif)$/);
+      
+      if (!isSupported) {
+        console.warn(`[BULK-SCAN] Skipping unsupported file: ${file.name} (${file.type})`);
+        toast.warning(`Skipped: ${file.name} - unsupported format`);
+      }
+      return isSupported;
+    });
+    
+    if (validFiles.length === 0) {
+      toast.error('No valid image files selected');
+      return;
+    }
+    
     // Process files: convert HEIC to JPEG, then create previews
     const newItems: BulkUploadItem[] = await Promise.all(
-      files.map(async (originalFile) => {
-        // Convert HEIC to JPEG if needed
+      validFiles.map(async (originalFile) => {
         let file = originalFile;
+        let conversionError: string | undefined;
+        
+        // Convert HEIC to JPEG if needed
         if (isHeicFile(originalFile)) {
           try {
             file = await convertHeicToJpeg(originalFile);
           } catch (err) {
             console.error(`[BULK-SCAN] ❌ HEIC conversion failed for ${originalFile.name}:`, err);
-            // Keep original file, will fail later with clear error
+            conversionError = `HEIC conversion failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
           }
         }
         
         return {
           id: `${Date.now()}-${Math.random()}`,
-          file, // Use converted file (or original if not HEIC)
-          preview: await createPreview(file),
-          status: 'pending' as const,
+          file,
+          preview: await createPreview(conversionError ? originalFile : file),
+          // Mark as error immediately if conversion failed
+          status: conversionError ? 'error' as const : 'pending' as const,
+          error: conversionError,
         };
       })
     );
     
+    // Count failed conversions for user feedback
+    const failedCount = newItems.filter(i => i.status === 'error').length;
+    if (failedCount > 0) {
+      toast.error(`⚠️ ${failedCount} file(s) could not be converted from HEIC`);
+    }
+    
     setItems(prev => [...prev, ...newItems]);
-    console.log(`[BULK-SCAN] Added ${files.length} files with previews`);
+    console.log(`[BULK-SCAN] Added ${validFiles.length} files with previews (${failedCount} errors)`);
   }, []);
 
   const removeItem = useCallback((id: string) => {
@@ -140,6 +175,13 @@ export function useBulkScanSupplements() {
 
   const compressImage = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
+      // Timeout after 30 seconds
+      const timeout = setTimeout(() => {
+        reject(new Error(`Image compression timeout for ${file.name}`));
+      }, 30000);
+      
+      const cleanup = () => clearTimeout(timeout);
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -155,10 +197,13 @@ export function useBulkScanSupplements() {
           
           canvas.toBlob(
             (blob) => {
+              cleanup();
               if (blob) {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
+                reader.onerror = (err) => {
+                  reject(new Error(`Failed to read compressed image: ${file.name}`));
+                };
                 reader.readAsDataURL(blob);
               } else {
                 reject(new Error('Failed to compress image'));
@@ -168,10 +213,18 @@ export function useBulkScanSupplements() {
             0.6
           );
         };
-        img.onerror = reject;
+        img.onerror = (err) => {
+          cleanup();
+          console.error(`[BULK-SCAN] ❌ Image decode failed for ${file.name}:`, err);
+          reject(new Error(`Cannot decode image: ${file.name}. File may be corrupted or unsupported format.`));
+        };
         img.src = e.target?.result as string;
       };
-      reader.onerror = reject;
+      reader.onerror = (err) => {
+        cleanup();
+        console.error(`[BULK-SCAN] ❌ FileReader failed for ${file.name}:`, err);
+        reject(new Error(`Cannot read file: ${file.name}`));
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -236,18 +289,27 @@ export function useBulkScanSupplements() {
       ));
 
     } catch (error) {
-      // Handle ProgressEvent (network errors like {isTrusted: true})
+      // More specific error messages
       let errorMessage: string;
       
       if (error instanceof Error) {
-        errorMessage = error.message;
+        // Provide better context for common errors
+        if (error.message.includes('Cannot decode image')) {
+          errorMessage = 'Image format not supported. Try converting to JPEG first.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Processing took too long. Try with a smaller image.';
+        } else if (error.message.includes('HEIC')) {
+          errorMessage = error.message; // Already clear from conversion
+        } else {
+          errorMessage = error.message;
+        }
       } else if (error && typeof error === 'object' && 'isTrusted' in error) {
-        // Network error (ProgressEvent)
-        errorMessage = 'Network error - check your connection and try again';
+        // ProgressEvent indicates image processing failure
+        errorMessage = 'Image could not be processed. Unsupported format or corrupted file.';
       } else if (typeof error === 'object' && error !== null) {
         errorMessage = JSON.stringify(error);
       } else {
-        errorMessage = 'Processing failed';
+        errorMessage = 'Processing failed - unknown error';
       }
       
       // Check cancellation BEFORE retry
