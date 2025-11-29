@@ -2,9 +2,10 @@ import { useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Camera, Upload, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Camera, Upload, X, CheckCircle2, AlertCircle, Loader2, ImagePlus } from 'lucide-react';
 import { useBulkScanSupplements, BulkUploadItem } from '@/hooks/biostack/useBulkScanSupplements';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface BulkPhotoUploaderProps {
   open: boolean;
@@ -25,8 +26,10 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
   } = useBulkScanSupplements();
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
+      const count = e.target.files.length;
       addFiles(e.target.files);
+      toast.info(`📸 Added ${count} photo${count > 1 ? 's' : ''} to queue`);
     }
   }, [addFiles]);
 
@@ -103,8 +106,32 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 </div>
               </div>
 
-              {/* Mobile Camera Button */}
-              <div className="md:hidden">
+              {/* Mobile Options */}
+              <div className="md:hidden space-y-3">
+                {/* Select from Gallery - MULTIPLE */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="mobile-gallery"
+                />
+                <label htmlFor="mobile-gallery">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                    asChild
+                  >
+                    <span className="cursor-pointer flex items-center justify-center gap-2">
+                      <ImagePlus className="h-5 w-5" />
+                      🖼️ Select from Gallery (Multiple)
+                    </span>
+                  </Button>
+                </label>
+                
+                {/* Take Photo - SINGLE */}
                 <input
                   type="file"
                   accept="image/*"
@@ -115,14 +142,14 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 />
                 <label htmlFor="mobile-camera">
                   <Button
-                    variant="default"
+                    variant="outline"
                     size="lg"
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                    className="w-full"
                     asChild
                   >
                     <span className="cursor-pointer flex items-center justify-center gap-2">
                       <Camera className="h-5 w-5" />
-                      📷 Take Photo
+                      📷 Take Photo (Single)
                     </span>
                   </Button>
                 </label>
@@ -160,8 +187,27 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                         </label>
                       </div>
                       
-                      {/* Mobile: Take Another Photo */}
-                      <div className="md:hidden">
+                      {/* Mobile: Add More Options */}
+                      <div className="md:hidden flex gap-2">
+                        {/* Add from Gallery */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="add-from-gallery"
+                        />
+                        <label htmlFor="add-from-gallery">
+                          <Button variant="outline" size="sm" asChild>
+                            <span className="cursor-pointer flex items-center gap-1">
+                              <ImagePlus className="h-4 w-4" />
+                              🖼️ Gallery
+                            </span>
+                          </Button>
+                        </label>
+                        
+                        {/* Take Another Photo */}
                         <input
                           type="file"
                           accept="image/*"
@@ -172,9 +218,9 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                         />
                         <label htmlFor="take-another-photo">
                           <Button variant="outline" size="sm" asChild>
-                            <span className="cursor-pointer">
-                              <Camera className="h-4 w-4 mr-2" />
-                              Take Another
+                            <span className="cursor-pointer flex items-center gap-1">
+                              <Camera className="h-4 w-4" />
+                              📷 Camera
                             </span>
                           </Button>
                         </label>
