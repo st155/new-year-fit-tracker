@@ -383,6 +383,30 @@ export function useBulkScanSupplements() {
             source: 'scan',
             scan_count: 1,
           }, { onConflict: 'user_id,product_id' });
+
+        // Auto-add to active stack with morning as default intake time
+        console.log(`[BULK-SCAN] 📋 Adding to active stack: ${name}`);
+        const { error: stackError } = await supabase
+          .from('user_stack')
+          .upsert({
+            user_id: user.id,
+            product_id: productId,
+            stack_name: name, // Use product name as stack name
+            intake_times: ['morning'],
+            servings_remaining: scanData.servingsPerContainer,
+            is_active: true,
+            ai_suggested: false,
+            source: 'scan'
+          }, { 
+            onConflict: 'user_id,product_id',
+            ignoreDuplicates: true // Don't override if already in stack
+          });
+
+        if (stackError) {
+          console.error('[BULK-SCAN] ⚠️ Stack error (non-critical):', stackError);
+        } else {
+          console.log(`[BULK-SCAN] ✅ Added to active stack: ${name}`);
+        }
       }
 
       // Trigger enrichment (fire and forget)
