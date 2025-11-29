@@ -42,6 +42,9 @@ interface AIResponse {
 }
 
 serve(async (req) => {
+  const requestId = crypto.randomUUID().slice(0, 8);
+  console.log(`[SCAN-${requestId}] ====== NEW REQUEST ======`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -49,6 +52,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error(`[SCAN-${requestId}] ❌ Missing authorization header`);
       throw new Error('No authorization header');
     }
 
@@ -56,21 +60,26 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
+      console.error(`[SCAN-${requestId}] ❌ Unauthorized:`, userError);
       throw new Error('Unauthorized');
     }
+
+    console.log(`[SCAN-${requestId}] 👤 User authenticated:`, user.id);
 
     const { imageBase64 }: ScanRequest = await req.json();
 
     if (!imageBase64) {
+      console.error(`[SCAN-${requestId}] ❌ No image provided`);
       throw new Error('No image provided');
     }
 
-    console.log('[SCAN-BOTTLE] Starting AI analysis...');
-    console.log('[SCAN-BOTTLE] Image size:', imageBase64.length, 'bytes');
+    console.log(`[SCAN-${requestId}] 📷 Image received (${Math.round(imageBase64.length / 1024)}KB)`);
 
     // Call Lovable AI Gateway with Gemini Vision
+    console.log(`[SCAN-${requestId}] 🤖 Calling Gemini Vision API...`);
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
+      console.error(`[SCAN-${requestId}] ❌ LOVABLE_API_KEY not configured`);
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
@@ -149,7 +158,7 @@ Return ONLY valid JSON (no markdown):
 
     if (!visionResponse.ok) {
       const error = await visionResponse.text();
-      console.error('[SCAN-BOTTLE] Vision API error:', error);
+      console.error(`[SCAN-${requestId}] ❌ Vision API error (${visionResponse.status}):`, error);
       throw new Error(`Vision API error: ${visionResponse.status}`);
     }
 
@@ -157,10 +166,11 @@ Return ONLY valid JSON (no markdown):
     const content = visionData.choices?.[0]?.message?.content;
     
     if (!content) {
+      console.error(`[SCAN-${requestId}] ❌ No content from Vision API`);
       throw new Error('No content from Vision API');
     }
 
-    console.log('[SCAN-BOTTLE] Raw AI response:', content);
+    console.log(`[SCAN-${requestId}] ✅ AI response received (${content.length} chars)`);
 
     // Parse extracted data
     let extracted: ExtractedData;
@@ -168,12 +178,17 @@ Return ONLY valid JSON (no markdown):
       // Remove markdown code blocks if present
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       extracted = JSON.parse(cleanContent);
+      console.log(`[SCAN-${requestId}] 📊 Extracted data:`, {
+        brand: extracted.brand,
+        name: extracted.supplement_name,
+        form: extracted.form,
+        dosage: extracted.dosage_per_serving
+      });
     } catch (parseError) {
-      console.error('[SCAN-BOTTLE] Failed to parse AI response:', content);
+      console.error(`[SCAN-${requestId}] ❌ Failed to parse AI response:`, parseError);
+      console.error(`[SCAN-${requestId}] Raw content:`, content.substring(0, 500));
       throw new Error('Failed to parse AI response');
     }
-
-    console.log('[SCAN-BOTTLE] Extracted:', extracted);
 
     // Query biomarker_correlations for matching supplement
     const supplementName = extracted.supplement_name.toLowerCase();
@@ -205,14 +220,20 @@ Return ONLY valid JSON (no markdown):
       },
     };
 
-    console.log('[SCAN-BOTTLE] Success:', response);
+    console.log(`[SCAN-${requestId}] ✅ Scan completed successfully`);
+    console.log(`[SCAN-${requestId}] Result:`, {
+      supplement: extracted.supplement_name,
+      brand: extracted.brand,
+      biomarkers: linkedBiomarkers.length,
+      times: intakeTimes.join(', ')
+    });
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('[SCAN-BOTTLE] Error:', error);
+    console.error(`[SCAN-${requestId}] ❌ Error:`, error);
     return new Response(
       JSON.stringify({ 
         success: false, 

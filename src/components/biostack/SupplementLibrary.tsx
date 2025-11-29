@@ -3,13 +3,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill, Sparkles, Clock } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill, Sparkles, Clock, Loader2 } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
 import { useBackfillLibrary } from '@/hooks/biostack';
 import { useEnrichProduct } from '@/hooks/biostack/useEnrichProduct';
 import { useSyncProtocolsToLibrary } from '@/hooks/biostack/useSyncProtocolsToLibrary';
 import { SupplementInfoCard } from './SupplementInfoCard';
 import { ProductPhotoUploader } from './ProductPhotoUploader';
+import { BulkPhotoUploader } from './BulkPhotoUploader';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,8 +21,9 @@ export function SupplementLibrary() {
   const [sourceFilter, setSourceFilter] = useState<'scan' | 'protocol' | 'manual' | null>(null);
   const [viewProduct, setViewProduct] = useState<any>(null);
   const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
-  const { data: library, isLoading } = useSupplementLibrary();
+  const { data: library, isLoading, refetch } = useSupplementLibrary();
   const removeFromLibrary = useRemoveFromLibrary();
   const backfillLibrary = useBackfillLibrary();
   const enrichProduct = useEnrichProduct();
@@ -74,22 +76,25 @@ export function SupplementLibrary() {
         </div>
         <div className="flex gap-2">
           <Button
+            onClick={() => setBulkUploadOpen(true)}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+            size="sm"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Bulk Upload
+          </Button>
+          <Button
             onClick={() => syncProtocols.mutate()}
             disabled={syncProtocols.isPending}
             variant="outline"
             size="sm"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncProtocols.isPending ? 'animate-spin' : ''}`} />
-            Sync Protocols to Library
-          </Button>
-          <Button
-            onClick={() => backfillLibrary.mutate()}
-            disabled={backfillLibrary.isPending}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${backfillLibrary.isPending ? 'animate-spin' : ''}`} />
-            Sync from Stack
+            {syncProtocols.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Sync Protocols
           </Button>
         </div>
       </div>
@@ -371,6 +376,15 @@ export function SupplementLibrary() {
           productName={photoUploaderProduct.name}
         />
       )}
+
+      {/* Bulk Photo Uploader */}
+      <BulkPhotoUploader
+        open={bulkUploadOpen}
+        onOpenChange={setBulkUploadOpen}
+        onComplete={() => {
+          refetch();
+        }}
+      />
     </div>
   );
 }

@@ -1,0 +1,261 @@
+import { useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Camera, Upload, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useBulkScanSupplements, BulkUploadItem } from '@/hooks/biostack/useBulkScanSupplements';
+import { cn } from '@/lib/utils';
+
+interface BulkPhotoUploaderProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onComplete?: () => void;
+}
+
+export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoUploaderProps) {
+  const {
+    items,
+    isProcessing,
+    progress,
+    addFiles,
+    removeItem,
+    startProcessing,
+    cancelProcessing,
+    reset,
+  } = useBulkScanSupplements();
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      addFiles(e.target.files);
+    }
+  }, [addFiles]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files) {
+      addFiles(e.dataTransfer.files);
+    }
+  }, [addFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleClose = () => {
+    if (!isProcessing) {
+      reset();
+      onOpenChange(false);
+      if (progress.current > 0 && onComplete) {
+        onComplete();
+      }
+    }
+  };
+
+  const getStatusIcon = (item: BulkUploadItem) => {
+    switch (item.status) {
+      case 'success':
+        return <CheckCircle2 className="h-5 w-5 text-green-400" />;
+      case 'error':
+        return <AlertCircle className="h-5 w-5 text-red-400" />;
+      case 'processing':
+        return <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />;
+      default:
+        return <div className="h-5 w-5 rounded-full border-2 border-muted" />;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">📷 Bulk Supplement Upload</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Drop Zone */}
+          {items.length === 0 && (
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="relative border-2 border-dashed border-muted hover:border-primary/50 rounded-lg p-12 text-center transition-colors cursor-pointer bg-neutral-950/50"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="space-y-4">
+                <div className="flex justify-center gap-4">
+                  <Upload className="h-12 w-12 text-muted-foreground" />
+                  <Camera className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium">Drop 10-20 photos here or click to browse</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Upload supplement bottle photos for automatic recognition
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* File List */}
+          {items.length > 0 && (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">
+                    Queue ({items.filter(i => i.status === 'pending').length} pending)
+                  </h3>
+                  {!isProcessing && (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="add-more-files"
+                    />
+                  )}
+                  {!isProcessing && (
+                    <label htmlFor="add-more-files">
+                      <Button variant="outline" size="sm" asChild>
+                        <span className="cursor-pointer">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Add More
+                        </span>
+                      </Button>
+                    </label>
+                  )}
+                </div>
+
+                {/* Progress Bar */}
+                {isProcessing && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Processing: {progress.current} / {progress.total}</span>
+                      <span>{progress.percentage}%</span>
+                    </div>
+                    <Progress value={progress.percentage} className="h-2" />
+                  </div>
+                )}
+
+                {/* Thumbnails Grid */}
+                <div className="grid grid-cols-5 gap-3">
+                  {items.map(item => (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "relative aspect-square rounded-lg overflow-hidden border-2 transition-all",
+                        item.status === 'success' && "border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]",
+                        item.status === 'error' && "border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]",
+                        item.status === 'processing' && "border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]",
+                        item.status === 'pending' && "border-muted"
+                      )}
+                    >
+                      <img
+                        src={item.preview}
+                        alt="Supplement"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        {getStatusIcon(item)}
+                      </div>
+                      {!isProcessing && item.status === 'pending' && (
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="absolute top-1 right-1 p-1 rounded-full bg-black/80 hover:bg-red-500/80 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results List */}
+              {(progress.current > 0 || items.some(i => i.status !== 'pending')) && (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {items
+                    .filter(i => i.status !== 'pending')
+                    .map(item => (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg border",
+                          item.status === 'success' && "bg-green-500/10 border-green-500/30",
+                          item.status === 'error' && "bg-red-500/10 border-red-500/30",
+                          item.status === 'processing' && "bg-blue-500/10 border-blue-500/30"
+                        )}
+                      >
+                        {getStatusIcon(item)}
+                        <div className="flex-1 min-w-0">
+                          {item.status === 'success' && item.result && (
+                            <>
+                              <p className="font-medium truncate">
+                                {item.result.name}
+                              </p>
+                              {item.result.brand && (
+                                <p className="text-sm text-muted-foreground">
+                                  {item.result.brand}
+                                </p>
+                              )}
+                            </>
+                          )}
+                          {item.status === 'processing' && (
+                            <p className="text-sm text-muted-foreground">Analyzing...</p>
+                          )}
+                          {item.status === 'error' && (
+                            <>
+                              <p className="text-sm font-medium text-red-400">Failed</p>
+                              <p className="text-xs text-muted-foreground">{item.error}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-between gap-3">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isProcessing}
+            >
+              {progress.current > 0 ? 'Close' : 'Cancel'}
+            </Button>
+            
+            {items.length > 0 && (
+              <div className="flex gap-3">
+                {isProcessing ? (
+                  <Button
+                    variant="destructive"
+                    onClick={cancelProcessing}
+                  >
+                    Stop Processing
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={startProcessing}
+                    disabled={items.filter(i => i.status === 'pending').length === 0}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Start Processing ({items.filter(i => i.status === 'pending').length})
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
