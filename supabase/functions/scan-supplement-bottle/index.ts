@@ -307,15 +307,21 @@ Return ONLY valid JSON (no markdown):
       console.error(`[SCAN-${requestId}] ❌ Error checking existing product:`, productCheckError);
     }
 
+    // Parse dosage with fallback to default values
+    const parsedDosageAmount = extracted.dosage_per_serving 
+      ? parseFloat(extracted.dosage_per_serving.replace(/[^0-9.]/g, '')) 
+      : NaN;
+    const parsedDosageUnit = extracted.dosage_per_serving?.match(/[a-zA-Z]+/)?.[0];
+
     let productId: string;
     const productData = {
       name: extracted.supplement_name,
       brand: extracted.brand,
       form: extracted.form,
-      dosage_amount: extracted.dosage_per_serving 
-        ? parseFloat(extracted.dosage_per_serving.replace(/[^0-9.]/g, '')) || null 
-        : null,
-      dosage_unit: extracted.dosage_per_serving?.match(/[a-zA-Z]+/)?.[0] || null,
+      dosage_amount: !isNaN(parsedDosageAmount) && parsedDosageAmount > 0 
+        ? parsedDosageAmount 
+        : 1,  // Default: 1 serving
+      dosage_unit: parsedDosageUnit || 'serving',  // Default: "serving"
       servings_per_container: extracted.servings_per_container,
       label_description: extracted.label_description,
       label_benefits: extracted.label_benefits,
