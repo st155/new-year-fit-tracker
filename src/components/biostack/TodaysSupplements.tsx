@@ -3,11 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTodaysSupplements } from "@/hooks/biostack/useTodaysSupplements";
-import { Sunrise, Sun, Moon, Pill, CheckCircle2, Camera, Sparkles } from "lucide-react";
+import { Sunrise, Sun, Moon, Pill, CheckCircle2, Camera, Sparkles, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { BottleScanner } from "./BottleScanner";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { CompactSupplementChip } from "./CompactSupplementChip";
+import { ProtocolManagementModal } from "./ProtocolManagementModal";
 
 const TIME_GROUPS = [
   { 
@@ -41,6 +42,7 @@ export function TodaysSupplements() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+  const [isManageProtocolsOpen, setIsManageProtocolsOpen] = useState(false);
 
   const handleToggleItem = (itemId: string) => {
     const newSelected = new Set(selectedItems);
@@ -114,6 +116,16 @@ export function TodaysSupplements() {
         
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setIsManageProtocolsOpen(true)}
+            className="border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Manage Protocols
+          </Button>
+          
           <Button 
             variant="outline"
             size="sm"
@@ -241,6 +253,11 @@ export function TodaysSupplements() {
       )}
 
       {/* Modals */}
+      <ProtocolManagementModal
+        isOpen={isManageProtocolsOpen}
+        onClose={() => setIsManageProtocolsOpen(false)}
+      />
+      
       <BottleScanner 
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}

@@ -122,6 +122,38 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setStep('camera');
   }, []);
 
+  // Upload product image to Storage
+  const uploadProductImage = async (base64Image: string, productId: string): Promise<string | null> => {
+    try {
+      // Convert base64 to Blob
+      const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+      const byteCharacters = atob(base64Data);
+      const byteArray = new Uint8Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArray[i] = byteCharacters.charCodeAt(i);
+      }
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      
+      // Upload to supplement-images bucket
+      const fileName = `${productId}_${Date.now()}.jpg`;
+      const { data, error } = await supabase.storage
+        .from('supplement-images')
+        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+      
+      if (error) throw error;
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('supplement-images')
+        .getPublicUrl(fileName);
+      
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('[BOTTLE-SCANNER] Image upload error:', error);
+      return null;
+    }
+  };
+
   // Create product and enrich
   const createProductAndEnrich = async (extracted: ExtractedData, suggestions: any) => {
     console.log('[BOTTLE-SCANNER] Starting product creation with:', { extracted, suggestions });
@@ -163,11 +195,12 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       // Find or create product
       let newProductId: string | null = null;
       
-      console.log('[BOTTLE-SCANNER] Checking for existing product:', extracted.supplement_name);
+      console.log('[BOTTLE-SCANNER] Checking for existing product:', extracted.supplement_name, extracted.brand);
       const { data: existingProduct, error: checkError } = await supabase
         .from('supplement_products')
         .select('id')
         .ilike('name', extracted.supplement_name)
+        .ilike('brand', extracted.brand || 'Unknown')
         .maybeSingle();
 
       if (checkError) {
@@ -203,6 +236,19 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         
         console.log('[BOTTLE-SCANNER] ✅ Product created:', newProduct.id);
         newProductId = newProduct.id;
+
+        // Upload captured image if available
+        if (capturedImage) {
+          console.log('[BOTTLE-SCANNER] Uploading product image...');
+          const imageUrl = await uploadProductImage(capturedImage, newProductId);
+          if (imageUrl) {
+            await supabase
+              .from('supplement_products')
+              .update({ image_url: imageUrl })
+              .eq('id', newProductId);
+            console.log('[BOTTLE-SCANNER] ✅ Image saved:', imageUrl);
+          }
+        }
       }
 
       setProductId(newProductId);

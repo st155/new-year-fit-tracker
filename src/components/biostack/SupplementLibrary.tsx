@@ -3,10 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
 import { useBackfillLibrary } from '@/hooks/biostack';
 import { SupplementInfoCard } from './SupplementInfoCard';
+import { ProductPhotoUploader } from './ProductPhotoUploader';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -14,6 +15,7 @@ export function SupplementLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [viewProduct, setViewProduct] = useState<any>(null);
+  const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
 
   const { data: library, isLoading } = useSupplementLibrary();
   const removeFromLibrary = useRemoveFromLibrary();
@@ -180,6 +182,19 @@ export function SupplementLibrary() {
 
                 {/* Actions */}
                 <div className="flex gap-2">
+                  {!entry.supplement_products.image_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPhotoUploaderProduct({
+                        id: entry.product_id,
+                        name: entry.supplement_products.name
+                      })}
+                      className="border-blue-500/30 hover:bg-blue-500/10"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -229,6 +244,16 @@ export function SupplementLibrary() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Photo Uploader Modal */}
+      {photoUploaderProduct && (
+        <ProductPhotoUploader
+          isOpen={!!photoUploaderProduct}
+          onClose={() => setPhotoUploaderProduct(null)}
+          productId={photoUploaderProduct.id}
+          productName={photoUploaderProduct.name}
+        />
+      )}
     </div>
   );
 }
