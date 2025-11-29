@@ -454,11 +454,16 @@ export function useBulkScanSupplements() {
     
     setIsProcessing(false);
     
-    const successCount = items.filter(i => i.status === 'success').length;
-    const errorCount = items.filter(i => i.status === 'error').length;
-    
-    console.log(`[BULK-SCAN] Completed: ${successCount} success, ${errorCount} errors`);
-    toast.success(`✅ Processed ${successCount} supplements${errorCount ? ` (${errorCount} errors)` : ''}`);
+    // Get actual final counts from state using callback
+    setItems(prev => {
+      const finalSuccessCount = prev.filter(i => i.status === 'success').length;
+      const finalErrorCount = prev.filter(i => i.status === 'error').length;
+      
+      console.log(`[BULK-SCAN] Completed: ${finalSuccessCount} success, ${finalErrorCount} errors`);
+      toast.success(`✅ Processed ${finalSuccessCount} supplements${finalErrorCount ? ` (${finalErrorCount} errors)` : ''}`);
+      
+      return prev; // Don't modify state
+    });
   }, [items, isProcessing]);
 
   const cancelProcessing = useCallback(() => {
