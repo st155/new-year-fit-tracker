@@ -228,21 +228,39 @@ export function useBulkScanSupplements() {
   }, []);
 
   const compressImage = async (file: File): Promise<string> => {
-    // For HEIC files, read as base64 without browser processing
-    // Server will handle conversion via Gemini Vision (supports HEIC natively)
-    if (isHeicFile(file)) {
-      console.log(`[BULK-SCAN] Reading HEIC file as base64 for server: ${file.name}`);
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error(`Failed to read HEIC file: ${file.name}`));
-        reader.readAsDataURL(file);
-      });
+    console.log(`[BULK-SCAN] Processing: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+    
+    // Warn about large files
+    if (file.size > 2 * 1024 * 1024) {
+      console.warn(`[BULK-SCAN] ⚠️ Large file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      toast.warning(`Large file (${(file.size / 1024 / 1024).toFixed(1)}MB). Processing may be slow.`);
     }
     
-    // For JPEG/PNG/WebP, compress with browser canvas
+    let processedFile = file;
+    
+    // For HEIC files, convert to JPEG first using heic2any
+    if (isHeicFile(file)) {
+      console.log('[BULK-SCAN] Converting HEIC to JPEG...');
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        
+        const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        processedFile = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
+        console.log(`[BULK-SCAN] ✅ Converted to JPEG: ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
+      } catch (error) {
+        console.error('[BULK-SCAN] ❌ HEIC conversion failed:', error);
+        toast.error(`Failed to convert ${file.name}. Try using JPEG.`);
+        throw error;
+      }
+    }
+    
+    // Compress image with canvas
     return new Promise((resolve, reject) => {
-      // Timeout after 30 seconds
       const timeout = setTimeout(() => {
         reject(new Error(`Image compression timeout for ${file.name}`));
       }, 30000);
@@ -254,36 +272,49 @@ export function useBulkScanSupplements() {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxWidth = 600;
-          const scale = maxWidth / img.width;
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
+          
+          // Resize to max 1200px (better quality for OCR)
+          let width = img.width;
+          let height = img.height;
+          const maxSize = 1200;
+          
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
           
           const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx?.drawImage(img, 0, 0, width, height);
           
           canvas.toBlob(
             (blob) => {
               cleanup();
               if (blob) {
+                console.log(`[BULK-SCAN] ✅ Compressed to ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = (err) => {
-                  reject(new Error(`Failed to read compressed image: ${file.name}`));
-                };
+                reader.onerror = () => reject(new Error(`Failed to read compressed image: ${file.name}`));
                 reader.readAsDataURL(blob);
               } else {
                 reject(new Error('Failed to compress image'));
               }
             },
             'image/jpeg',
-            0.6
+            0.7 // Good balance for OCR quality
           );
         };
         img.onerror = (err) => {
           cleanup();
           console.error(`[BULK-SCAN] ❌ Image decode failed for ${file.name}:`, err);
-          reject(new Error(`Cannot decode image: ${file.name}. File may be corrupted or unsupported format.`));
+          reject(new Error(`Cannot decode image: ${file.name}. File may be corrupted.`));
         };
         img.src = e.target?.result as string;
       };
@@ -292,7 +323,7 @@ export function useBulkScanSupplements() {
         console.error(`[BULK-SCAN] ❌ FileReader failed for ${file.name}:`, err);
         reject(new Error(`Cannot read file: ${file.name}`));
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(processedFile);
     });
   };
 
