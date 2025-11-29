@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTodaysSupplements } from "@/hooks/biostack/useTodaysSupplements";
 import { Sunrise, Sun, Moon, Pill, CheckCircle2, Camera, Sparkles, Settings } from "lucide-react";
 import { motion } from "framer-motion";
-import { BottleScanner } from "./BottleScanner";
+import { BulkPhotoUploader } from "./BulkPhotoUploader";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { CompactSupplementChip } from "./CompactSupplementChip";
 import { ProtocolManagementModal } from "./ProtocolManagementModal";
@@ -41,7 +41,7 @@ const TIME_GROUPS = [
 export function TodaysSupplements() {
   const { groupedSupplements, logIntakeMutation } = useTodaysSupplements();
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isManageProtocolsOpen, setIsManageProtocolsOpen] = useState(false);
   const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
@@ -131,7 +131,7 @@ export function TodaysSupplements() {
           <Button 
             variant="outline"
             size="sm"
-            onClick={() => setIsScannerOpen(true)}
+            onClick={() => setIsBulkUploaderOpen(true)}
             className="border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10"
           >
             <Camera className="h-4 w-4 mr-2" />
@@ -261,11 +261,11 @@ export function TodaysSupplements() {
         onClose={() => setIsManageProtocolsOpen(false)}
       />
       
-      <BottleScanner 
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onSuccess={() => {
-          setIsScannerOpen(false);
+      <BulkPhotoUploader 
+        open={isBulkUploaderOpen}
+        onOpenChange={setIsBulkUploaderOpen}
+        onComplete={() => {
+          // Queries will auto-refresh via useTodaysSupplements hook
         }}
       />
       
