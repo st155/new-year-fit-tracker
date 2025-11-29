@@ -3,13 +3,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill, Sparkles, Clock } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
 import { useBackfillLibrary } from '@/hooks/biostack';
+import { useEnrichProduct } from '@/hooks/biostack/useEnrichProduct';
+import { useSyncProtocolsToLibrary } from '@/hooks/biostack/useSyncProtocolsToLibrary';
 import { SupplementInfoCard } from './SupplementInfoCard';
 import { ProductPhotoUploader } from './ProductPhotoUploader';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatDistanceToNow } from 'date-fns';
 
 export function SupplementLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +24,11 @@ export function SupplementLibrary() {
   const { data: library, isLoading } = useSupplementLibrary();
   const removeFromLibrary = useRemoveFromLibrary();
   const backfillLibrary = useBackfillLibrary();
+  const enrichProduct = useEnrichProduct();
+  const syncProtocols = useSyncProtocolsToLibrary();
+
+  // Recently scanned (last 5)
+  const recentScans = library?.slice(0, 5) || [];
 
   // Get all unique tags
   const allTags = Array.from(
@@ -58,22 +66,68 @@ export function SupplementLibrary() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <Library className="h-6 w-6 text-green-500" />
           <h2 className="text-2xl font-bold">My Library</h2>
           <Badge variant="outline">{library?.length || 0}</Badge>
         </div>
-        <Button
-          onClick={() => backfillLibrary.mutate()}
-          disabled={backfillLibrary.isPending}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${backfillLibrary.isPending ? 'animate-spin' : ''}`} />
-          Sync from Stack
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => syncProtocols.mutate()}
+            disabled={syncProtocols.isPending}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncProtocols.isPending ? 'animate-spin' : ''}`} />
+            Sync Protocols to Library
+          </Button>
+          <Button
+            onClick={() => backfillLibrary.mutate()}
+            disabled={backfillLibrary.isPending}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${backfillLibrary.isPending ? 'animate-spin' : ''}`} />
+            Sync from Stack
+          </Button>
+        </div>
       </div>
+
+      {/* Recently Scanned */}
+      {recentScans.length > 0 && (
+        <Card className="p-4 bg-neutral-900/50 border-blue-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4 text-blue-400" />
+            <h3 className="font-semibold text-sm">🕐 Recently Scanned</h3>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {recentScans.map((scan) => (
+              <div
+                key={scan.id}
+                className="w-20 flex-shrink-0 text-center cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setViewProduct(scan.supplement_products)}
+              >
+                {scan.supplement_products.image_url ? (
+                  <img
+                    src={scan.supplement_products.image_url}
+                    alt={scan.supplement_products.name}
+                    className="w-20 h-20 rounded-lg object-cover mb-1"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-neutral-800 flex items-center justify-center mb-1">
+                    <Pill className="h-8 w-8 text-neutral-600" />
+                  </div>
+                )}
+                <p className="text-xs truncate">{scan.supplement_products.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(scan.updated_at), { addSuffix: true })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
@@ -177,13 +231,30 @@ export function SupplementLibrary() {
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2 mb-3">
+                  {/* Enrichment Status */}
+                  {entry.enrichment_status === 'enriched' && (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                      ✅ Enriched
+                    </Badge>
+                  )}
+                  {entry.enrichment_status === 'partial' && (
+                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
+                      ⚠️ Partial
+                    </Badge>
+                  )}
+                  {entry.enrichment_status === 'not_enriched' && (
+                    <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
+                      ❌ Not enriched
+                    </Badge>
+                  )}
+                  
                   {entry.source === 'protocol' && (
                     <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
                       📋 From Protocol
                     </Badge>
                   )}
                   {entry.is_in_stack && (
-                    <Badge className="bg-green-500/20 text-green-500 border-green-500/50">
+                    <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/50">
                       ✅ In Stack
                     </Badge>
                   )}
@@ -213,7 +284,7 @@ export function SupplementLibrary() {
                 </p>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {!entry.supplement_products.image_url && (
                     <Button
                       variant="outline"
@@ -227,6 +298,20 @@ export function SupplementLibrary() {
                       <Camera className="h-4 w-4" />
                     </Button>
                   )}
+                  
+                  {/* Re-enrich button for non-enriched products */}
+                  {entry.enrichment_status !== 'enriched' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => enrichProduct.mutate(entry.product_id)}
+                      disabled={enrichProduct.isPending}
+                      className="border-yellow-500/30 hover:bg-yellow-500/10"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outline"
                     size="sm"
