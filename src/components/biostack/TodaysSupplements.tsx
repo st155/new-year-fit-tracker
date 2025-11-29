@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useTodaysSupplements, UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
+import { useTodaysSupplements } from "@/hooks/biostack/useTodaysSupplements";
 import { Sunrise, Sun, Moon, Pill, CheckCircle2, Camera, Sparkles } from "lucide-react";
-import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { BottleScanner } from "./BottleScanner";
 import { AIStackGenerator } from "./AIStackGenerator";
+import { CompactSupplementChip } from "./CompactSupplementChip";
 
 const TIME_GROUPS = [
   { 
@@ -178,67 +177,15 @@ export function TodaysSupplements() {
                   )}
                 </div>
 
-                {/* Items List */}
-                <div className="divide-y divide-border/30">
+                {/* Items Grid */}
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {items.map((item) => (
-                    <div
+                    <CompactSupplementChip
                       key={item.id}
-                      className={`px-6 py-4 flex items-center gap-4 transition-colors ${
-                        item.takenToday 
-                          ? 'bg-green-500/5 opacity-60' 
-                          : 'hover:bg-neutral-900/30'
-                      }`}
-                    >
-                      {/* Checkbox */}
-                      {!item.takenToday && (
-                        <Checkbox
-                          checked={selectedItems.has(item.id)}
-                          onCheckedChange={() => handleToggleItem(item.id)}
-                          className="border-border data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                        />
-                      )}
-                      {item.takenToday && (
-                        <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      )}
-
-                      {/* Supplement Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-foreground truncate">
-                            {item.name}
-                          </p>
-                          {item.brand && (
-                            <span className="text-xs text-muted-foreground">
-                              • {item.brand}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{item.dosage}</span>
-                          {item.form && <span>• {item.form}</span>}
-                          {item.protocolName && (
-                            <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20">
-                              📋 {item.protocolName}
-                            </Badge>
-                          )}
-                          {item.source === 'manual' && (
-                            <Badge variant="secondary" className="text-xs bg-neutral-800 text-muted-foreground border-border/30">
-                              🏷️ manual
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Status */}
-                      {item.takenToday && item.takenAt && (
-                        <div className="text-sm text-green-500 flex items-center gap-2">
-                          <span className="font-medium">✅ taken</span>
-                          <span className="text-muted-foreground">
-                            {format(item.takenAt, 'HH:mm')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                      item={item}
+                      isSelected={selectedItems.has(item.id)}
+                      onToggle={() => handleToggleItem(item.id)}
+                    />
                   ))}
                 </div>
               </Card>

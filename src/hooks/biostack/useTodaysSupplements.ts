@@ -16,6 +16,7 @@ export interface UnifiedSupplementItem {
   takenToday: boolean;
   takenAt?: Date;
   productId?: string;
+  imageUrl?: string;
 }
 
 export function useTodaysSupplements() {
@@ -42,7 +43,8 @@ export function useTodaysSupplements() {
             brand,
             form,
             dosage_amount,
-            dosage_unit
+            dosage_unit,
+            image_url
           )
         `)
         .eq('user_id', user.id)
@@ -82,6 +84,7 @@ export function useTodaysSupplements() {
             takenToday: !!log,
             takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
             productId: item.product_id || undefined,
+            imageUrl: product?.image_url,
           });
         });
       });
@@ -113,7 +116,8 @@ export function useTodaysSupplements() {
               brand,
               form,
               dosage_amount,
-              dosage_unit
+              dosage_unit,
+              image_url
             )
           )
         `)
@@ -174,6 +178,7 @@ export function useTodaysSupplements() {
               takenToday: !!log,
               takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
               productId: product?.id,
+              imageUrl: product?.image_url,
             });
           });
         });
