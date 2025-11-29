@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
 import { useBackfillLibrary } from '@/hooks/biostack';
 import { SupplementInfoCard } from './SupplementInfoCard';
@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function SupplementLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<'scan' | 'protocol' | 'manual' | null>(null);
   const [viewProduct, setViewProduct] = useState<any>(null);
   const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
 
@@ -36,8 +37,9 @@ export function SupplementLibrary() {
       entry.supplement_products.brand?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesTag = !selectedTag || entry.tags?.includes(selectedTag);
+    const matchesSource = !sourceFilter || entry.source === sourceFilter;
 
-    return matchesSearch && matchesTag;
+    return matchesSearch && matchesTag && matchesSource;
   });
 
   if (isLoading) {
@@ -74,7 +76,7 @@ export function SupplementLibrary() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -85,26 +87,47 @@ export function SupplementLibrary() {
           />
         </div>
         
-        {/* Tag Filters */}
+        {/* Source Filters */}
         <div className="flex gap-2 flex-wrap">
           <Button
-            variant={selectedTag === null ? 'default' : 'outline'}
+            variant={sourceFilter === null ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setSelectedTag(null)}
+            onClick={() => setSourceFilter(null)}
           >
             All
           </Button>
-          {allTags.map(tag => (
-            <Button
-              key={tag}
-              variant={selectedTag === tag ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedTag(tag)}
-            >
-              {tag}
-            </Button>
-          ))}
+          <Button
+            variant={sourceFilter === 'scan' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSourceFilter('scan')}
+          >
+            📷 Scanned
+          </Button>
+          <Button
+            variant={sourceFilter === 'protocol' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSourceFilter('protocol')}
+          >
+            📋 From Protocol
+          </Button>
         </div>
+
+        {/* Tag Filters */}
+        {allTags.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground self-center">Tags:</span>
+            {allTags.map(tag => (
+              <Button
+                key={tag}
+                variant={selectedTag === tag ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+              >
+                {tag}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Empty State */}
@@ -129,14 +152,18 @@ export function SupplementLibrary() {
                 key={entry.id}
                 className="p-4 border border-blue-500/30 bg-neutral-900/50 hover:bg-neutral-900 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all"
               >
-                {/* Image */}
-                {entry.supplement_products.image_url && (
+                {/* Image or Placeholder */}
+                {entry.supplement_products.image_url ? (
                   <div className="aspect-square bg-neutral-800 rounded-lg mb-3 overflow-hidden">
                     <img
                       src={entry.supplement_products.image_url}
                       alt={entry.supplement_products.name}
                       className="w-full h-full object-contain"
                     />
+                  </div>
+                ) : (
+                  <div className="aspect-square bg-neutral-800 rounded-lg mb-3 flex items-center justify-center">
+                    <Pill className="h-16 w-16 text-neutral-600" />
                   </div>
                 )}
 
@@ -150,6 +177,11 @@ export function SupplementLibrary() {
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2 mb-3">
+                  {entry.source === 'protocol' && (
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
+                      📋 From Protocol
+                    </Badge>
+                  )}
                   {entry.is_in_stack && (
                     <Badge className="bg-green-500/20 text-green-500 border-green-500/50">
                       ✅ In Stack

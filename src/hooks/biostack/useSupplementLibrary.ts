@@ -11,6 +11,7 @@ interface LibraryEntry {
   notes: string | null;
   custom_rating: number | null;
   tags: string[] | null;
+  source: 'scan' | 'protocol' | 'manual';
   created_at: string;
   updated_at: string;
   supplement_products: {
@@ -39,6 +40,7 @@ export function useSupplementLibrary() {
         .from('user_supplement_library')
         .select(`
           *,
+          source,
           supplement_products (
             id,
             name,
