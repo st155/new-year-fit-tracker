@@ -44,19 +44,33 @@ export function useSupplementLibrary() {
         .select(`
           *,
           source,
-          supplement_products (
-            id,
-            name,
-            brand,
-            dosage_amount,
-            dosage_unit,
-            form,
-            image_url,
-            description,
-            avg_rating,
-            benefits,
-            research_summary
-          )
+      supplement_products (
+        id,
+        name,
+        brand,
+        dosage_amount,
+        dosage_unit,
+        form,
+        image_url,
+        description,
+        avg_rating,
+        benefits,
+        research_summary,
+        manufacturer_info,
+        servings_per_container,
+        price,
+        label_description,
+        label_benefits,
+        certifications,
+        storage_instructions,
+        country_of_origin,
+        website,
+        ingredients,
+        warnings,
+        recommended_daily_intake,
+        expiration_info,
+        barcode
+      )
         `)
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });

@@ -74,29 +74,58 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
         <div className="space-y-6">
           {/* Drop Zone */}
           {items.length === 0 && (
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="relative border-2 border-dashed border-muted hover:border-primary/50 rounded-lg p-12 text-center transition-colors cursor-pointer bg-neutral-950/50"
-            >
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileSelect}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              <div className="space-y-4">
-                <div className="flex justify-center gap-4">
-                  <Upload className="h-12 w-12 text-muted-foreground" />
-                  <Camera className="h-12 w-12 text-muted-foreground" />
+            <div className="space-y-4">
+              {/* Desktop Upload */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                className="relative border-2 border-dashed border-muted hover:border-primary/50 rounded-lg p-12 text-center transition-colors cursor-pointer bg-neutral-950/50"
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  id="desktop-upload"
+                />
+                <div className="space-y-4">
+                  <div className="flex justify-center gap-4">
+                    <Upload className="h-12 w-12 text-muted-foreground" />
+                    <Camera className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-medium">Drop 10-20 photos here or click to browse</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Upload supplement bottle photos for automatic recognition
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-medium">Drop 10-20 photos here or click to browse</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Upload supplement bottle photos for automatic recognition
-                  </p>
-                </div>
+              </div>
+
+              {/* Mobile Camera Button */}
+              <div className="md:hidden">
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="mobile-camera"
+                />
+                <label htmlFor="mobile-camera">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                    asChild
+                  >
+                    <span className="cursor-pointer flex items-center justify-center gap-2">
+                      <Camera className="h-5 w-5" />
+                      📷 Take Photo
+                    </span>
+                  </Button>
+                </label>
               </div>
             </div>
           )}

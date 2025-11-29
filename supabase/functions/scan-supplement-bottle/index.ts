@@ -209,6 +209,74 @@ Return ONLY valid JSON (no markdown):
     const targetOutcome = generateTargetOutcome(extracted.supplement_name);
     const aiRationale = generateRationale(extracted.supplement_name, intakeTimes, linkedBiomarkers.length);
 
+    // Check if product already exists
+    const { data: existingProduct, error: productCheckError } = await supabase
+      .from('supplement_products')
+      .select('id')
+      .eq('name', extracted.supplement_name)
+      .eq('brand', extracted.brand)
+      .maybeSingle();
+
+    if (productCheckError) {
+      console.error(`[SCAN-${requestId}] ❌ Error checking existing product:`, productCheckError);
+    }
+
+    let productId: string;
+    const productData = {
+      name: extracted.supplement_name,
+      brand: extracted.brand,
+      form: extracted.form,
+      dosage_amount: extracted.dosage_per_serving 
+        ? parseFloat(extracted.dosage_per_serving.replace(/[^0-9.]/g, '')) || null 
+        : null,
+      dosage_unit: extracted.dosage_per_serving?.match(/[a-zA-Z]+/)?.[0] || null,
+      servings_per_container: extracted.servings_per_container,
+      label_description: extracted.label_description,
+      label_benefits: extracted.label_benefits,
+      ingredients: extracted.ingredients,
+      country_of_origin: extracted.manufacturer_country,
+      website: extracted.manufacturer_website,
+      certifications: extracted.certifications,
+      price: extracted.price,
+      storage_instructions: extracted.storage_instructions,
+      warnings: extracted.warnings,
+      recommended_daily_intake: extracted.recommended_daily_intake,
+      expiration_info: extracted.expiration_info,
+    };
+
+    if (existingProduct) {
+      console.log(`[SCAN-${requestId}] 🔄 Product exists, updating: ${existingProduct.id}`);
+      productId = existingProduct.id;
+      
+      // Update existing product
+      const { error: updateError } = await supabase
+        .from('supplement_products')
+        .update(productData)
+        .eq('id', productId);
+
+      if (updateError) {
+        console.error(`[SCAN-${requestId}] ❌ Error updating product:`, updateError);
+      } else {
+        console.log(`[SCAN-${requestId}] ✅ Product updated successfully`);
+      }
+    } else {
+      console.log(`[SCAN-${requestId}] ➕ Creating new product`);
+      
+      const { data: newProduct, error: insertError } = await supabase
+        .from('supplement_products')
+        .insert(productData)
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error(`[SCAN-${requestId}] ❌ Error creating product:`, insertError);
+        throw new Error(`Failed to create product: ${insertError.message}`);
+      }
+
+      productId = newProduct.id;
+      console.log(`[SCAN-${requestId}] ✅ Product created with ID: ${productId}`);
+    }
+
     const response: AIResponse = {
       success: true,
       extracted,
@@ -222,13 +290,22 @@ Return ONLY valid JSON (no markdown):
 
     console.log(`[SCAN-${requestId}] ✅ Scan completed successfully`);
     console.log(`[SCAN-${requestId}] Result:`, {
+      productId,
       supplement: extracted.supplement_name,
       brand: extracted.brand,
       biomarkers: linkedBiomarkers.length,
       times: intakeTimes.join(', ')
     });
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify({
+      success: true,
+      productId,
+      name: extracted.supplement_name,
+      brand: extracted.brand,
+      form: extracted.form,
+      extracted,
+      suggestions: response.suggestions,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
