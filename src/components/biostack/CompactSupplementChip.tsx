@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CheckCircle2, Pill } from "lucide-react";
+import { CheckCircle2, Pill, Camera } from "lucide-react";
 import { UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
 import { cn } from "@/lib/utils";
 
@@ -8,9 +8,10 @@ interface CompactSupplementChipProps {
   item: UnifiedSupplementItem;
   isSelected: boolean;
   onToggle: () => void;
+  onAddPhoto?: (productId: string, productName: string) => void;
 }
 
-export function CompactSupplementChip({ item, isSelected, onToggle }: CompactSupplementChipProps) {
+export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }: CompactSupplementChipProps) {
   return (
     <TooltipProvider>
       <Tooltip delayDuration={200}>
@@ -26,7 +27,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle }: CompactSup
             onClick={!item.takenToday ? onToggle : undefined}
           >
             {/* Photo or Icon */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 relative group/photo">
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
@@ -37,6 +38,18 @@ export function CompactSupplementChip({ item, isSelected, onToggle }: CompactSup
                 <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
                   <Pill className="w-5 h-5 text-green-500/70" />
                 </div>
+              )}
+              {/* Camera overlay on hover if no image and onAddPhoto is provided */}
+              {!item.imageUrl && item.productId && onAddPhoto && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddPhoto(item.productId!, item.name);
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/photo:opacity-100 transition-opacity rounded-full"
+                >
+                  <Camera className="h-4 w-4 text-white" />
+                </button>
               )}
             </div>
 

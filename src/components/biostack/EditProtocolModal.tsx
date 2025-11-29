@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Save } from 'lucide-react';
+import { Edit, Trash2, Save, Camera, Pill } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { EditProtocolItemDialog } from './EditProtocolItemDialog';
+import { ProductPhotoUploader } from './ProductPhotoUploader';
 
 interface EditProtocolModalProps {
   protocol: any;
@@ -22,6 +23,7 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
   const [name, setName] = useState(protocol.name);
   const [description, setDescription] = useState(protocol.description || '');
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -137,7 +139,33 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
                   key={item.id}
                   className="p-4 border border-border/50 bg-neutral-900/50"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    {/* Product Photo */}
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-neutral-800 flex-shrink-0 relative group">
+                      {item.supplement_products?.image_url ? (
+                        <img 
+                          src={item.supplement_products.image_url} 
+                          alt={item.supplement_products.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <>
+                          <div className="w-full h-full flex items-center justify-center bg-green-500/10">
+                            <Pill className="h-6 w-6 text-green-500/50" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setPhotoUploaderProduct({ id: item.product_id, name: item.supplement_products?.name || 'Supplement' })}
+                            className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-0"
+                          >
+                            <Camera className="h-5 w-5 text-white" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
                     <div className="flex-1">
                       <h4 className="font-semibold mb-1">
                         {item.supplement_products?.name || 'Unknown'}
@@ -148,7 +176,7 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
                       
                       <div className="flex flex-wrap gap-2 text-xs">
                         <Badge variant="outline">
-                          {item.daily_dosage} {item.dosage_unit}
+                          {item.daily_dosage} {item.dosage_unit || 'mg'}
                         </Badge>
                         {item.intake_times?.map((time: string) => (
                           <Badge key={time} variant="secondary">
@@ -158,6 +186,7 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
                       </div>
                     </div>
 
+                    {/* Actions */}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -197,6 +226,16 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
           item={editingItem}
           open={!!editingItem}
           onClose={() => setEditingItem(null)}
+        />
+      )}
+
+      {/* Photo Uploader */}
+      {photoUploaderProduct && (
+        <ProductPhotoUploader
+          isOpen={!!photoUploaderProduct}
+          onClose={() => setPhotoUploaderProduct(null)}
+          productId={photoUploaderProduct.id}
+          productName={photoUploaderProduct.name}
         />
       )}
     </>
