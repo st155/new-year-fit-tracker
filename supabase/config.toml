@@ -212,3 +212,6 @@ verify_jwt = true
 
 [functions.reprocess-all-documents]
 verify_jwt = true
+
+[functions.process-supplement-photo]
+verify_jwt = true
