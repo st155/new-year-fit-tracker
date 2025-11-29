@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { calculateTimeStatus } from "@/lib/supplement-timing";
 
 export interface UnifiedSupplementItem {
   id: string;
@@ -17,6 +18,17 @@ export interface UnifiedSupplementItem {
   takenAt?: Date;
   productId?: string;
   imageUrl?: string;
+  
+  // Smart timing fields
+  scheduledTime?: string;        // "08:00", "14:00", "22:00"
+  intakeInstruction?: string;    // "with_food", "before_sleep_30", etc.
+  timeWindowMinutes: number;     // 60 = ±30 min
+  
+  // Computed fields
+  isDueNow: boolean;
+  isOverdue: boolean;
+  minutesUntilDue?: number;
+  minutesOverdue?: number;
 }
 
 export function useTodaysSupplements() {
@@ -72,6 +84,13 @@ export function useTodaysSupplements() {
         
         intakeTimes.forEach(time => {
           const log = logsMap.get(item.id);
+          const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
+          const timeStatus = calculateTimeStatus(
+            item.specific_time,
+            item.time_window_minutes || 60,
+            takenAt
+          );
+          
           items.push({
             id: `${item.id}-${time}`,
             name: product?.name || 'Unknown',
@@ -82,9 +101,13 @@ export function useTodaysSupplements() {
             source: 'manual',
             sourceId: item.id,
             takenToday: !!log,
-            takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
+            takenAt,
             productId: item.product_id || undefined,
             imageUrl: product?.image_url,
+            scheduledTime: item.specific_time,
+            intakeInstruction: item.intake_instruction,
+            timeWindowMinutes: item.time_window_minutes || 60,
+            ...timeStatus,
           });
         });
       });
@@ -164,6 +187,12 @@ export function useTodaysSupplements() {
           intakeTimes.forEach((time: string) => {
             const logKey = `${item.id}-${time}`;
             const log = logsMap.get(logKey);
+            const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
+            const timeStatus = calculateTimeStatus(
+              item.specific_time,
+              item.time_window_minutes || 60,
+              takenAt
+            );
             
             items.push({
               id: `protocol-${item.id}-${time}`,
@@ -176,9 +205,13 @@ export function useTodaysSupplements() {
               sourceId: item.id,
               protocolName: protocol.name,
               takenToday: !!log,
-              takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
+              takenAt,
               productId: product?.id,
               imageUrl: product?.image_url,
+              scheduledTime: item.specific_time,
+              intakeInstruction: item.intake_instruction,
+              timeWindowMinutes: item.time_window_minutes || 60,
+              ...timeStatus,
             });
           });
         });
