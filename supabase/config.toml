@@ -215,3 +215,6 @@ verify_jwt = true
 
 [functions.process-supplement-photo]
 verify_jwt = true
+
+[functions.backfill-supplement-images]
+verify_jwt = true
