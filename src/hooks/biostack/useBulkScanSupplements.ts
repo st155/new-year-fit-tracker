@@ -107,33 +107,8 @@ export function useBulkScanSupplements() {
       const { productId, name, brand } = scanData;
       console.log(`[BULK-SCAN] ✅ Scanned: ${name} by ${brand}`);
 
-      // Upload image to Storage
-      const fileName = `${productId}_${Date.now()}.jpg`;
-      const blob = await fetch(base64Image).then(r => r.blob());
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('supplement-images')
-        .upload(fileName, blob, { contentType: 'image/jpeg' });
-
-      if (uploadError) {
-        console.error(`[BULK-SCAN] ⚠️ Image upload failed:`, uploadError);
-      } else {
-        const { data: { publicUrl } } = supabase.storage
-          .from('supplement-images')
-          .getPublicUrl(fileName);
-
-        // Update product with image_url
-        const { error: updateError } = await supabase
-          .from('supplement_products')
-          .update({ image_url: publicUrl })
-          .eq('id', productId);
-
-        if (updateError) {
-          console.error(`[BULK-SCAN] ⚠️ Failed to save image_url:`, updateError);
-        } else {
-          console.log(`[BULK-SCAN] ✅ Image saved:`, publicUrl);
-        }
-      }
+      // Image upload is now handled by scan-supplement-bottle Edge Function
+      console.log(`[BULK-SCAN] ✅ Product processed with image: ${scanData.imageUrl || 'no image'}`);
 
       // Add to library
       const { data: { user } } = await supabase.auth.getUser();

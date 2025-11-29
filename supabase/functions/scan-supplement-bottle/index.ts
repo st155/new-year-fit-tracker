@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createAuthClient } from "../_shared/supabase-client.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,53 @@ const corsHeaders = {
 
 interface ScanRequest {
   imageBase64: string;
+}
+
+async function uploadImageToStorage(
+  imageBase64: string,
+  productId: string
+): Promise<string | null> {
+  try {
+    console.log('[SCAN-BOTTLE] Uploading image to Storage...');
+    
+    // Convert base64 to Uint8Array
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Create storage client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const storageClient = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Upload to supplement-images bucket
+    const fileName = `${productId}_${Date.now()}.jpg`;
+    const { error: uploadError } = await storageClient.storage
+      .from('supplement-images')
+      .upload(fileName, bytes, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+    
+    if (uploadError) {
+      console.error('[SCAN-BOTTLE] Upload error:', uploadError);
+      return null;
+    }
+    
+    // Get public URL
+    const { data: urlData } = storageClient.storage
+      .from('supplement-images')
+      .getPublicUrl(fileName);
+    
+    console.log('[SCAN-BOTTLE] ✅ Image uploaded:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('[SCAN-BOTTLE] Image upload error:', error);
+    return null;
+  }
 }
 
 interface ExtractedData {
@@ -277,6 +325,26 @@ Return ONLY valid JSON (no markdown):
       console.log(`[SCAN-${requestId}] ✅ Product created with ID: ${productId}`);
     }
 
+    // Upload image to Storage and save image_url
+    let imageUrl: string | null = null;
+    if (imageBase64 && productId) {
+      console.log(`[SCAN-${requestId}] 📸 Uploading product image...`);
+      imageUrl = await uploadImageToStorage(imageBase64, productId);
+      
+      if (imageUrl) {
+        const { error: updateError } = await supabase
+          .from('supplement_products')
+          .update({ image_url: imageUrl })
+          .eq('id', productId);
+        
+        if (updateError) {
+          console.error(`[SCAN-${requestId}] ❌ Failed to save image_url:`, updateError);
+        } else {
+          console.log(`[SCAN-${requestId}] ✅ image_url saved to database`);
+        }
+      }
+    }
+
     const response: AIResponse = {
       success: true,
       extracted,
@@ -294,12 +362,14 @@ Return ONLY valid JSON (no markdown):
       supplement: extracted.supplement_name,
       brand: extracted.brand,
       biomarkers: linkedBiomarkers.length,
-      times: intakeTimes.join(', ')
+      times: intakeTimes.join(', '),
+      imageUrl: imageUrl ? 'uploaded' : 'no image'
     });
 
     return new Response(JSON.stringify({
       success: true,
       productId,
+      imageUrl,
       name: extracted.supplement_name,
       brand: extracted.brand,
       form: extracted.form,

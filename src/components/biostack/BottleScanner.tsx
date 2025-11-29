@@ -122,37 +122,6 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setStep('camera');
   }, []);
 
-  // Upload product image to Storage
-  const uploadProductImage = async (base64Image: string, productId: string): Promise<string | null> => {
-    try {
-      // Convert base64 to Blob
-      const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
-      const byteCharacters = atob(base64Data);
-      const byteArray = new Uint8Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteArray[i] = byteCharacters.charCodeAt(i);
-      }
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
-      
-      // Upload to supplement-images bucket
-      const fileName = `${productId}_${Date.now()}.jpg`;
-      const { data, error } = await supabase.storage
-        .from('supplement-images')
-        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-      
-      if (error) throw error;
-      
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('supplement-images')
-        .getPublicUrl(fileName);
-      
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('[BOTTLE-SCANNER] Image upload error:', error);
-      return null;
-    }
-  };
 
   // Create product and enrich
   const createProductAndEnrich = async (extracted: ExtractedData, suggestions: any) => {
@@ -210,27 +179,6 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       if (existingProduct) {
         console.log('[BOTTLE-SCANNER] Found existing product:', existingProduct.id);
         newProductId = existingProduct.id;
-        
-        // 🆕 ALWAYS UPLOAD PHOTO for existing products
-        if (capturedImage) {
-          console.log('[BOTTLE-SCANNER] 📸 Uploading photo for existing product...');
-          const imageUrl = await uploadProductImage(capturedImage, newProductId);
-          if (imageUrl) {
-            console.log('[BOTTLE-SCANNER] ✅ Photo uploaded, URL:', imageUrl);
-            const { error: imgUpdateError } = await supabase
-              .from('supplement_products')
-              .update({ image_url: imageUrl })
-              .eq('id', newProductId);
-            
-            if (imgUpdateError) {
-              console.error('[BOTTLE-SCANNER] ❌ Failed to save image_url to database:', imgUpdateError);
-            } else {
-              console.log('[BOTTLE-SCANNER] ✅ image_url saved to database');
-            }
-          } else {
-            console.error('[BOTTLE-SCANNER] ❌ Photo upload returned null URL');
-          }
-        }
       } else {
         console.log('[BOTTLE-SCANNER] Creating new product...');
         const { data: newProduct, error: productError } = await supabase
@@ -257,27 +205,6 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         
         console.log('[BOTTLE-SCANNER] ✅ Product created:', newProduct.id);
         newProductId = newProduct.id;
-
-        // Upload captured image if available
-        if (capturedImage) {
-          console.log('[BOTTLE-SCANNER] 📸 Uploading product image for new product...');
-          const imageUrl = await uploadProductImage(capturedImage, newProductId);
-          if (imageUrl) {
-            console.log('[BOTTLE-SCANNER] ✅ Photo uploaded, URL:', imageUrl);
-            const { error: imgUpdateError } = await supabase
-              .from('supplement_products')
-              .update({ image_url: imageUrl })
-              .eq('id', newProductId);
-            
-            if (imgUpdateError) {
-              console.error('[BOTTLE-SCANNER] ❌ Failed to save image_url to database:', imgUpdateError);
-            } else {
-              console.log('[BOTTLE-SCANNER] ✅ image_url saved to database');
-            }
-          } else {
-            console.error('[BOTTLE-SCANNER] ❌ Photo upload returned null URL');
-          }
-        }
       }
 
       setProductId(newProductId);
