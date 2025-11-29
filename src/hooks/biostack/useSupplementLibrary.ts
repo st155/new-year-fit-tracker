@@ -24,8 +24,11 @@ interface LibraryEntry {
     image_url: string | null;
     description: string | null;
     avg_rating: number | null;
+    benefits: string[] | null;
+    research_summary: string | null;
   };
   is_in_stack: boolean;
+  enrichment_status: 'enriched' | 'partial' | 'not_enriched';
 }
 
 export function useSupplementLibrary() {
@@ -50,11 +53,13 @@ export function useSupplementLibrary() {
             form,
             image_url,
             description,
-            avg_rating
+            avg_rating,
+            benefits,
+            research_summary
           )
         `)
         .eq('user_id', user.id)
-        .order('scan_count', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
@@ -67,10 +72,23 @@ export function useSupplementLibrary() {
 
       const stackProductIds = new Set(stackItems?.map(item => item.product_id) || []);
 
-      return library?.map(entry => ({
-        ...entry,
-        is_in_stack: stackProductIds.has(entry.product_id)
-      })) as LibraryEntry[];
+      return library?.map(entry => {
+        // Determine enrichment status
+        const product = entry.supplement_products;
+        let enrichment_status: 'enriched' | 'partial' | 'not_enriched' = 'not_enriched';
+        
+        if (product.description && product.benefits && product.research_summary) {
+          enrichment_status = 'enriched';
+        } else if (product.description || product.benefits) {
+          enrichment_status = 'partial';
+        }
+
+        return {
+          ...entry,
+          is_in_stack: stackProductIds.has(entry.product_id),
+          enrichment_status
+        };
+      }) as LibraryEntry[];
     },
   });
 }

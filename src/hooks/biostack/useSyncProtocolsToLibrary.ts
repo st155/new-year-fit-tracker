@@ -1,0 +1,67 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export function useSyncProtocolsToLibrary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      console.log('[SYNC-PROTOCOLS] Starting sync...');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get all protocol items
+      const { data: protocolItems, error: itemsError } = await supabase
+        .from('protocol_items')
+        .select(`
+          product_id,
+          protocols!inner (
+            user_id,
+            is_active
+          )
+        `)
+        .eq('protocols.user_id', user.id)
+        .eq('protocols.is_active', true);
+
+      if (itemsError) throw itemsError;
+
+      console.log('[SYNC-PROTOCOLS] Found protocol items:', protocolItems?.length);
+
+      if (!protocolItems || protocolItems.length === 0) {
+        return { synced: 0, message: 'No protocol items to sync' };
+      }
+
+      // Sync each item to library
+      let syncedCount = 0;
+      for (const item of protocolItems) {
+        const { error: syncError } = await supabase
+          .from('user_supplement_library')
+          .upsert({
+            user_id: user.id,
+            product_id: item.product_id,
+            source: 'protocol',
+            scan_count: 0,
+          }, { onConflict: 'user_id,product_id' });
+
+        if (!syncError) {
+          syncedCount++;
+        } else {
+          console.error('[SYNC-PROTOCOLS] Error syncing item:', syncError);
+        }
+      }
+
+      console.log('[SYNC-PROTOCOLS] ✅ Synced', syncedCount, 'items');
+      return { synced: syncedCount, message: `Synced ${syncedCount} supplements from protocols` };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+      toast.success(`✅ ${data.message}`);
+    },
+    onError: (error) => {
+      console.error('[SYNC-PROTOCOLS] Error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to sync protocols');
+    },
+  });
+}

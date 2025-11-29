@@ -213,14 +213,22 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         
         // 🆕 ALWAYS UPLOAD PHOTO for existing products
         if (capturedImage) {
-          console.log('[BOTTLE-SCANNER] Uploading photo for existing product...');
+          console.log('[BOTTLE-SCANNER] 📸 Uploading photo for existing product...');
           const imageUrl = await uploadProductImage(capturedImage, newProductId);
           if (imageUrl) {
-            await supabase
+            console.log('[BOTTLE-SCANNER] ✅ Photo uploaded, URL:', imageUrl);
+            const { error: imgUpdateError } = await supabase
               .from('supplement_products')
               .update({ image_url: imageUrl })
               .eq('id', newProductId);
-            console.log('[BOTTLE-SCANNER] ✅ Photo updated for existing product:', imageUrl);
+            
+            if (imgUpdateError) {
+              console.error('[BOTTLE-SCANNER] ❌ Failed to save image_url to database:', imgUpdateError);
+            } else {
+              console.log('[BOTTLE-SCANNER] ✅ image_url saved to database');
+            }
+          } else {
+            console.error('[BOTTLE-SCANNER] ❌ Photo upload returned null URL');
           }
         }
       } else {
@@ -252,14 +260,22 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
         // Upload captured image if available
         if (capturedImage) {
-          console.log('[BOTTLE-SCANNER] Uploading product image...');
+          console.log('[BOTTLE-SCANNER] 📸 Uploading product image for new product...');
           const imageUrl = await uploadProductImage(capturedImage, newProductId);
           if (imageUrl) {
-            await supabase
+            console.log('[BOTTLE-SCANNER] ✅ Photo uploaded, URL:', imageUrl);
+            const { error: imgUpdateError } = await supabase
               .from('supplement_products')
               .update({ image_url: imageUrl })
               .eq('id', newProductId);
-            console.log('[BOTTLE-SCANNER] ✅ Image saved:', imageUrl);
+            
+            if (imgUpdateError) {
+              console.error('[BOTTLE-SCANNER] ❌ Failed to save image_url to database:', imgUpdateError);
+            } else {
+              console.log('[BOTTLE-SCANNER] ✅ image_url saved to database');
+            }
+          } else {
+            console.error('[BOTTLE-SCANNER] ❌ Photo upload returned null URL');
           }
         }
       }
