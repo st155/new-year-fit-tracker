@@ -104,7 +104,9 @@ export function useTodaysSupplements() {
           name,
           protocol_items (
             id,
-            intake_time,
+            intake_times,
+            daily_dosage,
+            notes,
             supplement_products (
               id,
               name,
@@ -133,28 +135,46 @@ export function useTodaysSupplements() {
         .lte('scheduled_time', todayEnd.toISOString())
         .eq('status', 'taken');
 
-      const logsMap = new Map(logs?.map(log => [log.protocol_item_id, log]) || []);
+      // Group logs by protocol_item_id and intake_time (extracted from scheduled_time)
+      const logsMap = new Map<string, any>();
+      logs?.forEach(log => {
+        const scheduledTime = new Date(log.scheduled_time);
+        const hour = scheduledTime.getHours();
+        let intakeTime = 'morning';
+        if (hour >= 12 && hour < 17) intakeTime = 'afternoon';
+        else if (hour >= 17 && hour < 21) intakeTime = 'evening';
+        else if (hour >= 21 || hour < 6) intakeTime = 'before_sleep';
+        
+        const key = `${log.protocol_item_id}-${intakeTime}`;
+        logsMap.set(key, log);
+      });
 
-      // Transform to unified format
+      // Transform to unified format - expand intake_times array
       const items: UnifiedSupplementItem[] = [];
       protocols?.forEach(protocol => {
         protocol.protocol_items?.forEach((item: any) => {
           const product = item.supplement_products;
-          const log = logsMap.get(item.id);
+          const intakeTimes = item.intake_times || ['morning'];
           
-          items.push({
-            id: `${item.id}-${item.intake_time}`,
-            name: product?.name || 'Unknown',
-            brand: product?.brand,
-            dosage: `${product?.dosage_amount || 0}${product?.dosage_unit || 'mg'}`,
-            form: product?.form,
-            intakeTime: item.intake_time || 'morning',
-            source: 'protocol',
-            sourceId: item.id,
-            protocolName: protocol.name,
-            takenToday: !!log,
-            takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
-            productId: product?.id,
+          // Create separate entry for each intake time
+          intakeTimes.forEach((time: string) => {
+            const logKey = `${item.id}-${time}`;
+            const log = logsMap.get(logKey);
+            
+            items.push({
+              id: `protocol-${item.id}-${time}`,
+              name: product?.name || 'Unknown',
+              brand: product?.brand,
+              dosage: `${item.daily_dosage || product?.dosage_amount || 0}${product?.dosage_unit || 'mg'}`,
+              form: product?.form,
+              intakeTime: time,
+              source: 'protocol',
+              sourceId: item.id,
+              protocolName: protocol.name,
+              takenToday: !!log,
+              takenAt: log?.taken_at ? new Date(log.taken_at) : undefined,
+              productId: product?.id,
+            });
           });
         });
       });
@@ -201,6 +221,21 @@ export function useTodaysSupplements() {
 
       // Log protocol supplements
       for (const item of protocolItems) {
+        // Extract intake time from id (format: protocol-{itemId}-{time})
+        const parts = item.id.split('-');
+        const intakeTime = parts[parts.length - 1];
+        
+        // Map intake time to hour range for scheduled_time filtering
+        let hourStart = 6, hourEnd = 12;
+        if (intakeTime === 'afternoon') { hourStart = 12; hourEnd = 17; }
+        else if (intakeTime === 'evening') { hourStart = 17; hourEnd = 21; }
+        else if (intakeTime === 'before_sleep') { hourStart = 21; hourEnd = 24; }
+        
+        const scheduleStart = new Date(todayStart);
+        scheduleStart.setHours(hourStart, 0, 0, 0);
+        const scheduleEnd = new Date(todayStart);
+        scheduleEnd.setHours(hourEnd, 0, 0, 0);
+        
         const { error: logError } = await supabase
           .from('supplement_logs')
           .update({ 
@@ -210,8 +245,8 @@ export function useTodaysSupplements() {
           })
           .eq('protocol_item_id', item.sourceId)
           .eq('status', 'pending')
-          .gte('scheduled_time', todayStart.toISOString())
-          .lte('scheduled_time', todayEnd.toISOString())
+          .gte('scheduled_time', scheduleStart.toISOString())
+          .lte('scheduled_time', scheduleEnd.toISOString())
           .order('scheduled_time', { ascending: true })
           .limit(1);
 
