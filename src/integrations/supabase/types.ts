@@ -4636,6 +4636,8 @@ export type Database = {
           benefits: string[] | null
           brand: string
           category: string | null
+          certifications: string[] | null
+          country_of_origin: string | null
           created_at: string | null
           description: string | null
           dosage_amount: number
@@ -4645,16 +4647,21 @@ export type Database = {
           id: string
           image_url: string | null
           ingredients: string[] | null
+          label_benefits: string[] | null
+          label_description: string | null
           manufacturer: string | null
           manufacturer_info: Json | null
           name: string
           popularity_score: number | null
+          price: string | null
           recommended_daily_intake: string | null
           research_summary: string | null
           servings_per_container: number | null
+          storage_instructions: string | null
           total_ratings: number | null
           updated_at: string | null
           warnings: string | null
+          website: string | null
         }
         Insert: {
           ai_confidence_score?: number | null
@@ -4663,6 +4670,8 @@ export type Database = {
           benefits?: string[] | null
           brand: string
           category?: string | null
+          certifications?: string[] | null
+          country_of_origin?: string | null
           created_at?: string | null
           description?: string | null
           dosage_amount: number
@@ -4672,16 +4681,21 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string[] | null
+          label_benefits?: string[] | null
+          label_description?: string | null
           manufacturer?: string | null
           manufacturer_info?: Json | null
           name: string
           popularity_score?: number | null
+          price?: string | null
           recommended_daily_intake?: string | null
           research_summary?: string | null
           servings_per_container?: number | null
+          storage_instructions?: string | null
           total_ratings?: number | null
           updated_at?: string | null
           warnings?: string | null
+          website?: string | null
         }
         Update: {
           ai_confidence_score?: number | null
@@ -4690,6 +4704,8 @@ export type Database = {
           benefits?: string[] | null
           brand?: string
           category?: string | null
+          certifications?: string[] | null
+          country_of_origin?: string | null
           created_at?: string | null
           description?: string | null
           dosage_amount?: number
@@ -4699,16 +4715,21 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string[] | null
+          label_benefits?: string[] | null
+          label_description?: string | null
           manufacturer?: string | null
           manufacturer_info?: Json | null
           name?: string
           popularity_score?: number | null
+          price?: string | null
           recommended_daily_intake?: string | null
           research_summary?: string | null
           servings_per_container?: number | null
+          storage_instructions?: string | null
           total_ratings?: number | null
           updated_at?: string | null
           warnings?: string | null
+          website?: string | null
         }
         Relationships: []
       }

@@ -168,36 +168,72 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
               <p className="text-neutral-300 leading-relaxed">
                 {product.description || 'No description available.'}
               </p>
+              <Badge variant="outline" className="mt-2 text-xs border-blue-500/50 text-blue-400">
+                {(product as any).label_description ? '📷 From Label' : '🤖 AI Generated'}
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
-                <p className="text-xs text-neutral-500 mb-1">Serving Size</p>
+                <p className="text-xs text-neutral-500 mb-1">💊 Serving Size</p>
                 <p className="text-sm text-white font-medium">
                   {product.serving_size || 'N/A'} {product.serving_unit || ''}
                 </p>
               </div>
               <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
-                <p className="text-xs text-neutral-500 mb-1">Recommended</p>
+                <p className="text-xs text-neutral-500 mb-1">📦 Servings</p>
                 <p className="text-sm text-white font-medium">
-                  {product.recommended_dosage || 'See label'}
+                  {(product as any).servings_per_container || 'N/A'}
+                </p>
+              </div>
+              <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
+                <p className="text-xs text-neutral-500 mb-1">💰 Price</p>
+                <p className="text-sm text-white font-medium">
+                  {(product as any).price || 'N/A'}
                 </p>
               </div>
             </div>
+
+            {/* Certifications */}
+            {(product as any).certifications && (product as any).certifications.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-neutral-500">Certifications</p>
+                <div className="flex flex-wrap gap-2">
+                  {(product as any).certifications.map((cert: string, i: number) => (
+                    <Badge key={i} className="bg-green-500/20 text-green-400 border-green-500/50">
+                      🏅 {cert}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Storage Instructions */}
+            {(product as any).storage_instructions && (
+              <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
+                <p className="text-xs text-neutral-500 mb-1">Storage</p>
+                <p className="text-sm text-neutral-300">{(product as any).storage_instructions}</p>
+              </div>
+            )}
           </TabsContent>
 
           {/* Benefits Tab */}
           <TabsContent value="benefits" className="space-y-3 mt-4">
             {product.benefits && product.benefits.length > 0 ? (
-              product.benefits.map((benefit, index) => (
-                <div 
-                  key={index}
-                  className="flex items-start gap-3 bg-neutral-900 rounded-lg p-3 border border-neutral-800"
-                >
-                  <span className="text-green-400 mt-0.5">✓</span>
-                  <p className="text-sm text-neutral-300 flex-1">{benefit}</p>
-                </div>
-              ))
+              <>
+                {product.benefits.map((benefit, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-start gap-3 bg-neutral-900 rounded-lg p-3 border border-neutral-800"
+                  >
+                    <span className="text-green-400 mt-0.5">✓</span>
+                    <p className="text-sm text-neutral-300 flex-1">{benefit}</p>
+                  </div>
+                ))}
+                <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-400">
+                  {(product as any).label_benefits?.length > 0 ? '📷 From Label' : '🤖 AI Generated'}
+                </Badge>
+              </>
             ) : (
               <p className="text-neutral-500 text-sm">No benefits information available.</p>
             )}
@@ -214,43 +250,66 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
 
           {/* Manufacturer Tab */}
           <TabsContent value="manufacturer" className="space-y-4 mt-4">
-            {product.manufacturer_info ? (
-              <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-800 space-y-3">
-                {product.manufacturer_info.description && (
-                  <p className="text-sm text-neutral-300">
+            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-800 space-y-3">
+              {/* Brand Name */}
+              <div>
+                <p className="text-xs text-neutral-500 mb-1">🏭 Brand</p>
+                <p className="text-lg font-semibold text-white">{product.brand}</p>
+              </div>
+
+              {/* AI Description */}
+              {product.manufacturer_info?.description && (
+                <div className="pt-3 border-t border-neutral-800">
+                  <p className="text-sm text-neutral-300 leading-relaxed">
                     {product.manufacturer_info.description}
                   </p>
-                )}
-                
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-800">
-                  {product.manufacturer_info.country && (
-                    <div>
-                      <p className="text-xs text-neutral-500">Country</p>
-                      <p className="text-sm text-white">{product.manufacturer_info.country}</p>
-                    </div>
-                  )}
-                  {product.manufacturer_info.founded_year && (
-                    <div>
-                      <p className="text-xs text-neutral-500">Founded</p>
-                      <p className="text-sm text-white">{product.manufacturer_info.founded_year}</p>
-                    </div>
-                  )}
+                  <Badge variant="outline" className="mt-2 text-xs border-blue-500/50 text-blue-400">
+                    🤖 AI Generated
+                  </Badge>
                 </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-800">
+                {/* Country - prioritize label data */}
+                {((product as any).country_of_origin || product.manufacturer_info?.country) && (
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">📍 Country</p>
+                    <p className="text-sm text-white">
+                      {(product as any).country_of_origin || product.manufacturer_info.country}
+                    </p>
+                    <Badge variant="outline" className="mt-1 text-xs border-blue-500/50 text-blue-400">
+                      {(product as any).country_of_origin ? '📷 From Label' : '🤖 AI'}
+                    </Badge>
+                  </div>
+                )}
+                {product.manufacturer_info?.founded_year && (
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">🗓️ Founded</p>
+                    <p className="text-sm text-white">{product.manufacturer_info.founded_year}</p>
+                    <Badge variant="outline" className="mt-1 text-xs border-blue-500/50 text-blue-400">
+                      🤖 AI
+                    </Badge>
+                  </div>
+                )}
+              </div>
 
-                {product.manufacturer_info.website && (
+              {/* Website - prioritize label data */}
+              {((product as any).website || product.manufacturer_info?.website) && (
+                <div className="pt-3 border-t border-neutral-800">
                   <a 
-                    href={product.manufacturer_info.website}
+                    href={(product as any).website || product.manufacturer_info.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-green-400 hover:text-green-300 inline-flex items-center gap-1"
                   >
-                    Visit Website →
+                    🌐 Visit Website →
                   </a>
-                )}
-              </div>
-            ) : (
-              <p className="text-neutral-500 text-sm">No manufacturer information available.</p>
-            )}
+                  <Badge variant="outline" className="ml-2 text-xs border-blue-500/50 text-blue-400">
+                    {(product as any).website ? '📷 From Label' : '🤖 AI'}
+                  </Badge>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           {/* Community Tab */}

@@ -16,9 +16,16 @@ interface ExtractedData {
   dosage_per_serving: string;
   servings_per_container: number;
   form: string;
-  recommended_daily_intake?: string | null;
+  label_description?: string | null;
+  label_benefits?: string[] | null;
   ingredients?: string[] | null;
+  manufacturer_country?: string | null;
+  manufacturer_website?: string | null;
+  certifications?: string[] | null;
+  price?: string | null;
+  storage_instructions?: string | null;
   warnings?: string | null;
+  recommended_daily_intake?: string | null;
   expiration_info?: string | null;
 }
 
@@ -67,7 +74,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const visionPrompt = `Analyze this supplement bottle photo and extract ALL available information:
+    const visionPrompt = `Analyze this supplement bottle photo and extract ALL visible information from the label:
 
 REQUIRED FIELDS:
 1. BRAND: Manufacturer/brand name
@@ -76,11 +83,18 @@ REQUIRED FIELDS:
 4. SERVINGS_PER_CONTAINER: Total servings in the bottle (number)
 5. FORM: capsule/tablet/powder/liquid/gummy/softgel
 
-ADDITIONAL FIELDS (if visible on label):
-6. RECOMMENDED_DAILY_INTAKE: Manufacturer's usage instructions (e.g., "Take 1 capsule daily with food", "2 tablets twice daily")
-7. INGREDIENTS: List of active and inactive ingredients
-8. WARNINGS: Health warnings or contraindications
-9. EXPIRATION_INFO: Expiration date or "Best by" information
+EXTRACT FROM LABEL (if visible):
+6. LABEL_DESCRIPTION: Product description text from the bottle label
+7. LABEL_BENEFITS: Any health claims or benefits listed on the label (array)
+8. INGREDIENTS: Complete ingredients list (active + inactive)
+9. MANUFACTURER_COUNTRY: Country of origin ("Made in...", "Product of...")
+10. MANUFACTURER_WEBSITE: Website URL if visible on label
+11. CERTIFICATIONS: Quality certifications (GMP, NSF, Organic, Non-GMO, etc.)
+12. PRICE: Price if visible on label or price sticker
+13. STORAGE_INSTRUCTIONS: Storage recommendations ("Keep refrigerated", "Store in cool dry place")
+14. WARNINGS: Health warnings, allergens, or contraindications
+15. RECOMMENDED_DAILY_INTAKE: Usage instructions from manufacturer
+16. EXPIRATION_INFO: Expiration or "Best by" date
 
 Return ONLY valid JSON (no markdown):
 {
@@ -89,9 +103,16 @@ Return ONLY valid JSON (no markdown):
   "dosage_per_serving": "...",
   "servings_per_container": number,
   "form": "...",
-  "recommended_daily_intake": "..." or null,
+  "label_description": "..." or null,
+  "label_benefits": ["..."] or null,
   "ingredients": ["..."] or null,
+  "manufacturer_country": "..." or null,
+  "manufacturer_website": "..." or null,
+  "certifications": ["GMP", "NSF"] or null,
+  "price": "..." or null,
+  "storage_instructions": "..." or null,
   "warnings": "..." or null,
+  "recommended_daily_intake": "..." or null,
   "expiration_info": "..." or null
 }`;
 

@@ -210,6 +210,19 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       if (existingProduct) {
         console.log('[BOTTLE-SCANNER] Found existing product:', existingProduct.id);
         newProductId = existingProduct.id;
+        
+        // 🆕 ALWAYS UPLOAD PHOTO for existing products
+        if (capturedImage) {
+          console.log('[BOTTLE-SCANNER] Uploading photo for existing product...');
+          const imageUrl = await uploadProductImage(capturedImage, newProductId);
+          if (imageUrl) {
+            await supabase
+              .from('supplement_products')
+              .update({ image_url: imageUrl })
+              .eq('id', newProductId);
+            console.log('[BOTTLE-SCANNER] ✅ Photo updated for existing product:', imageUrl);
+          }
+        }
       } else {
         console.log('[BOTTLE-SCANNER] Creating new product...');
         const { data: newProduct, error: productError } = await supabase
@@ -314,13 +327,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         }
       }
 
-      // Start enrichment
-      console.log('[BOTTLE-SCANNER] Starting enrichment...');
+      // Start enrichment with label data
+      console.log('[BOTTLE-SCANNER] Starting enrichment with label data...');
       setStep('enriching');
       
       try {
         const { data: enrichData, error: enrichError } = await supabase.functions.invoke('enrich-supplement-info', {
-          body: { productId: newProductId }
+          body: { 
+            productId: newProductId,
+            labelData: extracted // Pass label data to enrichment
+          }
         });
 
         if (enrichError) {
