@@ -89,6 +89,35 @@ interface AIResponse {
   error?: string;
 }
 
+// Normalize form values to match database constraint
+function normalizeForm(rawForm: string | null | undefined): string {
+  if (!rawForm) return 'other';
+  
+  const form = rawForm.toLowerCase().trim();
+  
+  // Mapping different variants to standard values
+  if (form.includes('capsule') || form.includes('vcap') || form.includes('veggie cap')) {
+    return 'capsule';
+  }
+  if (form.includes('tablet') || form.includes('tab')) {
+    return 'tablet';
+  }
+  if (form.includes('powder')) {
+    return 'powder';
+  }
+  if (form.includes('liquid') || form.includes('drops') || form.includes('tincture')) {
+    return 'liquid';
+  }
+  if (form.includes('gummy') || form.includes('gummies')) {
+    return 'gummy';
+  }
+  if (form.includes('softgel') || form.includes('soft gel') || form.includes('gelcap')) {
+    return 'softgel';
+  }
+  
+  return 'other';
+}
+
 async function callGeminiWithRetry(
   url: string,
   options: RequestInit,
@@ -317,7 +346,7 @@ Return ONLY valid JSON (no markdown):
     const productData = {
       name: extracted.supplement_name,
       brand: extracted.brand,
-      form: extracted.form,
+      form: normalizeForm(extracted.form),
       dosage_amount: !isNaN(parsedDosageAmount) && parsedDosageAmount > 0 
         ? parsedDosageAmount 
         : 1,  // Default: 1 serving
