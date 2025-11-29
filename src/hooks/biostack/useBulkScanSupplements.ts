@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,7 +25,7 @@ export function useBulkScanSupplements() {
   const [items, setItems] = useState<BulkUploadItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, percentage: 0 });
-  const [cancelRequested, setCancelRequested] = useState(false);
+  const cancelRequestedRef = useRef(false);
 
   const addFiles = useCallback((fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -88,8 +88,9 @@ export function useBulkScanSupplements() {
     });
   };
 
-  const processSingleItem = async (item: BulkUploadItem): Promise<void> => {
-    console.log(`[BULK-SCAN] Processing item: ${item.file.name}`);
+  const processSingleItem = async (item: BulkUploadItem, retryCount = 0): Promise<void> => {
+    const MAX_RETRIES = 3;
+    console.log(`[BULK-SCAN] Processing item: ${item.file.name}${retryCount > 0 ? ` (retry ${retryCount}/${MAX_RETRIES})` : ''}`);
     
     try {
       // Compress image
@@ -135,13 +136,36 @@ export function useBulkScanSupplements() {
       ));
 
     } catch (error) {
+      // Check if it's a rate limit error and we have retries left
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isRateLimitError = errorMessage.includes('429') || 
+                              errorMessage.includes('rate') || 
+                              errorMessage.includes('quota') ||
+                              errorMessage.includes('too many requests');
+      
+      if (retryCount < MAX_RETRIES && isRateLimitError) {
+        const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+        console.log(`[BULK-SCAN] ⚠️ Rate limited, retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return processSingleItem(item, retryCount + 1);
+      }
+      
+      // Log detailed error
       console.error(`[BULK-SCAN] ❌ Error processing ${item.file.name}:`, error);
+      
+      // Set error status with detailed message
+      const detailedError = error instanceof Error 
+        ? error.message 
+        : typeof error === 'object' && error !== null
+          ? JSON.stringify(error)
+          : 'Processing failed';
+      
       setItems(prev => prev.map(i => 
         i.id === item.id 
           ? { 
               ...i, 
               status: 'error' as const, 
-              error: error instanceof Error ? error.message : 'Processing failed' 
+              error: detailedError
             }
           : i
       ));
@@ -152,14 +176,14 @@ export function useBulkScanSupplements() {
     if (isProcessing || items.length === 0) return;
     
     setIsProcessing(true);
-    setCancelRequested(false);
+    cancelRequestedRef.current = false;
     setProgress({ current: 0, total: items.length, percentage: 0 });
     
     console.log(`[BULK-SCAN] Starting bulk processing of ${items.length} items`);
     
     let processed = 0;
     for (const item of items) {
-      if (cancelRequested) {
+      if (cancelRequestedRef.current) {
         console.log('[BULK-SCAN] Processing cancelled by user');
         break;
       }
@@ -178,9 +202,9 @@ export function useBulkScanSupplements() {
           percentage: Math.round((processed / items.length) * 100),
         });
         
-        // Rate limiting: 2 seconds between requests
+        // Rate limiting: 3 seconds between requests
         if (processed < items.length) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
       }
     }
@@ -192,10 +216,10 @@ export function useBulkScanSupplements() {
     
     console.log(`[BULK-SCAN] Completed: ${successCount} success, ${errorCount} errors`);
     toast.success(`✅ Processed ${successCount} supplements${errorCount ? ` (${errorCount} errors)` : ''}`);
-  }, [items, isProcessing, cancelRequested]);
+  }, [items, isProcessing]);
 
   const cancelProcessing = useCallback(() => {
-    setCancelRequested(true);
+    cancelRequestedRef.current = true;
     console.log('[BULK-SCAN] Cancel requested');
   }, []);
 
@@ -207,7 +231,7 @@ export function useBulkScanSupplements() {
     });
     setItems([]);
     setProgress({ current: 0, total: 0, percentage: 0 });
-    setCancelRequested(false);
+    cancelRequestedRef.current = false;
   }, [items]);
 
   return {

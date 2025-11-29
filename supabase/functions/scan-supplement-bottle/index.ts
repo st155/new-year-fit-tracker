@@ -89,6 +89,40 @@ interface AIResponse {
   error?: string;
 }
 
+async function callGeminiWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 2
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // If rate limited, wait and retry
+      if (response.status === 429) {
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+          console.log(`[SCAN-RETRY] Rate limited (429), waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      const delay = Math.pow(2, attempt) * 1000;
+      console.log(`[SCAN-RETRY] Request failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw new Error('Max retries exceeded');
+}
+
 serve(async (req) => {
   const requestId = crypto.randomUUID().slice(0, 8);
   console.log(`[SCAN-${requestId}] ====== NEW REQUEST ======`);
@@ -177,30 +211,34 @@ Return ONLY valid JSON (no markdown):
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
 
-    const visionResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+    const visionResponse = await callGeminiWithRetry(
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: visionPrompt },
+                { 
+                  type: 'image_url', 
+                  image_url: { url: imageBase64 } 
+                }
+              ]
+            }
+          ],
+          max_tokens: 1000,
+        }),
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: visionPrompt },
-              { 
-                type: 'image_url', 
-                image_url: { url: imageBase64 } 
-              }
-            ]
-          }
-        ],
-        max_tokens: 1000,
-      }),
-    });
+      2 // max 2 retries (3 total attempts)
+    );
 
     clearTimeout(timeoutId);
 
