@@ -44,12 +44,25 @@ Deno.serve(async (req) => {
 
     if (stackError) throw stackError;
 
-    const productIds = [...new Set(stackItems?.map(item => item.product_id) || [])];
+    // Get all unique products from user's protocol items
+    const { data: protocolItems, error: protocolError } = await supabaseClient
+      .from('protocol_items')
+      .select('product_id, protocols!inner(user_id)')
+      .eq('protocols.user_id', user.id);
+
+    if (protocolError) throw protocolError;
+
+    const stackProductIds = [...new Set(stackItems?.map(item => item.product_id) || [])];
+    const protocolProductIds = [...new Set(protocolItems?.map(item => item.product_id) || [])];
+    
+    // Combine and dedupe all product IDs
+    const allProductIds = [...new Set([...stackProductIds, ...protocolProductIds])];
+    
     let addedCount = 0;
     let skippedCount = 0;
 
     // For each product, check if it exists in library
-    for (const productId of productIds) {
+    for (const productId of allProductIds) {
       const { data: existing } = await supabaseClient
         .from('user_supplement_library')
         .select('id')
@@ -58,13 +71,18 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!existing) {
+        // Determine source based on where product came from
+        const isFromProtocol = protocolProductIds.includes(productId);
+        const source = isFromProtocol ? 'protocol' : 'manual';
+        
         // Add to library
         const { error: insertError } = await supabaseClient
           .from('user_supplement_library')
           .insert({
             user_id: user.id,
             product_id: productId,
-            scan_count: 1,
+            scan_count: 0,
+            source: source,
           });
 
         if (insertError) {
@@ -82,7 +100,7 @@ Deno.serve(async (req) => {
         success: true,
         addedCount,
         skippedCount,
-        totalProcessed: productIds.length,
+        totalProcessed: allProductIds.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

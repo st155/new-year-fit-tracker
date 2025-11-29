@@ -5896,6 +5896,7 @@ export type Database = {
           notes: string | null
           product_id: string
           scan_count: number | null
+          source: string | null
           tags: string[] | null
           updated_at: string | null
           user_id: string
@@ -5908,6 +5909,7 @@ export type Database = {
           notes?: string | null
           product_id: string
           scan_count?: number | null
+          source?: string | null
           tags?: string[] | null
           updated_at?: string | null
           user_id: string
@@ -5920,6 +5922,7 @@ export type Database = {
           notes?: string | null
           product_id?: string
           scan_count?: number | null
+          source?: string | null
           tags?: string[] | null
           updated_at?: string | null
           user_id?: string

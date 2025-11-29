@@ -309,6 +309,34 @@ export function useSupplementProtocol(userId: string | undefined) {
           throw itemError;
         }
         console.log(`✅ [Supplement ${i+1}] Protocol item created successfully`);
+
+        // Sync to library with source='protocol'
+        console.log(`🔵 [Supplement ${i+1}] Syncing to library...`);
+        const { data: existingLibraryEntry } = await supabase
+          .from('user_supplement_library')
+          .select('id, source')
+          .eq('user_id', userId)
+          .eq('product_id', productId)
+          .maybeSingle();
+
+        if (!existingLibraryEntry) {
+          const { error: libraryError } = await supabase
+            .from('user_supplement_library')
+            .insert({
+              user_id: userId,
+              product_id: productId,
+              scan_count: 0,
+              source: 'protocol',
+            });
+
+          if (libraryError) {
+            console.warn(`⚠️ [Supplement ${i+1}] Library sync failed:`, libraryError);
+          } else {
+            console.log(`✅ [Supplement ${i+1}] Added to library with source='protocol'`);
+          }
+        } else {
+          console.log(`✅ [Supplement ${i+1}] Already in library (source: ${existingLibraryEntry.source})`);
+        }
       }
 
       console.log('🎉 [Protocol] All supplements processed successfully');
