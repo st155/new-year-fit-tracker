@@ -8,7 +8,7 @@ import { ProtocolCard } from "./ProtocolCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Zap, Sparkles, Clock, Sun, Sunset, Moon, Pill, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { BottleScanner } from "./BottleScanner";
+import { BulkPhotoUploader } from "./BulkPhotoUploader";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { useLowStockAlerts } from "@/hooks/biostack/useLowStockAlerts";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
@@ -24,7 +24,7 @@ export function TheStackView() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
 
   // Protocol management
@@ -221,7 +221,7 @@ export function TheStackView() {
         <Button 
           variant="outline"
           size="sm"
-          onClick={() => setIsScannerOpen(true)}
+          onClick={() => setIsBulkUploaderOpen(true)}
           className="w-full sm:w-auto border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
         >
           <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -387,7 +387,7 @@ export function TheStackView() {
           <div className="flex justify-center gap-3">
             <Button 
               variant="outline" 
-              onClick={() => setIsScannerOpen(true)}
+              onClick={() => setIsBulkUploaderOpen(true)}
             >
               <Camera className="h-4 w-4 mr-2" />
               Scan Bottle
@@ -396,13 +396,13 @@ export function TheStackView() {
         </div>
       )}
 
-      {/* Bottle Scanner Modal */}
-      <BottleScanner 
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onSuccess={() => {
+      {/* Bulk Photo Uploader */}
+      <BulkPhotoUploader 
+        open={isBulkUploaderOpen}
+        onOpenChange={setIsBulkUploaderOpen}
+        onComplete={() => {
           queryClient.invalidateQueries({ queryKey: ['user-stack'] });
-          toast.success("✅ Supplement added to your stack!");
+          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
         }}
       />
 
