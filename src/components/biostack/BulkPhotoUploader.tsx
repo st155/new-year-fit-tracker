@@ -257,6 +257,10 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                         src={item.preview}
                         alt="Supplement"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('[BULK-UPLOAD] Preview failed to load:', item.file.name);
+                          (e.target as HTMLImageElement).src = '/placeholder.svg';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                         {getStatusIcon(item)}
