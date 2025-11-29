@@ -139,24 +139,47 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                     Queue ({items.filter(i => i.status === 'pending').length} pending)
                   </h3>
                   {!isProcessing && (
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="add-more-files"
-                    />
-                  )}
-                  {!isProcessing && (
-                    <label htmlFor="add-more-files">
-                      <Button variant="outline" size="sm" asChild>
-                        <span className="cursor-pointer">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Add More
-                        </span>
-                      </Button>
-                    </label>
+                    <div className="flex gap-2">
+                      {/* Desktop: Add more files */}
+                      <div className="hidden md:block">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="add-more-files"
+                        />
+                        <label htmlFor="add-more-files">
+                          <Button variant="outline" size="sm" asChild>
+                            <span className="cursor-pointer">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Add More
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
+                      
+                      {/* Mobile: Take Another Photo */}
+                      <div className="md:hidden">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="take-another-photo"
+                        />
+                        <label htmlFor="take-another-photo">
+                          <Button variant="outline" size="sm" asChild>
+                            <span className="cursor-pointer">
+                              <Camera className="h-4 w-4 mr-2" />
+                              Take Another
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
                   )}
                 </div>
 
