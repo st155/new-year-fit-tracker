@@ -9,6 +9,7 @@ import { BottleScanner } from "./BottleScanner";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { CompactSupplementChip } from "./CompactSupplementChip";
 import { ProtocolManagementModal } from "./ProtocolManagementModal";
+import { ProductPhotoUploader } from "./ProductPhotoUploader";
 
 const TIME_GROUPS = [
   { 
@@ -43,6 +44,7 @@ export function TodaysSupplements() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
   const [isManageProtocolsOpen, setIsManageProtocolsOpen] = useState(false);
+  const [photoUploaderProduct, setPhotoUploaderProduct] = useState<{ id: string; name: string } | null>(null);
 
   const handleToggleItem = (itemId: string) => {
     const newSelected = new Set(selectedItems);
@@ -197,6 +199,7 @@ export function TodaysSupplements() {
                       item={item}
                       isSelected={selectedItems.has(item.id)}
                       onToggle={() => handleToggleItem(item.id)}
+                      onAddPhoto={(productId, productName) => setPhotoUploaderProduct({ id: productId, name: productName })}
                     />
                   ))}
                 </div>
@@ -270,6 +273,15 @@ export function TodaysSupplements() {
         open={isAIGeneratorOpen}
         onOpenChange={setIsAIGeneratorOpen}
       />
+      
+      {photoUploaderProduct && (
+        <ProductPhotoUploader
+          isOpen={!!photoUploaderProduct}
+          onClose={() => setPhotoUploaderProduct(null)}
+          productId={photoUploaderProduct.id}
+          productName={photoUploaderProduct.name}
+        />
+      )}
     </div>
   );
 }

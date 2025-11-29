@@ -109,6 +109,9 @@ export function ProductPhotoUploader({ isOpen, onClose, productId, productName }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+      queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
+      queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
+      queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
       toast({
         title: '✅ Photo uploaded',
         description: `Photo added to ${productName}`,

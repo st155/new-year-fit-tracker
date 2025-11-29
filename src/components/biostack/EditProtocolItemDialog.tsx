@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Save } from 'lucide-react';
+import { Save, Camera, Pill } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { ProductPhotoUploader } from './ProductPhotoUploader';
 
 interface EditProtocolItemDialogProps {
   item: any;
@@ -28,6 +29,7 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
   const [dailyDosage, setDailyDosage] = useState(item.daily_dosage?.toString() || '1');
   const [dosageUnit, setDosageUnit] = useState(item.dosage_unit || 'mg');
   const [intakeTimes, setIntakeTimes] = useState<string[]>(item.intake_times || []);
+  const [isPhotoUploaderOpen, setIsPhotoUploaderOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -72,15 +74,43 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
   });
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-neutral-950 border-yellow-500/30">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            Edit: {item.supplement_products?.name || 'Supplement'}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-lg bg-neutral-950 border-yellow-500/30">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Edit: {item.supplement_products?.name || 'Supplement'}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6">
+          <div className="space-y-6">
+            {/* Product Photo */}
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-lg overflow-hidden bg-neutral-800 relative group">
+                {item.supplement_products?.image_url ? (
+                  <img 
+                    src={item.supplement_products.image_url} 
+                    alt={item.supplement_products.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <>
+                    <div className="w-full h-full flex items-center justify-center bg-green-500/10">
+                      <Pill className="h-12 w-12 text-green-500/50" />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setIsPhotoUploaderOpen(true)}
+                      className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-0"
+                    >
+                      <Camera className="h-6 w-6 text-white" />
+                      <span className="text-xs text-white">Add Photo</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           {/* Dosage */}
           <div className="space-y-4">
             <div>
@@ -143,10 +173,19 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
             className="w-full bg-green-500 hover:bg-green-600"
           >
             <Save className="h-4 w-4 mr-2" />
-            {updateItemMutation.isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          {updateItemMutation.isPending ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+
+  {/* Photo Uploader */}
+  <ProductPhotoUploader
+    isOpen={isPhotoUploaderOpen}
+    onClose={() => setIsPhotoUploaderOpen(false)}
+    productId={item.product_id}
+    productName={item.supplement_products?.name || 'Supplement'}
+  />
+  </>
   );
 }
