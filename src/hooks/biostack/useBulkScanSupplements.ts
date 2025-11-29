@@ -8,6 +8,7 @@ export interface BulkUploadItem {
   file: File;
   preview: string;
   status: 'pending' | 'processing' | 'success' | 'error';
+  isHeic?: boolean; // Flag for server-side HEIC processing
   result?: {
     name: string;
     brand: string;
@@ -126,41 +127,33 @@ export function useBulkScanSupplements() {
       return;
     }
     
-    // Process files: convert HEIC to JPEG, then create previews
+    // Process files: skip client-side HEIC conversion, send to server
     const newItems: BulkUploadItem[] = await Promise.all(
       validFiles.map(async (originalFile) => {
-        let file = originalFile;
-        let conversionError: string | undefined;
-        
-        // Convert HEIC to JPEG if needed
+        // For HEIC files, don't convert - server will handle it
         if (isHeicFile(originalFile)) {
-          try {
-            file = await convertHeicToJpeg(originalFile);
-          } catch (err) {
-            console.error(`[BULK-SCAN] ❌ HEIC conversion failed for ${originalFile.name}:`, err);
-            conversionError = `HEIC conversion failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
-          }
+          console.log(`[BULK-SCAN] HEIC file detected, will convert on server: ${originalFile.name}`);
+          return {
+            id: `${Date.now()}-${Math.random()}`,
+            file: originalFile,
+            preview: PILL_PLACEHOLDER, // Can't preview HEIC in browser
+            status: 'pending' as const,
+            isHeic: true, // Flag for server processing
+          };
         }
         
+        // For other formats, create preview normally
         return {
           id: `${Date.now()}-${Math.random()}`,
-          file,
-          preview: await createPreview(conversionError ? originalFile : file),
-          // Mark as error immediately if conversion failed
-          status: conversionError ? 'error' as const : 'pending' as const,
-          error: conversionError,
+          file: originalFile,
+          preview: await createPreview(originalFile),
+          status: 'pending' as const,
         };
       })
     );
     
-    // Count failed conversions for user feedback
-    const failedCount = newItems.filter(i => i.status === 'error').length;
-    if (failedCount > 0) {
-      toast.error(`⚠️ ${failedCount} file(s) could not be converted from HEIC`);
-    }
-    
     setItems(prev => [...prev, ...newItems]);
-    console.log(`[BULK-SCAN] Added ${validFiles.length} files with previews (${failedCount} errors)`);
+    console.log(`[BULK-SCAN] Added ${validFiles.length} files (${newItems.filter(i => i.isHeic).length} HEIC files will be processed on server)`);
   }, []);
 
   const removeItem = useCallback((id: string) => {
@@ -174,6 +167,19 @@ export function useBulkScanSupplements() {
   }, []);
 
   const compressImage = async (file: File): Promise<string> => {
+    // For HEIC files, read as base64 without browser processing
+    // Server will handle conversion via Gemini Vision (supports HEIC natively)
+    if (isHeicFile(file)) {
+      console.log(`[BULK-SCAN] Reading HEIC file as base64 for server: ${file.name}`);
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error(`Failed to read HEIC file: ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // For JPEG/PNG/WebP, compress with browser canvas
     return new Promise((resolve, reject) => {
       // Timeout after 30 seconds
       const timeout = setTimeout(() => {
