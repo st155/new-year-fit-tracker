@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import heic2any from 'heic2any';
 
 export interface BulkUploadItem {
   id: string;
@@ -27,7 +28,41 @@ export function useBulkScanSupplements() {
   const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, percentage: 0 });
   const cancelRequestedRef = useRef(false);
 
-  // Create preview by converting to JPEG via Canvas (handles HEIC and other formats)
+  // Inline SVG placeholder (always works, no external file dependency)
+  const PILL_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect fill="#1a1a1a" width="100" height="100" rx="8"/>
+  <text x="50" y="60" text-anchor="middle" font-size="40">💊</text>
+</svg>
+  `)}`;
+
+  // Helper to detect HEIC files
+  const isHeicFile = (file: File): boolean => {
+    return file.type === 'image/heic' || 
+           file.type === 'image/heif' ||
+           file.name.toLowerCase().endsWith('.heic') ||
+           file.name.toLowerCase().endsWith('.heif');
+  };
+
+  // Convert HEIC to JPEG blob
+  const convertHeicToJpeg = async (file: File): Promise<File> => {
+    console.log(`[BULK-SCAN] 🔄 Converting HEIC to JPEG: ${file.name}`);
+    
+    const blob = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.8,
+    }) as Blob;
+    
+    // Create new File from blob with .jpg extension
+    const newFileName = file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg');
+    const jpegFile = new File([blob], newFileName, { type: 'image/jpeg' });
+    
+    console.log(`[BULK-SCAN] ✅ Converted: ${file.name} → ${newFileName} (${Math.round(jpegFile.size / 1024)}KB)`);
+    return jpegFile;
+  };
+
+  // Create preview by converting to JPEG via Canvas
   const createPreview = async (file: File): Promise<string> => {
     return new Promise((resolve) => {
       console.log(`[BULK-SCAN] Creating preview for: ${file.name}, type: ${file.type}, size: ${file.size}`);
@@ -55,7 +90,7 @@ export function useBulkScanSupplements() {
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
         console.error(`[BULK-SCAN] ❌ Failed to create preview for: ${file.name}`);
-        resolve('/placeholder.svg'); // Fallback
+        resolve(PILL_PLACEHOLDER); // Inline SVG fallback
       };
       
       img.src = objectUrl;
@@ -66,14 +101,27 @@ export function useBulkScanSupplements() {
     const files = Array.from(fileList);
     console.log(`[BULK-SCAN] Adding ${files.length} files...`);
     
-    // Create items with async preview conversion
+    // Process files: convert HEIC to JPEG, then create previews
     const newItems: BulkUploadItem[] = await Promise.all(
-      files.map(async (file) => ({
-        id: `${Date.now()}-${Math.random()}`,
-        file,
-        preview: await createPreview(file), // Async JPEG conversion
-        status: 'pending' as const,
-      }))
+      files.map(async (originalFile) => {
+        // Convert HEIC to JPEG if needed
+        let file = originalFile;
+        if (isHeicFile(originalFile)) {
+          try {
+            file = await convertHeicToJpeg(originalFile);
+          } catch (err) {
+            console.error(`[BULK-SCAN] ❌ HEIC conversion failed for ${originalFile.name}:`, err);
+            // Keep original file, will fail later with clear error
+          }
+        }
+        
+        return {
+          id: `${Date.now()}-${Math.random()}`,
+          file, // Use converted file (or original if not HEIC)
+          preview: await createPreview(file),
+          status: 'pending' as const,
+        };
+      })
     );
     
     setItems(prev => [...prev, ...newItems]);
@@ -129,6 +177,12 @@ export function useBulkScanSupplements() {
   };
 
   const processSingleItem = async (item: BulkUploadItem, retryCount = 0): Promise<void> => {
+    // Check cancellation BEFORE starting
+    if (cancelRequestedRef.current) {
+      console.log(`[BULK-SCAN] ⏹️ Cancelled before processing: ${item.file.name}`);
+      return;
+    }
+    
     const MAX_RETRIES = 3;
     console.log(`[BULK-SCAN] Processing item: ${item.file.name}${retryCount > 0 ? ` (retry ${retryCount}/${MAX_RETRIES})` : ''}`);
     
@@ -196,6 +250,12 @@ export function useBulkScanSupplements() {
         errorMessage = 'Processing failed';
       }
       
+      // Check cancellation BEFORE retry
+      if (cancelRequestedRef.current) {
+        console.log(`[BULK-SCAN] ⏹️ Cancelled during error handling: ${item.file.name}`);
+        return;
+      }
+      
       // Check for rate limit, timeout, or network errors that should retry
       const shouldRetry = errorMessage.includes('429') || 
                           errorMessage.includes('rate') ||
@@ -255,8 +315,9 @@ export function useBulkScanSupplements() {
           percentage: Math.round((processed / items.length) * 100),
         });
         
-        // Rate limiting: 5 seconds between requests
-        if (processed < items.length) {
+        // Rate limiting: 5 seconds between requests with cancellation check
+        if (processed < items.length && !cancelRequestedRef.current) {
+          console.log(`[BULK-SCAN] ⏱️ Rate limiting: waiting 5s before next item...`);
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
