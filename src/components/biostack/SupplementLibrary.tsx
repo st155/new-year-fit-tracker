@@ -353,15 +353,7 @@ export function SupplementLibrary() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-neutral-950 border-blue-500/50">
           {viewProduct && (
             <SupplementInfoCard
-              product={{
-                id: viewProduct.id,
-                name: viewProduct.name,
-                brand: viewProduct.brand,
-                form: viewProduct.form,
-                image_url: viewProduct.image_url,
-                description: viewProduct.description,
-                avg_rating: viewProduct.avg_rating,
-              }}
+              product={viewProduct}
             />
           )}
         </DialogContent>
