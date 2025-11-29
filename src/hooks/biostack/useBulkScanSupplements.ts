@@ -27,17 +27,57 @@ export function useBulkScanSupplements() {
   const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, percentage: 0 });
   const cancelRequestedRef = useRef(false);
 
-  const addFiles = useCallback((fileList: FileList | File[]) => {
+  // Create preview by converting to JPEG via Canvas (handles HEIC and other formats)
+  const createPreview = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      console.log(`[BULK-SCAN] Creating preview for: ${file.name}, type: ${file.type}, size: ${file.size}`);
+      
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 200; // Preview size
+        const scale = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to JPEG data URL (works everywhere)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        URL.revokeObjectURL(objectUrl); // Free memory
+        console.log(`[BULK-SCAN] ✅ Preview created for: ${file.name}`);
+        resolve(dataUrl);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        console.error(`[BULK-SCAN] ❌ Failed to create preview for: ${file.name}`);
+        resolve('/placeholder.svg'); // Fallback
+      };
+      
+      img.src = objectUrl;
+    });
+  };
+
+  const addFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
-    const newItems: BulkUploadItem[] = files.map(file => ({
-      id: `${Date.now()}-${Math.random()}`,
-      file,
-      preview: URL.createObjectURL(file),
-      status: 'pending' as const,
-    }));
+    console.log(`[BULK-SCAN] Adding ${files.length} files...`);
+    
+    // Create items with async preview conversion
+    const newItems: BulkUploadItem[] = await Promise.all(
+      files.map(async (file) => ({
+        id: `${Date.now()}-${Math.random()}`,
+        file,
+        preview: await createPreview(file), // Async JPEG conversion
+        status: 'pending' as const,
+      }))
+    );
     
     setItems(prev => [...prev, ...newItems]);
-    console.log(`[BULK-SCAN] Added ${files.length} files to queue`);
+    console.log(`[BULK-SCAN] Added ${files.length} files with previews`);
   }, []);
 
   const removeItem = useCallback((id: string) => {
