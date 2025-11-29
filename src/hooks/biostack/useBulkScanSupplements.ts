@@ -238,7 +238,7 @@ export function useBulkScanSupplements() {
     
     let processedFile = file;
     
-    // For HEIC files, convert to JPEG first using heic2any
+    // For HEIC files, try converting to JPEG first using heic2any
     if (isHeicFile(file)) {
       console.log('[BULK-SCAN] Converting HEIC to JPEG...');
       try {
@@ -252,10 +252,20 @@ export function useBulkScanSupplements() {
         const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
         processedFile = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
         console.log(`[BULK-SCAN] ✅ Converted to JPEG: ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
-      } catch (error) {
-        console.error('[BULK-SCAN] ❌ HEIC conversion failed:', error);
-        toast.error(`Failed to convert ${file.name}. Try using JPEG.`);
-        throw error;
+      } catch (heicError) {
+        // heic2any failed - send raw HEIC to Gemini (it supports HEIC natively)
+        console.log(`[BULK-SCAN] ⚠️ heic2any failed, sending raw HEIC to Gemini (native support)`);
+        toast.info(`Processing ${file.name} as HEIC (iPhone format)`);
+        
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            console.log(`[BULK-SCAN] ✅ Raw HEIC ready for Gemini`);
+            resolve(reader.result as string);
+          };
+          reader.onerror = () => reject(new Error('Failed to read HEIC file'));
+          reader.readAsDataURL(file);
+        });
       }
     }
     
