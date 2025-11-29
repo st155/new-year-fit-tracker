@@ -259,7 +259,13 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           console.error('[BULK-UPLOAD] Preview failed to load:', item.file.name);
-                          (e.target as HTMLImageElement).src = '/placeholder.svg';
+                          // Inline SVG placeholder (matches hook)
+                          (e.target as HTMLImageElement).src = `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect fill="#1a1a1a" width="100" height="100" rx="8"/>
+  <text x="50" y="60" text-anchor="middle" font-size="40">💊</text>
+</svg>
+                          `)}`;
                         }}
                       />
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
