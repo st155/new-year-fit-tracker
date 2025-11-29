@@ -86,8 +86,8 @@ export function useTodaysSupplements() {
           const log = logsMap.get(item.id);
           const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
           const timeStatus = calculateTimeStatus(
-            item.specific_time,
-            item.time_window_minutes || 60,
+            (item as any).specific_time,
+            (item as any).time_window_minutes || 60,
             takenAt
           );
           
@@ -104,9 +104,9 @@ export function useTodaysSupplements() {
             takenAt,
             productId: item.product_id || undefined,
             imageUrl: product?.image_url,
-            scheduledTime: item.specific_time,
-            intakeInstruction: item.intake_instruction,
-            timeWindowMinutes: item.time_window_minutes || 60,
+            scheduledTime: (item as any).specific_time,
+            intakeInstruction: (item as any).intake_instruction,
+            timeWindowMinutes: (item as any).time_window_minutes || 60,
             ...timeStatus,
           });
         });
@@ -189,8 +189,8 @@ export function useTodaysSupplements() {
             const log = logsMap.get(logKey);
             const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
             const timeStatus = calculateTimeStatus(
-              item.specific_time,
-              item.time_window_minutes || 60,
+              (item as any).specific_time,
+              (item as any).time_window_minutes || 60,
               takenAt
             );
             
@@ -208,9 +208,9 @@ export function useTodaysSupplements() {
               takenAt,
               productId: product?.id,
               imageUrl: product?.image_url,
-              scheduledTime: item.specific_time,
-              intakeInstruction: item.intake_instruction,
-              timeWindowMinutes: item.time_window_minutes || 60,
+              scheduledTime: (item as any).specific_time,
+              intakeInstruction: (item as any).intake_instruction,
+              timeWindowMinutes: (item as any).time_window_minutes || 60,
               ...timeStatus,
             });
           });
