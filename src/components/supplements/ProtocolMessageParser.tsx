@@ -314,6 +314,42 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
         }
       });
 
+      // 🆕 AUTO-SYNC PROTOCOL ITEMS TO LIBRARY
+      console.log('[PROTOCOL-PARSER] Syncing protocol items to library...');
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        // Fetch all protocol items for the newly created protocol
+        const { data: protocolData } = await supabase
+          .from('protocols')
+          .select('id')
+          .eq('name', protocolName)
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (protocolData) {
+          const { data: items } = await supabase
+            .from('protocol_items')
+            .select('product_id')
+            .eq('protocol_id', protocolData.id);
+
+          if (items && items.length > 0) {
+            for (const item of items) {
+              await supabase
+                .from('user_supplement_library')
+                .upsert({
+                  user_id: currentUser.id,
+                  product_id: item.product_id,
+                  source: 'protocol',
+                  scan_count: 0,
+                }, { onConflict: 'user_id,product_id' });
+            }
+            console.log('[PROTOCOL-PARSER] ✅ Synced', items.length, 'items to library');
+          }
+        }
+      }
+
       toast({
         title: "✅ Протокол создан и активирован!",
         description: `${parsedSupplements.length} добавок добавлено. Протокол активен.`

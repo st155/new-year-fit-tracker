@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productId } = await req.json();
+    const { productId, labelData } = await req.json();
     
     if (!productId) {
       throw new Error('Product ID is required');
@@ -31,21 +31,50 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    // Check if already enriched
+    console.log(`[ENRICH] Enriching product: ${product.name} by ${product.brand}`);
+    console.log('[ENRICH] Label data received:', !!labelData);
+
+    // Update product with label data first (if provided)
+    if (labelData) {
+      const labelUpdates: any = {};
+      if (labelData.label_description) labelUpdates.label_description = labelData.label_description;
+      if (labelData.label_benefits) labelUpdates.label_benefits = labelData.label_benefits;
+      if (labelData.certifications) labelUpdates.certifications = labelData.certifications;
+      if (labelData.price) labelUpdates.price = labelData.price;
+      if (labelData.storage_instructions) labelUpdates.storage_instructions = labelData.storage_instructions;
+      if (labelData.manufacturer_country) labelUpdates.country_of_origin = labelData.manufacturer_country;
+      if (labelData.manufacturer_website) labelUpdates.website = labelData.manufacturer_website;
+
+      if (Object.keys(labelUpdates).length > 0) {
+        await supabase
+          .from('supplement_products')
+          .update(labelUpdates)
+          .eq('id', productId);
+        console.log('[ENRICH] ✅ Label data saved:', Object.keys(labelUpdates));
+      }
+    }
+
+    // Check if already enriched with AI data
     if (product.description && product.benefits && product.research_summary) {
-      console.log(`[ENRICH] Product ${productId} already enriched, returning cached data`);
+      console.log(`[ENRICH] Product ${productId} already AI-enriched, returning cached data`);
+      
+      // Fetch updated product with label data
+      const { data: updatedProduct } = await supabase
+        .from('supplement_products')
+        .select('*')
+        .eq('id', productId)
+        .single();
+
       return new Response(JSON.stringify({ 
         success: true, 
         cached: true,
-        product 
+        product: updatedProduct 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`[ENRICH] Enriching product: ${product.name} by ${product.brand}`);
-
-    // Call Lovable AI Gateway for enrichment
+    // Call Lovable AI Gateway for enrichment (only for data NOT on label)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -55,16 +84,19 @@ serve(async (req) => {
 
 IMPORTANT: Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
 {
-  "description": "2-3 sentence comprehensive description",
-  "benefits": ["benefit1", "benefit2", "benefit3"],
-  "research_summary": "Paragraph about scientific research and evidence",
+  "description": "2-3 sentence comprehensive description (only if not provided from label)",
+  "benefits": ["benefit1", "benefit2", "benefit3"] (only if not provided from label),
+  "research_summary": "Paragraph about scientific research and evidence (ALWAYS generate this)",
   "manufacturer_info": {
-    "country": "Country of origin",
+    "country": "Country of origin (if not from label)",
     "founded_year": 2020,
     "description": "About the manufacturer",
-    "website": "https://example.com"
+    "website": "https://example.com (if not from label)"
   }
 }`;
+
+    const hasLabelDescription = labelData?.label_description;
+    const hasLabelBenefits = labelData?.label_benefits?.length > 0;
 
     const userPrompt = `Generate comprehensive information for this supplement:
 - Name: ${product.name}
@@ -72,11 +104,13 @@ IMPORTANT: Return ONLY a valid JSON object with this exact structure (no markdow
 - Form: ${product.form || 'Not specified'}
 - Ingredients: ${product.ingredients ? product.ingredients.join(', ') : 'Not specified'}
 - Dosage: ${product.serving_size || ''} ${product.serving_unit || ''}
+${hasLabelDescription ? `- Label Description: ${labelData.label_description}` : ''}
+${hasLabelBenefits ? `- Label Benefits: ${labelData.label_benefits.join(', ')}` : ''}
 
 Focus on:
-1. Clear, factual description (2-3 sentences)
-2. 3-5 key evidence-based benefits
-3. Research summary with scientific backing
+1. ${hasLabelDescription ? 'Use the label description as-is' : 'Clear, factual description (2-3 sentences)'}
+2. ${hasLabelBenefits ? 'Use label benefits as-is' : '3-5 key evidence-based benefits'}
+3. Research summary with scientific backing (ALWAYS generate this - not on labels)
 4. Manufacturer information (research the brand if known, otherwise provide general info)`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -117,15 +151,18 @@ Focus on:
       throw new Error('Failed to parse AI response');
     }
 
+    // HYBRID LOGIC: Prioritize label data over AI
+    const finalUpdates: any = {
+      description: hasLabelDescription ? labelData.label_description : enrichedData.description,
+      benefits: hasLabelBenefits ? labelData.label_benefits : enrichedData.benefits,
+      research_summary: enrichedData.research_summary, // Always from AI
+      manufacturer_info: enrichedData.manufacturer_info,
+    };
+
     // Update product with enriched data
     const { error: updateError } = await supabase
       .from('supplement_products')
-      .update({
-        description: enrichedData.description,
-        benefits: enrichedData.benefits,
-        research_summary: enrichedData.research_summary,
-        manufacturer_info: enrichedData.manufacturer_info,
-      })
+      .update(finalUpdates)
       .eq('id', productId);
 
     if (updateError) {
