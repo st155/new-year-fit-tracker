@@ -268,9 +268,20 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                           `)}`;
                         }}
                       />
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        {getStatusIcon(item)}
-                      </div>
+                      
+                      {/* Preview Loading Spinner */}
+                      {item.previewLoading && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 text-blue-400 animate-spin" />
+                        </div>
+                      )}
+                      
+                      {/* Status Icon - only show when preview is ready */}
+                      {!item.previewLoading && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          {getStatusIcon(item)}
+                        </div>
+                      )}
                       {!isProcessing && item.status === 'pending' && (
                         <button
                           onClick={() => removeItem(item.id)}
@@ -352,11 +363,23 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 ) : (
                   <Button
                     onClick={startProcessing}
-                    disabled={items.filter(i => i.status === 'pending').length === 0}
+                    disabled={
+                      items.filter(i => i.status === 'pending').length === 0 ||
+                      items.some(i => i.previewLoading)
+                    }
                     className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                   >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Processing ({items.filter(i => i.status === 'pending').length})
+                    {items.some(i => i.previewLoading) ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Loading previews...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4 mr-2" />
+                        Start Processing ({items.filter(i => i.status === 'pending').length})
+                      </>
+                    )}
                   </Button>
                 )}
               </div>

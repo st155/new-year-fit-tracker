@@ -9,6 +9,7 @@ export interface BulkUploadItem {
   preview: string;
   status: 'pending' | 'processing' | 'success' | 'error';
   isHeic?: boolean; // Flag for server-side HEIC processing
+  previewLoading?: boolean; // True while preview is being created
   result?: {
     name: string;
     brand: string;
@@ -127,33 +128,51 @@ export function useBulkScanSupplements() {
       return;
     }
     
-    // Process files: skip client-side HEIC conversion, send to server
-    const newItems: BulkUploadItem[] = await Promise.all(
-      validFiles.map(async (originalFile) => {
-        // For HEIC files, don't convert - server will handle it
-        if (isHeicFile(originalFile)) {
-          console.log(`[BULK-SCAN] HEIC file detected, will convert on server: ${originalFile.name}`);
-          return {
-            id: `${Date.now()}-${Math.random()}`,
-            file: originalFile,
-            preview: PILL_PLACEHOLDER, // Can't preview HEIC in browser
-            status: 'pending' as const,
-            isHeic: true, // Flag for server processing
-          };
+    // Add files with loading state first
+    const initialItems: BulkUploadItem[] = validFiles.map((file) => ({
+      id: `${Date.now()}-${Math.random()}`,
+      file,
+      preview: PILL_PLACEHOLDER,
+      previewLoading: true, // Show spinner while creating preview
+      status: 'pending' as const,
+      isHeic: isHeicFile(file),
+    }));
+    
+    setItems(prev => [...prev, ...initialItems]);
+    
+    // Create previews asynchronously
+    for (const item of initialItems) {
+      try {
+        let previewFile = item.file;
+        
+        // For HEIC - convert to JPEG for preview only (original HEIC sent to server)
+        if (isHeicFile(item.file)) {
+          console.log(`[BULK-SCAN] Converting HEIC to JPEG for preview: ${item.file.name}`);
+          const result = await heic2any({
+            blob: item.file,
+            toType: 'image/jpeg',
+            quality: 0.3, // Low quality for preview
+          });
+          const blob = Array.isArray(result) ? result[0] : result;
+          previewFile = new File([blob], 'preview.jpg', { type: 'image/jpeg' });
         }
         
-        // For other formats, create preview normally
-        return {
-          id: `${Date.now()}-${Math.random()}`,
-          file: originalFile,
-          preview: await createPreview(originalFile),
-          status: 'pending' as const,
-        };
-      })
-    );
+        const preview = await createPreview(previewFile);
+        
+        // Update item with ready preview
+        setItems(prev => prev.map(i => 
+          i.id === item.id ? { ...i, preview, previewLoading: false } : i
+        ));
+      } catch (err) {
+        console.warn(`[BULK-SCAN] Preview creation failed for ${item.file.name}:`, err);
+        // Keep placeholder, remove spinner
+        setItems(prev => prev.map(i => 
+          i.id === item.id ? { ...i, previewLoading: false } : i
+        ));
+      }
+    }
     
-    setItems(prev => [...prev, ...newItems]);
-    console.log(`[BULK-SCAN] Added ${validFiles.length} files (${newItems.filter(i => i.isHeic).length} HEIC files will be processed on server)`);
+    console.log(`[BULK-SCAN] Added ${validFiles.length} files (${initialItems.filter(i => i.isHeic).length} HEIC files)`);
   }, []);
 
   const removeItem = useCallback((id: string) => {
