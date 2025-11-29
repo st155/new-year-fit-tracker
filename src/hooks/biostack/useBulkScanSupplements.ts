@@ -57,7 +57,7 @@ export function useBulkScanSupplements() {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxWidth = 800;
+          const maxWidth = 600;
           const scale = maxWidth / img.width;
           canvas.width = maxWidth;
           canvas.height = img.height * scale;
@@ -77,7 +77,7 @@ export function useBulkScanSupplements() {
               }
             },
             'image/jpeg',
-            0.8
+            0.6
           );
         };
         img.onerror = reject;
@@ -96,11 +96,17 @@ export function useBulkScanSupplements() {
       // Compress image
       const base64Image = await compressImage(item.file);
       
-      // Call scan-supplement-bottle edge function
-      const { data: scanData, error: scanError } = await supabase.functions.invoke(
-        'scan-supplement-bottle',
-        { body: { imageBase64: base64Image } }
+      // Call scan-supplement-bottle edge function with timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout (90s) - server may be busy')), 90000)
       );
+
+      const { data: scanData, error: scanError } = await Promise.race([
+        supabase.functions.invoke('scan-supplement-bottle', {
+          body: { imageBase64: base64Image }
+        }),
+        timeoutPromise
+      ]) as any;
 
       if (scanError) throw scanError;
       if (!scanData?.success) throw new Error(scanData?.error || 'Scan failed');
@@ -136,16 +142,30 @@ export function useBulkScanSupplements() {
       ));
 
     } catch (error) {
-      // Check if it's a rate limit error and we have retries left
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const isRateLimitError = errorMessage.includes('429') || 
-                              errorMessage.includes('rate') || 
-                              errorMessage.includes('quota') ||
-                              errorMessage.includes('too many requests');
+      // Handle ProgressEvent (network errors like {isTrusted: true})
+      let errorMessage: string;
       
-      if (retryCount < MAX_RETRIES && isRateLimitError) {
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === 'object' && 'isTrusted' in error) {
+        // Network error (ProgressEvent)
+        errorMessage = 'Network error - check your connection and try again';
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = 'Processing failed';
+      }
+      
+      // Check for rate limit, timeout, or network errors that should retry
+      const shouldRetry = errorMessage.includes('429') || 
+                          errorMessage.includes('rate') ||
+                          errorMessage.includes('quota') ||
+                          errorMessage.includes('timeout') ||
+                          errorMessage.includes('Network error');
+      
+      if (retryCount < MAX_RETRIES && shouldRetry) {
         const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
-        console.log(`[BULK-SCAN] ⚠️ Rate limited, retrying in ${delay}ms...`);
+        console.log(`[BULK-SCAN] ⚠️ ${errorMessage}, retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return processSingleItem(item, retryCount + 1);
       }
@@ -153,19 +173,12 @@ export function useBulkScanSupplements() {
       // Log detailed error
       console.error(`[BULK-SCAN] ❌ Error processing ${item.file.name}:`, error);
       
-      // Set error status with detailed message
-      const detailedError = error instanceof Error 
-        ? error.message 
-        : typeof error === 'object' && error !== null
-          ? JSON.stringify(error)
-          : 'Processing failed';
-      
       setItems(prev => prev.map(i => 
         i.id === item.id 
           ? { 
               ...i, 
               status: 'error' as const, 
-              error: detailedError
+              error: errorMessage
             }
           : i
       ));
@@ -202,9 +215,9 @@ export function useBulkScanSupplements() {
           percentage: Math.round((processed / items.length) * 100),
         });
         
-        // Rate limiting: 3 seconds between requests
+        // Rate limiting: 5 seconds between requests
         if (processed < items.length) {
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
     }
