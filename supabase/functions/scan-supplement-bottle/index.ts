@@ -8,7 +8,9 @@ const corsHeaders = {
 };
 
 interface ScanRequest {
-  imageBase64: string;
+  frontImageBase64: string;      // Front side (required)
+  backImageBase64?: string;      // Back side (optional)
+  imageBase64?: string;          // Legacy single image for backward compatibility
 }
 
 async function uploadImageToStorage(
@@ -64,6 +66,7 @@ interface ExtractedData {
   dosage_per_serving: string;
   servings_per_container: number;
   form: string;
+  barcode?: string | null;        // NEW: Barcode from back side
   label_description?: string | null;
   label_benefits?: string[] | null;
   ingredients?: string[] | null;
@@ -177,14 +180,21 @@ serve(async (req) => {
 
     console.log(`[SCAN-${requestId}] 👤 User authenticated:`, user.id);
 
-    const { imageBase64 }: ScanRequest = await req.json();
+    const { frontImageBase64, backImageBase64, imageBase64 }: ScanRequest = await req.json();
 
-    if (!imageBase64) {
-      console.error(`[SCAN-${requestId}] ❌ No image provided`);
-      throw new Error('No image provided');
+    // Handle backward compatibility - if only imageBase64 provided, use it as frontImage
+    const frontImage = frontImageBase64 || imageBase64;
+    const backImage = backImageBase64;
+
+    if (!frontImage) {
+      console.error(`[SCAN-${requestId}] ❌ No front image provided`);
+      throw new Error('No front image provided');
     }
 
-    console.log(`[SCAN-${requestId}] 📷 Image received (${Math.round(imageBase64.length / 1024)}KB)`);
+    console.log(`[SCAN-${requestId}] 📷 Images received:`, {
+      front: `${Math.round(frontImage.length / 1024)}KB`,
+      back: backImage ? `${Math.round(backImage.length / 1024)}KB` : 'not provided'
+    });
 
     // Call Lovable AI Gateway with Gemini Vision
     console.log(`[SCAN-${requestId}] 🤖 Calling Gemini Vision API...`);
@@ -194,7 +204,46 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const visionPrompt = `Analyze this supplement bottle photo and extract ALL visible information from the label:
+    const visionPrompt = backImage 
+      ? `Analyze these two supplement bottle photos and extract ALL visible information:
+
+IMAGE 1 (FRONT SIDE): Extract product identification
+- BRAND: Manufacturer/brand name
+- SUPPLEMENT_NAME: Main supplement name (e.g., "Vitamin D3", "Magnesium Glycinate")
+- DOSAGE_PER_SERVING: Amount per serving with unit (e.g., "5000 IU", "400mg")
+- SERVINGS_PER_CONTAINER: Total servings in the bottle (number)
+- FORM: capsule/tablet/powder/liquid/gummy/softgel
+
+IMAGE 2 (BACK SIDE): Extract additional details
+- BARCODE: UPC or EAN barcode number (typically 12-13 digits) - IMPORTANT!
+- INGREDIENTS: Complete ingredients list (active + inactive)
+- WARNINGS: Health warnings, allergens, or contraindications
+- STORAGE_INSTRUCTIONS: Storage recommendations
+- RECOMMENDED_DAILY_INTAKE: Usage instructions from manufacturer
+- EXPIRATION_INFO: Expiration or "Best by" date
+- Other visible label information
+
+Return ONLY valid JSON (no markdown):
+{
+  "brand": "...",
+  "supplement_name": "...",
+  "dosage_per_serving": "...",
+  "servings_per_container": number,
+  "form": "...",
+  "barcode": "012345678901" or null,
+  "label_description": "..." or null,
+  "label_benefits": ["..."] or null,
+  "ingredients": ["..."] or null,
+  "manufacturer_country": "..." or null,
+  "manufacturer_website": "..." or null,
+  "certifications": ["GMP", "NSF"] or null,
+  "price": "..." or null,
+  "storage_instructions": "..." or null,
+  "warnings": "..." or null,
+  "recommended_daily_intake": "..." or null,
+  "expiration_info": "..." or null
+}`
+      : `Analyze this supplement bottle photo and extract ALL visible information from the label:
 
 REQUIRED FIELDS:
 1. BRAND: Manufacturer/brand name
@@ -204,17 +253,18 @@ REQUIRED FIELDS:
 5. FORM: capsule/tablet/powder/liquid/gummy/softgel
 
 EXTRACT FROM LABEL (if visible):
-6. LABEL_DESCRIPTION: Product description text from the bottle label
-7. LABEL_BENEFITS: Any health claims or benefits listed on the label (array)
-8. INGREDIENTS: Complete ingredients list (active + inactive)
-9. MANUFACTURER_COUNTRY: Country of origin ("Made in...", "Product of...")
-10. MANUFACTURER_WEBSITE: Website URL if visible on label
-11. CERTIFICATIONS: Quality certifications (GMP, NSF, Organic, Non-GMO, etc.)
-12. PRICE: Price if visible on label or price sticker
-13. STORAGE_INSTRUCTIONS: Storage recommendations ("Keep refrigerated", "Store in cool dry place")
-14. WARNINGS: Health warnings, allergens, or contraindications
-15. RECOMMENDED_DAILY_INTAKE: Usage instructions from manufacturer
-16. EXPIRATION_INFO: Expiration or "Best by" date
+6. BARCODE: UPC or EAN barcode if visible (typically 12-13 digits)
+7. LABEL_DESCRIPTION: Product description text from the bottle label
+8. LABEL_BENEFITS: Any health claims or benefits listed on the label (array)
+9. INGREDIENTS: Complete ingredients list (active + inactive)
+10. MANUFACTURER_COUNTRY: Country of origin ("Made in...", "Product of...")
+11. MANUFACTURER_WEBSITE: Website URL if visible on label
+12. CERTIFICATIONS: Quality certifications (GMP, NSF, Organic, Non-GMO, etc.)
+13. PRICE: Price if visible on label or price sticker
+14. STORAGE_INSTRUCTIONS: Storage recommendations ("Keep refrigerated", "Store in cool dry place")
+15. WARNINGS: Health warnings, allergens, or contraindications
+16. RECOMMENDED_DAILY_INTAKE: Usage instructions from manufacturer
+17. EXPIRATION_INFO: Expiration or "Best by" date
 
 Return ONLY valid JSON (no markdown):
 {
@@ -223,6 +273,7 @@ Return ONLY valid JSON (no markdown):
   "dosage_per_serving": "...",
   "servings_per_container": number,
   "form": "...",
+  "barcode": "..." or null,
   "label_description": "..." or null,
   "label_benefits": ["..."] or null,
   "ingredients": ["..."] or null,
@@ -254,13 +305,16 @@ Return ONLY valid JSON (no markdown):
           messages: [
             {
               role: 'user',
-              content: [
-                { type: 'text', text: visionPrompt },
-                { 
-                  type: 'image_url', 
-                  image_url: { url: imageBase64 } 
-                }
-              ]
+              content: backImage 
+                ? [
+                    { type: 'text', text: visionPrompt },
+                    { type: 'image_url', image_url: { url: frontImage } },
+                    { type: 'image_url', image_url: { url: backImage } }
+                  ]
+                : [
+                    { type: 'text', text: visionPrompt },
+                    { type: 'image_url', image_url: { url: frontImage } }
+                  ]
             }
           ],
           max_tokens: 1000,
@@ -297,7 +351,8 @@ Return ONLY valid JSON (no markdown):
         brand: extracted.brand,
         name: extracted.supplement_name,
         form: extracted.form,
-        dosage: extracted.dosage_per_serving
+        dosage: extracted.dosage_per_serving,
+        barcode: extracted.barcode || 'not extracted'
       });
     } catch (parseError) {
       console.error(`[SCAN-${requestId}] ❌ Failed to parse AI response:`, parseError);
@@ -347,6 +402,7 @@ Return ONLY valid JSON (no markdown):
       name: extracted.supplement_name,
       brand: extracted.brand,
       form: normalizeForm(extracted.form),
+      barcode: extracted.barcode || null,  // Save barcode if extracted
       dosage_amount: !isNaN(parsedDosageAmount) && parsedDosageAmount > 0 
         ? parsedDosageAmount 
         : 1,  // Default: 1 serving
@@ -398,11 +454,11 @@ Return ONLY valid JSON (no markdown):
       console.log(`[SCAN-${requestId}] ✅ Product created with ID: ${productId}`);
     }
 
-    // Upload image to Storage and save image_url
+    // Upload image to Storage and save image_url (use front image)
     let imageUrl: string | null = null;
-    if (imageBase64 && productId) {
-      console.log(`[SCAN-${requestId}] 📸 Uploading product image...`);
-      imageUrl = await uploadImageToStorage(imageBase64, productId);
+    if (frontImage && productId) {
+      console.log(`[SCAN-${requestId}] 📸 Uploading product image (front side)...`);
+      imageUrl = await uploadImageToStorage(frontImage, productId);
       
       if (imageUrl) {
         const { error: updateError } = await supabase
@@ -434,6 +490,7 @@ Return ONLY valid JSON (no markdown):
       productId,
       supplement: extracted.supplement_name,
       brand: extracted.brand,
+      barcode: extracted.barcode || 'not found',
       biomarkers: linkedBiomarkers.length,
       times: intakeTimes.join(', '),
       imageUrl: imageUrl ? 'uploaded' : 'no image'
