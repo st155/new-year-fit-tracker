@@ -231,8 +231,18 @@ IMAGE 1 (FRONT SIDE): Extract product identification
 - SERVINGS_PER_CONTAINER: Total servings in the bottle (number)
 - FORM: capsule/tablet/powder/liquid/gummy/softgel
 
-IMAGE 2 (BACK SIDE): Extract additional details
-- BARCODE: UPC or EAN barcode number (typically 12-13 digits) - IMPORTANT!
+IMAGE 2 (BACK SIDE): Extract additional details - FOCUS ON BARCODE EXTRACTION!
+🎯 CRITICAL: BARCODE EXTRACTION IS TOP PRIORITY!
+Look for the BARCODE on the back side image:
+- Standard formats: UPC-A (12 digits) or EAN-13 (13 digits)
+- Usually located near the bottom of the label
+- Look for the black and white vertical lines: ████████████
+- The NUMBERS appear BENEATH the barcode lines
+- Extract the EXACT DIGITS (e.g., "012345678901" for UPC-A, "5901234123457" for EAN-13)
+- NO spaces, NO dashes, ONLY the numeric digits
+- If you cannot clearly read the barcode digits, return null
+
+OTHER BACK SIDE INFO:
 - INGREDIENTS: Complete ingredients list (active + inactive)
 - WARNINGS: Health warnings, allergens, or contraindications
 - STORAGE_INSTRUCTIONS: Storage recommendations

@@ -59,6 +59,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const [sharedUsage, setSharedUsage] = useState(false);
   const [approximateServings, setApproximateServings] = useState(0);
   const [isQuickMatch, setIsQuickMatch] = useState(false);
+  const [manualBarcode, setManualBarcode] = useState<string>('');
   
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +77,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setEnrichedProduct(null);
     setProductId(null);
     setIsQuickMatch(false);
+    setManualBarcode('');
     onClose();
   }, [onClose]);
 
@@ -308,6 +310,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             ingredients: extracted.ingredients || null,
             warnings: extracted.warnings || null,
             expiration_info: extracted.expiration_info || null,
+            barcode: extracted.barcode || null, // Include barcode if available
           })
           .select('id')
           .single();
@@ -448,7 +451,27 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       }
 
       setScanResult(data);
-      setEditedData(data.extracted);
+      
+      // Merge manual barcode with AI-extracted data
+      const extractedWithBarcode = {
+        ...data.extracted,
+        barcode: manualBarcode || data.extracted.barcode || null
+      };
+      
+      setEditedData(extractedWithBarcode);
+      
+      // Log barcode status
+      if (manualBarcode) {
+        console.log('[BOTTLE-SCANNER] ✍️ Using manual barcode:', manualBarcode);
+        toast({
+          title: "📋 Ручной баркод применён",
+          description: `Использован баркод: ${manualBarcode}`,
+        });
+      } else if (data.extracted.barcode) {
+        console.log('[BOTTLE-SCANNER] 🤖 AI extracted barcode:', data.extracted.barcode);
+      } else {
+        console.log('[BOTTLE-SCANNER] ℹ️ No barcode extracted or provided');
+      }
       
       // 🆕 QUICK MATCH HANDLING
       if (data.quick_match && data.productId) {
@@ -471,7 +494,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         if (productData) {
           setEnrichedProduct({
             ...productData,
-            barcode: data.extracted.barcode,
+            barcode: manualBarcode || data.extracted.barcode,
           });
         }
         
@@ -753,6 +776,41 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                     </div>
                   )}
                 </div>
+              </div>
+              
+              {/* Manual Barcode Input */}
+              <div className="space-y-2 bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
+                <Label htmlFor="manual-barcode" className="text-sm font-medium flex items-center gap-2">
+                  <span className="text-xl">🔲</span>
+                  Ручной ввод баркода (опционально)
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Введите баркод вручную, если AI не смог его извлечь (12-13 цифр)
+                </p>
+                <Input
+                  id="manual-barcode"
+                  type="text"
+                  placeholder="012345678901 или 5901234123457"
+                  value={manualBarcode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Only digits
+                    if (value.length <= 13) {
+                      setManualBarcode(value);
+                    }
+                  }}
+                  className="font-mono text-lg tracking-wider"
+                  maxLength={13}
+                />
+                {manualBarcode && (manualBarcode.length !== 12 && manualBarcode.length !== 13) && (
+                  <p className="text-xs text-yellow-400 flex items-center gap-1">
+                    ⚠️ Баркод должен содержать 12 (UPC-A) или 13 (EAN-13) цифр
+                  </p>
+                )}
+                {manualBarcode && (manualBarcode.length === 12 || manualBarcode.length === 13) && (
+                  <p className="text-xs text-green-400 flex items-center gap-1">
+                    ✅ Корректный формат баркода ({manualBarcode.length === 12 ? 'UPC-A' : 'EAN-13'})
+                  </p>
+                )}
               </div>
               
               <div className="flex gap-2 justify-center">
