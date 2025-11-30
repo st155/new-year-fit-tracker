@@ -28,6 +28,7 @@ interface ExtractedData {
   dosage_per_serving: string;
   servings_per_container: number;
   form: string;
+  barcode?: string | null;
   recommended_daily_intake?: string | null;
   ingredients?: string[] | null;
   warnings?: string | null;
@@ -44,11 +45,13 @@ interface ScanResult {
   };
 }
 
-type ScanStep = 'camera' | 'preview' | 'analyzing' | 'enriching' | 'info-card';
+type ScanStep = 'camera-front' | 'camera-back' | 'preview' | 'analyzing' | 'enriching' | 'info-card';
 
 export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps) {
-  const [step, setStep] = useState<ScanStep>('camera');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [step, setStep] = useState<ScanStep>('camera-front');
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null); // Legacy for backward compatibility
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [editedData, setEditedData] = useState<ExtractedData | null>(null);
   const [enrichedProduct, setEnrichedProduct] = useState<any>(null);
@@ -63,7 +66,9 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
   // Reset state when modal closes
   const handleClose = useCallback(() => {
-    setStep('camera');
+    setStep('camera-front');
+    setFrontImage(null);
+    setBackImage(null);
     setCapturedImage(null);
     setScanResult(null);
     setEditedData(null);
@@ -96,10 +101,21 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       const compressed = await compressImage(imageSrc);
-      setCapturedImage(compressed);
-      setStep('preview');
+      
+      if (step === 'camera-front') {
+        setFrontImage(compressed);
+        setCapturedImage(compressed); // Set legacy for backward compatibility
+        setStep('camera-back');
+        toast({
+          title: "📸 Лицевая сторона готова",
+          description: "Теперь сфотографируйте заднюю сторону с баркодом",
+        });
+      } else if (step === 'camera-back') {
+        setBackImage(compressed);
+        setStep('preview');
+      }
     }
-  }, []);
+  }, [step, toast]);
 
   // Upload from gallery
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,17 +126,43 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     reader.onload = async (event) => {
       const base64 = event.target?.result as string;
       const compressed = await compressImage(base64);
-      setCapturedImage(compressed);
-      setStep('preview');
+      
+      if (step === 'camera-front') {
+        setFrontImage(compressed);
+        setCapturedImage(compressed);
+        setStep('camera-back');
+        toast({
+          title: "📸 Лицевая сторона загружена",
+          description: "Теперь загрузите заднюю сторону с баркодом",
+        });
+      } else if (step === 'camera-back') {
+        setBackImage(compressed);
+        setStep('preview');
+      }
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [step, toast]);
 
   // Retake photo
-  const handleRetake = useCallback(() => {
-    setCapturedImage(null);
-    setStep('camera');
+  const handleRetake = useCallback((side: 'front' | 'back') => {
+    if (side === 'front') {
+      setFrontImage(null);
+      setCapturedImage(null);
+      setStep('camera-front');
+    } else {
+      setBackImage(null);
+      setStep('camera-back');
+    }
   }, []);
+
+  // Skip back side (optional)
+  const handleSkipBackSide = useCallback(() => {
+    setStep('preview');
+    toast({
+      title: "ℹ️ Задняя сторона пропущена",
+      description: "Баркод не будет извлечен, но AI все равно проанализирует добавку",
+    });
+  }, [toast]);
 
 
   // Create product and enrich
@@ -364,7 +406,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
   // Analyze with AI
   const handleAnalyze = useCallback(async () => {
-    if (!capturedImage) return;
+    if (!frontImage) return;
 
     setStep('analyzing');
     
@@ -375,7 +417,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       );
 
       const analyzePromise = supabase.functions.invoke('scan-supplement-bottle', {
-        body: { imageBase64: capturedImage },
+        body: { 
+          frontImageBase64: frontImage,
+          backImageBase64: backImage || undefined,
+        },
       });
 
       const { data, error } = await Promise.race([analyzePromise, timeoutPromise]) as any;
@@ -405,7 +450,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       });
       setStep('preview');
     }
-  }, [capturedImage, toast]);
+  }, [frontImage, backImage, toast]);
 
   // Add to stack mutation (product already created)
   const addToStackMutation = useMutation({
@@ -454,7 +499,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         name: editedData?.supplement_name,
         brand: editedData?.brand,
         dosage: editedData?.dosage_per_serving ? parseFloat(editedData.dosage_per_serving) : undefined,
-        photoUrl: capturedImage || undefined,
+        photoUrl: frontImage || capturedImage || undefined,
         productId: data?.productId
       });
       
@@ -493,9 +538,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Camera View */}
-          {step === 'camera' && (
+          {/* Camera View - Front Side */}
+          {step === 'camera-front' && (
             <div className="space-y-4">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-400 flex items-center gap-2">
+                  <span className="text-xl">📦</span>
+                  <span className="font-medium">Шаг 1 из 2:</span> Сфотографируйте <strong>лицевую сторону</strong> (название, бренд, дозировка)
+                </p>
+              </div>
+              
               <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
                 <Webcam
                   ref={webcamRef}
@@ -517,7 +569,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                 >
                   <Camera className="h-5 w-5 mr-2" />
-                  Capture
+                  Сделать фото
                 </Button>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -525,10 +577,78 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   variant="outline"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Upload from Gallery
+                  Загрузить из галереи
                 </Button>
                 <Button onClick={handleClose} variant="outline">
-                  Cancel
+                  Отмена
+                </Button>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {/* Camera View - Back Side */}
+          {step === 'camera-back' && (
+            <div className="space-y-4">
+              {frontImage && (
+                <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                  <img src={frontImage} alt="Front side preview" className="w-16 h-16 object-cover rounded border border-green-500/50" />
+                  <div className="flex-1">
+                    <p className="text-sm text-green-400 font-medium">✅ Лицевая сторона готова</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <p className="text-sm text-blue-400 flex items-center gap-2">
+                  <span className="text-xl">🔲</span>
+                  <span className="font-medium">Шаг 2 из 2:</span> Сфотографируйте <strong>заднюю сторону</strong> с баркодом и составом
+                </p>
+              </div>
+              
+              <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={{
+                    facingMode: "environment",
+                    width: 1280,
+                    height: 720,
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button
+                  onClick={handleCapture}
+                  size="lg"
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  Сделать фото
+                </Button>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  size="lg"
+                  variant="outline"
+                >
+                  <Upload className="h-5 w-5 mr-2" />
+                  Загрузить из галереи
+                </Button>
+                <Button onClick={() => handleRetake('front')} variant="outline" size="lg">
+                  ← Переснять лицевую
+                </Button>
+                <Button onClick={handleSkipBackSide} variant="ghost" size="lg" className="text-muted-foreground">
+                  Пропустить →
                 </Button>
               </div>
 
@@ -543,10 +663,42 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           )}
 
           {/* Preview View */}
-          {step === 'preview' && capturedImage && (
+          {step === 'preview' && frontImage && (
             <div className="space-y-4">
-              <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-blue-500/50">
-                <img src={capturedImage} alt="Captured bottle" className="w-full h-full object-contain" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-green-400 flex items-center gap-2">
+                    <span>📦 Лицевая сторона</span>
+                  </div>
+                  <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-green-500/50">
+                    <img src={frontImage} alt="Front side" className="w-full h-full object-contain" />
+                  </div>
+                  <Button onClick={() => handleRetake('front')} variant="outline" size="sm" className="w-full">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Переснять
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-blue-400 flex items-center gap-2">
+                    <span>🔲 Задняя сторона</span>
+                  </div>
+                  {backImage ? (
+                    <>
+                      <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-blue-500/50">
+                        <img src={backImage} alt="Back side" className="w-full h-full object-contain" />
+                      </div>
+                      <Button onClick={() => handleRetake('back')} variant="outline" size="sm" className="w-full">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Переснять
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="aspect-video bg-neutral-900 rounded-lg flex items-center justify-center border border-dashed border-neutral-700">
+                      <p className="text-sm text-muted-foreground">Не загружено</p>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="flex gap-2 justify-center">
@@ -556,11 +708,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Analyze with AI
-                </Button>
-                <Button onClick={handleRetake} variant="outline">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Retake
+                  Анализировать с AI
                 </Button>
               </div>
             </div>
