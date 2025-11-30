@@ -304,9 +304,9 @@ Return ONLY valid JSON (no markdown):
   "expiration_info": "..." or null
 }`;
 
-    // Setup timeout with AbortController
+    // Setup timeout with AbortController (increased to 90s)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
 
     const visionResponse = await callGeminiWithRetry(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -345,7 +345,38 @@ Return ONLY valid JSON (no markdown):
     if (!visionResponse.ok) {
       const error = await visionResponse.text();
       console.error(`[SCAN-${requestId}] ❌ Vision API error (${visionResponse.status}):`, error);
-      throw new Error(`Vision API error: ${visionResponse.status}`);
+      
+      // Return specific error codes
+      if (visionResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            errorCode: 'RATE_LIMITED',
+            error: 'Too many requests. Please wait a moment and try again.' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+      
+      if (visionResponse.status >= 500) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            errorCode: 'GEMINI_SERVER_ERROR',
+            error: 'AI service temporarily unavailable. Please try again.' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          errorCode: 'VISION_API_ERROR',
+          error: `Image analysis failed (${visionResponse.status})` 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     const visionData = await visionResponse.json();
@@ -353,7 +384,14 @@ Return ONLY valid JSON (no markdown):
     
     if (!content) {
       console.error(`[SCAN-${requestId}] ❌ No content from Vision API`);
-      throw new Error('No content from Vision API');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          errorCode: 'IMAGE_UNREADABLE',
+          error: 'Could not read supplement label from image. Please ensure label is clearly visible.' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     console.log(`[SCAN-${requestId}] ✅ AI response received (${content.length} chars)`);
@@ -374,7 +412,14 @@ Return ONLY valid JSON (no markdown):
     } catch (parseError) {
       console.error(`[SCAN-${requestId}] ❌ Failed to parse AI response:`, parseError);
       console.error(`[SCAN-${requestId}] Raw content:`, content.substring(0, 500));
-      throw new Error('Failed to parse AI response');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          errorCode: 'PARSE_FAILED',
+          error: 'Could not extract supplement information. Label may be unclear or damaged.' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     // QUICK BARCODE LOOKUP: Check if product already exists by barcode

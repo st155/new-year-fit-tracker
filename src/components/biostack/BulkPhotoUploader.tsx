@@ -18,11 +18,15 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
     items,
     isProcessing,
     progress,
+    successCount,
+    errorCount,
+    failedItems,
     addFiles,
     removeItem,
     startProcessing,
     cancelProcessing,
     reset,
+    retryFailed,
   } = useBulkScanSupplements();
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,6 +299,20 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 </div>
               </div>
 
+              {/* Summary Stats */}
+              {(successCount > 0 || errorCount > 0) && (
+                <div className="grid grid-cols-2 gap-3 p-4 bg-neutral-900/50 rounded-lg border border-white/10">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-green-400">{successCount}</p>
+                    <p className="text-sm text-muted-foreground">✅ Successfully added</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-red-400">{errorCount}</p>
+                    <p className="text-sm text-muted-foreground">❌ Failed</p>
+                  </div>
+                </div>
+              )}
+
               {/* Results List */}
               {(progress.current > 0 || items.some(i => i.status !== 'pending')) && (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -361,26 +379,40 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                     Stop Processing
                   </Button>
                 ) : (
-                  <Button
-                    onClick={startProcessing}
-                    disabled={
-                      items.filter(i => i.status === 'pending').length === 0 ||
-                      items.some(i => i.previewLoading)
-                    }
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                  >
-                    {items.some(i => i.previewLoading) ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Loading previews...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-4 w-4 mr-2" />
-                        Start Processing ({items.filter(i => i.status === 'pending').length})
-                      </>
+                  <>
+                    {/* Retry Failed Button */}
+                    {errorCount > 0 && (
+                      <Button
+                        onClick={retryFailed}
+                        variant="outline"
+                        className="border-red-500/50 hover:bg-red-500/10"
+                      >
+                        🔄 Retry Failed ({errorCount})
+                      </Button>
                     )}
-                  </Button>
+                    
+                    {/* Start Processing Button */}
+                    <Button
+                      onClick={startProcessing}
+                      disabled={
+                        items.filter(i => i.status === 'pending').length === 0 ||
+                        items.some(i => i.previewLoading)
+                      }
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                    >
+                      {items.some(i => i.previewLoading) ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Loading previews...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-4 w-4 mr-2" />
+                          Start Processing ({items.filter(i => i.status === 'pending').length})
+                        </>
+                      )}
+                    </Button>
+                  </>
                 )}
               </div>
             )}

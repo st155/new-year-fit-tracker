@@ -29,6 +29,11 @@ export function useBulkScanSupplements() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, percentage: 0 });
   const cancelRequestedRef = useRef(false);
+  
+  // Summary counts
+  const successCount = items.filter(i => i.status === 'success').length;
+  const errorCount = items.filter(i => i.status === 'error').length;
+  const failedItems = items.filter(i => i.status === 'error');
 
   // Inline SVG placeholder (always works, no external file dependency)
   const PILL_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(`
@@ -364,7 +369,32 @@ export function useBulkScanSupplements() {
       ]) as any;
 
       if (scanError) throw scanError;
-      if (!scanData?.success) throw new Error(scanData?.error || 'Scan failed');
+      if (!scanData?.success) {
+        // Parse specific error codes
+        const errorCode = scanData?.errorCode || 'UNKNOWN';
+        const errorMessage = scanData?.error || 'Scan failed';
+        
+        let userFriendlyError = errorMessage;
+        switch (errorCode) {
+          case 'RATE_LIMITED':
+            userFriendlyError = '⏱️ Too many requests - retrying...';
+            break;
+          case 'IMAGE_UNREADABLE':
+            userFriendlyError = '📸 Label not clear - take sharper photo';
+            break;
+          case 'PARSE_FAILED':
+            userFriendlyError = '🔍 Could not extract info - label damaged?';
+            break;
+          case 'GEMINI_SERVER_ERROR':
+            userFriendlyError = '🔧 AI service busy - retrying...';
+            break;
+          case 'IMAGE_TOO_LARGE':
+            userFriendlyError = '📦 Image too large - try smaller file';
+            break;
+        }
+        
+        throw new Error(userFriendlyError);
+      }
 
       const { productId, name, brand } = scanData;
       console.log(`[BULK-SCAN] ✅ Scanned: ${name} by ${brand}`);
@@ -547,14 +577,33 @@ export function useBulkScanSupplements() {
     cancelRequestedRef.current = false;
   }, [items]);
 
+  const retryFailed = useCallback(async () => {
+    const failedItemsList = items.filter(i => i.status === 'error');
+    if (failedItemsList.length === 0) return;
+    
+    console.log(`[BULK-SCAN] 🔄 Retrying ${failedItemsList.length} failed items...`);
+    
+    // Reset failed items to pending
+    setItems(prev => prev.map(i => 
+      i.status === 'error' ? { ...i, status: 'pending' as const, error: undefined } : i
+    ));
+    
+    // Start processing
+    await startProcessing();
+  }, [items, startProcessing]);
+
   return {
     items,
     isProcessing,
     progress,
+    successCount,
+    errorCount,
+    failedItems,
     addFiles,
     removeItem,
     startProcessing,
     cancelProcessing,
     reset,
+    retryFailed,
   };
 }
