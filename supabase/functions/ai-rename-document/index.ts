@@ -120,6 +120,36 @@ Generate SHORT English filename.`;
       .replace(/['"]/g, '')
       .trim();
 
+    // Validate filename format: {Type}_{MonthYear}.{ext}
+    const validPattern = /^(Lab|MRI|CT|USG|InBody|VO2|Photo|Rx|Program|Doc)_[A-Z][a-z]{2}\d{2}\.\w+$/;
+    
+    if (!validPattern.test(suggestedName)) {
+      console.warn('[AI_RENAME] Invalid format from AI:', suggestedName);
+      
+      // Fallback to simple rename
+      const extension = fileName.split('.').pop();
+      const date = new Date().toLocaleDateString('en-US', { 
+        month: 'short', 
+        year: '2-digit' 
+      }).replace(' ', '');
+      
+      const typeMap: Record<string, string> = {
+        'blood_test': 'Lab',
+        'lab_urine': 'Lab',
+        'inbody': 'InBody',
+        'progress_photo': 'Photo',
+        'fitness_report': 'VO2',
+        'vo2max': 'VO2',
+        'imaging_report': 'MRI',
+        'prescription': 'Rx',
+        'training_program': 'Program',
+        'other': 'Doc'
+      };
+      
+      suggestedName = `${typeMap[documentType] || 'Doc'}_${date}.${extension}`;
+      console.log('[AI_RENAME] Using fallback:', suggestedName);
+    }
+
     console.log('[AI_RENAME] Success:', fileName, '→', suggestedName);
 
     return new Response(

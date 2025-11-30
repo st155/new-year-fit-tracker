@@ -212,6 +212,7 @@ verify_jwt = true
 
 [functions.reprocess-all-documents]
 verify_jwt = true
+max_duration = 400
 
 [functions.process-supplement-photo]
 verify_jwt = true
