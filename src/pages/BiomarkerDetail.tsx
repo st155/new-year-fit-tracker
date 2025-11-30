@@ -10,6 +10,7 @@ import { BiomarkerTrendChart } from '@/components/biomarkers/BiomarkerTrendChart
 import QualitativeTrendChart from '@/components/biomarkers/QualitativeTrendChart';
 import { BiomarkerSettingsModal } from '@/components/biomarkers/BiomarkerSettingsModal';
 import { RecommendedSupplementsCard } from '@/components/biomarkers/RecommendedSupplementsCard';
+import { useAddSupplementToStack } from '@/hooks/biostack/useAddSupplementToStack';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -21,6 +22,7 @@ export default function BiomarkerDetail() {
   const { biomarkerId } = useParams<{ biomarkerId: string }>();
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
+  const { addToStack, isAdding } = useAddSupplementToStack();
   
   // Protection: if no biomarkerId, return early before calling hooks
   if (!biomarkerId) {
@@ -488,8 +490,17 @@ export default function BiomarkerDetail() {
         <RecommendedSupplementsCard 
           biomarkerId={biomarkerId!}
           onAddToStack={(supplementName) => {
-            console.log('Add to stack:', supplementName);
-            // TODO: Implement add to stack functionality
+            const correlation = analysis?.correlations?.find(
+              c => c.supplement_name === supplementName
+            );
+            addToStack({
+              supplementName,
+              biomarkerId: biomarkerId!,
+              biomarkerName: biomarker.display_name,
+              expectedChange: correlation?.expected_change_percent,
+              timeframeWeeks: correlation?.timeframe_weeks,
+              rationale: correlation?.research_summary,
+            });
           }}
         />
       </motion.div>

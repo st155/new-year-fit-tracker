@@ -58,7 +58,7 @@ export function RecommendedSupplementsCard({
         <div className="flex items-center gap-3">
           <Pill className="h-5 w-5 text-purple-400" />
           <h3 className="text-lg font-semibold text-foreground">
-            Recommended Supplements
+            Рекомендуемые добавки
           </h3>
         </div>
 
@@ -80,7 +80,8 @@ export function RecommendedSupplementsCard({
                       variant="outline" 
                       className={getEvidenceBadgeClass(corr.evidence_level)}
                     >
-                      {corr.evidence_level} evidence
+                      {corr.evidence_level === 'high' ? 'Высокая' : 
+                       corr.evidence_level === 'moderate' ? 'Средняя' : 'Низкая'} доказательность
                     </Badge>
                   </div>
 
@@ -89,7 +90,7 @@ export function RecommendedSupplementsCard({
                     <TrendingUp className="h-4 w-4 text-green-400" />
                     <span className="text-muted-foreground">
                       {getCorrelationIcon(corr.correlation_type)}
-                      {Math.abs(corr.expected_change_percent)}% expected change
+                      {Math.abs(corr.expected_change_percent)}% ожидаемое изменение
                     </span>
                   </div>
 
@@ -97,7 +98,7 @@ export function RecommendedSupplementsCard({
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-blue-400" />
                     <span className="text-muted-foreground">
-                      Results in {corr.timeframe_weeks} weeks
+                      Результат через {corr.timeframe_weeks} недель
                     </span>
                   </div>
 
@@ -114,10 +115,10 @@ export function RecommendedSupplementsCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="shrink-0 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400"
+                    className="shrink-0 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400 hover:text-purple-300"
                     onClick={() => onAddToStack(corr.supplement_name)}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    Добавить
                   </Button>
                 )}
               </div>
