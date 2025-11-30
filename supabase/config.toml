@@ -222,3 +222,6 @@ verify_jwt = true
 
 [functions.backfill-supplement-images]
 verify_jwt = true
+
+[functions.check-retest-suggestions]
+verify_jwt = true

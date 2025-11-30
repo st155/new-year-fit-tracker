@@ -14,25 +14,25 @@ import { ProductPhotoUploader } from "./ProductPhotoUploader";
 const TIME_GROUPS = [
   { 
     key: 'morning', 
-    label: 'Morning', 
+    label: 'Утро', 
     icon: Sunrise, 
     color: 'text-amber-500' 
   },
   { 
     key: 'afternoon', 
-    label: 'Afternoon', 
+    label: 'День', 
     icon: Sun, 
     color: 'text-orange-500' 
   },
   { 
     key: 'evening', 
-    label: 'Evening', 
+    label: 'Вечер', 
     icon: Moon, 
     color: 'text-indigo-500' 
   },
   { 
     key: 'before_sleep', 
-    label: 'Before Sleep', 
+    label: 'Перед сном', 
     icon: Moon, 
     color: 'text-purple-500' 
   },
@@ -109,10 +109,10 @@ export function TodaysSupplements() {
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Pill className="h-6 w-6 text-green-500" />
-            Today's Supplements
+            Добавки на сегодня
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {totalPending} pending supplements
+            {totalPending} ожидает приёма
           </p>
         </div>
         
@@ -125,7 +125,7 @@ export function TodaysSupplements() {
             className="border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10"
           >
             <Settings className="h-4 w-4 mr-2" />
-            Manage Protocols
+            Управление
           </Button>
           
           <Button 
@@ -135,7 +135,7 @@ export function TodaysSupplements() {
             className="border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10"
           >
             <Camera className="h-4 w-4 mr-2" />
-            Scan Bottle
+            Сканировать
           </Button>
           
           <Button 
@@ -145,7 +145,7 @@ export function TodaysSupplements() {
             className="border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10"
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            AI Generator
+            AI Генератор
           </Button>
         </div>
       </div>
@@ -186,7 +186,7 @@ export function TodaysSupplements() {
                       onClick={() => handleTakeAllTime(timeGroup.key)}
                       className="text-xs border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
                     >
-                      Take All {timeGroup.label}
+                      Принять всё ({timeGroup.label})
                     </Button>
                   )}
                 </div>
@@ -218,7 +218,7 @@ export function TodaysSupplements() {
         >
           <Card className="px-6 py-4 bg-neutral-950 border border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)] flex items-center gap-4">
             <span className="text-sm font-medium text-foreground">
-              {selectedItems.size} selected
+              Выбрано: {selectedItems.size}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -227,7 +227,7 @@ export function TodaysSupplements() {
                 onClick={handleDeselectAll}
                 className="border-border/50"
               >
-                Deselect All
+                Снять выделение
               </Button>
               <Button
                 size="sm"
@@ -235,7 +235,7 @@ export function TodaysSupplements() {
                 disabled={logIntakeMutation.isPending}
                 className="bg-green-500 hover:bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]"
               >
-                {logIntakeMutation.isPending ? 'Logging...' : `Log Selected (${selectedItems.size})`}
+                {logIntakeMutation.isPending ? 'Сохранение...' : `Принять (${selectedItems.size})`}
               </Button>
             </div>
           </Card>
@@ -250,7 +250,7 @@ export function TodaysSupplements() {
             onClick={handleSelectAll}
             className="border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
           >
-            Select All Pending
+            Выбрать все ожидающие
           </Button>
         </div>
       )}

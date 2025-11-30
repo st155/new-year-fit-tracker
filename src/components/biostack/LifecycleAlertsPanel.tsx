@@ -71,7 +71,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
               </motion.div>
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-warning" />
-                Protocol Alerts
+                Уведомления протоколов
               </h3>
             </div>
             {unreadCount > 0 && (
@@ -81,7 +81,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                 className="px-3 py-1 rounded-full bg-warning/20 border border-warning/40"
               >
                 <span className="text-sm font-semibold text-warning">
-                  {unreadCount} new
+                  {unreadCount} новых
                 </span>
               </motion.div>
             )}
@@ -108,9 +108,9 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     <div>
                       <h4 className="font-semibold text-sm">
                         {alert.alert_type === 'retest_prompt' 
-                          ? 'Re-test Recommended' 
-                          : 'Protocol Completed'}
-                        : {alert.protocol?.stack_name || 'Unknown Protocol'}
+                          ? 'Рекомендуется пересдача' 
+                          : 'Протокол завершён'}
+                        : {alert.protocol?.stack_name || 'Неизвестный протокол'}
                       </h4>
                       {alert.protocol?.supplement_products && (
                         <p className="text-xs text-muted-foreground">
@@ -141,7 +141,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     variant="outline"
                   >
                     <Calendar className="h-3 w-3 mr-1" />
-                    Schedule Re-test
+                    Запланировать пересдачу
                   </Button>
                   <Button
                     size="sm"
@@ -150,7 +150,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3 mr-1" />
-                    Dismiss
+                    Скрыть
                   </Button>
                 </div>
               </motion.div>
@@ -161,7 +161,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
           {alerts.length === 0 && !isLoading && (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-success mx-auto mb-3 opacity-50" />
-              <p className="text-sm text-muted-foreground">No new protocol alerts</p>
+              <p className="text-sm text-muted-foreground">Нет новых уведомлений</p>
             </div>
           )}
         </div>

@@ -940,6 +940,28 @@ Extract all available metrics. Common metric names:
       })
       .eq('id', documentId);
 
+    // ============================================================
+    // AUTO-INVOKE DOCTOR RECOMMENDATIONS PARSER
+    // ============================================================
+    // If document is clinical_note or prescription, automatically extract doctor recommendations
+    if (documentCategory === 'clinical_note' || documentCategory === 'prescription') {
+      console.log(`[PARSE-LAB-REPORT] 🩺 Auto-invoking doctor recommendations parser for ${documentCategory}`);
+      
+      try {
+        const { data: rxData, error: rxError } = await supabase.functions.invoke('parse-doctor-recommendations', {
+          body: { documentId }
+        });
+        
+        if (rxError) {
+          console.error('[PARSE-LAB-REPORT] ⚠️ Doctor Rx parser failed:', rxError);
+        } else {
+          console.log(`[PARSE-LAB-REPORT] ✅ Extracted ${rxData?.recommendations?.length || 0} doctor recommendations`);
+        }
+      } catch (rxParseError) {
+        console.error('[PARSE-LAB-REPORT] ⚠️ Error calling parse-doctor-recommendations:', rxParseError);
+      }
+    }
+
     // Invalidate AI analysis cache for lab results
     if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
       const biomarkerIds = results.map(r => r.biomarker_id).filter(Boolean);
