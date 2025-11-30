@@ -121,6 +121,58 @@ function normalizeForm(rawForm: string | null | undefined): string {
   return 'other';
 }
 
+// Normalize dosage unit to match database constraint
+// Allowed values: 'mg', 'g', 'mcg', 'IU', 'ml', 'serving'
+function normalizeDosageUnit(rawUnit: string | null | undefined): string {
+  if (!rawUnit) return 'serving';
+  
+  const unit = rawUnit.toLowerCase().trim();
+  
+  // Direct matches
+  if (['mg', 'g', 'mcg', 'iu', 'ml', 'serving'].includes(unit)) {
+    return unit === 'iu' ? 'IU' : unit;
+  }
+  
+  // Common aliases
+  const aliases: Record<string, string> = {
+    'milligram': 'mg',
+    'milligrams': 'mg',
+    'gram': 'g',
+    'grams': 'g',
+    'microgram': 'mcg',
+    'micrograms': 'mcg',
+    'µg': 'mcg',
+    'μg': 'mcg',
+    'international unit': 'IU',
+    'international units': 'IU',
+    'milliliter': 'ml',
+    'milliliters': 'ml',
+    'capsule': 'serving',
+    'capsules': 'serving',
+    'tablet': 'serving',
+    'tablets': 'serving',
+    'softgel': 'serving',
+    'softgels': 'serving',
+    'veggie': 'serving',
+    'veg': 'serving',
+    'scoop': 'serving',
+    'scoops': 'serving',
+    'drop': 'ml',
+    'drops': 'ml',
+  };
+  
+  if (aliases[unit]) return aliases[unit];
+  
+  // Partial matches
+  if (unit.includes('mg')) return 'mg';
+  if (unit.includes('mcg') || unit.includes('µg')) return 'mcg';
+  if (unit.includes('ml')) return 'ml';
+  if (unit.includes('iu')) return 'IU';
+  if (unit.includes('gram')) return 'g';
+  
+  return 'serving'; // Safe default
+}
+
 // Validate and clean barcode
 function validateBarcode(barcode: string | null | undefined): string | null {
   if (!barcode) return null;
@@ -508,11 +560,12 @@ Return ONLY valid JSON (no markdown):
       console.error(`[SCAN-${requestId}] ❌ Error checking existing product:`, productCheckError);
     }
 
-    // Parse dosage with fallback to default values
-    const parsedDosageAmount = extracted.dosage_per_serving 
-      ? parseFloat(extracted.dosage_per_serving.replace(/[^0-9.]/g, '')) 
-      : NaN;
-    const parsedDosageUnit = extracted.dosage_per_serving?.match(/[a-zA-Z]+/)?.[0];
+    // Parse dosage with smart extraction and normalization
+    const dosageMatch = extracted.dosage_per_serving?.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
+    const parsedDosageAmount = dosageMatch 
+      ? parseFloat(dosageMatch[1]) 
+      : 1;  // Default: 1 serving
+    const parsedDosageUnit = normalizeDosageUnit(dosageMatch?.[2]);
 
     let productId: string;
     const productData = {
@@ -520,10 +573,8 @@ Return ONLY valid JSON (no markdown):
       brand: extracted.brand,
       form: normalizeForm(extracted.form),
       barcode: validatedBarcode || null,  // Save validated barcode
-      dosage_amount: !isNaN(parsedDosageAmount) && parsedDosageAmount > 0 
-        ? parsedDosageAmount 
-        : 1,  // Default: 1 serving
-      dosage_unit: parsedDosageUnit || 'serving',  // Default: "serving"
+      dosage_amount: parsedDosageAmount,
+      dosage_unit: parsedDosageUnit,  // Now always valid!
       servings_per_container: extracted.servings_per_container,
       label_description: extracted.label_description,
       label_benefits: extracted.label_benefits,
@@ -556,6 +607,7 @@ Return ONLY valid JSON (no markdown):
     } else {
       console.log(`[SCAN-${requestId}] ➕ Creating new product`);
       
+      // First attempt with extracted data
       const { data: newProduct, error: insertError } = await supabase
         .from('supplement_products')
         .insert(productData)
@@ -563,12 +615,33 @@ Return ONLY valid JSON (no markdown):
         .single();
 
       if (insertError) {
-        console.error(`[SCAN-${requestId}] ❌ Error creating product:`, insertError);
-        throw new Error(`Failed to create product: ${insertError.message}`);
+        console.error(`[SCAN-${requestId}] ❌ First insert attempt failed:`, insertError);
+        console.log(`[SCAN-${requestId}] 🔄 Retrying with safe defaults...`);
+        
+        // Retry with safe defaults
+        const safeProductData = {
+          ...productData,
+          dosage_unit: 'serving',
+          dosage_amount: 1,
+        };
+        
+        const { data: retryProduct, error: retryError } = await supabase
+          .from('supplement_products')
+          .insert(safeProductData)
+          .select('id')
+          .single();
+        
+        if (retryError) {
+          console.error(`[SCAN-${requestId}] ❌ Retry also failed:`, retryError);
+          throw new Error(`Failed to create product: ${retryError.message}`);
+        }
+        
+        productId = retryProduct.id;
+        console.log(`[SCAN-${requestId}] ✅ Product created with safe defaults: ${productId}`);
+      } else {
+        productId = newProduct.id;
+        console.log(`[SCAN-${requestId}] ✅ Product created with ID: ${productId}`);
       }
-
-      productId = newProduct.id;
-      console.log(`[SCAN-${requestId}] ✅ Product created with ID: ${productId}`);
     }
 
     // Upload image to Storage and save image_url (use front image)
