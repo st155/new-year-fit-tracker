@@ -34,8 +34,8 @@ serve(async (req) => {
     // Parse request body
     const metric: WebVitalMetric = await req.json();
 
-    // Validate metric
-    if (!metric.name || !metric.value || !metric.rating) {
+    // Validate metric (check for undefined/null, not falsy - value can be 0!)
+    if (!metric.name || typeof metric.value !== 'number' || !metric.rating) {
       return new Response(
         JSON.stringify({ error: 'Invalid metric data' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
