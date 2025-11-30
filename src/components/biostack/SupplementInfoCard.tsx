@@ -28,6 +28,7 @@ interface SupplementInfoCardProps {
     serving_size?: string;
     serving_unit?: string;
     recommended_dosage?: string;
+    barcode?: string;  // Barcode from label
   };
   onAddToStack?: () => void;
   onSaveToLibraryOnly?: () => void;
@@ -173,7 +174,7 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
               </Badge>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
                 <p className="text-xs text-neutral-500 mb-1">💊 Serving Size</p>
                 <p className="text-sm text-white font-medium">
@@ -185,6 +186,17 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
                 <p className="text-sm text-white font-medium">
                   {(product as any).servings_per_container || 'N/A'}
                 </p>
+              </div>
+              <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
+                <p className="text-xs text-neutral-500 mb-1">🔲 Barcode</p>
+                <p className="text-xs text-white font-mono">
+                  {product.barcode || 'Not scanned'}
+                </p>
+                {product.barcode && (
+                  <Badge variant="outline" className="mt-1 text-xs border-blue-500/50 text-blue-400">
+                    📷 From Label
+                  </Badge>
+                )}
               </div>
               <div className="bg-neutral-900 rounded-lg p-3 border border-neutral-800">
                 <p className="text-xs text-neutral-500 mb-1">💰 Price</p>
