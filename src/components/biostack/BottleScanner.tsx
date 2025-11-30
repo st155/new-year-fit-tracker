@@ -58,6 +58,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const [productId, setProductId] = useState<string | null>(null);
   const [sharedUsage, setSharedUsage] = useState(false);
   const [approximateServings, setApproximateServings] = useState(0);
+  const [isQuickMatch, setIsQuickMatch] = useState(false);
   
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,8 +75,79 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     setEditedData(null);
     setEnrichedProduct(null);
     setProductId(null);
+    setIsQuickMatch(false);
     onClose();
   }, [onClose]);
+
+  // Helper: Add or update product in library
+  const addToLibrary = async (productId: string, productName: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      console.log('[BOTTLE-SCANNER] Adding to library...');
+      const { data: existingLibEntry, error: libCheckError } = await supabase
+        .from('user_supplement_library')
+        .select('id, scan_count')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
+
+      if (libCheckError) {
+        console.error('[BOTTLE-SCANNER] Error checking library:', libCheckError);
+        return;
+      }
+
+      if (existingLibEntry) {
+        // Update scan count
+        console.log('[BOTTLE-SCANNER] Updating library scan count...');
+        const { error: updateError } = await supabase
+          .from('user_supplement_library')
+          .update({ scan_count: existingLibEntry.scan_count + 1 })
+          .eq('id', existingLibEntry.id);
+
+        if (updateError) {
+          console.error('[BOTTLE-SCANNER] Library update error:', updateError);
+        } else {
+          console.log('[BOTTLE-SCANNER] ✅ Library scan count updated');
+          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+          queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
+          toast({
+            title: "📚 Scan Recorded",
+            description: `${productName} scan count updated.`,
+          });
+        }
+      } else {
+        // Create new entry
+        console.log('[BOTTLE-SCANNER] Creating new library entry...');
+        const { error: libraryError } = await supabase
+          .from('user_supplement_library')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            scan_count: 1,
+          });
+
+        if (libraryError) {
+          console.error('[BOTTLE-SCANNER] ❌ Library creation failed:', libraryError);
+          toast({
+            title: "⚠️ Library warning",
+            description: "Product found but couldn't add to library.",
+          });
+        } else {
+          console.log('[BOTTLE-SCANNER] ✅ Added to library');
+          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
+          queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
+          toast({
+            title: "📚 Added to Library",
+            description: `${productName} saved to your library.`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[BOTTLE-SCANNER] Library operation error:', error);
+    }
+  };
 
   // Compress image before upload
   const compressImage = async (base64: string): Promise<string> => {
@@ -251,66 +323,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
       setProductId(newProductId);
 
-      // Add to library automatically - check if exists first
-      console.log('[BOTTLE-SCANNER] Adding to library...');
-      const { data: existingLibEntry, error: libCheckError } = await supabase
-        .from('user_supplement_library')
-        .select('id, scan_count')
-        .eq('user_id', user.id)
-        .eq('product_id', newProductId)
-        .maybeSingle();
-
-      if (libCheckError) {
-        console.error('[BOTTLE-SCANNER] Error checking library:', libCheckError);
-      }
-
-      if (existingLibEntry) {
-        // Update scan count
-        console.log('[BOTTLE-SCANNER] Updating library scan count...');
-        const { error: updateError } = await supabase
-          .from('user_supplement_library')
-          .update({ scan_count: existingLibEntry.scan_count + 1 })
-          .eq('id', existingLibEntry.id);
-
-        if (updateError) {
-          console.error('[BOTTLE-SCANNER] Library update error:', updateError);
-        } else {
-          console.log('[BOTTLE-SCANNER] ✅ Library scan count updated');
-          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-          queryClient.invalidateQueries({ queryKey: ['library-check', newProductId] });
-          toast({
-            title: "📚 Library Updated",
-            description: `${extracted.supplement_name} scan count updated.`,
-          });
-        }
-      } else {
-        // Create new entry
-        console.log('[BOTTLE-SCANNER] Creating new library entry...');
-        const { error: libraryError } = await supabase
-          .from('user_supplement_library')
-          .insert({
-            user_id: user.id,
-            product_id: newProductId,
-            scan_count: 1,
-          });
-
-        if (libraryError) {
-          console.error('[BOTTLE-SCANNER] ❌ Library creation failed:', libraryError);
-          // Don't fail the whole flow, just warn
-          toast({
-            title: "⚠️ Library warning",
-            description: "Product created but couldn't add to library.",
-          });
-        } else {
-          console.log('[BOTTLE-SCANNER] ✅ Added to library');
-          queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-          queryClient.invalidateQueries({ queryKey: ['library-check', newProductId] });
-          toast({
-            title: "📚 Added to Library",
-            description: `${extracted.supplement_name} saved to your library.`,
-          });
-        }
-      }
+      // Add to library automatically using helper function
+      await addToLibrary(newProductId, extracted.supplement_name);
 
       // Start enrichment with label data
       console.log('[BOTTLE-SCANNER] Starting enrichment with label data...');
@@ -436,6 +450,44 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       setScanResult(data);
       setEditedData(data.extracted);
       
+      // 🆕 QUICK MATCH HANDLING
+      if (data.quick_match && data.productId) {
+        console.log('[BOTTLE-SCANNER] ⚡ QUICK MATCH! Product found by barcode:', data.productId);
+        setProductId(data.productId);
+        setIsQuickMatch(true);
+        
+        // Fetch full product data for info card
+        const { data: productData, error: fetchError } = await supabase
+          .from('supplement_products')
+          .select('*')
+          .eq('id', data.productId)
+          .single();
+        
+        if (fetchError) {
+          console.error('[BOTTLE-SCANNER] Error fetching product:', fetchError);
+          throw fetchError;
+        }
+        
+        if (productData) {
+          setEnrichedProduct({
+            ...productData,
+            barcode: data.extracted.barcode,
+          });
+        }
+        
+        // Add to library (or update scan count)
+        await addToLibrary(data.productId, data.extracted.supplement_name);
+        
+        toast({
+          title: "⚡ Мгновенное распознавание!",
+          description: `${data.extracted.supplement_name} найден по баркоду`,
+        });
+        
+        setStep('info-card');
+        return; // Skip enrichment
+      }
+      
+      // Regular flow (product not found by barcode)
       toast({
         title: "✅ Bottle analyzed!",
         description: `Detected: ${data.extracted.supplement_name}`,
@@ -749,6 +801,15 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           {/* Info Card View */}
           {step === 'info-card' && enrichedProduct && (
             <div className="space-y-4">
+              {isQuickMatch && (
+                <div className="bg-cyan-500/10 border border-cyan-500/50 rounded-lg p-3 flex items-center gap-2 animate-pulse">
+                  <span className="text-2xl">⚡</span>
+                  <div>
+                    <p className="text-cyan-400 font-semibold">Мгновенно найден по баркоду!</p>
+                    <p className="text-xs text-cyan-300/70">Продукт уже в базе данных</p>
+                  </div>
+                </div>
+              )}
               <SupplementInfoCard
                 product={enrichedProduct}
                 onAddToStack={handleAddToStack}
