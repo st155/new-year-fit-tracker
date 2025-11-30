@@ -80,6 +80,28 @@ export const BloodTestTrendsChart = () => {
     },
   });
 
+  const fixDuplicatesMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fix-duplicate-lab-results');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Дубликаты очищены",
+        description: `Удалено: ${data.deleted} неправильных записей`,
+      });
+      refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Ошибка очистки",
+        description: error.message,
+      });
+    },
+  });
+
   const stats = useMemo(() => {
     if (!data?.chartData || data.chartData.length < 2) return null;
 
@@ -124,7 +146,16 @@ export const BloodTestTrendsChart = () => {
   return (
     <div className="space-y-4">
       {/* Recalculate Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => fixDuplicatesMutation.mutate()}
+          disabled={fixDuplicatesMutation.isPending}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${fixDuplicatesMutation.isPending ? 'animate-spin' : ''}`} />
+          Очистить дубликаты
+        </Button>
         <Button 
           variant="outline" 
           size="sm"

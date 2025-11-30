@@ -207,6 +207,9 @@ verify_jwt = true
 [functions.fix-unit-conversions]
 verify_jwt = true
 
+[functions.fix-duplicate-lab-results]
+verify_jwt = true
+
 [functions.reclassify-imaging-documents]
 verify_jwt = true
 
