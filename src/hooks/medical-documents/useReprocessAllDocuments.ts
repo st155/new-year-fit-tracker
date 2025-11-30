@@ -30,7 +30,7 @@ export const useReprocessAllDocuments = () => {
 
   const [events, setEvents] = useState<ReprocessEvent[]>([]);
 
-  const startReprocessing = async () => {
+  const startReprocessing = async (forceReprocess: boolean = false) => {
     setProgress({
       current: 0,
       total: 0,
@@ -54,6 +54,7 @@ export const useReprocessAllDocuments = () => {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ forceReprocess }),
         }
       );
 

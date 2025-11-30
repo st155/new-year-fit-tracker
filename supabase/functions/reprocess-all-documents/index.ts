@@ -35,14 +35,28 @@ serve(async (req) => {
       });
     }
 
-    console.log('[REPROCESS_ALL] Starting reprocessing for user:', user.id);
+    // Parse request body for forceReprocess option
+    const body = await req.json().catch(() => ({}));
+    const forceReprocess = body?.forceReprocess === true;
 
-    // Fetch all user's documents
-    const { data: documents, error: fetchError } = await supabase
+    console.log('[REPROCESS_ALL] Starting reprocessing for user:', user.id, '| force:', forceReprocess);
+
+    // Build query to fetch documents
+    let query = supabase
       .from('medical_documents')
-      .select('id, storage_path, file_name, mime_type')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .select('id, storage_path, file_name, mime_type, category')
+      .eq('user_id', user.id);
+
+    // If not forcing, skip already processed documents with proper category and filename
+    if (!forceReprocess) {
+      // Only process documents without category OR with non-standard filenames
+      query = query.or('category.is.null,and(file_name.not.ilike.Lab_%,file_name.not.ilike.MRI_%,file_name.not.ilike.CT_%,file_name.not.ilike.USG_%,file_name.not.ilike.InBody_%,file_name.not.ilike.VO2_%,file_name.not.ilike.Photo_%,file_name.not.ilike.Rx_%,file_name.not.ilike.Program_%,file_name.not.ilike.Doc_%)');
+    }
+
+    const { data: documents, error: fetchError } = await query.order('created_at', { ascending: false });
+
+    console.log('[REPROCESS_ALL] Query filter:', forceReprocess ? 'ALL documents' : 'Only unprocessed/misnamed documents');
+    console.log('[REPROCESS_ALL] Found documents:', documents?.length || 0);
 
     if (fetchError) {
       console.error('[REPROCESS_ALL] Error fetching documents:', fetchError);
@@ -57,8 +71,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-
-    console.log(`[REPROCESS_ALL] Found ${documents.length} documents to reprocess`);
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({

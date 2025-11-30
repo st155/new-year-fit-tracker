@@ -4,16 +4,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { RefreshCw, CheckCircle2, XCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const ReprocessAllDocumentsDialog = () => {
   const [open, setOpen] = useState(false);
+  const [forceReprocess, setForceReprocess] = useState(false);
   const { progress, events, startReprocessing, reset } = useReprocessAllDocuments();
 
   const handleStart = async () => {
     try {
-      await startReprocessing();
+      await startReprocessing(forceReprocess);
       toast.success('Переобработка завершена', {
         description: `Успешно: ${progress.succeeded}, Ошибок: ${progress.failed}`,
       });
@@ -59,6 +62,21 @@ export const ReprocessAllDocumentsDialog = () => {
                 Нажмите кнопку ниже, чтобы начать переобработку всех ваших документов.<br />
                 Процесс может занять несколько минут.
               </p>
+              
+              <div className="flex items-center space-x-2 mt-2">
+                <Checkbox 
+                  id="force-reprocess" 
+                  checked={forceReprocess}
+                  onCheckedChange={(checked) => setForceReprocess(checked as boolean)}
+                />
+                <Label 
+                  htmlFor="force-reprocess" 
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
+                  Переобработать все документы (включая уже обработанные)
+                </Label>
+              </div>
+
               <Button onClick={handleStart} size="lg" className="gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Начать переобработку
