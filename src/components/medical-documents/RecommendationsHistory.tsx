@@ -74,7 +74,7 @@ export const RecommendationsHistory = () => {
                       </div>
                       {rec.health_score && (
                         <Badge variant="outline" className="text-xs">
-                          Оценка: {rec.health_score}/10
+                          Оценка: {rec.health_score}/100
                         </Badge>
                       )}
                     </div>
@@ -124,7 +124,7 @@ export const RecommendationsHistory = () => {
             </div>
             {selectedRec?.health_score && (
               <Badge className="text-lg px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30">
-                {selectedRec.health_score}/10
+                {selectedRec.health_score}/100
               </Badge>
             )}
           </div>
