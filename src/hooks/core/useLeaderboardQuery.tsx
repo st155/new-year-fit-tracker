@@ -110,7 +110,18 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number, challeng
         const avgSleepEfficiency = sleepEffMetrics.length > 0 
           ? sleepEffMetrics.reduce((sum, m) => sum + (m.value || 0), 0) / sleepEffMetrics.length 
           : 0;
-        const steps = stepMetrics.reduce((sum, m) => sum + (m.value || 0), 0);
+        
+        // Deduplicate steps: take MAX per day to handle multiple devices
+        const stepsByDate = new Map<string, number>();
+        stepMetrics.forEach(m => {
+          const date = m.measurement_date;
+          const currentMax = stepsByDate.get(date) || 0;
+          if (m.value && m.value > currentMax) {
+            stepsByDate.set(date, m.value);
+          }
+        });
+        const steps = Array.from(stepsByDate.values()).reduce((sum, v) => sum + v, 0);
+        
         const activeDays = new Set(userMetrics.map(m => m.measurement_date)).size;
         
         metricsMap.set(uid, {
