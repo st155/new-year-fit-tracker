@@ -9,6 +9,11 @@ interface RecommendationHistory {
   context_snapshot: {
     documents_analyzed?: number;
     biomarkers_count?: number;
+    abnormal_biomarkers?: number;
+    fitness_metrics_count?: number;
+    medical_findings_count?: number;
+    active_supplements_count?: number;
+    supplement_adherence?: number;
     date_range?: { from: string; to: string };
   };
   health_score: number | null;
@@ -22,9 +27,13 @@ export function useRecommendationsHistory() {
   const { data: history, isLoading, error } = useQuery({
     queryKey: ['recommendations-history'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('recommendations_history')
         .select('*')
+        .eq('user_id', user.id)
         .order('generated_at', { ascending: false });
 
       if (error) throw error;
@@ -40,17 +49,7 @@ export function useRecommendationsHistory() {
 
       if (error) throw error;
 
-      // Save to history
-      const { error: insertError } = await supabase
-        .from('recommendations_history')
-        .insert({
-          recommendations_text: data.recommendations,
-          context_snapshot: data.context || {},
-          health_score: data.health_score || null,
-        } as any);
-
-      if (insertError) throw insertError;
-
+      // Edge Function already saves to recommendations_history
       return data;
     },
     onSuccess: () => {
