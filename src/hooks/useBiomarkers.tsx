@@ -115,11 +115,37 @@ export function useLabTestResults(documentId?: string) {
     },
   });
 
+  const rematchBiomarkers = useMutation({
+    mutationFn: async (documentId?: string) => {
+      const { data, error } = await supabase.functions.invoke('rematch-biomarkers', {
+        body: { documentId }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['lab-test-results'] });
+      toast({
+        title: 'Пересопоставление завершено',
+        description: `Сопоставлено ${data.rematchedCount} из ${data.totalUnmatched} биомаркеров`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Ошибка пересопоставления',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     results,
     isLoading,
     error,
     parseDocument,
+    rematchBiomarkers,
   };
 }
 
