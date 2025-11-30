@@ -41,22 +41,16 @@ serve(async (req) => {
 
     console.log('[REPROCESS_ALL] Starting reprocessing for user:', user.id, '| force:', forceReprocess);
 
-    // Build query to fetch documents
-    let query = supabase
+    // Fetch ALL documents first
+    const { data: allDocuments, error: fetchError } = await supabase
       .from('medical_documents')
       .select('id, storage_path, file_name, mime_type, category')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-    // If not forcing, skip already processed documents with proper category and filename
-    if (!forceReprocess) {
-      // Only process documents without category OR with non-standard filenames
-      query = query.or('category.is.null,and(file_name.not.ilike.Lab_%,file_name.not.ilike.MRI_%,file_name.not.ilike.CT_%,file_name.not.ilike.USG_%,file_name.not.ilike.InBody_%,file_name.not.ilike.VO2_%,file_name.not.ilike.Photo_%,file_name.not.ilike.Rx_%,file_name.not.ilike.Program_%,file_name.not.ilike.Doc_%)');
-    }
+    console.log('[REPROCESS_ALL] Fetched all documents:', allDocuments?.length || 0);
 
-    const { data: documents, error: fetchError } = await query.order('created_at', { ascending: false });
-
-    console.log('[REPROCESS_ALL] Query filter:', forceReprocess ? 'ALL documents' : 'Only unprocessed/misnamed documents');
-    console.log('[REPROCESS_ALL] Found documents:', documents?.length || 0);
+    console.log('[REPROCESS_ALL] Fetched all documents:', allDocuments?.length || 0);
 
     if (fetchError) {
       console.error('[REPROCESS_ALL] Error fetching documents:', fetchError);
@@ -66,8 +60,35 @@ serve(async (req) => {
       });
     }
 
-    if (!documents || documents.length === 0) {
+    if (!allDocuments || allDocuments.length === 0) {
       return new Response(JSON.stringify({ message: 'No documents to process', processed: 0 }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Filter documents in JavaScript
+    const newFormatPattern = /^(Lab|MRI|CT|USG|InBody|VO2|Photo|Rx|Program|Doc)_[A-Z][a-z]{2}\d{2}/;
+    
+    let documentsToProcess = forceReprocess 
+      ? allDocuments 
+      : allDocuments.filter(doc => !newFormatPattern.test(doc.file_name));
+
+    console.log('[REPROCESS_ALL] Filter mode:', forceReprocess ? 'FORCE (all documents)' : 'SMART (old format only)');
+    console.log('[REPROCESS_ALL] Documents to process:', documentsToProcess.length);
+
+    // Sort to prioritize old format names first
+    if (!forceReprocess) {
+      documentsToProcess.sort((a, b) => {
+        const aIsNew = newFormatPattern.test(a.file_name);
+        const bIsNew = newFormatPattern.test(b.file_name);
+        if (aIsNew && !bIsNew) return 1;  // Old names first
+        if (!aIsNew && bIsNew) return -1;
+        return 0;
+      });
+    }
+
+    if (documentsToProcess.length === 0) {
+      return new Response(JSON.stringify({ message: 'All documents already processed', processed: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -79,20 +100,27 @@ serve(async (req) => {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
         };
 
-        sendEvent('start', { total: documents.length });
+        sendEvent('start', { total: documentsToProcess.length });
 
         let processed = 0;
         let succeeded = 0;
         let failed = 0;
 
-        for (const doc of documents) {
+        for (const doc of documentsToProcess) {
           try {
+            // Double-check: skip if already renamed (unless forcing)
+            if (!forceReprocess && newFormatPattern.test(doc.file_name)) {
+              console.log(`[REPROCESS_ALL] Skipping already renamed: ${doc.file_name}`);
+              processed++;
+              continue;
+            }
+
             console.log(`[REPROCESS_ALL] Processing document ${doc.id}: ${doc.file_name}`);
             sendEvent('progress', { 
               documentId: doc.id, 
               fileName: doc.file_name,
               current: processed + 1,
-              total: documents.length 
+              total: documentsToProcess.length 
             });
 
             // Download file from storage
@@ -199,7 +227,7 @@ serve(async (req) => {
             processed++;
 
             // Rate limiting: wait 2 seconds between documents
-            if (processed < documents.length) {
+            if (processed < documentsToProcess.length) {
               await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
@@ -216,7 +244,7 @@ serve(async (req) => {
         }
 
         sendEvent('done', { 
-          total: documents.length, 
+          total: documentsToProcess.length, 
           succeeded, 
           failed 
         });
