@@ -337,9 +337,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
         console.log('[BOTTLE-SCANNER] ✅ Enrichment successful');
         
-        // Add serving_size info from scanned data
+        // Add serving_size info and barcode from scanned data
         const enrichedProductData = {
           ...enrichData.product,
+          barcode: extracted.barcode || null,  // Pass barcode to UI
           serving_size: dosageAmount.toString(),
           serving_unit: dosageUnit,
           recommended_dosage: scanResult?.suggestions?.ai_rationale?.split('.')?.[0] || 'As directed',
@@ -359,6 +360,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           id: newProductId,
           name: extracted.supplement_name || 'Unknown Supplement',
           brand: extracted.brand || 'Unknown',
+          barcode: extracted.barcode || null,  // Pass barcode to UI
           dosage_amount: dosageAmount,
           dosage_unit: dosageUnit,
           form: extracted.form || 'capsules',

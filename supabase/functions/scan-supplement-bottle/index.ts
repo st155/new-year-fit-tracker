@@ -121,6 +121,23 @@ function normalizeForm(rawForm: string | null | undefined): string {
   return 'other';
 }
 
+// Validate and clean barcode
+function validateBarcode(barcode: string | null | undefined): string | null {
+  if (!barcode) return null;
+  
+  // Remove all non-digit characters
+  const cleaned = barcode.replace(/\D/g, '');
+  
+  // UPC-A: 12 digits, EAN-13: 13 digits
+  if (cleaned.length !== 12 && cleaned.length !== 13) {
+    console.log('[BARCODE] Invalid length:', cleaned.length, '(expected 12 or 13)');
+    return null;
+  }
+  
+  console.log('[BARCODE] ✅ Valid barcode:', cleaned);
+  return cleaned;
+}
+
 async function callGeminiWithRetry(
   url: string,
   options: RequestInit,
@@ -347,7 +364,7 @@ Return ONLY valid JSON (no markdown):
       // Remove markdown code blocks if present
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       extracted = JSON.parse(cleanContent);
-      console.log(`[SCAN-${requestId}] 📊 Extracted data:`, {
+    console.log(`[SCAN-${requestId}] 📊 Extracted data:`, {
         brand: extracted.brand,
         name: extracted.supplement_name,
         form: extracted.form,
@@ -358,6 +375,51 @@ Return ONLY valid JSON (no markdown):
       console.error(`[SCAN-${requestId}] ❌ Failed to parse AI response:`, parseError);
       console.error(`[SCAN-${requestId}] Raw content:`, content.substring(0, 500));
       throw new Error('Failed to parse AI response');
+    }
+
+    // QUICK BARCODE LOOKUP: Check if product already exists by barcode
+    const validatedBarcode = validateBarcode(extracted.barcode);
+    if (validatedBarcode) {
+      console.log(`[SCAN-${requestId}] 🔍 QUICK LOOKUP: Checking barcode ${validatedBarcode}...`);
+      
+      const { data: existingByBarcode, error: barcodeError } = await supabase
+        .from('supplement_products')
+        .select('*')
+        .eq('barcode', validatedBarcode)
+        .maybeSingle();
+      
+      if (barcodeError) {
+        console.error(`[SCAN-${requestId}] ❌ Barcode lookup error:`, barcodeError);
+      }
+      
+      if (existingByBarcode) {
+        console.log(`[SCAN-${requestId}] ⚡ QUICK MATCH! Product found by barcode:`, existingByBarcode.id);
+        
+        // Return immediately with existing product (skip AI enrichment)
+        const quickResponse = {
+          success: true,
+          quick_match: true,  // Flag indicating instant match
+          productId: existingByBarcode.id,
+          extracted: {
+            ...extracted,
+            barcode: validatedBarcode,
+          },
+          suggestions: {
+            intake_times: suggestIntakeTimes(existingByBarcode.name, existingByBarcode.form),
+            linked_biomarkers: [],
+            ai_rationale: `Quick match from barcode ${validatedBarcode}`,
+            target_outcome: generateTargetOutcome(existingByBarcode.name),
+          },
+        };
+        
+        console.log(`[SCAN-${requestId}] ✅ QUICK MATCH response sent (no AI enrichment needed)`);
+        
+        return new Response(JSON.stringify(quickResponse), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log(`[SCAN-${requestId}] ℹ️ Barcode not found in database, proceeding with full AI analysis...`);
     }
 
     // Query biomarker_correlations for matching supplement
@@ -402,7 +464,7 @@ Return ONLY valid JSON (no markdown):
       name: extracted.supplement_name,
       brand: extracted.brand,
       form: normalizeForm(extracted.form),
-      barcode: extracted.barcode || null,  // Save barcode if extracted
+      barcode: validatedBarcode || null,  // Save validated barcode
       dosage_amount: !isNaN(parsedDosageAmount) && parsedDosageAmount > 0 
         ? parsedDosageAmount 
         : 1,  // Default: 1 serving
