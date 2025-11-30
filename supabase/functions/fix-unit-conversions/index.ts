@@ -150,6 +150,15 @@ function normalizeUnit(unit: string): string {
     'umol/L': 'µmol/L',
     'µmol/l': 'µmol/L',
     'мкмоль/л': 'µmol/L',
+    
+    // Insulin unit variations
+    'pmol/l': 'pmol/L',
+    'пмоль/л': 'pmol/L',
+    'miu/l': 'mIU/L',
+    'мме/л': 'mIU/L',
+    'µiu/ml': 'µIU/mL',
+    'uiu/ml': 'µIU/mL',
+    'мкме/мл': 'µIU/mL',
   };
   
   return unitMap[unit] || unit;
