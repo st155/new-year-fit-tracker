@@ -22,13 +22,28 @@ export function useImagingTimeline() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // First, find all document IDs that have medical findings
+      const { data: findingsData } = await supabase
+        .from('medical_findings')
+        .select('document_id')
+        .eq('user_id', user.id);
+
+      const docIdsWithFindings = [...new Set(findingsData?.map(f => f.document_id) || [])];
+
+      // Build the OR condition including documents with findings
+      let orCondition = `category.eq.imaging_report,file_name.ilike.%узи%,file_name.ilike.%мрт%,file_name.ilike.%кт%,file_name.ilike.%рентген%,file_name.ilike.%ultrasound%,file_name.ilike.%mri%,file_name.ilike.%ct scan%,file_name.ilike.%x-ray%,file_name.ilike.%органов%,file_name.ilike.%gastro%,file_name.ilike.%эндоскопия%,file_name.ilike.%endoscopy%,file_name.ilike.%колоноскопия%,file_name.ilike.%эхокг%`;
+      
+      // Add document IDs with findings to the OR condition
+      if (docIdsWithFindings.length > 0) {
+        orCondition += `,id.in.(${docIdsWithFindings.join(',')})`;
+      }
+
       // Fetch imaging documents - expanded filter to catch misclassified documents
-      // Include: category='imaging_report' OR filename contains imaging keywords
       const { data: documents, error: docError } = await supabase
         .from('medical_documents')
         .select('id, file_name, document_date, ai_summary, category')
         .eq('user_id', user.id)
-        .or(`category.eq.imaging_report,file_name.ilike.%узи%,file_name.ilike.%мрт%,file_name.ilike.%кт%,file_name.ilike.%рентген%,file_name.ilike.%ultrasound%,file_name.ilike.%mri%,file_name.ilike.%ct scan%,file_name.ilike.%x-ray%,file_name.ilike.%органов%,file_name.ilike.%gastro%,file_name.ilike.%эндоскопия%,file_name.ilike.%endoscopy%,file_name.ilike.%колоноскопия%,file_name.ilike.%эхокг%`)
+        .or(orCondition)
         .order('document_date', { ascending: false });
 
       if (docError) throw docError;
