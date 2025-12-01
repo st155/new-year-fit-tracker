@@ -4,30 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategorySummaries } from "@/hooks/medical-documents/useCategorySummaries";
 import { useNavigate } from "react-router-dom";
-import { Droplet, FileText, Microscope, Stethoscope, Folder, ArrowRight } from "lucide-react";
+import { Droplet, FileText, Microscope, Stethoscope, Folder, ArrowRight, Pill, Activity, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 
 const categoryIcons: Record<string, any> = {
-  lab_blood: Droplet,
+  blood_test: Droplet,
   lab_urine: Microscope,
   imaging_report: Stethoscope,
   clinical_note: FileText,
+  prescription: Pill,
+  fitness_report: Activity,
+  inbody: User,
+  progress_photo: Camera,
   other: Folder,
 };
 
 const categoryLabels: Record<string, string> = {
-  lab_blood: 'Анализы крови',
+  blood_test: 'Анализы крови',
   lab_urine: 'Анализы мочи',
   imaging_report: 'МРТ/УЗИ',
   clinical_note: 'Заключения',
+  prescription: 'Рецепты',
+  fitness_report: 'Фитнес-отчёты',
+  inbody: 'Состав тела',
+  progress_photo: 'Прогресс-фото',
   other: 'Другие',
 };
 
 const categoryColors: Record<string, string> = {
-  lab_blood: 'from-red-500/20 to-pink-500/20 border-red-500/30',
+  blood_test: 'from-red-500/20 to-pink-500/20 border-red-500/30',
   lab_urine: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30',
   imaging_report: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
   clinical_note: 'from-purple-500/20 to-violet-500/20 border-purple-500/30',
+  prescription: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
+  fitness_report: 'from-orange-500/20 to-amber-500/20 border-orange-500/30',
+  inbody: 'from-cyan-500/20 to-teal-500/20 border-cyan-500/30',
+  progress_photo: 'from-pink-500/20 to-rose-500/20 border-pink-500/30',
   other: 'from-gray-500/20 to-slate-500/20 border-gray-500/30',
 };
 

@@ -74,7 +74,7 @@ serve(async (req) => {
       await supabase
         .from('medical_documents')
         .update({
-          ai_summary: 'Document too large for automatic AI analysis. Please review manually or use specialized processing for large files.',
+          ai_summary: 'Документ слишком большой для автоматического анализа. Просмотрите вручную или используйте специализированную обработку для больших файлов.',
           ai_processed: true,
           processing_status: 'completed',
           processing_completed_at: new Date().toISOString(),

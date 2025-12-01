@@ -22,13 +22,20 @@ export interface CategoryDetail {
   dateRange: { from: string; to: string } | null;
   aiSummary: string;
   metrics: CategoryMetric[];
+  documents: Array<{
+    id: string;
+    file_name: string;
+    document_date: string;
+    ai_summary: string | null;
+    processing_status: string;
+  }>;
 }
 
 async function fetchCategoryDetail(categoryId: string, userId: string): Promise<CategoryDetail> {
   // Fetch documents in this category
   const { data: documents, error: docsError } = await supabase
     .from('medical_documents')
-    .select('id, document_date, ai_summary')
+    .select('id, file_name, document_date, ai_summary, processing_status')
     .eq('user_id', userId)
     .eq('category', categoryId)
     .order('document_date', { ascending: false });
@@ -56,7 +63,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
   // Generate AI summary based on biomarker changes
   let aiSummary = 'Нет доступного описания';
   
-  if (categoryId === 'lab_blood' || categoryId === 'lab_urine') {
+  if (categoryId === 'blood_test' || categoryId === 'lab_urine') {
     // Fetch latest biomarker data for intelligent summary
     const { data: latestResults } = await supabase
       .from('lab_test_results')
@@ -138,7 +145,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
   // Fetch metrics based on category
   let metrics: CategoryMetric[] = [];
 
-  if (categoryId === 'lab_blood' || categoryId === 'lab_urine') {
+  if (categoryId === 'blood_test' || categoryId === 'lab_urine') {
     // Fetch biomarker data
     const { data: biomarkerData, error: bioError } = await supabase
       .from('lab_test_results')
@@ -284,6 +291,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
     dateRange,
     aiSummary,
     metrics,
+    documents: documents || [],
   };
 }
 

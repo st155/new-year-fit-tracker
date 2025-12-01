@@ -24,7 +24,17 @@ export function useCategorySummaries() {
       if (error) throw error;
 
       // Group by category
-      const categories = ['lab_blood', 'lab_urine', 'imaging_report', 'clinical_note', 'other'];
+      const categories = [
+        'blood_test',      // Анализы крови
+        'lab_urine',       // Анализы мочи
+        'imaging_report',  // МРТ/УЗИ
+        'clinical_note',   // Заключения
+        'prescription',    // Рецепты
+        'fitness_report',  // Фитнес-отчёты
+        'inbody',          // Состав тела
+        'progress_photo',  // Прогресс-фото
+        'other',           // Другие
+      ];
       const summaries: CategorySummary[] = [];
 
       for (const cat of categories) {
