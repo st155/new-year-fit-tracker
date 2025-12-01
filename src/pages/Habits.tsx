@@ -217,23 +217,23 @@ export default function HabitsV3() {
 
         {/* Tabs */}
         <Tabs defaultValue="smart" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 overflow-x-auto">
-            <TabsTrigger value="smart" className="text-xs sm:text-sm">
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 p-1">
+            <TabsTrigger value="smart" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               🧠 Умный
             </TabsTrigger>
-            <TabsTrigger value="compact" className="text-xs sm:text-sm">
+            <TabsTrigger value="compact" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               📋 Список
             </TabsTrigger>
-            <TabsTrigger value="social" className="text-xs sm:text-sm">
+            <TabsTrigger value="social" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               🤝 Соц
             </TabsTrigger>
-            <TabsTrigger value="focus" className="text-xs sm:text-sm">
+            <TabsTrigger value="focus" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               🎯 Фокус
             </TabsTrigger>
-            <TabsTrigger value="timeline" className="text-xs sm:text-sm">
+            <TabsTrigger value="timeline" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               ⏰ График
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs sm:text-sm">
+            <TabsTrigger value="analytics" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               📊 Данные
             </TabsTrigger>
           </TabsList>
