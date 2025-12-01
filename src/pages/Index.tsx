@@ -39,6 +39,8 @@ import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
+import { RetestRemindersWidget } from '@/components/dashboard/RetestRemindersWidget';
+import { UnitRecalculationWidget } from '@/components/dashboard/UnitRecalculationWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -375,6 +377,20 @@ const Index = () => {
         {user?.id && (
           <ErrorBoundary>
             <ActiveProtocolsWidget />
+          </ErrorBoundary>
+        )}
+
+        {/* Retest Reminders Widget */}
+        {user?.id && (
+          <ErrorBoundary>
+            <RetestRemindersWidget />
+          </ErrorBoundary>
+        )}
+
+        {/* Unit Recalculation Warning */}
+        {user?.id && (
+          <ErrorBoundary>
+            <UnitRecalculationWidget />
           </ErrorBoundary>
         )}
 
