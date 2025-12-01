@@ -313,14 +313,23 @@ Return ONLY valid JSON (no markdown):
     if (documentCategory === 'clinical_note' || documentCategory === 'prescription') {
       console.log('[PARSE-LAB-REPORT] 💊 Document is clinical note/prescription - invoking parse-doctor-recommendations...');
       try {
-        const rxResponse = await supabase.functions.invoke('parse-doctor-recommendations', {
-          body: { documentId }
-        });
+        // Use service role to call internal function
+        const rxResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/parse-doctor-recommendations`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+            },
+            body: JSON.stringify({ documentId })
+          }
+        );
         
-        if (rxResponse.error) {
-          console.error('[PARSE-LAB-REPORT] ⚠️ Rx parsing failed:', rxResponse.error);
+        if (!rxResponse.ok) {
+          console.error('[PARSE-LAB-REPORT] ⚠️ Rx parsing failed:', await rxResponse.text());
         } else {
-          const rxData = rxResponse.data as { count?: number };
+          const rxData = await rxResponse.json();
           console.log(`[PARSE-LAB-REPORT] ✓ Rx parsing complete: ${rxData?.count || 0} recommendations extracted`);
         }
       } catch (rxError) {
@@ -746,6 +755,39 @@ Extract all available metrics. Common metric names:
           console.error(`[PARSE-LAB-REPORT] Error processing fitness metric ${metric.name}:`, metricError);
         }
       }
+    
+    // ============================================================
+    // PARSER E: CLINICAL NOTE / PRESCRIPTION
+    // ============================================================
+    } else if (documentCategory === 'clinical_note' || documentCategory === 'prescription') {
+      console.log('[PARSE-LAB-REPORT] 📋 Clinical note/prescription - extraction delegated to parse-doctor-recommendations');
+      
+      // Clinical notes don't have biomarker data to extract
+      // The parse-doctor-recommendations function handles these documents
+      // Mark as successfully processed if we get here
+      
+      aiSummary = `Документ типа "${documentCategory}" обработан. Рекомендации врача извлечены отдельным парсером.`;
+      
+      // Update document status to completed
+      await supabase
+        .from('medical_documents')
+        .update({ 
+          processing_status: 'completed',
+          processing_completed_at: new Date().toISOString(),
+          ai_summary: aiSummary
+        })
+        .eq('id', documentId);
+      
+      // Return early - no biomarker processing needed for clinical notes
+      return new Response(JSON.stringify({
+        success: true,
+        category: documentCategory,
+        message: 'Clinical note processed. Doctor recommendations extracted separately.',
+        results: []
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     } else {
       // Unsupported category
       throw new Error(`Unsupported document category: ${documentCategory}`);
