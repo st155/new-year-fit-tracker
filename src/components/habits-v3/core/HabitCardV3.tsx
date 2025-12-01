@@ -14,7 +14,7 @@ import { haptics } from '@/lib/haptics';
 import { useHabitCardState } from '@/hooks/useHabitCardState';
 import { HabitCelebration } from '@/components/habits/HabitCelebration';
 import { HabitOptionsMenu } from '@/components/habits/HabitOptionsMenu';
-import { Flame, Calendar, Target, Clock, Coins, ChevronDown, ChevronUp } from 'lucide-react';
+import { Flame, Calendar, Target, Clock, Coins, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { getHabitIcon } from '@/lib/habit-utils';
 import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from '@/lib/duration-utils';
 import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
@@ -390,6 +390,24 @@ export function HabitCardV3({
               </div>
             )}
 
+            {/* Daily Check Habit - Quick Complete Button */}
+            {!compact && habit.habit_type === 'daily_check' && !habit.completed_today && (
+              <div className="mt-3">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    celebrate();
+                    onComplete?.();
+                  }}
+                  className="w-full bg-green-500 hover:bg-green-600"
+                  size="sm"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Отметить выполнено
+                </Button>
+              </div>
+            )}
+
             {/* Regular habit info */}
             {!compact && habit.habit_type !== 'duration_counter' && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1.5">
@@ -421,7 +439,7 @@ export function HabitCardV3({
 
             {/* Duration Counter Badge (compact) */}
             {habit.habit_type === 'duration_counter' && elapsedTime && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {elapsedTime.days} {elapsedTime.days === 1 ? 'день' : 'дней'}
@@ -432,6 +450,17 @@ export function HabitCardV3({
                     {moneySaved.toLocaleString()}₽
                   </Badge>
                 )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(); // Expand to show reset dialog
+                  }}
+                >
+                  🔄 Сбросить
+                </Button>
               </div>
             )}
 

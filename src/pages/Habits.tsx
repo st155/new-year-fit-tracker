@@ -217,7 +217,7 @@ export default function HabitsV3() {
 
         {/* Tabs */}
         <Tabs defaultValue="smart" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-6 overflow-x-auto">
             <TabsTrigger value="smart" className="text-xs sm:text-sm">
               🧠 Умный
             </TabsTrigger>
@@ -227,13 +227,13 @@ export default function HabitsV3() {
             <TabsTrigger value="social" className="text-xs sm:text-sm">
               🤝 Соц
             </TabsTrigger>
-            <TabsTrigger value="focus" className="text-xs sm:text-sm hidden lg:block">
+            <TabsTrigger value="focus" className="text-xs sm:text-sm">
               🎯 Фокус
             </TabsTrigger>
-            <TabsTrigger value="timeline" className="text-xs sm:text-sm hidden lg:block">
+            <TabsTrigger value="timeline" className="text-xs sm:text-sm">
               ⏰ График
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs sm:text-sm hidden lg:block">
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm">
               📊 Данные
             </TabsTrigger>
           </TabsList>

@@ -47,7 +47,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-muted-foreground" />
           <span className="font-medium">
-            {isToday ? 'Today' : format(selectedDate, 'MMMM d, yyyy')}
+            {isToday ? 'Сегодня' : format(selectedDate, 'MMMM d, yyyy')}
           </span>
         </div>
 
@@ -126,7 +126,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
                     ))
                   ) : (
                     <div className="text-xs text-muted-foreground/50 italic py-4">
-                      No habits scheduled
+                      Нет запланированных привычек
                     </div>
                   )}
                 </div>
