@@ -225,3 +225,6 @@ verify_jwt = true
 
 [functions.check-retest-suggestions]
 verify_jwt = true
+
+[functions.delete-habit]
+verify_jwt = true

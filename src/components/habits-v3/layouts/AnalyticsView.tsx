@@ -82,12 +82,12 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
     })).slice(-30);
   }, [xpHistory]);
 
-  const timeOfDayChartData = [
-    { name: 'Morning', value: timeOfDayStats.morning, fill: 'hsl(var(--chart-1))' },
-    { name: 'Afternoon', value: timeOfDayStats.afternoon, fill: 'hsl(var(--chart-2))' },
-    { name: 'Evening', value: timeOfDayStats.evening, fill: 'hsl(var(--chart-3))' },
-    { name: 'Night', value: timeOfDayStats.night, fill: 'hsl(var(--chart-4))' },
-    { name: 'Anytime', value: timeOfDayStats.anytime, fill: 'hsl(var(--chart-5))' }
+                  const timeOfDayChartData = [
+    { name: 'Утро', value: timeOfDayStats.morning, fill: 'hsl(var(--chart-1))' },
+    { name: 'День', value: timeOfDayStats.afternoon, fill: 'hsl(var(--chart-2))' },
+    { name: 'Вечер', value: timeOfDayStats.evening, fill: 'hsl(var(--chart-3))' },
+    { name: 'Ночь', value: timeOfDayStats.night, fill: 'hsl(var(--chart-4))' },
+    { name: 'Любое', value: timeOfDayStats.anytime, fill: 'hsl(var(--chart-5))' }
   ];
 
   const COLORS = [
@@ -101,7 +101,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Loading analytics...</div>
+        <div className="text-muted-foreground">Загрузка аналитики...</div>
       </div>
     );
   }
@@ -115,7 +115,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5" />
-                Smart Insights
+                Умные инсайты
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -192,21 +192,21 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
         {/* Rewards & Achievements Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5" />
-              Rewards & Achievements
-            </CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Награды и достижения
+              </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Streak Milestones */}
             <div>
-              <h4 className="text-sm font-semibold mb-4">🔥 Streak Milestones</h4>
+              <h4 className="text-sm font-semibold mb-4">🔥 Серийность</h4>
               <StreakMilestoneTimeline currentStreak={analytics.currentStreak} />
             </div>
 
             {/* Achievement Progress */}
             <div>
-              <h4 className="text-sm font-semibold mb-4">📊 Achievement Progress</h4>
+              <h4 className="text-sm font-semibold mb-4">📊 Прогресс достижений</h4>
               <AchievementProgress
                 items={[
                   // Mock data - in real app, calculate from user data
@@ -238,7 +238,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.completionRate}%</div>
-                <div className="text-xs text-muted-foreground">Completion Rate</div>
+                <div className="text-xs text-muted-foreground">Процент выполнения</div>
               </div>
             </div>
           </Card>
@@ -250,7 +250,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.currentStreak}</div>
-                <div className="text-xs text-muted-foreground">Current Streak</div>
+                <div className="text-xs text-muted-foreground">Текущая серия</div>
               </div>
             </div>
           </Card>
@@ -262,7 +262,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.totalXP}</div>
-                <div className="text-xs text-muted-foreground">Total XP</div>
+                <div className="text-xs text-muted-foreground">Всего опыта</div>
               </div>
             </div>
           </Card>
@@ -274,7 +274,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.activeHabits}</div>
-                <div className="text-xs text-muted-foreground">Active Habits</div>
+                <div className="text-xs text-muted-foreground">Активные привычки</div>
               </div>
             </div>
           </Card>
@@ -284,7 +284,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Completion Trend */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Completion Trend (30 days)</h3>
+            <h3 className="text-lg font-semibold mb-4">Тренд выполнения (30 дней)</h3>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={completionTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -315,7 +315,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* XP Earnings */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">XP Earnings</h3>
+            <h3 className="text-lg font-semibold mb-4">Заработанный опыт</h3>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={xpTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -346,7 +346,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* Time of Day Distribution */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Best Time of Day</h3>
+            <h3 className="text-lg font-semibold mb-4">Лучшее время дня</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={timeOfDayChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -374,7 +374,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* Category Distribution */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Category Distribution</h3>
+            <h3 className="text-lg font-semibold mb-4">Распределение по категориям</h3>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -405,7 +405,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
         {/* Top Habits List */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Top 5 Habits</h3>
+          <h3 className="text-lg font-semibold mb-4">Топ 5 привычек</h3>
           <div className="space-y-3">
             {topHabits.map((habit, index) => (
               <div 
@@ -421,7 +421,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                 <div className="flex-1">
                   <div className="font-medium">{habit.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {habit.completionCount} completions · {habit.totalXP} XP
+                    {habit.completionCount} выполнений · {habit.totalXP} XP
                   </div>
                 </div>
               </div>

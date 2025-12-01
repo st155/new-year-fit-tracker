@@ -189,7 +189,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                 {currentHabit.current_streak > 0 && (
                   <div className="glass-card p-4 rounded-lg">
                     <div className="text-2xl font-bold">🔥 {currentHabit.current_streak}</div>
-                    <div className="text-xs text-muted-foreground mt-1">Streak</div>
+                    <div className="text-xs text-muted-foreground mt-1">Серия</div>
                   </div>
                 )}
                 {currentHabit.xp_reward && (
