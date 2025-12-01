@@ -1,8 +1,10 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CheckCircle2, Pill, Camera } from "lucide-react";
+import { CheckCircle2, Pill, Camera, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
 import { cn } from "@/lib/utils";
+import { useLinkedBiomarkers } from "@/hooks/biostack/useLinkedBiomarkers";
+import { Link } from "react-router-dom";
 
 interface CompactSupplementChipProps {
   item: UnifiedSupplementItem;
@@ -12,6 +14,15 @@ interface CompactSupplementChipProps {
 }
 
 export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }: CompactSupplementChipProps) {
+  const { data: linkedBiomarkers } = useLinkedBiomarkers(item.linkedBiomarkerIds);
+
+  const getTrendIcon = (trend: 'up' | 'down' | 'stable' | null) => {
+    if (trend === 'up') return <TrendingUp className="h-3 w-3 text-green-500" />;
+    if (trend === 'down') return <TrendingDown className="h-3 w-3 text-red-500" />;
+    if (trend === 'stable') return <Minus className="h-3 w-3 text-blue-500" />;
+    return null;
+  };
+
   return (
     <TooltipProvider>
       <Tooltip delayDuration={200}>
@@ -90,25 +101,25 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }
             
             <div className="space-y-1 text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Dosage:</span>
+                <span className="text-muted-foreground">Дозировка:</span>
                 <span className="text-foreground">{item.dosage}</span>
               </div>
               {item.form && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Form:</span>
+                  <span className="text-muted-foreground">Форма:</span>
                   <span className="text-foreground">{item.form}</span>
                 </div>
               )}
               {item.protocolName && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Protocol:</span>
+                  <span className="text-muted-foreground">Протокол:</span>
                   <span className="text-blue-400">📋 {item.protocolName}</span>
                 </div>
               )}
               {item.source === 'manual' && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Source:</span>
-                  <span className="text-foreground">🏷️ Manual</span>
+                  <span className="text-muted-foreground">Источник:</span>
+                  <span className="text-foreground">🏷️ Ручной ввод</span>
                 </div>
               )}
             </div>
@@ -116,8 +127,39 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Taken at {item.takenAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  ✅ Принято в {item.takenAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                 </p>
+              </div>
+            )}
+
+            {/* Linked Biomarkers Section */}
+            {linkedBiomarkers && linkedBiomarkers.length > 0 && (
+              <div className="pt-2 border-t border-border/30 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Связанные биомаркеры:</p>
+                <div className="space-y-1.5">
+                  {linkedBiomarkers.map((biomarker) => (
+                    <Link
+                      key={biomarker.id}
+                      to={`/biomarkers/${biomarker.id}`}
+                      className="flex items-center justify-between gap-2 p-2 rounded bg-neutral-900/50 hover:bg-neutral-800/50 transition-colors group"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate group-hover:text-green-500 transition-colors">
+                          {biomarker.display_name}
+                        </p>
+                        {biomarker.latest_value && (
+                          <p className="text-xs text-muted-foreground">
+                            {biomarker.latest_value.toFixed(2)} {biomarker.latest_unit}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        {getTrendIcon(biomarker.trend)}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

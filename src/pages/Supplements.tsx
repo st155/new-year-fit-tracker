@@ -9,6 +9,7 @@ import { ProtocolHistory } from "@/components/supplements/ProtocolHistory";
 import { SupplementLibrary } from "@/components/biostack/SupplementLibrary";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckCompletedProtocols } from "@/hooks/biostack";
+import { useNewLabAlerts } from "@/hooks/biostack/useNewLabAlerts";
 
 type ViewMode = "dashboard" | "correlation" | "history" | "import" | "library";
 
@@ -17,6 +18,9 @@ export default function Supplements() {
   
   // Auto-check for completed protocols on mount
   useCheckCompletedProtocols();
+  
+  // Monitor new lab alerts for linked biomarkers
+  useNewLabAlerts();
   
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
 

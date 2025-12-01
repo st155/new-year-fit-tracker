@@ -290,11 +290,11 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                                 {isInLibrary ? (
                                   <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
                                     <Library className="h-3 w-3 mr-1" />
-                                    In Library
+                                    📚 В библиотеке
                                   </Badge>
                                 ) : (
                                   <Badge variant="outline" className="text-xs border-blue-500 text-blue-500">
-                                    🆕 New
+                                    🆕 Новое
                                   </Badge>
                                 )}
                               </div>

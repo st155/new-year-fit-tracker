@@ -18,6 +18,7 @@ export interface UnifiedSupplementItem {
   takenAt?: Date;
   productId?: string;
   imageUrl?: string;
+  linkedBiomarkerIds?: string[];
   
   // Smart timing fields
   scheduledTime?: string;        // "08:00", "14:00", "22:00"
@@ -104,6 +105,7 @@ export function useTodaysSupplements() {
             takenAt,
             productId: item.product_id || undefined,
             imageUrl: product?.image_url,
+            linkedBiomarkerIds: item.linked_biomarker_ids || [],
             scheduledTime: (item as any).specific_time,
             intakeInstruction: (item as any).intake_instruction,
             timeWindowMinutes: (item as any).time_window_minutes || 60,
@@ -208,6 +210,7 @@ export function useTodaysSupplements() {
               takenAt,
               productId: product?.id,
               imageUrl: product?.image_url,
+              linkedBiomarkerIds: (item as any).linked_biomarker_ids || [],
               scheduledTime: (item as any).specific_time,
               intakeInstruction: (item as any).intake_instruction,
               timeWindowMinutes: (item as any).time_window_minutes || 60,
