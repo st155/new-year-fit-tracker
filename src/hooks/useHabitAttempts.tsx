@@ -112,12 +112,13 @@ export function useHabitAttempts(habitId: string, userId?: string) {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Force immediate refetch to update UI
+      await queryClient.refetchQueries({ queryKey: ["habits", userId] });
       queryClient.invalidateQueries({ queryKey: ["habit-attempts", habitId] });
-      queryClient.invalidateQueries({ queryKey: ["habits", userId] });
       queryClient.invalidateQueries({ queryKey: ["habit-stats"] });
       queryClient.invalidateQueries({ queryKey: ["habit-measurements"] });
-      toast.info("Привычка сброшена! Начинаем заново 💪");
+      toast.success("Привычка сброшена! Начинаем заново 💪");
     },
     onError: (error) => {
       console.error("Error resetting habit:", error);
