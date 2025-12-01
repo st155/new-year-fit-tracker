@@ -574,6 +574,8 @@ export function HabitCardV3({
                   currentAttempt 
                 });
                 resetHabit({ reason: resetReason });
+                // Immediately update local state for instant UI feedback
+                setElapsedTime({ days: 0, hours: 0, minutes: 0 });
                 setShowResetDialog(false);
                 setResetReason("");
               }}

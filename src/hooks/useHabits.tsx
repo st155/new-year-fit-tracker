@@ -196,7 +196,7 @@ export function useHabits(userId?: string) {
       });
     },
     enabled: !!userId,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000, // Consider data fresh for 5 seconds - more reactive to changes
   });
 
   // Log results for debugging
