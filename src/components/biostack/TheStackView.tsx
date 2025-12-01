@@ -379,10 +379,10 @@ export function TheStackView() {
         <div className="text-center py-12">
           <Pill className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground mb-2">
-            No supplements in your stack yet.
+            В вашем стеке пока нет добавок
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Import a protocol or scan your first bottle to get started
+            Импортируйте протокол или отсканируйте первую бутылочку, чтобы начать
           </p>
           <div className="flex justify-center gap-3">
             <Button 

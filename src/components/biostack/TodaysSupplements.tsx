@@ -93,9 +93,9 @@ export function TodaysSupplements() {
       <Card className="p-8 bg-neutral-950 border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
         <div className="text-center space-y-4">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-          <h3 className="text-xl font-bold text-green-500">All Done for Today! 🎉</h3>
+          <h3 className="text-xl font-bold text-green-500">Всё сделано на сегодня! 🎉</h3>
           <p className="text-muted-foreground">
-            You've logged all your scheduled supplements
+            Вы приняли все запланированные добавки
           </p>
         </div>
       </Card>

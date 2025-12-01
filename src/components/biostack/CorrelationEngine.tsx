@@ -63,9 +63,9 @@ export function CorrelationEngine() {
         <div className="text-center space-y-4">
           <Activity className="h-12 w-12 mx-auto text-muted-foreground" />
           <div>
-            <h3 className="text-lg font-semibold mb-2">No Supplements with Linked Biomarkers</h3>
+            <h3 className="text-lg font-semibold mb-2">Нет добавок с привязанными биомаркерами</h3>
             <p className="text-muted-foreground">
-              Add supplements to your stack and link them to biomarkers to see correlation analysis.
+              Добавьте добавки в стек и свяжите их с биомаркерами, чтобы увидеть анализ корреляций
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function CorrelationEngine() {
         <Card className="p-12 bg-neutral-950 border-neutral-800">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
-            <p className="text-muted-foreground">🤖 Analyzing correlation...</p>
+            <p className="text-muted-foreground">🤖 Анализ корреляции...</p>
           </div>
         </Card>
       )}
@@ -119,7 +119,7 @@ export function CorrelationEngine() {
       {correlation && !correlation.success && (
         <Card className="p-8 bg-neutral-950 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-red-400">Insufficient Data</h3>
+            <h3 className="text-lg font-semibold text-red-400">Недостаточно данных</h3>
             <p className="text-muted-foreground">{correlation.error}</p>
           </div>
         </Card>
@@ -133,7 +133,7 @@ export function CorrelationEngine() {
             <Card className="p-4 bg-neutral-950 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Biomarker Change</span>
+                  <span className="text-sm text-muted-foreground">Изменение биомаркера</span>
                   {correlation.biomarker && correlation.biomarker.changePercent > 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-500" />
                   ) : (

@@ -212,7 +212,7 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
 
               {(!protocol.protocol_items || protocol.protocol_items.length === 0) && (
                 <p className="text-center py-6 text-muted-foreground">
-                  No supplements in this protocol
+                  В этом протоколе нет добавок
                 </p>
               )}
             </div>

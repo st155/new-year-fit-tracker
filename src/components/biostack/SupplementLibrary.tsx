@@ -196,9 +196,9 @@ export function SupplementLibrary() {
             <Library className="h-8 w-8 text-green-500" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-2">Library is empty</h3>
+            <h3 className="text-lg font-semibold mb-2">Библиотека пуста</h3>
             <p className="text-sm text-muted-foreground">
-              Scan supplement bottles to build your personal library
+              Сканируйте бутылочки добавок, чтобы создать персональную библиотеку
             </p>
           </div>
         </div>
@@ -342,7 +342,7 @@ export function SupplementLibrary() {
           {/* No Results */}
           {filteredLibrary?.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No supplements match your filters</p>
+              <p className="text-muted-foreground">Нет добавок, соответствующих вашим фильтрам</p>
             </div>
           )}
         </>

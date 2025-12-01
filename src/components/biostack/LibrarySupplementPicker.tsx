@@ -137,7 +137,7 @@ export function LibrarySupplementPicker({
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No supplements in your library</p>
+              <p>В вашей библиотеке нет добавок</p>
             </div>
           )}
         </ScrollArea>
