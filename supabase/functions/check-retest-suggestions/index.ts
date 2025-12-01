@@ -157,28 +157,18 @@ serve(async (req) => {
 
     console.log(`[CHECK-RETEST] Generated ${suggestions.length} retest suggestions`);
 
-    // Save suggestions to lifecycle_alerts table
+    // Save suggestions to protocol_lifecycle_alerts table
     if (suggestions.length > 0) {
       const alerts = suggestions.map(s => ({
         user_id: user.id,
-        alert_type: s.type,
-        priority: s.priority,
-        title: s.title,
+        protocol_id: s.stack_item_id || null,
+        alert_type: 'retest_prompt',
         message: s.message,
-        action_label: s.action_label,
-        action_url: s.action_url,
-        metadata: {
-          stack_item_id: s.stack_item_id,
-          supplement_name: s.supplement_name,
-          linked_biomarker_ids: s.linked_biomarker_ids,
-          days_until_action: s.days_until_action,
-          weeks_since_start: s.weeks_since_start,
-        },
-        status: 'active',
+        is_read: false,
       }));
 
       const { error: insertError } = await supabase
-        .from('lifecycle_alerts')
+        .from('protocol_lifecycle_alerts')
         .insert(alerts);
 
       if (insertError) {
@@ -186,7 +176,7 @@ serve(async (req) => {
         throw insertError;
       }
 
-      console.log(`[CHECK-RETEST] ✅ Saved ${alerts.length} alerts to lifecycle_alerts table`);
+      console.log(`[CHECK-RETEST] ✅ Saved ${alerts.length} alerts to protocol_lifecycle_alerts table`);
     }
 
     return new Response(

@@ -82,7 +82,7 @@ const MedicalIngestionCockpit = () => {
   // Users can manually retry via ErrorDetailsPanel if needed
 
   if (isLoading) {
-    return <PageLoader message="Loading document..." />;
+    return <PageLoader message="Загрузка документа..." />;
   }
 
   if (error || !document) {
@@ -91,7 +91,7 @@ const MedicalIngestionCockpit = () => {
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load document. Please try again.
+            Ошибка загрузки документа. Попробуйте снова.
           </AlertDescription>
         </Alert>
       </div>

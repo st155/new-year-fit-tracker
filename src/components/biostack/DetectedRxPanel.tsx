@@ -56,7 +56,7 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
       <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <span>📋</span>
-          <span>Doctor's Recommendations</span>
+          <span>Рекомендации врача</span>
           <span className="text-sm text-muted-foreground">({recommendations.length})</span>
         </h3>
         <Button
@@ -67,10 +67,10 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
           {isAddingAll ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Adding...
+              Добавление...
             </>
           ) : (
-            'Add All to Stack'
+            'Добавить всё в стек'
           )}
         </Button>
       </div>
@@ -153,10 +153,10 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
                   {isAddingToStack ? (
                     <>
                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      Adding...
+                      Добавление...
                     </>
                   ) : (
-                    'Add to Stack'
+                    'В стек'
                   )}
                 </Button>
                 <Button
@@ -169,7 +169,7 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
                   {isDismissing ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    'Dismiss'
+                    'Отклонить'
                   )}
                 </Button>
               </div>

@@ -11,6 +11,9 @@ import QualitativeTrendChart from '@/components/biomarkers/QualitativeTrendChart
 import { BiomarkerSettingsModal } from '@/components/biomarkers/BiomarkerSettingsModal';
 import { RecommendedSupplementsCard } from '@/components/biomarkers/RecommendedSupplementsCard';
 import { useAddSupplementToStack } from '@/hooks/biostack/useAddSupplementToStack';
+import { BeforeAfterCard } from '@/components/biostack/BeforeAfterCard';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -40,6 +43,27 @@ export default function BiomarkerDetail() {
   
   const { analysis, isLoading: analysisLoading } = useBiomarkerTrends(biomarkerId);
   const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId);
+  
+  // Fetch stack items linked to this biomarker
+  const { data: linkedStackItems } = useQuery({
+    queryKey: ['linked-stack-items', biomarkerId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('user_stack')
+        .select('id, stack_name, start_date')
+        .eq('user_id', user.id)
+        .contains('linked_biomarker_ids', [biomarkerId])
+        .not('start_date', 'is', null)
+        .order('start_date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!biomarkerId,
+  });
 
   if (analysisLoading || historyLoading) {
     return (
@@ -255,6 +279,22 @@ export default function BiomarkerDetail() {
               unit={biomarker.unit}
               referenceRanges={reference_ranges}
             />
+          )}
+
+          {/* Before/After Cards for linked supplements */}
+          {linkedStackItems && linkedStackItems.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Влияние добавок</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {linkedStackItems.map((item) => (
+                  <BeforeAfterCard
+                    key={item.id}
+                    stackItemId={item.id}
+                    biomarkerId={biomarkerId}
+                  />
+                ))}
+              </div>
+            </div>
           )}
 
           {/* AI Insights */}

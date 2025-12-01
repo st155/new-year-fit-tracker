@@ -107,11 +107,25 @@ export const RecommendationsHistory = () => {
           </Button>
 
           <Button
-            onClick={() => generateRecommendation.mutate()}
-            disabled={generateRecommendation.isPending}
+            onClick={async () => {
+              // First recalculate units
+              try {
+                await recalculateUnits.mutateAsync();
+              } catch (error) {
+                console.error('Unit recalculation failed:', error);
+              }
+              // Then generate recommendations
+              generateRecommendation.mutate();
+            }}
+            disabled={generateRecommendation.isPending || recalculateUnits.isPending}
             className="w-full mt-2 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
           >
-            {generateRecommendation.isPending ? (
+            {recalculateUnits.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Пересчёт единиц...
+              </>
+            ) : generateRecommendation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Генерация...
