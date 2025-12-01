@@ -72,10 +72,15 @@ export function HabitCardV3({
   const swipeResetTimer = useRef<NodeJS.Timeout>();
   const { user } = useAuth();
 
-  // Hook for reset functionality (only for duration_counter habits)
-  const { resetHabit, isResetting } = habit.habit_type === 'duration_counter' && user?.id
-    ? useHabitAttempts(habit.id, user.id)
-    : { resetHabit: () => {}, isResetting: false };
+  // Hook for reset functionality - ALWAYS call unconditionally to follow React hooks rules
+  const isDurationCounter = habit.habit_type === 'duration_counter';
+  const habitAttempts = useHabitAttempts(
+    isDurationCounter ? habit.id : '', 
+    isDurationCounter ? user?.id : undefined
+  );
+  const { resetHabit, isResetting, currentAttempt } = isDurationCounter 
+    ? habitAttempts 
+    : { resetHabit: () => {}, isResetting: false, currentAttempt: null };
 
   const theme = getTimeBasedTheme(habit.time_of_day as TimeOfDay);
   const stateStyles = getStateStyles(state);
@@ -475,6 +480,11 @@ export function HabitCardV3({
                   className="h-6 px-2 text-xs border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/5"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!user?.id) {
+                      toast.error("Необходимо авторизоваться");
+                      return;
+                    }
+                    console.log('Opening reset dialog for habit:', habit.id);
                     setShowResetDialog(true);
                   }}
                 >
@@ -557,6 +567,12 @@ export function HabitCardV3({
             <AlertDialogAction
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('Reset clicked:', { 
+                  habitId: habit.id, 
+                  userId: user?.id, 
+                  reason: resetReason,
+                  currentAttempt 
+                });
                 resetHabit({ reason: resetReason });
                 setShowResetDialog(false);
                 setResetReason("");

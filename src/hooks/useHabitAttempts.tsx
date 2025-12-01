@@ -40,9 +40,36 @@ export function useHabitAttempts(habitId: string, userId?: string) {
   const resetHabit = useMutation({
     mutationFn: async ({ reason }: { reason?: string }) => {
       if (!userId) throw new Error("User not authenticated");
-      if (!currentAttempt) throw new Error("No active attempt");
-
+      
       const today = new Date().toISOString().split('T')[0];
+      
+      // If no active attempt exists, create one and then reset it
+      // This handles the case when habit was created but no attempt was recorded
+      if (!currentAttempt) {
+        console.warn("No active attempt found, creating initial attempt first");
+        
+        // Start new attempt from today
+        const { data: newAttempt, error: createError } = await supabase
+          .from("habit_attempts")
+          .insert({
+            habit_id: habitId,
+            user_id: userId,
+            start_date: today,
+          })
+          .select()
+          .single();
+        
+        if (createError) throw createError;
+        
+        // Update habit table to reset start_date
+        await supabase
+          .from("habits")
+          .update({ start_date: today })
+          .eq("id", habitId);
+        
+        return newAttempt;
+      }
+
       const daysLasted = Math.floor(
         (new Date(today).getTime() - new Date(currentAttempt.start_date).getTime()) 
         / (1000 * 60 * 60 * 24)
