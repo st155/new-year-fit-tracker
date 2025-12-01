@@ -163,13 +163,13 @@ export default function CategoryDetailPage() {
                             : doc.processing_status === 'processing'
                             ? 'bg-blue-500/20 text-blue-500 border-blue-500/50'
                             : doc.processing_status === 'error'
-                            ? 'bg-red-500/20 text-red-500 border-red-500/50'
+                            ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50'
                             : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50'
                         }
                       >
-                        {doc.processing_status === 'completed' ? '✅' : 
-                         doc.processing_status === 'processing' ? '⏳' :
-                         doc.processing_status === 'error' ? '❌' : '⏸️'}
+                        {doc.processing_status === 'completed' ? '✅ Обработан' : 
+                         doc.processing_status === 'processing' ? '⏳ Обработка' :
+                         doc.processing_status === 'error' ? '⚠️ Требует внимания' : '⏸️ Ожидает'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
