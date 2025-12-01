@@ -8,18 +8,26 @@ import { CategoryMetricCard } from '@/components/medical-documents/CategoryMetri
 import { motion } from 'framer-motion';
 
 const categoryLabels: Record<string, string> = {
-  lab_blood: 'Анализы крови',
+  blood_test: 'Анализы крови',
   lab_urine: 'Анализы мочи',
   imaging_report: 'МРТ/УЗИ',
   clinical_note: 'Заключения',
+  prescription: 'Рецепты',
+  fitness_report: 'Фитнес-отчёты',
+  inbody: 'Состав тела',
+  progress_photo: 'Прогресс-фото',
   other: 'Другие',
 };
 
 const categoryIcons: Record<string, string> = {
-  lab_blood: '🩸',
+  blood_test: '🩸',
   lab_urine: '🧪',
   imaging_report: '🔬',
   clinical_note: '📋',
+  prescription: '💊',
+  fitness_report: '🏃',
+  inbody: '⚖️',
+  progress_photo: '📸',
   other: '📁',
 };
 
@@ -99,7 +107,7 @@ export default function CategoryDetailPage() {
 
       {/* Metrics Grid */}
       {data.metrics && data.metrics.length > 0 && (
-        <div>
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Показатели</h2>
             <Badge variant="secondary">
@@ -122,8 +130,70 @@ export default function CategoryDetailPage() {
         </div>
       )}
 
+      {/* Documents List */}
+      {data.documents && data.documents.length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Документы</h2>
+            <Badge variant="secondary">{data.documents.length}</Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.documents.map((doc, index) => (
+              <motion.div
+                key={doc.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
+              >
+                <Card 
+                  className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg"
+                  onClick={() => navigate(`/medical-documents/view/${doc.id}`)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-base truncate flex-1">
+                        {doc.file_name}
+                      </CardTitle>
+                      <Badge 
+                        variant="outline"
+                        className={
+                          doc.processing_status === 'completed' 
+                            ? 'bg-green-500/20 text-green-500 border-green-500/50'
+                            : doc.processing_status === 'processing'
+                            ? 'bg-blue-500/20 text-blue-500 border-blue-500/50'
+                            : doc.processing_status === 'error'
+                            ? 'bg-red-500/20 text-red-500 border-red-500/50'
+                            : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50'
+                        }
+                      >
+                        {doc.processing_status === 'completed' ? '✅' : 
+                         doc.processing_status === 'processing' ? '⏳' :
+                         doc.processing_status === 'error' ? '❌' : '⏸️'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {doc.document_date ? new Date(doc.document_date).toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      }) : 'Дата не указана'}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {doc.ai_summary || 'Нет описания'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
-      {(!data.metrics || data.metrics.length === 0) && (
+      {(!data.metrics || data.metrics.length === 0) && (!data.documents || data.documents.length === 0) && (
         <Card className="py-12">
           <CardContent className="text-center">
             <p className="text-muted-foreground">
