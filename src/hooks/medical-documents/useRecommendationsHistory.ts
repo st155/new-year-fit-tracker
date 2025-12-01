@@ -41,6 +41,30 @@ export function useRecommendationsHistory() {
     },
   });
 
+  const recalculateUnits = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fix-unit-conversions', {
+        body: {}
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Единицы пересчитаны',
+        description: `Обновлено ${data?.updated || 0} записей`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Ошибка пересчёта',
+        description: error.message,
+        variant: 'destructive'
+      });
+    },
+  });
+
   const generateRecommendation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('generate-health-recommendations', {
@@ -73,5 +97,6 @@ export function useRecommendationsHistory() {
     isLoading,
     error,
     generateRecommendation,
+    recalculateUnits,
   };
 }

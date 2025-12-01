@@ -5,11 +5,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRecommendationsHistory } from "@/hooks/medical-documents/useRecommendationsHistory";
-import { Sparkles, Loader2, Lightbulb, Calendar, ChevronRight } from "lucide-react";
+import { Sparkles, Loader2, Lightbulb, Calendar, ChevronRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const RecommendationsHistory = () => {
-  const { history, isLoading, generateRecommendation } = useRecommendationsHistory();
+  const { history, isLoading, generateRecommendation, recalculateUnits } = useRecommendationsHistory();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const selectedRec = history?.find(h => h.id === selectedId) || history?.[0];
@@ -88,9 +88,28 @@ export const RecommendationsHistory = () => {
           </ScrollArea>
 
           <Button
+            onClick={() => recalculateUnits.mutate()}
+            disabled={recalculateUnits.isPending}
+            variant="outline"
+            className="w-full mt-4 gap-2 border-orange-500/30 hover:bg-orange-500/10"
+          >
+            {recalculateUnits.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Пересчёт...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                🔄 Обновить данные
+              </>
+            )}
+          </Button>
+
+          <Button
             onClick={() => generateRecommendation.mutate()}
             disabled={generateRecommendation.isPending}
-            className="w-full mt-4 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+            className="w-full mt-2 gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
           >
             {generateRecommendation.isPending ? (
               <>

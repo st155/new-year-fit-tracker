@@ -155,6 +155,13 @@ serve(async (req) => {
         if (latest.normalized_value && oldest.normalized_value) {
           const change = latest.normalized_value - oldest.normalized_value;
           const percentChange = ((change / oldest.normalized_value) * 100).toFixed(1);
+          const absPercentChange = Math.abs(parseFloat(percentChange));
+          
+          // ⚠️ Warning for suspicious changes (>500%) - likely unit conversion issue
+          if (absPercentChange > 500) {
+            console.warn(`[SUSPICIOUS CHANGE] ${biomarker.display_name}: ${oldest.normalized_value} → ${latest.normalized_value} (${percentChange}%) - possible unit conversion error`);
+          }
+          
           const trend = change > 0 ? '↗️' : change < 0 ? '↘️' : '→';
           
           const refRanges = biomarker.reference_ranges as any;

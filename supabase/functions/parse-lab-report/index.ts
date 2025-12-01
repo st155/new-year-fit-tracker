@@ -880,6 +880,25 @@ Extract all available metrics. Common metric names:
       }
     }
     
+    // ✅ Auto-normalize units for newly added biomarker results
+    if (results.length > 0 && (documentCategory === 'blood_test' || documentCategory === 'lab_urine' || documentCategory === 'lab_microbiome')) {
+      console.log('[PARSE-LAB-REPORT] Auto-normalizing units for new results...');
+      try {
+        const { data: fixData, error: fixError } = await supabase.functions.invoke('fix-unit-conversions', {
+          body: {}
+        });
+        
+        if (fixError) {
+          console.warn('[PARSE-LAB-REPORT] Unit normalization warning:', fixError.message);
+        } else {
+          console.log(`[PARSE-LAB-REPORT] ✓ Normalized ${fixData?.updated || 0} values`);
+        }
+      } catch (normalizeError) {
+        // Non-critical error - log but don't fail the entire parsing
+        console.warn('[PARSE-LAB-REPORT] Unit normalization failed:', normalizeError);
+      }
+    }
+    
     // Process IMAGING results
     else if (documentCategory === 'imaging_report') {
       for (const finding of extractedData.findings || []) {
