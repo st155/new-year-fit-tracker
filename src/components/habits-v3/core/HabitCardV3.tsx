@@ -20,6 +20,18 @@ import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculat
 import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useHabitAttempts } from '@/hooks/useHabitAttempts';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface HabitCardV3Props {
   habit: any;
@@ -54,9 +66,16 @@ export function HabitCardV3({
   const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
   const [swipeLeftCount, setSwipeLeftCount] = useState(0);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetReason, setResetReason] = useState("");
   const longPressTimer = useRef<NodeJS.Timeout>();
   const swipeResetTimer = useRef<NodeJS.Timeout>();
   const { user } = useAuth();
+
+  // Hook for reset functionality (only for duration_counter habits)
+  const { resetHabit, isResetting } = habit.habit_type === 'duration_counter' && user?.id
+    ? useHabitAttempts(habit.id, user.id)
+    : { resetHabit: () => {}, isResetting: false };
 
   const theme = getTimeBasedTheme(habit.time_of_day as TimeOfDay);
   const stateStyles = getStateStyles(state);
@@ -456,7 +475,7 @@ export function HabitCardV3({
                   className="h-6 px-2 text-xs border border-red-500/30 hover:border-red-500/50 hover:bg-red-500/5"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggle(); // Expand to show reset dialog
+                    setShowResetDialog(true);
                   }}
                 >
                   🔄 Сбросить
@@ -517,6 +536,39 @@ export function HabitCardV3({
         trigger={showCelebration} 
         type={habit.streak % 7 === 0 ? 'milestone' : 'completion'} 
       />
+
+      {/* Reset confirmation dialog */}
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Сбросить счетчик?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ваш прогресс ({elapsedTime?.days || 0} дней) сохранится в истории. Счетчик начнется заново.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            placeholder="Что произошло? (опционально)"
+            value={resetReason}
+            onChange={(e) => setResetReason(e.target.value)}
+            className="min-h-[80px]"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.stopPropagation();
+                resetHabit({ reason: resetReason });
+                setShowResetDialog(false);
+                setResetReason("");
+              }}
+              disabled={isResetting}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isResetting ? "Сброс..." : "Начать заново"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
