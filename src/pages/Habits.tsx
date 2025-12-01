@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SmartView } from '@/components/habits-v3/layouts';
+import { SmartView, AllHabitsView } from '@/components/habits-v3/layouts';
 import { SocialView } from '@/components/habits-v3/layouts/SocialView';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
@@ -216,8 +216,11 @@ export default function HabitsV3() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="smart" className="space-y-6">
+        <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 p-1">
+            <TabsTrigger value="all" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
+              📊 Все
+            </TabsTrigger>
             <TabsTrigger value="smart" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               🧠 Умный
             </TabsTrigger>
@@ -237,6 +240,14 @@ export default function HabitsV3() {
               📊 Данные
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="all">
+            <AllHabitsView
+              habits={habits}
+              onHabitComplete={handleHabitComplete}
+              onHabitClick={handleHabitTap}
+            />
+          </TabsContent>
 
           <TabsContent value="smart">
               <SmartView

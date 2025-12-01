@@ -5,3 +5,4 @@ export { CompactListView } from './CompactListView';
 export { FocusMode } from './FocusMode';
 export { TimelineView } from './TimelineView';
 export { AnalyticsView } from './AnalyticsView';
+export { AllHabitsView } from './AllHabitsView';
