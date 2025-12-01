@@ -57,8 +57,8 @@ export const AIInsights = () => {
           if (todayMetrics.length > 0) {
             generatedInsights.push({
               type: 'highlight',
-              title: "🔥 Today's Highlight",
-              message: `You've logged ${todayMetrics.length} metrics today! Keep the momentum going.`,
+              title: "🔥 Достижение дня",
+              message: `Вы записали ${todayMetrics.length} метрик сегодня! Продолжайте в том же духе.`,
               priority: 'high'
             });
           }
@@ -107,8 +107,8 @@ export const AIInsights = () => {
         if (metricsData.data && metricsData.data.length >= 5) {
           generatedInsights.push({
             type: 'achievement',
-            title: "🏆 Active Week",
-            message: `You've logged ${metricsData.data.length} metrics this week. You're on fire!`,
+            title: "🏆 Активная неделя",
+            message: `Вы записали ${metricsData.data.length} метрик на этой неделе. Вы в огне!`,
             priority: 'low'
           });
         }

@@ -41,6 +41,7 @@ import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidget';
 import { RetestRemindersWidget } from '@/components/dashboard/RetestRemindersWidget';
 import { UnitRecalculationWidget } from '@/components/dashboard/UnitRecalculationWidget';
+import { DailyOverviewWidget } from '@/components/dashboard/DailyOverviewWidget';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -371,6 +372,13 @@ const Index = () => {
         )}
         </motion.div>
           </>
+        )}
+
+        {/* Daily Overview Widget */}
+        {user?.id && (
+          <ErrorBoundary>
+            <DailyOverviewWidget />
+          </ErrorBoundary>
         )}
 
         {/* Active Protocols Widget */}
