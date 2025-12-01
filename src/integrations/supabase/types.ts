@@ -7058,6 +7058,10 @@ export type Database = {
         Args: { _challenge_id: string; _user_id: string }
         Returns: boolean
       }
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_trainer: { Args: { _user_id: string }; Returns: boolean }
       join_challenge:
         | { Args: { p_challenge_id: string }; Returns: Json }
