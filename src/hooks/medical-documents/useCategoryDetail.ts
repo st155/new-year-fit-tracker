@@ -3,6 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+// Локализация известных английских сообщений об ошибках
+function localizeAiSummary(summary: string | null): string | null {
+  if (!summary) return null;
+  
+  const translations: Record<string, string> = {
+    'Document too large for automatic AI analysis. Please review manually or use specialized processing for large files.': 
+      'Документ слишком большой для автоматического анализа. Пожалуйста, просмотрите вручную.',
+    'Failed to process document':
+      'Не удалось обработать документ',
+    'Processing error':
+      'Ошибка обработки',
+  };
+  
+  return translations[summary] || summary;
+}
+
 export interface CategoryMetric {
   id: string;
   biomarkerId: string; // ID биомаркера для навигации
@@ -134,12 +150,31 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
       aiSummary = summary;
     }
   } else {
-    // For other categories, use document summaries
-    aiSummary = documents
-      ?.slice(0, 3)
-      .map(d => d.ai_summary)
-      .filter(Boolean)
-      .join(' ') || 'Нет доступного описания';
+    // For other categories, use document summaries with deduplication
+    const uniqueSummaries = [...new Set(
+      documents
+        ?.slice(0, 5)
+        .map(d => localizeAiSummary(d.ai_summary))
+        .filter(Boolean)
+    )];
+
+    if (uniqueSummaries.length > 0) {
+      // Проверяем, не являются ли все саммари только сообщениями об ошибках
+      const hasRealContent = uniqueSummaries.some(s => 
+        !s?.includes('слишком большой') && 
+        !s?.includes('too large') &&
+        !s?.includes('Не удалось') &&
+        !s?.includes('Failed')
+      );
+      
+      if (hasRealContent) {
+        aiSummary = uniqueSummaries.join('\n\n');
+      } else {
+        aiSummary = `В категории ${documentCount} документ${documentCount === 1 ? '' : documentCount < 5 ? 'а' : 'ов'}. ${uniqueSummaries[0]}`;
+      }
+    } else {
+      aiSummary = 'Нет доступного описания';
+    }
   }
 
   // Fetch metrics based on category
