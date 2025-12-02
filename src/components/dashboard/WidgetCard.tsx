@@ -46,20 +46,31 @@ interface WidgetCardProps {
   inBodySparklineData?: { date: string; value: number }[];
 }
 
-// Custom tooltip component for sparkline charts
+// Custom tooltip component for sparkline charts - supports dual data sources
 function WidgetChartTooltip({ active, payload, metricName, unit }: any) {
   if (active && payload && payload.length) {
-    const value = payload[0].value;
-    const date = payload[0].payload.date;
+    const date = payload[0]?.payload?.date;
+    const withingsValue = payload.find((p: any) => p.dataKey === 'withingsValue')?.value;
+    const inbodyValue = payload.find((p: any) => p.dataKey === 'inbodyValue')?.value;
     
     return (
       <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg">
-        <p className="text-xs text-muted-foreground mb-0.5">
-          {date}
-        </p>
-        <p className="text-sm font-semibold text-foreground">
-          {formatValue(value, metricName, unit)} {unit}
-        </p>
+        <p className="text-xs text-muted-foreground mb-1">{date}</p>
+        {withingsValue != null && (
+          <p className="text-sm font-semibold" style={{ color: '#ec4899' }}>
+            Withings: {formatValue(withingsValue, metricName, unit)} {unit}
+          </p>
+        )}
+        {inbodyValue != null && (
+          <p className="text-sm font-semibold" style={{ color: '#10b981' }}>
+            InBody: {formatValue(inbodyValue, metricName, unit)} {unit}
+          </p>
+        )}
+        {withingsValue == null && inbodyValue == null && payload[0]?.value != null && (
+          <p className="text-sm font-semibold text-foreground">
+            {formatValue(payload[0].value, metricName, unit)} {unit}
+          </p>
+        )}
       </div>
     );
   }
@@ -839,66 +850,85 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         </div>
 
         {/* Sparkline Chart - Recharts with InBody overlay */}
-        {sparklineData && sparklineData.length > 1 && (
-          <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
-            <ResponsiveContainer width="100%" height={60}>
-              <AreaChart 
-                data={useMemo(() => {
-                  // Merge Withings and InBody data by date
-                  const allDates = new Set([
-                    ...sparklineData.map(d => d.date),
-                    ...(inBodySparklineData || []).map(d => d.date),
-                  ]);
-                  
-                  return Array.from(allDates).sort().map(date => ({
-                    date: format(parseISO(date), 'd MMM', { locale: ru }),
-                    withingsValue: sparklineData.find(d => d.date === date)?.value,
-                    inbodyValue: inBodySparklineData?.find(d => d.date === date)?.value,
-                  }));
-                }, [sparklineData, inBodySparklineData])}
-                margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <YAxis domain={['auto', 'auto']} hide />
-                <RechartsTooltip 
-                  content={
-                    <WidgetChartTooltip 
-                      metricName={metricName} 
-                      unit={data.unit} 
-                    />
-                  } 
-                />
-                {/* Withings data - main line */}
-                <Area
-                  type="natural"
-                  dataKey="withingsValue"
-                  stroke={color}
-                  strokeWidth={2}
-                  fill={`url(#gradient-${metricName.replace(/\s+/g, '-')})`}
-                  isAnimationActive={false}
-                />
-                {/* InBody data - green dashed line overlay */}
-                {inBodySparklineData && inBodySparklineData.length > 0 && (
+        {sparklineData && sparklineData.length > 1 && (() => {
+          // Merge Withings and InBody data by date (computed once, not in JSX)
+          const mergedChartData = (() => {
+            const allDates = new Set([
+              ...sparklineData.map(d => d.date),
+              ...(inBodySparklineData || []).map(d => d.date),
+            ]);
+            
+            return Array.from(allDates).sort().map(date => ({
+              date: format(parseISO(date), 'd MMM', { locale: ru }),
+              withingsValue: sparklineData.find(d => d.date === date)?.value,
+              inbodyValue: inBodySparklineData?.find(d => d.date === date)?.value,
+            }));
+          })();
+
+          return (
+            <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
+              <ResponsiveContainer width="100%" height={60}>
+                <AreaChart 
+                  data={mergedChartData}
+                  margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <YAxis domain={['auto', 'auto']} hide />
+                  <RechartsTooltip 
+                    content={
+                      <WidgetChartTooltip 
+                        metricName={metricName} 
+                        unit={data.unit} 
+                      />
+                    } 
+                  />
+                  {/* Withings data - main line */}
                   <Area
                     type="natural"
-                    dataKey="inbodyValue"
-                    stroke="#10b981"
+                    dataKey="withingsValue"
+                    stroke={color}
                     strokeWidth={2}
-                    fill="transparent"
-                    strokeDasharray="5 3"
+                    fill={`url(#gradient-${metricName.replace(/\s+/g, '-')})`}
                     isAnimationActive={false}
-                    dot={{ fill: '#10b981', r: 3 }}
+                    connectNulls={true}
                   />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+                  {/* InBody data - green dashed line overlay */}
+                  {inBodySparklineData && inBodySparklineData.length > 0 && (
+                    <Area
+                      type="natural"
+                      dataKey="inbodyValue"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill="transparent"
+                      strokeDasharray="5 3"
+                      isAnimationActive={false}
+                      connectNulls={true}
+                      dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
+                    />
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
+              {/* Legend for dual data sources */}
+              {inBodySparklineData && inBodySparklineData.length > 0 && (
+                <div className="flex items-center justify-end gap-3 px-3 pb-2 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-0.5 rounded" style={{ backgroundColor: color }}></span>
+                    Withings
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-0.5 rounded bg-emerald-500" style={{ borderStyle: 'dashed' }}></span>
+                    InBody
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
       </CardContent>
     </Card>
