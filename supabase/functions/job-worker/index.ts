@@ -574,6 +574,24 @@ async function processTerraWebhookData(
           });
         }
       }
+      
+      // HRV from sleep data (Oura, WHOOP send HRV in sleep webhooks)
+      const sleepHrv = sleep.heart_rate_data?.summary?.avg_hrv_rmssd ??
+                       sleep.heart_rate_data?.summary?.hrv_data?.rmssd ??
+                       sleep.heart_rate_data?.summary?.rmssd;
+                       
+      if (typeof sleepHrv === 'number' && sleepHrv > 0) {
+        metricsToInsert.push({
+          metric_name: 'HRV RMSSD',
+          category: 'recovery',
+          value: sleepHrv,
+          measurement_date: date,
+          source: provider,
+          external_id: `terra_${provider}_sleep_hrv_${date}`,
+          user_id,
+        });
+        console.log(`✅ [job-worker] Extracted HRV RMSSD from sleep: ${sleepHrv} ms (${provider}, ${date})`);
+      }
     }
   }
 
