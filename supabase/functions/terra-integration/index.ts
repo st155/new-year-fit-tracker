@@ -1318,8 +1318,8 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
-          // HRV RMSSD
-          const hrv = daily.hrv_rmssd_ms ?? daily.hrv?.rmssd_ms ?? daily.hrv?.rmssd_milli;
+          // HRV RMSSD - check multiple paths (WHOOP uses avg_hrv_rmssd)
+          const hrv = daily.hrv_rmssd_ms ?? daily.hrv?.rmssd_ms ?? daily.hrv?.rmssd_milli ?? daily.heart_rate_data?.summary?.avg_hrv_rmssd;
           if (typeof hrv === 'number') {
             const { data: hrvMetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,

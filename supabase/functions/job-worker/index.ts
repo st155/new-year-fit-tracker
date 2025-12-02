@@ -672,12 +672,18 @@ async function processTerraWebhookData(
         }
       }
 
-      // HRV RMSSD
-      if (daily.heart_rate_data?.summary?.hrv_data?.rmssd !== undefined) {
+      // HRV RMSSD - check multiple paths (WHOOP uses avg_hrv_rmssd)
+      const hrvValue = 
+        daily.heart_rate_data?.summary?.hrv_data?.rmssd ??
+        daily.heart_rate_data?.summary?.avg_hrv_rmssd ??
+        daily.hrv_rmssd_ms ??
+        daily.hrv?.rmssd_ms;
+      
+      if (hrvValue !== undefined && hrvValue !== null) {
         metricsToInsert.push({
           metric_name: 'HRV RMSSD',
           category: 'heart_rate',
-          value: daily.heart_rate_data.summary.hrv_data.rmssd,
+          value: hrvValue,
           measurement_date: date,
           source: provider,
           external_id: `terra_${provider}_hrv_${date}`,
