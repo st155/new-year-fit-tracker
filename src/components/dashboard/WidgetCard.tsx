@@ -872,12 +872,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   data={mergedChartData}
                   margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                 >
-                  <defs>
-                    <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={color} stopOpacity={0.4} />
-                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
+                <defs>
+                  <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id={`gradient-inbody-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
                   <YAxis domain={['auto', 'auto']} hide />
                   <RechartsTooltip 
                     content={
@@ -899,17 +903,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   />
                   {/* InBody data - green dashed line overlay */}
                   {inBodySparklineData && inBodySparklineData.length > 0 && (
-                    <Area
-                      type="natural"
-                      dataKey="inbodyValue"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fill="transparent"
-                      strokeDasharray="5 3"
-                      isAnimationActive={false}
-                      connectNulls={true}
-                      dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
-                    />
+                <Area
+                  type="natural"
+                  dataKey="inbodyValue"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  fill={`url(#gradient-inbody-${metricName.replace(/\s+/g, '-')})`}
+                  isAnimationActive={false}
+                  connectNulls={true}
+                  dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
+                />
                   )}
                 </AreaChart>
               </ResponsiveContainer>
@@ -921,7 +924,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     Withings
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-0.5 rounded bg-emerald-500" style={{ borderStyle: 'dashed' }}></span>
+                    <span className="w-3 h-2 rounded-sm bg-emerald-500/50"></span>
                     InBody
                   </span>
                 </div>
