@@ -40,6 +40,12 @@ serve(async (req) => {
 
     console.log('Calling AI to parse InBody images...');
 
+    // Get Lovable API key
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
     // Build content with all images
     const imageContents = images.map((img: string) => ({
       type: 'image_url',
