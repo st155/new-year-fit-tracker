@@ -1064,6 +1064,49 @@ async function processTerraData(supabase: any, payload: any) {
               }
             }
           }
+          
+          // HRV from sleep data (Oura, WHOOP send HRV in sleep webhooks)
+          const sleepHrv = sleep.heart_rate_data?.summary?.avg_hrv_rmssd ??
+                           sleep.heart_rate_data?.summary?.hrv_data?.rmssd ??
+                           sleep.heart_rate_data?.summary?.rmssd;
+                           
+          if (typeof sleepHrv === 'number' && sleepHrv > 0) {
+            const { data: hrvMetricId } = await supabase.rpc('create_or_get_metric', {
+              p_user_id: userId,
+              p_metric_name: 'HRV RMSSD',
+              p_metric_category: 'recovery',
+              p_unit: 'ms',
+              p_source: provider.toLowerCase(),
+            });
+            
+            if (hrvMetricId) {
+              const { error: hrvError } = await supabase.from('metric_values').upsert({
+                user_id: userId,
+                metric_id: hrvMetricId,
+                value: sleepHrv,
+                measurement_date: measurementDate,
+                source_data: sleep,
+                external_id: `terra_${provider}_sleep_hrv_${measurementDate}`,
+              }, {
+                onConflict: 'user_id,metric_id,measurement_date,external_id',
+              });
+              
+              if (!hrvError) {
+                stats.insertedCounts.sleep++;
+                console.log(`✅ Extracted HRV RMSSD from sleep: ${sleepHrv} ms (${provider}, ${measurementDate})`);
+                
+                // Write to unified metrics
+                await writeToUnifiedMetrics(supabase, {
+                  userId,
+                  metricName: 'HRV RMSSD',
+                  source: provider,
+                  value: sleepHrv,
+                  unit: 'ms',
+                  measurementDate: measurementDate,
+                });
+              }
+            }
+          }
         } catch (e) {
           console.error('⚠️ Error processing sleep item:', e);
           stats.errors.push(`Sleep processing error: ${e.message}`);
