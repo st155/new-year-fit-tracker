@@ -3,6 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { widgetKeys, type Widget } from '@/hooks/useWidgetsQuery';
 import { getAliasSet } from '@/lib/metric-aliases';
 
+// Real-time metrics that only make sense with fresh data (last 48 hours)
+const REALTIME_METRICS = new Set([
+  'Steps',
+  'Recovery Score',
+  'HRV RMSSD',
+  'HRV',
+  'Sleep Score',
+  'Sleep Duration',
+  'Resting Heart Rate',
+  'Day Strain',
+  'Active Calories',
+  'Activity Score',
+  'Calories Burned',
+  'Distance',
+  'Max Heart Rate',
+]);
+
 export interface SourceData {
   value: number;
   unit: string;
@@ -133,9 +150,18 @@ export function useMultiSourceWidgetsData(
             };
           });
 
+          // Filter stale sources for real-time metrics (48h max)
+          const isRealtimeMetric = REALTIME_METRICS.has(w.metric_name);
+          const maxAgeHours = isRealtimeMetric ? 48 : 168; // 48h for realtime, 7 days for others
+          
+          const filteredSources = sources.filter(s => {
+            const measurementDate = new Date(s.measurement_date);
+            const ageHours = (Date.now() - measurementDate.getTime()) / (1000 * 60 * 60);
+            return ageHours <= maxAgeHours;
+          });
+
           // Sort: 1) newest measurement_date, 2) freshest sync, 3) highest confidence
-          const finalSources = sources;
-          finalSources.sort((a, b) => {
+          filteredSources.sort((a, b) => {
             const dateA = new Date(a.measurement_date).getTime();
             const dateB = new Date(b.measurement_date).getTime();
             if (dateA !== dateB) return dateB - dateA; // Newest date first
@@ -143,12 +169,15 @@ export function useMultiSourceWidgetsData(
             return (b.confidence ?? 0) - (a.confidence ?? 0); // Highest confidence
           });
 
-          const primarySource = finalSources[0]?.source;
+          // Only add widget data if there are fresh sources
+          if (filteredSources.length > 0) {
+            const primarySource = filteredSources[0]?.source;
 
-          result.set(w.id, {
-            sources: finalSources,
-            primarySource,
-          });
+            result.set(w.id, {
+              sources: filteredSources,
+              primarySource,
+            });
+          }
         }
       }
 
