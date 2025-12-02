@@ -17,7 +17,7 @@ import {
 import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { useMultiSourceWidgetsData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import { useWidgetHistory } from '@/hooks/metrics/useWidgetHistory';
-import { useInBodySparkline } from '@/hooks/metrics/useInBodySparkline';
+import { useAllInBodySparklines } from '@/hooks/metrics/useAllInBodySparklines';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -196,6 +196,9 @@ const Index = () => {
     processedWidgets
   );
 
+  // ✅ InBody sparkline data (called once at top level, not inside .map())
+  const { data: allInBodySparklines } = useAllInBodySparklines(user?.id);
+
   // Wait for auth to load first (with force timeout)
   if ((authLoading || rolesLoading) && !forceReady) {
     console.log('⏳ [Index] Waiting for auth/roles...');
@@ -359,8 +362,8 @@ const Index = () => {
                 });
               }
 
-              // Fetch InBody sparkline data for Body Fat Percentage
-              const { data: inBodyData } = useInBodySparkline(user?.id, widget.metric_name);
+              // Get InBody sparkline data from pre-fetched Map (not a hook call!)
+              const inBodyData = allInBodySparklines?.get(widget.metric_name);
               
               return (
                 <WidgetCard
