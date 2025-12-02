@@ -17,6 +17,7 @@ import {
 import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { useMultiSourceWidgetsData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import { useWidgetHistory } from '@/hooks/metrics/useWidgetHistory';
+import { useInBodySparkline } from '@/hooks/metrics/useInBodySparkline';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -357,6 +358,9 @@ const Index = () => {
                   dataLength: sparklineData?.length
                 });
               }
+
+              // Fetch InBody sparkline data for Body Fat Percentage
+              const { data: inBodyData } = useInBodySparkline(user?.id, widget.metric_name);
               
               return (
                 <WidgetCard
@@ -365,6 +369,7 @@ const Index = () => {
                   data={singleData}
                   multiSourceData={multiSourceData}
                   sparklineData={sparklineData}
+                  inBodySparklineData={inBodyData}
                 />
               );
             })}
