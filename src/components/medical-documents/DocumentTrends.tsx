@@ -2,29 +2,30 @@ import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
-import { useMedicalDocuments } from "@/hooks/useMedicalDocuments";
+import { useAuth } from "@/hooks/useAuth";
+import { useInBodyAnalyses } from "@/hooks/useInBodyAnalyses";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const DocumentTrends = () => {
-  const { documents } = useMedicalDocuments({ documentType: 'inbody' });
+  const { user } = useAuth();
+  const { data: inbodyAnalyses, isLoading } = useInBodyAnalyses(user?.id);
 
   const trendData = useMemo(() => {
-    if (!documents) return [];
-
-    return documents
-      .filter(doc => doc.ai_processed && doc.ai_extracted_data)
-      .map(doc => {
-        const data = doc.ai_extracted_data as any;
-        return {
-          date: doc.document_date ? new Date(doc.document_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : 'N/A',
-          timestamp: doc.document_date ? new Date(doc.document_date).getTime() : 0,
-          weight: data?.weight || null,
-          bodyFat: data?.body_fat_percentage || null,
-          muscleMass: data?.skeletal_muscle_mass || null,
-        };
-      })
+    if (!inbodyAnalyses?.length) return [];
+    
+    return inbodyAnalyses
+      .map(analysis => ({
+        date: analysis.test_date 
+          ? new Date(analysis.test_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) 
+          : 'N/A',
+        timestamp: analysis.test_date ? new Date(analysis.test_date).getTime() : 0,
+        weight: analysis.weight || null,
+        bodyFat: analysis.percent_body_fat || null,
+        muscleMass: analysis.skeletal_muscle_mass || null,
+      }))
       .filter(item => item.timestamp > 0)
       .sort((a, b) => a.timestamp - b.timestamp);
-  }, [documents]);
+  }, [inbodyAnalyses]);
 
   const stats = useMemo(() => {
     if (trendData.length < 2) return null;
@@ -46,7 +47,11 @@ export const DocumentTrends = () => {
     };
   }, [trendData]);
 
-  if (!documents || documents.length === 0) {
+  if (isLoading) {
+    return <Skeleton className="h-[400px] w-full" />;
+  }
+
+  if (!inbodyAnalyses || inbodyAnalyses.length === 0) {
     return null;
   }
 
