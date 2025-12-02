@@ -567,6 +567,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const hasTrend = data.trend !== undefined && !isNaN(data.trend);
   const trendColor = hasTrend ? getTrendColor(data.trend!, metricName) : undefined;
   
+  // Check if this is Body Fat metric for dual-column display
+  const isBodyFatMetric = metricName.toLowerCase().includes('body') && metricName.toLowerCase().includes('fat');
+  
   // Качество метрики (цвет рамки по значению)
   const qualityColor = getMetricQualityColor(metricName, data.value);
   const qualityLabel = getQualityLabel(metricName, data.value);
@@ -705,16 +708,42 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-baseline gap-2 my-2">
-            <span className="text-3xl font-bold tracking-tight" style={{ color }}>
-              {formatValue(data.value, metricName, data.unit)}
-            </span>
-            {data.unit && (
-              <span className="text-base text-muted-foreground">
-                {data.unit}
+          {/* Two-column layout for Body Fat with InBody data */}
+          {isBodyFatMetric && inBodySparklineData && inBodySparklineData.length > 0 ? (
+            <div className="flex justify-between items-start my-2">
+              {/* Withings - left, pink */}
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground mb-0.5">Withings</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold tracking-tight" style={{ color }}>
+                    {formatValue(data.value, metricName, data.unit)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{data.unit}</span>
+                </div>
+              </div>
+              {/* InBody - right, green */}
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-muted-foreground mb-0.5">InBody</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold tracking-tight text-emerald-500">
+                    {inBodySparklineData[inBodySparklineData.length - 1]?.value.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{data.unit}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-2 my-2">
+              <span className="text-3xl font-bold tracking-tight" style={{ color }}>
+                {formatValue(data.value, metricName, data.unit)}
               </span>
-            )}
-          </div>
+              {data.unit && (
+                <span className="text-base text-muted-foreground">
+                  {data.unit}
+                </span>
+              )}
+            </div>
+          )}
           
           {/* Текстовый индикатор качества */}
           {qualityLabel && (
@@ -901,18 +930,17 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     isAnimationActive={false}
                     connectNulls={true}
                   />
-                  {/* InBody data - green dashed line overlay */}
+                  {/* InBody data - green filled area overlay */}
                   {inBodySparklineData && inBodySparklineData.length > 0 && (
-                <Area
-                  type="natural"
-                  dataKey="inbodyValue"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fill={`url(#gradient-inbody-${metricName.replace(/\s+/g, '-')})`}
-                  isAnimationActive={false}
-                  connectNulls={true}
-                  dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
-                />
+                    <Area
+                      type="natural"
+                      dataKey="inbodyValue"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill={`url(#gradient-inbody-${metricName.replace(/\s+/g, '-')})`}
+                      isAnimationActive={false}
+                      connectNulls={true}
+                    />
                   )}
                 </AreaChart>
               </ResponsiveContainer>
