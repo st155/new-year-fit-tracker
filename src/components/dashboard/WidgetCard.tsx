@@ -43,6 +43,7 @@ interface WidgetCardProps {
   };
   multiSourceData?: MultiSourceWidgetData;
   sparklineData?: WidgetHistoryData[];
+  inBodySparklineData?: { date: string; value: number }[];
 }
 
 // Custom tooltip component for sparkline charts
@@ -350,7 +351,7 @@ const getMetricTooltip = (metricName: string): string | null => {
   return null;
 };
 
-export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData, sparklineData }: WidgetCardProps) {
+export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceData, sparklineData, inBodySparklineData }: WidgetCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -837,15 +838,24 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
           )}
         </div>
 
-        {/* Sparkline Chart - Recharts */}
+        {/* Sparkline Chart - Recharts with InBody overlay */}
         {sparklineData && sparklineData.length > 1 && (
           <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
             <ResponsiveContainer width="100%" height={60}>
               <AreaChart 
-                data={sparklineData.map(d => ({ 
-                  date: format(parseISO(d.date), 'd MMM', { locale: ru }),
-                  value: d.value 
-                }))}
+                data={useMemo(() => {
+                  // Merge Withings and InBody data by date
+                  const allDates = new Set([
+                    ...sparklineData.map(d => d.date),
+                    ...(inBodySparklineData || []).map(d => d.date),
+                  ]);
+                  
+                  return Array.from(allDates).sort().map(date => ({
+                    date: format(parseISO(date), 'd MMM', { locale: ru }),
+                    withingsValue: sparklineData.find(d => d.date === date)?.value,
+                    inbodyValue: inBodySparklineData?.find(d => d.date === date)?.value,
+                  }));
+                }, [sparklineData, inBodySparklineData])}
                 margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
               >
                 <defs>
@@ -863,14 +873,28 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     />
                   } 
                 />
+                {/* Withings data - main line */}
                 <Area
                   type="natural"
-                  dataKey="value"
+                  dataKey="withingsValue"
                   stroke={color}
                   strokeWidth={2}
                   fill={`url(#gradient-${metricName.replace(/\s+/g, '-')})`}
                   isAnimationActive={false}
                 />
+                {/* InBody data - green dashed line overlay */}
+                {inBodySparklineData && inBodySparklineData.length > 0 && (
+                  <Area
+                    type="natural"
+                    dataKey="inbodyValue"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    fill="transparent"
+                    strokeDasharray="5 3"
+                    isAnimationActive={false}
+                    dot={{ fill: '#10b981', r: 3 }}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>
