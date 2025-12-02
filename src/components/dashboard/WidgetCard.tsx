@@ -880,6 +880,30 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
         {/* Sparkline Chart - Recharts with InBody overlay */}
         {sparklineData && sparklineData.length > 1 && (() => {
+          // Linear interpolation function for InBody data
+          const interpolateInBodyValue = (dateStr: string, inBodyData: { date: string; value: number }[]): number | undefined => {
+            if (inBodyData.length < 2) return undefined;
+            
+            const sorted = [...inBodyData].sort((a, b) => a.date.localeCompare(b.date));
+            const firstPoint = sorted[0];
+            const lastPoint = sorted[sorted.length - 1];
+            
+            // Outside range - undefined
+            if (dateStr < firstPoint.date || dateStr > lastPoint.date) return undefined;
+            
+            // Exact match - return actual value
+            const exactMatch = sorted.find(d => d.date === dateStr);
+            if (exactMatch) return exactMatch.value;
+            
+            // Linear interpolation between first and last point
+            const firstTime = new Date(firstPoint.date).getTime();
+            const lastTime = new Date(lastPoint.date).getTime();
+            const currentTime = new Date(dateStr).getTime();
+            
+            const progress = (currentTime - firstTime) / (lastTime - firstTime);
+            return firstPoint.value + (lastPoint.value - firstPoint.value) * progress;
+          };
+
           // Merge Withings and InBody data by date (computed once, not in JSX)
           const mergedChartData = (() => {
             // If no InBody data or only 1 point - show only Withings
@@ -907,15 +931,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             
             return Array.from(allDates).sort().map(date => {
               const withingsPoint = filteredWithings.find(d => d.date === date);
-              // InBody value only within InBody date range, undefined after lastInBodyDate
-              const inBodyPoint = date <= lastInBodyDate 
-                ? inBodySparklineData.find(d => d.date === date)
-                : undefined;
+              // InBody value: interpolated for all dates within range
+              const inbodyValue = interpolateInBodyValue(date, inBodySparklineData);
               
               return {
                 date: format(parseISO(date), 'd MMM', { locale: ru }),
                 withingsValue: withingsPoint?.value,
-                inbodyValue: inBodyPoint?.value,
+                inbodyValue: inbodyValue,
               };
             });
           })();
@@ -956,16 +978,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     isAnimationActive={false}
                     connectNulls={true}
                   />
-                  {/* InBody data - green filled area overlay */}
-                  {inBodySparklineData && inBodySparklineData.length > 0 && (
+                  {/* InBody data - green filled area with linear interpolation */}
+                  {inBodySparklineData && inBodySparklineData.length >= 2 && (
                     <Area
-                      type="natural"
+                      type="linear"
                       dataKey="inbodyValue"
                       stroke="#10b981"
                       strokeWidth={2}
                       fill={`url(#gradient-inbody-${metricName.replace(/\s+/g, '-')})`}
                       isAnimationActive={false}
-                      connectNulls={true}
                     />
                   )}
                 </AreaChart>
