@@ -882,16 +882,42 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         {sparklineData && sparklineData.length > 1 && (() => {
           // Merge Withings and InBody data by date (computed once, not in JSX)
           const mergedChartData = (() => {
+            // If no InBody data or only 1 point - show only Withings
+            if (!inBodySparklineData || inBodySparklineData.length < 2) {
+              return sparklineData.map(d => ({
+                date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+                withingsValue: d.value,
+                inbodyValue: undefined,
+              }));
+            }
+            
+            // Get InBody date range
+            const inBodyDates = inBodySparklineData.map(d => d.date).sort();
+            const firstInBodyDate = inBodyDates[0];
+            const lastInBodyDate = inBodyDates[inBodyDates.length - 1];
+            
+            // Filter Withings: only from first InBody date onwards
+            const filteredWithings = sparklineData.filter(d => d.date >= firstInBodyDate);
+            
+            // Combine all dates (filtered Withings + InBody)
             const allDates = new Set([
-              ...sparklineData.map(d => d.date),
-              ...(inBodySparklineData || []).map(d => d.date),
+              ...filteredWithings.map(d => d.date),
+              ...inBodySparklineData.map(d => d.date),
             ]);
             
-            return Array.from(allDates).sort().map(date => ({
-              date: format(parseISO(date), 'd MMM', { locale: ru }),
-              withingsValue: sparklineData.find(d => d.date === date)?.value,
-              inbodyValue: inBodySparklineData?.find(d => d.date === date)?.value,
-            }));
+            return Array.from(allDates).sort().map(date => {
+              const withingsPoint = filteredWithings.find(d => d.date === date);
+              // InBody value only within InBody date range, undefined after lastInBodyDate
+              const inBodyPoint = date <= lastInBodyDate 
+                ? inBodySparklineData.find(d => d.date === date)
+                : undefined;
+              
+              return {
+                date: format(parseISO(date), 'd MMM', { locale: ru }),
+                withingsValue: withingsPoint?.value,
+                inbodyValue: inBodyPoint?.value,
+              };
+            });
           })();
 
           return (
