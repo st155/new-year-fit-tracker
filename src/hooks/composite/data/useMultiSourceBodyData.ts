@@ -97,7 +97,9 @@ export function useMultiSourceBodyData(days: number = 90) {
         .in('metric_name', [
           'Weight',
           'Body Fat %',
+          'Body Fat Percentage',
           'Skeletal Muscle Mass',
+          'Muscle Mass',
           'BMI',
           'BMR',
         ])
@@ -218,7 +220,7 @@ export function useMultiSourceBodyData(days: number = 90) {
 
     // Body Fat %
     const bodyFatCandidates = [];
-    unifiedMetrics?.filter(m => m.metric_name === 'Body Fat %').forEach(m => {
+    unifiedMetrics?.filter(m => m.metric_name === 'Body Fat %' || m.metric_name === 'Body Fat Percentage').forEach(m => {
       bodyFatCandidates.push({
         value: m.value,
         source: m.source,
@@ -250,7 +252,7 @@ export function useMultiSourceBodyData(days: number = 90) {
 
     // Muscle Mass
     const muscleCandidates = [];
-    unifiedMetrics?.filter(m => m.metric_name === 'Skeletal Muscle Mass').forEach(m => {
+    unifiedMetrics?.filter(m => m.metric_name === 'Skeletal Muscle Mass' || m.metric_name === 'Muscle Mass').forEach(m => {
       muscleCandidates.push({
         value: m.value,
         source: m.source,
@@ -361,8 +363,8 @@ export function useMultiSourceBodyData(days: number = 90) {
       
       if (existing) {
         if (m.metric_name === 'Weight') existing.weight = m.value;
-        if (m.metric_name === 'Body Fat %') existing.bodyFat = m.value;
-        if (m.metric_name === 'Skeletal Muscle Mass') existing.muscleMass = m.value;
+        if (m.metric_name === 'Body Fat %' || m.metric_name === 'Body Fat Percentage') existing.bodyFat = m.value;
+        if (m.metric_name === 'Skeletal Muscle Mass' || m.metric_name === 'Muscle Mass') existing.muscleMass = m.value;
       } else {
         const entry: TimelineEntry = {
           date: m.measurement_date,
@@ -370,8 +372,8 @@ export function useMultiSourceBodyData(days: number = 90) {
           type: m.source.toLowerCase() as any,
         };
         if (m.metric_name === 'Weight') entry.weight = m.value;
-        if (m.metric_name === 'Body Fat %') entry.bodyFat = m.value;
-        if (m.metric_name === 'Skeletal Muscle Mass') entry.muscleMass = m.value;
+        if (m.metric_name === 'Body Fat %' || m.metric_name === 'Body Fat Percentage') entry.bodyFat = m.value;
+        if (m.metric_name === 'Skeletal Muscle Mass' || m.metric_name === 'Muscle Mass') entry.muscleMass = m.value;
         entriesMap.set(key, entry);
       }
     });
