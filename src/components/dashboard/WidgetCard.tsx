@@ -372,7 +372,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const source = data?.source || 'unknown';
   const isMultiMode = widget.display_mode === 'multi' && multiSourceData;
 
-  // Render special Habits 3.0 widgets
+  // ✅ ALL hooks BEFORE any early returns (React Rules of Hooks)
+  const handleCardClick = useCallback(() => {
+    navigate(`/metrics/${encodeURIComponent(metricName)}`);
+  }, [navigate, metricName]);
+
+  const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
+  const color = useMemo(() => getMetricColor(metricName), [metricName]);
+
+  // Render special Habits 3.0 widgets (after hooks)
   if (metricName === '🏆 Habit Level') {
     return <HabitLevelWidget />;
   }
@@ -382,16 +390,6 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   if (metricName === '🤝 Habit Social') {
     return <HabitSocialWidget />;
   }
-
-
-  const handleCardClick = useCallback(() => {
-    // Navigate to metric detail page
-    navigate(`/metrics/${encodeURIComponent(metricName)}`);
-  }, [navigate, metricName]);
-
-  // Мемоизация дорогих вычислений
-  const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
-  const color = useMemo(() => getMetricColor(metricName), [metricName]);
 
   // Debug logging
   logger.debug('[WidgetCard]', {
