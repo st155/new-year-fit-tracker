@@ -131,7 +131,7 @@ export const UNIFIED_METRICS: Record<string, MetricMapping> = {
   
   // HRV
   hrv_rmssd: {
-    terraField: ['hrv_rmssd_ms', 'hrv.rmssd_ms', 'hrv.rmssd_milli'],
+    terraField: ['hrv_rmssd_ms', 'hrv.rmssd_ms', 'hrv.rmssd_milli', 'heart_rate_data.summary.avg_hrv_rmssd'],
     unifiedName: 'HRV RMSSD',
     unit: 'ms',
     category: 'recovery'
