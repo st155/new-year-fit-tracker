@@ -946,8 +946,29 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             });
           })();
           
-          // Extract real InBody points for markers
-          const realInBodyPoints = mergedChartData.filter(d => d.isRealInBody && d.inbodyValue != null);
+          // Calculate SEPARATE domains for each data source
+          const withingsValues = mergedChartData
+            .map(d => d.withingsValue)
+            .filter((v): v is number => v != null);
+          
+          const inbodyValues = mergedChartData
+            .map(d => d.inbodyValue)
+            .filter((v): v is number => v != null);
+
+          // Explicit domains with padding - each source gets its own range
+          const withingsDomain: [number, number] = withingsValues.length > 0 
+            ? [
+                Math.min(...withingsValues) - 0.3,
+                Math.max(...withingsValues) + 0.3
+              ]
+            : [0, 100];
+          
+          const inbodyDomain: [number, number] = inbodyValues.length > 0
+            ? [
+                Math.min(...inbodyValues) - 0.3,
+                Math.max(...inbodyValues) + 0.3
+              ]
+            : [0, 100];
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
@@ -956,16 +977,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   data={mergedChartData}
                   margin={{ top: 5, right: 5, left: 5, bottom: 0 }}
                 >
-                  {/* Dual Y-axis: Withings left, InBody right - each normalized to its own range */}
+                  {/* Dual Y-axis with EXPLICIT separate domains */}
                   <YAxis 
                     yAxisId="withings"
-                    domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    domain={withingsDomain}
                     hide 
                   />
                   <YAxis 
                     yAxisId="inbody"
                     orientation="right"
-                    domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    domain={inbodyDomain}
                     hide 
                   />
                   <RechartsTooltip 
