@@ -269,6 +269,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS (Rules of Hooks)
+  const [forceLoaded, setForceLoaded] = useState(false);
+  
+  // Get user role from user_roles table with graceful fallback
+  const { data: userRoles, isLoading: rolesLoading } = useQuery({
+    queryKey: ['user-roles', context?.user?.id],
+    queryFn: async () => {
+      if (!context?.user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', context.user.id);
+      
+      // On error, return default client role
+      if (error) {
+        console.warn('⚠️ [useAuth] Failed to fetch roles:', error);
+        return [{ role: 'client' }];
+      }
+      
+      // If no roles found, return default client role
+      if (!data || data.length === 0) {
+        console.warn('⚠️ [useAuth] No roles found, using default');
+        return [{ role: 'client' }];
+      }
+      
+      return data;
+    },
+    enabled: !!context?.user?.id,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 1,
+    retryDelay: 500,
+  });
+  
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (context?.user?.id && rolesLoading) {
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ [useAuth] Roles loading timeout, forcing default role');
+        setForceLoaded(true);
+      }, 2000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [context?.user?.id, rolesLoading]);
+  
+  // NOW we can do conditional return (after all hooks)
   if (context === undefined) {
     if (import.meta.env.DEV) {
       console.error('💥 [useAuth] Called outside AuthProvider!');
@@ -290,52 +338,6 @@ export const useAuth = () => {
       isClient: true,
     };
   }
-  
-  const [forceLoaded, setForceLoaded] = useState(false);
-  
-  // Get user role from user_roles table with graceful fallback
-  const { data: userRoles, isLoading: rolesLoading } = useQuery({
-    queryKey: ['user-roles', context.user?.id],
-    queryFn: async () => {
-      if (!context.user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', context.user.id);
-      
-      // On error, return default client role
-      if (error) {
-        console.warn('⚠️ [useAuth] Failed to fetch roles:', error);
-        return [{ role: 'client' }];
-      }
-      
-      // If no roles found, return default client role
-      if (!data || data.length === 0) {
-        console.warn('⚠️ [useAuth] No roles found, using default');
-        return [{ role: 'client' }];
-      }
-      
-      return data;
-    },
-    enabled: !!context.user?.id,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    retry: 1,
-    retryDelay: 500,
-  });
-  
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    if (context.user?.id && rolesLoading) {
-      const timeout = setTimeout(() => {
-        console.warn('⚠️ [useAuth] Roles loading timeout, forcing default role');
-        setForceLoaded(true);
-      }, 2000);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [context.user?.id, rolesLoading]);
   
   // Use effective loading state with timeout
   const effectiveRolesLoading = rolesLoading && !forceLoaded;
