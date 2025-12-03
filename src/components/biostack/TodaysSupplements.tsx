@@ -179,7 +179,7 @@ export function TodaysSupplements() {
                       {items.length}
                     </Badge>
                   </div>
-                  {pendingItems.length > 0 && (
+                  {pendingItems.length > 0 ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -187,6 +187,15 @@ export function TodaysSupplements() {
                       className="text-xs border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
                     >
                       Принять всё ({timeGroup.label})
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled
+                      className="text-xs bg-green-500 text-white border-green-500 cursor-default shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Всё принято ✓
                     </Button>
                   )}
                 </div>
