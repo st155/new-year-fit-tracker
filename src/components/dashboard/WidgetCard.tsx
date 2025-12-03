@@ -1,6 +1,6 @@
 import { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { Card as TremorCard } from '@tremor/react';
-import { Area, AreaChart, ResponsiveContainer, YAxis, Tooltip as RechartsTooltip } from 'recharts';
+import { Line, LineChart, ResponsiveContainer, YAxis, Tooltip as RechartsTooltip, ReferenceDot } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -908,8 +908,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             if (!inBodySparklineData || inBodySparklineData.length < 2) {
               return sparklineData.map(d => ({
                 date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+                rawDate: d.date,
                 withingsValue: d.value,
                 inbodyValue: undefined,
+                isRealInBody: false,
               }));
             }
             
@@ -931,33 +933,41 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               const withingsPoint = filteredWithings.find(d => d.date === date);
               // InBody value: interpolated for all dates within range
               const inbodyValue = interpolateInBodyValue(date, inBodySparklineData);
+              // Check if this is a real InBody measurement point
+              const isRealInBody = inBodySparklineData.some(d => d.date === date);
               
               return {
                 date: format(parseISO(date), 'd MMM', { locale: ru }),
+                rawDate: date,
                 withingsValue: withingsPoint?.value,
                 inbodyValue: inbodyValue,
+                isRealInBody: isRealInBody,
               };
             });
           })();
+          
+          // Extract real InBody points for markers
+          const realInBodyPoints = mergedChartData.filter(d => d.isRealInBody && d.inbodyValue != null);
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
-              <ResponsiveContainer width="100%" height={60}>
-                <AreaChart 
+              <ResponsiveContainer width="100%" height={65}>
+                <LineChart 
                   data={mergedChartData}
-                  margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 0 }}
                 >
-                <defs>
-                  <linearGradient id={`gradient-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id={`gradient-inbody-${metricName.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                  <YAxis domain={['auto', 'auto']} hide />
+                  {/* Dual Y-axis: Withings left, InBody right - each normalized to its own range */}
+                  <YAxis 
+                    yAxisId="withings"
+                    domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    hide 
+                  />
+                  <YAxis 
+                    yAxisId="inbody"
+                    orientation="right"
+                    domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    hide 
+                  />
                   <RechartsTooltip 
                     content={
                       <WidgetChartTooltip 
@@ -966,28 +976,46 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                       />
                     } 
                   />
-                  {/* Withings data - main line */}
-                  <Area
-                    type="natural"
+                  {/* Withings data - pink line */}
+                  <Line
+                    yAxisId="withings"
+                    type="monotone"
                     dataKey="withingsValue"
                     stroke={color}
                     strokeWidth={2}
-                    fill={`url(#gradient-${metricName.replace(/\s+/g, '-')})`}
+                    dot={false}
                     isAnimationActive={false}
                     connectNulls={true}
                   />
-                  {/* InBody data - green filled area with linear interpolation */}
+                  {/* InBody data - green line with real measurement dots */}
                   {inBodySparklineData && inBodySparklineData.length >= 2 && (
-                    <Area
+                    <Line
+                      yAxisId="inbody"
                       type="linear"
                       dataKey="inbodyValue"
                       stroke="#10b981"
-                      strokeWidth={2}
-                      fill={`url(#gradient-inbody-${metricName.replace(/\s+/g, '-')})`}
+                      strokeWidth={2.5}
+                      dot={(props: any) => {
+                        // Only show dots for real InBody measurements
+                        const { cx, cy, payload } = props;
+                        if (payload?.isRealInBody && cx && cy) {
+                          return (
+                            <circle 
+                              cx={cx} 
+                              cy={cy} 
+                              r={4} 
+                              fill="#10b981" 
+                              stroke="white" 
+                              strokeWidth={1.5}
+                            />
+                          );
+                        }
+                        return null;
+                      }}
                       isAnimationActive={false}
                     />
                   )}
-                </AreaChart>
+                </LineChart>
               </ResponsiveContainer>
               {/* Legend for dual data sources */}
               {inBodySparklineData && inBodySparklineData.length > 0 && (
@@ -997,7 +1025,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     Withings
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-2 rounded-sm bg-emerald-500/50"></span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                     InBody
                   </span>
                 </div>
