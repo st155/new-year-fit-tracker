@@ -10,10 +10,12 @@ interface CompactSupplementChipProps {
   item: UnifiedSupplementItem;
   isSelected: boolean;
   onToggle: () => void;
+  onToggleIntake?: () => void;
+  isToggling?: boolean;
   onAddPhoto?: (productId: string, productName: string) => void;
 }
 
-export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }: CompactSupplementChipProps) {
+export function CompactSupplementChip({ item, isSelected, onToggle, onToggleIntake, isToggling, onAddPhoto }: CompactSupplementChipProps) {
   const { data: linkedBiomarkers } = useLinkedBiomarkers(item.linkedBiomarkerIds);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable' | null) => {
@@ -77,7 +79,17 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onAddPhoto }
             {/* Status Indicator */}
             <div className="flex-shrink-0">
               {item.takenToday ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleIntake?.();
+                  }}
+                  disabled={isToggling}
+                  className="p-0.5 rounded hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                  title="Отменить приём"
+                >
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </button>
               ) : (
                 <Checkbox
                   checked={isSelected}

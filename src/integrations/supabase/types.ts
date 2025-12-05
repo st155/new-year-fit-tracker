@@ -3601,6 +3601,8 @@ export type Database = {
           created_at: string | null
           felt_effect: string | null
           id: string
+          intake_date: string | null
+          intake_time: string | null
           notes: string | null
           servings_taken: number | null
           stack_item_id: string | null
@@ -3611,6 +3613,8 @@ export type Database = {
           created_at?: string | null
           felt_effect?: string | null
           id?: string
+          intake_date?: string | null
+          intake_time?: string | null
           notes?: string | null
           servings_taken?: number | null
           stack_item_id?: string | null
@@ -3621,6 +3625,8 @@ export type Database = {
           created_at?: string | null
           felt_effect?: string | null
           id?: string
+          intake_date?: string | null
+          intake_time?: string | null
           notes?: string | null
           servings_taken?: number | null
           stack_item_id?: string | null
