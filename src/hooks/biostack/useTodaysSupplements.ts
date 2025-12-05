@@ -19,6 +19,7 @@ export interface UnifiedSupplementItem {
   productId?: string;
   imageUrl?: string;
   linkedBiomarkerIds?: string[];
+  logId?: string; // ID of the intake log for cancellation
   
   // Smart timing fields
   scheduledTime?: string;        // "08:00", "14:00", "22:00"
@@ -40,10 +41,12 @@ export function useTodaysSupplements() {
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
+  
+  const todayDateStr = todayStart.toISOString().split('T')[0]; // YYYY-MM-DD
 
   // Fetch active user_stack items (manual supplements) with today's intake logs
   const { data: manualSupplements = [] } = useQuery({
-    queryKey: ['manual-supplements-today', user?.id, todayStart.toISOString()],
+    queryKey: ['manual-supplements-today', user?.id, todayDateStr],
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -66,7 +69,7 @@ export function useTodaysSupplements() {
 
       if (stackError) throw stackError;
 
-      // Fetch today's intake logs
+      // Fetch today's intake logs with intake_time
       const stackItemIds = stackItems?.map(item => item.id) || [];
       const { data: logs } = await supabase
         .from('intake_logs')
@@ -75,7 +78,12 @@ export function useTodaysSupplements() {
         .gte('taken_at', todayStart.toISOString())
         .lte('taken_at', todayEnd.toISOString());
 
-      const logsMap = new Map(logs?.map(log => [log.stack_item_id, log]) || []);
+      // Use composite key: stack_item_id + intake_time
+      const logsMap = new Map<string, any>();
+      logs?.forEach(log => {
+        const key = `${log.stack_item_id}-${log.intake_time || 'unknown'}`;
+        logsMap.set(key, log);
+      });
 
       // Transform to unified format
       const items: UnifiedSupplementItem[] = [];
@@ -84,7 +92,8 @@ export function useTodaysSupplements() {
         const intakeTimes = item.intake_times || [];
         
         intakeTimes.forEach(time => {
-          const log = logsMap.get(item.id);
+          const logKey = `${item.id}-${time}`;
+          const log = logsMap.get(logKey);
           const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
           const timeStatus = calculateTimeStatus(
             (item as any).specific_time,
@@ -103,6 +112,7 @@ export function useTodaysSupplements() {
             sourceId: item.id,
             takenToday: !!log,
             takenAt,
+            logId: log?.id,
             productId: item.product_id || undefined,
             imageUrl: product?.image_url,
             linkedBiomarkerIds: item.linked_biomarker_ids || [],
@@ -121,7 +131,7 @@ export function useTodaysSupplements() {
 
   // Fetch protocol items with today's supplement logs
   const { data: protocolSupplements = [] } = useQuery({
-    queryKey: ['protocol-supplements-today', user?.id, todayStart.toISOString()],
+    queryKey: ['protocol-supplements-today', user?.id, todayDateStr],
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -208,6 +218,7 @@ export function useTodaysSupplements() {
               protocolName: protocol.name,
               takenToday: !!log,
               takenAt,
+              logId: log?.id,
               productId: product?.id,
               imageUrl: product?.image_url,
               linkedBiomarkerIds: (item as any).linked_biomarker_ids || [],
@@ -236,26 +247,39 @@ export function useTodaysSupplements() {
     as_needed: allSupplements.filter(s => s.intakeTime === 'as_needed'),
   };
 
-  // Log intake for selected items
+  // Log intake for selected items (only items NOT already taken today)
   const logIntakeMutation = useMutation({
     mutationFn: async (items: UnifiedSupplementItem[]) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      const manualItems = items.filter(i => i.source === 'manual');
-      const protocolItems = items.filter(i => i.source === 'protocol');
+      // Filter out already taken items to prevent duplicates
+      const notTakenItems = items.filter(i => !i.takenToday);
+      if (notTakenItems.length === 0) {
+        throw new Error('All selected items already taken today');
+      }
 
-      // Log manual supplements
+      const manualItems = notTakenItems.filter(i => i.source === 'manual');
+      const protocolItems = notTakenItems.filter(i => i.source === 'protocol');
+
+      // Log manual supplements with intake_time and intake_date
       if (manualItems.length > 0) {
+        const now = new Date();
         const intakeLogs = manualItems.map(item => ({
           user_id: user.id,
           stack_item_id: item.sourceId,
-          taken_at: new Date().toISOString(),
+          intake_time: item.intakeTime,
+          intake_date: todayDateStr,
+          taken_at: now.toISOString(),
           servings_taken: 1,
         }));
 
+        // Use upsert to handle potential duplicates gracefully
         const { error: intakeError } = await supabase
           .from('intake_logs')
-          .insert(intakeLogs);
+          .upsert(intakeLogs, { 
+            onConflict: 'user_id,stack_item_id,intake_time,intake_date',
+            ignoreDuplicates: true
+          });
 
         if (intakeError) throw intakeError;
       }
@@ -293,15 +317,112 @@ export function useTodaysSupplements() {
 
         if (logError) throw logError;
       }
+      
+      return notTakenItems.length;
     },
-    onSuccess: (_, items) => {
+    onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
       queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
-      toast.success(`✅ Logged ${items.length} supplement${items.length > 1 ? 's' : ''}`);
+      toast.success(`✅ Принято: ${count}`);
+    },
+    onError: (error: any) => {
+      console.error('Error logging intake:', error);
+      if (error.message === 'All selected items already taken today') {
+        toast.info('Все выбранные добавки уже приняты сегодня');
+      } else {
+        toast.error('Ошибка при сохранении');
+      }
+    },
+  });
+
+  // Toggle intake (take or cancel)
+  const toggleIntakeMutation = useMutation({
+    mutationFn: async (item: UnifiedSupplementItem) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      if (item.takenToday && item.logId) {
+        // CANCEL - delete the log
+        if (item.source === 'manual') {
+          const { error } = await supabase
+            .from('intake_logs')
+            .delete()
+            .eq('id', item.logId);
+          
+          if (error) throw error;
+        } else {
+          // Protocol: revert to pending
+          const { error } = await supabase
+            .from('supplement_logs')
+            .update({ status: 'pending', taken_at: null })
+            .eq('id', item.logId);
+          
+          if (error) throw error;
+        }
+        return { action: 'cancelled', name: item.name };
+      } else {
+        // TAKE - create log
+        if (item.source === 'manual') {
+          const { error } = await supabase
+            .from('intake_logs')
+            .upsert({
+              user_id: user.id,
+              stack_item_id: item.sourceId,
+              intake_time: item.intakeTime,
+              intake_date: todayDateStr,
+              taken_at: new Date().toISOString(),
+              servings_taken: 1,
+            }, {
+              onConflict: 'user_id,stack_item_id,intake_time,intake_date',
+              ignoreDuplicates: false
+            });
+          
+          if (error) throw error;
+        } else {
+          // Protocol: mark as taken
+          const parts = item.id.split('-');
+          const intakeTime = parts[parts.length - 1];
+          
+          let hourStart = 6, hourEnd = 12;
+          if (intakeTime === 'afternoon') { hourStart = 12; hourEnd = 17; }
+          else if (intakeTime === 'evening') { hourStart = 17; hourEnd = 21; }
+          else if (intakeTime === 'before_sleep') { hourStart = 21; hourEnd = 24; }
+          
+          const scheduleStart = new Date(todayStart);
+          scheduleStart.setHours(hourStart, 0, 0, 0);
+          const scheduleEnd = new Date(todayStart);
+          scheduleEnd.setHours(hourEnd, 0, 0, 0);
+          
+          const { error } = await supabase
+            .from('supplement_logs')
+            .update({ 
+              status: 'taken',
+              taken_at: new Date().toISOString(),
+              servings_taken: 1
+            })
+            .eq('protocol_item_id', item.sourceId)
+            .eq('status', 'pending')
+            .gte('scheduled_time', scheduleStart.toISOString())
+            .lte('scheduled_time', scheduleEnd.toISOString())
+            .order('scheduled_time', { ascending: true })
+            .limit(1);
+          
+          if (error) throw error;
+        }
+        return { action: 'taken', name: item.name };
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
+      queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
+      if (result.action === 'cancelled') {
+        toast.info(`↩️ Отменено: ${result.name}`);
+      } else {
+        toast.success(`✅ Принято: ${result.name}`);
+      }
     },
     onError: (error) => {
-      console.error('Error logging intake:', error);
-      toast.error('Failed to log intake');
+      console.error('Error toggling intake:', error);
+      toast.error('Ошибка');
     },
   });
 
@@ -309,5 +430,6 @@ export function useTodaysSupplements() {
     groupedSupplements,
     allSupplements,
     logIntakeMutation,
+    toggleIntakeMutation,
   };
 }

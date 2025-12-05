@@ -39,7 +39,7 @@ const TIME_GROUPS = [
 ];
 
 export function TodaysSupplements() {
-  const { groupedSupplements, logIntakeMutation } = useTodaysSupplements();
+  const { groupedSupplements, logIntakeMutation, toggleIntakeMutation } = useTodaysSupplements();
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
@@ -184,9 +184,10 @@ export function TodaysSupplements() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleTakeAllTime(timeGroup.key)}
-                      className="text-xs border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
+                      disabled={logIntakeMutation.isPending}
+                      className="text-xs border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50 disabled:opacity-50"
                     >
-                      Принять всё ({timeGroup.label})
+                      {logIntakeMutation.isPending ? 'Сохранение...' : `Принять всё (${timeGroup.label})`}
                     </Button>
                   ) : (
                     <Button
@@ -202,12 +203,14 @@ export function TodaysSupplements() {
 
                 {/* Items Grid */}
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {items.map((item) => (
+                {items.map((item) => (
                     <CompactSupplementChip
                       key={item.id}
                       item={item}
                       isSelected={selectedItems.has(item.id)}
                       onToggle={() => handleToggleItem(item.id)}
+                      onToggleIntake={() => toggleIntakeMutation.mutate(item)}
+                      isToggling={toggleIntakeMutation.isPending}
                       onAddPhoto={(productId, productName) => setPhotoUploaderProduct({ id: productId, name: productName })}
                     />
                   ))}
