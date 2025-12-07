@@ -915,25 +915,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               }));
             }
             
-            // Get InBody date range
-            const inBodyDates = inBodySparklineData.map(d => d.date).sort();
-            const firstInBodyDate = inBodyDates[0];
-            const lastInBodyDate = inBodyDates[inBodyDates.length - 1];
-            
-            // Filter Withings: only from first InBody date onwards
-            const filteredWithings = sparklineData.filter(d => d.date >= firstInBodyDate);
-            
-            // Combine all dates (filtered Withings + InBody)
+            // Show ALL Withings data (full period) + InBody only in its range
             const allDates = new Set([
-              ...filteredWithings.map(d => d.date),
+              ...sparklineData.map(d => d.date),
               ...inBodySparklineData.map(d => d.date),
             ]);
             
             return Array.from(allDates).sort().map(date => {
-              const withingsPoint = filteredWithings.find(d => d.date === date);
-              // InBody value: interpolated for all dates within range
+              const withingsPoint = sparklineData.find(d => d.date === date);
+              // InBody: interpolated only within its date range, undefined outside
               const inbodyValue = interpolateInBodyValue(date, inBodySparklineData);
-              // Check if this is a real InBody measurement point
               const isRealInBody = inBodySparklineData.some(d => d.date === date);
               
               return {
