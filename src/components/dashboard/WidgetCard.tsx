@@ -937,25 +937,29 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             });
           })();
           
-          // Single shared domain for both sources - parallel waves
-          const allValues = [
-            ...mergedChartData.map(d => d.withingsValue).filter((v): v is number => v != null),
-            ...mergedChartData.map(d => d.inbodyValue).filter((v): v is number => v != null)
-          ];
+          // Calculate SEPARATE domains for each data source - beautiful waves!
+          const withingsValues = mergedChartData
+            .map(d => d.withingsValue)
+            .filter((v): v is number => v != null);
+          
+          const inbodyValues = mergedChartData
+            .map(d => d.inbodyValue)
+            .filter((v): v is number => v != null);
 
-          // Calculate domain with space for gradient fill below
+          // Expand lower boundary to create space for gradient fill
           const calculateDomain = (values: number[]): [number, number] => {
             if (values.length === 0) return [0, 100];
             const minVal = Math.min(...values);
             const maxVal = Math.max(...values);
             const range = maxVal - minVal || 1;
             return [
-              minVal - range * 1.5,  // Expand down for gradient space
+              minVal - range * 1.5,  // Expand down 150% of range for gradient space
               maxVal + range * 0.2   // Small padding at top
             ];
           };
 
-          const sharedDomain = calculateDomain(allValues);
+          const withingsDomain = calculateDomain(withingsValues);
+          const inbodyDomain = calculateDomain(inbodyValues);
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
@@ -974,8 +978,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
-                  {/* Single shared Y-axis */}
-                  <YAxis domain={sharedDomain} hide />
+                  {/* Dual Y-axis with separate domains for beautiful waves */}
+                  <YAxis yAxisId="withings" domain={withingsDomain} hide />
+                  <YAxis yAxisId="inbody" orientation="right" domain={inbodyDomain} hide />
                   <RechartsTooltip 
                     content={
                       <WidgetChartTooltip 
@@ -986,6 +991,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   />
                   {/* Withings data - pink gradient wave */}
                   <Area
+                    yAxisId="withings"
                     type="monotone"
                     dataKey="withingsValue"
                     stroke={color}
@@ -997,6 +1003,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   {/* InBody data - green gradient wave with dots */}
                   {inBodySparklineData && inBodySparklineData.length >= 2 && (
                     <Area
+                      yAxisId="inbody"
                       type="linear"
                       dataKey="inbodyValue"
                       stroke="#10b981"
