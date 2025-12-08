@@ -18,6 +18,7 @@ import { useSmartWidgetsData } from '@/hooks/metrics/useSmartWidgetsData';
 import { useMultiSourceWidgetsData } from '@/hooks/metrics/useMultiSourceWidgetsData';
 import { useWidgetHistory } from '@/hooks/metrics/useWidgetHistory';
 import { useAllInBodySparklines } from '@/hooks/metrics/useAllInBodySparklines';
+import { useExtendedBodyCompositionHistory, getInBodyDateRange } from '@/hooks/metrics/useExtendedBodyCompositionHistory';
 import { WidgetCard } from '@/components/dashboard/WidgetCard';
 import { WidgetSettings } from '@/components/dashboard/WidgetSettings';
 import { Leaderboard } from '@/components/dashboard/leaderboard';
@@ -199,6 +200,16 @@ const Index = () => {
   // ✅ InBody sparkline data (called once at top level, not inside .map())
   const { data: allInBodySparklines } = useAllInBodySparklines(user?.id);
 
+  // ✅ Get InBody date range for extended Withings history
+  const bodyFatInBodyRange = getInBodyDateRange(allInBodySparklines?.get('Body Fat Percentage'));
+  
+  // ✅ Extended Withings history for body composition (synced with InBody period)
+  const { data: extendedBodyFatHistory } = useExtendedBodyCompositionHistory(
+    user?.id,
+    bodyFatInBodyRange.startDate,
+    'Body Fat Percentage'
+  );
+
   // Wait for auth to load first (with force timeout)
   if ((authLoading || rolesLoading) && !forceReady) {
     console.log('⏳ [Index] Waiting for auth/roles...');
@@ -352,18 +363,13 @@ const Index = () => {
               const multiSourceData = !isSingleMode ? multiData?.get(widget.id) : undefined;
               const sparklineData = widgetHistory?.get(widget.id);
               
-              // 🔍 DEBUG: Log Recovery Score sparkline data
-              if (widget.metric_name.toLowerCase().includes('recovery')) {
-                console.log('🔍 [Index] Recovery Score sparkline:', {
-                  widgetId: widget.id,
-                  metricName: widget.metric_name,
-                  sparklineData: sparklineData,
-                  dataLength: sparklineData?.length
-                });
-              }
-
               // Get InBody sparkline data from pre-fetched Map (not a hook call!)
               const inBodyData = allInBodySparklines?.get(widget.metric_name);
+              
+              // Use extended history for Body Fat Percentage (synced with InBody dates)
+              const finalSparklineData = widget.metric_name === 'Body Fat Percentage' && extendedBodyFatHistory?.length
+                ? extendedBodyFatHistory
+                : sparklineData;
               
               return (
                 <WidgetCard
@@ -371,7 +377,7 @@ const Index = () => {
                   widget={widget}
                   data={singleData}
                   multiSourceData={multiSourceData}
-                  sparklineData={sparklineData}
+                  sparklineData={finalSparklineData}
                   inBodySparklineData={inBodyData}
                 />
               );
