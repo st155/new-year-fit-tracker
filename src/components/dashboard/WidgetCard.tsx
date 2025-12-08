@@ -946,20 +946,21 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             .map(d => d.inbodyValue)
             .filter((v): v is number => v != null);
 
-          // Explicit domains with padding - each source gets its own range
-          const withingsDomain: [number, number] = withingsValues.length > 0 
-            ? [
-                Math.min(...withingsValues) - 0.3,
-                Math.max(...withingsValues) + 0.3
-              ]
-            : [0, 100];
-          
-          const inbodyDomain: [number, number] = inbodyValues.length > 0
-            ? [
-                Math.min(...inbodyValues) - 0.3,
-                Math.max(...inbodyValues) + 0.3
-              ]
-            : [0, 100];
+          // Expand lower boundary to create space for gradient fill
+          // Data line stays at top, gradient fills downward
+          const calculateDomain = (values: number[]): [number, number] => {
+            if (values.length === 0) return [0, 100];
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+            const range = maxVal - minVal || 1; // Avoid division by zero
+            return [
+              minVal - range * 1.5,  // Expand down 150% of range for gradient space
+              maxVal + range * 0.2   // Small padding at top
+            ];
+          };
+
+          const withingsDomain = calculateDomain(withingsValues);
+          const inbodyDomain = calculateDomain(inbodyValues);
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
