@@ -902,22 +902,43 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             return firstPoint.value + (lastPoint.value - firstPoint.value) * progress;
           };
 
-          // Prepare data for parallel sparklines
-          const withingsChartData = sparklineData.map(d => ({
-            date: format(parseISO(d.date), 'd MMM', { locale: ru }),
-            value: d.value,
-          }));
-          
-          const inbodyChartData = (inBodySparklineData || []).map(d => ({
-            date: format(parseISO(d.date), 'd MMM', { locale: ru }),
-            value: d.value,
-          }));
+          // Sort InBody data by date and get boundaries
+          const inBodySorted = [...(inBodySparklineData || [])].sort((a, b) => a.date.localeCompare(b.date));
+          const hasInBody = inBodySorted.length > 0;
+          const inBodyStartDate = inBodySorted[0]?.date;
+          const inBodyEndDate = inBodySorted[inBodySorted.length - 1]?.date;
+
+          // Filter Withings: from InBody start date onwards (if InBody exists)
+          const withingsFiltered = hasInBody 
+            ? sparklineData.filter(d => d.date >= inBodyStartDate)
+            : sparklineData;
+
+          // Build unified timeline with both data sources
+          const unifiedData = withingsFiltered.map(d => {
+            const date = d.date;
+            const withingsValue = d.value;
+            
+            // InBody: interpolate only within InBody date range
+            let inbodyValue: number | undefined = undefined;
+            if (hasInBody && date <= inBodyEndDate) {
+              inbodyValue = interpolateInBodyValue(date, inBodySorted);
+            }
+            
+            return {
+              date: format(parseISO(date), 'd MMM', { locale: ru }),
+              rawDate: date,
+              withingsValue,
+              inbodyValue,
+            };
+          });
 
           // Calculate domain with space for gradient fill
           const calculateDomain = (values: number[]): [number, number] => {
             if (values.length === 0) return [0, 100];
-            const minVal = Math.min(...values);
-            const maxVal = Math.max(...values);
+            const validValues = values.filter(v => v !== undefined && !isNaN(v)) as number[];
+            if (validValues.length === 0) return [0, 100];
+            const minVal = Math.min(...validValues);
+            const maxVal = Math.max(...validValues);
             const range = maxVal - minVal || 1;
             return [
               minVal - range * 0.8,  // Expand down for gradient space
@@ -925,16 +946,16 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             ];
           };
 
-          const withingsDomain = calculateDomain(withingsChartData.map(d => d.value));
-          const inbodyDomain = calculateDomain(inbodyChartData.map(d => d.value));
-          const hasInBody = inbodyChartData.length > 0;
+          // Calculate domains for each data source independently
+          const withingsDomain = calculateDomain(unifiedData.map(d => d.withingsValue));
+          const inbodyDomain = calculateDomain(unifiedData.map(d => d.inbodyValue).filter(Boolean) as number[]);
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
               <div className="flex flex-col gap-0.5">
-                {/* Withings — розовая волна */}
+                {/* Withings — розовая волна (на всей ширине) */}
                 <ResponsiveContainer width="100%" height={hasInBody ? 32 : 65}>
-                  <AreaChart data={withingsChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                  <AreaChart data={unifiedData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id={`gradientWithings-${metricName}`} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={color} stopOpacity={0.5} />
@@ -944,19 +965,20 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     <YAxis domain={withingsDomain} hide />
                     <Area 
                       type="monotone" 
-                      dataKey="value" 
+                      dataKey="withingsValue" 
                       stroke={color} 
                       strokeWidth={1.5} 
                       fill={`url(#gradientWithings-${metricName})`}
                       isAnimationActive={false}
+                      connectNulls
                     />
                   </AreaChart>
                 </ResponsiveContainer>
                 
-                {/* InBody — зелёная волна */}
+                {/* InBody — зелёная волна (заканчивается на последней InBody дате) */}
                 {hasInBody && (
                   <ResponsiveContainer width="100%" height={32}>
-                    <AreaChart data={inbodyChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                    <AreaChart data={unifiedData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id={`gradientInBody-${metricName}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.5} />
@@ -966,11 +988,12 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                       <YAxis domain={inbodyDomain} hide />
                       <Area 
                         type="monotone" 
-                        dataKey="value" 
+                        dataKey="inbodyValue" 
                         stroke="#10b981" 
                         strokeWidth={1.5} 
                         fill={`url(#gradientInBody-${metricName})`}
                         isAnimationActive={false}
+                        connectNulls
                       />
                     </AreaChart>
                   </ResponsiveContainer>
