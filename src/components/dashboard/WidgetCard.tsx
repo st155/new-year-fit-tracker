@@ -1,6 +1,6 @@
 import { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { Card as TremorCard } from '@tremor/react';
-import { Area, ComposedChart, ResponsiveContainer, YAxis, Tooltip as RechartsTooltip, Scatter } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -902,128 +902,90 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             return firstPoint.value + (lastPoint.value - firstPoint.value) * progress;
           };
 
-          // Merge Withings and InBody data by date (computed once, not in JSX)
-          const mergedChartData = (() => {
-            // If no InBody data or only 1 point - show only Withings
-            if (!inBodySparklineData || inBodySparklineData.length < 2) {
-              return sparklineData.map(d => ({
-                date: format(parseISO(d.date), 'd MMM', { locale: ru }),
-                rawDate: d.date,
-                withingsValue: d.value,
-                inbodyValue: undefined,
-                isRealInBody: false,
-              }));
-            }
-            
-            // Show ALL Withings data (full period) + InBody only in its range
-            const allDates = new Set([
-              ...sparklineData.map(d => d.date),
-              ...inBodySparklineData.map(d => d.date),
-            ]);
-            
-            return Array.from(allDates).sort().map(date => {
-              const withingsPoint = sparklineData.find(d => d.date === date);
-              // InBody: interpolated only within its date range, undefined outside
-              const inbodyValue = interpolateInBodyValue(date, inBodySparklineData);
-              const isRealInBody = inBodySparklineData.some(d => d.date === date);
-              
-              return {
-                date: format(parseISO(date), 'd MMM', { locale: ru }),
-                rawDate: date,
-                withingsValue: withingsPoint?.value,
-                inbodyValue: inbodyValue,
-                isRealInBody: isRealInBody,
-              };
-            });
-          })();
+          // Prepare data for parallel sparklines
+          const withingsChartData = sparklineData.map(d => ({
+            date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+            value: d.value,
+          }));
           
-          // Single shared domain for both sources - honest vertical comparison
-          const allValues = [
-            ...mergedChartData.map(d => d.withingsValue).filter((v): v is number => v != null),
-            ...mergedChartData.map(d => d.inbodyValue).filter((v): v is number => v != null)
-          ];
+          const inbodyChartData = (inBodySparklineData || []).map(d => ({
+            date: format(parseISO(d.date), 'd MMM', { locale: ru }),
+            value: d.value,
+          }));
 
-          // Calculate domain with space for gradient fill below
+          // Calculate domain with space for gradient fill
           const calculateDomain = (values: number[]): [number, number] => {
             if (values.length === 0) return [0, 100];
             const minVal = Math.min(...values);
             const maxVal = Math.max(...values);
             const range = maxVal - minVal || 1;
             return [
-              minVal - range * 0.5,  // Expand down for gradient space
-              maxVal + range * 0.3   // Padding at top
+              minVal - range * 0.8,  // Expand down for gradient space
+              maxVal + range * 0.2   // Padding at top
             ];
           };
 
-          const sharedDomain = calculateDomain(allValues);
+          const withingsDomain = calculateDomain(withingsChartData.map(d => d.value));
+          const inbodyDomain = calculateDomain(inbodyChartData.map(d => d.value));
+          const hasInBody = inbodyChartData.length > 0;
 
           return (
             <div className="mt-2 sm:mt-3 -mx-3 sm:-mx-6 -mb-3 sm:-mb-6">
-              <ResponsiveContainer width="100%" height={65}>
-                <ComposedChart 
-                  data={mergedChartData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id={`gradientWithings-${metricName}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={color} stopOpacity={0.5} />
-                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <YAxis domain={sharedDomain} hide />
-                  <RechartsTooltip 
-                    content={
-                      <WidgetChartTooltip 
-                        metricName={metricName} 
-                        unit={data.unit} 
-                      />
-                    } 
-                  />
-                  {/* Withings data - beautiful pink gradient wave */}
-                  <Area
-                    type="monotone"
-                    dataKey="withingsValue"
-                    stroke={color}
-                    strokeWidth={2}
-                    fill={`url(#gradientWithings-${metricName})`}
-                    isAnimationActive={false}
-                    connectNulls={true}
-                  />
-                  {/* InBody data - green scatter points (markers only, no line) */}
-                  {inBodySparklineData && inBodySparklineData.length > 0 && (
-                    <Scatter
-                      dataKey="inbodyValue"
-                      fill="#10b981"
+              <div className="flex flex-col gap-0.5">
+                {/* Withings — розовая волна */}
+                <ResponsiveContainer width="100%" height={hasInBody ? 32 : 65}>
+                  <AreaChart data={withingsChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={`gradientWithings-${metricName}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={color} stopOpacity={0.5} />
+                        <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <YAxis domain={withingsDomain} hide />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke={color} 
+                      strokeWidth={1.5} 
+                      fill={`url(#gradientWithings-${metricName})`}
                       isAnimationActive={false}
-                      shape={(props: any) => {
-                        const { cx, cy, payload } = props;
-                        if (payload?.isRealInBody && cx != null && cy != null) {
-                          return (
-                            <circle 
-                              cx={cx} 
-                              cy={cy} 
-                              r={6} 
-                              fill="#10b981" 
-                              stroke="white" 
-                              strokeWidth={2}
-                            />
-                          );
-                        }
-                        return <g />;
-                      }}
                     />
-                  )}
-                </ComposedChart>
-              </ResponsiveContainer>
+                  </AreaChart>
+                </ResponsiveContainer>
+                
+                {/* InBody — зелёная волна */}
+                {hasInBody && (
+                  <ResponsiveContainer width="100%" height={32}>
+                    <AreaChart data={inbodyChartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id={`gradientInBody-${metricName}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.5} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                        </linearGradient>
+                      </defs>
+                      <YAxis domain={inbodyDomain} hide />
+                      <Area 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="#10b981" 
+                        strokeWidth={1.5} 
+                        fill={`url(#gradientInBody-${metricName})`}
+                        isAnimationActive={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              
               {/* Legend for dual data sources */}
-              {inBodySparklineData && inBodySparklineData.length > 0 && (
+              {hasInBody && (
                 <div className="flex items-center justify-end gap-3 px-3 pb-2 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-0.5 rounded" style={{ backgroundColor: color }}></span>
                     Withings
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="w-3 h-0.5 rounded bg-emerald-500"></span>
                     InBody
                   </span>
                 </div>
