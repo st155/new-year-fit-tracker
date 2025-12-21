@@ -137,7 +137,7 @@ export default function TerraCallback() {
               return;
             }
             
-            setTimeout(() => navigate('/integrations'), 3000);
+            setTimeout(() => navigate('/integrations'), 500);
             return;
           }
         } catch (e) {
@@ -243,9 +243,7 @@ export default function TerraCallback() {
                   
                   // Redirect to saved URL or integrations
                   const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
-                  setTimeout(() => {
-                    navigate(returnUrl);
-                  }, 1000);
+                  navigate(returnUrl);
                 }
               }, 1000);
 
@@ -283,7 +281,7 @@ export default function TerraCallback() {
           return;
         }
         
-        setTimeout(() => navigate('/integrations'), 3000);
+        setTimeout(() => navigate('/integrations'), 500);
         return;
       }
 
@@ -340,7 +338,7 @@ export default function TerraCallback() {
             return;
           }
 
-            setTimeout(() => navigate('/integrations'), 3000);
+            setTimeout(() => navigate('/integrations'), 500);
             return;
           }
         }
