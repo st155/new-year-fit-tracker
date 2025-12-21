@@ -49,7 +49,7 @@ export function useHabitFeed(teamId?: string) {
         .from('habit_feed_events' as any)
         .select(`
           *,
-          profiles!habit_feed_events_user_id_fkey(username, full_name, avatar_url),
+          profiles:user_id(username, full_name, avatar_url),
           feed_reactions(id, user_id, reaction_type)
         `)
         .order('created_at', { ascending: false })
