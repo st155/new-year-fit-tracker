@@ -286,6 +286,73 @@ Deno.serve(
                       .eq('id', nullToken.id),
                     2000
                   );
+                } else {
+                  // No token found at all - auto-create if we have reference_id
+                  const referenceId = payload.user?.reference_id;
+                  
+                  if (referenceId) {
+                    logger.info('No token found, auto-creating from data webhook', {
+                      referenceId,
+                      provider,
+                      terraUserId
+                    });
+                    
+                    // Delete old inactive entries for this provider and user
+                    await withTimeout(
+                      supabase
+                        .from('terra_tokens')
+                        .delete()
+                        .eq('user_id', referenceId)
+                        .eq('provider', provider)
+                        .eq('is_active', false),
+                      2000
+                    );
+                    
+                    // Also delete any old active entries with different terra_user_id
+                    await withTimeout(
+                      supabase
+                        .from('terra_tokens')
+                        .delete()
+                        .eq('user_id', referenceId)
+                        .eq('provider', provider)
+                        .neq('terra_user_id', terraUserId),
+                      2000
+                    );
+                    
+                    // Create new token entry
+                    const { error: insertError } = await withTimeout(
+                      supabase
+                        .from('terra_tokens')
+                        .upsert({
+                          user_id: referenceId,
+                          provider: provider,
+                          terra_user_id: terraUserId,
+                          is_active: true,
+                          last_sync_date: new Date().toISOString(),
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString()
+                        }, {
+                          onConflict: 'user_id,provider',
+                          ignoreDuplicates: false
+                        }),
+                      2000
+                    );
+                    
+                    if (insertError) {
+                      logger.error('Failed to auto-create terra_tokens', {
+                        error: insertError.message,
+                        referenceId,
+                        provider,
+                        terraUserId
+                      });
+                    } else {
+                      logger.info('✅ Auto-created terra_tokens from data webhook', {
+                        referenceId,
+                        provider,
+                        terraUserId
+                      });
+                    }
+                  }
                 }
               } else {
                 logger.info('Updated last_sync_date', { 
