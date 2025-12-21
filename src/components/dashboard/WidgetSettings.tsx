@@ -138,7 +138,7 @@ export function WidgetSettings({
           className="md:w-auto md:px-3 md:gap-2 h-10 md:h-9"
           title="Настроить виджеты"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-4 w-4 text-green-500" />
           <span className="hidden md:inline">Настроить виджеты</span>
         </Button>
       </DialogTrigger>
