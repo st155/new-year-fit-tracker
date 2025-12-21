@@ -21,8 +21,15 @@ import {
   ExternalLink,
   Clock,
   Dumbbell,
-  Trash2
+  Trash2,
+  Info
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -616,6 +623,13 @@ export function TerraIntegration() {
               </Button>
             </div>
 
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800 mb-3">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Проблемы с данными?</strong> Отключите устройство (кнопка 🔗) → в секции "Отключенные устройства" нажмите "Удалить" → подключите заново.
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               {status.providers.map((provider) => {
                 const Icon = PROVIDER_ICONS[provider.name] || Activity;
@@ -670,8 +684,15 @@ export function TerraIntegration() {
               <AlertCircle className="h-5 w-5" />
               Отключенные устройства
             </CardTitle>
-            <CardDescription>
-              Эти устройства были ранее подключены. Вы можете быстро переподключить их.
+            <CardDescription className="space-y-2">
+              <span>Эти устройства были ранее подключены. Вы можете быстро переподключить их.</span>
+              <Alert className="border-amber-300 bg-amber-100/50 dark:bg-amber-950/30 dark:border-amber-700 mt-2">
+                <Info className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+                  <strong>Проблемы с синхронизацией?</strong> Нажмите <strong>"Удалить"</strong> для полного удаления токена, 
+                  затем подключите устройство заново.
+                </AlertDescription>
+              </Alert>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -713,14 +734,23 @@ export function TerraIntegration() {
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deauthenticateProvider(provider.name)}
-                      title="Полностью удалить и подключить заново"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deauthenticateProvider(provider.name)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Удалить
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p>Полностью удалить токен авторизации. После этого подключите устройство заново для решения проблем с синхронизацией.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               );
