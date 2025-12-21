@@ -94,6 +94,38 @@ export function TerraIntegration() {
   const forceSyncMutation = useForceTerraSync();
 
 
+  // Listen for messages from popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'terra-connection-result') {
+        console.log('📨 Received result from popup:', event.data);
+        
+        const providerName = PROVIDER_NAMES[event.data.provider] || event.data.provider;
+        
+        if (event.data.success) {
+          toast({
+            title: 'Устройство подключено!',
+            description: `${providerName} успешно подключен.`,
+          });
+        } else {
+          toast({
+            title: 'Ошибка подключения',
+            description: event.data.error || 'Не удалось подключить устройство',
+            variant: 'destructive',
+          });
+        }
+        
+        // Update status
+        setConnectingProvider(null);
+        checkStatus();
+        checkInactiveProviders();
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [toast]);
+
   useEffect(() => {
     if (user) {
       // Проверяем, не возвращаемся ли мы из Terra widget
