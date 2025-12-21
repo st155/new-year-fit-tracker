@@ -37,6 +37,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // Handle password recovery flow
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('🔑 [AuthProvider] Password recovery flow detected');
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('show-password-reset-modal'));
+          }, 0);
+        }
+        
         // Handle successful OAuth login
         if (event === 'SIGNED_IN' && session?.user) {
           // Check if this is a new user (first login)
