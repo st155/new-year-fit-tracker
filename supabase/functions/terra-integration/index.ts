@@ -417,6 +417,87 @@ serve(async (req) => {
       );
     }
 
+    // Полная деавторизация Terra user (отзыв OAuth + удаление локальной записи)
+    if (action === 'deauthenticate-user') {
+      console.log('🔌 FULL Deauthenticating Terra user:', { userId: user.id, provider });
+      
+      if (!provider) {
+        throw new Error('Provider is required for deauthenticate-user action');
+      }
+      
+      const normalizedProvider = provider.toUpperCase();
+      
+      // Получаем terra_user_id для провайдера
+      const { data: token, error: tokenError } = await supabase
+        .from('terra_tokens')
+        .select('terra_user_id')
+        .eq('user_id', user.id)
+        .eq('provider', normalizedProvider)
+        .maybeSingle();
+      
+      if (tokenError) {
+        console.error('❌ Error fetching token:', tokenError);
+        throw tokenError;
+      }
+      
+      console.log('📋 Found token:', token);
+      
+      // Вызываем Terra API для полной деавторизации (если есть terra_user_id)
+      if (token?.terra_user_id) {
+        console.log('🔄 Calling Terra deauthenticate API for terra_user_id:', token.terra_user_id);
+        
+        try {
+          const response = await fetch(
+            `https://api.tryterra.co/v2/auth/deauthenticateUser?user_id=${token.terra_user_id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'Accept': 'application/json',
+                'dev-id': terraDevId,
+                'x-api-key': terraApiKey,
+              },
+            }
+          );
+          
+          const responseText = await response.text();
+          console.log('📡 Terra deauth response:', { 
+            status: response.status, 
+            ok: response.ok,
+            body: responseText.substring(0, 500)
+          });
+          
+          if (!response.ok) {
+            console.warn('⚠️ Terra deauth API returned error (continuing with local deletion):', responseText);
+          } else {
+            console.log('✅ Terra user deauthenticated successfully via API');
+          }
+        } catch (terraError: any) {
+          console.error('❌ Terra deauth API error (continuing with local deletion):', terraError.message);
+        }
+      } else {
+        console.log('ℹ️ No terra_user_id found, skipping Terra API call');
+      }
+      
+      // ВСЕГДА удаляем запись из нашей БД полностью
+      const { error: deleteError } = await supabase
+        .from('terra_tokens')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('provider', normalizedProvider);
+      
+      if (deleteError) {
+        console.error('❌ Failed to delete local token:', deleteError);
+        throw deleteError;
+      }
+      
+      console.log('✅ Successfully deauthenticated and deleted token for:', normalizedProvider);
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'User fully deauthenticated', provider: normalizedProvider }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Activate provider manually
     if (action === 'activate-provider') {
       console.log('🔓 Activating provider:', { userId: user.id, provider });

@@ -20,7 +20,8 @@ import {
   Watch,
   ExternalLink,
   Clock,
-  Dumbbell
+  Dumbbell,
+  Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -479,6 +480,45 @@ export function TerraIntegration() {
     }
   };
 
+  // Полная деавторизация (удаление и на Terra, и локально)
+  const deauthenticateProvider = async (provider: string) => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      `Вы уверены, что хотите полностью удалить подключение ${PROVIDER_NAMES[provider]}?\n\nЭто отзовёт OAuth-токен на стороне ${PROVIDER_NAMES[provider]} и удалит запись. После этого вы сможете подключить устройство заново.`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'deauthenticate-user', provider },
+      });
+
+      if (error) throw error;
+
+      // Очищаем кэши
+      localStorage.removeItem('fitness_metrics_cache');
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+
+      toast({
+        title: 'Устройство полностью удалено',
+        description: `${PROVIDER_NAMES[provider]} удалён. Теперь можно подключить заново.`,
+      });
+
+      await checkStatus();
+      await checkInactiveProviders();
+    } catch (error: any) {
+      console.error('Deauthenticate error:', error);
+      toast({
+        title: 'Ошибка удаления',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -621,25 +661,35 @@ export function TerraIntegration() {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => reactivateProvider(provider.name)}
-                    disabled={isReactivating}
-                    className="border-amber-300 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/30"
-                  >
-                    {isReactivating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Активация...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Переподключить
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => reactivateProvider(provider.name)}
+                      disabled={isReactivating}
+                      className="border-amber-300 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/30"
+                    >
+                      {isReactivating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Активация...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Активировать
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deauthenticateProvider(provider.name)}
+                      title="Полностью удалить и подключить заново"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               );
             })}
