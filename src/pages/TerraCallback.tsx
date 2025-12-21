@@ -25,6 +25,32 @@ export default function TerraCallback() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>('processing');
   const [message, setMessage] = useState('Обработка подключения...');
+  
+  // Detect if we're running in a popup window
+  const isPopup = window.opener !== null && window.opener !== window;
+  
+  // Helper to notify parent and close popup
+  const notifyParentAndClose = (success: boolean, provider: string, error?: string) => {
+    if (isPopup && window.opener) {
+      try {
+        window.opener.postMessage({
+          type: 'terra-connection-result',
+          success,
+          provider,
+          error,
+        }, '*');
+      } catch (e) {
+        console.error('Failed to notify parent:', e);
+      }
+      
+      // Close popup after a short delay
+      setTimeout(() => {
+        window.close();
+      }, 500);
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     const run = async () => {
@@ -106,6 +132,11 @@ export default function TerraCallback() {
               setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
             }
 
+            // If popup, notify parent and close
+            if (notifyParentAndClose(true, providerParam)) {
+              return;
+            }
+            
             setTimeout(() => navigate('/integrations'), 3000);
             return;
           }
@@ -127,6 +158,11 @@ export default function TerraCallback() {
           setMessage('Сессия авторизации истекла. Это может произойти, если авторизация заняла больше 5 минут. Нажмите "Попробовать снова" для повторной попытки.');
         } else {
           setMessage(decodedError);
+        }
+        
+        // If popup, notify parent and close (even on error)
+        if (notifyParentAndClose(false, providerParam, isSessionExpired ? 'Session expired' : decodedError)) {
+          return;
         }
         
         // Не делаем автоматический редирект при session expired — даём пользователю время нажать retry
@@ -200,6 +236,11 @@ export default function TerraCallback() {
                   sessionStorage.removeItem('terra_last_provider');
                   sessionStorage.removeItem('terra_return_url');
                   
+                  // If popup, notify parent and close
+                  if (notifyParentAndClose(true, providerParam)) {
+                    return;
+                  }
+                  
                   // Redirect to saved URL or integrations
                   const returnUrl = sessionStorage.getItem('terra_return_url') || '/integrations';
                   setTimeout(() => {
@@ -235,6 +276,11 @@ export default function TerraCallback() {
         } catch (e) {
           console.error('Sync error:', e);
           setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+        }
+        
+        // If popup, notify parent and close
+        if (notifyParentAndClose(true, providerParam)) {
+          return;
         }
         
         setTimeout(() => navigate('/integrations'), 3000);
@@ -281,13 +327,18 @@ export default function TerraCallback() {
                 console.error('Sync error:', syncError);
                 setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
               } else {
-                console.log('Sync initiated:', data);
-                setMessage('Устройство подключено и данные синхронизированы!');
-              }
-            } catch (e) {
-              console.error('Sync error:', e);
-              setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+              console.log('Sync initiated:', data);
+              setMessage('Устройство подключено и данные синхронизированы!');
             }
+          } catch (e) {
+            console.error('Sync error:', e);
+            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+          }
+          
+          // If popup, notify parent and close
+          if (notifyParentAndClose(true, providerParam)) {
+            return;
+          }
 
             setTimeout(() => navigate('/integrations'), 3000);
             return;
