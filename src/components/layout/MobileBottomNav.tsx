@@ -1,11 +1,11 @@
-import { Home, Target, Dumbbell, User } from 'lucide-react';
+import { Home, Sparkles, Dumbbell, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: Home, label: 'Главная', path: '/' },
-  { icon: Target, label: 'Цели', path: '/goals' },
+  { icon: Sparkles, label: 'Советы', path: '/recommendations' },
   { icon: Dumbbell, label: 'Тренировки', path: '/workouts' },
   { icon: User, label: 'Профиль', path: '/profile' },
 ];

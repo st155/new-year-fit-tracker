@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell } from "lucide-react";
+import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell, Sparkles } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,8 +94,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   // Main navigation items for mobile (4 items)
   const mainNavItems = [
     { type: 'home' as const, path: "/dashboard", icon: Home, label: 'Главная' },
+    { type: 'recommendations' as const, path: "/recommendations", icon: Sparkles, label: 'Советы' },
     { type: 'stats' as const, path: "/progress", icon: TrendingUp, label: 'Прогресс' },
-    { type: 'goals' as const, path: "/goals", icon: Target, label: 'Цели' },
     { type: 'workouts' as const, path: "/workouts", icon: Dumbbell, label: 'Тренировки' },
   ];
 
@@ -114,10 +114,11 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   // Desktop navigation items (full list)
   const userNavItems = [
     { type: 'home' as const, path: "/", label: 'Главная' },
+    { type: 'recommendations' as const, path: "/recommendations", label: 'Советы', badge: 'New' },
     { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Цели' },
     { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
-    { type: 'activity' as const, path: "/supplements", label: 'Добавки', badge: 'New' },
+    { type: 'activity' as const, path: "/supplements", label: 'Добавки' },
     { type: 'activity' as const, path: "/medical-documents", label: 'Мед. док.' },
     { type: 'body' as const, path: "/body", label: 'Тело' },
     { type: 'habits' as const, path: "/habits", label: 'Привычки' },
