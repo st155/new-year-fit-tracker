@@ -35,6 +35,7 @@ import TrainerIndexPage from './TrainerIndexPage';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAutoSync } from '@/hooks/useAutoSync';
 import { useMetricsRealtime } from '@/hooks/metrics/useMetricsRealtime';
+import { useTerraRealtimeSync } from '@/hooks/useTerraRealtimeSync';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { EnhancedAIInsights } from '@/components/dashboard/EnhancedAIInsights';
@@ -141,6 +142,9 @@ const Index = () => {
   // Auto-sync for fresh data
   const { syncAllData, isSyncing } = useAutoSync(user?.id);
   
+  // Realtime Terra sync for instant metric updates
+  const { mutate: syncTerraRealtime, isPending: isSyncingRealtime } = useTerraRealtimeSync();
+  
   // Real-time subscription for metrics updates
   useMetricsRealtime(!!user?.id);
   
@@ -180,8 +184,11 @@ const Index = () => {
   
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered - syncing all sources');
-    await syncAllData(); // Trigger real sync
+    console.log('🔄 Manual refresh triggered - realtime Terra sync');
+    // First try realtime sync for instant data
+    syncTerraRealtime('WHOOP');
+    // Also trigger background sync
+    await syncAllData();
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
   };
@@ -285,12 +292,12 @@ const Index = () => {
               variant="outline"
               size="icon"
               onClick={handleRefresh}
-              disabled={isSyncing}
+              disabled={isSyncing || isSyncingRealtime}
               className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
-              title="Обновить"
+              title="Синхронизировать данные с WHOOP/Garmin"
             >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">Обновить</span>
+              <RefreshCw className={`h-4 w-4 ${(isSyncing || isSyncingRealtime) ? 'animate-spin' : ''}`} />
+              <span className="hidden md:inline">{isSyncingRealtime ? 'Синхронизация...' : 'Обновить'}</span>
             </Button>
             
             {/* Widget Settings */}

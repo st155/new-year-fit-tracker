@@ -228,3 +228,6 @@ verify_jwt = true
 
 [functions.delete-habit]
 verify_jwt = true
+
+[functions.sync-terra-realtime]
+verify_jwt = true
