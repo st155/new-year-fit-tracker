@@ -21,6 +21,7 @@ import DebugPage from "@/pages/DebugPage";
 import SmokeHome from "@/pages/SmokeHome";
 import ComponentLibrary from "@/pages/ComponentLibrary";
 import { TerraWidgetLoader } from "@/components/integrations/TerraWidgetLoader";
+import { PasswordResetModal } from "@/components/auth/PasswordResetModal";
 
 // 🔍 DIAGNOSTIC: Landing imported directly (not lazy) to debug black screen
 import Landing from "@/pages/Landing";
@@ -403,6 +404,7 @@ export const AppRoutes = () => {
         <Sonner />
         <InstallPrompt />
         <UpdatePrompt />
+        <PasswordResetModal />
       </Suspense>
       </AsyncErrorBoundary>
     </MotionProvider>
