@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -48,9 +49,24 @@ type TimeFilter = 'today' | 'week' | 'month';
 export default function FitnessData() {
   const { user } = useAuth();
   const { deviceFilter } = useMetricsView();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
   const [dateOffset, setDateOffset] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Sync tab with URL parameter
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
@@ -421,13 +437,23 @@ export default function FitnessData() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Обзор</TabsTrigger>
-          <TabsTrigger value="connections">Подключения</TabsTrigger>
-          <TabsTrigger value="health">Здоровье</TabsTrigger>
-          <TabsTrigger value="details">Детали</TabsTrigger>
-          <TabsTrigger value="integrations">Интеграции</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1">
+          <TabsTrigger value="overview" className="flex-shrink-0 px-3 text-xs md:text-sm">
+            Обзор
+          </TabsTrigger>
+          <TabsTrigger value="connections" className="flex-shrink-0 px-3 text-xs md:text-sm">
+            Подключения
+          </TabsTrigger>
+          <TabsTrigger value="health" className="flex-shrink-0 px-3 text-xs md:text-sm">
+            Здоровье
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex-shrink-0 px-3 text-xs md:text-sm">
+            Детали
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="flex-shrink-0 px-3 text-xs md:text-sm">
+            Интеграции
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Overview */}
