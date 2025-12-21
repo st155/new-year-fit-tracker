@@ -74,14 +74,22 @@ const AVAILABLE_PROVIDERS = [
   'GOOGLE',
 ];
 
+interface InactiveProvider {
+  name: string;
+  terraUserId: string | null;
+  deactivatedAt: string;
+}
+
 export function TerraIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
+  const [inactiveProviders, setInactiveProviders] = useState<InactiveProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
+  const [reactivatingProvider, setReactivatingProvider] = useState<string | null>(null);
   const forceSyncMutation = useForceTerraSync();
 
 
@@ -101,6 +109,7 @@ export function TerraIntegration() {
       }
       
       checkStatus();
+      checkInactiveProviders();
     }
   }, [user]);
 
@@ -252,6 +261,71 @@ export function TerraIntegration() {
       console.error('Status check error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkInactiveProviders = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: tokens, error } = await supabase
+        .from('terra_tokens')
+        .select('provider, terra_user_id, updated_at')
+        .eq('user_id', user.id)
+        .eq('is_active', false);
+
+      if (error) throw error;
+
+      const inactive: InactiveProvider[] = (tokens || [])
+        .filter(t => t.terra_user_id) // Only show if we have a terra_user_id (can be reactivated)
+        .map(t => ({
+          name: t.provider,
+          terraUserId: t.terra_user_id,
+          deactivatedAt: t.updated_at,
+        }));
+
+      setInactiveProviders(inactive);
+      console.log('📋 Inactive providers found:', inactive.length);
+    } catch (error: any) {
+      console.error('Error checking inactive providers:', error);
+    }
+  };
+
+  const reactivateProvider = async (provider: string) => {
+    if (!user) return;
+    
+    setReactivatingProvider(provider);
+    
+    try {
+      const { error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'activate-provider', provider },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Устройство активировано',
+        description: `${PROVIDER_NAMES[provider]} успешно переподключен. Запускаем синхронизацию...`,
+      });
+
+      // Refresh status and clear inactive list
+      await checkStatus();
+      await checkInactiveProviders();
+      
+      // Trigger sync after reactivation
+      setTimeout(() => {
+        syncData();
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('Reactivate error:', error);
+      toast({
+        title: 'Ошибка активации',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setReactivatingProvider(null);
     }
   };
 
@@ -490,6 +564,63 @@ export function TerraIntegration() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Inactive Providers - Can be reactivated */}
+      {inactiveProviders.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertCircle className="h-5 w-5" />
+              Отключенные устройства
+            </CardTitle>
+            <CardDescription>
+              Эти устройства были ранее подключены. Вы можете быстро переподключить их.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {inactiveProviders.map((provider) => {
+              const Icon = PROVIDER_ICONS[provider.name] || Activity;
+              const isReactivating = reactivatingProvider === provider.name;
+              
+              return (
+                <div
+                  key={provider.name}
+                  className="flex items-center justify-between p-3 border border-amber-200 dark:border-amber-800 rounded-lg bg-amber-50/50 dark:bg-amber-950/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-amber-600" />
+                    <div>
+                      <p className="font-medium">{PROVIDER_NAMES[provider.name]}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Отключен • Можно переподключить без повторной авторизации
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => reactivateProvider(provider.name)}
+                    disabled={isReactivating}
+                    className="border-amber-300 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/30"
+                  >
+                    {isReactivating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Активация...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Переподключить
+                      </>
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}
