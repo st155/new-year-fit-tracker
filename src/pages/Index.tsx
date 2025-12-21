@@ -153,12 +153,12 @@ const Index = () => {
     }
   }, [user?.id, queryClient]);
   
-  // 🔥 Force rendering after 10 seconds if stuck loading
+  // 🔥 Force rendering after 5 seconds if stuck loading
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn('⚠️ [Index] Force rendering after 10s timeout');
+      console.warn('⚠️ [Index] Force rendering after 5s timeout');
       setForceReady(true);
-    }, 10000);
+    }, 5000);
     
     return () => clearTimeout(timeout);
   }, []);
