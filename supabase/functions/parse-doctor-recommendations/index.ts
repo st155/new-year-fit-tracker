@@ -3,7 +3,22 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-interface RecommendationExtraction {
+interface ActionItemExtraction {
+  action_type: 'supplement' | 'exercise' | 'lifestyle' | 'test' | 'medication' | 'consultation';
+  name: string;
+  details?: string;
+  dosage?: string;
+  frequency?: string;
+  schedule?: string; // "1-0-1" format
+  duration?: string;
+  rationale?: string;
+  priority?: 'high' | 'medium' | 'low';
+  confidence_score: number;
+  doctor_name?: string;
+  prescription_date?: string;
+}
+
+interface LegacyRecommendationExtraction {
   supplement_name: string;
   dosage?: string;
   frequency?: string;
@@ -32,24 +47,24 @@ Deno.serve(async (req) => {
 
     console.log('[PARSE-RX] Starting recommendation extraction for document:', documentId);
 
-    // Check if recommendations already exist (prevent duplicates)
-    const { data: existingRecs, error: checkError } = await supabase
-      .from('doctor_recommendations')
+    // Check if action items already exist (prevent duplicates)
+    const { data: existingActions, error: checkActionsError } = await supabase
+      .from('doctor_action_items')
       .select('id')
       .eq('document_id', documentId)
       .limit(1);
 
-    if (checkError) {
-      console.error('[PARSE-RX] Error checking existing recommendations:', checkError);
+    if (checkActionsError) {
+      console.error('[PARSE-RX] Error checking existing action items:', checkActionsError);
     }
 
-    if (existingRecs && existingRecs.length > 0) {
-      console.log('[PARSE-RX] ⏭️ Recommendations already exist for this document. Skipping extraction.');
+    if (existingActions && existingActions.length > 0) {
+      console.log('[PARSE-RX] ⏭️ Action items already exist for this document. Skipping extraction.');
       return new Response(
         JSON.stringify({ 
           success: true, 
           count: 0,
-          message: 'Recommendations already extracted for this document'
+          message: 'Action items already extracted for this document'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -112,9 +127,9 @@ Deno.serve(async (req) => {
     }
     const base64Pdf = btoa(binaryString);
 
-    console.log('[PARSE-RX] Sending to Gemini for recommendation extraction...');
+    console.log('[PARSE-RX] Sending to Gemini for comprehensive recommendation extraction...');
 
-    // Send to Gemini 2.5 Pro for extraction
+    // Send to Gemini 2.5 Pro for extraction - EXPANDED PROMPT
     const geminiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -126,48 +141,74 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a medical document parser specialized in extracting doctor's supplement recommendations from clinical notes, prescriptions, and consultation reports.
+            content: `You are a medical document parser specialized in extracting ALL doctor's recommendations from clinical notes, prescriptions, and consultation reports.
 
-Extract ALL supplement recommendations from the document. For each recommendation, identify:
-- supplement_name (e.g., "Vitamin D3", "Omega-3", "Magnesium")
-- dosage (e.g., "5000 IU", "1000mg", "400mg")
-- frequency (e.g., "daily", "twice daily", "morning", "before bed")
-- duration (e.g., "3 months", "ongoing", "until retest")
-- rationale (why the doctor recommended it, e.g., "low vitamin D levels", "cardiovascular support")
-- doctor_name (if mentioned in document)
-- prescription_date (date of the recommendation, if mentioned)
-- confidence_score (0-1, how confident you are in the extraction accuracy)
+Extract ALL recommendations grouped by type:
 
-Look for keywords like:
-- "Recommended:", "Prescription:", "Supplement regimen:", "Start taking:", "Continue with:"
-- "Take", "Use", "Add to protocol", "Begin supplementation"
+1. **supplements** - Vitamins, minerals, nutraceuticals, dietary supplements
+   - Look for dosage formats like "1-0-1" (morning-noon-evening), "2x daily", "500mg"
+   
+2. **medications** - Pharmaceutical drugs, prescriptions
+   
+3. **exercises** - Physical therapy, exercises, rehabilitation activities
+   - Examples: "ЛФК", "лечебная физкультура", "физиотерапия", "растяжка"
+   
+4. **lifestyle** - Lifestyle changes, habits, wellness practices
+   - Examples: "сауна", "контрастный душ", "режим сна", "hydration"
+   
+5. **tests** - Follow-up tests, lab work, diagnostics
+   - Examples: "повторный анализ", "УЗИ", "MRI", "blood panel"
+   
+6. **consultations** - Follow-up appointments, specialist visits
+   - Examples: "консультация эндокринолога", "follow-up in 3 months"
 
-Return ONLY a valid JSON object with this structure:
+For each item extract:
+- action_type: one of [supplement, medication, exercise, lifestyle, test, consultation]
+- name: name of the item
+- details: additional details or description
+- dosage: dosage if applicable (for supplements/medications)
+- frequency: how often (daily, weekly, etc.)
+- schedule: timing format like "1-0-1" (morning-noon-evening) or "утром", "перед сном"
+- duration: how long to take/do
+- rationale: why it was recommended
+- priority: high/medium/low based on emphasis in document
+- doctor_name: name of the prescribing doctor
+- prescription_date: date in YYYY-MM-DD format
+- confidence_score: 0-1, accuracy confidence
+
+Return ONLY valid JSON:
 {
-  "recommendations": [
+  "action_items": [
     {
-      "supplement_name": "string",
-      "dosage": "string or null",
-      "frequency": "string or null",
-      "duration": "string or null",
-      "rationale": "string or null",
-      "confidence_score": number (0-1),
-      "doctor_name": "string or null",
-      "prescription_date": "YYYY-MM-DD or null"
+      "action_type": "supplement",
+      "name": "Vitamin D3",
+      "dosage": "5000 IU",
+      "frequency": "daily",
+      "schedule": "1-0-0",
+      "duration": "3 months",
+      "rationale": "low vitamin D levels",
+      "priority": "high",
+      "doctor_name": "Dr. Smith",
+      "prescription_date": "2025-01-15",
+      "confidence_score": 0.95
     }
-  ]
+  ],
+  "doctor_info": {
+    "name": "Dr. Name from document",
+    "date": "YYYY-MM-DD"
+  }
 }
 
-If NO recommendations are found, return: {"recommendations": []}
+If NO recommendations found, return: {"action_items": [], "doctor_info": null}
 
-Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
+Do NOT wrap JSON in markdown code blocks. Return raw JSON only.`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Extract all supplement recommendations from this medical document.'
+                text: 'Extract ALL recommendations from this medical document, including supplements, exercises, tests, lifestyle changes, and follow-up appointments.'
               },
               {
                 type: 'image_url',
@@ -178,7 +219,7 @@ Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
             ]
           }
         ],
-        max_tokens: 8000,
+        max_tokens: 12000,
         temperature: 0.1
       })
     });
@@ -203,7 +244,7 @@ Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
     const geminiData = await geminiResponse.json();
     const rawContent = geminiData.choices[0]?.message?.content || '{}';
     
-    console.log('[PARSE-RX] Raw Gemini response (first 500 chars):', rawContent.substring(0, 500));
+    console.log('[PARSE-RX] Raw Gemini response (first 1000 chars):', rawContent.substring(0, 1000));
 
     // Robust JSON extraction - remove markdown wrappers
     let cleanedJson = rawContent.trim();
@@ -220,7 +261,13 @@ Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
       }
     }
 
-    let extractedData: { recommendations: RecommendationExtraction[] };
+    let extractedData: { 
+      action_items: ActionItemExtraction[]; 
+      doctor_info?: { name?: string; date?: string } | null;
+      // Legacy format support
+      recommendations?: LegacyRecommendationExtraction[];
+    };
+    
     try {
       extractedData = JSON.parse(cleanedJson);
     } catch (parseError) {
@@ -240,46 +287,94 @@ Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
       );
     }
 
-    const recommendations = extractedData.recommendations || [];
-    console.log(`[PARSE-RX] Extracted ${recommendations.length} recommendations`);
+    const actionItems = extractedData.action_items || [];
+    const doctorInfo = extractedData.doctor_info;
+    
+    console.log(`[PARSE-RX] Extracted ${actionItems.length} action items`);
 
-    // Insert recommendations into database
-    if (recommendations.length > 0) {
-      const recommendationsToInsert = recommendations.map(rec => ({
+    // Insert action items into new table
+    if (actionItems.length > 0) {
+      const actionItemsToInsert = actionItems.map(item => {
+        // Generate protocol tag
+        const doctorName = item.doctor_name || doctorInfo?.name || null;
+        const prescriptionDate = item.prescription_date || doctorInfo?.date || null;
+        let protocolTag: string | null = null;
+        
+        if (doctorName) {
+          const dateStr = prescriptionDate 
+            ? new Date(prescriptionDate).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
+            : new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+          protocolTag = `Протокол ${doctorName} - ${dateStr}`;
+        }
+
+        return {
+          user_id: document.user_id,
+          document_id: documentId,
+          action_type: item.action_type,
+          name: item.name,
+          details: item.details || null,
+          dosage: item.dosage || null,
+          frequency: item.frequency || null,
+          schedule: item.schedule || null,
+          duration: item.duration || null,
+          rationale: item.rationale || null,
+          priority: item.priority || 'medium',
+          confidence_score: item.confidence_score,
+          doctor_name: doctorName,
+          prescription_date: prescriptionDate,
+          protocol_tag: protocolTag,
+          status: 'pending'
+        };
+      });
+
+      const { error: insertError } = await supabase
+        .from('doctor_action_items')
+        .insert(actionItemsToInsert);
+
+      if (insertError) {
+        console.error('[PARSE-RX] Database insert error for action_items:', insertError);
+        // Don't fail completely, continue to save supplements to legacy table
+      } else {
+        console.log('[PARSE-RX] Successfully saved action items to database');
+      }
+    }
+
+    // Also insert supplements to legacy doctor_recommendations table for backward compatibility
+    const supplements = actionItems.filter(item => item.action_type === 'supplement');
+    
+    if (supplements.length > 0) {
+      const recommendationsToInsert = supplements.map(rec => ({
         user_id: document.user_id,
         document_id: documentId,
-        supplement_name: rec.supplement_name,
+        supplement_name: rec.name,
         dosage: rec.dosage || null,
-        frequency: rec.frequency || null,
+        frequency: rec.frequency || rec.schedule || null,
         duration: rec.duration || null,
         rationale: rec.rationale || null,
         confidence_score: rec.confidence_score,
-        doctor_name: rec.doctor_name || null,
-        prescription_date: rec.prescription_date || null,
+        doctor_name: rec.doctor_name || doctorInfo?.name || null,
+        prescription_date: rec.prescription_date || doctorInfo?.date || null,
         status: 'pending'
       }));
 
-      const { error: insertError } = await supabase
+      // Check if legacy recommendations already exist
+      const { data: existingRecs } = await supabase
         .from('doctor_recommendations')
-        .insert(recommendationsToInsert);
+        .select('id')
+        .eq('document_id', documentId)
+        .limit(1);
 
-      if (insertError) {
-        console.error('[PARSE-RX] Database insert error:', insertError);
-        await supabase
-          .from('medical_documents')
-          .update({ 
-            processing_status: 'error',
-            processing_error: 'Failed to save recommendations'
-          })
-          .eq('id', documentId);
-        
-        return new Response(
-          JSON.stringify({ error: 'Failed to save recommendations' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (!existingRecs || existingRecs.length === 0) {
+        const { error: insertError } = await supabase
+          .from('doctor_recommendations')
+          .insert(recommendationsToInsert);
+
+        if (insertError) {
+          console.error('[PARSE-RX] Database insert error for legacy recommendations:', insertError);
+        } else {
+          console.log('[PARSE-RX] Also saved to legacy doctor_recommendations table');
+        }
       }
-
-      console.log('[PARSE-RX] Successfully saved recommendations to database');
     }
 
     // Update document processing status
@@ -291,13 +386,14 @@ Do NOT wrap the JSON in markdown code blocks. Return raw JSON only.`
       })
       .eq('id', documentId);
 
-    console.log(`[PARSE-RX] ✅ Extraction complete. Found ${recommendations.length} recommendations.`);
+    console.log(`[PARSE-RX] ✅ Extraction complete. Found ${actionItems.length} action items.`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        count: recommendations.length,
-        recommendations: recommendations
+        count: actionItems.length,
+        action_items: actionItems,
+        doctor_info: doctorInfo
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
