@@ -499,6 +499,24 @@ export function TerraIntegration() {
         <CardHeader>
           <CardTitle>Подключить устройство</CardTitle>
           <CardDescription>
+            Подключите фитнес-трекер для автоматической синхронизации данных
+          </CardDescription>
+        </CardHeader>
+        
+        {/* Предупреждение о лимите времени */}
+        <CardContent className="pt-0 pb-2">
+          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+              <strong>Важно:</strong> После нажатия кнопки подключения завершите авторизацию 
+              в приложении устройства в течение <strong>5 минут</strong>. 
+              Если увидите ошибку "Session expired" — нажмите "Попробовать снова".
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+        
+        <CardHeader className="pt-2">
+          <CardDescription>
             Выберите ваш фитнес-трекер для подключения
           </CardDescription>
         </CardHeader>

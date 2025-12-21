@@ -116,9 +116,23 @@ export default function TerraCallback() {
 
       // Явная ошибка от Terra/провайдера
       if (errorParam) {
+        const decodedError = decodeURIComponent(errorParam);
+        const isSessionExpired = decodedError.toLowerCase().includes('session') || 
+                                  decodedError.toLowerCase().includes('expired') ||
+                                  decodedError.toLowerCase().includes('timeout');
+        
         setStatus('error');
-        setMessage(decodeURIComponent(errorParam));
-        setTimeout(() => navigate('/integrations'), 5000);
+        
+        if (isSessionExpired) {
+          setMessage('Сессия авторизации истекла. Это может произойти, если авторизация заняла больше 5 минут. Нажмите "Попробовать снова" для повторной попытки.');
+        } else {
+          setMessage(decodedError);
+        }
+        
+        // Не делаем автоматический редирект при session expired — даём пользователю время нажать retry
+        if (!isSessionExpired) {
+          setTimeout(() => navigate('/fitness-data?tab=integrations'), 5000);
+        }
         return;
       }
 
@@ -346,9 +360,18 @@ export default function TerraCallback() {
             </Alert>
           )}
 
+          {status === 'error' && message.includes('истекла') && (
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+              <AlertDescription className="text-sm">
+                <strong>Совет:</strong> После нажатия "Попробовать снова" завершите 
+                авторизацию в приложении устройства в течение 5 минут.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex flex-col gap-2">
             {status === 'success' && (
-              <Button onClick={() => navigate('/integrations')} className="w-full">
+              <Button onClick={() => navigate('/fitness-data?tab=integrations')} className="w-full">
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Перейти к интеграциям
               </Button>
@@ -356,15 +379,26 @@ export default function TerraCallback() {
 
             {status === 'error' && (
               <>
-                <Button onClick={() => navigate('/integrations')} className="w-full">
+                <Button 
+                  onClick={() => {
+                    // Получаем провайдера из sessionStorage и открываем виджет заново
+                    const lastProvider = sessionStorage.getItem('terra_last_provider');
+                    if (lastProvider) {
+                      navigate(`/terra-widget-loader?provider=${encodeURIComponent(lastProvider)}`);
+                    } else {
+                      navigate('/fitness-data?tab=integrations');
+                    }
+                  }} 
+                  className="w-full"
+                >
                   Попробовать снова
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/fitness-data?tab=integrations')}
                   className="w-full"
                 >
-                  Вернуться в дашборд
+                  Вернуться к интеграциям
                 </Button>
               </>
             )}
