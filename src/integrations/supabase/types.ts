@@ -1625,6 +1625,83 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_action_items: {
+        Row: {
+          action_type: string
+          added_to_library_at: string | null
+          confidence_score: number | null
+          created_at: string
+          details: string | null
+          doctor_name: string | null
+          document_id: string
+          dosage: string | null
+          duration: string | null
+          frequency: string | null
+          id: string
+          name: string
+          prescription_date: string | null
+          priority: string | null
+          protocol_tag: string | null
+          rationale: string | null
+          schedule: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          added_to_library_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          details?: string | null
+          doctor_name?: string | null
+          document_id: string
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          prescription_date?: string | null
+          priority?: string | null
+          protocol_tag?: string | null
+          rationale?: string | null
+          schedule?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          added_to_library_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          details?: string | null
+          doctor_name?: string | null
+          document_id?: string
+          dosage?: string | null
+          duration?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          prescription_date?: string | null
+          priority?: string | null
+          protocol_tag?: string | null
+          rationale?: string | null
+          schedule?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_action_items_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_recommendations: {
         Row: {
           added_to_stack_at: string | null

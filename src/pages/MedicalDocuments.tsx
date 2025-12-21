@@ -11,7 +11,8 @@ import { RecommendationsHistory } from '@/components/medical-documents/Recommend
 import { CategorySummaryDashboard } from '@/components/medical-documents/CategorySummaryDashboard';
 import { BatchProcessingDialog } from '@/components/medical-documents/BatchProcessingDialog';
 import { HealthAnalysisWidget } from '@/components/medical-documents/HealthAnalysisWidget';
-import { FileText, Upload, Database, TrendingUp, Lightbulb } from 'lucide-react';
+import { ActionItemsDashboard } from '@/components/medical-documents/ActionItemsDashboard';
+import { FileText, Upload, Database, TrendingUp, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import '@/components/medical-documents/medical-documents.css';
 
@@ -45,13 +46,13 @@ const MedicalDocuments = () => {
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Документы</span>
           </TabsTrigger>
+          <TabsTrigger value="actions" className="gap-2 data-[state=active]:bg-primary/20">
+            <ClipboardList className="h-4 w-4" />
+            <span className="hidden sm:inline">Назначения</span>
+          </TabsTrigger>
           <TabsTrigger value="trends" className="gap-2 data-[state=active]:bg-primary/20">
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Тренды</span>
-          </TabsTrigger>
-          <TabsTrigger value="recommendations" className="gap-2 data-[state=active]:bg-primary/20">
-            <Lightbulb className="h-4 w-4" />
-            <span className="hidden sm:inline">Советы</span>
           </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2 data-[state=active]:bg-primary/20">
             <Upload className="h-4 w-4" />
@@ -81,12 +82,12 @@ const MedicalDocuments = () => {
           <DocumentsGrid filterType={filterType} filterCategory={filterCategory} />
         </TabsContent>
 
-        <TabsContent value="trends">
-          <UniversalTrendsView />
+        <TabsContent value="actions">
+          <ActionItemsDashboard />
         </TabsContent>
 
-        <TabsContent value="recommendations">
-          <RecommendationsHistory />
+        <TabsContent value="trends">
+          <UniversalTrendsView />
         </TabsContent>
 
         <TabsContent value="upload">
