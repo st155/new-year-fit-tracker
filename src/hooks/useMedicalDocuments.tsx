@@ -4,6 +4,22 @@ import { useToast } from '@/hooks/use-toast';
 
 export type DocumentType = 'inbody' | 'blood_test' | 'fitness_report' | 'progress_photo' | 'vo2max' | 'caliper' | 'prescription' | 'training_program' | 'other';
 
+// Map document type to valid category for database constraint
+const getCategoryFromType = (docType: DocumentType): string => {
+  const mapping: Record<DocumentType, string> = {
+    'blood_test': 'blood_test',
+    'prescription': 'prescription',
+    'fitness_report': 'fitness_report',
+    'inbody': 'inbody',
+    'vo2max': 'vo2max',
+    'caliper': 'caliper',
+    'progress_photo': 'progress_photo',
+    'training_program': 'training_program',
+    'other': 'other',
+  };
+  return mapping[docType] || 'other';
+};
+
 export interface MedicalDocument {
   id: string;
   user_id: string;
@@ -105,6 +121,7 @@ export function useMedicalDocuments(filters?: {
           file_name: file.name,
           storage_path: storagePath,
           document_type: documentType,
+          category: getCategoryFromType(documentType),
           file_size: file.size,
           mime_type: file.type,
           document_date: documentDate || new Date().toISOString().split('T')[0],

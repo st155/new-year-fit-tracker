@@ -381,7 +381,10 @@ export function BulkDocumentUpload() {
                 disabled={activeUploads > 0}
               />
               <Button 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 disabled={activeUploads > 0}
               >
                 Выбрать файлы
