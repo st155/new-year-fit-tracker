@@ -318,7 +318,7 @@ const Index = () => {
               className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
               title="Интеграции"
             >
-              <Plug className="h-4 w-4" />
+              <Plug className="h-4 w-4 text-blue-500" />
               <span className="hidden md:inline">Интеграции</span>
             </Button>
           </div>
