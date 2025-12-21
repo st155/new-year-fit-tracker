@@ -118,7 +118,17 @@ Deno.serve(
     });
 
     // Generate webhook ID for idempotency
-    const webhookId = payload.reference_id || crypto.randomUUID();
+    // For auth webhooks, use composite key to allow connecting multiple devices
+    let webhookId: string;
+    if (payload.type === 'auth' || payload.type === 'reauth') {
+      const referenceId = payload.user?.reference_id || payload.reference_id || 'unknown';
+      const terraUserId = payload.user?.user_id || 'unknown';
+      const providerName = payload.user?.provider || 'unknown';
+      webhookId = `${payload.type}_${referenceId}_${providerName}_${terraUserId}`;
+      logger.info('Auth webhook idempotency key generated', { webhookId, referenceId, providerName, terraUserId });
+    } else {
+      webhookId = payload.reference_id || crypto.randomUUID();
+    }
 
     // Check idempotency
     const idempotency = new IdempotencyManager();
