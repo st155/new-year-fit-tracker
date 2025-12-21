@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 interface FileUploadState {
   file: File;
   id: string;
-  status: 'queue' | 'hashing' | 'classifying' | 'renaming' | 'uploading' | 'complete' | 'duplicate' | 'error';
+  status: 'queue' | 'hashing' | 'classifying' | 'renaming' | 'uploading' | 'parsing' | 'complete' | 'duplicate' | 'error';
   progress: number;
   classification?: {
     document_type: DocumentType;
@@ -256,7 +256,7 @@ export function BulkDocumentUpload() {
       // Create a new File object with the renamed name for proper storage
       const renamedFile = new File([fileState.file], finalFileName, { type: fileState.file.type });
 
-      await uploadDocument.mutateAsync({
+      const uploadedDoc = await uploadDocument.mutateAsync({
         file: renamedFile,
         fileHash,
         documentType: aiClassification.document_type,
@@ -264,6 +264,26 @@ export function BulkDocumentUpload() {
         tags: aiClassification.tags,
         hiddenFromTrainer: true, // Default: hidden
       });
+
+      // Step 4: Parse doctor recommendations for prescription/medical documents
+      const recommendationTypes: DocumentType[] = ['prescription', 'fitness_report', 'blood_test', 'other'];
+      if (recommendationTypes.includes(aiClassification.document_type) && uploadedDoc?.id) {
+        setFiles(prev => prev.map(f => 
+          f.id === fileState.id ? { ...f, status: 'parsing', progress: 85 } : f
+        ));
+        
+        console.log('[BulkUpload] Parsing doctor recommendations for:', uploadedDoc.id);
+        
+        try {
+          await supabase.functions.invoke('parse-doctor-recommendations', {
+            body: { documentId: uploadedDoc.id }
+          });
+          console.log('[BulkUpload] Doctor recommendations parsed successfully');
+        } catch (parseError) {
+          console.warn('[BulkUpload] Recommendation parsing failed (non-blocking):', parseError);
+          // Don't fail the upload - recommendations parsing is optional
+        }
+      }
 
       // Complete
       setFiles(prev => prev.map(f => 
@@ -481,6 +501,12 @@ export function BulkDocumentUpload() {
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         <span className="text-sm text-primary">Загрузка...</span>
+                      </>
+                    )}
+                    {fileState.status === 'parsing' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
+                        <span className="text-sm text-orange-600">Извлечение рекомендаций...</span>
                       </>
                     )}
                     {fileState.status === 'complete' && (
