@@ -1,8 +1,10 @@
 import { useAuth } from '@/hooks/useAuth';
 import { DataQualityMonitoring } from '@/components/admin/DataQualityMonitoring';
+import { TerraTokenAdmin } from '@/components/admin/TerraTokenAdmin';
 import { Navigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ShieldAlert } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ShieldAlert, Activity, Link2 } from 'lucide-react';
 
 export default function Admin() {
   const { user, isTrainer } = useAuth();
@@ -29,7 +31,26 @@ export default function Admin() {
 
   return (
     <div className="container max-w-7xl py-8">
-      <DataQualityMonitoring />
+      <Tabs defaultValue="data-quality" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="data-quality" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Data Quality
+          </TabsTrigger>
+          <TabsTrigger value="terra-tokens" className="gap-2">
+            <Link2 className="h-4 w-4" />
+            Terra Tokens
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="data-quality">
+          <DataQualityMonitoring />
+        </TabsContent>
+        
+        <TabsContent value="terra-tokens">
+          <TerraTokenAdmin />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
