@@ -36,6 +36,10 @@ export function useAddSupplementToLibrary() {
       if (existingProducts && existingProducts.length > 0) {
         productId = existingProducts[0].id;
       } else {
+        // Parse dosage with fallback defaults for NOT NULL constraints
+        const parsedDosage = item.dosage ? parseFloat(item.dosage.replace(/[^\d.]/g, '')) : null;
+        const parsedUnit = item.dosage ? item.dosage.replace(/[\d.\s]/g, '').trim() : null;
+
         // Create new product with required brand field
         const { data: newProduct, error: productError } = await supabase
           .from('supplement_products')
@@ -43,13 +47,16 @@ export function useAddSupplementToLibrary() {
             brand: 'Unknown',
             name: item.name,
             description: item.details || item.rationale || null,
-            dosage_amount: item.dosage ? parseFloat(item.dosage.replace(/[^\d.]/g, '')) || null : null,
-            dosage_unit: item.dosage ? item.dosage.replace(/[\d.\s]/g, '').trim() || 'mg' : null,
+            dosage_amount: parsedDosage && !isNaN(parsedDosage) ? parsedDosage : 0,
+            dosage_unit: parsedUnit || 'unit',
           } as any)
           .select('id')
           .single();
 
-        if (productError) throw productError;
+        if (productError) {
+          console.error('Failed to create supplement product:', productError, 'Item:', item);
+          throw productError;
+        }
         productId = newProduct.id;
       }
 
