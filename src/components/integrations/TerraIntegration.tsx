@@ -372,10 +372,22 @@ export function TerraIntegration() {
       });
       
       if (deauthError) {
-        console.warn('⚠️ Deauth before reconnect failed (continuing anyway):', deauthError);
+        console.warn('⚠️ Deauth before reconnect failed:', deauthError);
+        throw new Error('Не удалось удалить старый токен');
       }
       
-      // Шаг 2: Подключаем заново через Terra Widget
+      // Шаг 2: Ждём 3 секунды, чтобы Whoop/провайдер очистил OAuth кэш
+      console.log('⏳ Waiting 3s for provider OAuth cache to clear...');
+      
+      toast({
+        title: 'Очистка сессии...',
+        description: 'Подождите 3 секунды для синхронизации',
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Шаг 3: Подключаем заново через Terra Widget
+      console.log('🔄 Starting fresh connection...');
       await connectProvider(provider);
       
       // Обновляем списки
