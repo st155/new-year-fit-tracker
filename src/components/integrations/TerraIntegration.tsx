@@ -124,57 +124,79 @@ export function TerraIntegration() {
     
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
-    // Open loader page that will fetch and redirect to Terra widget
-    const loaderUrl = `/terra-widget-loader?provider=${encodeURIComponent(provider)}&userId=${user.id}`;
-    
-    if (isIOS) {
-      // iOS: redirect in same tab (popup blockers are aggressive)
-      console.log('📱 iOS detected, redirecting to loader...');
-      window.location.assign(loaderUrl);
-      return;
-    }
-    
-    // Desktop/Android: open loader in new window
-    console.log('🖥️ Desktop/Android detected, opening loader in popup');
-    
-    const popup = window.open(
-      loaderUrl,
-      '_blank',
-      'width=600,height=800,scrollbars=yes,resizable=yes,popup=yes'
-    );
-    
-    if (popup) {
-      console.log('✅ Terra widget loader opened in new window');
+    try {
+      // Get Terra widget URL FIRST, before opening any window
+      console.log('🔄 Fetching Terra widget URL...');
       
-      toast({
-        title: 'Окно авторизации открыто',
-        description: 'Завершите авторизацию в открывшемся окне',
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'generate-widget-session' },
       });
       
-      // Track when popup closes
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          setConnectingProvider(null);
-          console.log('🔄 Auth window closed, checking status...');
-          
-          // Check status after delays to allow webhook processing
-          setTimeout(() => checkStatus(), 2000);
-          setTimeout(() => checkStatus(), 5000);
-        }
-      }, 1000);
-    } else {
-      // Popup blocked - fallback to same-tab redirect
-      console.log('⚠️ Popup blocked by browser, falling back to redirect');
+      if (error) throw error;
+      if (!data?.url) throw new Error('No widget URL received');
       
+      console.log('✅ Got Terra widget URL:', data.url);
+      
+      if (isIOS) {
+        // iOS: redirect in same tab (popup blockers are aggressive)
+        console.log('📱 iOS detected, redirecting directly to Terra widget...');
+        sessionStorage.setItem('terra_return_url', window.location.pathname);
+        window.location.assign(data.url);
+        return;
+      }
+      
+      // Desktop/Android: open Terra widget DIRECTLY in new window
+      console.log('🖥️ Desktop/Android detected, opening Terra widget directly');
+      
+      const popup = window.open(
+        data.url,
+        '_blank',
+        'width=600,height=800,scrollbars=yes,resizable=yes,popup=yes'
+      );
+      
+      if (popup) {
+        console.log('✅ Terra widget opened directly in new window');
+        
+        toast({
+          title: 'Окно авторизации открыто',
+          description: 'Завершите авторизацию в открывшемся окне. У вас есть 5 минут.',
+        });
+        
+        // Track when popup closes
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            setConnectingProvider(null);
+            console.log('🔄 Auth window closed, checking status...');
+            
+            // Check status after delays to allow webhook processing
+            setTimeout(() => checkStatus(), 2000);
+            setTimeout(() => checkStatus(), 5000);
+            setTimeout(() => checkInactiveProviders(), 5000);
+          }
+        }, 1000);
+      } else {
+        // Popup blocked - fallback to same-tab redirect
+        console.log('⚠️ Popup blocked by browser, falling back to redirect');
+        
+        toast({
+          title: 'Попап заблокирован',
+          description: 'Открываем авторизацию в этой вкладке',
+        });
+        
+        sessionStorage.setItem('terra_return_url', window.location.pathname);
+        setTimeout(() => {
+          window.location.assign(data.url);
+        }, 500);
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to get Terra widget URL:', error);
       toast({
-        title: 'Попап заблокирован',
-        description: 'Открываем авторизацию в этой вкладке',
+        title: 'Ошибка',
+        description: error.message || 'Не удалось получить ссылку для авторизации',
+        variant: 'destructive',
       });
-      
-      setTimeout(() => {
-        window.location.assign(loaderUrl);
-      }, 500);
+      setConnectingProvider(null);
     }
   };
 
