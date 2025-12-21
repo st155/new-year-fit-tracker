@@ -55,12 +55,12 @@ export function useUserLevel() {
       // Get total XP from xp_history
       const { data, error: xpError } = await supabase
         .from('xp_history' as any)
-        .select('amount')
+        .select('xp_earned')
         .eq('user_id', user.id);
 
       if (xpError) throw xpError;
 
-      const totalXP = (data || []).reduce((sum: number, record: any) => sum + (record.amount || 0), 0);
+      const totalXP = (data || []).reduce((sum: number, record: any) => sum + (record.xp_earned || 0), 0);
       const info = getUserLevelInfo(totalXP);
       
       setLevelInfo(info);
