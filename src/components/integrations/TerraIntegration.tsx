@@ -359,30 +359,33 @@ export function TerraIntegration() {
     setReactivatingProvider(provider);
     
     try {
-      const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'activate-provider', provider },
-      });
-
-      if (error) throw error;
-
+      // Шаг 1: Автоматически полностью деавторизуем старый токен
+      console.log('🧹 Auto-deauthenticating before reconnect:', provider);
+      
       toast({
-        title: 'Устройство активировано',
-        description: `${PROVIDER_NAMES[provider]} успешно переподключен. Запускаем синхронизацию...`,
+        title: 'Подготовка к переподключению...',
+        description: 'Удаляем старый токен авторизации',
       });
-
-      // Refresh status and clear inactive list
+      
+      const { error: deauthError } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'deauthenticate-user', provider },
+      });
+      
+      if (deauthError) {
+        console.warn('⚠️ Deauth before reconnect failed (continuing anyway):', deauthError);
+      }
+      
+      // Шаг 2: Подключаем заново через Terra Widget
+      await connectProvider(provider);
+      
+      // Обновляем списки
       await checkStatus();
       await checkInactiveProviders();
-      
-      // Trigger sync after reactivation
-      setTimeout(() => {
-        syncData();
-      }, 1000);
       
     } catch (error: any) {
       console.error('Reactivate error:', error);
       toast({
-        title: 'Ошибка активации',
+        title: 'Ошибка переподключения',
         description: error.message,
         variant: 'destructive',
       });
@@ -623,12 +626,6 @@ export function TerraIntegration() {
               </Button>
             </div>
 
-            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800 mb-3">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Проблемы с данными?</strong> Отключите устройство (кнопка 🔗) → в секции "Отключенные устройства" нажмите "Удалить" → подключите заново.
-              </AlertDescription>
-            </Alert>
 
             <div className="space-y-2">
               {status.providers.map((provider) => {
@@ -684,15 +681,8 @@ export function TerraIntegration() {
               <AlertCircle className="h-5 w-5" />
               Отключенные устройства
             </CardTitle>
-            <CardDescription className="space-y-2">
-              <span>Эти устройства были ранее подключены. Вы можете быстро переподключить их.</span>
-              <Alert className="border-amber-300 bg-amber-100/50 dark:bg-amber-950/30 dark:border-amber-700 mt-2">
-                <Info className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-                  <strong>Проблемы с синхронизацией?</strong> Нажмите <strong>"Удалить"</strong> для полного удаления токена, 
-                  затем подключите устройство заново.
-                </AlertDescription>
-              </Alert>
+            <CardDescription>
+              Эти устройства были ранее подключены. Нажмите "Активировать" для автоматического переподключения.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
