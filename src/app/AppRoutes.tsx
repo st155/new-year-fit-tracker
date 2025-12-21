@@ -63,6 +63,7 @@ import WorkoutV31 from "@/pages/WorkoutV31";
 const WorkoutDetail = lazy(() => import("@/pages/WorkoutDetail"));
 const MyTrainingPlans = lazy(() => import("@/pages/MyTrainingPlans"));
 const Supplements = lazy(() => import("@/pages/Supplements"));
+const Recommendations = lazy(() => import("@/pages/Recommendations"));
 const MedicalDocumentDetail = lazy(() => import("@/pages/MedicalDocumentDetail"));
 const BiomarkerDetail = lazy(() => import("@/pages/BiomarkerDetail"));
 const MedicalIngestionCockpit = lazy(() => import("@/pages/MedicalIngestionCockpit"));
@@ -314,6 +315,13 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <Supplements />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/recommendations" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <Recommendations />
             </ModernAppLayout>
           </ProtectedRoute>
         } />

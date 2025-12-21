@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, TrendingUp, Target, Dumbbell, Menu } from "lucide-react";
+import { Home, TrendingUp, Sparkles, Dumbbell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -8,11 +8,12 @@ import { memo } from "react";
 const mainNavItems = [
   { path: "/dashboard", icon: Home, label: "Главная" },
   { path: "/progress", icon: TrendingUp, label: "Прогресс" },
-  { path: "/goals", icon: Target, label: "Цели" },
+  { path: "/recommendations", icon: Sparkles, label: "Советы" },
   { path: "/workouts", icon: Dumbbell, label: "Тренировки" },
 ];
 
 const secondaryNavItems = [
+  { path: "/goals", label: "Цели" },
   { path: "/leaderboard", label: "Рейтинг" },
   { path: "/body", label: "Тело" },
   { path: "/challenges", label: "Челленджи" },
