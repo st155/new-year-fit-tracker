@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DocumentCard } from './DocumentCard';
 import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
@@ -45,7 +46,10 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
     initialData: {},
   });
 
-  // Retry mutation
+  // State for tracking which document is being parsed
+  const [parsingDocId, setParsingDocId] = useState<string | null>(null);
+
+  // Retry mutation for lab reports
   const retryMutation = useMutation({
     mutationFn: async (documentId: string) => {
       const { error } = await supabase.functions.invoke('parse-lab-report', {
@@ -60,6 +64,34 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
     onError: (error: any) => {
       console.error('Retry failed:', error);
       toast.error('Не удалось повторить обработку', { description: error.message });
+    }
+  });
+
+  // Parse recommendations mutation
+  const parseRecommendationsMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      setParsingDocId(documentId);
+      const { error, data } = await supabase.functions.invoke('parse-doctor-recommendations', {
+        body: { documentId }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['recommendations-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
+      const count = data?.recommendations?.length || 0;
+      toast.success(`Извлечено рекомендаций: ${count}`, {
+        description: count > 0 ? 'Перейдите в раздел Рекомендации' : 'Рекомендации не найдены'
+      });
+    },
+    onError: (error: any) => {
+      console.error('Parse recommendations failed:', error);
+      toast.error('Не удалось извлечь рекомендации', { description: error.message });
+    },
+    onSettled: () => {
+      setParsingDocId(null);
     }
   });
 
@@ -131,6 +163,8 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
           onDownload={handleDownload}
           onDelete={handleDelete}
           onRetry={(id) => retryMutation.mutate(id)}
+          onParseRecommendations={(id) => parseRecommendationsMutation.mutate(id)}
+          isParsingRecommendations={parsingDocId === doc.id}
         />
       ))}
     </div>

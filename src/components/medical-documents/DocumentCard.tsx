@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info, Eye, RefreshCw } from 'lucide-react';
+import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info, Eye, RefreshCw, Pill } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -38,6 +38,8 @@ interface DocumentCardProps {
   onDownload: (storagePath: string, fileName: string) => void;
   onDelete: (id: string) => void;
   onRetry?: (id: string) => void;
+  onParseRecommendations?: (id: string) => void;
+  isParsingRecommendations?: boolean;
 }
 
 const documentTypeLabels: Record<DocumentType, string> = {
@@ -82,6 +84,8 @@ export const DocumentCard = ({
   onDownload,
   onDelete,
   onRetry,
+  onParseRecommendations,
+  isParsingRecommendations,
 }: DocumentCardProps) => {
   const navigate = useNavigate();
 
@@ -206,6 +210,27 @@ export const DocumentCard = ({
         </div>
 
         <div className="flex gap-1">
+          {/* Parse Recommendations Button */}
+          {onParseRecommendations && ['prescription', 'fitness_report', 'blood_test', 'other'].includes(documentType) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-pink-400 hover:text-pink-300 hover:bg-pink-500/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                onParseRecommendations(id);
+              }}
+              disabled={isParsingRecommendations}
+              title="Извлечь рекомендации врача"
+            >
+              {isParsingRecommendations ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Pill className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          )}
+          
           {/* Retry/Reprocess Button */}
           {onRetry && (processingStatus === 'error' || documentType === 'blood_test' || documentType === 'fitness_report') && (
             <Button
