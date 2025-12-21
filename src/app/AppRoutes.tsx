@@ -68,6 +68,7 @@ const MedicalDocumentDetail = lazy(() => import("@/pages/MedicalDocumentDetail")
 const BiomarkerDetail = lazy(() => import("@/pages/BiomarkerDetail"));
 const MedicalIngestionCockpit = lazy(() => import("@/pages/MedicalIngestionCockpit"));
 const CategoryDetailPage = lazy(() => import("@/pages/CategoryDetailPage"));
+const ProtocolDetailPage = lazy(() => import("@/pages/ProtocolDetailPage"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -322,6 +323,13 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <Recommendations />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/recommendations/protocol/:documentId" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <ProtocolDetailPage />
             </ModernAppLayout>
           </ProtectedRoute>
         } />

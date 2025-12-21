@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import { 
   FileText, 
   Pill, 
@@ -15,9 +18,12 @@ import {
   FlaskConical,
   Heart,
   Stethoscope,
+  RefreshCw,
+  ChevronRight,
 } from 'lucide-react';
 import { useProtocolGroups, DoctorActionItem, formatScheduleDisplay } from '@/hooks/biostack/useDoctorActionItems';
 import { useAddProtocolToLibrary } from '@/hooks/biostack/useDoctorProtocol';
+import { useExtractProtocols, useToggleProtocolStatus } from '@/hooks/biostack/useExtractProtocols';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -41,18 +47,27 @@ interface ProtocolCardProps {
   };
   onAddAll: () => void;
   isAdding: boolean;
+  onNavigate: () => void;
 }
 
-function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
+function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCardProps) {
+  const toggleStatus = useToggleProtocolStatus();
+  
   const supplements = protocol.items.filter(i => i.action_type === 'supplement' || i.action_type === 'medication');
   const pendingSupplements = supplements.filter(s => s.status === 'pending');
   const otherItems = protocol.items.filter(i => i.action_type !== 'supplement' && i.action_type !== 'medication');
+  
+  const isActive = protocol.items.some(item => item.status === 'active' || item.status === 'pending');
+
+  const handleToggle = (checked: boolean) => {
+    toggleStatus.mutate({ documentId: protocol.documentId, isActive: checked });
+  };
 
   return (
     <Card className="glass-card">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={onNavigate}>
             <div className="p-2 rounded-lg bg-primary/10">
               <FileText className="h-5 w-5 text-primary" />
             </div>
@@ -61,24 +76,40 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
               {protocol.prescriptionDate && (
                 <CardDescription className="text-xs">
                   {format(new Date(protocol.prescriptionDate), 'd MMMM yyyy', { locale: ru })}
+                  {' • '}{protocol.items.length} элементов
                 </CardDescription>
               )}
             </div>
           </div>
-          {pendingSupplements.length > 0 && (
-            <Button 
-              size="sm" 
-              onClick={onAddAll}
-              disabled={isAdding}
-            >
-              {isAdding ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Package className="h-4 w-4 mr-2" />
-              )}
-              Добавить все ({pendingSupplements.length})
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {isActive ? 'Активен' : 'Неактивен'}
+              </span>
+              <Switch 
+                checked={isActive}
+                onCheckedChange={handleToggle}
+                disabled={toggleStatus.isPending}
+              />
+            </div>
+            {pendingSupplements.length > 0 && (
+              <Button 
+                size="sm" 
+                onClick={(e) => { e.stopPropagation(); onAddAll(); }}
+                disabled={isAdding}
+              >
+                {isAdding ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Package className="h-4 w-4 mr-2" />
+                )}
+                Добавить все ({pendingSupplements.length})
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" onClick={onNavigate}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -90,7 +121,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
                 Добавки и медикаменты ({supplements.length})
               </p>
               <div className="grid gap-2">
-                {supplements.map(item => (
+                {supplements.slice(0, 3).map(item => (
                   <div 
                     key={item.id} 
                     className="flex items-center justify-between p-3 rounded-lg bg-background/50"
@@ -114,6 +145,11 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
                     </span>
                   </div>
                 ))}
+                {supplements.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center py-1">
+                    + ещё {supplements.length - 3}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -124,7 +160,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
                 Другие рекомендации ({otherItems.length})
               </p>
               <div className="space-y-2">
-                {otherItems.map(item => {
+                {otherItems.slice(0, 2).map(item => {
                   const config = ACTION_TYPE_CONFIG[item.action_type as keyof typeof ACTION_TYPE_CONFIG];
                   const Icon = config?.icon || Heart;
                   return (
@@ -142,6 +178,11 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
                     </div>
                   );
                 })}
+                {otherItems.length > 2 && (
+                  <p className="text-xs text-muted-foreground text-center py-1">
+                    + ещё {otherItems.length - 2}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -152,8 +193,10 @@ function ProtocolCard({ protocol, onAddAll, isAdding }: ProtocolCardProps) {
 }
 
 export function DoctorProtocolsSection() {
+  const navigate = useNavigate();
   const { data: protocols, isLoading } = useProtocolGroups();
   const addProtocol = useAddProtocolToLibrary();
+  const { extractAll, isExtracting, progress } = useExtractProtocols();
   const [addingProtocolId, setAddingProtocolId] = useState<string | null>(null);
 
   const handleAddAll = async (protocol: NonNullable<typeof protocols>[0]) => {
@@ -165,40 +208,74 @@ export function DoctorProtocolsSection() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="glass-card">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!protocols || protocols.length === 0) {
-    return (
-      <Alert>
-        <FileText className="h-4 w-4" />
-        <AlertDescription>
-          Нет протоколов от врачей. Загрузите медицинские документы с назначениями, 
-          и система автоматически извлечёт рекомендации.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const handleNavigateToProtocol = (documentId: string) => {
+    navigate(`/recommendations/protocol/${documentId}`);
+  };
 
   return (
     <div className="space-y-4">
-      {protocols.map(protocol => (
-        <ProtocolCard 
-          key={protocol.documentId}
-          protocol={protocol}
-          onAddAll={() => handleAddAll(protocol)}
-          isAdding={addingProtocolId === protocol.documentId}
-        />
-      ))}
+      {/* Extract All Button */}
+      <Card className="glass-card border-dashed">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-medium">Извлечь протоколы из документов</h3>
+              <p className="text-sm text-muted-foreground">
+                AI проанализирует все ваши медицинские документы и извлечёт рекомендации
+              </p>
+            </div>
+            <Button 
+              onClick={() => extractAll()}
+              disabled={isExtracting}
+              variant="outline"
+            >
+              {isExtracting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {isExtracting ? 'Извлечение...' : 'Извлечь все протоколы'}
+            </Button>
+          </div>
+          {progress && (
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Обработка документов</span>
+                <span>{progress.current} / {progress.total}</span>
+              </div>
+              <Progress value={(progress.current / progress.total) * 100} />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {isLoading ? (
+        <Card className="glass-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : !protocols || protocols.length === 0 ? (
+        <Alert>
+          <FileText className="h-4 w-4" />
+          <AlertDescription>
+            Нет протоколов от врачей. Загрузите медицинские документы с назначениями 
+            и нажмите "Извлечь все протоколы" для автоматического анализа.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        protocols.map(protocol => (
+          <ProtocolCard 
+            key={protocol.documentId}
+            protocol={protocol}
+            onAddAll={() => handleAddAll(protocol)}
+            isAdding={addingProtocolId === protocol.documentId}
+            onNavigate={() => handleNavigateToProtocol(protocol.documentId)}
+          />
+        ))
+      )}
     </div>
   );
 }
