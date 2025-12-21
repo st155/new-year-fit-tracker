@@ -148,7 +148,7 @@ export default function CategoryDetailPage() {
               >
                 <Card 
                   className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg"
-                  onClick={() => navigate(`/medical-documents/view/${doc.id}`)}
+                  onClick={() => navigate(`/medical-documents/${doc.id}`)}
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
