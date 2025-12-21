@@ -7,12 +7,10 @@ import { DocumentFilters } from '@/components/medical-documents/DocumentFilters'
 import { DocumentStats } from '@/components/medical-documents/DocumentStats';
 import { MigrationStatus } from '@/components/medical-documents/MigrationStatus';
 import { UniversalTrendsView } from '@/components/medical-documents/UniversalTrendsView';
-import { RecommendationsHistory } from '@/components/medical-documents/RecommendationsHistory';
 import { CategorySummaryDashboard } from '@/components/medical-documents/CategorySummaryDashboard';
 import { BatchProcessingDialog } from '@/components/medical-documents/BatchProcessingDialog';
 import { HealthAnalysisWidget } from '@/components/medical-documents/HealthAnalysisWidget';
-import { ActionItemsDashboard } from '@/components/medical-documents/ActionItemsDashboard';
-import { FileText, Upload, Database, TrendingUp, ClipboardList } from 'lucide-react';
+import { FileText, Upload, Database, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import '@/components/medical-documents/medical-documents.css';
 
@@ -41,14 +39,10 @@ const MedicalDocuments = () => {
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <Tabs defaultValue="documents" className="space-y-4">
-        <TabsList className="glass-card grid w-full grid-cols-5 h-auto p-1">
+        <TabsList className="glass-card grid w-full grid-cols-4 h-auto p-1">
           <TabsTrigger value="documents" className="gap-2 data-[state=active]:bg-primary/20">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Документы</span>
-          </TabsTrigger>
-          <TabsTrigger value="actions" className="gap-2 data-[state=active]:bg-primary/20">
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Назначения</span>
           </TabsTrigger>
           <TabsTrigger value="trends" className="gap-2 data-[state=active]:bg-primary/20">
             <TrendingUp className="h-4 w-4" />
@@ -80,10 +74,6 @@ const MedicalDocuments = () => {
             <HealthAnalysisWidget />
           </div>
           <DocumentsGrid filterType={filterType} filterCategory={filterCategory} />
-        </TabsContent>
-
-        <TabsContent value="actions">
-          <ActionItemsDashboard />
         </TabsContent>
 
         <TabsContent value="trends">
