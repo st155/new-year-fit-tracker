@@ -3,6 +3,27 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+// Normalize action_type from plural/variant forms to valid singular DB values
+const normalizeActionType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    'tests': 'test',
+    'supplements': 'supplement',
+    'medications': 'medication',
+    'exercises': 'exercise',
+    'consultations': 'consultation',
+    'lifestyle_changes': 'lifestyle',
+    'lifestyle_change': 'lifestyle',
+    'diet': 'lifestyle',
+    'appointments': 'consultation',
+    'appointment': 'consultation',
+    'follow_ups': 'consultation',
+    'follow_up': 'consultation',
+    'other': 'lifestyle'
+  };
+  const normalized = type.toLowerCase().trim();
+  return typeMap[normalized] || normalized;
+};
+
 interface ActionItemExtraction {
   action_type: 'supplement' | 'exercise' | 'lifestyle' | 'test' | 'medication' | 'consultation';
   name: string;
@@ -310,7 +331,7 @@ Do NOT wrap JSON in markdown code blocks. Return raw JSON only.`
         return {
           user_id: document.user_id,
           document_id: documentId,
-          action_type: item.action_type,
+          action_type: normalizeActionType(item.action_type),
           name: item.name,
           details: item.details || null,
           dosage: item.dosage || null,

@@ -52,6 +52,7 @@ export function useExtractProtocols() {
     },
     onSuccess: (results) => {
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
+      queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       setProgress(null);
       
       if (results.failed === 0) {
