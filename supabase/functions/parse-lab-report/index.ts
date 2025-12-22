@@ -357,6 +357,11 @@ Return ONLY valid JSON (no markdown):
     let extractedData;
     let aiSummary = '';
     
+    // Results array declared early for all parsers
+    const results: any[] = [];
+    let matchedCount = 0;
+    let unmatchedCount = 0;
+    
     // ============================================================
     // PARSER A: LAB BLOOD/URINE (ENHANCED)
     // ============================================================
@@ -853,12 +858,6 @@ Return ONLY valid JSON (no markdown):
         throw inbodyError;
       }
     }
-    
-    // Results array declared early for fitness_report parser
-    const results: any[] = [];
-    let matchedCount = 0;
-    let unmatchedCount = 0;
-    
     // ============================================================
     // PARSER D: FITNESS REPORT (VO2max, Lactate, Heart Rate Zones)
     // ============================================================

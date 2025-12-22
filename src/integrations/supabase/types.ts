@@ -3363,6 +3363,7 @@ export type Database = {
           body_cell_mass: number | null
           body_fat_mass: number | null
           created_at: string | null
+          document_id: string | null
           ecw_ratio: number | null
           extracellular_water: number | null
           fat_free_mass: number | null
@@ -3414,6 +3415,7 @@ export type Database = {
           body_cell_mass?: number | null
           body_fat_mass?: number | null
           created_at?: string | null
+          document_id?: string | null
           ecw_ratio?: number | null
           extracellular_water?: number | null
           fat_free_mass?: number | null
@@ -3465,6 +3467,7 @@ export type Database = {
           body_cell_mass?: number | null
           body_fat_mass?: number | null
           created_at?: string | null
+          document_id?: string | null
           ecw_ratio?: number | null
           extracellular_water?: number | null
           fat_free_mass?: number | null
@@ -3509,6 +3512,13 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inbody_analyses_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inbody_analyses_migrated_to_document_id_fkey"
             columns: ["migrated_to_document_id"]
