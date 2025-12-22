@@ -491,6 +491,13 @@ export function TerraIntegration() {
   const disconnectProvider = async (provider: string) => {
     if (!user) return;
 
+    // Подтверждение от пользователя
+    const confirmed = window.confirm(
+      `Вы уверены, что хотите отключить ${PROVIDER_NAMES[provider]}?\n\nЭто полностью удалит подключение и отзовёт OAuth-токен. Для повторного использования потребуется новая авторизация.`
+    );
+    
+    if (!confirmed) return;
+
     // Оптимистичное обновление UI - сразу убираем провайдера из списка
     const previousStatus = status;
     setStatus(prev => ({
@@ -499,8 +506,9 @@ export function TerraIntegration() {
     }));
 
     try {
+      // Используем deauthenticate-user вместо disconnect для полного удаления
       const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'disconnect', provider },
+        body: { action: 'deauthenticate-user', provider },
       });
 
       if (error) throw error;
@@ -514,12 +522,13 @@ export function TerraIntegration() {
       queryClient.invalidateQueries({ queryKey: ['metric-values'] });
 
       toast({
-        title: 'Устройство отключено',
-        description: `${PROVIDER_NAMES[provider]} успешно отключен`,
+        title: 'Устройство полностью отключено',
+        description: `${PROVIDER_NAMES[provider]} удалён. Можно подключить заново.`,
       });
 
       // Обновляем статус
       await checkStatus();
+      await checkInactiveProviders();
     } catch (error: any) {
       console.error('Disconnect error:', error);
       
