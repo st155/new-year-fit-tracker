@@ -79,11 +79,13 @@ export function ProtocolManagementModal({ isOpen, onClose }: ProtocolManagementM
                       )}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>
-                          Created: {new Date(protocol.created_at).toLocaleDateString()}
+                          Created: {protocol.created_at 
+                            ? new Date(protocol.created_at).toLocaleDateString() 
+                            : 'Unknown'}
                         </span>
-                        {protocol.adherence_rate !== null && (
+                        {typeof protocol.adherence_rate === 'number' && (
                           <span>
-                            Adherence: {protocol.adherence_rate}%
+                            Adherence: {Math.round(protocol.adherence_rate)}%
                           </span>
                         )}
                       </div>
