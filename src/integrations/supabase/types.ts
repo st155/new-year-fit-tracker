@@ -4816,6 +4816,36 @@ export type Database = {
         }
         Relationships: []
       }
+      supplement_synonyms: {
+        Row: {
+          canonical_name: string
+          confidence: number | null
+          created_at: string | null
+          id: string
+          language: string | null
+          synonym: string
+          updated_at: string | null
+        }
+        Insert: {
+          canonical_name: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          synonym: string
+          updated_at?: string | null
+        }
+        Update: {
+          canonical_name?: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          synonym?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       team_challenges: {
         Row: {
           created_at: string | null
