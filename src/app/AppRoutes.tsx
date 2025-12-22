@@ -319,6 +319,14 @@ export const AppRoutes = () => {
             </ModernAppLayout>
           </ProtectedRoute>
         } />
+        {/* Alias for /biostack/supplements */}
+        <Route path="/biostack/supplements" element={
+          <ProtectedRoute>
+            <ModernAppLayout>
+              <Supplements />
+            </ModernAppLayout>
+          </ProtectedRoute>
+        } />
         <Route path="/recommendations" element={
           <ProtectedRoute>
             <ModernAppLayout>
