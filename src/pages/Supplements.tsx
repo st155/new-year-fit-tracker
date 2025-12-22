@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SupplementsHeroSection } from "@/components/biostack/SupplementsHeroSection";
 import { SecondaryNavigation } from "@/components/biostack/SecondaryNavigation";
 import { LifecycleAlertsPanel } from "@/components/biostack/LifecycleAlertsPanel";
@@ -13,8 +14,19 @@ import { useNewLabAlerts } from "@/hooks/biostack/useNewLabAlerts";
 
 type ViewMode = "dashboard" | "correlation" | "history" | "import" | "library";
 
+// Map URL tab params to ViewMode
+const tabToViewMode: Record<string, ViewMode> = {
+  protocols: "history",
+  history: "history",
+  correlation: "correlation",
+  import: "import",
+  library: "library",
+  dashboard: "dashboard",
+};
+
 export default function Supplements() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   
   // Auto-check for completed protocols on mount
   useCheckCompletedProtocols();
@@ -22,7 +34,18 @@ export default function Supplements() {
   // Monitor new lab alerts for linked biomarkers
   useNewLabAlerts();
   
-  const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
+  // Initialize viewMode from URL tab param
+  const tabParam = searchParams.get("tab");
+  const initialViewMode = tabParam && tabToViewMode[tabParam] ? tabToViewMode[tabParam] : "dashboard";
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
+  
+  // Sync viewMode with URL changes
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tabToViewMode[tab]) {
+      setViewMode(tabToViewMode[tab]);
+    }
+  }, [searchParams]);
 
   return (
     <div className="container mx-auto py-8 space-y-8">
