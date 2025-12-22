@@ -1,8 +1,21 @@
 import { motion } from "framer-motion";
-import { Activity, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Activity, TrendingUp, CheckCircle2, LucideIcon } from "lucide-react";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 
-export function SupplementsHeroSection() {
+interface SupplementsHeroSectionProps {
+  onActiveProtocolsClick?: () => void;
+}
+
+interface StatItem {
+  label: string;
+  value: string | number;
+  icon: LucideIcon;
+  color: string;
+  glow: string;
+  onClick?: () => void;
+}
+
+export function SupplementsHeroSection({ onActiveProtocolsClick }: SupplementsHeroSectionProps) {
   const { activeProtocols, isLoading } = useProtocolManagement();
 
   // Calculate metrics
@@ -15,13 +28,14 @@ export function SupplementsHeroSection() {
   // Calculate adherence rate (mock for now, could be calculated from intake_logs)
   const adherenceRate = 85;
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       label: "Active Protocols",
       value: activeProtocolsCount,
       icon: Activity,
       color: "blue",
-      glow: "shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+      glow: "shadow-[0_0_15px_rgba(59,130,246,0.5)]",
+      onClick: onActiveProtocolsClick
     },
     {
       label: "Adherence Rate",
@@ -47,7 +61,8 @@ export function SupplementsHeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className={`bg-neutral-950 border border-${stat.color}-500/30 rounded-lg p-4 sm:p-6 ${stat.glow} hover:scale-105 transition-transform`}
+          className={`bg-neutral-950 border border-${stat.color}-500/30 rounded-lg p-4 sm:p-6 ${stat.glow} hover:scale-105 transition-transform ${stat.onClick ? 'cursor-pointer' : ''}`}
+          onClick={stat.onClick}
         >
           <div className="flex items-center gap-3 mb-2">
             <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 text-${stat.color}-500`} />

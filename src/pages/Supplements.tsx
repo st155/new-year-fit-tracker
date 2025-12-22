@@ -66,7 +66,7 @@ export default function Supplements() {
       {viewMode === "dashboard" && (
         <>
           {/* Hero Section with Metrics */}
-          <SupplementsHeroSection />
+          <SupplementsHeroSection onActiveProtocolsClick={() => setViewMode("history")} />
 
           {/* Unified Today's Supplements View */}
           <TodaysSupplements />
