@@ -1,13 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, TrendingUp, Clock, Pill, ChevronDown, Activity } from "lucide-react";
+import { Check, TrendingUp, Clock, Pill, ChevronDown, Activity, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface StackItemCardProps {
   item: {
@@ -31,9 +32,10 @@ interface StackItemCardProps {
   biomarkerTrend?: number[]; // Mini sparkline data
   servingsRemaining?: number;
   onLogIntake: (itemId: string) => void;
+  onRemove?: (itemId: string) => void;
 }
 
-export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIntake }: StackItemCardProps) {
+export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIntake, onRemove }: StackItemCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -130,16 +132,50 @@ export function StackItemCard({ item, biomarkerTrend, servingsRemaining, onLogIn
           </div>
         )}
 
-        {/* One-Tap Log Button */}
-        <Button
-          onClick={() => onLogIntake(item.id)}
-          variant="outline"
-          size="sm"
-          className="w-full bg-neutral-900 hover:bg-neutral-800 border-neutral-700"
-        >
-          <Check className="h-4 w-4 mr-2" />
-          Log Intake
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => onLogIntake(item.id)}
+            variant="outline"
+            size="sm"
+            className="flex-1 bg-neutral-900 hover:bg-neutral-800 border-neutral-700"
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Log Intake
+          </Button>
+          
+          {onRemove && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-red-500/30 hover:bg-red-500/10 text-red-400"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-neutral-950 border-neutral-800">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove from Stack?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will end your current protocol for "{item.supplement_products?.name || item.stack_name}". 
+                    The end date will be recorded for your history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-neutral-700">Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => onRemove(item.id)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
 
         {/* Expandable Details */}
         {(item.ai_suggested || item.target_outcome || item.linked_biomarker_ids?.length) && (

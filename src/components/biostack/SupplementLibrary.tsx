@@ -3,11 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill, Sparkles, Clock, Loader2 } from 'lucide-react';
+import { Search, Star, Library, Package, Eye, Trash2, RefreshCw, Camera, Pill, Sparkles, Clock, Loader2, Plus } from 'lucide-react';
 import { useSupplementLibrary, useRemoveFromLibrary } from '@/hooks/biostack/useSupplementLibrary';
 import { useBackfillLibrary } from '@/hooks/biostack';
 import { useEnrichProduct } from '@/hooks/biostack/useEnrichProduct';
 import { useSyncProtocolsToLibrary } from '@/hooks/biostack/useSyncProtocolsToLibrary';
+import { useAddProductToStack } from '@/hooks/biostack/useAddProductToStack';
 import { SupplementInfoCard } from './SupplementInfoCard';
 import { ProductPhotoUploader } from './ProductPhotoUploader';
 import { BulkPhotoUploader } from './BulkPhotoUploader';
@@ -28,6 +29,7 @@ export function SupplementLibrary() {
   const backfillLibrary = useBackfillLibrary();
   const enrichProduct = useEnrichProduct();
   const syncProtocols = useSyncProtocolsToLibrary();
+  const addToStack = useAddProductToStack();
 
   // Recently scanned (last 5)
   const recentScans = library?.slice(0, 5) || [];
@@ -317,6 +319,18 @@ export function SupplementLibrary() {
                     </Button>
                   )}
                   
+                  {!entry.is_in_stack && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addToStack.mutate(entry.product_id)}
+                      disabled={addToStack.isPending}
+                      className="border-green-500/30 hover:bg-green-500/10 text-green-400"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      to Stack
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
