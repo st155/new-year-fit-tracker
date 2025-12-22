@@ -116,10 +116,46 @@ Deno.serve(async (req) => {
 
         const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-        const tokensWithProfiles = tokens?.map(token => ({
-          ...token,
-          profile: profilesMap.get(token.user_id) || null
-        })) || [];
+        // Get last webhook date for each terra_user_id from unified_metrics
+        const terraUserIds = tokens?.filter(t => t.terra_user_id).map(t => t.terra_user_id) || [];
+        
+        // Query unified_metrics to find last data date per user
+        const lastDataMap = new Map<string, { last_date: string; days_since: number }>();
+        
+        if (terraUserIds.length > 0) {
+          // Get last measurement date per user from unified_metrics
+          const { data: lastMetrics } = await serviceClient
+            .from('unified_metrics')
+            .select('user_id, measurement_date')
+            .in('user_id', userIds)
+            .order('measurement_date', { ascending: false });
+
+          if (lastMetrics) {
+            const userLastDateMap = new Map<string, string>();
+            for (const metric of lastMetrics) {
+              if (!userLastDateMap.has(metric.user_id)) {
+                userLastDateMap.set(metric.user_id, metric.measurement_date);
+              }
+            }
+            
+            const now = new Date();
+            userLastDateMap.forEach((lastDate, userId) => {
+              const daysSince = Math.floor((now.getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24));
+              lastDataMap.set(userId, { last_date: lastDate, days_since: daysSince });
+            });
+          }
+        }
+
+        const tokensWithProfiles = tokens?.map(token => {
+          const lastData = lastDataMap.get(token.user_id);
+          return {
+            ...token,
+            profile: profilesMap.get(token.user_id) || null,
+            last_webhook_date: lastData?.last_date || null,
+            days_since_webhook: lastData?.days_since ?? null,
+            is_dead: token.is_active && lastData ? lastData.days_since > 7 : false
+          };
+        }) || [];
 
         console.log(`✅ Listed ${tokensWithProfiles.length} tokens`);
 

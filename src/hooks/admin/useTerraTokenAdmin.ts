@@ -17,6 +17,10 @@ interface TerraToken {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
+  // Added fields for dead connection detection
+  last_webhook_date?: string | null;
+  days_since_webhook?: number | null;
+  is_dead?: boolean;
 }
 
 interface UserProfile {
@@ -131,6 +135,30 @@ export function useDeleteTerraToken() {
     },
     onError: (error: Error) => {
       toast.error(`Ошибка удаления: ${error.message}`);
+    }
+  });
+}
+
+export function useRequestHistoricalData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { terra_user_id: string; days?: number }) => {
+      const { data, error } = await supabase.functions.invoke('terra-request-historical', {
+        body: params
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
+      toast.success(`Запрос исторических данных отправлен: ${data.message}`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Ошибка запроса данных: ${error.message}`);
     }
   });
 }
