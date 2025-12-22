@@ -113,6 +113,7 @@ serve(async (req) => {
           reference_id: user.id,
           providers: 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR,GOOGLE',
           language: 'en',
+          show_disconnect: true, // Show disconnect button in widget for reconnection
           auth_success_redirect_url: redirectUrl,
           auth_failure_redirect_url: redirectUrl,
         }),

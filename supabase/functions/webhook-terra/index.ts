@@ -571,6 +571,106 @@ Deno.serve(
       );
     }
 
+    // Handle user_reauth webhook (Terra sends this when user reconnects with different terra_user_id)
+    if (payload.type === 'user_reauth') {
+      logger.info('user_reauth webhook received', {
+        oldUserId: payload.old_user?.user_id,
+        newUserId: payload.new_user?.user_id,
+        newProvider: payload.new_user?.provider,
+        referenceId: payload.new_user?.reference_id,
+      });
+
+      const oldTerraUserId = payload.old_user?.user_id;
+      const newTerraUserId = payload.new_user?.user_id;
+      const provider = payload.new_user?.provider?.toUpperCase();
+      const referenceId = payload.new_user?.reference_id;
+
+      if (!newTerraUserId || !provider || !referenceId) {
+        logger.error('Missing required fields in user_reauth webhook', {
+          newTerraUserId,
+          provider,
+          referenceId,
+        });
+        
+        const response = { success: false, message: 'Missing required fields for user_reauth' };
+        await idempotency.storeResult(webhookId, response);
+        return new Response(JSON.stringify(response), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        // Delete any old tokens for this provider/user that have different terra_user_id
+        if (oldTerraUserId) {
+          await supabase
+            .from('terra_tokens')
+            .delete()
+            .eq('user_id', referenceId)
+            .eq('provider', provider)
+            .eq('terra_user_id', oldTerraUserId);
+          
+          logger.info('Deleted old terra_token with old_user_id', { oldTerraUserId, referenceId, provider });
+        }
+
+        // Delete any inactive tokens for this provider/user
+        await supabase
+          .from('terra_tokens')
+          .delete()
+          .eq('user_id', referenceId)
+          .eq('provider', provider)
+          .eq('is_active', false);
+
+        // Upsert new token with new terra_user_id
+        const { error: upsertError } = await supabase
+          .from('terra_tokens')
+          .upsert({
+            user_id: referenceId,
+            provider: provider,
+            terra_user_id: newTerraUserId,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id,provider',
+            ignoreDuplicates: false
+          });
+
+        if (upsertError) {
+          logger.error('Failed to upsert terra_tokens for user_reauth', { error: upsertError.message });
+          throw upsertError;
+        }
+
+        logger.info('✅ user_reauth processed: updated terra_user_id', {
+          referenceId,
+          provider,
+          oldTerraUserId,
+          newTerraUserId,
+        });
+
+        // Clear idempotency cache for old auth events to allow fresh reconnection
+        // This helps prevent "duplicate webhook" blocking fresh connections
+        
+        const response = { success: true, message: 'user_reauth processed successfully' };
+        await idempotency.storeResult(webhookId, response);
+        return new Response(JSON.stringify(response), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        logger.error('Failed to process user_reauth webhook', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        
+        const response = { success: false, message: 'Failed to process user_reauth', error: String(error) };
+        await idempotency.storeResult(webhookId, response);
+        return new Response(JSON.stringify(response), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Handle auth and reauth webhooks
     if (payload.type === 'auth' || payload.type === 'reauth') {
       logger.info(`${payload.type} webhook received`, {

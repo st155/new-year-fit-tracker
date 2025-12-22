@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw, ArrowLeft, Clock } from 'lucide-react';
 
-const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 минут — рекомендуемый лимит
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 минут — увеличенный лимит для надёжности
 
 export function TerraWidgetLoader() {
   const [searchParams] = useSearchParams();
@@ -147,17 +147,25 @@ export function TerraWidgetLoader() {
       />
       
       {/* Предупреждение о лимите времени */}
-      <div className="mt-8 max-w-md">
+      <div className="mt-8 max-w-md space-y-3">
         <Alert>
           <Clock className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Важно:</strong> Завершите авторизацию в течение 5 минут, 
+            <strong>Важно:</strong> Завершите авторизацию в течение 15 минут, 
             иначе сессия истечёт и потребуется повторная попытка.
             {timeRemaining !== null && timeRemaining > 0 && (
               <span className="block mt-1 font-mono text-primary">
                 Осталось: {formatTimeRemaining(timeRemaining)}
               </span>
             )}
+          </AlertDescription>
+        </Alert>
+        
+        <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Совет:</strong> Если видите "Session Expired" — выйдите из приложения устройства (Whoop/Oura/etc), 
+            войдите заново, а затем повторите подключение.
           </AlertDescription>
         </Alert>
       </div>
