@@ -376,15 +376,15 @@ export function TerraIntegration() {
         throw new Error('Не удалось удалить старый токен');
       }
       
-      // Шаг 2: Ждём 3 секунды, чтобы Whoop/провайдер очистил OAuth кэш
-      console.log('⏳ Waiting 3s for provider OAuth cache to clear...');
+      // Шаг 2: Ждём 5 секунд, чтобы Whoop/провайдер очистил OAuth кэш
+      console.log('⏳ Waiting 5s for provider OAuth cache to clear...');
       
       toast({
         title: 'Очистка сессии...',
-        description: 'Подождите 3 секунды для синхронизации',
+        description: 'Подождите 5 секунд для синхронизации с провайдером',
       });
       
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
       // Шаг 3: Подключаем заново через Terra Widget
       console.log('🔄 Starting fresh connection...');
@@ -771,13 +771,23 @@ export function TerraIntegration() {
         </CardHeader>
         
         {/* Предупреждение о лимите времени */}
-        <CardContent className="pt-0 pb-2">
+        <CardContent className="pt-0 pb-2 space-y-2">
           <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
               <strong>Важно:</strong> После нажатия кнопки подключения завершите авторизацию 
-              в приложении устройства в течение <strong>5 минут</strong>. 
-              Если увидите ошибку "Session expired" — нажмите "Попробовать снова".
+              в приложении устройства в течение <strong>15 минут</strong>. 
+            </AlertDescription>
+          </Alert>
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Проблемы с подключением?</strong> Если видите "Session expired":
+              <ol className="list-decimal list-inside mt-1 space-y-1">
+                <li>Откройте приложение устройства (Whoop/Oura/etc)</li>
+                <li>Выйдите из аккаунта и войдите заново</li>
+                <li>Повторите подключение в Elite10</li>
+              </ol>
             </AlertDescription>
           </Alert>
         </CardContent>
