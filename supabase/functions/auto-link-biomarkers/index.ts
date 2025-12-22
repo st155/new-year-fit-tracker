@@ -42,7 +42,24 @@ serve(async (req) => {
 
     console.log(`[auto-link-biomarkers] Processing: ${supplementName}`);
 
-    // Step 1: Get all unique supplement names from biomarker_correlations
+    // Step 1: Check supplement_synonyms table first for fast matching
+    let matchedScientificName: string | null = null;
+    let matchConfidence = 0;
+
+    const { data: synonymMatch } = await supabase
+      .from('supplement_synonyms')
+      .select('canonical_name, confidence')
+      .or(`synonym.ilike.%${supplementName}%,canonical_name.ilike.%${supplementName}%`)
+      .order('confidence', { ascending: false })
+      .limit(1);
+
+    if (synonymMatch && synonymMatch.length > 0) {
+      matchedScientificName = synonymMatch[0].canonical_name;
+      matchConfidence = (synonymMatch[0].confidence || 0.8) * 100;
+      console.log(`[auto-link-biomarkers] Synonym match: ${matchedScientificName} (${matchConfidence}%)`);
+    }
+
+    // Step 2: Get all unique supplement names from biomarker_correlations
     const { data: correlations, error: corrError } = await supabase
       .from('biomarker_correlations')
       .select('supplement_name, biomarker_id, correlation_type, expected_change_percent, evidence_level, research_summary');
@@ -55,13 +72,10 @@ serve(async (req) => {
     const scientificNames = [...new Set(correlations?.map(c => c.supplement_name) || [])];
     console.log(`[auto-link-biomarkers] Found ${scientificNames.length} scientific names in database`);
 
-    // Step 2: Use AI to match user supplement name to scientific names
+    // Step 3: Use AI to match if no synonym match found
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
-    let matchedScientificName: string | null = null;
-    let matchConfidence = 0;
 
-    if (LOVABLE_API_KEY && scientificNames.length > 0) {
+    if (!matchedScientificName && LOVABLE_API_KEY && scientificNames.length > 0) {
       const matchPrompt = `You are a supplement expert. Match the user's supplement name to the most appropriate scientific name from the database.
 
 User supplement: "${supplementName}"

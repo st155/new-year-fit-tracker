@@ -92,7 +92,30 @@ export function useAddSupplementToStack() {
 
       if (stackError) throw stackError;
 
-      // Step 4: Add to supplement library
+      // Get the new stack item ID
+      const { data: newStackItem } = await supabase
+        .from('user_stack')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .eq('is_active', true)
+        .single();
+
+      // Step 4: Auto-link biomarkers via edge function
+      if (newStackItem?.id) {
+        try {
+          await supabase.functions.invoke('auto-link-biomarkers', {
+            body: { 
+              stackItemId: newStackItem.id, 
+              supplementName: params.supplementName 
+            }
+          });
+        } catch (e) {
+          console.log('Auto-link attempted, continuing...', e);
+        }
+      }
+
+      // Step 5: Add to supplement library
       const { data: existingLibraryEntry } = await supabase
         .from('user_supplement_library')
         .select('id')
