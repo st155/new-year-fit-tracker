@@ -85,20 +85,20 @@ serve(async (req) => {
       console.log(`✅ Deleted ${duplicateGoalIds.length} duplicate goals`);
     }
 
-    // Step 4: Activate Terra tokens for Kristina Ivanova
+    // Step 4: Activate Terra tokens for Alexey Gubarev (WHOOP + WITHINGS)
     const { error: activateError1 } = await supabase
-      .from('terra_connections')
-      .update({ is_active: true })
-      .eq('user_id', '4e608801-d141-49a4-b254-853bee42069b')
+      .from('terra_tokens')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('user_id', 'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae')
       .eq('provider', 'WHOOP');
 
     const { error: activateError2 } = await supabase
-      .from('terra_connections')
-      .update({ is_active: true })
-      .eq('user_id', '4e608801-d141-49a4-b254-853bee42069b')
+      .from('terra_tokens')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('user_id', 'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae')
       .eq('provider', 'WITHINGS');
 
-    console.log('✅ Activated Terra tokens for Kristina');
+    console.log('✅ Activated Terra tokens for Alexey Gubarev', { activateError1, activateError2 });
 
     const result = {
       success: true,
