@@ -7,9 +7,9 @@ export function useProtocolManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch all active protocols with items
+  // Fetch all protocols with items (both active and paused)
   const { data: activeProtocols = [], isLoading } = useQuery({
-    queryKey: ['active-protocols', user?.id],
+    queryKey: ['protocols-management', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
@@ -28,7 +28,6 @@ export function useProtocolManagement() {
           )
         `)
         .eq('user_id', user.id)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -51,7 +50,7 @@ export function useProtocolManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
       toast.success('Protocol status updated');
     },
     onError: (error) => {
@@ -94,7 +93,7 @@ export function useProtocolManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
       toast.success('Protocol deleted');
     },
     onError: (error) => {
@@ -129,7 +128,7 @@ export function useProtocolManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
       toast.success('✅ Intake logged');
     },
     onError: (error) => {
