@@ -66,7 +66,11 @@ export default function Supplements() {
       {viewMode === "dashboard" && (
         <>
           {/* Hero Section with Metrics */}
-          <SupplementsHeroSection onActiveProtocolsClick={() => setViewMode("history")} />
+<SupplementsHeroSection 
+            onActiveProtocolsClick={() => setViewMode("history")}
+            onAdherenceRateClick={() => setViewMode("correlation")}
+            onOptimizedClick={() => setViewMode("correlation")}
+          />
 
           {/* Unified Today's Supplements View */}
           <TodaysSupplements />

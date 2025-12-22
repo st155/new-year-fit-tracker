@@ -1,9 +1,13 @@
 import { motion } from "framer-motion";
 import { Activity, TrendingUp, CheckCircle2, LucideIcon } from "lucide-react";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
+import { useAuth } from "@/hooks/useAuth";
+import { useTopSupplements } from "@/hooks/biostack/useTopSupplements";
 
 interface SupplementsHeroSectionProps {
   onActiveProtocolsClick?: () => void;
+  onAdherenceRateClick?: () => void;
+  onOptimizedClick?: () => void;
 }
 
 interface StatItem {
@@ -15,15 +19,21 @@ interface StatItem {
   onClick?: () => void;
 }
 
-export function SupplementsHeroSection({ onActiveProtocolsClick }: SupplementsHeroSectionProps) {
+export function SupplementsHeroSection({ 
+  onActiveProtocolsClick,
+  onAdherenceRateClick,
+  onOptimizedClick
+}: SupplementsHeroSectionProps) {
+  const { user } = useAuth();
   const { activeProtocols, isLoading } = useProtocolManagement();
+  const { data: topSupplements } = useTopSupplements(user?.id);
 
   // Calculate metrics
   const activeProtocolsCount = activeProtocols?.length || 0;
   const totalSupplements = activeProtocols?.reduce((acc, protocol) => 
     acc + (protocol.protocol_items?.length || 0), 0
   ) || 0;
-  const optimizedSupplements = 0; // Will be calculated from effectiveness_score in future
+  const optimizedSupplements = topSupplements?.length || 0;
 
   // Calculate adherence rate (mock for now, could be calculated from intake_logs)
   const adherenceRate = 85;
@@ -42,14 +52,16 @@ export function SupplementsHeroSection({ onActiveProtocolsClick }: SupplementsHe
       value: `${adherenceRate}%`,
       icon: TrendingUp,
       color: "purple",
-      glow: "shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+      glow: "shadow-[0_0_15px_rgba(168,85,247,0.5)]",
+      onClick: onAdherenceRateClick
     },
     {
       label: "Optimized",
       value: optimizedSupplements,
       icon: CheckCircle2,
       color: "green",
-      glow: "shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+      glow: "shadow-[0_0_15px_rgba(34,197,94,0.5)]",
+      onClick: onOptimizedClick
     }
   ];
 
