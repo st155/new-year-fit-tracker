@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell, Sparkles } from "lucide-react";
+import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell, Sparkles, ShieldCheck } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -132,6 +132,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
     { type: 'stats' as const, path: "/progress", label: 'Мой прогресс' },
     { type: 'goals' as const, path: "/goals", label: 'Мои цели' },
+    { type: 'settings' as const, path: "/admin", label: 'Админ' },
   ];
 
   const navItems = isTrainer ? trainerNavItems : userNavItems;
@@ -347,6 +348,12 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isTrainer && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Администрирование</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate('/fitness-data')} className="cursor-pointer flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                     <span>Фитнес дата</span>
