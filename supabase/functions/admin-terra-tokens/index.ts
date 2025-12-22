@@ -91,11 +91,11 @@ Deno.serve(async (req) => {
             user_id,
             provider,
             terra_user_id,
-            status,
             is_active,
-            last_sync_at,
+            last_sync_date,
             created_at,
-            updated_at
+            updated_at,
+            metadata
           `)
           .order('created_at', { ascending: false });
 
@@ -183,7 +183,6 @@ Deno.serve(async (req) => {
             user_id,
             terra_user_id,
             provider: provider.toUpperCase(),
-            status: 'active',
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -208,7 +207,7 @@ Deno.serve(async (req) => {
       }
 
       case 'update': {
-        const { id, terra_user_id, provider, is_active, status } = data;
+        const { id, terra_user_id, provider, is_active } = data;
 
         if (!id) {
           return new Response(
@@ -224,7 +223,6 @@ Deno.serve(async (req) => {
         if (terra_user_id !== undefined) updateData.terra_user_id = terra_user_id;
         if (provider !== undefined) updateData.provider = provider.toUpperCase();
         if (is_active !== undefined) updateData.is_active = is_active;
-        if (status !== undefined) updateData.status = status;
 
         const { data: updatedToken, error: updateError } = await serviceClient
           .from('terra_tokens')

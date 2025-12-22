@@ -7,11 +7,11 @@ interface TerraToken {
   user_id: string;
   provider: string;
   terra_user_id: string | null;
-  status: string;
   is_active: boolean;
-  last_sync_at: string | null;
+  last_sync_date: string | null;
   created_at: string;
   updated_at: string;
+  metadata?: Record<string, unknown> | null;
   profile: {
     user_id: string;
     full_name: string | null;
@@ -91,7 +91,6 @@ export function useUpdateTerraToken() {
       terra_user_id?: string; 
       provider?: string; 
       is_active?: boolean;
-      status?: string;
     }) => {
       const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
         body: { action: 'update', data: params }
