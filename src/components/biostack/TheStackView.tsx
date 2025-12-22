@@ -12,6 +12,7 @@ import { BulkPhotoUploader } from "./BulkPhotoUploader";
 import { AIStackGenerator } from "./AIStackGenerator";
 import { useLowStockAlerts } from "@/hooks/biostack/useLowStockAlerts";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
+import { useRemoveFromStack } from "@/hooks/biostack/useRemoveFromStack";
 
 const INTAKE_TIME_GROUPS = [
   { key: 'morning', label: 'Morning Stack', icon: Sun },
@@ -38,6 +39,9 @@ export function TheStackView() {
 
   // Low stock alerts
   const { data: lowStockItems = [] } = useLowStockAlerts(user?.id);
+
+  // Remove from stack mutation
+  const removeFromStack = useRemoveFromStack();
 
   // Show toast notification on mount if there are low stock items
   useEffect(() => {
@@ -351,6 +355,7 @@ export function TheStackView() {
                           item={item}
                           servingsRemaining={item.servingsRemaining}
                           onLogIntake={(id) => logIntakeMutation.mutate(id)}
+                          onRemove={(id) => removeFromStack.mutate(id)}
                         />
                       ))}
                     </div>
@@ -366,6 +371,7 @@ export function TheStackView() {
                     item={item}
                     servingsRemaining={item.servingsRemaining}
                     onLogIntake={(id) => logIntakeMutation.mutate(id)}
+                    onRemove={(id) => removeFromStack.mutate(id)}
                   />
                 ))}
               </div>

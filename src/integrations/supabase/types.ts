@@ -5934,6 +5934,7 @@ export type Database = {
           created_at: string | null
           effectiveness_score: number | null
           end_action: string | null
+          ended_at: string | null
           id: string
           intake_times: string[] | null
           is_active: boolean | null
@@ -5962,6 +5963,7 @@ export type Database = {
           created_at?: string | null
           effectiveness_score?: number | null
           end_action?: string | null
+          ended_at?: string | null
           id?: string
           intake_times?: string[] | null
           is_active?: boolean | null
@@ -5990,6 +5992,7 @@ export type Database = {
           created_at?: string | null
           effectiveness_score?: number | null
           end_action?: string | null
+          ended_at?: string | null
           id?: string
           intake_times?: string[] | null
           is_active?: boolean | null
