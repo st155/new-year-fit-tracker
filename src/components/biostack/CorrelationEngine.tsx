@@ -3,15 +3,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupplementCorrelation } from '@/hooks/biostack/useSupplementCorrelation';
 import { useAutoLinkBiomarkers, SupplementCorrelation } from '@/hooks/biostack/useAutoLinkBiomarkers';
+import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, TrendingUp, TrendingDown, Activity, Clock, Beaker, Link2, Sparkles } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Activity, Clock, Beaker, Link2, Sparkles, Brain } from 'lucide-react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { SupplementResearchCard } from './SupplementResearchCard';
 import { SupplementEffectivenessInsight, EffectivenessVerdict } from './SupplementEffectivenessInsight';
 import { SupplementTimeline } from './SupplementTimeline';
+import { AIEffectivenessAnalyzer } from './AIEffectivenessAnalyzer';
 
 interface StackItem {
   id: string;
@@ -31,7 +33,9 @@ export function CorrelationEngine() {
   const [selectedStackItemId, setSelectedStackItemId] = useState<string>();
   const [timeframe, setTimeframe] = useState<number>(6);
   const [stackItemsWithData, setStackItemsWithData] = useState<StackItemWithCorrelations[]>([]);
+  const [selectedForAI, setSelectedForAI] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { mutateAsync: autoLink, isPending: isLinking } = useAutoLinkBiomarkers();
 
@@ -230,6 +234,40 @@ export function CorrelationEngine() {
           />
         ))}
       </div>
+
+      {/* AI Effectiveness Analysis Section */}
+      {user && stackItemsWithData.length > 0 && (
+        <div className="border-t border-neutral-800 pt-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Brain className="h-5 w-5 text-purple-400" />
+            AI-анализ эффективности
+          </h3>
+          
+          {/* Selector for AI analysis */}
+          <div className="mb-4">
+            <Select value={selectedForAI || ''} onValueChange={setSelectedForAI}>
+              <SelectTrigger className="bg-neutral-950 border-neutral-700 max-w-md">
+                <SelectValue placeholder="Выберите добавку для AI-анализа" />
+              </SelectTrigger>
+              <SelectContent>
+                {stackItemsWithData.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.stack_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedForAI && (
+            <AIEffectivenessAnalyzer
+              stackItemId={selectedForAI}
+              userId={user.id}
+              supplementName={stackItemsWithData.find(i => i.id === selectedForAI)?.stack_name || ''}
+            />
+          )}
+        </div>
+      )}
 
       {/* Timeline Section */}
       {stackItemsWithData.filter(i => i.created_at && i.timeframeWeeks).length > 0 && (

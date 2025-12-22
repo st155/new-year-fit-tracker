@@ -1,5 +1,8 @@
 project_id = "ueykmmzmguzjppdudvef"
 
+[functions.analyze-supplement-effectiveness]
+verify_jwt = false
+
 [functions.scan-supplement-barcode]
 verify_jwt = true
 
