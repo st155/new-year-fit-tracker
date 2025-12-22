@@ -276,9 +276,9 @@ export function TerraTokenAdmin() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {token.last_sync_at ? (
+                    {token.last_sync_date ? (
                       <span className="text-sm text-muted-foreground">
-                        {format(new Date(token.last_sync_at), 'dd MMM yyyy HH:mm', { locale: ru })}
+                        {format(new Date(token.last_sync_date), 'dd MMM yyyy HH:mm', { locale: ru })}
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
