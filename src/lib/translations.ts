@@ -106,6 +106,7 @@ export const t = (key: string, params?: Record<string, any>): string => {
     
     // Trainer Navigation
     'navigation.trainerDashboard': 'Панель тренера',
+    'navigation.admin': 'Администрирование',
     'navigation.analytics': 'Аналитика',
     
     // Trainer Analytics Dashboard

@@ -92,6 +92,7 @@ export function AppSidebar() {
   const trainerItems = [
     { title: "navigation.trainerDashboard", url: "/trainer-dashboard", iconType: "trainer" as const },
     { title: "navigation.analytics", url: "/trainer-analytics", iconType: "stats" as const },
+    { title: "navigation.admin", url: "/admin", iconType: "settings" as const },
   ];
 
   const settingsItems = [
