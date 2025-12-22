@@ -7241,6 +7241,7 @@ export type Database = {
           unified_unit: string
         }[]
       }
+      get_user_team_ids: { Args: { user_uuid: string }; Returns: string[] }
       get_webhook_processing_stats: {
         Args: never
         Returns: {
@@ -7284,6 +7285,10 @@ export type Database = {
       }
       is_team_member: {
         Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_owner: {
+        Args: { team_uuid: string; user_uuid: string }
         Returns: boolean
       }
       is_trainer: { Args: { _user_id: string }; Returns: boolean }
