@@ -46,17 +46,27 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-  User
+  User,
+  AlertTriangle,
+  History,
+  Skull
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   useTerraTokens,
   useUsersList,
   useCreateTerraToken,
   useUpdateTerraToken,
-  useDeleteTerraToken
+  useDeleteTerraToken,
+  useRequestHistoricalData
 } from '@/hooks/admin/useTerraTokenAdmin';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const PROVIDERS = [
   { value: 'WHOOP', label: 'Whoop' },
@@ -74,12 +84,15 @@ export function TerraTokenAdmin() {
   const createToken = useCreateTerraToken();
   const updateToken = useUpdateTerraToken();
   const deleteToken = useDeleteTerraToken();
+  const requestHistorical = useRequestHistoricalData();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDead, setFilterDead] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedToken, setSelectedToken] = useState<typeof tokens extends (infer T)[] ? T : never | null>(null);
+  const [requestingHistorical, setRequestingHistorical] = useState<string | null>(null);
 
   // Create form state
   const [newUserId, setNewUserId] = useState('');
@@ -91,7 +104,11 @@ export function TerraTokenAdmin() {
   const [editProvider, setEditProvider] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
 
+  // Count dead tokens
+  const deadTokensCount = tokens?.filter(t => t.is_dead).length || 0;
+
   const filteredTokens = tokens?.filter(token => {
+    if (filterDead && !token.is_dead) return false;
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -162,6 +179,16 @@ export function TerraTokenAdmin() {
     setShowDeleteDialog(true);
   };
 
+  const handleRequestHistorical = async (token: NonNullable<typeof tokens>[0]) => {
+    if (!token.terra_user_id) return;
+    setRequestingHistorical(token.id);
+    try {
+      await requestHistorical.mutateAsync({ terra_user_id: token.terra_user_id, days: 30 });
+    } finally {
+      setRequestingHistorical(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -191,6 +218,35 @@ export function TerraTokenAdmin() {
           </Button>
         </div>
       </div>
+
+      {/* Dead Tokens Alert */}
+      {deadTokensCount > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skull className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium text-destructive">
+                    Обнаружено {deadTokensCount} мёртвых подключений
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Токены активны, но данные не поступали более 7 дней
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant={filterDead ? "destructive" : "outline"} 
+                size="sm"
+                onClick={() => setFilterDead(!filterDead)}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {filterDead ? 'Показать все' : 'Показать мёртвые'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search */}
       <Card>
@@ -224,6 +280,7 @@ export function TerraTokenAdmin() {
                 <TableHead>Провайдер</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>Последняя синхр.</TableHead>
+                <TableHead>Посл. данные</TableHead>
                 <TableHead className="text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
@@ -284,8 +341,57 @@ export function TerraTokenAdmin() {
                       <span className="text-sm text-muted-foreground">—</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {token.last_webhook_date ? (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm ${token.is_dead ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                          {formatDistanceToNow(new Date(token.last_webhook_date), { 
+                            addSuffix: true, 
+                            locale: ru 
+                          })}
+                        </span>
+                        {token.is_dead && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Skull className="h-4 w-4 text-destructive" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Нет данных {token.days_since_webhook} дней</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      {token.terra_user_id && token.is_dead && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRequestHistorical(token)}
+                                disabled={requestingHistorical === token.id}
+                              >
+                                {requestingHistorical === token.id ? (
+                                  <RefreshCw className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <History className="h-4 w-4 text-primary" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Запросить данные за 30 дней</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -306,8 +412,8 @@ export function TerraTokenAdmin() {
               ))}
               {(!filteredTokens || filteredTokens.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Токены не найдены
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    {filterDead ? 'Мёртвые токены не найдены' : 'Токены не найдены'}
                   </TableCell>
                 </TableRow>
               )}

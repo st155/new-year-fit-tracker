@@ -234,3 +234,6 @@ verify_jwt = true
 
 [functions.admin-terra-tokens]
 verify_jwt = true
+
+[functions.terra-request-historical]
+verify_jwt = true
