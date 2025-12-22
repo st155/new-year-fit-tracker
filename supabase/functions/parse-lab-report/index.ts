@@ -259,9 +259,20 @@ IMPORTANT: If the document contains ANY of these keywords, classify as fitness_r
 - Blood lactate, лактат крови, lactate concentration
 - Training zones, тренировочные зоны
 
+IMPORTANT: If the document contains ANY of these keywords, classify as inbody:
+- InBody, Состав тела, Body Composition Analysis
+- Skeletal Muscle Mass, SMM, скелетная мускулатура, мышечная масса
+- Body Fat Mass, BFM, жировая масса, масса жира
+- Percent Body Fat, PBF, процент жира, Body Fat %
+- Visceral Fat Area, VFA, висцеральный жир
+- Segmental Lean, сегментарный анализ
+- Body Water, ECW, ICW, внутриклеточная, внеклеточная вода
+- Bioelectrical Impedance, биоимпеданс, BIA
+- Tanita, DEXA, DXA, денситометрия
+
 Return ONLY valid JSON (no markdown):
 {
-  "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "fitness_report" | "clinical_note",
+  "category": "lab_blood" | "lab_urine" | "lab_microbiome" | "imaging_report" | "fitness_report" | "inbody" | "clinical_note",
   "confidence_score": 0-100,
   "reasoning": "Brief explanation of classification"
 }`
@@ -623,7 +634,233 @@ Return ONLY valid JSON (no markdown):
       }
     } 
     // ============================================================
-    // PARSER C: FITNESS REPORT (VO2max, Lactate, Heart Rate Zones)
+    // PARSER C: INBODY (Body Composition Analysis)
+    // ============================================================
+    else if (documentCategory === 'inbody') {
+      console.log('[PARSE-LAB-REPORT] 🏋️ InBody document detected - processing body composition...');
+      
+      try {
+        // Parse InBody using the same AI as parse-inbody-pdf
+        const inbodyPrompt = `Ты эксперт по анализу InBody сканирований. Извлеки все данные из PDF документа.
+
+Извлеки следующие поля:
+- test_date: дата и время теста (формат: YYYY-MM-DDTHH:MM:SS). ВАЖНО: InBody использует ЕВРОПЕЙСКИЙ формат DD.MM.YYYY (день.месяц.год).
+- weight: вес в кг
+- skeletal_muscle_mass: мышечная масса в кг (SMM)
+- percent_body_fat: процент жира (PBF %)
+- body_fat_mass: масса жира в кг
+- visceral_fat_area: висцеральный жир в см²
+- bmi: индекс массы тела
+- bmr: базальный метаболизм в ккал
+- total_body_water: общая вода в литрах
+- protein: белок в кг
+- minerals: минералы в кг
+- right_arm_mass, right_arm_percent, left_arm_mass, left_arm_percent
+- trunk_mass, trunk_percent
+- right_leg_mass, right_leg_percent, left_leg_mass, left_leg_percent
+
+Верни ТОЛЬКО валидный JSON:
+{
+  "metrics": { ... все метрики ... },
+  "summary": "краткий текстовый анализ",
+  "key_insights": ["инсайт 1", "инсайт 2"]
+}`;
+
+        const inbodyResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: inbodyPrompt },
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: 'Проанализируй InBody сканирование и извлеки все метрики:' },
+                  { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64Pdf}` } }
+                ]
+              }
+            ],
+            max_tokens: 4000
+          })
+        });
+
+        if (!inbodyResponse.ok) {
+          throw new Error(`AI API error: ${inbodyResponse.status}`);
+        }
+
+        const inbodyData = await inbodyResponse.json();
+        let inbodyText = inbodyData.choices?.[0]?.message?.content || '{}';
+        
+        // Clean markdown wrapper
+        inbodyText = inbodyText.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+        
+        const jsonMatch = inbodyText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('Invalid JSON response from AI');
+        }
+        
+        const inbodyResult = JSON.parse(jsonMatch[0]);
+        const metrics = inbodyResult.metrics || inbodyResult;
+        aiSummary = inbodyResult.summary || 'InBody анализ обработан';
+
+        // Helper functions
+        const normalizeNumber = (val: any): number | null => {
+          if (val === null || val === undefined) return null;
+          const str = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+          const num = parseFloat(str);
+          return isNaN(num) ? null : Math.round(num * 10) / 10;
+        };
+
+        const normalizeInteger = (val: any): number | null => {
+          if (val === null || val === undefined) return null;
+          const str = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+          const num = parseInt(str);
+          return isNaN(num) ? null : num;
+        };
+
+        // Parse test date
+        let testDate: string;
+        if (metrics.test_date) {
+          try {
+            const parsed = new Date(metrics.test_date);
+            testDate = isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+          } catch {
+            testDate = new Date().toISOString();
+          }
+        } else {
+          testDate = new Date().toISOString();
+        }
+
+        // Prepare data for inbody_analyses table
+        const inbodyRecord = {
+          user_id: user.id,
+          document_id: documentId,
+          test_date: testDate,
+          weight: normalizeNumber(metrics.weight),
+          skeletal_muscle_mass: normalizeNumber(metrics.skeletal_muscle_mass),
+          percent_body_fat: normalizeNumber(metrics.percent_body_fat),
+          body_fat_mass: normalizeNumber(metrics.body_fat_mass),
+          visceral_fat_area: normalizeNumber(metrics.visceral_fat_area),
+          bmi: normalizeNumber(metrics.bmi),
+          bmr: normalizeInteger(metrics.bmr),
+          total_body_water: normalizeNumber(metrics.total_body_water),
+          protein: normalizeNumber(metrics.protein),
+          minerals: normalizeNumber(metrics.minerals),
+          right_arm_mass: normalizeNumber(metrics.right_arm_mass),
+          right_arm_percent: normalizeNumber(metrics.right_arm_percent),
+          left_arm_mass: normalizeNumber(metrics.left_arm_mass),
+          left_arm_percent: normalizeNumber(metrics.left_arm_percent),
+          trunk_mass: normalizeNumber(metrics.trunk_mass),
+          trunk_percent: normalizeNumber(metrics.trunk_percent),
+          right_leg_mass: normalizeNumber(metrics.right_leg_mass),
+          right_leg_percent: normalizeNumber(metrics.right_leg_percent),
+          left_leg_mass: normalizeNumber(metrics.left_leg_mass),
+          left_leg_percent: normalizeNumber(metrics.left_leg_percent),
+          ai_summary: inbodyResult.summary || null,
+          ai_insights: inbodyResult.key_insights || [],
+          raw_data: metrics
+        };
+
+        console.log('[PARSE-LAB-REPORT] 💾 Saving InBody analysis to database...');
+        
+        const { data: inbodyAnalysis, error: inbodyInsertError } = await supabase
+          .from('inbody_analyses')
+          .insert(inbodyRecord)
+          .select()
+          .single();
+
+        if (inbodyInsertError) {
+          console.error('[PARSE-LAB-REPORT] ❌ Failed to save InBody analysis:', inbodyInsertError);
+          throw inbodyInsertError;
+        }
+
+        console.log(`[PARSE-LAB-REPORT] ✓ InBody analysis saved: ${inbodyAnalysis.id}`);
+        console.log(`[PARSE-LAB-REPORT] ✓ Test date: ${testDate}, Weight: ${inbodyRecord.weight}kg, SMM: ${inbodyRecord.skeletal_muscle_mass}kg, BF%: ${inbodyRecord.percent_body_fat}%`);
+
+        // Also save key metrics to body_composition table for unified tracking
+        const bodyCompRecord = {
+          user_id: user.id,
+          measurement_date: testDate.split('T')[0],
+          weight: inbodyRecord.weight,
+          body_fat_percentage: inbodyRecord.percent_body_fat,
+          muscle_mass: inbodyRecord.skeletal_muscle_mass,
+          measurement_method: 'InBody'
+        };
+
+        const { error: bodyCompError } = await supabase
+          .from('body_composition')
+          .insert(bodyCompRecord);
+
+        if (bodyCompError) {
+          console.warn('[PARSE-LAB-REPORT] ⚠️ Failed to save to body_composition:', bodyCompError.message);
+        } else {
+          console.log('[PARSE-LAB-REPORT] ✓ Body composition record saved');
+        }
+
+        // Update medical_documents with inbody_analysis_id reference
+        await supabase
+          .from('medical_documents')
+          .update({ 
+            processing_status: 'completed',
+            processing_completed_at: new Date().toISOString(),
+            ai_summary: aiSummary,
+            extracted_data: {
+              inbody_analysis_id: inbodyAnalysis.id,
+              test_date: testDate,
+              weight: inbodyRecord.weight,
+              skeletal_muscle_mass: inbodyRecord.skeletal_muscle_mass,
+              percent_body_fat: inbodyRecord.percent_body_fat,
+              visceral_fat_area: inbodyRecord.visceral_fat_area
+            }
+          })
+          .eq('id', documentId);
+
+        // Return success response for InBody
+        return new Response(JSON.stringify({
+          success: true,
+          category: 'inbody',
+          inbody_analysis_id: inbodyAnalysis.id,
+          test_date: testDate,
+          summary: aiSummary,
+          key_insights: inbodyResult.key_insights || [],
+          metrics: {
+            weight: inbodyRecord.weight,
+            skeletal_muscle_mass: inbodyRecord.skeletal_muscle_mass,
+            percent_body_fat: inbodyRecord.percent_body_fat,
+            visceral_fat_area: inbodyRecord.visceral_fat_area
+          }
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+
+      } catch (inbodyError: any) {
+        console.error('[PARSE-LAB-REPORT] ❌ InBody processing failed:', inbodyError);
+        
+        await supabase
+          .from('medical_documents')
+          .update({ 
+            processing_status: 'error',
+            processing_error: inbodyError.message || 'InBody processing failed',
+            processing_completed_at: new Date().toISOString()
+          })
+          .eq('id', documentId);
+
+        throw inbodyError;
+      }
+    }
+    
+    // Results array declared early for fitness_report parser
+    const results: any[] = [];
+    let matchedCount = 0;
+    let unmatchedCount = 0;
+    
+    // ============================================================
+    // PARSER D: FITNESS REPORT (VO2max, Lactate, Heart Rate Zones)
     // ============================================================
     else if (documentCategory === 'fitness_report') {
       console.log('[PARSE-LAB-REPORT] Processing fitness_report document...');
@@ -807,9 +1044,7 @@ Extract all available metrics. Common metric names:
     // ============================================================
     console.log('[PARSE-LAB-REPORT] 💾 Stage 5/5: Saving results to database...');
 
-    const results = [];
-    let matchedCount = 0;
-    let unmatchedCount = 0;
+    // Note: results, matchedCount, unmatchedCount declared above before fitness_report parser
 
     // Process LAB results (blood/urine)
     if (documentCategory === 'lab_blood' || documentCategory === 'lab_urine') {
