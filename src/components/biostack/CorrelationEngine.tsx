@@ -10,17 +10,21 @@ import { Button } from '@/components/ui/button';
 import { Loader2, TrendingUp, TrendingDown, Activity, Clock, Beaker, Link2, Sparkles } from 'lucide-react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { SupplementResearchCard } from './SupplementResearchCard';
+import { SupplementEffectivenessInsight, EffectivenessVerdict } from './SupplementEffectivenessInsight';
+import { SupplementTimeline } from './SupplementTimeline';
 
 interface StackItem {
   id: string;
   stack_name: string;
   linked_biomarker_ids: string[];
+  created_at?: string;
 }
 
 interface StackItemWithCorrelations extends StackItem {
   correlations?: SupplementCorrelation[];
   scientificName?: string;
   confidence?: number;
+  timeframeWeeks?: number;
 }
 
 export function CorrelationEngine() {
@@ -40,7 +44,7 @@ export function CorrelationEngine() {
 
       const { data, error } = await supabase
         .from('user_stack')
-        .select('id, stack_name, linked_biomarker_ids')
+        .select('id, stack_name, linked_biomarker_ids, created_at')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
@@ -109,7 +113,7 @@ export function CorrelationEngine() {
         if (normalizedName.includes(sciName) || sciName.includes(normalizedName)) return true;
         
         // Key ingredient match
-        const keyTerms = ['magnesium', 'vitamin', 'omega', 'zinc', 'iron', 'calcium', 'b12', 'b6', 'folate', 'coq10', 'd3'];
+        const keyTerms = ['magnesium', 'vitamin', 'omega', 'zinc', 'iron', 'calcium', 'b12', 'b6', 'folate', 'coq10', 'd3', 'berberine', 'ashwagandha', 'curcumin', 'melatonin'];
         return keyTerms.some(term => normalizedName.includes(term) && sciName.includes(term));
       });
 
@@ -122,11 +126,17 @@ export function CorrelationEngine() {
         researchSummary: c.research_summary || '',
       }));
 
+      // Get average timeframe from correlations
+      const avgTimeframe = matchingCorrelations.length > 0
+        ? Math.round(matchingCorrelations.reduce((sum, c) => sum + ((c as any).timeframe_weeks || 8), 0) / matchingCorrelations.length)
+        : 8;
+
       return {
         ...item,
         correlations,
         scientificName: matchingCorrelations[0]?.supplement_name,
         confidence: matchingCorrelations.length > 0 ? 85 : 0,
+        timeframeWeeks: avgTimeframe,
       };
     });
 
@@ -220,6 +230,29 @@ export function CorrelationEngine() {
           />
         ))}
       </div>
+
+      {/* Timeline Section */}
+      {stackItemsWithData.filter(i => i.created_at && i.timeframeWeeks).length > 0 && (
+        <div className="border-t border-neutral-800 pt-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Clock className="h-5 w-5 text-blue-400" />
+            Таймлайн эффекта
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            {stackItemsWithData
+              .filter(i => i.created_at && i.timeframeWeeks)
+              .slice(0, 4)
+              .map(item => (
+                <SupplementTimeline
+                  key={item.id}
+                  supplementName={item.stack_name}
+                  startDate={item.created_at!}
+                  expectedEffectWeeks={item.timeframeWeeks || 8}
+                />
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Detailed Analysis Section */}
       {itemsWithCorrelations.length > 0 && (
@@ -423,8 +456,36 @@ export function CorrelationEngine() {
                 </Card>
               )}
 
-              {/* AI Insights */}
+              {/* AI Insights - Enhanced with new component */}
               {correlation.aiInsights && (
+                <SupplementEffectivenessInsight
+                  supplementName={selectedItem?.stack_name || 'Supplement'}
+                  expectedChange={
+                    selectedItem?.correlations?.[0] ? {
+                      biomarker: selectedItem.correlations[0].biomarkerName,
+                      percent: selectedItem.correlations[0].expectedChangePercent,
+                      timeframeWeeks: selectedItem.timeframeWeeks,
+                    } : undefined
+                  }
+                  actualChange={
+                    correlation.biomarker ? {
+                      biomarker: correlation.biomarker.name,
+                      percent: correlation.biomarker.changePercent,
+                      startValue: correlation.biomarker.startValue,
+                      endValue: correlation.biomarker.endValue,
+                      unit: correlation.biomarker.unit,
+                    } : undefined
+                  }
+                  verdict={
+                    correlation.aiInsights.is_effective ? 'effective' :
+                    (correlation.correlation?.score || 0) > 0.3 ? 'needs_more_time' : 'not_working'
+                  }
+                  weeksOnSupplement={timeframe * 4}
+                />
+              )}
+
+              {/* Legacy AI Insights Card */}
+              {correlation.aiInsights && !selectedItem?.correlations?.[0] && (
                 <Card className={`p-6 bg-neutral-950 ${
                   correlation.aiInsights.is_effective 
                     ? 'border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.2)]'
