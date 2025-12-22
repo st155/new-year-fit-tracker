@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 interface HealthAnalysis {
   id: string;
-  overall_score: number;
+  overall_score: number | null;
   health_categories: {
     cardiovascular?: number;
     metabolic?: number;
@@ -163,49 +163,58 @@ export function HealthAnalysisWidget() {
         ) : (
           <>
             {/* Overall Score */}
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <svg className="w-24 h-24 transform -rotate-90">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    className="text-muted"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={`${(analysis.overall_score / 10) * 251.2} 251.2`}
-                    className="text-primary transition-all duration-1000"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold">{analysis.overall_score.toFixed(1)}</span>
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-2">Общая оценка здоровья</p>
-                <p className="text-sm leading-relaxed">{analysis.summary}</p>
+            {analysis.overall_score == null ? (
+              <div className="text-center py-6 bg-muted/30 rounded-lg">
+                <p className="text-muted-foreground">Недостаточно данных для расчёта оценки</p>
                 <p className="text-xs text-muted-foreground mt-2">
                   Проанализировано документов: {analysis.documents_analyzed}
                 </p>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <svg className="w-24 h-24 transform -rotate-90">
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      className="text-muted"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${(analysis.overall_score / 10) * 251.2} 251.2`}
+                      className="text-primary transition-all duration-1000"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold">{analysis.overall_score.toFixed(1)}</span>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-2">Общая оценка здоровья</p>
+                  <p className="text-sm leading-relaxed">{analysis.summary}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Проанализировано документов: {analysis.documents_analyzed}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Categories */}
             {analysis.health_categories && Object.keys(analysis.health_categories).length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Object.entries(analysis.health_categories).map(([key, value]) => (
                   <div key={key} className="bg-background/50 rounded-lg p-3 text-center">
-                    <div className="text-lg font-semibold text-primary">{value?.toFixed(1)}</div>
+                    <div className="text-lg font-semibold text-primary">{value != null ? value.toFixed(1) : '—'}</div>
                     <div className="text-xs text-muted-foreground capitalize">
                       {key === 'cardiovascular' && 'Сердечно-сосудистая'}
                       {key === 'metabolic' && 'Метаболизм'}
