@@ -259,6 +259,8 @@ const ProfilePage = () => {
             onSignOut={handleLogout}
             onResetOnboarding={handleResetOnboarding}
             userId={user?.id}
+            trainerMode={profile.trainer_role}
+            onTrainerModeChange={handleTrainerModeChange}
           />
 
           {/* Stats Grid */}
