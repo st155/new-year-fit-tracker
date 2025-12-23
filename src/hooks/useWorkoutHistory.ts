@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getWorkoutTypeName } from '@/lib/workout-types';
 import { mapTerraActivityType } from '@/lib/terra-activity-types';
+import { translateWorkoutName } from '@/lib/workout-translations';
 
 export type WorkoutSource = 'manual' | 'tracker' | 'all';
 
@@ -70,12 +71,18 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
 
         if (trackerWorkouts) {
           trackerWorkouts.forEach((workout: any) => {
-            // Determine workout name based on source
+            // Priority 1: Use source_data.name (original name from provider)
             let workoutName = 'Тренировка';
-            if (workout.source?.toLowerCase() === 'whoop') {
+            const originalName = workout.source_data?.name;
+            
+            if (originalName && typeof originalName === 'string') {
+              // Translate English names to Russian
+              workoutName = translateWorkoutName(originalName);
+            } else if (workout.source?.toLowerCase() === 'whoop') {
+              // Fallback for Whoop: use workout_type mapping
               workoutName = getWorkoutTypeName(workout.workout_type);
             } else if (workout.workout_type !== null && workout.workout_type !== undefined) {
-              // For other providers (Garmin, Withings, etc.), use Terra mapping
+              // Fallback for other providers: use Terra mapping
               workoutName = mapTerraActivityType(workout.workout_type, workout.source);
             }
             
@@ -88,7 +95,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
               distance: workout.distance_km,
               source: workout.source?.toLowerCase() as any,
               sourceLabel: getSourceLabel(workout.source),
-              workoutType: workout.workout_type,
+              workoutType: originalName || workout.workout_type, // Keep original for icons
               strain: workout.source_data?.score?.strain,
             });
           });
