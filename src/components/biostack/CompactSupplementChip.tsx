@@ -108,9 +108,9 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             <div className="flex-shrink-0 flex items-center gap-1">
               {item.takenToday ? (
                 <>
-                  {/* Intake count badge */}
+                  {/* Intake count badge - red for visibility */}
                   {item.todayIntakeCount > 1 && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/20 text-green-500 min-w-[24px] text-center">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white min-w-[24px] text-center shadow-sm">
                       ×{item.todayIntakeCount}
                     </span>
                   )}
