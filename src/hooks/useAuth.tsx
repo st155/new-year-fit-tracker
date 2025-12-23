@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  signInWithMagicLink: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
 }
 
@@ -252,6 +253,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectUrl,
+      }
+    });
+
+    if (error) {
+      toast.error(`Ошибка отправки magic link: ${error.message}`);
+    } else {
+      toast.success(`Magic link отправлен на ${email}. Проверьте почту!`);
+    }
+
+    return { error };
+  };
+
   const value = {
     user,
     session,
@@ -259,6 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithMagicLink,
     signOut
   };
 
@@ -337,6 +358,7 @@ export const useAuth = () => {
       signUp: async () => ({ error: new Error('Auth not initialized') }),
       signIn: async () => ({ error: new Error('Auth not initialized') }),
       signInWithGoogle: async () => ({ error: new Error('Auth not initialized') }),
+      signInWithMagicLink: async () => ({ error: new Error('Auth not initialized') }),
       signOut: async () => ({ error: new Error('Auth not initialized') }),
       role: 'client' as const,
       roles: ['client'] as const,
