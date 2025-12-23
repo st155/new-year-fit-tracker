@@ -36,6 +36,9 @@ const AIChatContext = createContext<AIChatContextType | null>(null);
 
 export function AIChatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  
+  console.log('🔐 [AIChatProvider] User:', user?.id, user?.email);
+  
   const aiConversations = useAIConversations(user?.id);
 
   const value = useMemo(() => ({
