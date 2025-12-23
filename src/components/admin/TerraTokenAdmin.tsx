@@ -420,9 +420,47 @@ export function TerraTokenAdmin() {
               Сбросить все
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            <strong>Известные проблемные пользователи:</strong> Pavel Radaev, Anton, Aleksey Gubarev — используйте для них "Сбросить все", затем попросите переподключиться.
-          </p>
+          
+          {/* Quick Deauth for known problem users */}
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <p className="text-sm font-medium mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              Быстрый сброс для известных проблемных пользователей:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { name: 'Pavel Radaev', id: '932aab9d-a104-4ba2-885f-2dfdc5dd5df2' },
+                { name: 'Anton', id: 'f9e07829-5fd7-4e27-94eb-b3f5c49b4e7e' },
+                { name: 'Aleksey Gubarev', id: 'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae' },
+              ].map(user => (
+                <Button
+                  key={user.id}
+                  variant="outline"
+                  size="sm"
+                  className="border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => {
+                    deauthAllTerraUsers.mutateAsync({ targetUserId: user.id }).then(result => {
+                      if (result.total === 0) {
+                        toast.info(`У ${user.name} нет подключений в Terra API`, {
+                          description: 'Пользователь может попробовать подключиться заново'
+                        });
+                      } else {
+                        toast.success(`✅ ${user.name}: сброшено ${result.deauthenticated}/${result.total} подключений`, {
+                          description: 'Пользователь может переподключить интеграцию'
+                        });
+                      }
+                    }).catch(err => {
+                      toast.error(`❌ Ошибка для ${user.name}: ${err.message}`);
+                    });
+                  }}
+                  disabled={deauthAllTerraUsers.isPending}
+                >
+                  <Unplug className="h-3 w-3 mr-1" />
+                  {user.name}
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
