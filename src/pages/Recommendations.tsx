@@ -15,7 +15,8 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { useAllRecommendations, UnifiedRecommendation, RecommendationCategory } from '@/hooks/useAllRecommendations';
+import { useAllRecommendations, RecommendationCategory } from '@/hooks/useAllRecommendations';
+import { MergedRecommendation } from '@/lib/deduplication';
 import { CategorySection } from '@/components/recommendations/CategorySection';
 import { DoctorProtocolsSection } from '@/components/recommendations/DoctorProtocolsSection';
 import { RecommendationCard } from '@/components/recommendations/RecommendationCard';
@@ -67,7 +68,7 @@ const Recommendations = () => {
   const dismissItem = useDismissActionItem();
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
 
-  const handleAction = async (recommendation: UnifiedRecommendation) => {
+  const handleAction = async (recommendation: MergedRecommendation) => {
     if (recommendation.action?.type === 'add_to_stack' && recommendation.metadata.originalItem) {
       setActionPendingId(recommendation.id);
       try {
@@ -75,15 +76,22 @@ const Recommendations = () => {
           item: recommendation.metadata.originalItem, 
           addToStack: true 
         });
+        // If merged, dismiss all others in the group
+        if (recommendation.mergeCount > 1) {
+          for (const id of recommendation.mergedFrom.slice(1)) {
+            dismissItem.mutate(id);
+          }
+        }
       } finally {
         setActionPendingId(null);
       }
     }
   };
 
-  const handleDismiss = (recommendation: UnifiedRecommendation) => {
-    if (recommendation.metadata.originalItem) {
-      dismissItem.mutate(recommendation.metadata.originalItem.id);
+  const handleDismiss = (recommendation: MergedRecommendation) => {
+    // Dismiss all merged items
+    for (const id of recommendation.mergedFrom) {
+      dismissItem.mutate(id);
     }
   };
 
