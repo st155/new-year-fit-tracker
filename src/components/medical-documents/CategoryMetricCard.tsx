@@ -100,6 +100,8 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
                 showGrid: false,
                 showTooltip: false,
                 showLegend: false,
+                yDomain: 'dataMin-dataMax',
+                yPadding: 15,
               }}
               height={64}
             />

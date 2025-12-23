@@ -20,6 +20,8 @@ export interface ChartConfig {
   showTooltip?: boolean;
   showLegend?: boolean;
   label?: string;
+  yDomain?: 'auto' | 'dataMin-dataMax';
+  yPadding?: number; // Percentage padding from min/max (e.g., 15 = 15%)
 }
 
 interface ChartProps {
