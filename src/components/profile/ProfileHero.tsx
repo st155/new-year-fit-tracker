@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Trophy, Zap, Flame, Calendar, Plug, Pencil, Settings, LogOut, RotateCcw, Copy } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Trophy, Zap, Flame, Calendar, Plug, Pencil, Settings, LogOut, RotateCcw, Copy, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { format, parseISO } from 'date-fns';
@@ -28,6 +35,8 @@ interface ProfileHeroProps {
   onSignOut?: () => void;
   onResetOnboarding?: () => void;
   userId?: string;
+  trainerMode?: boolean;
+  onTrainerModeChange?: (value: boolean) => void;
 }
 
 export function ProfileHero({
@@ -42,6 +51,8 @@ export function ProfileHero({
   onSignOut,
   onResetOnboarding,
   userId,
+  trainerMode = false,
+  onTrainerModeChange,
 }: ProfileHeroProps) {
   const { levelInfo, isLoading } = useUserLevel();
 
@@ -84,6 +95,42 @@ export function ProfileHero({
       <CardContent className="p-6 relative">
         {/* Action Buttons - Top Right */}
         <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          {/* Trainer Mode Toggle - Most Prominent */}
+          {onTrainerModeChange && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full cursor-pointer transition-all ${
+                      trainerMode 
+                        ? 'bg-green-500/20 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                        : 'bg-muted/80 border border-border/50 backdrop-blur-sm hover:bg-muted'
+                    }`}
+                    animate={trainerMode ? { 
+                      boxShadow: ['0 0 15px rgba(34,197,94,0.3)', '0 0 25px rgba(34,197,94,0.5)', '0 0 15px rgba(34,197,94,0.3)']
+                    } : {}}
+                    transition={trainerMode ? { duration: 2, repeat: Infinity } : {}}
+                    onClick={() => onTrainerModeChange(!trainerMode)}
+                  >
+                    <Target className={`h-4 w-4 ${trainerMode ? 'text-green-500' : 'text-muted-foreground'}`} />
+                    <span className={`text-sm font-semibold hidden sm:inline ${trainerMode ? 'text-green-500' : 'text-muted-foreground'}`}>
+                      Тренер
+                    </span>
+                    <Switch 
+                      checked={trainerMode} 
+                      onCheckedChange={onTrainerModeChange}
+                      className="data-[state=checked]:bg-green-500"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px]">
+                  <p className="text-sm">Создавай свои челленджи и приглашай друзей!</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           {onEditProfile && (
             <Button
               variant="ghost"
