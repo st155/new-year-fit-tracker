@@ -19,11 +19,19 @@ export function useProtocolManagement() {
           *,
           protocol_items (
             *,
-            supplement_products (
+            supplement_products!protocol_items_product_id_fkey (
               name,
               brand,
               form,
+              image_url,
               servings_per_container
+            ),
+            linked_product:supplement_products!protocol_items_linked_product_id_fkey (
+              id,
+              name,
+              brand,
+              form,
+              image_url
             )
           )
         `)

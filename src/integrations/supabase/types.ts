@@ -4323,6 +4323,7 @@ export type Database = {
           daily_dosage: number
           id: string
           intake_times: string[]
+          linked_product_id: string | null
           notes: string | null
           position: number | null
           product_id: string
@@ -4335,6 +4336,7 @@ export type Database = {
           daily_dosage: number
           id?: string
           intake_times?: string[]
+          linked_product_id?: string | null
           notes?: string | null
           position?: number | null
           product_id: string
@@ -4347,6 +4349,7 @@ export type Database = {
           daily_dosage?: number
           id?: string
           intake_times?: string[]
+          linked_product_id?: string | null
           notes?: string | null
           position?: number | null
           product_id?: string
@@ -4355,6 +4358,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "protocol_items_linked_product_id_fkey"
+            columns: ["linked_product_id"]
+            isOneToOne: false
+            referencedRelation: "supplement_products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "protocol_items_product_id_fkey"
             columns: ["product_id"]
