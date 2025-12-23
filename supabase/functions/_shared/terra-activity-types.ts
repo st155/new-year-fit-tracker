@@ -7,6 +7,7 @@ export const TERRA_ACTIVITY_TYPES: Record<number, string> = {
   0: 'Активность',
   1: 'Бег',
   2: 'Велосипед',
+  8: 'Бег', // Garmin Running type
   15: 'Эллипсоид',
   16: 'Бейсбол',
   17: 'Баскетбол',

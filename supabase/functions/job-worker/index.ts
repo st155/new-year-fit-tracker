@@ -181,8 +181,15 @@ async function processTerraWebhookData(
       
       const durationMs = new Date(metadata.end_time).getTime() - new Date(metadata.start_time).getTime();
       const durationMinutes = Math.round(durationMs / 60000);
-      const distanceKm = activity.distance_data?.distance_meters 
-        ? Math.round(activity.distance_data.distance_meters / 10) / 100
+      
+      // Extract distance from multiple possible structures (Garmin uses summary.distance_meters)
+      const distanceMeters = 
+        activity.distance_data?.distance_meters ??
+        activity.distance_data?.summary?.distance_meters ??
+        activity.distance_data?.detailed?.distance_samples?.reduce((sum: number, s: any) => sum + (s.distance_meters || 0), 0) ??
+        null;
+      const distanceKm = distanceMeters 
+        ? Math.round(distanceMeters / 10) / 100
         : null;
 
       logger.info('🏋️ Attempting to insert workout', {
@@ -709,12 +716,18 @@ async function processTerraWebhookData(
         });
       }
 
-      // VO2Max
-      if (daily.vo2max_ml_per_min_per_kg !== undefined && daily.vo2max_ml_per_min_per_kg !== null) {
+      // VO2Max - check multiple paths (Garmin uses oxygen_data.vo2max_ml_per_min_per_kg)
+      const vo2max = 
+        daily.vo2max_ml_per_min_per_kg ??
+        daily.oxygen_data?.vo2max_ml_per_min_per_kg ??
+        daily.scores?.vo2_max ??
+        daily.fitness_level?.vo2_max;
+        
+      if (vo2max !== undefined && vo2max !== null && vo2max > 0) {
         metricsToInsert.push({
           metric_name: 'VO2Max',
           category: 'fitness',
-          value: daily.vo2max_ml_per_min_per_kg,
+          value: vo2max,
           measurement_date: date,
           source: provider,
           external_id: `terra_${provider}_vo2max_${date}`,

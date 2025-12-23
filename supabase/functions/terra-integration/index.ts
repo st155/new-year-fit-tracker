@@ -698,8 +698,15 @@ async function processTerraData(supabase: any, payload: any) {
           for (const workout of activity.active_durations) {
             const externalId = `terra_${provider}_${workout.start_time}`;
             const workoutType = mapTerraActivityType(workout.activity_type, provider);
-            const distanceKm = activity.distance_data?.distance_meters 
-              ? Math.round(activity.distance_data.distance_meters / 10) / 100  // Convert meters to km with 2 decimals
+            
+            // Extract distance from multiple possible structures (Garmin uses summary.distance_meters)
+            const distanceMeters = 
+              activity.distance_data?.distance_meters ??
+              activity.distance_data?.summary?.distance_meters ??
+              activity.distance_data?.detailed?.distance_samples?.reduce((sum: number, s: any) => sum + (s.distance_meters || 0), 0) ??
+              null;
+            const distanceKm = distanceMeters 
+              ? Math.round(distanceMeters / 10) / 100
               : null;
             
             const { error: workoutError } = await supabase.from('workouts').upsert({
@@ -1505,9 +1512,13 @@ async function processTerraData(supabase: any, payload: any) {
             }
           }
 
-          // VO2Max
-          const vo2max = daily.oxygen_data?.vo2max_ml_per_min_per_kg ?? daily.vo2max_ml_per_min_per_kg;
-          if (typeof vo2max === 'number') {
+          // VO2Max - check multiple paths (Garmin uses oxygen_data.vo2max_ml_per_min_per_kg)
+          const vo2max = 
+            daily.vo2max_ml_per_min_per_kg ??
+            daily.oxygen_data?.vo2max_ml_per_min_per_kg ??
+            daily.scores?.vo2_max ??
+            daily.fitness_level?.vo2_max;
+          if (typeof vo2max === 'number' && vo2max > 0) {
             const { data: vo2MetricId } = await supabase.rpc('create_or_get_metric', {
               p_user_id: userId,
               p_metric_name: 'VO2Max',
