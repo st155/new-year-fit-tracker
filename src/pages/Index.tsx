@@ -45,7 +45,6 @@ import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidg
 import { RetestRemindersWidget } from '@/components/dashboard/RetestRemindersWidget';
 import { UnitRecalculationWidget } from '@/components/dashboard/UnitRecalculationWidget';
 import { DailyOverviewWidget } from '@/components/dashboard/DailyOverviewWidget';
-import { IntegrationStaleReminder } from '@/components/integrations/IntegrationStaleReminder';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
@@ -262,7 +261,6 @@ const Index = () => {
   return (
     <AnimatedPage>
       <MobileDebugOverlay />
-      <IntegrationStaleReminder />
       <div className="min-h-screen bg-background p-4 md:p-6 pb-24 md:pb-6">
       <div className="max-w-7xl mx-auto space-y-3 md:space-y-4">
         {/* Compact Dashboard Header with AI Insights + Quality - Hidden on mobile */}
