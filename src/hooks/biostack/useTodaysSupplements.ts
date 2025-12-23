@@ -340,16 +340,15 @@ export function useTodaysSupplements() {
         
         // Fallback: if no existing log found, create a new one with status='taken'
         if (!updatedLogs || updatedLogs.length === 0) {
-          console.log(`No supplement_logs found, inserting new record for protocol_item_id=${item.sourceId}, time=${intakeTime}`);
-          const now = new Date();
+          console.log(`No supplement_logs found, inserting new record for protocol_item_id=${item.sourceId}, time=${intakeTime}, scheduleStart=${scheduleStart.toISOString()}`);
           const { error: insertError } = await supabase
             .from('supplement_logs')
             .insert({
               user_id: user.id,
               protocol_item_id: item.sourceId,
-              scheduled_time: now.toISOString(),
+              scheduled_time: scheduleStart.toISOString(), // Use scheduleStart to match the correct time slot
               status: 'taken',
-              taken_at: now.toISOString(),
+              taken_at: new Date().toISOString(),
               servings_taken: 1
             });
           
@@ -461,16 +460,15 @@ export function useTodaysSupplements() {
           
           // Fallback: if no existing log found, create a new one with status='taken'
           if (!updated || updated.length === 0) {
-            console.log(`No supplement_logs found for toggle, inserting new record for protocol_item_id=${item.sourceId}`);
-            const now = new Date();
+            console.log(`No supplement_logs found for toggle, inserting new record for protocol_item_id=${item.sourceId}, scheduleStart=${scheduleStart.toISOString()}`);
             const { error: insertError } = await supabase
               .from('supplement_logs')
               .insert({
                 user_id: user.id,
                 protocol_item_id: item.sourceId,
-                scheduled_time: now.toISOString(),
+                scheduled_time: scheduleStart.toISOString(), // Use scheduleStart to match the correct time slot
                 status: 'taken',
-                taken_at: now.toISOString(),
+                taken_at: new Date().toISOString(),
                 servings_taken: 1
               });
             
