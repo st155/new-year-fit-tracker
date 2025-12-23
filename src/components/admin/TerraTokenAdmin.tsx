@@ -49,7 +49,9 @@ import {
   User,
   AlertTriangle,
   History,
-  Skull
+  Skull,
+  Unplug,
+  Eye
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -59,7 +61,11 @@ import {
   useCreateTerraToken,
   useUpdateTerraToken,
   useDeleteTerraToken,
-  useRequestHistoricalData
+  useRequestHistoricalData,
+  useGetTerraUsers,
+  useDeauthTerraUser,
+  useDeauthAllTerraUsers,
+  TerraApiUser
 } from '@/hooks/admin/useTerraTokenAdmin';
 import {
   Tooltip,
@@ -85,14 +91,23 @@ export function TerraTokenAdmin() {
   const updateToken = useUpdateTerraToken();
   const deleteToken = useDeleteTerraToken();
   const requestHistorical = useRequestHistoricalData();
+  const getTerraUsers = useGetTerraUsers();
+  const deauthTerraUser = useDeauthTerraUser();
+  const deauthAllTerraUsers = useDeauthAllTerraUsers();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDead, setFilterDead] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showTerraUsersDialog, setShowTerraUsersDialog] = useState(false);
   const [selectedToken, setSelectedToken] = useState<typeof tokens extends (infer T)[] ? T : never | null>(null);
   const [requestingHistorical, setRequestingHistorical] = useState<string | null>(null);
+  
+  // Terra API users state
+  const [terraApiUsers, setTerraApiUsers] = useState<TerraApiUser[]>([]);
+  const [inspectingUserId, setInspectingUserId] = useState<string | null>(null);
+  const [inspectingUserName, setInspectingUserName] = useState<string>('');
 
   // Create form state
   const [newUserId, setNewUserId] = useState('');
@@ -186,6 +201,54 @@ export function TerraTokenAdmin() {
       await requestHistorical.mutateAsync({ terra_user_id: token.terra_user_id, days: 30 });
     } finally {
       setRequestingHistorical(null);
+    }
+  };
+
+  // Inspect Terra API users for a specific user
+  const handleInspectTerraUsers = async (token: NonNullable<typeof tokens>[0]) => {
+    setInspectingUserId(token.user_id);
+    setInspectingUserName(token.profile?.full_name || token.user_id.substring(0, 8));
+    setTerraApiUsers([]);
+    setShowTerraUsersDialog(true);
+    
+    try {
+      const result = await getTerraUsers.mutateAsync(token.user_id);
+      setTerraApiUsers(result.users);
+    } catch (err) {
+      console.error('Error fetching Terra users:', err);
+    }
+  };
+
+  // Deauth a specific Terra user
+  const handleDeauthSingleUser = async (terraUserId: string, provider: string) => {
+    try {
+      await deauthTerraUser.mutateAsync({ terraUserId, provider });
+      // Remove from local state
+      setTerraApiUsers(prev => prev.filter(u => u.user_id !== terraUserId));
+    } catch (err) {
+      console.error('Error deauthing Terra user:', err);
+    }
+  };
+
+  // Deauth all Terra users for this reference_id
+  const handleDeauthAllUsers = async (providerFilter?: string) => {
+    if (!inspectingUserId) return;
+    
+    try {
+      const result = await deauthAllTerraUsers.mutateAsync({ 
+        targetUserId: inspectingUserId, 
+        providerFilter 
+      });
+      
+      if (providerFilter) {
+        // Remove only matching provider from local state
+        setTerraApiUsers(prev => prev.filter(u => u.provider?.toUpperCase() !== providerFilter.toUpperCase()));
+      } else {
+        // Clear all
+        setTerraApiUsers([]);
+      }
+    } catch (err) {
+      console.error('Error deauthing all Terra users:', err);
     }
   };
 
@@ -392,6 +455,22 @@ export function TerraTokenAdmin() {
                           </Tooltip>
                         </TooltipProvider>
                       )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleInspectTerraUsers(token)}
+                            >
+                              <Eye className="h-4 w-4 text-primary" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Проверить Terra API</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -615,6 +694,114 @@ export function TerraTokenAdmin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Terra API Users Dialog */}
+      <Dialog open={showTerraUsersDialog} onOpenChange={setShowTerraUsersDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Terra API подключения: {inspectingUserName}
+            </DialogTitle>
+            <DialogDescription>
+              Подключения в Terra API для reference_id: <code className="bg-muted px-1 py-0.5 rounded text-xs">{inspectingUserId}</code>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {getTerraUsers.isPending ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Загрузка из Terra API...</span>
+              </div>
+            ) : terraApiUsers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-success" />
+                <p className="font-medium">Подключений не найдено</p>
+                <p className="text-sm">В Terra API нет подключений для этого пользователя</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Найдено {terraApiUsers.length} подключений
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeauthAllUsers()}
+                    disabled={deauthAllTerraUsers.isPending}
+                  >
+                    {deauthAllTerraUsers.isPending ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Unplug className="h-4 w-4 mr-2" />
+                    )}
+                    Сбросить все
+                  </Button>
+                </div>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Провайдер</TableHead>
+                      <TableHead>Terra User ID</TableHead>
+                      <TableHead>Последний вебхук</TableHead>
+                      <TableHead className="text-right">Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {terraApiUsers.map((terraUser) => (
+                      <TableRow key={terraUser.user_id}>
+                        <TableCell>
+                          <Badge variant="secondary">{terraUser.provider}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {terraUser.user_id.substring(0, 20)}...
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          {terraUser.last_webhook_update ? (
+                            <span className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(terraUser.last_webhook_update), { 
+                                addSuffix: true, 
+                                locale: ru 
+                              })}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeauthSingleUser(terraUser.user_id, terraUser.provider)}
+                            disabled={deauthTerraUser.isPending}
+                          >
+                            {deauthTerraUser.isPending ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Unplug className="h-4 w-4 text-destructive" />
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTerraUsersDialog(false)}>
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

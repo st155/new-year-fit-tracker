@@ -314,6 +314,245 @@ Deno.serve(async (req) => {
         );
       }
 
+      case 'get-terra-users': {
+        // Get all Terra users for a reference_id from Terra API
+        const { targetUserId } = data;
+
+        if (!targetUserId) {
+          return new Response(
+            JSON.stringify({ error: 'Missing targetUserId' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const terraApiKey = Deno.env.get('TERRA_API_KEY');
+        const terraDevId = Deno.env.get('TERRA_DEV_ID');
+
+        if (!terraApiKey || !terraDevId) {
+          return new Response(
+            JSON.stringify({ error: 'Terra API not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`🔍 Fetching Terra users for reference_id: ${targetUserId}`);
+
+        const terraResponse = await fetch(
+          `https://api.tryterra.co/v2/userInfo?reference_id=${targetUserId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'dev-id': terraDevId,
+              'x-api-key': terraApiKey,
+            }
+          }
+        );
+
+        if (!terraResponse.ok) {
+          const errorText = await terraResponse.text();
+          console.error('❌ Terra API error:', terraResponse.status, errorText);
+          return new Response(
+            JSON.stringify({ error: 'Terra API error', details: errorText }),
+            { status: terraResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const terraData = await terraResponse.json();
+        console.log(`✅ Found ${terraData.users?.length || 0} Terra users for reference_id: ${targetUserId}`);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            users: terraData.users || [],
+            reference_id: targetUserId
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'deauth-user': {
+        // Deauthenticate a specific Terra user
+        const { terraUserId, provider } = data;
+
+        if (!terraUserId) {
+          return new Response(
+            JSON.stringify({ error: 'Missing terraUserId' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const terraApiKey = Deno.env.get('TERRA_API_KEY');
+        const terraDevId = Deno.env.get('TERRA_DEV_ID');
+
+        if (!terraApiKey || !terraDevId) {
+          return new Response(
+            JSON.stringify({ error: 'Terra API not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`🔌 Deauthenticating Terra user: ${terraUserId}`);
+
+        const terraResponse = await fetch(
+          `https://api.tryterra.co/v2/auth/deauthenticateUser?user_id=${terraUserId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Accept': 'application/json',
+              'dev-id': terraDevId,
+              'x-api-key': terraApiKey,
+            }
+          }
+        );
+
+        if (!terraResponse.ok) {
+          const errorText = await terraResponse.text();
+          console.error('❌ Terra deauth error:', terraResponse.status, errorText);
+          return new Response(
+            JSON.stringify({ error: 'Terra deauth error', details: errorText }),
+            { status: terraResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`✅ Deauthenticated Terra user: ${terraUserId}`);
+
+        // Also delete from local terra_tokens if exists
+        const { error: deleteError } = await serviceClient
+          .from('terra_tokens')
+          .delete()
+          .eq('terra_user_id', terraUserId);
+
+        if (deleteError) {
+          console.warn('⚠️ Could not delete local token:', deleteError);
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, terraUserId }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'deauth-all': {
+        // Deauthenticate all Terra connections for a user by reference_id
+        const { targetUserId, providerFilter } = data;
+
+        if (!targetUserId) {
+          return new Response(
+            JSON.stringify({ error: 'Missing targetUserId' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const terraApiKey = Deno.env.get('TERRA_API_KEY');
+        const terraDevId = Deno.env.get('TERRA_DEV_ID');
+
+        if (!terraApiKey || !terraDevId) {
+          return new Response(
+            JSON.stringify({ error: 'Terra API not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`🔄 Deauth all Terra users for reference_id: ${targetUserId}, filter: ${providerFilter || 'ALL'}`);
+
+        // 1. Get all Terra users for this reference_id
+        const usersResponse = await fetch(
+          `https://api.tryterra.co/v2/userInfo?reference_id=${targetUserId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'dev-id': terraDevId,
+              'x-api-key': terraApiKey,
+            }
+          }
+        );
+
+        if (!usersResponse.ok) {
+          const errorText = await usersResponse.text();
+          console.error('❌ Terra API error:', usersResponse.status, errorText);
+          return new Response(
+            JSON.stringify({ error: 'Failed to get Terra users', details: errorText }),
+            { status: usersResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const usersData = await usersResponse.json();
+        const users = usersData.users || [];
+        
+        console.log(`📋 Found ${users.length} Terra users to potentially deauth`);
+
+        // 2. Deauthenticate each matching user
+        const results: Array<{ terraUserId: string; provider: string; success: boolean; error?: string }> = [];
+        
+        for (const terraUser of users) {
+          // Filter by provider if specified
+          if (providerFilter && terraUser.provider?.toUpperCase() !== providerFilter.toUpperCase()) {
+            console.log(`⏭️ Skipping ${terraUser.provider} (filter: ${providerFilter})`);
+            continue;
+          }
+
+          try {
+            const deauthResponse = await fetch(
+              `https://api.tryterra.co/v2/auth/deauthenticateUser?user_id=${terraUser.user_id}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Accept': 'application/json',
+                  'dev-id': terraDevId,
+                  'x-api-key': terraApiKey,
+                }
+              }
+            );
+
+            if (deauthResponse.ok) {
+              console.log(`✅ Deauthenticated: ${terraUser.provider} (${terraUser.user_id})`);
+              results.push({ terraUserId: terraUser.user_id, provider: terraUser.provider, success: true });
+            } else {
+              const errorText = await deauthResponse.text();
+              console.error(`❌ Failed to deauth ${terraUser.provider}:`, errorText);
+              results.push({ terraUserId: terraUser.user_id, provider: terraUser.provider, success: false, error: errorText });
+            }
+          } catch (err) {
+            console.error(`❌ Error deauthing ${terraUser.provider}:`, err);
+            results.push({ terraUserId: terraUser.user_id, provider: terraUser.provider, success: false, error: String(err) });
+          }
+        }
+
+        // 3. Delete local tokens
+        let deleteQuery = serviceClient
+          .from('terra_tokens')
+          .delete()
+          .eq('user_id', targetUserId);
+        
+        if (providerFilter) {
+          deleteQuery = deleteQuery.eq('provider', providerFilter.toUpperCase());
+        }
+
+        const { error: deleteError, count: deletedCount } = await deleteQuery;
+
+        if (deleteError) {
+          console.warn('⚠️ Error deleting local tokens:', deleteError);
+        } else {
+          console.log(`🗑️ Deleted ${deletedCount || 0} local tokens`);
+        }
+
+        const successCount = results.filter(r => r.success).length;
+        console.log(`✅ Deauth complete: ${successCount}/${results.length} successful`);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            deauthenticated: successCount,
+            total: results.length,
+            results,
+            localTokensDeleted: deletedCount || 0
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: `Unknown action: ${action}` }),
