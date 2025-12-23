@@ -64,40 +64,54 @@ export function AddClientToPlanDialog({
 
     setLoading(true);
     try {
-      // Use RPC or simpler query to avoid type issues
-      const response = await supabase
-        .from('trainer_clients')
-        .select('client_id')
-        .eq('trainer_id', user.id)
-        .eq('status', 'active');
-      
-      const trainerClients = response.data;
-      const tcError = response.error;
-
-      if (tcError) throw tcError;
-
-      const clientIds = (trainerClients || []).map((tc: { client_id: string }) => tc.client_id);
-      
-      if (clientIds.length === 0) {
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-
-      // Then get the profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, username, full_name, avatar_url')
-        .in('user_id', clientIds);
-
-      if (profilesError) throw profilesError;
-
-      setClients((profiles || []) as Client[]);
+      await loadClientsDirectly();
     } catch (error) {
       console.error('Error loading clients:', error);
       toast.error('Не удалось загрузить клиентов');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadClientsDirectly = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Get client IDs first
+      const tcResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL || 'https://d.elite10.club'}/rest/v1/trainer_clients?trainer_id=eq.${user.id}&status=eq.active&select=client_id`,
+        {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVleWttbXptZ3V6anBwZHVkdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTAwNjEsImV4cCI6MjA3NDAyNjA2MX0.nSc_MFoU6rAsyw0c8Mv-BD0MPuGAsuDXUckvMUyYX94',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+        }
+      );
+      
+      const tcData: { client_id: string }[] = await tcResponse.json();
+      const clientIds = tcData.map(tc => tc.client_id);
+      
+      if (clientIds.length === 0) {
+        setClients([]);
+        return;
+      }
+
+      // Get profiles
+      const profilesResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL || 'https://d.elite10.club'}/rest/v1/profiles?user_id=in.(${clientIds.join(',')})&select=user_id,username,full_name,avatar_url`,
+        {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVleWttbXptZ3V6anBwZHVkdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTAwNjEsImV4cCI6MjA3NDAyNjA2MX0.nSc_MFoU6rAsyw0c8Mv-BD0MPuGAsuDXUckvMUyYX94',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+        }
+      );
+      
+      const profilesData: Client[] = await profilesResponse.json();
+      setClients(profilesData || []);
+    } catch (error) {
+      console.error('Error in fallback client load:', error);
+      toast.error('Не удалось загрузить клиентов');
     }
   };
 
@@ -125,9 +139,10 @@ export function AddClientToPlanDialog({
       onOpenChange(false);
       setSelectedClientId(null);
       setSearchQuery('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error assigning client:', error);
-      toast.error(error.message || 'Не удалось добавить клиента');
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось добавить клиента';
+      toast.error(errorMessage);
     } finally {
       setAssigning(false);
     }
