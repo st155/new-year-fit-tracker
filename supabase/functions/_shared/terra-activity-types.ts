@@ -34,7 +34,7 @@ export const TERRA_ACTIVITY_TYPES: Record<number, string> = {
   42: 'Танцы',
   43: 'Пилатес',
   44: 'Йога',
-  45: 'Силовая тренировка',
+  45: 'Медитация', // Was incorrectly mapped - 45 is Meditation in Whoop
   47: 'Лыжные гонки',
   48: 'Кроссфит',
   49: 'Дуатлон',
