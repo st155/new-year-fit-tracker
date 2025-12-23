@@ -10,7 +10,8 @@ import {
   Utensils,
   Info,
 } from 'lucide-react';
-import { UnifiedRecommendation, RecommendationCategory } from '@/hooks/useAllRecommendations';
+import { RecommendationCategory } from '@/hooks/useAllRecommendations';
+import { MergedRecommendation } from '@/lib/deduplication';
 import { RecommendationCard } from './RecommendationCard';
 import { cn } from '@/lib/utils';
 
@@ -74,9 +75,9 @@ const CATEGORY_CONFIG: Record<RecommendationCategory, {
 
 interface CategorySectionProps {
   category: RecommendationCategory;
-  recommendations: UnifiedRecommendation[];
-  onAction?: (recommendation: UnifiedRecommendation) => void;
-  onDismiss?: (recommendation: UnifiedRecommendation) => void;
+  recommendations: MergedRecommendation[];
+  onAction?: (recommendation: MergedRecommendation) => void;
+  onDismiss?: (recommendation: MergedRecommendation) => void;
   actionPendingId?: string | null;
   showHeader?: boolean;
 }

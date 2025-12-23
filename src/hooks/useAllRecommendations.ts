@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useDoctorActionItems, DoctorActionItem } from '@/hooks/biostack/useDoctorActionItems';
 import { useMetricsRecommendations } from '@/hooks/useMetricsRecommendations';
 import { useAuth } from '@/hooks/useAuth';
+import { mergeRecommendations, MergedRecommendation } from '@/lib/deduplication';
 
 export type RecommendationCategory = 'sleep' | 'exercise' | 'supplement' | 'checkup' | 'lifestyle' | 'nutrition';
 export type RecommendationSource = 'doctor' | 'ai' | 'device' | 'manual';
@@ -110,16 +111,11 @@ export function useAllRecommendations() {
       recommendations.push(...metricsRecommendations);
     }
     
-    // Deduplicate by id
-    const uniqueRecommendations = recommendations.reduce((acc, rec) => {
-      if (!acc.find(r => r.id === rec.id)) {
-        acc.push(rec);
-      }
-      return acc;
-    }, [] as UnifiedRecommendation[]);
+    // Apply smart deduplication - merge similar recommendations
+    const mergedRecommendations = mergeRecommendations(recommendations);
     
     // Sort by priority and date
-    return uniqueRecommendations.sort((a, b) => {
+    return mergedRecommendations.sort((a, b) => {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       if (priorityDiff !== 0) return priorityDiff;
@@ -128,7 +124,7 @@ export function useAllRecommendations() {
   }, [doctorItems, metricsRecommendations]);
   
   const groupedByCategory = useMemo(() => {
-    const groups: Record<RecommendationCategory, UnifiedRecommendation[]> = {
+    const groups: Record<RecommendationCategory, MergedRecommendation[]> = {
       sleep: [],
       exercise: [],
       supplement: [],
