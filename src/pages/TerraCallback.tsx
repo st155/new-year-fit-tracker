@@ -411,9 +411,17 @@ export default function TerraCallback() {
 
           {status === 'error' && message.includes('истекла') && (
             <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-              <AlertDescription className="text-sm">
-                <strong>Совет:</strong> После нажатия "Попробовать снова" завершите 
-                авторизацию в приложении устройства в течение 5 минут.
+              <AlertDescription className="text-sm space-y-3">
+                <p className="font-semibold">Как исправить:</p>
+                <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
+                  <li>Откройте приложение WHOOP/Oura/Garmin на телефоне</li>
+                  <li>Выйдите из аккаунта и войдите заново</li>
+                  <li>Вернитесь сюда и нажмите "Попробовать снова"</li>
+                  <li>Завершите авторизацию <strong>в течение 5 минут</strong></li>
+                </ol>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Если проблема повторяется, попробуйте подключиться с другого браузера или устройства.
+                </p>
               </AlertDescription>
             </Alert>
           )}

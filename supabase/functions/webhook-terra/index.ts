@@ -571,6 +571,63 @@ Deno.serve(
       );
     }
 
+    // Handle deauth webhook (Terra sends this when user disconnects or token is revoked)
+    if (payload.type === 'deauth') {
+      const terraUserId = payload.user?.user_id;
+      const provider = payload.user?.provider?.toUpperCase();
+      
+      logger.info('deauth webhook received', {
+        terraUserId,
+        provider,
+        referenceId: payload.user?.reference_id,
+      });
+
+      if (terraUserId) {
+        try {
+          // Deactivate the token
+          const { data: updated, error: updateError } = await supabase
+            .from('terra_tokens')
+            .update({ 
+              is_active: false, 
+              updated_at: new Date().toISOString() 
+            })
+            .eq('terra_user_id', terraUserId)
+            .select('user_id, provider');
+
+          if (updateError) {
+            logger.error('Failed to deactivate token on deauth', {
+              error: updateError.message,
+              terraUserId,
+            });
+          } else if (updated && updated.length > 0) {
+            logger.info('✅ Token deactivated via deauth webhook', {
+              terraUserId,
+              provider: updated[0].provider,
+              userId: updated[0].user_id,
+            });
+          } else {
+            logger.warn('No active token found to deactivate', { terraUserId });
+          }
+        } catch (e) {
+          logger.error('Exception processing deauth webhook', {
+            error: e instanceof Error ? e.message : String(e),
+            terraUserId,
+          });
+        }
+      }
+
+      const response = { success: true, message: 'deauth processed' };
+      await idempotency.storeResult(webhookId, response);
+      
+      return new Response(
+        JSON.stringify(response),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Handle user_reauth webhook (Terra sends this when user reconnects with different terra_user_id)
     if (payload.type === 'user_reauth') {
       logger.info('user_reauth webhook received', {
