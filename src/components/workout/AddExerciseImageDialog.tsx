@@ -17,6 +17,7 @@ interface WgerExerciseImage {
   id: number;
   image: string;
   is_main: boolean;
+  name?: string;
 }
 
 interface AddExerciseImageDialogProps {
@@ -49,43 +50,26 @@ export default function AddExerciseImageDialog({
     setSearchResults([]);
     
     try {
-      // Search for exercises by name
-      const exerciseResponse = await fetch(
-        `https://wger.de/api/v2/exercise/?name=${encodeURIComponent(searchTerm)}&language=2&limit=10`
+      // Use Search API for proper exercise search with images
+      const response = await fetch(
+        `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(searchTerm)}&language=2`
       );
-      const exerciseData = await exerciseResponse.json();
+      const data = await response.json();
       
-      if (exerciseData.results && exerciseData.results.length > 0) {
-        // Get exercise base IDs
-        const exerciseBaseIds = exerciseData.results
-          .map((e: any) => e.exercise_base)
-          .filter(Boolean);
+      if (data.suggestions && data.suggestions.length > 0) {
+        // Transform results to our format - only include those with images
+        const images: WgerExerciseImage[] = data.suggestions
+          .filter((item: any) => item.data?.image)
+          .map((item: any) => ({
+            id: item.data.id,
+            image: item.data.image.startsWith('http') 
+              ? item.data.image 
+              : `https://wger.de${item.data.image}`,
+            is_main: true,
+            name: item.data.name,
+          }));
         
-        if (exerciseBaseIds.length > 0) {
-          // Fetch images for these exercises
-          const imageResponse = await fetch(
-            `https://wger.de/api/v2/exerciseimage/?exercise_base=${exerciseBaseIds.join(',')}&limit=20`
-          );
-          const imageData = await imageResponse.json();
-          
-          if (imageData.results) {
-            setSearchResults(imageData.results);
-          }
-        }
-      }
-      
-      // Also try direct image search
-      const directImageResponse = await fetch(
-        `https://wger.de/api/v2/exerciseimage/?limit=30`
-      );
-      const directImageData = await directImageResponse.json();
-      
-      if (directImageData.results && searchResults.length === 0) {
-        // Filter by checking if any results match common exercise patterns
-        const filtered = directImageData.results.slice(0, 12);
-        if (filtered.length > 0 && searchResults.length === 0) {
-          setSearchResults(filtered);
-        }
+        setSearchResults(images);
       }
     } catch (error) {
       console.error('Error searching Wger:', error);
