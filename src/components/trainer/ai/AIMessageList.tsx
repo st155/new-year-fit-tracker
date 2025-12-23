@@ -142,15 +142,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   isOptimistic && "opacity-60",
                   isFailed && "opacity-40 border-2 border-destructive"
                 )}>
-                  {/* Show preparing indicator for assistant messages */}
-                  {!isUser && (msg.metadata?.preparingPlan || msg.metadata?.status === 'preparing') && (
-                    <div className="flex items-center gap-2 py-1 mb-2">
-                      <Sparkles className="h-4 w-4 animate-pulse text-purple-500" />
-                      <span className="text-sm text-muted-foreground">
-                        Готовлю структурированный план...
-                      </span>
-                    </div>
-                  )}
+                  {/* Note: preparing state removed - cards now appear immediately */}
                   
                   {/* Show tool results if available */}
                   {msg.metadata?.autoExecuted && msg.metadata?.results && (
@@ -183,9 +175,8 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     </Alert>
                   )}
                   
-                  {/* Message content - hide for preparing messages that are just loading */}
-                  {!(msg.metadata?.preparingPlan || msg.metadata?.status === 'preparing') && (
-                    <div className={cn(
+                  {/* Message content */}
+                  <div className={cn(
                       "prose prose-sm dark:prose-invert max-w-none",
                       isUser && "prose-invert"
                     )}>
@@ -246,7 +237,6 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                         {msg.content}
                       </ReactMarkdown>
                     </div>
-                  )}
                   
                   {/* Pending Action Indicator */}
                   {!isUser && msg.metadata?.pendingActionId && (
@@ -274,12 +264,10 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   )}
                 </div>
 
-                {/* Pending Action Card - shown after AI message */}
+                {/* Pending Action Card - shown immediately after AI message */}
                 {!isUser && msg.metadata?.pendingActionId && (() => {
                   const pendingAction = pendingActions.find(pa => pa.id === msg.metadata?.pendingActionId);
                   if (!pendingAction) return null;
-                  
-                  const isPreparing = pendingAction.status === 'preparing';
                   
                   return (
                     <motion.div
@@ -287,23 +275,14 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                       animate={{ opacity: 1, y: 0 }}
                       className="ml-12 mt-2"
                     >
-                      <Card className="border-amber-500/50 bg-amber-500/10 overflow-hidden">
+                      <Card className="border-green-500/50 bg-green-500/5 overflow-hidden">
                         <div className="p-4 space-y-3">
                           <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                              isPreparing ? "bg-amber-500/20 animate-pulse" : "bg-amber-500/20"
-                            )}>
-                              {isPreparing ? (
-                                <Loader2 className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-spin" />
-                              ) : (
-                                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                              )}
+                            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-green-500/20">
+                              <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="flex-1 space-y-1">
-                              <div className="font-medium text-sm">
-                                {isPreparing ? 'Готовлю план действий...' : 'План действий'}
-                              </div>
+                              <div className="font-medium text-sm">Готово к выполнению</div>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {pendingAction.action_plan}
                               </p>
@@ -314,18 +293,13 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                             <Button
                               size="sm"
                               onClick={() => handleExecute(pendingAction.id)}
-                              disabled={executing || isPreparing}
+                              disabled={executing}
                               className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                             >
                               {executing ? (
                                 <>
                                   <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                                   Выполняю...
-                                </>
-                              ) : isPreparing ? (
-                                <>
-                                  <Clock className="h-3 w-3 mr-2" />
-                                  Подготовка...
                                 </>
                               ) : (
                                 <>
@@ -338,7 +312,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                               size="sm"
                               variant="outline"
                               onClick={() => rejectAction(pendingAction.id)}
-                              disabled={executing || isPreparing}
+                              disabled={executing}
                               className="flex-1 border-red-500/50 text-red-600 hover:bg-red-500/10 disabled:opacity-50"
                             >
                               <XCircle className="h-3 w-3 mr-2" />

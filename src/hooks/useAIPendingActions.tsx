@@ -10,7 +10,7 @@ export interface AIPendingAction {
   action_type: string;
   action_plan: string;
   action_data: any;
-  status: 'pending' | 'preparing' | 'approved' | 'rejected' | 'executed';
+  status: 'pending' | 'approved' | 'rejected' | 'executed';
   executed_at: string | null;
   created_at: string;
 }
@@ -30,7 +30,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
         .from('ai_pending_actions')
         .select('*')
         .eq('trainer_id', userId)
-        .in('status', ['pending', 'preparing'])
+        .in('status', ['pending'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
