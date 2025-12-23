@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,8 +41,9 @@ export default function AddExerciseImageDialog({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const searchWger = async () => {
-    if (!searchQuery.trim()) return;
+  const searchWger = async (query?: string) => {
+    const searchTerm = query || searchQuery;
+    if (!searchTerm.trim()) return;
     
     setIsSearching(true);
     setSearchResults([]);
@@ -50,7 +51,7 @@ export default function AddExerciseImageDialog({
     try {
       // Search for exercises by name
       const exerciseResponse = await fetch(
-        `https://wger.de/api/v2/exercise/?name=${encodeURIComponent(searchQuery)}&language=2&limit=10`
+        `https://wger.de/api/v2/exercise/?name=${encodeURIComponent(searchTerm)}&language=2&limit=10`
       );
       const exerciseData = await exerciseResponse.json();
       
@@ -97,6 +98,21 @@ export default function AddExerciseImageDialog({
       setIsSearching(false);
     }
   };
+
+  // Автоматический поиск при открытии диалога
+  const hasSearchedRef = useRef(false);
+  
+  useEffect(() => {
+    if (open && exerciseName && activeTab === 'search' && !hasSearchedRef.current) {
+      hasSearchedRef.current = true;
+      setSearchQuery(exerciseName);
+      searchWger(exerciseName);
+    }
+    
+    if (!open) {
+      hasSearchedRef.current = false;
+    }
+  }, [open, exerciseName, activeTab]);
 
   const handleUrlSubmit = () => {
     if (!urlInput.trim()) return;
@@ -172,7 +188,7 @@ export default function AddExerciseImageDialog({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchWger()}
               />
-              <Button onClick={searchWger} disabled={isSearching}>
+              <Button onClick={() => searchWger()} disabled={isSearching}>
                 {isSearching ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
