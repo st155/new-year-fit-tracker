@@ -10,7 +10,7 @@ import { AIStackGenerator } from "./AIStackGenerator";
 import { CompactSupplementChip } from "./CompactSupplementChip";
 import { ProtocolManagementModal } from "./ProtocolManagementModal";
 import { ProductPhotoUploader } from "./ProductPhotoUploader";
-
+import { cn } from "@/lib/utils";
 const TIME_GROUPS = [
   { 
     key: 'morning', 
@@ -155,6 +155,8 @@ export function TodaysSupplements() {
         {TIME_GROUPS.map(timeGroup => {
           const items = groupedSupplements[timeGroup.key as keyof typeof groupedSupplements];
           const pendingItems = items.filter(item => !item.takenToday);
+          const takenItems = items.filter(item => item.takenToday);
+          const allTaken = pendingItems.length === 0 && items.length > 0;
           
           if (items.length === 0) return null;
 
@@ -167,16 +169,36 @@ export function TodaysSupplements() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="bg-neutral-950 border border-border/50 overflow-hidden">
+              <Card className={cn(
+                "bg-neutral-950 border overflow-hidden",
+                allTaken ? "border-green-500/30" : "border-border/50"
+              )}>
                 {/* Time Header */}
-                <div className="px-6 py-4 border-b border-border/50 bg-neutral-900/50 flex items-center justify-between">
+                <div className={cn(
+                  "px-6 py-4 border-b flex items-center justify-between",
+                  allTaken 
+                    ? "border-green-500/20 bg-green-500/5" 
+                    : "border-border/50 bg-neutral-900/50"
+                )}>
                   <div className="flex items-center gap-3">
-                    <Icon className={`h-5 w-5 ${timeGroup.color}`} />
-                    <h3 className="font-bold text-foreground uppercase tracking-wider text-sm">
+                    <Icon className={cn(
+                      "h-5 w-5",
+                      allTaken ? "text-green-500" : timeGroup.color
+                    )} />
+                    <h3 className={cn(
+                      "font-bold uppercase tracking-wider text-sm",
+                      allTaken ? "text-green-500" : "text-foreground"
+                    )}>
                       {timeGroup.label}
                     </h3>
-                    <Badge variant="outline" className="text-xs">
-                      {items.length}
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-xs",
+                        allTaken && "border-green-500/30 text-green-500"
+                      )}
+                    >
+                      {takenItems.length}/{items.length}
                     </Badge>
                   </div>
                   {pendingItems.length > 0 ? (
@@ -185,9 +207,19 @@ export function TodaysSupplements() {
                       variant="outline"
                       onClick={() => handleTakeAllTime(timeGroup.key)}
                       disabled={logIntakeMutation.isPending}
-                      className="text-xs border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50 disabled:opacity-50"
+                      className={cn(
+                        "text-xs disabled:opacity-50",
+                        takenItems.length > 0 
+                          ? "border-green-500/50 bg-green-500/10 hover:bg-green-500/20 text-green-500" 
+                          : "border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
+                      )}
                     >
-                      {logIntakeMutation.isPending ? 'Сохранение...' : `Принять всё (${timeGroup.label})`}
+                      {logIntakeMutation.isPending 
+                        ? 'Сохранение...' 
+                        : takenItems.length > 0 
+                          ? `Принять остальные (${pendingItems.length})`
+                          : `Принять всё (${items.length})`
+                      }
                     </Button>
                   ) : (
                     <Button
