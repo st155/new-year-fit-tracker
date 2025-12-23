@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDoctorActionItems, DoctorActionItem } from '@/hooks/biostack/useDoctorActionItems';
-import { useUserWeeklySleep } from '@/hooks/useUserWeeklySleep';
+import { useMetricsRecommendations } from '@/hooks/useMetricsRecommendations';
 import { useAuth } from '@/hooks/useAuth';
 
 export type RecommendationCategory = 'sleep' | 'exercise' | 'supplement' | 'checkup' | 'lifestyle' | 'nutrition';
@@ -91,60 +91,10 @@ function mapDoctorItemToRecommendation(item: DoctorActionItem): UnifiedRecommend
   };
 }
 
-function generateSleepRecommendations(sleepData: { date: string; value: number }[] | undefined): UnifiedRecommendation[] {
-  if (!sleepData || sleepData.length < 3) return [];
-  
-  const recommendations: UnifiedRecommendation[] = [];
-  const recentData = sleepData.slice(-3);
-  const avgRecovery = recentData.reduce((sum, d) => sum + d.value, 0) / recentData.length;
-  
-  // Low recovery recommendation
-  if (avgRecovery < 60) {
-    recommendations.push({
-      id: 'sleep-recovery-low',
-      category: 'sleep',
-      source: 'device',
-      title: 'Увеличьте время сна',
-      description: `Recovery ${Math.round(avgRecovery)}% за последние 3 дня. Рекомендуем добавить 30-60 минут сна.`,
-      priority: avgRecovery < 40 ? 'high' : 'medium',
-      status: 'pending',
-      actionable: false,
-      metadata: {
-        deviceSource: 'whoop',
-        confidence: 0.85,
-      },
-      createdAt: new Date().toISOString(),
-    });
-  }
-  
-  // Check for declining trend
-  if (recentData.length >= 3) {
-    const isDecreasing = recentData[0].value > recentData[1].value && recentData[1].value > recentData[2].value;
-    if (isDecreasing && recentData[2].value < 70) {
-      recommendations.push({
-        id: 'sleep-trend-declining',
-        category: 'sleep',
-        source: 'ai',
-        title: 'Проверьте качество сна',
-        description: 'Тренд показывает снижение recovery. Рекомендуем проверить режим сна и уровень стресса.',
-        priority: 'medium',
-        status: 'pending',
-        actionable: false,
-        metadata: {
-          confidence: 0.75,
-        },
-        createdAt: new Date().toISOString(),
-      });
-    }
-  }
-  
-  return recommendations;
-}
-
 export function useAllRecommendations() {
   const { user } = useAuth();
   const { data: doctorItems, isLoading: isDoctorLoading } = useDoctorActionItems();
-  const { data: sleepData, isLoading: isSleepLoading } = useUserWeeklySleep(user?.id);
+  const { data: metricsRecommendations, isLoading: isMetricsLoading } = useMetricsRecommendations(user?.id);
   
   const allRecommendations = useMemo(() => {
     const recommendations: UnifiedRecommendation[] = [];
@@ -155,18 +105,27 @@ export function useAllRecommendations() {
       recommendations.push(...doctorRecommendations);
     }
     
-    // Generate sleep recommendations from device data
-    const sleepRecommendations = generateSleepRecommendations(sleepData || undefined);
-    recommendations.push(...sleepRecommendations);
+    // Add metrics-based recommendations from device data
+    if (metricsRecommendations) {
+      recommendations.push(...metricsRecommendations);
+    }
+    
+    // Deduplicate by id
+    const uniqueRecommendations = recommendations.reduce((acc, rec) => {
+      if (!acc.find(r => r.id === rec.id)) {
+        acc.push(rec);
+      }
+      return acc;
+    }, [] as UnifiedRecommendation[]);
     
     // Sort by priority and date
-    return recommendations.sort((a, b) => {
+    return uniqueRecommendations.sort((a, b) => {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       if (priorityDiff !== 0) return priorityDiff;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [doctorItems, sleepData]);
+  }, [doctorItems, metricsRecommendations]);
   
   const groupedByCategory = useMemo(() => {
     const groups: Record<RecommendationCategory, UnifiedRecommendation[]> = {
@@ -198,6 +157,6 @@ export function useAllRecommendations() {
     recommendations: allRecommendations,
     groupedByCategory,
     stats,
-    isLoading: isDoctorLoading || isSleepLoading,
+    isLoading: isDoctorLoading || isMetricsLoading,
   };
 }
