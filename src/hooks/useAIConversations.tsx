@@ -143,7 +143,27 @@ export const useAIConversations = (userId: string | undefined) => {
     contextClientId?: string,
     autoExecute: boolean = false
   ) => {
-    if (!userId) return null;
+    console.log('🚀 [sendMessage] Called with:', { 
+      userId, 
+      hasContent: !!message.trim(),
+      contextMode,
+      conversationId: currentConversation?.id 
+    });
+    
+    if (!userId) {
+      console.error('❌ [sendMessage] userId is undefined, aborting');
+      showToast({
+        title: 'Ошибка авторизации',
+        description: 'Войдите в систему для использования AI',
+        variant: 'destructive'
+      });
+      return null;
+    }
+    
+    if (!message.trim()) {
+      console.warn('⚠️ [sendMessage] Empty message, aborting');
+      return null;
+    }
 
     // Reset sending state first to clear any stuck states
     setSending(false);
