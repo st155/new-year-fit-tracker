@@ -220,49 +220,70 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
     metrics = Array.from(biomarkerGroups.entries()).map(([biomarkerId, results]) => {
       const latest = results[0];
       const biomarker = latest.biomarker_master;
+      const refRanges = biomarker.reference_ranges;
       
-      // Calculate history and trends (only for quantitative data)
-      // Keep chronological order (oldest first) for chart display
-      const history = results
-        .filter(r => r.normalized_value !== null)
-        .map(r => ({
-          date: r.test_date,
-          value: r.normalized_value,
-        }))
-        .reverse(); // Reverse to get chronological order (oldest → newest)
+      // Filter outliers - values that are way outside reference range are likely wrong biomarker assignments
+      const refMin = refRanges?.min ?? 0;
+      const refMax = refRanges?.max ?? Infinity;
+      const tolerance = 5; // Allow 5x outside reference range
+      
+      const validResults = results.filter(r => {
+        if (r.normalized_value === null) return false;
+        const value = r.normalized_value;
+        // Filter out extreme outliers that are likely misassigned values
+        return value >= 0 && value <= refMax * tolerance;
+      });
 
-      const values = history.map(h => h.value).filter(v => v !== null);
-      const trend = values.length > 0 ? {
-        min: Math.min(...values),
-        avg: values.reduce((a, b) => a + b, 0) / values.length,
-        max: Math.max(...values),
+      // Aggregate by date - group all values for the same date and take average
+      const historyMap = new Map<string, number[]>();
+      validResults.forEach(r => {
+        if (r.normalized_value !== null) {
+          const existing = historyMap.get(r.test_date) || [];
+          existing.push(r.normalized_value);
+          historyMap.set(r.test_date, existing);
+        }
+      });
+
+      // Convert to array with averaged values, sorted chronologically
+      const history = Array.from(historyMap.entries())
+        .map(([date, values]) => ({
+          date,
+          value: values.reduce((a, b) => a + b, 0) / values.length, // average
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date)); // chronological order
+
+      const aggregatedValues = history.map(h => h.value);
+      const trend = aggregatedValues.length > 0 ? {
+        min: Math.min(...aggregatedValues),
+        avg: aggregatedValues.reduce((a, b) => a + b, 0) / aggregatedValues.length,
+        max: Math.max(...aggregatedValues),
       } : { min: 0, avg: 0, max: 0 };
 
-      // Determine status
-      const refRanges = biomarker.reference_ranges;
+      // Determine status using the latest valid value
       let status: CategoryMetric['status'] = 'normal';
+      const latestValue = history.length > 0 ? history[history.length - 1].value : null;
       
-      if (latest.normalized_value !== null && refRanges) {
-        if (latest.normalized_value < refRanges.min) status = 'warning';
-        else if (latest.normalized_value > refRanges.max) status = 'critical';
+      if (latestValue !== null && refRanges) {
+        if (latestValue < refRanges.min) status = 'warning';
+        else if (latestValue > refRanges.max) status = 'critical';
         else if (refRanges.optimal_min && refRanges.optimal_max &&
-                 latest.normalized_value >= refRanges.optimal_min && 
-                 latest.normalized_value <= refRanges.optimal_max) {
+                 latestValue >= refRanges.optimal_min && 
+                 latestValue <= refRanges.optimal_max) {
           status = 'optimal';
         }
       }
 
       return {
         id: biomarkerId,
-        biomarkerId: biomarkerId, // Явно указываем ID биомаркера
+        biomarkerId: biomarkerId,
         name: biomarker.display_name,
         icon: getCategoryIcon(biomarker.category),
-        currentValue: latest.normalized_value ?? latest.text_value ?? 'N/A',
+        currentValue: latestValue ?? latest.text_value ?? 'N/A',
         unit: latest.normalized_unit || biomarker.standard_unit,
         history,
         trend,
         status,
-        testCount: results.length,
+        testCount: history.length, // Show unique date count instead of total records
       };
     });
 

@@ -5,6 +5,7 @@ import { OptimizedChart } from '@/components/charts/OptimizedChart';
 import { CategoryMetric } from '@/hooks/medical-documents/useCategoryDetail';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface CategoryMetricCardProps {
   metric: CategoryMetric;
@@ -86,7 +87,10 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
           <div className="h-16 -mx-2">
             <OptimizedChart
               type="line"
-              data={metric.history}
+              data={metric.history.map(h => ({
+                date: format(new Date(h.date), 'dd.MM.yy'),
+                value: h.value,
+              }))}
               config={{
                 xKey: 'date',
                 yKey: 'value',
