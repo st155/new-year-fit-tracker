@@ -162,3 +162,88 @@ export function useRequestHistoricalData() {
     }
   });
 }
+
+// Get all Terra users for a reference_id from Terra API
+export interface TerraApiUser {
+  user_id: string;
+  provider: string;
+  last_webhook_update?: string;
+  scopes?: string;
+  reference_id?: string;
+}
+
+export function useGetTerraUsers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
+        body: { action: 'get-terra-users', data: { targetUserId } }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      return data as { success: boolean; users: TerraApiUser[]; reference_id: string };
+    },
+    onError: (error: Error) => {
+      toast.error(`Ошибка получения Terra users: ${error.message}`);
+    }
+  });
+}
+
+// Deauthenticate a single Terra user
+export function useDeauthTerraUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { terraUserId: string; provider?: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
+        body: { action: 'deauth-user', data: params }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
+      toast.success('Terra пользователь деавторизован');
+    },
+    onError: (error: Error) => {
+      toast.error(`Ошибка деавторизации: ${error.message}`);
+    }
+  });
+}
+
+// Deauthenticate all Terra connections for a user by reference_id
+export function useDeauthAllTerraUsers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { targetUserId: string; providerFilter?: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
+        body: { action: 'deauth-all', data: params }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      return data as { 
+        success: boolean; 
+        deauthenticated: number; 
+        total: number; 
+        results: Array<{ terraUserId: string; provider: string; success: boolean; error?: string }>;
+        localTokensDeleted: number;
+      };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
+      toast.success(`Сброшено ${data.deauthenticated} подключений из ${data.total}`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Ошибка сброса подключений: ${error.message}`);
+    }
+  });
+}
