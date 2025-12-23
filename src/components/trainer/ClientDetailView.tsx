@@ -52,6 +52,8 @@ import { ClientDetailSkeleton } from './client-detail/ClientDetailSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ClientProgressVisualization } from './client-detail/visualization/ClientProgressVisualization';
 import { AIGoalSuggestions } from './client-detail/AIGoalSuggestions';
+import { ClientAssignedPlans } from './client-detail/ClientAssignedPlans';
+import { AssignTrainingPlanDialog } from './AssignTrainingPlanDialog';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Client {
@@ -166,6 +168,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
   const navigate = useNavigate();
   const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const [showAssignPlanDialog, setShowAssignPlanDialog] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('goals');
@@ -662,6 +665,12 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         </TabsContent>
 
         <TabsContent value="workouts" className="space-y-4">
+          {/* Assigned Training Plans */}
+          <ClientAssignedPlans
+            clientId={client.user_id}
+            onAssignPlan={() => setShowAssignPlanDialog(true)}
+          />
+          
           <WorkoutAnalysis 
             metrics={unifiedMetrics} 
             clientName={client.full_name || client.username}
