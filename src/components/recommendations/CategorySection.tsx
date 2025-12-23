@@ -127,7 +127,7 @@ export function CategorySection({
           <div className="space-y-3">
             {recommendations.map(rec => (
               <RecommendationCard
-                key={rec.id}
+                key={rec.mergedId}
                 recommendation={rec}
                 onAction={onAction}
                 onDismiss={onDismiss}

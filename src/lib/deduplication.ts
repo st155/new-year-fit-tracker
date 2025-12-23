@@ -1,6 +1,7 @@
 import { UnifiedRecommendation, RecommendationCategory, RecommendationPriority } from '@/hooks/useAllRecommendations';
 
 export interface MergedRecommendation extends UnifiedRecommendation {
+  mergedId: string;
   mergedFrom: string[];
   sources: Array<{
     id: string;
@@ -88,6 +89,7 @@ export function mergeRecommendations(recommendations: UnifiedRecommendation[]): 
       // Single item, no merge needed
       merged.push({
         ...group[0],
+        mergedId: group[0].id,
         mergedFrom: [group[0].id],
         sources: [{
           id: group[0].id,
@@ -131,9 +133,13 @@ export function mergeRecommendations(recommendations: UnifiedRecommendation[]): 
       // Combine dosages
       const dosages = [...new Set(group.map(r => r.metadata.dosage).filter(Boolean))];
       
+      // Create unique mergedId from sorted IDs
+      const mergedId = `merged_${group.map(r => r.id).sort().join('_')}`;
+      
       merged.push({
         ...primary,
         id: primary.id, // Keep primary ID for actions
+        mergedId,
         priority: highestPriority,
         status: anyPending ? 'pending' : primary.status,
         actionable: anyActionable,
