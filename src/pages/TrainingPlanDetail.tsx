@@ -134,8 +134,12 @@ export default function TrainingPlanDetail() {
 
         <TabsContent value="clients" className="space-y-4">
           <TrainingPlanClientsTab
+            planId={plan.id}
+            planName={plan.name}
+            planDurationWeeks={plan.duration_weeks}
             assignedClients={plan.assigned_training_plans || []}
             onViewClient={(clientId) => navigate(`/trainer-dashboard?tab=clients&client=${clientId}`)}
+            onRefresh={refetch}
           />
         </TabsContent>
 

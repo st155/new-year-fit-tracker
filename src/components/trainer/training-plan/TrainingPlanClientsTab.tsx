@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { TrainerClientCard } from '@/components/trainer/ui';
-import { Users } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
+import { AddClientToPlanDialog } from './AddClientToPlanDialog';
 
 interface AssignedClient {
   id: string;
@@ -15,63 +18,106 @@ interface AssignedClient {
 }
 
 interface TrainingPlanClientsTabProps {
+  planId: string;
+  planName: string;
+  planDurationWeeks: number;
   assignedClients: AssignedClient[];
   onViewClient: (clientId: string) => void;
+  onRefresh: () => void;
 }
 
 export function TrainingPlanClientsTab({
+  planId,
+  planName,
+  planDurationWeeks,
   assignedClients,
   onViewClient,
+  onRefresh,
 }: TrainingPlanClientsTabProps) {
-  if (!assignedClients || assignedClients.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium mb-2">Нет назначенных клиентов</h3>
-          <p className="text-muted-foreground">
-            Этот план еще не назначен ни одному клиенту
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
+  
+  const existingClientIds = assignedClients.map((a) => a.client_id);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {assignedClients.map((assignment) => {
-        if (!assignment.profiles) {
-          return (
-            <Card key={assignment.id}>
-              <CardContent className="py-6">
-                <p className="text-sm text-muted-foreground">
-                  Профиль клиента не найден
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  ID: {assignment.client_id}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        }
-        
-        return (
-          <TrainerClientCard
-            key={assignment.id}
-            client={{
-              id: assignment.client_id,
-              username: assignment.profiles.username,
-              full_name: assignment.profiles.full_name,
-              avatar_url: assignment.profiles.avatar_url,
-              goals_count: 0
-            }}
-            healthScore={75}
-            isActive={assignment.status === 'active'}
-            lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString('ru-RU')}`}
-            onViewDetails={() => onViewClient(assignment.client_id)}
-          />
-        );
-      })}
-    </div>
+    <>
+      <div className="space-y-4">
+        {/* Header with Add Button */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">
+            Клиенты ({assignedClients.length})
+          </h3>
+          <Button onClick={() => setShowAddClientDialog(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Добавить клиента
+          </Button>
+        </div>
+
+        {(!assignedClients || assignedClients.length === 0) ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">Нет назначенных клиентов</h3>
+              <p className="text-muted-foreground mb-4">
+                Этот план еще не назначен ни одному клиенту
+              </p>
+              <Button onClick={() => setShowAddClientDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить первого клиента
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {assignedClients.map((assignment) => {
+              if (!assignment.profiles) {
+                return (
+                  <Card key={assignment.id}>
+                    <CardContent className="py-6">
+                      <p className="text-sm text-muted-foreground">
+                        Профиль клиента не найден
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ID: {assignment.client_id}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              
+              return (
+                <TrainerClientCard
+                  key={assignment.id}
+                  client={{
+                    id: assignment.client_id,
+                    username: assignment.profiles.username,
+                    full_name: assignment.profiles.full_name,
+                    avatar_url: assignment.profiles.avatar_url,
+                    goals_count: 0
+                  }}
+                  healthScore={75}
+                  isActive={assignment.status === 'active'}
+                  lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString('ru-RU')}`}
+                  onViewDetails={() => onViewClient(assignment.client_id)}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Add Client Dialog */}
+      <AddClientToPlanDialog
+        open={showAddClientDialog}
+        onOpenChange={setShowAddClientDialog}
+        planId={planId}
+        planName={planName}
+        planDurationWeeks={planDurationWeeks}
+        existingClientIds={existingClientIds}
+        onSuccess={() => {
+          setShowAddClientDialog(false);
+          onRefresh();
+        }}
+      />
+    </>
   );
 }

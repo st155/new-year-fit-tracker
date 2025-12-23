@@ -1131,6 +1131,17 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           refetch();
         }}
       />
+      
+      {/* Assign Training Plan Dialog */}
+      <AssignTrainingPlanDialog
+        open={showAssignPlanDialog}
+        onOpenChange={setShowAssignPlanDialog}
+        clientId={client.user_id}
+        clientName={client.full_name || client.username}
+        onSuccess={() => {
+          // Force refresh of assigned plans
+        }}
+      />
     </div>
   );
 }
