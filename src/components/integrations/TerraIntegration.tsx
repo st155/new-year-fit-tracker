@@ -158,18 +158,20 @@ export function TerraIntegration() {
     
     setConnectingProvider(provider);
     
-    // Store provider in sessionStorage for callback handling
+    // Store provider in sessionStorage as backup (main source is URL params now)
     sessionStorage.setItem('terra_last_provider', provider);
+    sessionStorage.setItem('terra_return_url', window.location.pathname);
     console.log('📝 Stored provider in sessionStorage:', provider);
     
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
     try {
-      // Get Terra widget URL FIRST, before opening any window
-      console.log('🔄 Fetching Terra widget URL...');
+      // Get Terra widget URL with provider specified
+      console.log('🔄 Fetching Terra widget URL for provider:', provider);
       
       const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'generate-widget-session' },
+        body: { 
+          action: 'generate-widget-session',
+          provider: provider, // Pass provider to get it in redirect URL
+        },
       });
       
       if (error) throw error;
@@ -177,58 +179,20 @@ export function TerraIntegration() {
       
       console.log('✅ Got Terra widget URL:', data.url);
       
-      if (isIOS) {
-        // iOS: redirect in same tab (popup blockers are aggressive)
-        console.log('📱 iOS detected, redirecting directly to Terra widget...');
-        sessionStorage.setItem('terra_return_url', window.location.pathname);
+      // ALWAYS use same-tab redirect for OAuth providers (WHOOP, etc.)
+      // This avoids session/cookie issues with popups and cross-window communication
+      console.log('🔄 Redirecting to Terra widget in same tab (avoids session issues)...');
+      
+      toast({
+        title: 'Переход на страницу авторизации',
+        description: `Подключаем ${PROVIDER_NAMES[provider] || provider}. Завершите авторизацию в течение 5 минут.`,
+      });
+      
+      // Small delay to show toast, then redirect
+      setTimeout(() => {
         window.location.assign(data.url);
-        return;
-      }
+      }, 500);
       
-      // Desktop/Android: open Terra widget DIRECTLY in new window
-      console.log('🖥️ Desktop/Android detected, opening Terra widget directly');
-      
-      const popup = window.open(
-        data.url,
-        '_blank',
-        'width=600,height=800,scrollbars=yes,resizable=yes,popup=yes'
-      );
-      
-      if (popup) {
-        console.log('✅ Terra widget opened directly in new window');
-        
-        toast({
-          title: 'Окно авторизации открыто',
-          description: 'Завершите авторизацию в открывшемся окне. У вас есть 5 минут.',
-        });
-        
-        // Track when popup closes
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            setConnectingProvider(null);
-            console.log('🔄 Auth window closed, checking status...');
-            
-            // Check status after delays to allow webhook processing
-            setTimeout(() => checkStatus(), 2000);
-            setTimeout(() => checkStatus(), 5000);
-            setTimeout(() => checkInactiveProviders(), 5000);
-          }
-        }, 1000);
-      } else {
-        // Popup blocked - fallback to same-tab redirect
-        console.log('⚠️ Popup blocked by browser, falling back to redirect');
-        
-        toast({
-          title: 'Попап заблокирован',
-          description: 'Открываем авторизацию в этой вкладке',
-        });
-        
-        sessionStorage.setItem('terra_return_url', window.location.pathname);
-        setTimeout(() => {
-          window.location.assign(data.url);
-        }, 500);
-      }
     } catch (error: any) {
       console.error('❌ Failed to get Terra widget URL:', error);
       toast({
