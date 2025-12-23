@@ -94,10 +94,36 @@ serve(async (req) => {
     if (action === 'generate-widget-session') {
       console.log('🔗 Generating widget session...');
       
-      // Always use production URL for redirect (Terra callback)
-      const redirectUrl = 'https://elite10.club/terra-callback';
+      // Get provider from request if specified (for single-provider flow)
+      const requestedProvider = provider ? provider.toUpperCase() : null;
       
-      console.log('🌐 Using production redirect URL:', redirectUrl);
+      // Build redirect URL with query params to avoid sessionStorage issues
+      const baseRedirectUrl = 'https://elite10.club/terra-callback';
+      const timestamp = Date.now();
+      
+      // Build URL with provider, reference_id, and timestamp for cache-busting
+      const buildRedirectUrl = (isSuccess: boolean) => {
+        const params = new URLSearchParams();
+        if (requestedProvider) {
+          params.set('provider', requestedProvider);
+        }
+        params.set('reference_id', user.id);
+        params.set('ts', timestamp.toString());
+        params.set('status', isSuccess ? 'success' : 'error');
+        return `${baseRedirectUrl}?${params.toString()}`;
+      };
+      
+      const successRedirectUrl = buildRedirectUrl(true);
+      const failureRedirectUrl = buildRedirectUrl(false);
+      
+      // Use specific provider if requested, otherwise show all
+      const providersToShow = requestedProvider || 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR,GOOGLE';
+      
+      console.log('🌐 Redirect URLs:', { 
+        success: successRedirectUrl, 
+        failure: failureRedirectUrl,
+        provider: requestedProvider || 'ALL'
+      });
       console.log('📋 Reference ID:', user.id);
       
       console.log('🔄 Calling Terra Widget API...');
@@ -111,24 +137,35 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           reference_id: user.id,
-          providers: 'WHOOP,ULTRAHUMAN,OURA,GARMIN,WITHINGS,POLAR,GOOGLE',
+          providers: providersToShow,
           language: 'en',
           show_disconnect: true, // Show disconnect button in widget for reconnection
-          auth_success_redirect_url: redirectUrl,
-          auth_failure_redirect_url: redirectUrl,
+          auth_success_redirect_url: successRedirectUrl,
+          auth_failure_redirect_url: failureRedirectUrl,
         }),
       });
 
       console.log('📡 Terra Widget API response status:', response.status);
 
       if (!response.ok) {
-        const error = await response.text();
-        console.error('❌ Terra widget error:', error);
-        throw new Error(`Terra API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Terra widget error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText.substring(0, 500),
+          provider: requestedProvider,
+          reference_id: user.id,
+        });
+        throw new Error(`Terra API error: ${response.status} - ${errorText.substring(0, 100)}`);
       }
 
       const data = await response.json();
-      console.log('✅ Terra widget session created:', JSON.stringify(data, null, 2));
+      console.log('✅ Terra widget session created:', {
+        url: data.url?.substring(0, 100) + '...',
+        session_id: data.session_id,
+        provider: requestedProvider || 'ALL',
+        reference_id: user.id,
+      });
 
       return new Response(
         JSON.stringify({ url: data.url, sessionId: data.session_id }),

@@ -59,15 +59,36 @@ export default function TerraCallback() {
       const errorParam = searchParams.get('error') || searchParams.get('message');
       const reference = searchParams.get('reference') || searchParams.get('reference_id');
       const terraUserId = searchParams.get('user') || searchParams.get('user_id') || searchParams.get('terra_user_id');
+      const timestamp = searchParams.get('ts'); // Cache-busting timestamp
       
-      // Determine provider from URL params or sessionStorage
+      // Determine provider from URL params FIRST (primary), then sessionStorage (backup)
       let providerParam = searchParams.get('provider') || searchParams.get('source') || searchParams.get('resource');
       
       if (!providerParam) {
-        // Try to get from sessionStorage
+        // Fallback to sessionStorage (for legacy flows or popup mode)
         providerParam = sessionStorage.getItem('terra_last_provider');
-        console.log('📝 Retrieved provider from sessionStorage:', providerParam);
+        console.log('📝 Retrieved provider from sessionStorage (fallback):', providerParam);
       }
+      
+      console.log('🔍 Terra callback params:', { 
+        success, statusParam, errorParam, reference, terraUserId, providerParam, timestamp,
+        url: window.location.href 
+      });
+      
+      // CRITICAL: Check if user is logged in FIRST
+      const { data: userRes, error: authError } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      
+      if (authError || !uid) {
+        console.error('❌ User not logged in on callback page:', authError);
+        setStatus('error');
+        setMessage('Вы не авторизованы. Войдите в аккаунт и попробуйте подключить устройство снова.');
+        
+        // Don't auto-redirect, let user see the message and act
+        return;
+      }
+      
+      console.log('✅ User authenticated:', uid);
       
       if (!providerParam) {
         console.error('❌ No provider detected in URL or sessionStorage');
@@ -80,66 +101,64 @@ export default function TerraCallback() {
       providerParam = providerParam.toUpperCase();
       console.log('✅ Provider detected:', providerParam);
 
-      console.log('Terra callback:', { success, statusParam, errorParam, reference, terraUserId, providerParam });
-
       // Если Terra вернула terra_user_id прямо в редиректе, связываем пользователя без ожидания вебхука
       if (terraUserId) {
         try {
-          const { data: userRes } = await supabase.auth.getUser();
-          const uid = userRes.user?.id;
-          if (uid) {
-            setStatus('processing');
-            setMessage('Подтверждаем подключение...');
+          setStatus('processing');
+          setMessage('Подтверждаем подключение...');
 
-            const { data: existing } = await supabase
-              .from('terra_tokens')
-              .select('id')
-              .eq('user_id', uid)
-              .eq('provider', providerParam)
-              .maybeSingle();
+          const { data: existing } = await supabase
+            .from('terra_tokens')
+            .select('id')
+            .eq('user_id', uid)
+            .eq('provider', providerParam)
+            .maybeSingle();
 
-            if (existing?.id) {
-              await supabase.from('terra_tokens').update({
-                terra_user_id: terraUserId,
-                is_active: true,
-                updated_at: new Date().toISOString(),
-              }).eq('id', existing.id);
-            } else {
-              await supabase.from('terra_tokens').insert({
-                user_id: uid,
-                terra_user_id: terraUserId,
-                provider: providerParam,
-                is_active: true,
-              });
-            }
+          if (existing?.id) {
+            await supabase.from('terra_tokens').update({
+              terra_user_id: terraUserId,
+              is_active: true,
+              updated_at: new Date().toISOString(),
+            }).eq('id', existing.id);
+          } else {
+            await supabase.from('terra_tokens').insert({
+              user_id: uid,
+              terra_user_id: terraUserId,
+              provider: providerParam,
+              is_active: true,
+            });
+          }
 
-            // Запускаем синхронизацию
-            setStatus('success');
-            setMessage('Устройство подключено! Запускаем синхронизацию данных...');
-            try {
-              const { data, error } = await supabase.functions.invoke('terra-integration', {
-                body: { action: 'sync-data' }
-              });
-              if (error) {
-                console.error('Sync error:', error);
-                setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
-              } else {
-                console.log('Sync initiated:', data);
-                setMessage('Устройство подключено и данные синхронизированы!');
-              }
-            } catch (e) {
-              console.error('Sync error:', e);
+          // Запускаем синхронизацию
+          setStatus('success');
+          setMessage('Устройство подключено! Запускаем синхронизацию данных...');
+          try {
+            const { data, error } = await supabase.functions.invoke('terra-integration', {
+              body: { action: 'sync-data' }
+            });
+            if (error) {
+              console.error('Sync error:', error);
               setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            } else {
+              console.log('Sync initiated:', data);
+              setMessage('Устройство подключено и данные синхронизированы!');
             }
+          } catch (e) {
+            console.error('Sync error:', e);
+            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+          }
 
-            // If popup, notify parent and close
-            if (notifyParentAndClose(true, providerParam)) {
-              return;
-            }
-            
-            setTimeout(() => navigate('/integrations'), 500);
+          // Clear sessionStorage
+          sessionStorage.removeItem('terra_last_provider');
+          sessionStorage.removeItem('terra_return_url');
+
+          // If popup, notify parent and close
+          if (notifyParentAndClose(true, providerParam)) {
             return;
           }
+          
+          setTimeout(() => navigate('/integrations'), 500);
+          return;
         } catch (e) {
           console.error('Direct bind error:', e);
         }
@@ -438,12 +457,13 @@ export default function TerraCallback() {
               <>
                 <Button 
                   onClick={() => {
-                    // Получаем провайдера из sessionStorage и открываем виджет заново
-                    const lastProvider = sessionStorage.getItem('terra_last_provider');
+                    // Получаем провайдера из URL или sessionStorage и открываем виджет заново
+                    const urlProvider = searchParams.get('provider');
+                    const lastProvider = urlProvider || sessionStorage.getItem('terra_last_provider');
                     if (lastProvider) {
-                      navigate(`/terra-widget-loader?provider=${encodeURIComponent(lastProvider)}`);
+                      navigate(`/integrations`);
                     } else {
-                      navigate('/fitness-data?tab=integrations');
+                      navigate('/integrations');
                     }
                   }} 
                   className="w-full"
@@ -452,7 +472,7 @@ export default function TerraCallback() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/fitness-data?tab=integrations')}
+                  onClick={() => navigate('/integrations')}
                   className="w-full"
                 >
                   Вернуться к интеграциям
