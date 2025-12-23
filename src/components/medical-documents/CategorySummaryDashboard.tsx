@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategorySummaries } from "@/hooks/medical-documents/useCategorySummaries";
 import { useNavigate } from "react-router-dom";
 import { Droplet, FileText, Microscope, Stethoscope, Folder, ArrowRight, Pill, Activity, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<string, any> = {
   blood_test: Droplet,
@@ -89,10 +89,25 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className={`bg-gradient-to-br ${categoryColors[summary.category]} hover:shadow-lg transition-shadow`}>
+              <Card 
+                className={cn(
+                  "bg-gradient-to-br hover:shadow-lg transition-all cursor-pointer",
+                  categoryColors[summary.category]
+                )}
+                onClick={() => navigate(`/medical-documents/category/${summary.category}`)}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
+                      {summary.overallScore && (
+                        <div className={cn(
+                          "w-2.5 h-2.5 rounded-full flex-shrink-0",
+                          summary.overallScore === 'excellent' && 'bg-green-500',
+                          summary.overallScore === 'good' && 'bg-blue-500',
+                          summary.overallScore === 'attention' && 'bg-yellow-500',
+                          summary.overallScore === 'warning' && 'bg-orange-500',
+                        )} />
+                      )}
                       <Icon className="h-5 w-5" />
                       <CardTitle className="text-lg">
                         {categoryLabels[summary.category]}
@@ -110,18 +125,17 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
                   <p className="text-sm line-clamp-3 text-muted-foreground">
                     {summary.aiSummary}
                   </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full gap-2 group"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(`/medical-documents/category/${summary.category}`);
-                    }}
-                  >
-                    Подробнее
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    {summary.healthIndicator && (
+                      <Badge variant="outline" className="text-xs">
+                        {summary.healthIndicator}
+                      </Badge>
+                    )}
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground ml-auto group">
+                      <span>Подробнее</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
