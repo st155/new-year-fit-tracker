@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell, Sparkles, ShieldCheck } from "lucide-react";
+import { Settings, Menu, Home, TrendingUp, Target, Trophy, Dumbbell, Sparkles, ShieldCheck, LogOut, Link } from "lucide-react";
 import { CustomNavigationIcon } from "@/components/ui/custom-navigation-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,10 +58,13 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
     console.error('💥 [TopNavigation] useTranslation error:', error);
   }
   
+  let signOut: () => Promise<any> = async () => {};
+  
   try {
     const authData = useAuth();
     isTrainer = authData?.isTrainer ?? false;
     user = authData?.user;
+    signOut = authData?.signOut ?? (async () => {});
   } catch (error) {
     console.error('💥 [TopNavigation] useAuth error:', error);
   }
@@ -345,7 +348,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
                   <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isTrainer && (
@@ -355,15 +358,23 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => navigate('/fitness-data')} className="cursor-pointer flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    <span>Фитнес дата</span>
+                    <Link className="h-4 w-4" />
+                    <span>{t('navigation.connections')}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
                     <span>{t('navigation.profile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/privacy-policy')}>
+                  <DropdownMenuItem onClick={() => navigate('/privacy-policy')} className="cursor-pointer">
                     <span>{t('dashboard.privacyPolicy')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => signOut()} 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>{t('navigation.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

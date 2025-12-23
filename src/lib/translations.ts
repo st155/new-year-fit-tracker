@@ -19,9 +19,11 @@ export const t = (key: string, params?: Record<string, any>): string => {
     'navigation.feed': 'Feed',
     'descriptions.medicalDocuments': 'Medical records, lab results & health data',
     'navigation.clients': 'Clients',
-    'navigation.profile': 'Profile',
-    'navigation.settings': 'Settings',
-    'navigation.logout': 'Logout',
+    'navigation.profile': 'Профиль',
+    'navigation.settings': 'Настройки',
+    'navigation.logout': 'Выйти',
+    'navigation.connections': 'Подключения',
+    'dashboard.privacyPolicy': 'Политика конфиденциальности',
     'navigation.leaderboard': 'Leaderboard',
     
     // Dashboard
