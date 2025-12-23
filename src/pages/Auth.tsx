@@ -31,13 +31,16 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => {
     const savedEmail = localStorage.getItem('rememberedEmail');
     return !!savedEmail;
   });
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithMagicLink, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -118,6 +121,19 @@ const Auth = () => {
     }
 
     setIsResetting(false);
+  };
+
+  const handleMagicLinkSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsMagicLinkLoading(true);
+
+    const { error } = await signInWithMagicLink(magicLinkEmail);
+
+    if (!error) {
+      setMagicLinkEmail('');
+    }
+
+    setIsMagicLinkLoading(false);
   };
 
   return (
@@ -251,6 +267,40 @@ const Auth = () => {
                       Назад к входу
                     </Button>
                   </form>
+                ) : showMagicLink ? (
+                  <form onSubmit={handleMagicLinkSignIn} className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        Введите email и мы отправим вам ссылку для входа без пароля
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="magic-link-email">Email</Label>
+                      <Input
+                        id="magic-link-email"
+                        type="email"
+                        placeholder="Введите ваш email"
+                        value={magicLinkEmail}
+                        onChange={(e) => setMagicLinkEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isMagicLinkLoading}
+                    >
+                      {isMagicLinkLoading ? 'Отправка...' : 'Отправить magic link'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowMagicLink(false)}
+                    >
+                      Назад к входу
+                    </Button>
+                  </form>
                 ) : (
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
@@ -305,54 +355,16 @@ const Auth = () => {
                     >
                       {isLoading ? t('auth.signingIn') : t('auth.signIn')}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowMagicLink(true)}
+                    >
+                      Войти без пароля (Magic Link)
+                    </Button>
                   </form>
                 )}
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-username">{t('auth.username')}</Label>
-                    <Input
-                      id="signup-username"
-                      type="text"
-                      placeholder={t('auth.enterUsername')}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder={t('auth.enterEmail')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder={t('auth.enterPassword')}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? t('auth.signingUp') : t('auth.signUp')}
-                  </Button>
-                </form>
               </TabsContent>
             </Tabs>
           </CardContent>
