@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseImageMap {
@@ -44,7 +44,8 @@ export function useExerciseImages() {
       }
 
       try {
-        const { data, error } = await supabase
+        // Use 'any' type since table is newly created and types not yet synced
+        const { data, error } = await (supabase as any)
           .from('exercise_images')
           .select('exercise_name, image_url')
           .eq('user_id', user.id);
@@ -56,7 +57,7 @@ export function useExerciseImages() {
 
         if (data) {
           const imageMap: ExerciseImageMap = {};
-          data.forEach((item) => {
+          data.forEach((item: { exercise_name: string; image_url: string }) => {
             imageMap[item.exercise_name.toLowerCase()] = item.image_url;
           });
           setImages((prev) => ({ ...prev, ...imageMap }));
@@ -89,7 +90,8 @@ export function useExerciseImages() {
     // Save to database if user is logged in
     if (user) {
       try {
-        const { error } = await supabase
+        // Use 'any' type since table is newly created and types not yet synced
+        const { error } = await (supabase as any)
           .from('exercise_images')
           .upsert({
             user_id: user.id,
