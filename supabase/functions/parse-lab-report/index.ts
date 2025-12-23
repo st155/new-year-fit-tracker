@@ -812,8 +812,8 @@ Return ONLY valid JSON (no markdown):
           .update({ 
             processing_status: 'completed',
             processing_completed_at: new Date().toISOString(),
-            ai_summary: aiSummary,
-            extracted_data: {
+          ai_summary: aiSummary,
+          ai_extracted_data: {
               inbody_analysis_id: inbodyAnalysis.id,
               test_date: testDate,
               weight: inbodyRecord.weight,
