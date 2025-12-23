@@ -33,7 +33,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             className={cn(
               "relative flex items-center gap-2 p-3 rounded-lg border transition-all cursor-pointer group",
               item.takenToday
-                ? "bg-green-500/5 border-green-500/20 opacity-60"
+                ? "bg-green-500/15 border-green-500/50 ring-1 ring-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.15)]"
                 : "bg-neutral-900/50 border-border/50 hover:border-green-500/50 hover:bg-green-500/5 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)]",
               isSelected && !item.takenToday && "border-green-500/50 bg-green-500/10"
             )}
@@ -45,15 +45,26 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
                 <img
                   src={item.imageUrl}
                   alt={item.name}
-                  className="w-10 h-10 rounded-full object-cover border border-border/30"
+                  className={cn(
+                    "w-10 h-10 rounded-full object-cover border",
+                    item.takenToday ? "border-green-500/50" : "border-border/30"
+                  )}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                  <Pill className="w-5 h-5 text-green-500/70" />
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center",
+                  item.takenToday 
+                    ? "bg-green-500/20 border border-green-500/40" 
+                    : "bg-green-500/10 border border-green-500/20"
+                )}>
+                  <Pill className={cn(
+                    "w-5 h-5",
+                    item.takenToday ? "text-green-500" : "text-green-500/70"
+                  )} />
                 </div>
               )}
               {/* Camera overlay on hover if no image and onAddPhoto is provided */}
-              {!item.imageUrl && item.productId && onAddPhoto && (
+              {!item.imageUrl && item.productId && onAddPhoto && !item.takenToday && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -64,13 +75,29 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
                   <Camera className="h-4 w-4 text-white" />
                 </button>
               )}
+              {/* Green checkmark overlay for taken items */}
+              {item.takenToday && (
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-neutral-950">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
+                </div>
+              )}
             </div>
 
             {/* Name and Dosage */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {item.name}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className={cn(
+                  "text-sm font-medium truncate",
+                  item.takenToday ? "text-green-500" : "text-foreground"
+                )}>
+                  {item.name}
+                </p>
+                {item.takenToday && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/20 text-green-500 uppercase tracking-wider">
+                    ✓
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {item.dosage}
               </p>
@@ -85,7 +112,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
                     onToggleIntake?.();
                   }}
                   disabled={isToggling}
-                  className="p-0.5 rounded hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                  className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors disabled:opacity-50"
                   title="Отменить приём"
                 >
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
