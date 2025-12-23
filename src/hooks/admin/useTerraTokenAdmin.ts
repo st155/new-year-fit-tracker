@@ -247,3 +247,30 @@ export function useDeauthAllTerraUsers() {
     }
   });
 }
+
+// Programmatic deauth for specific user - can be called directly
+export async function deauthUserConnections(targetUserId: string): Promise<{
+  success: boolean;
+  deauthenticated: number;
+  total: number;
+  error?: string;
+}> {
+  const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
+    body: { action: 'deauth-all', data: { targetUserId } }
+  });
+
+  if (error) {
+    console.error('Deauth error:', error);
+    return { success: false, deauthenticated: 0, total: 0, error: error.message };
+  }
+  
+  if (data.error) {
+    return { success: false, deauthenticated: 0, total: 0, error: data.error };
+  }
+  
+  return {
+    success: true,
+    deauthenticated: data.deauthenticated || 0,
+    total: data.total || 0,
+  };
+}
