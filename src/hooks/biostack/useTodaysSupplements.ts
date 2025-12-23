@@ -265,25 +265,44 @@ export function useTodaysSupplements() {
 
       // Log manual supplements with intake_time and intake_date
       if (manualItems.length > 0) {
-        const now = new Date();
-        const intakeLogs = manualItems.map(item => ({
-          user_id: user.id,
-          stack_item_id: item.sourceId,
-          intake_time: item.intakeTime,
-          intake_date: todayDateStr,
-          taken_at: now.toISOString(),
-          servings_taken: 1,
-        }));
-
-        // Use upsert to handle potential duplicates gracefully
-        const { error: intakeError } = await supabase
+        const stackItemIds = manualItems.map(item => item.sourceId);
+        
+        // Check which logs already exist for today
+        const { data: existingLogs } = await supabase
           .from('intake_logs')
-          .upsert(intakeLogs, { 
-            onConflict: 'user_id,stack_item_id,intake_time,intake_date',
-            ignoreDuplicates: true
-          });
+          .select('stack_item_id, intake_time')
+          .eq('user_id', user.id)
+          .eq('intake_date', todayDateStr)
+          .in('stack_item_id', stackItemIds);
 
-        if (intakeError) throw intakeError;
+        // Build set of existing keys
+        const existingKeys = new Set(
+          (existingLogs || []).map(log => `${log.stack_item_id}-${log.intake_time}`)
+        );
+
+        // Filter to only items that don't have a log yet
+        const itemsToInsert = manualItems.filter(item => {
+          const key = `${item.sourceId}-${item.intakeTime}`;
+          return !existingKeys.has(key);
+        });
+
+        if (itemsToInsert.length > 0) {
+          const now = new Date();
+          const intakeLogs = itemsToInsert.map(item => ({
+            user_id: user.id,
+            stack_item_id: item.sourceId,
+            intake_time: item.intakeTime,
+            intake_date: todayDateStr,
+            taken_at: now.toISOString(),
+            servings_taken: 1,
+          }));
+
+          const { error: intakeError } = await supabase
+            .from('intake_logs')
+            .insert(intakeLogs);
+
+          if (intakeError) throw intakeError;
+        }
       }
 
       // Log protocol supplements
@@ -364,18 +383,30 @@ export function useTodaysSupplements() {
       } else {
         // TAKE - create log
         if (item.source === 'manual') {
+          // Check if already exists
+          const { data: existing } = await supabase
+            .from('intake_logs')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('stack_item_id', item.sourceId)
+            .eq('intake_time', item.intakeTime)
+            .eq('intake_date', todayDateStr)
+            .maybeSingle();
+
+          if (existing) {
+            // Already taken - just return success
+            return { action: 'taken', name: item.name };
+          }
+
           const { error } = await supabase
             .from('intake_logs')
-            .upsert({
+            .insert({
               user_id: user.id,
               stack_item_id: item.sourceId,
               intake_time: item.intakeTime,
               intake_date: todayDateStr,
               taken_at: new Date().toISOString(),
               servings_taken: 1,
-            }, {
-              onConflict: 'user_id,stack_item_id,intake_time,intake_date',
-              ignoreDuplicates: false
             });
           
           if (error) throw error;
