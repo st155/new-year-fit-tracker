@@ -97,6 +97,16 @@ export default function WorkoutV31() {
     };
   }, [dailyWorkout]);
 
+  // Get weekly schedule from plan workouts
+  const weeklySchedule = useMemo(() => {
+    // This would ideally come from the plan data, but for now we'll create a placeholder
+    // The actual schedule will be loaded in TodaysPlanCard via PlanViewerDialog
+    if (!dailyWorkout?.assigned_plan_id) return [];
+    
+    // Return empty for now - the TodaysPlanCard will handle showing schedule
+    return [];
+  }, [dailyWorkout]);
+
   const weeklyDays = useMemo(() => {
     const today = new Date().getDay();
     const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -238,6 +248,11 @@ export default function WorkoutV31() {
                 <TodaysPlanCard 
                   exercises={todayData.exercises}
                   workoutName={dailyWorkout?.workout_name}
+                  planId={dailyWorkout?.assigned_plan_id}
+                  planName={dailyWorkout?.plan_name}
+                  weekNumber={dailyWorkout?.week_number}
+                  totalWeeks={dailyWorkout?.total_weeks}
+                  weeklySchedule={weeklySchedule}
                 />
               </div>
 
@@ -314,6 +329,11 @@ export default function WorkoutV31() {
               <TodaysPlanCard 
                 exercises={todayData.exercises}
                 workoutName={dailyWorkout?.workout_name}
+                planId={dailyWorkout?.assigned_plan_id}
+                planName={dailyWorkout?.plan_name}
+                weekNumber={dailyWorkout?.week_number}
+                totalWeeks={dailyWorkout?.total_weeks}
+                weeklySchedule={weeklySchedule}
               />
               <WeeklySplitCard days={weeklyDays} />
             </TabsContent>

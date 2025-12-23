@@ -122,17 +122,20 @@ export function ProgressChartCard({
   })();
 
   const formatValue = (value: number) => {
+    // Ensure we have a valid number and format it properly
+    const safeValue = Number.isFinite(value) ? value : 0;
+    
     switch (selectedMetric) {
       case 'calories':
-        return `${Math.round(value)} ккал`;
+        return `${Math.round(safeValue)} ккал`;
       case 'duration':
-        return `${Math.round(value)} мин`;
+        return `${Math.round(safeValue)} мин`;
       case 'count':
-        return `${value}`;
+        return `${Math.round(safeValue)}`;
       case 'heartRate':
-        return `${Math.round(value)} bpm`;
+        return `${Math.round(safeValue)} bpm`;
       default:
-        return value.toString();
+        return Math.round(safeValue).toString();
     }
   };
 

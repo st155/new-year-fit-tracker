@@ -28,7 +28,7 @@ export const WHOOP_SPORT_NAMES: Record<number, string> = {
   42: 'Dance',
   43: 'Pilates',
   44: 'Yoga',
-  45: 'Weightlifting',
+  45: 'Meditation', // Was incorrectly mapped to Weightlifting
   47: 'Cross Country Skiing',
   48: 'Functional Fitness',
   49: 'Duathlon',
