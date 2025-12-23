@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -18,6 +19,34 @@ interface Props {
 }
 
 export default function LineChartWrapper({ data, config, height }: Props) {
+  // Calculate optimal Y-axis domain based on data
+  const yAxisDomain = useMemo(() => {
+    if (config.yDomain !== 'dataMin-dataMax') {
+      return undefined; // Let recharts auto-calculate
+    }
+    
+    const values = data
+      .map(d => d[config.yKey])
+      .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+    
+    if (values.length === 0) return undefined;
+    
+    const dataMin = Math.min(...values);
+    const dataMax = Math.max(...values);
+    const range = dataMax - dataMin;
+    const paddingPercent = config.yPadding || 10;
+    const padding = range * (paddingPercent / 100);
+    
+    // Ensure we have some padding even for flat lines
+    const minPadding = dataMin * 0.05 || 0.1;
+    const actualPadding = Math.max(padding, minPadding);
+    
+    return [
+      Math.floor((dataMin - actualPadding) * 10) / 10,
+      Math.ceil((dataMax + actualPadding) * 10) / 10
+    ] as [number, number];
+  }, [data, config.yKey, config.yDomain, config.yPadding]);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data}>
@@ -26,7 +55,12 @@ export default function LineChartWrapper({ data, config, height }: Props) {
           dataKey={config.xKey} 
           className="text-xs text-muted-foreground"
         />
-        <YAxis className="text-xs text-muted-foreground" />
+        <YAxis 
+          className="text-xs text-muted-foreground"
+          domain={yAxisDomain}
+          tickFormatter={(v) => Number(v).toFixed(1)}
+          width={35}
+        />
         {config.showTooltip && (
           <Tooltip 
             contentStyle={rechartsTooltipStyle}
@@ -39,9 +73,9 @@ export default function LineChartWrapper({ data, config, height }: Props) {
           type="monotone" 
           dataKey={config.yKey} 
           stroke={config.color} 
-          strokeWidth={2}
-          dot={{ fill: config.color, r: 4 }}
-          activeDot={{ r: 6 }}
+          strokeWidth={3}
+          dot={{ fill: config.color, r: 5 }}
+          activeDot={{ r: 7 }}
         />
       </LineChart>
     </ResponsiveContainer>
