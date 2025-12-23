@@ -1,17 +1,20 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Zap, Flame } from 'lucide-react';
+import { Trophy, Zap, Flame, Calendar, Plug } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUserLevel } from '@/hooks/useUserLevel';
+import { format, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface ProfileHeroProps {
   username: string;
   fullName: string;
   avatarUrl: string;
   userInitials: string;
-  totalXP?: number;
-  level?: number;
+  registeredAt?: string | null;
+  activeIntegrationsCount?: number;
+  streakDays?: number;
 }
 
 export function ProfileHero({
@@ -19,6 +22,9 @@ export function ProfileHero({
   fullName,
   avatarUrl,
   userInitials,
+  registeredAt,
+  activeIntegrationsCount = 0,
+  streakDays = 0,
 }: ProfileHeroProps) {
   const { levelInfo, isLoading } = useUserLevel();
 
@@ -36,6 +42,15 @@ export function ProfileHero({
     if (level >= 20) return 'Профессионал';
     if (level >= 10) return 'Продвинутый';
     return 'Новичок';
+  };
+
+  const formatRegistrationDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
+    try {
+      return format(parseISO(dateStr), 'LLLL yyyy', { locale: ru });
+    } catch {
+      return '';
+    }
   };
 
   return (
@@ -56,9 +71,9 @@ export function ProfileHero({
               } rounded-full blur-xl opacity-50`}
             />
             <div className="relative">
-              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+              <Avatar className="h-28 w-28 md:h-32 md:w-32 border-4 border-background shadow-xl">
                 <AvatarImage src={avatarUrl} alt={username} />
-                <AvatarFallback className="text-3xl font-bold bg-gradient-primary text-white">
+                <AvatarFallback className="text-2xl md:text-3xl font-bold bg-gradient-primary text-white">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
@@ -67,7 +82,7 @@ export function ProfileHero({
                   className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${getLevelColor(levelInfo.level)} text-white border-0 shadow-lg px-3 py-1`}
                 >
                   <Trophy className="h-3 w-3 mr-1" />
-                  Уровень {levelInfo.level}
+                  Lvl {levelInfo.level}
                 </Badge>
               )}
             </div>
@@ -76,7 +91,7 @@ export function ProfileHero({
           {/* Profile Info */}
           <div className="flex-1 text-center md:text-left space-y-3">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 {fullName || username}
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -84,34 +99,48 @@ export function ProfileHero({
               </p>
             </div>
 
-            {/* Level Info */}
-            {levelInfo && !isLoading && (
-              <div className="flex flex-col sm:flex-row gap-3 items-center md:items-start justify-center md:justify-start">
-                <Badge variant="outline" className="gap-2 px-4 py-2 text-sm font-semibold">
-                  <Zap className="h-4 w-4 text-yellow-500" />
-                  {levelInfo.totalXP} XP
-                </Badge>
-                <Badge variant="outline" className="gap-2 px-4 py-2 text-sm font-semibold">
-                  <Trophy className="h-4 w-4 text-purple-500" />
-                  {getLevelTitle(levelInfo.level)}
-                </Badge>
-                {levelInfo.progressPercent >= 0 && (
-                  <Badge variant="outline" className="gap-2 px-4 py-2 text-sm font-semibold">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    {levelInfo.progressPercent.toFixed(0)}% до уровня {levelInfo.level + 1}
+            {/* Quick Info Badges */}
+            <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start">
+              {levelInfo && !isLoading && (
+                <>
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                    <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                    {levelInfo.totalXP} XP
                   </Badge>
-                )}
-              </div>
-            )}
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                    <Trophy className="h-3.5 w-3.5 text-purple-500" />
+                    {getLevelTitle(levelInfo.level)}
+                  </Badge>
+                </>
+              )}
+              {streakDays > 0 && (
+                <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                  <Flame className="h-3.5 w-3.5 text-orange-500" />
+                  {streakDays} дн. подряд
+                </Badge>
+              )}
+              {activeIntegrationsCount > 0 && (
+                <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                  <Plug className="h-3.5 w-3.5 text-green-500" />
+                  {activeIntegrationsCount} интеграций
+                </Badge>
+              )}
+              {registeredAt && (
+                <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  С {formatRegistrationDate(registeredAt)}
+                </Badge>
+              )}
+            </div>
 
             {/* Progress Bar */}
             {levelInfo && !isLoading && (
-              <div className="mt-4">
+              <div className="mt-4 max-w-md mx-auto md:mx-0">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                  <span>Прогресс до следующего уровня</span>
-                  <span className="font-semibold">{levelInfo.xpToNext} XP осталось</span>
+                  <span>До уровня {levelInfo.level + 1}</span>
+                  <span className="font-semibold">{levelInfo.xpToNext} XP</span>
                 </div>
-                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     className={`h-full bg-gradient-to-r ${getLevelColor(levelInfo.level)} rounded-full`}
                     initial={{ width: 0 }}
