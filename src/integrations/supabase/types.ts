@@ -1839,6 +1839,33 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_images: {
+        Row: {
+          created_at: string
+          exercise_name: string
+          id: string
+          image_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_name: string
+          id?: string
+          image_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_name?: string
+          id?: string
+          image_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       failed_webhook_processing: {
         Row: {
           created_at: string | null
