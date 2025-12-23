@@ -73,7 +73,8 @@ export function useExerciseImages() {
     loadImages();
   }, [user]);
 
-  const getImageUrl = (exerciseName: string): string | undefined => {
+  const getImageUrl = (exerciseName: string | undefined): string | undefined => {
+    if (!exerciseName) return undefined;
     return images[exerciseName.toLowerCase()];
   };
 

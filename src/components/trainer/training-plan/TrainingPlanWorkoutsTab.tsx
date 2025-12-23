@@ -8,7 +8,8 @@ import AddExerciseImageDialog from '@/components/workout/AddExerciseImageDialog'
 import { useExerciseImages } from '@/hooks/useExerciseImages';
 
 interface WorkoutExercise {
-  exercise_name: string;
+  name?: string;
+  exercise_name?: string;
   exercise_type?: 'strength' | 'cardio' | 'bodyweight';
   sets: number;
   reps: string;
@@ -22,6 +23,10 @@ interface WorkoutExercise {
   intensity?: string;
   target_metric?: string;
 }
+
+const getExerciseName = (exercise: WorkoutExercise): string => {
+  return exercise.exercise_name || exercise.name || 'Упражнение';
+};
 
 interface TrainingPlanWorkout {
   id: string;
@@ -95,20 +100,22 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
               {workout.exercises && workout.exercises.length > 0 && (
                 <CardContent>
                   <div className="space-y-3">
-                    {workout.exercises.map((exercise, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30"
-                      >
-                        <ExerciseImage
-                          exerciseName={exercise.exercise_name}
-                          imageUrl={getImageUrl(exercise.exercise_name)}
-                          size="md"
-                          editable
-                          onAddImage={() => handleAddImage(exercise.exercise_name)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{exercise.exercise_name}</h4>
+                    {workout.exercises.map((exercise, idx) => {
+                      const exerciseName = getExerciseName(exercise);
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30"
+                        >
+                          <ExerciseImage
+                            exerciseName={exerciseName}
+                            imageUrl={getImageUrl(exerciseName)}
+                            size="md"
+                            editable
+                            onAddImage={() => handleAddImage(exerciseName)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium truncate">{exerciseName}</h4>
                           {exercise.notes && (
                             <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
                               {exercise.notes}
@@ -174,9 +181,10 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
                             <div className="font-semibold">{exercise.rest_seconds}с</div>
                             <div className="text-xs text-muted-foreground">отдых</div>
                           </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               )}
