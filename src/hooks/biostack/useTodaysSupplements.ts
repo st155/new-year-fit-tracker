@@ -525,26 +525,17 @@ export function useTodaysSupplements() {
         
         if (error) throw error;
       } else {
-        // Protocol: add another supplement_log entry
-        const parts = item.id.split('-');
-        const intakeTime = parts[parts.length - 1];
-        
-        let hourStart = 6;
-        if (intakeTime === 'afternoon') { hourStart = 12; }
-        else if (intakeTime === 'evening') { hourStart = 17; }
-        else if (intakeTime === 'before_sleep') { hourStart = 21; }
-        
-        const scheduleStart = new Date(todayStart);
-        scheduleStart.setHours(hourStart, 0, 0, 0);
+        // Protocol: add another supplement_log entry with unique scheduled_time (current time)
+        const now = new Date();
 
         const { error } = await supabase
           .from('supplement_logs')
           .insert({
             user_id: user.id,
             protocol_item_id: item.sourceId,
-            scheduled_time: scheduleStart.toISOString(),
+            scheduled_time: now.toISOString(), // Use current time to avoid duplicate key error
             status: 'taken',
-            taken_at: new Date().toISOString(),
+            taken_at: now.toISOString(),
             servings_taken: 1
           });
         
