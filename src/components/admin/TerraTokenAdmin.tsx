@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,6 +109,10 @@ export function TerraTokenAdmin() {
   const [terraApiUsers, setTerraApiUsers] = useState<TerraApiUser[]>([]);
   const [inspectingUserId, setInspectingUserId] = useState<string | null>(null);
   const [inspectingUserName, setInspectingUserName] = useState<string>('');
+  
+  // Orphan cleanup state
+  const [selectedOrphanUserId, setSelectedOrphanUserId] = useState<string>('');
+  const [orphanSearchQuery, setOrphanSearchQuery] = useState('');
 
   // Create form state
   const [newUserId, setNewUserId] = useState('');
@@ -310,6 +315,116 @@ export function TerraTokenAdmin() {
           </CardContent>
         </Card>
       )}
+
+      {/* Orphan Cleanup Section */}
+      <Card className="border-warning/50 bg-warning/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Unplug className="h-5 w-5 text-warning" />
+            Очистка застрявших подключений
+          </CardTitle>
+          <CardDescription>
+            Для пользователей с ошибкой "session expired" — проверьте и сбросьте подключения в Terra API
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-3 items-end">
+            <div className="flex-1 space-y-2">
+              <Label>Выберите пользователя</Label>
+              <Select value={selectedOrphanUserId} onValueChange={setSelectedOrphanUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Поиск пользователя..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Поиск..."
+                      value={orphanSearchQuery}
+                      onChange={(e) => setOrphanSearchQuery(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {users
+                    ?.filter(u => {
+                      if (!orphanSearchQuery) return true;
+                      const query = orphanSearchQuery.toLowerCase();
+                      return u.full_name?.toLowerCase().includes(query) || u.user_id.toLowerCase().includes(query);
+                    })
+                    .map((user) => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={user.avatar_url || undefined} />
+                            <AvatarFallback>
+                              <User className="h-3 w-3" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{user.full_name || user.user_id.substring(0, 8)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={() => {
+                if (!selectedOrphanUserId) return;
+                const user = users?.find(u => u.user_id === selectedOrphanUserId);
+                setInspectingUserId(selectedOrphanUserId);
+                setInspectingUserName(user?.full_name || selectedOrphanUserId.substring(0, 8));
+                setTerraApiUsers([]);
+                setShowTerraUsersDialog(true);
+                getTerraUsers.mutateAsync(selectedOrphanUserId).then(result => {
+                  setTerraApiUsers(result.users);
+                }).catch(err => {
+                  console.error('Error fetching Terra users:', err);
+                });
+              }}
+              disabled={!selectedOrphanUserId || getTerraUsers.isPending}
+            >
+              {getTerraUsers.isPending ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              Проверить Terra API
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!selectedOrphanUserId) return;
+                const user = users?.find(u => u.user_id === selectedOrphanUserId);
+                const userName = user?.full_name || selectedOrphanUserId.substring(0, 8);
+                deauthAllTerraUsers.mutateAsync({ targetUserId: selectedOrphanUserId }).then(result => {
+                  if (result.total === 0) {
+                    toast.info(`У ${userName} нет подключений в Terra API`, {
+                      description: 'Пользователь может попробовать подключиться заново'
+                    });
+                  } else {
+                    toast.success(`Сброшено ${result.deauthenticated}/${result.total} подключений для ${userName}`, {
+                      description: 'Пользователь может переподключить интеграцию'
+                    });
+                  }
+                  setSelectedOrphanUserId('');
+                }).catch(err => {
+                  toast.error(`Ошибка сброса: ${err.message}`);
+                });
+              }}
+              disabled={!selectedOrphanUserId || deauthAllTerraUsers.isPending}
+            >
+              {deauthAllTerraUsers.isPending ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Unplug className="h-4 w-4 mr-2" />
+              )}
+              Сбросить все
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            <strong>Известные проблемные пользователи:</strong> Pavel Radaev, Anton, Aleksey Gubarev — используйте для них "Сбросить все", затем попросите переподключиться.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <Card>
