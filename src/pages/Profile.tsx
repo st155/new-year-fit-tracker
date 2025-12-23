@@ -4,6 +4,8 @@ import { ProtocolTestingPanel } from "@/components/protocols/ProtocolTestingPane
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { RecentActivity } from "@/components/profile/RecentActivity";
+import { HealthSnapshot } from "@/components/profile/HealthSnapshot";
+import { IntegrationStatus } from "@/components/profile/IntegrationStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +20,7 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useProfileSummary } from "@/hooks/profile/useProfileSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +29,7 @@ import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthB
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
   const { profile: contextProfile, refetch: refetchProfile } = useProfile();
+  const { data: summary, isLoading: summaryLoading } = useProfileSummary();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -218,13 +222,38 @@ const ProfilePage = () => {
             fullName={profile.full_name}
             avatarUrl={profile.avatar_url}
             userInitials={getUserInitials()}
+            registeredAt={summary?.registeredAt}
+            activeIntegrationsCount={summary?.activeIntegrationsCount}
+            streakDays={summary?.streakDays}
           />
 
           {/* Stats Grid */}
-          <ProfileStats />
+          <ProfileStats 
+            habitsCount={summary?.habitsCount || 0}
+            workoutsCount={summary?.workoutsCount || 0}
+            goalsCount={summary?.goalsCount || 0}
+            metricsCount={summary?.metricsCount || 0}
+            streakDays={summary?.streakDays || 0}
+            isLoading={summaryLoading}
+          />
 
-          {/* Recent Activity */}
-          <RecentActivity />
+          {/* Health + Activity Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <HealthSnapshot 
+              metrics={summary?.latestMetrics || []} 
+              isLoading={summaryLoading} 
+            />
+            <RecentActivity 
+              activities={summary?.recentActivity || []} 
+              isLoading={summaryLoading} 
+            />
+          </div>
+
+          {/* Integrations */}
+          <IntegrationStatus 
+            integrations={summary?.integrations || []} 
+            isLoading={summaryLoading} 
+          />
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1">
