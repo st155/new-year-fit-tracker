@@ -27,22 +27,9 @@ export default function BiomarkerDetail() {
   const [showSettings, setShowSettings] = useState(false);
   const { addToStack, isAdding } = useAddSupplementToStack();
   
-  // Protection: if no biomarkerId, return early before calling hooks
-  if (!biomarkerId) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="text-center">
-          <p className="text-muted-foreground">Некорректный ID биомаркера</p>
-          <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
-            Вернуться к документам
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  const { analysis, isLoading: analysisLoading } = useBiomarkerTrends(biomarkerId);
-  const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId);
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY AT THE TOP
+  const { analysis, isLoading: analysisLoading } = useBiomarkerTrends(biomarkerId || '');
+  const { history, isLoading: historyLoading } = useBiomarkerHistory(biomarkerId || '');
   
   // Fetch stack items linked to this biomarker
   const { data: linkedStackItems } = useQuery({
@@ -55,7 +42,7 @@ export default function BiomarkerDetail() {
         .from('user_stack')
         .select('id, stack_name, start_date')
         .eq('user_id', user.id)
-        .contains('linked_biomarker_ids', [biomarkerId])
+        .contains('linked_biomarker_ids', [biomarkerId!])
         .not('start_date', 'is', null)
         .order('start_date', { ascending: false });
       
@@ -64,6 +51,36 @@ export default function BiomarkerDetail() {
     },
     enabled: !!biomarkerId,
   });
+
+  // Calculate time in optimal zone - MUST be called before any conditional returns
+  const timeInOptimalZone = useMemo(() => {
+    if (!analysis?.success) return null;
+    const { biomarker: bm, reference_ranges: refs } = analysis;
+    const isQual = bm?.data_type === 'qualitative';
+    if (isQual || !analysis?.history || !refs?.optimal_min || !refs?.optimal_max) {
+      return null;
+    }
+    
+    const inOptimal = analysis.history.filter(
+      (h: any) => h.value >= refs.optimal_min! && h.value <= refs.optimal_max!
+    ).length;
+    
+    return Math.round((inOptimal / analysis.history.length) * 100);
+  }, [analysis]);
+
+  // NOW we can have conditional returns - after all hooks
+  if (!biomarkerId) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">Некорректный ID биомаркера</p>
+          <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
+            Вернуться к документам
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (analysisLoading || historyLoading) {
     return (
@@ -166,19 +183,6 @@ export default function BiomarkerDetail() {
 
   // Check if biomarker is qualitative (text-based data)
   const isQualitative = biomarker.data_type === 'qualitative';
-
-  // Calculate time in optimal zone (only for quantitative data)
-  const timeInOptimalZone = useMemo(() => {
-    if (isQualitative || !analysis?.history || !reference_ranges.optimal_min || !reference_ranges.optimal_max) {
-      return null;
-    }
-    
-    const inOptimal = analysis.history.filter(
-      (h: any) => h.value >= reference_ranges.optimal_min! && h.value <= reference_ranges.optimal_max!
-    ).length;
-    
-    return Math.round((inOptimal / analysis.history.length) * 100);
-  }, [isQualitative, analysis?.history, reference_ranges]);
 
   const statusColor =
     statistics.latest < reference_ranges.min ? 'yellow' :
