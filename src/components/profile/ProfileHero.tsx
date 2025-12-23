@@ -1,11 +1,20 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Zap, Flame, Calendar, Plug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Trophy, Zap, Flame, Calendar, Plug, Pencil, Settings, LogOut, RotateCcw, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface ProfileHeroProps {
   username: string;
@@ -15,6 +24,10 @@ interface ProfileHeroProps {
   registeredAt?: string | null;
   activeIntegrationsCount?: number;
   streakDays?: number;
+  onEditProfile?: () => void;
+  onSignOut?: () => void;
+  onResetOnboarding?: () => void;
+  userId?: string;
 }
 
 export function ProfileHero({
@@ -25,6 +38,10 @@ export function ProfileHero({
   registeredAt,
   activeIntegrationsCount = 0,
   streakDays = 0,
+  onEditProfile,
+  onSignOut,
+  onResetOnboarding,
+  userId,
 }: ProfileHeroProps) {
   const { levelInfo, isLoading } = useUserLevel();
 
@@ -53,11 +70,79 @@ export function ProfileHero({
     }
   };
 
+  const handleCopyUserId = () => {
+    if (userId) {
+      navigator.clipboard.writeText(userId);
+      toast.success('User ID скопирован');
+    }
+  };
+
   return (
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 shadow-glow-primary overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 pointer-events-none" />
       
       <CardContent className="p-6 relative">
+        {/* Action Buttons - Top Right */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          {onEditProfile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onEditProfile}
+              className="h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {userId && (
+                <DropdownMenuItem onClick={handleCopyUserId} className="gap-2">
+                  <Copy className="h-4 w-4" />
+                  Скопировать User ID
+                </DropdownMenuItem>
+              )}
+              {onResetOnboarding && (
+                <DropdownMenuItem onClick={onResetOnboarding} className="gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Сбросить онбординг
+                </DropdownMenuItem>
+              )}
+              {onSignOut && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onSignOut} className="gap-2 text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4" />
+                    Выйти
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {onSignOut && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onSignOut}
+              className="gap-1.5 h-9"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Выйти</span>
+            </Button>
+          )}
+        </div>
+
         <div className="flex flex-col md:flex-row items-center gap-6">
           {/* Avatar with Level Border */}
           <motion.div

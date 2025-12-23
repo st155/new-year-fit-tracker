@@ -247,7 +247,7 @@ const ProfilePage = () => {
         </div>
 
         <div className="px-4 max-w-7xl mx-auto space-y-6">
-          {/* Hero Section with Avatar + Level */}
+          {/* Hero Section with Avatar + Level + Actions */}
           <ProfileHero
             username={profile.username || user?.email?.split('@')[0] || 'user'}
             fullName={profile.full_name}
@@ -256,6 +256,9 @@ const ProfilePage = () => {
             registeredAt={summary?.registeredAt}
             activeIntegrationsCount={summary?.activeIntegrationsCount}
             streakDays={summary?.streakDays}
+            onSignOut={handleLogout}
+            onResetOnboarding={handleResetOnboarding}
+            userId={user?.id}
           />
 
           {/* Stats Grid */}
