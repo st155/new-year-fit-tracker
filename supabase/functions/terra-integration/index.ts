@@ -149,14 +149,35 @@ serve(async (req) => {
 
       if (!response.ok) {
         const errorText = await response.text();
+        let errorJson: any = null;
+        try {
+          errorJson = JSON.parse(errorText);
+        } catch {}
+        
+        // Enhanced error logging for debugging session expired issues
         console.error('❌ Terra widget error:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorText.substring(0, 500),
+          body: errorText.substring(0, 1000),
+          errorJson,
           provider: requestedProvider,
           reference_id: user.id,
+          terraDevId: terraDevId?.substring(0, 10) + '...',
+          timestamp: new Date().toISOString(),
         });
-        throw new Error(`Terra API error: ${response.status} - ${errorText.substring(0, 100)}`);
+        
+        // Log specific error patterns
+        if (errorText.includes('session') || errorText.includes('expired') || errorText.includes('token')) {
+          console.error('🔴 SESSION/TOKEN ERROR DETECTED:', {
+            errorPattern: 'session_expired_or_token_invalid',
+            user_id: user.id,
+            provider: requestedProvider,
+            recommendation: 'User needs to clear stuck Terra connections via admin panel (deauth-all)',
+            fullError: errorText,
+          });
+        }
+        
+        throw new Error(`Terra API error: ${response.status} - ${errorJson?.message || errorText.substring(0, 100)}`);
       }
 
       const data = await response.json();
