@@ -6,6 +6,8 @@ interface CategorySummary {
   count: number;
   lastDate: string;
   aiSummary: string;
+  overallScore: 'excellent' | 'good' | 'warning' | 'attention' | null;
+  healthIndicator: string;
 }
 
 export function useCategorySummaries() {
@@ -40,11 +42,52 @@ export function useCategorySummaries() {
       for (const cat of categories) {
         const catDocs = documents?.filter(d => d.category === cat || (!d.category && cat === 'other'));
         if (catDocs && catDocs.length > 0) {
+          // Собираем все уникальные саммари
+          const allSummaries = catDocs
+            .map(d => d.ai_summary)
+            .filter((s): s is string => !!s && s !== 'Нет описания');
+          
+          // Генерируем обобщённое саммари
+          let combinedSummary = '';
+          let overallScore: CategorySummary['overallScore'] = null;
+          let healthIndicator = '';
+
+          if (allSummaries.length > 0) {
+            // Берём ключевые фразы из первых 3 документов
+            const keyPhrases = allSummaries.slice(0, 3);
+            combinedSummary = keyPhrases.join(' • ');
+            
+            // Определяем общую оценку по ключевым словам
+            const allText = allSummaries.join(' ').toLowerCase();
+            
+            if (allText.includes('норм') || allText.includes('хорош') || allText.includes('отлично')) {
+              overallScore = 'excellent';
+              healthIndicator = 'В норме';
+            } else if (allText.includes('незначительн') || allText.includes('лёгк') || allText.includes('легк')) {
+              overallScore = 'good';
+              healthIndicator = 'Незначительные отклонения';
+            } else if (allText.includes('внимани') || allText.includes('контрол') || allText.includes('наблюд')) {
+              overallScore = 'attention';
+              healthIndicator = 'Требует внимания';
+            } else if (allText.includes('повышен') || allText.includes('понижен') || allText.includes('отклон')) {
+              overallScore = 'warning';
+              healthIndicator = 'Есть отклонения';
+            } else {
+              overallScore = 'good';
+              healthIndicator = `${catDocs.length} документ${catDocs.length > 4 ? 'ов' : catDocs.length > 1 ? 'а' : ''}`;
+            }
+          } else {
+            combinedSummary = 'Нет описания';
+            healthIndicator = `${catDocs.length} документ${catDocs.length > 4 ? 'ов' : catDocs.length > 1 ? 'а' : ''}`;
+          }
+
           summaries.push({
             category: cat,
             count: catDocs.length,
-            lastDate: catDocs[0].document_date || catDocs[0].document_date || '',
-            aiSummary: catDocs[0].ai_summary || 'Нет описания',
+            lastDate: catDocs[0].document_date || '',
+            aiSummary: combinedSummary,
+            overallScore,
+            healthIndicator,
           });
         }
       }
