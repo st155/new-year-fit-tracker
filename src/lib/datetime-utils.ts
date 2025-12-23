@@ -58,7 +58,8 @@ export class DateTimeService {
    */
   static todayDateString(): string {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    // Use local date components to avoid UTC conversion issues
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }
 
   /**
