@@ -30,23 +30,34 @@ interface ProtocolCardProps {
       daily_dosage?: number;
       intake_times?: string[];
       notes?: string;
+      linked_product_id?: string | null;
       supplement_products?: {
         name: string;
         brand?: string;
         form?: string;
+        image_url?: string;
       };
+      linked_product?: {
+        id: string;
+        name: string;
+        brand?: string;
+        form?: string;
+        image_url?: string;
+      } | null;
     }>;
   };
   onToggleActive: () => void;
   onDelete: () => void;
   onLogItem: (itemId: string) => void;
+  onLinkItem?: (itemId: string, currentLinkedId: string | null, itemName: string) => void;
 }
 
 export function ProtocolCard({ 
   protocol, 
   onToggleActive, 
   onDelete,
-  onLogItem 
+  onLogItem,
+  onLinkItem
 }: ProtocolCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
