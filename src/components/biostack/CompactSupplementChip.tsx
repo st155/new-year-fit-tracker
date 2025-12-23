@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CheckCircle2, Pill, Camera, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { CheckCircle2, Pill, Camera, TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
 import { UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
 import { cn } from "@/lib/utils";
 import { useLinkedBiomarkers } from "@/hooks/biostack/useLinkedBiomarkers";
@@ -11,11 +11,12 @@ interface CompactSupplementChipProps {
   isSelected: boolean;
   onToggle: () => void;
   onToggleIntake?: () => void;
+  onIncrementIntake?: () => void;
   isToggling?: boolean;
   onAddPhoto?: (productId: string, productName: string) => void;
 }
 
-export function CompactSupplementChip({ item, isSelected, onToggle, onToggleIntake, isToggling, onAddPhoto }: CompactSupplementChipProps) {
+export function CompactSupplementChip({ item, isSelected, onToggle, onToggleIntake, onIncrementIntake, isToggling, onAddPhoto }: CompactSupplementChipProps) {
   const { data: linkedBiomarkers } = useLinkedBiomarkers(item.linkedBiomarkerIds);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable' | null) => {
@@ -104,19 +105,42 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             </div>
 
             {/* Status Indicator */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-1">
               {item.takenToday ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleIntake?.();
-                  }}
-                  disabled={isToggling}
-                  className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors disabled:opacity-50"
-                  title="Отменить приём"
-                >
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                </button>
+                <>
+                  {/* Intake count badge */}
+                  {item.todayIntakeCount > 1 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/20 text-green-500 min-w-[24px] text-center">
+                      ×{item.todayIntakeCount}
+                    </span>
+                  )}
+                  
+                  {/* Increment button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onIncrementIntake?.();
+                    }}
+                    disabled={isToggling}
+                    className="p-1 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+                    title="Добавить ещё приём"
+                  >
+                    <Plus className="h-4 w-4 text-blue-400" />
+                  </button>
+                  
+                  {/* Cancel button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleIntake?.();
+                    }}
+                    disabled={isToggling}
+                    className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors disabled:opacity-50"
+                    title="Отменить приём"
+                  >
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  </button>
+                </>
               ) : (
                 <Checkbox
                   checked={isSelected}
@@ -166,8 +190,13 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Принято в {item.takenAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                 </p>
+                {item.todayIntakeCount > 1 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Нажмите + чтобы добавить ещё
+                  </p>
+                )}
               </div>
             )}
 

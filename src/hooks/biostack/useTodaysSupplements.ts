@@ -20,6 +20,7 @@ export interface UnifiedSupplementItem {
   imageUrl?: string;
   linkedBiomarkerIds?: string[];
   logId?: string; // ID of the intake log for cancellation
+  todayIntakeCount: number; // How many times taken today
   
   // Smart timing fields
   scheduledTime?: string;        // "08:00", "14:00", "22:00"
@@ -80,11 +81,15 @@ export function useTodaysSupplements() {
         .gte('taken_at', todayStart.toISOString())
         .lte('taken_at', todayEnd.toISOString());
 
-      // Use composite key: stack_item_id + intake_time
+      // Use composite key: stack_item_id + intake_time, count intakes
       const logsMap = new Map<string, any>();
+      const logsCountMap = new Map<string, number>();
       logs?.forEach(log => {
         const key = `${log.stack_item_id}-${log.intake_time || 'unknown'}`;
-        logsMap.set(key, log);
+        if (!logsMap.has(key)) {
+          logsMap.set(key, log);
+        }
+        logsCountMap.set(key, (logsCountMap.get(key) || 0) + 1);
       });
 
       // Transform to unified format
@@ -97,6 +102,7 @@ export function useTodaysSupplements() {
           const logKey = `${item.id}-${time}`;
           const log = logsMap.get(logKey);
           const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
+          const intakeCount = logsCountMap.get(logKey) || 0;
           const timeStatus = calculateTimeStatus(
             (item as any).specific_time,
             (item as any).time_window_minutes || 60,
@@ -121,6 +127,7 @@ export function useTodaysSupplements() {
             scheduledTime: (item as any).specific_time,
             intakeInstruction: (item as any).intake_instruction,
             timeWindowMinutes: (item as any).time_window_minutes || 60,
+            todayIntakeCount: intakeCount,
             ...timeStatus,
           });
         });
@@ -176,8 +183,9 @@ export function useTodaysSupplements() {
         .lte('scheduled_time', todayEnd.toISOString())
         .eq('status', 'taken');
 
-      // Group logs by protocol_item_id and intake_time (extracted from scheduled_time)
+      // Group logs by protocol_item_id and intake_time (extracted from scheduled_time), count intakes
       const logsMap = new Map<string, any>();
+      const logsCountMap = new Map<string, number>();
       logs?.forEach(log => {
         const scheduledTime = new Date(log.scheduled_time);
         const hour = scheduledTime.getHours();
@@ -187,7 +195,10 @@ export function useTodaysSupplements() {
         else if (hour >= 21 || hour < 6) intakeTime = 'before_sleep';
         
         const key = `${log.protocol_item_id}-${intakeTime}`;
-        logsMap.set(key, log);
+        if (!logsMap.has(key)) {
+          logsMap.set(key, log);
+        }
+        logsCountMap.set(key, (logsCountMap.get(key) || 0) + 1);
       });
 
       // Transform to unified format - expand intake_times array
@@ -202,6 +213,7 @@ export function useTodaysSupplements() {
             const logKey = `${item.id}-${time}`;
             const log = logsMap.get(logKey);
             const takenAt = log?.taken_at ? new Date(log.taken_at) : undefined;
+            const intakeCount = logsCountMap.get(logKey) || 0;
             const timeStatus = calculateTimeStatus(
               (item as any).specific_time,
               (item as any).time_window_minutes || 60,
@@ -227,6 +239,7 @@ export function useTodaysSupplements() {
               scheduledTime: (item as any).specific_time,
               intakeInstruction: (item as any).intake_instruction,
               timeWindowMinutes: (item as any).time_window_minutes || 60,
+              todayIntakeCount: intakeCount,
               ...timeStatus,
             });
           });
@@ -493,10 +506,69 @@ export function useTodaysSupplements() {
     },
   });
 
+  // Increment intake - add another serving for an already taken supplement
+  const incrementIntakeMutation = useMutation({
+    mutationFn: async (item: UnifiedSupplementItem) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      if (item.source === 'manual') {
+        const { error } = await supabase
+          .from('intake_logs')
+          .insert({
+            user_id: user.id,
+            stack_item_id: item.sourceId,
+            intake_time: item.intakeTime,
+            intake_date: todayDateStr,
+            taken_at: new Date().toISOString(),
+            servings_taken: 1,
+          });
+        
+        if (error) throw error;
+      } else {
+        // Protocol: add another supplement_log entry
+        const parts = item.id.split('-');
+        const intakeTime = parts[parts.length - 1];
+        
+        let hourStart = 6;
+        if (intakeTime === 'afternoon') { hourStart = 12; }
+        else if (intakeTime === 'evening') { hourStart = 17; }
+        else if (intakeTime === 'before_sleep') { hourStart = 21; }
+        
+        const scheduleStart = new Date(todayStart);
+        scheduleStart.setHours(hourStart, 0, 0, 0);
+
+        const { error } = await supabase
+          .from('supplement_logs')
+          .insert({
+            user_id: user.id,
+            protocol_item_id: item.sourceId,
+            scheduled_time: scheduleStart.toISOString(),
+            status: 'taken',
+            taken_at: new Date().toISOString(),
+            servings_taken: 1
+          });
+        
+        if (error) throw error;
+      }
+      
+      return item;
+    },
+    onSuccess: (item) => {
+      queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
+      queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
+      toast.success(`➕ Добавлен приём: ${item.name}`);
+    },
+    onError: (error) => {
+      console.error('Error incrementing intake:', error);
+      toast.error('Ошибка при добавлении приёма');
+    },
+  });
+
   return {
     groupedSupplements,
     allSupplements,
     logIntakeMutation,
     toggleIntakeMutation,
+    incrementIntakeMutation,
   };
 }

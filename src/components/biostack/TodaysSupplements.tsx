@@ -39,7 +39,7 @@ const TIME_GROUPS = [
 ];
 
 export function TodaysSupplements() {
-  const { groupedSupplements, logIntakeMutation, toggleIntakeMutation } = useTodaysSupplements();
+  const { groupedSupplements, logIntakeMutation, toggleIntakeMutation, incrementIntakeMutation } = useTodaysSupplements();
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
   const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
@@ -242,7 +242,8 @@ export function TodaysSupplements() {
                       isSelected={selectedItems.has(item.id)}
                       onToggle={() => handleToggleItem(item.id)}
                       onToggleIntake={() => toggleIntakeMutation.mutate(item)}
-                      isToggling={toggleIntakeMutation.isPending}
+                      onIncrementIntake={() => incrementIntakeMutation.mutate(item)}
+                      isToggling={toggleIntakeMutation.isPending || incrementIntakeMutation.isPending}
                       onAddPhoto={(productId, productName) => setPhotoUploaderProduct({ id: productId, name: productName })}
                     />
                   ))}
