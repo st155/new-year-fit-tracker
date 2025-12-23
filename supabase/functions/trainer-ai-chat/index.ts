@@ -1254,8 +1254,45 @@ IMPORTANT INSTRUCTIONS:
         toolCallsCount: toolCalls?.length || 0,
         assistantMessageLength: assistantMessage.length,
         needsStructuredOutput,
-        eagerMode
+        eagerMode,
+        toolChoiceWasRequired: requestBody.tool_choice === 'required'
       });
+      
+      // RETRY LOGIC: If tool_choice was "required" but AI didn't call tools, retry once
+      if (requestBody.tool_choice === 'required' && (!toolCalls || toolCalls.length === 0)) {
+        console.warn('⚠️ Tool call was required but AI did not call tools. Retrying with explicit prompt...');
+        
+        // Add explicit instruction to use tools
+        const retryMessages = [
+          ...requestBody.messages,
+          { 
+            role: 'user', 
+            content: 'ВАЖНО: Используй инструменты (tools) для выполнения этого запроса. Вызови create_client_goals, update_goal, add_measurements или create_training_plan.' 
+          }
+        ];
+        
+        try {
+          const retryData = await aiClient.complete({
+            model: requestBody.model,
+            messages: retryMessages,
+            tools: requestBody.tools,
+            tool_choice: 'required'
+          });
+          
+          if (retryData.tool_calls && retryData.tool_calls.length > 0) {
+            console.log('✅ Retry succeeded with', retryData.tool_calls.length, 'tool calls');
+            toolCalls = retryData.tool_calls;
+            // Keep original assistantMessage or update if retry provided better content
+            if (retryData.content && retryData.content.length > 10) {
+              assistantMessage = retryData.content;
+            }
+          } else {
+            console.error('❌ Retry also failed to produce tool calls');
+          }
+        } catch (retryError) {
+          console.error('❌ Retry request failed:', retryError);
+        }
+      }
       
       // Initialize isPlan at the top level to avoid scope issues
       let isPlan = false;
@@ -1733,6 +1770,78 @@ ${idx + 1}. [${s.suggestion_type.toUpperCase()}] ${goal.goal_name || 'Unknown go
           }
         });
       }
+    } else if (optimisticPendingAction && structuredActions.length === 0) {
+      // CRITICAL FIX: Optimistic pending action exists but no structured actions were created
+      // This means the AI failed to call tools - we should reject with honest message
+      console.error('⚠️ EAGER MODE FAILURE: Optimistic pending action exists but no structured actions were created');
+      
+      // Reject the pending action with clear error
+      await supabaseClient
+        .from('ai_pending_actions')
+        .update({
+          status: 'rejected',
+          action_plan: '⚠️ Не удалось создать план действий. AI не смог сформировать структурированные действия из запроса.',
+          action_data: []
+        })
+        .eq('id', optimisticPendingAction.id);
+      
+      console.log('❌ Rejected optimistic pending action due to empty structuredActions');
+      
+      // Create honest error message instead of false success
+      const honestErrorMessage = `⚠️ **Не удалось создать план действий**
+
+Я понял ваш запрос, но не смог сформировать структурированный план для выполнения.
+
+**Что можно попробовать:**
+1. Уточните запрос более конкретно
+2. Убедитесь, что выбран правильный клиент
+3. Используйте явные формулировки: "создай цель", "добавь измерение", "обнови цель"
+
+**Пример:**
+"Обнови цель Подтягивания: целевое значение 20 раз, текущий результат 14 раз"`;
+
+      // Find and update preparing message with error
+      const { data: preparingMessage } = await supabaseClient
+        .from('ai_messages')
+        .select('id')
+        .eq('conversation_id', conversation.id)
+        .eq('role', 'assistant')
+        .or('metadata->>status.eq.preparing,metadata->>isOptimistic.eq.true')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (preparingMessage) {
+        await supabaseClient
+          .from('ai_messages')
+          .update({
+            content: honestErrorMessage,
+            metadata: {
+              isPlan: false,
+              error: true,
+              errorType: 'no_structured_actions',
+              isOptimistic: false
+            }
+          })
+          .eq('id', preparingMessage.id);
+        console.log('✅ Updated preparing message with error');
+      } else {
+        // Insert new error message
+        await supabaseClient.from('ai_messages').insert({
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: honestErrorMessage,
+          metadata: {
+            isPlan: false,
+            error: true,
+            errorType: 'no_structured_actions'
+          }
+        });
+        console.log('✅ Created error message');
+      }
+      
+      // Update assistantMessage for response
+      assistantMessage = honestErrorMessage;
     } else {
       // Only check for plan if not auto-executed and no optimistic action
       isPlan = !autoExecuted && structuredActions.length > 0;
@@ -1801,12 +1910,13 @@ ${idx + 1}. [${s.suggestion_type.toUpperCase()}] ${goal.goal_name || 'Unknown go
     
     // Save assistant message:
     // 1. If optimisticPendingAction exists AND structured actions created → already updated above
-    // 2. If optimisticAssistantId exists → try to update it, fallback to insert if not found
-    // 3. Otherwise → insert new message
+    // 2. If optimisticPendingAction exists AND NO structured actions → already handled above with error
+    // 3. If optimisticAssistantId exists → try to update it, fallback to insert if not found
+    // 4. Otherwise → insert new message
 
-    if (optimisticPendingAction && structuredActions.length > 0) {
-      // Case 1: Already updated via optimistic pending action flow
-      console.log('⏭️ Optimistic mode: assistant message already updated via pending action');
+    if (optimisticPendingAction) {
+      // Cases 1 & 2: Already handled above
+      console.log('⏭️ Optimistic mode: assistant message already updated via pending action flow');
     } else if (optimisticAssistantId) {
       // Case 2: Try to update the preparing message sent from frontend
       console.log('📝 Trying to update optimistic assistant message:', optimisticAssistantId);
