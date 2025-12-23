@@ -322,7 +322,7 @@ export function useTodaysSupplements() {
         const scheduleEnd = new Date(todayStart);
         scheduleEnd.setHours(hourEnd, 0, 0, 0);
         
-        const { error: logError } = await supabase
+        const { data: updatedLogs, error: logError } = await supabase
           .from('supplement_logs')
           .update({ 
             status: 'taken',
@@ -330,13 +330,17 @@ export function useTodaysSupplements() {
             servings_taken: 1
           })
           .eq('protocol_item_id', item.sourceId)
-          .eq('status', 'pending')
+          .eq('user_id', user.id)
+          .in('status', ['scheduled', 'pending'])
           .gte('scheduled_time', scheduleStart.toISOString())
           .lte('scheduled_time', scheduleEnd.toISOString())
-          .order('scheduled_time', { ascending: true })
-          .limit(1);
+          .select('id');
 
         if (logError) throw logError;
+        
+        if (!updatedLogs || updatedLogs.length === 0) {
+          console.warn(`No supplement_logs found for protocol_item_id=${item.sourceId}, time=${intakeTime}`);
+        }
       }
       
       return notTakenItems.length;
@@ -371,10 +375,10 @@ export function useTodaysSupplements() {
           
           if (error) throw error;
         } else {
-          // Protocol: revert to pending
+          // Protocol: revert to scheduled
           const { error } = await supabase
             .from('supplement_logs')
-            .update({ status: 'pending', taken_at: null })
+            .update({ status: 'scheduled', taken_at: null })
             .eq('id', item.logId);
           
           if (error) throw error;
@@ -425,7 +429,7 @@ export function useTodaysSupplements() {
           const scheduleEnd = new Date(todayStart);
           scheduleEnd.setHours(hourEnd, 0, 0, 0);
           
-          const { error } = await supabase
+          const { data: updated, error } = await supabase
             .from('supplement_logs')
             .update({ 
               status: 'taken',
@@ -433,13 +437,17 @@ export function useTodaysSupplements() {
               servings_taken: 1
             })
             .eq('protocol_item_id', item.sourceId)
-            .eq('status', 'pending')
+            .eq('user_id', user.id)
+            .in('status', ['scheduled', 'pending'])
             .gte('scheduled_time', scheduleStart.toISOString())
             .lte('scheduled_time', scheduleEnd.toISOString())
-            .order('scheduled_time', { ascending: true })
-            .limit(1);
+            .select('id');
           
           if (error) throw error;
+          
+          if (!updated || updated.length === 0) {
+            console.warn(`No supplement_logs found for toggle: protocol_item_id=${item.sourceId}`);
+          }
         }
         return { action: 'taken', name: item.name };
       }
