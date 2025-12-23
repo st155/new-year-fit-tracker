@@ -42,7 +42,9 @@ export function useTodaysSupplements() {
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
   
-  const todayDateStr = todayStart.toISOString().split('T')[0]; // YYYY-MM-DD
+  // Use local date to avoid UTC timezone conversion issues
+  const now = new Date();
+  const todayDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   // Fetch active user_stack items (manual supplements) with today's intake logs
   const { data: manualSupplements = [] } = useQuery({
