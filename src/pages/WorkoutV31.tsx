@@ -62,7 +62,9 @@ export default function WorkoutV31() {
     chartData, 
     metrics,
     period,
-    setPeriod
+    setPeriod,
+    category,
+    setCategory
   } = useProgressMetrics(user?.id);
 
   // Button handlers
@@ -234,6 +236,8 @@ export default function WorkoutV31() {
                     workouts={workouts}
                     period={period}
                     onPeriodChange={setPeriod}
+                    category={category}
+                    onCategoryChange={setCategory}
                   />
                   <WeeklyGapAnalysis 
                     onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
@@ -261,6 +265,8 @@ export default function WorkoutV31() {
                   workouts={workouts}
                   period={period}
                   onPeriodChange={setPeriod}
+                  category={category}
+                  onCategoryChange={setCategory}
                 />
                 <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
               </div>
@@ -319,6 +325,8 @@ export default function WorkoutV31() {
                 workouts={workouts}
                 period={period}
                 onPeriodChange={setPeriod}
+                category={category}
+                onCategoryChange={setCategory}
               />
               <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
             </TabsContent>

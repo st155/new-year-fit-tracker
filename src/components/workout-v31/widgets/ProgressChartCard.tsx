@@ -60,6 +60,8 @@ interface ProgressChartCardProps {
   metrics?: ProgressMetrics;
   period?: PeriodFilter;
   onPeriodChange?: (period: PeriodFilter) => void;
+  category?: MetricCategory;
+  onCategoryChange?: (category: MetricCategory) => void;
 }
 
 const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
@@ -98,23 +100,12 @@ export function ProgressChartCard({
   workouts,
   metrics: propsMetrics,
   period = '30d',
-  onPeriodChange
+  onPeriodChange,
+  category = 'strength',
+  onCategoryChange
 }: ProgressChartCardProps) {
-  const [category, setCategory] = useState<MetricCategory>('strength');
   
-  // All workout exercises are strength, use category from availableMetrics
-  const categorizedMetrics = availableMetrics.map(m => ({
-    ...m,
-    category: m.category || 'strength' as MetricCategory
-  }));
-
-  // Filter by current category - for now all exercises are strength
-  // Wellness and Body tabs will show placeholder until we add those metrics
-  const filteredMetrics = category === 'strength' 
-    ? categorizedMetrics 
-    : [];
-  
-  // Use props data directly instead of recalculating
+  // Use props data directly
   const chartData = propChartData && propChartData.length > 0 
     ? propChartData 
     : [];
@@ -203,7 +194,7 @@ export function ProgressChartCard({
     <Card className="bg-neutral-900 border border-neutral-800">
       <CardContent className="pt-6">
         {/* Category tabs */}
-        <Tabs value={category} onValueChange={(v) => setCategory(v as MetricCategory)} className="mb-4">
+        <Tabs value={category} onValueChange={(v) => onCategoryChange?.(v as MetricCategory)} className="mb-4">
           <TabsList className="grid w-full grid-cols-3 bg-neutral-800">
             {(Object.entries(CATEGORY_CONFIG) as [MetricCategory, typeof CATEGORY_CONFIG.strength][]).map(([key, config]) => (
               <TabsTrigger 
@@ -258,11 +249,11 @@ export function ProgressChartCard({
         
           <Select value={selectedMetric} onValueChange={onMetricChange}>
             <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">
-              <SelectValue />
+              <SelectValue placeholder="Выберите метрику" />
             </SelectTrigger>
             <SelectContent>
-              {filteredMetrics.length > 0 ? (
-                filteredMetrics.map(metric => (
+              {availableMetrics.length > 0 ? (
+                availableMetrics.map(metric => (
                   <SelectItem key={metric.value} value={metric.value}>
                     {metric.label}
                   </SelectItem>
