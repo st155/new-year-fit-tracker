@@ -22,7 +22,9 @@ import {
   Clock,
   Dumbbell,
   Trash2,
-  Info
+  Info,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import {
   Tooltip,
@@ -30,6 +32,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -98,6 +109,9 @@ export function TerraIntegration() {
   const [syncing, setSyncing] = useState(false);
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const [reactivatingProvider, setReactivatingProvider] = useState<string | null>(null);
+  const [purgingProvider, setPurgingProvider] = useState<string | null>(null);
+  const [showPurgeDialog, setShowPurgeDialog] = useState(false);
+  const [purgeTargetProvider, setPurgeTargetProvider] = useState<string | null>(null);
   const forceSyncMutation = useForceTerraSync();
 
 
@@ -546,6 +560,66 @@ export function TerraIntegration() {
     }
   };
 
+  // Полный сброс Terra (очистка всех сессий на стороне Terra + локальных токенов)
+  const purgeProvider = async (provider: string) => {
+    if (!user) return;
+    
+    setPurgingProvider(provider);
+    setShowPurgeDialog(false);
+    
+    try {
+      toast({
+        title: 'Полный сброс...',
+        description: 'Очищаем все сессии на стороне Terra...',
+      });
+      
+      const { data, error } = await supabase.functions.invoke('terra-integration', {
+        body: { action: 'purge-terra-users', provider },
+      });
+
+      if (error) throw error;
+
+      console.log('Purge result:', data);
+
+      // Очищаем кэши
+      localStorage.removeItem('fitness_metrics_cache');
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['terra-tokens'] });
+
+      toast({
+        title: 'Полный сброс выполнен!',
+        description: `Удалено ${data.terra_users_found || 0} сессий Terra. Теперь выполните следующие шаги перед повторным подключением.`,
+      });
+
+      // Показываем диалог с инструкциями
+      setTimeout(() => {
+        toast({
+          title: 'Следующие шаги:',
+          description: '1. Очистите cookies для whoop.com/oura.com в Safari\n2. Выйдите и войдите в приложение устройства\n3. Подключите устройство заново',
+          duration: 15000,
+        });
+      }, 2000);
+
+      await checkStatus();
+      await checkInactiveProviders();
+    } catch (error: any) {
+      console.error('Purge error:', error);
+      toast({
+        title: 'Ошибка полного сброса',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setPurgingProvider(null);
+    }
+  };
+
+  const openPurgeDialog = (provider: string) => {
+    setPurgeTargetProvider(provider);
+    setShowPurgeDialog(true);
+  };
+
   if (loading) {
     return (
       <Card>
@@ -776,34 +850,63 @@ export function TerraIntegration() {
               const Icon = PROVIDER_ICONS[provider] || Activity;
               const isConnected = status.providers.some(p => p.name === provider);
               const isConnecting = connectingProvider === provider;
+              const isPurging = purgingProvider === provider;
               
               return (
                 <div key={provider} className="space-y-2">
-                  <Button
-                    variant={isConnected ? "secondary" : "outline"}
-                    className="h-auto py-4 justify-start w-full"
-                    onClick={() => !isConnected && connectProvider(provider)}
-                    disabled={isConnected || isConnecting}
-                  >
-                    {isConnecting ? (
-                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
-                    ) : (
-                      <Icon className="h-5 w-5 mr-3" />
-                    )}
-                    <div className="flex-1 text-left">
-                      <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={isConnected ? "secondary" : "outline"}
+                      className="h-auto py-4 justify-start flex-1"
+                      onClick={() => !isConnected && connectProvider(provider)}
+                      disabled={isConnected || isConnecting || isPurging}
+                    >
+                      {isConnecting ? (
+                        <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                      ) : (
+                        <Icon className="h-5 w-5 mr-3" />
+                      )}
+                      <div className="flex-1 text-left">
+                        <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
+                        {isConnected ? (
+                          <p className="text-xs text-muted-foreground">Подключено</p>
+                        ) : isConnecting ? (
+                          <p className="text-xs text-muted-foreground">Открываем окно...</p>
+                        ) : isPurging ? (
+                          <p className="text-xs text-muted-foreground">Сброс...</p>
+                        ) : null}
+                      </div>
                       {isConnected ? (
-                        <p className="text-xs text-muted-foreground">Подключено</p>
-                      ) : isConnecting ? (
-                        <p className="text-xs text-muted-foreground">Открываем окно...</p>
-                      ) : null}
-                    </div>
-                    {isConnected ? (
-                      <CheckCircle className="h-4 w-4 text-success" />
-                    ) : (
-                      <ExternalLink className="h-4 w-4 opacity-50" />
+                        <CheckCircle className="h-4 w-4 text-success" />
+                      ) : (
+                        <ExternalLink className="h-4 w-4 opacity-50" />
+                      )}
+                    </Button>
+                    {!isConnected && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-auto aspect-square"
+                              onClick={() => openPurgeDialog(provider)}
+                              disabled={isPurging}
+                            >
+                              {isPurging ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-4 w-4 text-destructive" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p>Полный сброс: очистить все застрявшие сессии перед подключением</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
-                  </Button>
+                  </div>
                   {isConnecting && (
                     <Button
                       size="sm"
@@ -827,6 +930,75 @@ export function TerraIntegration() {
           </Alert>
         </CardContent>
       </Card>
+
+      {/* Purge Dialog */}
+      <Dialog open={showPurgeDialog} onOpenChange={setShowPurgeDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Полный сброс {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : ''}
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-4">
+              <p>
+                Эта операция полностью удалит все сессии авторизации для {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : 'устройства'} на стороне Terra API и в нашей базе.
+              </p>
+              
+              <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-sm">
+                  <strong>После сброса выполните:</strong>
+                  <ol className="list-decimal list-inside mt-2 space-y-2">
+                    <li>
+                      <strong>Очистите cookies в Safari</strong>
+                      <br />
+                      <span className="text-xs text-muted-foreground ml-4">
+                        Настройки → Safari → Очистить историю и данные сайтов
+                      </span>
+                    </li>
+                    <li>
+                      <strong>Перезайдите в приложение {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : ''}</strong>
+                      <br />
+                      <span className="text-xs text-muted-foreground ml-4">
+                        Выйдите из аккаунта в приложении и войдите заново
+                      </span>
+                    </li>
+                    <li>
+                      <strong>Подключите устройство заново</strong>
+                      <br />
+                      <span className="text-xs text-muted-foreground ml-4">
+                        Вернитесь сюда и нажмите кнопку подключения
+                      </span>
+                    </li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPurgeDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => purgeTargetProvider && purgeProvider(purgeTargetProvider)}
+              disabled={!purgeTargetProvider || purgingProvider !== null}
+            >
+              {purgingProvider ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Сброс...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Выполнить сброс
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

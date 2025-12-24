@@ -882,6 +882,195 @@ serve(async (req) => {
       );
     }
 
+    // Get all Terra users by reference_id (for diagnostics)
+    if (action === 'get-terra-users-by-reference') {
+      const targetUserId = body.targetUserId || user.id;
+      console.log('📋 Fetching Terra users by reference_id:', targetUserId);
+      
+      try {
+        const response = await fetch('https://api.tryterra.co/v2/subscriptions', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'dev-id': terraDevId,
+            'x-api-key': terraApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Terra subscriptions API error:', response.status, errorText);
+          throw new Error(`Terra API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Filter by reference_id (our user_id)
+        const userTerraUsers = data.users?.filter((u: any) => u.reference_id === targetUserId) || [];
+        
+        console.log(`✅ Found ${userTerraUsers.length} Terra users for reference_id ${targetUserId}`);
+
+        // Get local tokens for comparison
+        const { data: localTokens, error: tokensError } = await supabase
+          .from('terra_tokens')
+          .select('*')
+          .eq('user_id', targetUserId);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            reference_id: targetUserId,
+            terra_users: userTerraUsers,
+            terra_users_count: userTerraUsers.length,
+            local_tokens: localTokens || [],
+            local_tokens_count: localTokens?.length || 0,
+            mismatch: userTerraUsers.length !== (localTokens?.length || 0),
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: any) {
+        console.error('❌ Error fetching Terra users by reference:', error);
+        throw error;
+      }
+    }
+
+    // Purge all Terra users for a specific provider (nuclear option for stuck sessions)
+    if (action === 'purge-terra-users') {
+      console.log('🔴 PURGE Terra users requested:', { userId: user.id, provider });
+      
+      const targetProvider = provider?.toUpperCase();
+      
+      try {
+        // Step 1: Get all Terra users for this reference_id from Terra API
+        console.log('📋 Step 1: Fetching all Terra users from API...');
+        const response = await fetch('https://api.tryterra.co/v2/subscriptions', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'dev-id': terraDevId,
+            'x-api-key': terraApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Terra API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Filter by reference_id and optionally by provider
+        let usersToDeauth = data.users?.filter((u: any) => 
+          u.reference_id === user.id &&
+          (!targetProvider || u.provider?.toUpperCase() === targetProvider)
+        ) || [];
+        
+        console.log(`📋 Found ${usersToDeauth.length} Terra users to deauthenticate`);
+        
+        // Step 2: Deauthenticate each Terra user via API
+        const deauthResults: any[] = [];
+        for (const terraUser of usersToDeauth) {
+          console.log(`🔌 Deauthenticating Terra user: ${terraUser.user_id} (${terraUser.provider})`);
+          
+          try {
+            const deauthResponse = await fetch(
+              `https://api.tryterra.co/v2/auth/deauthenticateUser?user_id=${terraUser.user_id}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Accept': 'application/json',
+                  'dev-id': terraDevId,
+                  'x-api-key': terraApiKey,
+                },
+              }
+            );
+            
+            const deauthResult = await deauthResponse.text();
+            deauthResults.push({
+              terra_user_id: terraUser.user_id,
+              provider: terraUser.provider,
+              status: deauthResponse.status,
+              success: deauthResponse.ok,
+              result: deauthResult.substring(0, 200),
+            });
+            
+            if (deauthResponse.ok) {
+              console.log(`✅ Deauthenticated: ${terraUser.user_id}`);
+            } else {
+              console.warn(`⚠️ Failed to deauth: ${terraUser.user_id}`, deauthResult);
+            }
+          } catch (e: any) {
+            console.error(`❌ Error deauthing ${terraUser.user_id}:`, e.message);
+            deauthResults.push({
+              terra_user_id: terraUser.user_id,
+              provider: terraUser.provider,
+              success: false,
+              error: e.message,
+            });
+          }
+        }
+        
+        // Step 3: Delete local tokens from our database
+        console.log('📋 Step 3: Deleting local tokens...');
+        let deleteQuery = supabase
+          .from('terra_tokens')
+          .delete()
+          .eq('user_id', user.id);
+        
+        if (targetProvider) {
+          deleteQuery = deleteQuery.eq('provider', targetProvider);
+        }
+        
+        const { error: deleteError, count: deletedCount } = await deleteQuery;
+        
+        if (deleteError) {
+          console.error('❌ Error deleting local tokens:', deleteError);
+        } else {
+          console.log(`✅ Deleted ${deletedCount || 0} local tokens`);
+        }
+        
+        // Step 4: Log the purge attempt
+        await supabase.from('terra_connection_attempts').insert({
+          user_id: user.id,
+          provider: targetProvider || 'ALL',
+          status: 'purged',
+          metadata: {
+            action: 'purge-terra-users',
+            terra_users_deauthed: deauthResults.length,
+            deauth_results: deauthResults,
+            local_tokens_deleted: deletedCount || 0,
+            timestamp: new Date().toISOString(),
+          }
+        });
+        
+        console.log('🔴 PURGE complete:', {
+          terra_users_found: usersToDeauth.length,
+          deauth_results: deauthResults.length,
+          local_tokens_deleted: deletedCount || 0,
+        });
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            message: 'Terra users purged successfully',
+            provider: targetProvider || 'ALL',
+            terra_users_found: usersToDeauth.length,
+            deauth_results: deauthResults,
+            local_tokens_deleted: deletedCount || 0,
+            next_steps: [
+              'Clear browser cookies for whoop.com/oura.com/etc',
+              'Logout and login to the device app',
+              'Reconnect the device in Elite10'
+            ],
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+        
+      } catch (error: any) {
+        console.error('❌ Purge error:', error);
+        throw error;
+      }
+    }
+
     throw new Error('Unknown action');
 
   } catch (error: any) {
