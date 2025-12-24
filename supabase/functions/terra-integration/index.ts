@@ -97,6 +97,23 @@ serve(async (req) => {
       // Get provider from request if specified (for single-provider flow)
       const requestedProvider = provider ? provider.toUpperCase() : null;
       
+      // Log connection attempt initiation
+      try {
+        await supabase.from('terra_connection_attempts').insert({
+          user_id: user.id,
+          provider: requestedProvider || 'ALL',
+          status: 'initiated',
+          metadata: { 
+            action: 'generate-widget-session',
+            timestamp: new Date().toISOString(),
+            user_agent: req.headers.get('user-agent')
+          }
+        });
+        console.log('📝 Logged connection attempt: initiated for', requestedProvider || 'ALL');
+      } catch (e) {
+        console.error('Failed to log connection attempt:', e);
+      }
+      
       // Build redirect URL with query params to avoid sessionStorage issues
       const baseRedirectUrl = 'https://elite10.club/terra-callback';
       const timestamp = Date.now();

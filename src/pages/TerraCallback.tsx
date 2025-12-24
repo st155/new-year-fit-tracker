@@ -52,6 +52,31 @@ export default function TerraCallback() {
     return false;
   };
 
+  // Helper to log connection attempt
+  const logConnectionAttempt = async (
+    userId: string, 
+    provider: string, 
+    status: 'callback_received' | 'success' | 'error',
+    errorMessage?: string,
+    metadata?: Record<string, any>
+  ) => {
+    try {
+      const urlParams = Object.fromEntries(searchParams.entries());
+      await supabase.from('terra_connection_attempts').insert({
+        user_id: userId,
+        provider: provider.toUpperCase(),
+        status,
+        error_message: errorMessage,
+        url_params: urlParams,
+        terra_user_id: searchParams.get('user') || searchParams.get('user_id') || null,
+        metadata: { ...metadata, callback_url: window.location.href }
+      });
+      console.log(`📝 Logged connection attempt: ${status} for ${provider}`);
+    } catch (e) {
+      console.error('Failed to log connection attempt:', e);
+    }
+  };
+
   useEffect(() => {
     const run = async () => {
       const success = searchParams.get('success');
@@ -103,6 +128,9 @@ export default function TerraCallback() {
 
       // Если Terra вернула terra_user_id прямо в редиректе, связываем пользователя без ожидания вебхука
       if (terraUserId) {
+        // Log callback received
+        await logConnectionAttempt(uid, providerParam, 'callback_received', undefined, { terraUserId, hasDirectBind: true });
+        
         try {
           setStatus('processing');
           setMessage('Подтверждаем подключение...');
@@ -129,6 +157,9 @@ export default function TerraCallback() {
             });
           }
 
+          // Log success
+          await logConnectionAttempt(uid, providerParam, 'success', undefined, { terraUserId, syncStarted: true });
+          
           // Запускаем синхронизацию
           setStatus('success');
           setMessage('Устройство подключено! Запускаем синхронизацию данных...');
@@ -170,6 +201,9 @@ export default function TerraCallback() {
         const isSessionExpired = decodedError.toLowerCase().includes('session') || 
                                   decodedError.toLowerCase().includes('expired') ||
                                   decodedError.toLowerCase().includes('timeout');
+        
+        // Log error to database for debugging
+        await logConnectionAttempt(uid, providerParam, 'error', decodedError, { isSessionExpired });
         
         setStatus('error');
         

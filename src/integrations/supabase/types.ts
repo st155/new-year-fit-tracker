@@ -5029,6 +5029,48 @@ export type Database = {
         }
         Relationships: []
       }
+      terra_connection_attempts: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          provider: string
+          session_id: string | null
+          status: string
+          terra_user_id: string | null
+          updated_at: string | null
+          url_params: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          provider: string
+          session_id?: string | null
+          status?: string
+          terra_user_id?: string | null
+          updated_at?: string | null
+          url_params?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          session_id?: string | null
+          status?: string
+          terra_user_id?: string | null
+          updated_at?: string | null
+          url_params?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       terra_data_payloads: {
         Row: {
           created_at: string
