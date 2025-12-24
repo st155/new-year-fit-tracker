@@ -148,7 +148,7 @@ serve(
     const { data: readinessData, error: readinessError } = await supabase
       .from("client_health_scores")
       .select("recovery_score, sleep_score, activity_score, total_health_score")
-      .eq("client_id", targetUserId)
+      .eq("user_id", targetUserId)
       .maybeSingle();
 
     const readiness: ReadinessData = readinessData || {
@@ -177,7 +177,7 @@ serve(
 
     const { data: performanceLogs, error: logsError } = await supabase
       .from("workout_logs")
-      .select("exercise_name, weight, reps, actual_rir, performed_at")
+      .select("exercise_name, actual_weight, actual_reps, actual_rir, performed_at")
       .eq("user_id", targetUserId)
       .in("exercise_name", exerciseNames)
       .order("performed_at", { ascending: false })
@@ -190,8 +190,8 @@ serve(
         if (!exerciseHistory[log.exercise_name]) {
           exerciseHistory[log.exercise_name] = {
             exercise_name: log.exercise_name,
-            last_weight: log.weight,
-            last_reps: log.reps,
+            last_weight: log.actual_weight,
+            last_reps: log.actual_reps,
             last_rir: log.actual_rir,
             last_date: log.performed_at,
           };
