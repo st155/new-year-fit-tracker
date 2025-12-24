@@ -64,8 +64,39 @@ function extractSide(str: string): { cleaned: string; side?: 'left' | 'right' } 
 function parseSetString(setStr: string, isBodyweightExercise: boolean = false): ParsedSet | null {
   // Extract side indicator first
   const { cleaned, side } = extractSide(setStr);
-  const trimmed = cleaned.trim().toLowerCase();
+  let trimmed = cleaned.trim().toLowerCase();
   if (!trimmed) return null;
+
+  // Remove trailing suffixes like "подхода", "подходов", "раз", "sets"
+  trimmed = trimmed.replace(/\s*(подход|подхода|подходов|sets?)\s*$/i, '');
+
+  // Format: "N подходов по Xсек" (e.g., "3 подхода по 30сек")
+  const setsOfDurationMatch = trimmed.match(/^(\d+)\s*(подход|подхода|подходов)\s*по\s*(\d+)\s*(сек|sec|s|мин|min|м)$/i);
+  if (setsOfDurationMatch) {
+    const sets = parseInt(setsOfDurationMatch[1]);
+    const duration = parseInt(setsOfDurationMatch[3]);
+    const unit = setsOfDurationMatch[4].toLowerCase();
+    const seconds = (unit === 'мин' || unit === 'min' || unit === 'м') ? duration * 60 : duration;
+    return { duration_seconds: seconds, setCount: sets, isBodyweight: true, side };
+  }
+
+  // Format: "N раз" (e.g., "13 раз", "20 раз")
+  const razOnlyMatch = trimmed.match(/^(\d+)\s*раз$/i);
+  if (razOnlyMatch) {
+    return { reps: parseInt(razOnlyMatch[1]), isBodyweight: true, side };
+  }
+
+  // Format: "N разхM" or "N раз x M" (e.g., "10 разх3", "10 раз x 3")
+  const razTimesMatch = trimmed.match(/^(\d+)\s*раз\s*[xх×]\s*(\d+)$/i);
+  if (razTimesMatch) {
+    return { reps: parseInt(razTimesMatch[1]), setCount: parseInt(razTimesMatch[2]), isBodyweight: true, side };
+  }
+
+  // Format: "N раз в каждую сторону" (e.g., "20 раз в каждую сторону")
+  const razEachSideMatch = trimmed.match(/^(\d+)\s*раз\s*(в каждую сторону|each side)$/i);
+  if (razEachSideMatch) {
+    return { reps: parseInt(razEachSideMatch[1]), setCount: 2, isBodyweight: true, side };
+  }
 
   // Duration with multiplier: 40sec x 4, 30s x 3, 60сек x 2
   const durationMultiplierMatch = trimmed.match(/^(\d+)\s*(sec|s|сек|с)\s*[xх×]\s*(\d+)$/i);
@@ -243,8 +274,17 @@ function applyWeightInheritance(sets: ParsedSet[]): void {
 function parseSetsFromLine(line: string, isBodyweightExercise: boolean = false): ParsedSet[] {
   const sets: ParsedSet[] = [];
   
+  // Normalize spaces around x/×/х BEFORE splitting (handles "20 x 8" -> "20x8")
+  let normalizedLine = line.replace(/\s*[xх×]\s*/gi, 'x');
+  
+  // Try to parse the whole line first for complex patterns
+  const wholeParsed = parseSetString(normalizedLine, isBodyweightExercise);
+  if (wholeParsed) {
+    return [wholeParsed];
+  }
+  
   // Split by spaces but keep set patterns together
-  const parts = line.split(/\s+/).filter(Boolean);
+  const parts = normalizedLine.split(/\s+/).filter(Boolean);
   
   for (const part of parts) {
     const parsed = parseSetString(part, isBodyweightExercise);
