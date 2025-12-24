@@ -35,8 +35,20 @@ export interface ChallengeGoal {
 export function useChallengeGoals(userId?: string) {
   const bodyMetrics = useAggregatedBodyMetrics(userId);
 
+  // Ensure react-query recalculates when aggregated body metrics arrive/refresh.
+  const bodyMetricsKey = [
+    bodyMetrics.weight?.date,
+    bodyMetrics.weight?.value,
+    bodyMetrics.bodyFat?.date,
+    bodyMetrics.bodyFat?.value,
+    bodyMetrics.muscleMass?.date,
+    bodyMetrics.muscleMass?.value,
+  ]
+    .filter(Boolean)
+    .join('|');
+
   return useQuery({
-    queryKey: ["challenge-goals", userId],
+    queryKey: ["challenge-goals", userId, bodyMetricsKey],
     queryFn: async () => {
       if (!userId) return [];
 
@@ -130,6 +142,15 @@ export function useChallengeGoals(userId?: string) {
         let source: 'inbody' | 'withings' | 'manual' | undefined;
         let sparklineData = allMeasurements.slice(0, 14);
         let baselineValue: number | null = null;
+
+        const isRecentDate = (dateStr?: string, days: number = 30) => {
+          if (!dateStr) return false;
+          const date = new Date(dateStr);
+          const now = new Date();
+          const diffMs = Math.abs(now.getTime() - date.getTime());
+          const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          return diffDays <= days;
+        };
 
         const goalNameLower = goal.goal_name.toLowerCase();
         const participation = participations?.find(p => p.challenge_id === goal.challenge_id);
@@ -234,7 +255,7 @@ export function useChallengeGoals(userId?: string) {
             baselineValue = participation?.baseline_weight || allMeasurements[allMeasurements.length - 1]?.value || null;
           }
         } else if (goalNameLower.includes('жир') || goalNameLower.includes('fat')) {
-          // Collect all sources
+          // Collect all sources (for UI)
           const sources = bodyMetrics.bodyFat?.sources;
           if (sources) {
             subSources = [];
@@ -248,11 +269,19 @@ export function useChallengeGoals(userId?: string) {
               subSources.push({ source: 'manual', value: sources.manual.value, label: 'Калипер' });
             }
           }
-          
-          // Priority: InBody > Withings > Manual
-          currentValue = bodyMetrics.bodyFat?.value || allMeasurements[0]?.value || 0;
-          source = bodyMetrics.bodyFat?.source;
-          
+
+          // Prefer aggregated body metrics; fallback to manual measurements only if they are recent.
+          if (bodyMetrics.bodyFat?.value !== undefined && bodyMetrics.bodyFat?.value !== null) {
+            currentValue = bodyMetrics.bodyFat.value;
+            source = bodyMetrics.bodyFat.source;
+          } else if (allMeasurements[0]?.value && isRecentDate(allMeasurements[0]?.measurement_date, 30)) {
+            currentValue = allMeasurements[0].value;
+            source = 'manual';
+          } else {
+            currentValue = 0;
+            source = bodyMetrics.bodyFat?.source;
+          }
+
           if (bodyMetrics.bodyFat?.sparklineData) {
             sparklineData = bodyMetrics.bodyFat.sparklineData.slice(0, 14).map(d => ({
               goal_id: goal.id,
@@ -260,7 +289,7 @@ export function useChallengeGoals(userId?: string) {
               measurement_date: d.date
             }));
           }
-          
+
           // Baseline: from sparkline earliest point (after challenge start) > participation > earliest measurement
           if (bodyMetrics.bodyFat?.sparklineData && bodyMetrics.bodyFat.sparklineData.length > 0) {
             let sparkline = bodyMetrics.bodyFat.sparklineData;
