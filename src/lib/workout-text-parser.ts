@@ -80,6 +80,13 @@ function parseSetString(setStr: string, isBodyweightExercise: boolean = false): 
     return { duration_seconds: seconds, setCount: sets, isBodyweight: true, side };
   }
 
+  // Format: decimal minutes "1.5" (1.5 minutes = 90 seconds) for planks etc.
+  const decimalMinMatch = trimmed.match(/^(\d+\.\d+)$/);
+  if (decimalMinMatch && isBodyweightExercise) {
+    const minutes = parseFloat(decimalMinMatch[1]);
+    return { duration_seconds: Math.round(minutes * 60), isBodyweight: true, side };
+  }
+
   // Format: "N раз" (e.g., "13 раз", "20 раз")
   const razOnlyMatch = trimmed.match(/^(\d+)\s*раз$/i);
   if (razOnlyMatch) {
@@ -96,6 +103,28 @@ function parseSetString(setStr: string, isBodyweightExercise: boolean = false): 
   const razEachSideMatch = trimmed.match(/^(\d+)\s*раз\s*(в каждую сторону|each side)$/i);
   if (razEachSideMatch) {
     return { reps: parseInt(razEachSideMatch[1]), setCount: 2, isBodyweight: true, side };
+  }
+
+  // Format: "8x12.5кгx2" or "8 х 12.5кг х 2" (reps x weight kg x sets)
+  const repsWeightSetsMatch = trimmed.match(/^(\d+)\s*[xх×]\s*(\d+(?:\.\d+)?)\s*(kg|кг)\s*[xх×]\s*(\d+)$/i);
+  if (repsWeightSetsMatch) {
+    return { 
+      reps: parseInt(repsWeightSetsMatch[1]), 
+      weight: parseFloat(repsWeightSetsMatch[2]), 
+      setCount: parseInt(repsWeightSetsMatch[4]),
+      side 
+    };
+  }
+
+  // Format: "Nкг AxB на каждую руку" (e.g., "15кг 3x8 на каждую руку")
+  const weightRepsEachHandMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(kg|кг)?\s*(\d+)\s*[xх×]\s*(\d+)\s*(на каждую руку|each arm|each hand)$/i);
+  if (weightRepsEachHandMatch) {
+    const weight = parseFloat(weightRepsEachHandMatch[1]);
+    const a = parseInt(weightRepsEachHandMatch[3]);
+    const b = parseInt(weightRepsEachHandMatch[4]);
+    // a x b - if a is small, it's sets x reps
+    const [sets, reps] = a <= b ? [a, b] : [b, a];
+    return { weight, reps, setCount: sets * 2, side }; // *2 for each arm
   }
 
   // Duration with multiplier: 40sec x 4, 30s x 3, 60сек x 2
@@ -274,8 +303,8 @@ function applyWeightInheritance(sets: ParsedSet[]): void {
 function parseSetsFromLine(line: string, isBodyweightExercise: boolean = false): ParsedSet[] {
   const sets: ParsedSet[] = [];
   
-  // Normalize spaces around x/×/х BEFORE splitting (handles "20 x 8" -> "20x8")
-  let normalizedLine = line.replace(/\s*[xх×]\s*/gi, 'x');
+  // Normalize dashes and spaces around separators (handles "20 - 10" -> "20x10", "20 x 8" -> "20x8")
+  let normalizedLine = line.replace(/\s*[xх×\-—]\s*/gi, 'x');
   
   // Try to parse the whole line first for complex patterns
   const wholeParsed = parseSetString(normalizedLine, isBodyweightExercise);
@@ -309,6 +338,14 @@ function isExerciseName(line: string): boolean {
   // Skip lines with dashes only
   if (/^[-—]+$/.test(trimmed)) return false;
   
+  // Check if line contains exercise name + set data (e.g., "Row 2m", "Plank 1.5")
+  // If it starts with letters and ends with a number/duration pattern, extract the name
+  const exerciseWithSetMatch = trimmed.match(/^([a-zA-Zа-яА-Я][a-zA-Zа-яА-Я\s]*?)\s+(\d+(?:\.\d+)?\s*(?:m|min|мин|s|sec|сек)?|[\d.]+)$/i);
+  if (exerciseWithSetMatch) {
+    // This line has both exercise name and set data - it's NOT just an exercise name
+    return false;
+  }
+  
   // If it contains letters and doesn't parse as a set, it's likely an exercise name
   const hasLetters = /[a-zA-Zа-яА-Я]/.test(trimmed);
   const parsed = parseSetString(trimmed);
@@ -340,6 +377,40 @@ export function parseWorkoutText(text: string): ParsedWorkout {
     // Check for separator (end of superset)
     if (/^[-—]+$/.test(line)) {
       inSuperset = false;
+      continue;
+    }
+    
+    // Check for combined line: "Exercise Name SetData" (e.g., "Row 2m", "Plank 1.5")
+    const combinedMatch = line.match(/^([a-zA-Zа-яА-Я][a-zA-Zа-яА-Я\s]*?)\s+(\d+(?:\.\d+)?\s*(?:m|min|мин|s|sec|сек)?)$/i);
+    if (combinedMatch) {
+      const exerciseName = combinedMatch[1].trim();
+      const setData = combinedMatch[2].trim();
+      
+      // Save previous exercise
+      if (currentExercise && currentExercise.sets.length > 0) {
+        currentExercise.sets = expandSets(currentExercise.sets);
+        applyWeightInheritance(currentExercise.sets);
+        exercises.push(currentExercise);
+      }
+      
+      const normalized = normalizeExerciseName(exerciseName);
+      const isBodyweight = isBodyweightExercise(exerciseName);
+      
+      currentExercise = {
+        name: normalized.canonicalName,
+        displayName: normalized.displayName,
+        displayNameRu: normalized.displayNameRu,
+        wasNormalized: normalized.matched,
+        isBodyweight,
+        sets: [],
+        supersetGroup: inSuperset ? currentSupersetGroup : undefined,
+      };
+      
+      // Parse the set data
+      const sets = parseSetsFromLine(setData, isBodyweight);
+      if (sets.length > 0) {
+        currentExercise.sets.push(...sets);
+      }
       continue;
     }
     
