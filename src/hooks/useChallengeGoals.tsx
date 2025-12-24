@@ -165,7 +165,10 @@ export function useChallengeGoals(userId?: string) {
           }
         } else if (goalNameLower === 'hrv' || goalNameLower === 'hrv (heart rate variability)') {
           const hrvMetrics = allUnifiedHistory?.filter(h => 
-            h.metric_name === 'HRV' || h.metric_name === 'Heart Rate Variability'
+            h.metric_name === 'HRV' || 
+            h.metric_name === 'HRV RMSSD' || 
+            h.metric_name === 'Sleep HRV RMSSD' ||
+            h.metric_name === 'Heart Rate Variability'
           ).slice(0, 14) || [];
           
           if (hrvMetrics.length > 0) {
@@ -180,7 +183,10 @@ export function useChallengeGoals(userId?: string) {
           }
         } else if (goalNameLower === 'resting heart rate' || goalNameLower.includes('resting heart rate')) {
           const rhrMetrics = allUnifiedHistory?.filter(h => 
-            h.metric_name === 'Resting Heart Rate' || h.metric_name === 'Resting HR' || h.metric_name === 'RHR'
+            h.metric_name === 'Resting Heart Rate' || 
+            h.metric_name === 'Resting HR' || 
+            h.metric_name === 'RHR' ||
+            h.metric_name === 'Sleep Resting Heart Rate'
           ).slice(0, 14) || [];
           
           if (rhrMetrics.length > 0) {
@@ -195,7 +201,9 @@ export function useChallengeGoals(userId?: string) {
           }
         } else if (goalNameLower === 'sleep hours' || goalNameLower.includes('sleep hours')) {
           const sleepMetrics = allUnifiedHistory?.filter(h => 
-            h.metric_name === 'Sleep Duration' || h.metric_name === 'Sleep Hours'
+            h.metric_name === 'Sleep Duration' || 
+            h.metric_name === 'Sleep Hours' ||
+            h.metric_name === 'Total Sleep'
           ).slice(0, 14) || [];
           
           if (sleepMetrics.length > 0) {
