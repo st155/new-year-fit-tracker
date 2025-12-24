@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import WorkoutDayNavigator from "@/components/workout/WorkoutDayNavigator";
 import { WorkoutV31Skeleton } from "@/components/workout-v31/WorkoutV31Skeleton";
 import { ManualWorkoutDialog } from "@/components/workout/manual/ManualWorkoutDialog";
-import { FileText, Calendar, Sparkles } from "lucide-react";
+import { FileText, Calendar, Sparkles, Plane } from "lucide-react";
 
 import { ProgressChartCard } from "@/components/workout-v31/widgets/ProgressChartCard";
 import { MicroTrackerCard } from "@/components/workout-v31/widgets/MicroTrackerCard";
@@ -25,12 +25,15 @@ import { CreateWellnessPlanDialog } from "@/components/wellness/CreateWellnessPl
 import { QuickActivityLogger } from "@/components/wellness/QuickActivityLogger";
 import { WellnessWeekView } from "@/components/wellness/WellnessWeekView";
 import { TodayActivitiesCard } from "@/components/wellness/TodayActivitiesCard";
+import { WeeklyGapAnalysis } from "@/components/wellness/WeeklyGapAnalysis";
+import { GenerateTravelWorkoutDialog } from "@/components/wellness/GenerateTravelWorkoutDialog";
 
 export default function WorkoutV31() {
   const [activeTab, setActiveTab] = useState("today");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
   const [manualWorkoutOpen, setManualWorkoutOpen] = useState(false);
   const [wellnessPlanOpen, setWellnessPlanOpen] = useState(false);
+  const [travelWorkoutOpen, setTravelWorkoutOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -113,6 +116,11 @@ export default function WorkoutV31() {
         onSuccess={() => {}}
       />
       
+      <GenerateTravelWorkoutDialog
+        open={travelWorkoutOpen}
+        onOpenChange={setTravelWorkoutOpen}
+      />
+      
       <div className="max-w-[1800px] mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
           <WorkoutDayNavigator
@@ -186,6 +194,14 @@ export default function WorkoutV31() {
                       Записать силовую тренировку
                     </Button>
                     <Button
+                      onClick={() => setTravelWorkoutOpen(true)}
+                      variant="outline"
+                      className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      <Plane className="w-4 h-4 mr-2" />
+                      Тренировка в поездке
+                    </Button>
+                    <Button
                       onClick={() => setWellnessPlanOpen(true)}
                       variant="outline"
                       className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
@@ -213,11 +229,9 @@ export default function WorkoutV31() {
                   availableMetrics={availableMetrics}
                   workouts={workouts}
                 />
-                <MicroTrackerCard
-                  title="Показатели за 7 дней"
-                  data={vitalData}
-                  color="purple"
-                  valueFormatter={(v) => `${v}%`}
+                <WeeklyGapAnalysis 
+                  onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
+                  compact 
                 />
               </div>
 
@@ -241,6 +255,14 @@ export default function WorkoutV31() {
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     Записать силовую
+                  </Button>
+                  <Button
+                    onClick={() => setTravelWorkoutOpen(true)}
+                    variant="outline"
+                    className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                  >
+                    <Plane className="w-4 h-4 mr-2" />
+                    Тренировка в поездке
                   </Button>
                   <Button
                     onClick={() => setWellnessPlanOpen(true)}
@@ -267,12 +289,7 @@ export default function WorkoutV31() {
                 availableMetrics={availableMetrics}
                 workouts={workouts}
               />
-              <MicroTrackerCard
-                title="Показатели за 7 дней"
-                data={vitalData}
-                color="purple"
-                valueFormatter={(v) => `${v}%`}
-              />
+              <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
             </TabsContent>
 
             <TabsContent value="logbook" className="space-y-6 mt-0">

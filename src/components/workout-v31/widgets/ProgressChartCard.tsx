@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -10,8 +11,11 @@ import {
   TooltipProps 
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { chartColors } from '@/lib/chart-colors';
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle, rechartsTooltipItemStyle } from '@/lib/chart-styles';
+import { Dumbbell, Heart, Scale } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface WorkoutHistoryItem {
   id: string;
@@ -41,14 +45,37 @@ interface ProgressMetrics {
   avg: number;
 }
 
+type MetricCategory = 'strength' | 'wellness' | 'body';
+
 interface ProgressChartCardProps {
   selectedMetric: string;
   onMetricChange: (metric: string) => void;
   chartData: ChartDataPoint[];
-  availableMetrics: Array<{ value: string; label: string }>;
+  availableMetrics: Array<{ value: string; label: string; category?: MetricCategory }>;
   workouts: WorkoutHistoryItem[];
   metrics?: ProgressMetrics;
 }
+
+const CATEGORY_CONFIG = {
+  strength: {
+    label: 'Сила',
+    icon: Dumbbell,
+    color: 'text-orange-400',
+    bgColor: 'data-[state=active]:bg-orange-500/20'
+  },
+  wellness: {
+    label: 'Wellness',
+    icon: Heart,
+    color: 'text-purple-400',
+    bgColor: 'data-[state=active]:bg-purple-500/20'
+  },
+  body: {
+    label: 'Тело',
+    icon: Scale,
+    color: 'text-cyan-400',
+    bgColor: 'data-[state=active]:bg-cyan-500/20'
+  }
+};
 
 export function ProgressChartCard({
   selectedMetric,
@@ -58,6 +85,27 @@ export function ProgressChartCard({
   workouts,
   metrics: propsMetrics
 }: ProgressChartCardProps) {
+  const [category, setCategory] = useState<MetricCategory>('strength');
+  
+  // Categorize metrics
+  const categorizedMetrics = availableMetrics.map(m => ({
+    ...m,
+    category: (m.category || 
+      (m.value.includes('1rm') || m.value.includes('press') || m.value.includes('squat') || 
+       m.value.includes('deadlift') || m.value.includes('lunges') || m.value.includes('biceps') ||
+       m.value.includes('dips') ? 'strength' : 
+       m.value.includes('weight') || m.value.includes('bodyfat') || m.value.includes('muscle') ? 'body' :
+       'wellness')) as MetricCategory
+  }));
+
+  // Filter by current category
+  const filteredMetrics = categorizedMetrics.filter(m => m.category === category);
+  
+  // Auto-select first metric of category when category changes
+  const currentMetricInCategory = filteredMetrics.find(m => m.value === selectedMetric);
+  if (!currentMetricInCategory && filteredMetrics.length > 0) {
+    // This will be handled by parent, just show first available
+  }
   
   // Use props data directly instead of recalculating
   const chartData = propChartData && propChartData.length > 0 
@@ -83,14 +131,20 @@ export function ProgressChartCard({
   const formatValue = (value: number) => {
     const safeValue = Number.isFinite(value) ? value : 0;
     
-    // For 1RM metrics, show as kg
-    if (selectedMetric.includes('1rm') || selectedMetric.includes('press') || 
-        selectedMetric.includes('squat') || selectedMetric.includes('deadlift') ||
-        selectedMetric.includes('lunges') || selectedMetric.includes('biceps') ||
-        selectedMetric.includes('dips')) {
+    // For 1RM / strength metrics
+    if (category === 'strength') {
       return `${Math.round(safeValue)} кг`;
     }
     
+    // Body metrics
+    if (category === 'body') {
+      if (selectedMetric.includes('bodyfat')) {
+        return `${safeValue.toFixed(1)}%`;
+      }
+      return `${safeValue.toFixed(1)} кг`;
+    }
+    
+    // Wellness
     switch (selectedMetric) {
       case 'calories':
         return `${Math.round(safeValue)} ккал`;
@@ -100,6 +154,10 @@ export function ProgressChartCard({
         return `${Math.round(safeValue)}`;
       case 'heartRate':
         return `${Math.round(safeValue)} bpm`;
+      case 'sleep':
+        return `${safeValue.toFixed(1)} ч`;
+      case 'steps':
+        return `${Math.round(safeValue)}`;
       default:
         return Math.round(safeValue).toString();
     }
@@ -119,89 +177,124 @@ export function ProgressChartCard({
     return null;
   };
 
+  const categoryConfig = CATEGORY_CONFIG[category];
+  const chartColor = category === 'strength' ? chartColors.rose : 
+                     category === 'wellness' ? chartColors.purple : chartColors.cyan;
+
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
       <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold">Прогресс</h3>
-        
-        <Select value={selectedMetric} onValueChange={onMetricChange}>
-          <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableMetrics.map(metric => (
-              <SelectItem key={metric.value} value={metric.value}>
-                {metric.label}
-              </SelectItem>
+        {/* Category tabs */}
+        <Tabs value={category} onValueChange={(v) => setCategory(v as MetricCategory)} className="mb-4">
+          <TabsList className="grid w-full grid-cols-3 bg-neutral-800">
+            {(Object.entries(CATEGORY_CONFIG) as [MetricCategory, typeof CATEGORY_CONFIG.strength][]).map(([key, config]) => (
+              <TabsTrigger 
+                key={key}
+                value={key}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs",
+                  config.bgColor,
+                  `data-[state=active]:${config.color}`
+                )}
+              >
+                <config.icon className="h-3.5 w-3.5" />
+                {config.label}
+              </TabsTrigger>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
+          </TabsList>
+        </Tabs>
 
-      {chartData.length === 0 ? (
-        <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <p className="text-sm">Нет данных по этому упражнению</p>
-            <p className="text-xs mt-1">Запишите тренировку чтобы увидеть прогресс</p>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <categoryConfig.icon className={cn("h-5 w-5", categoryConfig.color)} />
+            Прогресс
+          </h3>
+        
+          <Select value={selectedMetric} onValueChange={onMetricChange}>
+            <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredMetrics.length > 0 ? (
+                filteredMetrics.map(metric => (
+                  <SelectItem key={metric.value} value={metric.value}>
+                    {metric.label}
+                  </SelectItem>
+                ))
+              ) : (
+                availableMetrics.map(metric => (
+                  <SelectItem key={metric.value} value={metric.value}>
+                    {metric.label}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {chartData.length === 0 ? (
+          <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <p className="text-sm">Нет данных по этому показателю</p>
+              <p className="text-xs mt-1">Запишите тренировку чтобы увидеть прогресс</p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <XAxis 
+                dataKey="date" 
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                domain={['dataMin - 5', 'dataMax + 5']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke={chartColor}
+                strokeWidth={3}
+                fill="url(#colorValue)"
+                dot={{ fill: chartColor, r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                activeDot={{ r: 6, strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+
+        <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Начало</p>
+            <p className="text-sm font-semibold">{formatValue(metrics.start)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Текущий</p>
+            <p className="text-sm font-semibold">{formatValue(metrics.current)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Мин</p>
+            <p className="text-sm font-semibold">{formatValue(metrics.min)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Макс</p>
+            <p className="text-sm font-semibold">{formatValue(metrics.max)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Средний</p>
+            <p className="text-sm font-semibold">{formatValue(metrics.avg)}</p>
           </div>
         </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-            <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chartColors.rose} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={chartColors.rose} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-            <XAxis 
-              dataKey="date" 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-            />
-            <YAxis 
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              domain={['dataMin - 5', 'dataMax + 5']}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke={chartColors.rose}
-              strokeWidth={3}
-              fill="url(#colorValue)"
-              dot={{ fill: chartColors.rose, r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-              activeDot={{ r: 6, strokeWidth: 2 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
-
-      <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Начало</p>
-          <p className="text-sm font-semibold">{formatValue(metrics.start)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Текущий</p>
-          <p className="text-sm font-semibold">{formatValue(metrics.current)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Мин</p>
-          <p className="text-sm font-semibold">{formatValue(metrics.min)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Макс</p>
-          <p className="text-sm font-semibold">{formatValue(metrics.max)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Средний</p>
-          <p className="text-sm font-semibold">{formatValue(metrics.avg)}</p>
-        </div>
-      </div>
       </CardContent>
     </Card>
   );
