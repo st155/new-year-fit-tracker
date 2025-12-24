@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import {
@@ -62,6 +63,7 @@ export function ManualWorkoutDialog({
   onSuccess 
 }: ManualWorkoutDialogProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [workoutText, setWorkoutText] = useState("");
   const [workoutName, setWorkoutName] = useState("Тренировка с тренером");
   const [workoutDate, setWorkoutDate] = useState<Date>(new Date());
@@ -147,7 +149,11 @@ export function ManualWorkoutDialog({
         description: `${parsedWorkout.exercises.length} упражнений, ${parsedWorkout.totalSets} сетов`
       });
 
-      // Reset form
+      // Invalidate workout-related queries for smooth UI update
+      await queryClient.invalidateQueries({ queryKey: ['workout-history'] });
+      await queryClient.invalidateQueries({ queryKey: ['progress-metrics'] });
+
+      // Reset form and close dialog
       setWorkoutText("");
       setParsedWorkout(null);
       setStep('input');

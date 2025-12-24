@@ -104,7 +104,7 @@ export default function WorkoutV31() {
   }
 
   const handleManualWorkoutSuccess = () => {
-    window.location.reload();
+    // Cache invalidation happens inside the dialog
   };
 
   return (
