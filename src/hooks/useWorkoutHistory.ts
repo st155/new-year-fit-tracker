@@ -16,10 +16,20 @@ export interface WorkoutHistoryItem {
   distance?: number; // km for tracker workouts
   sets?: number;
   exercises?: number;
-  source: 'manual' | 'whoop' | 'withings' | 'terra' | 'apple_health' | 'garmin' | 'ultrahuman';
+  source: 'manual' | 'whoop' | 'withings' | 'terra' | 'apple_health' | 'garmin' | 'ultrahuman' | 'linked';
   sourceLabel: string;
   workoutType?: string; // raw workout type for icons
   strain?: number; // Whoop strain score
+  // Linked workout data
+  linkedWorkoutId?: string;
+  linkedData?: {
+    whoopCalories?: number;
+    whoopDuration?: number;
+    whoopStrain?: number;
+    manualVolume?: number;
+    manualSets?: number;
+    manualExercises?: number;
+  };
 }
 
 export function useWorkoutHistory(filter: WorkoutSource = 'all') {
@@ -32,58 +42,38 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
       if (!user) throw new Error('Not authenticated');
 
       const allWorkouts: WorkoutHistoryItem[] = [];
+      const linkedManualIds = new Set<string>();
 
-      // Fetch manual workouts if needed
-      if (filter === 'all' || filter === 'manual') {
-        const { data: manualWorkouts, error: manualError } = await supabase
-          .rpc('get_aggregated_workouts', { p_user_id: user.id });
-
-        if (manualError) throw manualError;
-
-        if (manualWorkouts) {
-          manualWorkouts.forEach((workout: any) => {
-            allWorkouts.push({
-              id: workout.id,
-              date: new Date(workout.performed_at),
-              name: workout.workout_name || 'Тренировка',
-              duration: workout.duration_minutes || 0,
-              calories: workout.estimated_calories || 0,
-              volume: workout.total_volume ? Number(workout.total_volume) : undefined,
-              sets: workout.total_sets ? Number(workout.total_sets) : undefined,
-              exercises: workout.total_exercises ? Number(workout.total_exercises) : undefined,
-              source: 'manual',
-              sourceLabel: 'Вручную',
-            });
-          });
-        }
-      }
-
-      // Fetch tracker workouts if needed
-    if (filter === 'all' || filter === 'tracker') {
-      const { data: trackerWorkouts, error: trackerError } = await supabase
-        .from('workouts')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('source', ['whoop', 'oura', 'garmin', 'withings', 'google', 'apple', 'manual_trainer'])
-        .order('start_time', { ascending: false })
-        .limit(50);
+      // Fetch tracker workouts first to identify linked ones
+      if (filter === 'all' || filter === 'tracker') {
+        const { data: trackerWorkouts, error: trackerError } = await supabase
+          .from('workouts')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('source', ['whoop', 'oura', 'garmin', 'withings', 'google', 'apple', 'manual_trainer'])
+          .order('start_time', { ascending: false })
+          .limit(50);
 
         if (trackerError) throw trackerError;
 
         if (trackerWorkouts) {
-          trackerWorkouts.forEach((workout: any) => {
+          for (const workout of trackerWorkouts) {
+            // Skip WHOOP workouts that are linked - we'll merge them with manual
+            if (workout.source === 'whoop' && workout.linked_workout_id) {
+              linkedManualIds.add(workout.linked_workout_id);
+              continue;
+            }
+
             // Priority 1: Use source_data.name (original name from provider)
             let workoutName = 'Тренировка';
-            const originalName = workout.source_data?.name;
+            const sourceData = workout.source_data as Record<string, any> | null;
+            const originalName = sourceData?.name;
             
             if (originalName && typeof originalName === 'string') {
-              // Translate English names to Russian
               workoutName = translateWorkoutName(originalName);
             } else if (workout.source?.toLowerCase() === 'whoop') {
-              // Fallback for Whoop: use workout_type mapping
               workoutName = getWorkoutTypeName(workout.workout_type);
             } else if (workout.workout_type !== null && workout.workout_type !== undefined) {
-              // Fallback for other providers: use Terra mapping
               workoutName = mapTerraActivityType(workout.workout_type, workout.source);
             }
             
@@ -96,10 +86,65 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
               distance: workout.distance_km,
               source: workout.source?.toLowerCase() as any,
               sourceLabel: getSourceLabel(workout.source),
-              workoutType: originalName || workout.workout_type, // Keep original for icons
-              strain: workout.source_data?.score?.strain,
+              workoutType: originalName || workout.workout_type,
+              strain: sourceData?.score?.strain,
             });
-          });
+          }
+        }
+      }
+
+      // Fetch manual workouts
+      if (filter === 'all' || filter === 'manual') {
+        const { data: manualWorkouts, error: manualError } = await supabase
+          .rpc('get_aggregated_workouts', { p_user_id: user.id });
+
+        if (manualError) throw manualError;
+
+        if (manualWorkouts) {
+          for (const workout of manualWorkouts) {
+            // Check if this manual workout has a linked WHOOP workout
+            const isLinked = linkedManualIds.has(workout.id);
+            
+            let linkedData: WorkoutHistoryItem['linkedData'] = undefined;
+            
+            if (isLinked) {
+              // Fetch linked WHOOP workout data
+              const { data: linkedWhoop } = await supabase
+                .from('workouts')
+                .select('calories_burned, duration_minutes, source_data')
+                .eq('linked_workout_id', workout.id)
+                .eq('source', 'whoop')
+                .single();
+              
+              if (linkedWhoop) {
+                const whoopSourceData = linkedWhoop.source_data as Record<string, any> | null;
+                linkedData = {
+                  whoopCalories: linkedWhoop.calories_burned,
+                  whoopDuration: linkedWhoop.duration_minutes,
+                  whoopStrain: whoopSourceData?.score?.strain,
+                  manualVolume: workout.total_volume ? Number(workout.total_volume) : undefined,
+                  manualSets: workout.total_sets ? Number(workout.total_sets) : undefined,
+                  manualExercises: workout.total_exercises ? Number(workout.total_exercises) : undefined,
+                };
+              }
+            }
+
+            allWorkouts.push({
+              id: workout.id,
+              date: new Date(workout.performed_at),
+              name: workout.workout_name || 'Тренировка',
+              duration: linkedData?.whoopDuration || workout.duration_minutes || 0,
+              calories: linkedData?.whoopCalories || workout.estimated_calories || 0,
+              volume: workout.total_volume ? Number(workout.total_volume) : undefined,
+              sets: workout.total_sets ? Number(workout.total_sets) : undefined,
+              exercises: workout.total_exercises ? Number(workout.total_exercises) : undefined,
+              source: isLinked ? 'linked' : 'manual',
+              sourceLabel: isLinked ? 'WHOOP + Вручную' : 'Вручную',
+              strain: linkedData?.whoopStrain,
+              linkedWorkoutId: isLinked ? workout.id : undefined,
+              linkedData,
+            });
+          }
         }
       }
 
@@ -123,6 +168,7 @@ function getSourceLabel(source: string): string {
     'apple_health': 'Apple Health',
     'garmin': 'Garmin',
     'ultrahuman': 'Ultrahuman',
+    'linked': 'WHOOP + Вручную',
   };
   return labels[source.toLowerCase()] || source;
 }

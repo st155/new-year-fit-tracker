@@ -145,8 +145,29 @@ export function ManualWorkoutDialog({
         if (logsError) throw logsError;
       }
 
+      // Auto-link with WHOOP workout on the same day
+      const workoutDateStr = startTime.toISOString().split('T')[0];
+      const { data: whoopWorkout } = await supabase
+        .from("workouts")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("source", "whoop")
+        .gte("start_time", `${workoutDateStr}T00:00:00`)
+        .lt("start_time", `${workoutDateStr}T23:59:59`)
+        .in("workout_type", ['0', '1', '48', '63', '44', '47', '82', '71'])
+        .is("linked_workout_id", null)
+        .limit(1)
+        .maybeSingle();
+
+      if (whoopWorkout) {
+        await supabase
+          .from("workouts")
+          .update({ linked_workout_id: workout.id })
+          .eq("id", whoopWorkout.id);
+      }
+
       toast.success("Тренировка сохранена!", {
-        description: `${parsedWorkout.exercises.length} упражнений, ${parsedWorkout.totalSets} сетов`
+        description: `${parsedWorkout.exercises.length} упражнений, ${parsedWorkout.totalSets} сетов${whoopWorkout ? ' • Связано с WHOOP' : ''}`
       });
 
       // Invalidate workout-related queries for smooth UI update

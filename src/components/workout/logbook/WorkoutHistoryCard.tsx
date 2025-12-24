@@ -1,7 +1,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch, Share2, Repeat, Trash2, ChevronDown, Trophy } from "lucide-react";
+import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch, Share2, Repeat, Trash2, ChevronDown, Trophy, Link } from "lucide-react";
 import { WorkoutHistoryItem } from "@/hooks/useWorkoutHistory";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -25,7 +25,9 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const deleteWorkout = useDeleteWorkout();
-  const colors = getWorkoutColors(workout.source);
+  const colors = workout.source === 'linked' 
+    ? { accent: 'border-l-gradient-to-r from-pink-500 to-purple-500', badge: 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border-pink-500/30' }
+    : getWorkoutColors(workout.source);
   
   // Swipe gesture state
   const x = useMotionValue(0);
@@ -64,6 +66,9 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   }
   
   const getSourceIcon = () => {
+    if (workout.source === 'linked') {
+      return <Link className="w-4 h-4 text-pink-400" />;
+    }
     switch (workout.source) {
       case 'manual':
         return <PenTool className="w-4 h-4 text-purple-400" />;
@@ -146,6 +151,11 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 mb-2">
               {getSourceIcon()}
               <h3 className="text-xl font-bold text-white">{workout.name}</h3>
+              {workout.source === 'linked' && (
+                <Badge className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border-pink-500/30 text-xs">
+                  WHOOP + Вручную
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-gray-400">
               {format(new Date(workout.date), "EEEE, d MMMM yyyy", { locale: ru })}
@@ -181,6 +191,16 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
               <div>
                 <p className="text-xs text-gray-400">Объем</p>
                 <p className="text-sm font-semibold">{Math.round(workout.volume)} кг</p>
+              </div>
+            </div>
+          )}
+          
+          {workout.strain && workout.strain > 0 && (
+            <div className="flex items-center gap-2 text-gray-300">
+              <Activity className="w-4 h-4 text-red-400" />
+              <div>
+                <p className="text-xs text-gray-400">Strain</p>
+                <p className="text-sm font-semibold">{workout.strain.toFixed(1)}</p>
               </div>
             </div>
           )}
