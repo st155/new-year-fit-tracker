@@ -178,52 +178,80 @@ export default function WorkoutV31() {
         </TabsList>
 
         {isDesktop ? (
-          // Desktop: 3-column grid inside "today" tab
-          <TabsContent value="today" className="mt-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Column 1: Today - Actions */}
-              <div className="space-y-6">
-                {/* Quick Actions Card */}
-                <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Записать активность</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button
-                      onClick={() => setManualWorkoutOpen(true)}
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Записать силовую тренировку
-                    </Button>
-                    <Button
-                      onClick={() => setTravelWorkoutOpen(true)}
-                      variant="outline"
-                      className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-                    >
-                      <Plane className="w-4 h-4 mr-2" />
-                      Тренировка в поездке
-                    </Button>
-                    <Button
-                      onClick={() => setWellnessPlanOpen(true)}
-                      variant="outline"
-                      className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Создать Wellness-расписание
-                    </Button>
-                  </CardContent>
-                </Card>
+          <>
+            {/* Desktop: 3-column grid inside "today" tab */}
+            <TabsContent value="today" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Column 1: Today - Actions */}
+                <div className="space-y-6">
+                  {/* Quick Actions Card */}
+                  <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">Записать активность</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Button
+                        onClick={() => setManualWorkoutOpen(true)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Записать силовую тренировку
+                      </Button>
+                      <Button
+                        onClick={() => setTravelWorkoutOpen(true)}
+                        variant="outline"
+                        className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                      >
+                        <Plane className="w-4 h-4 mr-2" />
+                        Тренировка в поездке
+                      </Button>
+                      <Button
+                        onClick={() => setWellnessPlanOpen(true)}
+                        variant="outline"
+                        className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Создать Wellness-расписание
+                      </Button>
+                    </CardContent>
+                  </Card>
 
-                {/* Today's scheduled activities */}
-                <TodayActivitiesCard />
+                  {/* Today's scheduled activities */}
+                  <TodayActivitiesCard />
 
-                {/* Quick activity logger */}
-                <QuickActivityLogger />
+                  {/* Quick activity logger */}
+                  <QuickActivityLogger />
+                </div>
+
+                {/* Column 2: Progress */}
+                <div className="space-y-6">
+                  <ProgressChartCard
+                    selectedMetric={selectedMetric}
+                    onMetricChange={setSelectedMetric}
+                    chartData={chartData}
+                    metrics={metrics}
+                    availableMetrics={availableMetrics}
+                    workouts={workouts}
+                    period={period}
+                    onPeriodChange={setPeriod}
+                  />
+                  <WeeklyGapAnalysis 
+                    onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
+                    compact 
+                  />
+                </div>
+
+                {/* Column 3: Week Schedule & Journal */}
+                <div className="space-y-6">
+                  <WellnessWeekView compact />
+                  <LogbookSnippetCard workouts={workouts} />
+                </div>
               </div>
+            </TabsContent>
 
-              {/* Column 2: Progress */}
-              <div className="space-y-6">
+            {/* Desktop: Progress tab */}
+            <TabsContent value="progress" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ProgressChartCard
                   selectedMetric={selectedMetric}
                   onMetricChange={setSelectedMetric}
@@ -234,19 +262,15 @@ export default function WorkoutV31() {
                   period={period}
                   onPeriodChange={setPeriod}
                 />
-                <WeeklyGapAnalysis 
-                  onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
-                  compact 
-                />
+                <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
               </div>
+            </TabsContent>
 
-              {/* Column 3: Week Schedule & Journal */}
-              <div className="space-y-6">
-                <WellnessWeekView compact />
-                <LogbookSnippetCard workouts={workouts} />
-              </div>
-            </div>
-          </TabsContent>
+            {/* Desktop: Logbook tab */}
+            <TabsContent value="logbook" className="mt-0">
+              <Logbook />
+            </TabsContent>
+          </>
         ) : (
           // Mobile: Tab-based content switching
           <>
