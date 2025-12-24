@@ -48,6 +48,8 @@ interface ProgressMetrics {
   avg: number;
   change?: number;
   changePercent?: number;
+  totalSessions?: number;
+  totalMinutes?: number;
 }
 
 type MetricCategory = 'strength' | 'wellness' | 'body';
@@ -359,28 +361,50 @@ export function ProgressChartCard({
           </ResponsiveContainer>
         )}
 
-        <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Начало</p>
-            <p className="text-sm font-semibold">{formatValue(metrics.start)}</p>
+        {/* Stats grid - different layout for wellness activities */}
+        {category === 'wellness' && selectedMetric.startsWith('activity:') ? (
+          <div className="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-neutral-800">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Сессий</p>
+              <p className="text-sm font-semibold">{metrics.totalSessions || 0}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Всего</p>
+              <p className="text-sm font-semibold">{metrics.totalMinutes || 0} мин</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Мин</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.min)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Макс</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.max)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Текущий</p>
-            <p className="text-sm font-semibold">{formatValue(metrics.current)}</p>
+        ) : (
+          <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Начало</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.start)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Текущий</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.current)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Мин</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.min)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Макс</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.max)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Средний</p>
+              <p className="text-sm font-semibold">{formatValue(metrics.avg)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Мин</p>
-            <p className="text-sm font-semibold">{formatValue(metrics.min)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Макс</p>
-            <p className="text-sm font-semibold">{formatValue(metrics.max)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Средний</p>
-            <p className="text-sm font-semibold">{formatValue(metrics.avg)}</p>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
