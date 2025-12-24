@@ -38,12 +38,12 @@ export function useTodayInsights(userId: string | undefined) {
         .gte('measurement_date', sevenDaysAgo)
         .lte('measurement_date', today);
 
-      // Count active goals - bypass type checking to avoid deep instantiation error
+      // Count personal goals (goals table doesn't have 'status' column)
       const goalsResponse = await (supabase as any)
         .from('goals')
         .select('id')
         .eq('user_id', userId)
-        .eq('status', 'active');
+        .eq('is_personal', true);
       const goalsCount = goalsResponse?.data?.length || 0;
 
       // Count active habits - bypass type checking to avoid deep instantiation error
