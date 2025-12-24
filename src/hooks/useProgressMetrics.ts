@@ -197,14 +197,13 @@ export function useProgressMetrics(userId?: string) {
       const startDate = subDays(new Date(), periodDays).toISOString();
       
       if (category === 'strength') {
-        // Fetch from workout_logs for strength exercises
+        // Fetch from workout_logs for strength exercises (including bodyweight)
         const { data, error } = await supabase
           .from('workout_logs')
           .select('exercise_name, actual_weight, actual_reps, performed_at')
           .eq('user_id', userId)
           .eq('exercise_name', selectedMetric)
           .gte('performed_at', startDate)
-          .gt('actual_weight', 0)
           .order('performed_at', { ascending: true });
         
         if (error) throw error;
@@ -245,21 +244,29 @@ export function useProgressMetrics(userId?: string) {
     }
 
     if (category === 'strength') {
-      // Group by date and calculate max estimated 1RM per day
-      const byDate: Record<string, { date: Date; maxWeight: number; maxReps: number; estimated1RM: number }> = {};
+      // Group by date and calculate max value per day
+      // For weighted exercises: use estimated 1RM
+      // For bodyweight exercises (weight = 0): use max reps
+      const byDate: Record<string, { date: Date; maxWeight: number; maxReps: number; value: number; isBodyweight: boolean }> = {};
       
       for (const log of workoutData as { performed_at: string; actual_weight: number; actual_reps: number }[]) {
         if (!log.performed_at) continue;
         
         const dateKey = format(new Date(log.performed_at), 'yyyy-MM-dd');
-        const estimated1RM = calculateEstimated1RM(log.actual_weight, log.actual_reps);
+        const isBodyweight = !log.actual_weight || log.actual_weight === 0;
         
-        if (!byDate[dateKey] || estimated1RM > byDate[dateKey].estimated1RM) {
+        // For bodyweight: use reps as value; for weighted: use estimated 1RM
+        const value = isBodyweight 
+          ? log.actual_reps 
+          : calculateEstimated1RM(log.actual_weight, log.actual_reps);
+        
+        if (!byDate[dateKey] || value > byDate[dateKey].value) {
           byDate[dateKey] = {
             date: new Date(log.performed_at),
-            maxWeight: log.actual_weight,
+            maxWeight: log.actual_weight || 0,
             maxReps: log.actual_reps,
-            estimated1RM
+            value,
+            isBodyweight
           };
         }
       }
@@ -268,9 +275,10 @@ export function useProgressMetrics(userId?: string) {
       
       return sorted.map(d => ({
         date: format(d.date, 'd MMM', { locale: ru }),
-        value: d.estimated1RM,
+        value: d.value,
         weight: d.maxWeight,
-        reps: d.maxReps
+        reps: d.maxReps,
+        isBodyweight: d.isBodyweight
       }));
     } else if (isWellnessActivity) {
       // For wellness activities - group by date and sum duration
