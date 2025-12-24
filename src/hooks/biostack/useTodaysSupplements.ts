@@ -144,6 +144,8 @@ export function useTodaysSupplements() {
     queryFn: async () => {
       if (!user?.id) return [];
 
+      console.log('🔍 [useTodaysSupplements] Fetching protocols for user:', user.id);
+
       const { data: protocols, error: protocolError } = await supabase
         .from('protocols')
         .select(`
@@ -169,6 +171,13 @@ export function useTodaysSupplements() {
         .eq('is_active', true);
 
       if (protocolError) throw protocolError;
+
+      console.log('📦 [useTodaysSupplements] Protocols fetched:', protocols?.length);
+      console.log('📦 [useTodaysSupplements] Protocol items with intake_times:', 
+        protocols?.flatMap(p => p.protocol_items?.map((i: any) => ({
+          name: i.supplement_products?.name,
+          intake_times: i.intake_times
+        }))));
 
       // Fetch today's supplement logs
       const protocolItemIds = protocols?.flatMap(p => 
@@ -206,7 +215,12 @@ export function useTodaysSupplements() {
       protocols?.forEach(protocol => {
         protocol.protocol_items?.forEach((item: any) => {
           const product = item.supplement_products;
-          const intakeTimes = item.intake_times || ['morning'];
+          // Ensure intake_times is valid and non-empty
+          const intakeTimes = (item.intake_times && item.intake_times.length > 0) 
+            ? item.intake_times 
+            : ['morning'];
+          
+          console.log(`🕐 [useTodaysSupplements] Processing item: ${product?.name}, intake_times:`, intakeTimes);
           
           // Create separate entry for each intake time
           intakeTimes.forEach((time: string) => {
@@ -246,6 +260,10 @@ export function useTodaysSupplements() {
         });
       });
 
+      console.log('📦 [useTodaysSupplements] Protocol items transformed:', items.length);
+      console.log('🌙 [useTodaysSupplements] Evening items:', items.filter(i => i.intakeTime === 'evening').length);
+      console.log('😴 [useTodaysSupplements] Before sleep items:', items.filter(i => i.intakeTime === 'before_sleep').length);
+
       return items;
     },
     enabled: !!user?.id,
@@ -261,6 +279,16 @@ export function useTodaysSupplements() {
     before_sleep: allSupplements.filter(s => s.intakeTime === 'before_sleep'),
     as_needed: allSupplements.filter(s => s.intakeTime === 'as_needed'),
   };
+
+  // Debug log for grouped supplements
+  console.log('📊 [useTodaysSupplements] Grouped supplements:', {
+    morning: groupedSupplements.morning.length,
+    afternoon: groupedSupplements.afternoon.length,
+    evening: groupedSupplements.evening.length,
+    before_sleep: groupedSupplements.before_sleep.length,
+    as_needed: groupedSupplements.as_needed.length,
+    total: allSupplements.length,
+  });
 
   // Log intake for selected items (only items NOT already taken today)
   const logIntakeMutation = useMutation({
