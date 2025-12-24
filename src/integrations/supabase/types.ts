@@ -6577,6 +6577,7 @@ export type Database = {
           heart_rate_avg: number | null
           heart_rate_max: number | null
           id: string
+          linked_workout_id: string | null
           notes: string | null
           source: string | null
           source_data: Json | null
@@ -6595,6 +6596,7 @@ export type Database = {
           heart_rate_avg?: number | null
           heart_rate_max?: number | null
           id?: string
+          linked_workout_id?: string | null
           notes?: string | null
           source?: string | null
           source_data?: Json | null
@@ -6613,6 +6615,7 @@ export type Database = {
           heart_rate_avg?: number | null
           heart_rate_max?: number | null
           id?: string
+          linked_workout_id?: string | null
           notes?: string | null
           source?: string | null
           source_data?: Json | null
@@ -6621,7 +6624,15 @@ export type Database = {
           user_id?: string
           workout_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workouts_linked_workout_id_fkey"
+            columns: ["linked_workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       xp_history: {
         Row: {
