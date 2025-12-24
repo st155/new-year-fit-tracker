@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { parseWorkoutText, ParsedWorkout } from "@/lib/workout-text-parser";
 import { ParsedWorkoutPreview } from "./ParsedWorkoutPreview";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, FileText, Calendar, Clock, User } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, FileText, Calendar as CalendarIcon, Clock, User } from "lucide-react";
 
 interface ManualWorkoutDialogProps {
   open: boolean;
@@ -56,7 +64,7 @@ export function ManualWorkoutDialog({
   const { user } = useAuth();
   const [workoutText, setWorkoutText] = useState("");
   const [workoutName, setWorkoutName] = useState("Тренировка с тренером");
-  const [workoutDate, setWorkoutDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [workoutDate, setWorkoutDate] = useState<Date>(new Date());
   const [duration, setDuration] = useState("60");
   const [trainerName, setTrainerName] = useState("");
   const [parsedWorkout, setParsedWorkout] = useState<ParsedWorkout | null>(null);
@@ -86,7 +94,8 @@ export function ManualWorkoutDialog({
 
     setIsSaving(true);
     try {
-      const startTime = new Date(`${workoutDate}T10:00:00`);
+      const startTime = new Date(workoutDate);
+      startTime.setHours(10, 0, 0, 0);
       const notes = trainerName ? `Тренировка с ${trainerName}` : workoutName;
 
       // Create workout record
@@ -208,17 +217,34 @@ export function ManualWorkoutDialog({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="workout-date" className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
+                <Label className="flex items-center gap-1.5">
+                  <CalendarIcon className="w-3.5 h-3.5" />
                   Дата
                 </Label>
-                <Input
-                  id="workout-date"
-                  type="date"
-                  value={workoutDate}
-                  onChange={(e) => setWorkoutDate(e.target.value)}
-                  className="bg-neutral-800 border-neutral-700"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-neutral-800 border-neutral-700 hover:bg-neutral-700",
+                        !workoutDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {workoutDate ? format(workoutDate, "d MMMM yyyy", { locale: ru }) : "Выберите дату"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={workoutDate}
+                      onSelect={(date) => date && setWorkoutDate(date)}
+                      initialFocus
+                      className="pointer-events-auto"
+                      disabled={(date) => date > new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration" className="flex items-center gap-1.5">
@@ -267,7 +293,7 @@ export function ManualWorkoutDialog({
               <ParsedWorkoutPreview 
                 workout={parsedWorkout}
                 workoutName={trainerName ? `${workoutName} (${trainerName})` : workoutName}
-                date={workoutDate}
+                date={format(workoutDate, "yyyy-MM-dd")}
                 duration={parseInt(duration) || 60}
               />
             )}
