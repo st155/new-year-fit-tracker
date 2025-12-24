@@ -313,7 +313,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => plan.plan_id && navigate(`/training-plan/${plan.plan_id}`)}
+                                onClick={() => plan.plan_id && navigate(`/training-plans/${plan.plan_id}`)}
                               >
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 Открыть план
