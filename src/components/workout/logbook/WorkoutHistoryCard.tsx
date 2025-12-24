@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { getWorkoutColors } from "@/lib/workout-colors";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useDeleteWorkout } from "@/hooks/useDeleteWorkout";
+import DeleteWorkoutDialog from "./DeleteWorkoutDialog";
 
 interface WorkoutHistoryCardProps {
   workout: WorkoutHistoryItem;
@@ -20,7 +22,9 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
+  const deleteWorkout = useDeleteWorkout();
   const colors = getWorkoutColors(workout.source);
   
   // Swipe gesture state
@@ -45,11 +49,7 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
     } else if (info.offset.x < -threshold) {
       // Swipe left - Delete
       if ('vibrate' in navigator) navigator.vibrate(15);
-      toast({
-        title: "Удалить тренировку?",
-        description: "Функция в разработке",
-        variant: "destructive"
-      });
+      setShowDeleteDialog(true);
       x.set(0);
     } else {
       x.set(0);
@@ -126,7 +126,15 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); }}>
             <Repeat className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive" onClick={(e) => { e.stopPropagation(); }}>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0 text-destructive" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              setShowDeleteDialog(true);
+            }}
+          >
             <Trash2 className="w-4 h-4" />
           </Button>
         </motion.div>
@@ -205,6 +213,18 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
         )}
       </div>
       </motion.div>
+      
+      <DeleteWorkoutDialog
+        workout={workout}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={() => {
+          deleteWorkout.mutate(workout, {
+            onSuccess: () => setShowDeleteDialog(false)
+          });
+        }}
+        isDeleting={deleteWorkout.isPending}
+      />
     </div>
   );
 }
