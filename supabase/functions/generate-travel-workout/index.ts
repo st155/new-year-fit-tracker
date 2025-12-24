@@ -36,11 +36,12 @@ serve(async (req) => {
     const { 
       durationMinutes = 45,
       equipment = 'bodyweight',
+      workoutType = 'full_body',
       focusMuscles = [],
       gapAnalysis = null
     } = await req.json();
 
-    console.log(`Generating travel workout for user ${user.id}: ${durationMinutes}min, equipment: ${equipment}`);
+    console.log(`Generating travel workout for user ${user.id}: ${durationMinutes}min, equipment: ${equipment}, type: ${workoutType}`);
 
     // Получаем историю тренировок за последние 60 дней для контекста
     const startDate = new Date();
@@ -139,6 +140,19 @@ serve(async (req) => {
       ? `\n\nПОЛЬЗОВАТЕЛЬ ХОЧЕТ СФОКУСИРОВАТЬСЯ НА: ${focusMuscles.join(', ')}`
       : '';
 
+    // Маппинг типа тренировки
+    const workoutTypeMap: Record<string, string> = {
+      'full_body': 'тренировка на всё тело',
+      'upper': 'тренировка верхней части тела (грудь, спина, плечи, руки)',
+      'lower': 'тренировка нижней части тела (ноги, ягодицы, кор)',
+      'push': 'жимовая тренировка (грудь, плечи, трицепс)',
+      'pull': 'тяговая тренировка (спина, бицепс)',
+      'cardio': 'кардио тренировка (HIIT, бег, прыжки)',
+      'custom': 'пользовательский выбор мышц'
+    };
+
+    const workoutTypeText = workoutTypeMap[workoutType] || workoutType;
+
     // Маппинг оборудования
     const equipmentMap: Record<string, string> = {
       'bodyweight': 'только собственный вес (без оборудования)',
@@ -190,6 +204,7 @@ ${gapsText}
 ${focusText}
 
 ПАРАМЕТРЫ ТРЕНИРОВКИ:
+- Тип тренировки: ${workoutTypeText}
 - Длительность: ${durationMinutes} минут
 - Доступное оборудование: ${equipmentText}
 

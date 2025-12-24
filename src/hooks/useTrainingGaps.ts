@@ -100,6 +100,7 @@ export function useGenerateTravelWorkout() {
     mutationFn: async (params: {
       durationMinutes?: number;
       equipment?: string;
+      workoutType?: string;
       focusMuscles?: string[];
       gapAnalysis?: GapAnalysisResult | null;
     }): Promise<GeneratedWorkout> => {
