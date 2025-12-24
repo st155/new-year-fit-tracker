@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Target, Dumbbell, Sparkles, Edit } from "lucide-react";
+import { Calendar, Target, Dumbbell, Sparkles, Edit, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -53,6 +53,24 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
       }
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при активации плана');
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    setIsActivating(true);
+    try {
+      const { error } = await supabase
+        .from('assigned_training_plans')
+        .update({ status: 'inactive' })
+        .eq('id', plan.id);
+      
+      if (error) throw error;
+      toast.success('План деактивирован');
+      onUpdate();
+    } catch (error: any) {
+      toast.error('Не удалось деактивировать план');
     } finally {
       setIsActivating(false);
     }
@@ -140,6 +158,19 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
                 size="sm"
               >
                 <Edit className="w-4 h-4" />
+              </Button>
+            )}
+
+            {isActive && (
+              <Button
+                onClick={handleDeactivate}
+                disabled={isActivating}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                title="Деактивировать план"
+              >
+                <Pause className="w-4 h-4" />
               </Button>
             )}
           </div>
