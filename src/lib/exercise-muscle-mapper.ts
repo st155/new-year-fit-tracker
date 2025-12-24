@@ -63,6 +63,11 @@ const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
   'decline press': ['chest'],
   'chest dip': ['chest', 'arms'],
   'pec deck': ['chest'],
+  'bench incline press': ['chest', 'shoulders'],
+  'fly dumbbell': ['chest'],
+  'bench press': ['chest'],
+  'push up': ['chest', 'arms'],
+  'pushup': ['chest', 'arms'],
   
   // Спина
   'lat pulldown': ['back'],
@@ -71,6 +76,15 @@ const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
   'hyperextension': ['back', 'core'],
   'good morning': ['back', 'legs'],
   'face pull': ['back', 'shoulders'],
+  'chinup': ['back', 'arms'],
+  'pullup': ['back', 'arms'],
+  'chin-up': ['back', 'arms'],
+  'pull-up': ['back', 'arms'],
+  'chinup pullup': ['back', 'arms'],
+  'bent row': ['back'],
+  'bent row dumbbells': ['back'],
+  'bent over row': ['back'],
+  'seated row': ['back'],
   
   // Ноги
   'hack squat': ['legs'],
@@ -81,6 +95,15 @@ const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
   'hip thrust': ['legs'],
   'calf raise': ['legs'],
   'box jump': ['legs', 'cardio'],
+  'lunges': ['legs'],
+  'lunge': ['legs'],
+  'lunges alternating': ['legs'],
+  'alternating lunges': ['legs'],
+  'walking lunges': ['legs'],
+  'split squat': ['legs'],
+  'bulgarian split squat': ['legs'],
+  'goblet squat': ['legs'],
+  'leg press': ['legs'],
   
   // Плечи
   'arnold press': ['shoulders'],
@@ -88,24 +111,45 @@ const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
   'rear delt fly': ['shoulders', 'back'],
   'upright row': ['shoulders'],
   'shrug': ['shoulders'],
+  'overhead press': ['shoulders'],
+  'overhead press barbell': ['shoulders'],
+  'military press': ['shoulders'],
+  'lateral raise': ['shoulders'],
+  'shoulder press': ['shoulders'],
   
   // Руки
   'hammer curl': ['arms'],
   'preacher curl': ['arms'],
   'skull crusher': ['arms'],
   'dip': ['arms', 'chest'],
+  'dips': ['arms', 'chest'],
   'close grip bench': ['arms', 'chest'],
   'cable curl': ['arms'],
   'rope pushdown': ['arms'],
+  'biceps curl': ['arms'],
+  'biceps cable': ['arms'],
+  'biceps dumbbell': ['arms'],
+  'triceps cable': ['arms'],
+  'triceps extension': ['arms'],
+  'triceps pushdown': ['arms'],
   
   // Кор
   'russian twist': ['core'],
   'leg raise': ['core'],
+  'legs hanging raise': ['core'],
+  'hanging leg raise': ['core'],
   'mountain climber': ['core', 'cardio'],
   'ab wheel': ['core'],
   'dead bug': ['core'],
   'bird dog': ['core', 'back'],
   'hollow hold': ['core'],
+  'plank': ['core'],
+  'side plank': ['core'],
+  'sit-up': ['core'],
+  'situp': ['core'],
+  'sit up': ['core'],
+  'crunch': ['core'],
+  'crunches': ['core'],
   
   // Кардио
   'treadmill': ['cardio'],
@@ -114,6 +158,9 @@ const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
   'jump rope': ['cardio'],
   'burpee': ['cardio', 'legs', 'chest'],
   'battle rope': ['cardio', 'arms', 'core'],
+  'running': ['cardio'],
+  'cycling': ['cardio'],
+  'swimming': ['cardio'],
 };
 
 /**
