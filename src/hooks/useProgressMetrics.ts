@@ -349,6 +349,12 @@ export function useProgressMetrics(userId?: string) {
     };
   }, [chartData]);
 
+  // Check if current exercise is bodyweight based on chart data
+  const isBodyweightExercise = useMemo(() => {
+    if (category !== 'strength' || chartData.length === 0) return false;
+    return chartData.every((d: any) => d.isBodyweight === true);
+  }, [chartData, category]);
+
   return {
     selectedMetric,
     setSelectedMetric,
@@ -359,6 +365,7 @@ export function useProgressMetrics(userId?: string) {
     period,
     setPeriod,
     category,
-    setCategory
+    setCategory,
+    isBodyweightExercise
   };
 }

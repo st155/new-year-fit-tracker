@@ -8,13 +8,19 @@ interface ExerciseProgress {
   reps: number;
   volume: number;
   isPR: boolean;
+  isBodyweight: boolean;
+}
+
+interface ExerciseProgressResult {
+  data: ExerciseProgress[];
+  isBodyweight: boolean;
 }
 
 export function useExerciseProgress(exerciseName: string, userId?: string) {
   return useQuery({
     queryKey: ['exercise-progress', exerciseName, userId],
-    queryFn: async () => {
-      if (!userId) return [];
+    queryFn: async (): Promise<ExerciseProgressResult> => {
+      if (!userId) return { data: [], isBodyweight: false };
 
       const threeMonthsAgo = subMonths(new Date(), 3);
 
@@ -28,20 +34,32 @@ export function useExerciseProgress(exerciseName: string, userId?: string) {
 
       if (error) throw error;
 
-      // Group by date and find max weight per day
+      // Determine if this is a bodyweight exercise (majority of entries have weight = 0)
+      const totalEntries = data?.length || 0;
+      const bodyweightEntries = data?.filter(d => !d.actual_weight || d.actual_weight === 0).length || 0;
+      const isBodyweight = totalEntries > 0 && bodyweightEntries > totalEntries / 2;
+
+      // Group by date and find max value per day
+      // For bodyweight: max reps; for weighted: max weight
       const grouped = data?.reduce((acc: Record<string, ExerciseProgress>, curr) => {
         const date = new Date(curr.performed_at).toLocaleDateString('ru-RU');
         const weight = curr.actual_weight || 0;
         const reps = curr.actual_reps || 0;
         const volume = weight * reps;
 
-        if (!acc[date] || weight > acc[date].weight) {
+        const currentBest = acc[date];
+        const shouldReplace = !currentBest || (isBodyweight 
+          ? reps > currentBest.reps 
+          : weight > currentBest.weight);
+
+        if (shouldReplace) {
           acc[date] = {
             date: curr.performed_at,
             weight,
             reps,
             volume,
             isPR: false,
+            isBodyweight: !weight || weight === 0,
           };
         }
 
@@ -50,22 +68,23 @@ export function useExerciseProgress(exerciseName: string, userId?: string) {
 
       const progressArray = Object.values(grouped || {});
 
-      // Mark PRs
-      let maxWeight = 0;
+      // Mark PRs based on the primary metric
+      let maxValue = 0;
       progressArray.forEach(entry => {
-        if (entry.weight > maxWeight) {
+        const value = isBodyweight ? entry.reps : entry.weight;
+        if (value > maxValue) {
           entry.isPR = true;
-          maxWeight = entry.weight;
+          maxValue = value;
         }
       });
 
-      return progressArray;
+      return { data: progressArray, isBodyweight };
     },
     enabled: !!userId && !!exerciseName,
   });
 }
 
-export function calculateTrend(data: ExerciseProgress[]): {
+export function calculateTrend(data: ExerciseProgress[], isBodyweight: boolean = false): {
   direction: 'up' | 'down' | 'stable';
   percentage: number;
 } {
@@ -76,10 +95,13 @@ export function calculateTrend(data: ExerciseProgress[]): {
 
   if (older.length === 0) return { direction: 'stable', percentage: 0 };
 
-  const recentAvg = recent.reduce((sum, d) => sum + d.weight, 0) / recent.length;
-  const olderAvg = older.reduce((sum, d) => sum + d.weight, 0) / older.length;
+  // Use reps for bodyweight, weight for weighted exercises
+  const getValue = (d: ExerciseProgress) => isBodyweight ? d.reps : d.weight;
+  
+  const recentAvg = recent.reduce((sum, d) => sum + getValue(d), 0) / recent.length;
+  const olderAvg = older.reduce((sum, d) => sum + getValue(d), 0) / older.length;
 
-  const percentage = ((recentAvg - olderAvg) / olderAvg) * 100;
+  const percentage = olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
 
   if (Math.abs(percentage) < 2) return { direction: 'stable', percentage: 0 };
   

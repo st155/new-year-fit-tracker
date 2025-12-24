@@ -62,6 +62,7 @@ interface ProgressChartCardProps {
   onPeriodChange?: (period: PeriodFilter) => void;
   category?: MetricCategory;
   onCategoryChange?: (category: MetricCategory) => void;
+  isBodyweightExercise?: boolean;
 }
 
 const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
@@ -102,7 +103,8 @@ export function ProgressChartCard({
   period = '30d',
   onPeriodChange,
   category = 'strength',
-  onCategoryChange
+  onCategoryChange,
+  isBodyweightExercise = false
 }: ProgressChartCardProps) {
   
   // Use props data directly
@@ -136,14 +138,19 @@ export function ProgressChartCard({
   const formatValue = (value: number) => {
     const safeValue = Number.isFinite(value) ? value : 0;
     
-    // For 1RM / strength metrics
+    // For strength metrics
     if (category === 'strength') {
+      // For bodyweight exercises: show reps
+      if (isBodyweightExercise) {
+        return `${Math.round(safeValue)} повт`;
+      }
+      // For weighted exercises: show weight/1RM
       return `${Math.round(safeValue)} кг`;
     }
     
     // Body metrics
     if (category === 'body') {
-      if (selectedMetric.includes('bodyfat')) {
+      if (selectedMetric.includes('bodyfat') || selectedMetric.includes('Body Fat')) {
         return `${safeValue.toFixed(1)}%`;
       }
       return `${safeValue.toFixed(1)} кг`;
@@ -164,6 +171,10 @@ export function ProgressChartCard({
       case 'steps':
         return `${Math.round(safeValue)}`;
       default:
+        // For wellness activities (massage, meditation, etc.)
+        if (selectedMetric.startsWith('activity:')) {
+          return `${Math.round(safeValue)} мин`;
+        }
         return Math.round(safeValue).toString();
     }
   };
