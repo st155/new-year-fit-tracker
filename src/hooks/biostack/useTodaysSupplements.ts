@@ -156,7 +156,7 @@ export function useTodaysSupplements() {
             intake_times,
             daily_dosage,
             notes,
-            supplement_products (
+            supplement_products!protocol_items_product_id_fkey (
               id,
               name,
               brand,
