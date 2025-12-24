@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
@@ -40,11 +39,21 @@ interface GenerateTravelWorkoutDialogProps {
 }
 
 const EQUIPMENT_OPTIONS = [
-  { value: 'bodyweight', label: 'Только тело', emoji: '🤸', desc: 'Без оборудования' },
-  { value: 'dumbbells', label: 'Гантели', emoji: '🏋️', desc: 'Лёгкие гантели' },
-  { value: 'resistance_bands', label: 'Резинки', emoji: '🔗', desc: 'Эластичные ленты' },
-  { value: 'hotel_gym', label: 'Зал в отеле', emoji: '🏨', desc: 'Базовое оборудование' },
-  { value: 'full_gym', label: 'Полный зал', emoji: '💪', desc: 'Всё доступно' },
+  { value: 'bodyweight', label: 'Только тело', emoji: '🤸' },
+  { value: 'dumbbells', label: 'Гантели', emoji: '🏋️' },
+  { value: 'resistance_bands', label: 'Резинки', emoji: '🔗' },
+  { value: 'hotel_gym', label: 'Зал в отеле', emoji: '🏨' },
+  { value: 'full_gym', label: 'Полный зал', emoji: '💪' },
+];
+
+const WORKOUT_TYPES = [
+  { value: 'full_body', label: 'Всё тело', emoji: '🏋️', muscles: ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'] },
+  { value: 'upper', label: 'Верх', emoji: '💪', muscles: ['chest', 'back', 'shoulders', 'arms'] },
+  { value: 'lower', label: 'Низ', emoji: '🦵', muscles: ['legs', 'core'] },
+  { value: 'push', label: 'Жим', emoji: '🔥', muscles: ['chest', 'shoulders', 'arms'] },
+  { value: 'pull', label: 'Тяга', emoji: '🎯', muscles: ['back', 'arms'] },
+  { value: 'cardio', label: 'Кардио', emoji: '❤️', muscles: [] },
+  { value: 'custom', label: 'Своё', emoji: '⚙️', muscles: [] },
 ];
 
 const MUSCLE_GROUPS = [
@@ -221,10 +230,19 @@ export function GenerateTravelWorkoutDialog({
   const [step, setStep] = useState<'config' | 'generating' | 'preview'>('config');
   const [duration, setDuration] = useState(45);
   const [equipment, setEquipment] = useState('bodyweight');
-  const [focusMuscles, setFocusMuscles] = useState<string[]>([]);
+  const [workoutType, setWorkoutType] = useState('full_body');
+  const [focusMuscles, setFocusMuscles] = useState<string[]>(['chest', 'back', 'legs', 'shoulders', 'arms', 'core']);
   const [generatedWorkout, setGeneratedWorkout] = useState<GeneratedWorkout | null>(null);
 
   const { data: gapAnalysis, isLoading: isLoadingGaps } = useTrainingGaps();
+
+  // Update focusMuscles when workoutType changes
+  useEffect(() => {
+    const selectedType = WORKOUT_TYPES.find(t => t.value === workoutType);
+    if (selectedType && workoutType !== 'custom') {
+      setFocusMuscles(selectedType.muscles);
+    }
+  }, [workoutType]);
   const generateMutation = useGenerateTravelWorkout();
   const saveMutation = useSaveGeneratedWorkout();
 
@@ -235,6 +253,7 @@ export function GenerateTravelWorkoutDialog({
       const workout = await generateMutation.mutateAsync({
         durationMinutes: duration,
         equipment,
+        workoutType,
         focusMuscles: focusMuscles.length > 0 ? focusMuscles : undefined,
         gapAnalysis
       });
@@ -257,7 +276,8 @@ export function GenerateTravelWorkoutDialog({
   const resetState = () => {
     setStep('config');
     setGeneratedWorkout(null);
-    setFocusMuscles([]);
+    setWorkoutType('full_body');
+    setFocusMuscles(['chest', 'back', 'legs', 'shoulders', 'arms', 'core']);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -332,51 +352,67 @@ export function GenerateTravelWorkoutDialog({
                   <Dumbbell className="h-4 w-4" />
                   Оборудование
                 </Label>
-                <RadioGroup value={equipment} onValueChange={setEquipment}>
-                  <div className="grid grid-cols-2 gap-2">
-                    {EQUIPMENT_OPTIONS.map(opt => (
-                      <div key={opt.value}>
-                        <RadioGroupItem
-                          value={opt.value}
-                          id={opt.value}
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor={opt.value}
-                          className={cn(
-                            "flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all",
-                            "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10",
-                            "hover:bg-muted/50"
-                          )}
-                        >
-                          <span className="text-xl">{opt.emoji}</span>
-                          <span className="text-xs font-medium mt-1">{opt.label}</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {/* Фокус на группах мышц */}
-              <div className="space-y-3">
-                <Label className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Фокус (опционально)
-                </Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {MUSCLE_GROUPS.map(group => (
-                    <Badge
-                      key={group.key}
-                      variant={focusMuscles.includes(group.key) ? 'default' : 'outline'}
-                      className="cursor-pointer transition-all"
-                      onClick={() => toggleMuscle(group.key)}
+                <div className="grid grid-cols-3 gap-2">
+                  {EQUIPMENT_OPTIONS.map(opt => (
+                    <Card
+                      key={opt.value}
+                      onClick={() => setEquipment(opt.value)}
+                      className={cn(
+                        "flex flex-col items-center p-3 cursor-pointer transition-all hover:bg-muted/50",
+                        equipment === opt.value && "border-primary bg-primary/10"
+                      )}
                     >
-                      {group.icon} {group.label}
-                    </Badge>
+                      <span className="text-xl">{opt.emoji}</span>
+                      <span className="text-xs font-medium mt-1 text-center">{opt.label}</span>
+                    </Card>
                   ))}
                 </div>
               </div>
+
+              {/* Тип тренировки */}
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Тип тренировки
+                </Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {WORKOUT_TYPES.map(type => (
+                    <Card
+                      key={type.value}
+                      onClick={() => setWorkoutType(type.value)}
+                      className={cn(
+                        "flex flex-col items-center p-2 cursor-pointer transition-all hover:bg-muted/50",
+                        workoutType === type.value && "border-primary bg-primary/10"
+                      )}
+                    >
+                      <span className="text-lg">{type.emoji}</span>
+                      <span className="text-xs font-medium mt-0.5 text-center">{type.label}</span>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Фокус на группах мышц (только для custom) */}
+              {workoutType === 'custom' && (
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Выберите мышцы
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MUSCLE_GROUPS.map(group => (
+                      <Badge
+                        key={group.key}
+                        variant={focusMuscles.includes(group.key) ? 'default' : 'outline'}
+                        className="cursor-pointer transition-all"
+                        onClick={() => toggleMuscle(group.key)}
+                      >
+                        {group.icon} {group.label}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <Button 
                 onClick={handleGenerate} 
