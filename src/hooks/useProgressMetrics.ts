@@ -40,6 +40,22 @@ const BODY_METRICS = [
   { name: 'Muscle Mass', label: 'Мышечная масса', unit: 'кг' },
 ];
 
+// Wellness activities from workouts table (Whoop activity types)
+const WELLNESS_ACTIVITY_TYPES: Record<string, { label: string; icon: string }> = {
+  'Массаж': { label: 'Массаж', icon: '💆' },
+  'Медитация': { label: 'Медитация', icon: '🧘' },
+  '125': { label: 'Массаж', icon: '💆' },
+  '45': { label: 'Медитация', icon: '🧘' },
+  '70': { label: 'Медитация', icon: '🧘' },
+  '88': { label: 'Ледяная ванна', icon: '🧊' },
+  '43': { label: 'Пилатес', icon: '🏃' },
+  '44': { label: 'Йога', icon: '🧘' },
+  '233': { label: 'Растяжка', icon: '🤸' },
+  '237': { label: 'Сауна', icon: '🧖' },
+};
+
+const WELLNESS_ACTIVITY_CODES = Object.keys(WELLNESS_ACTIVITY_TYPES);
+
 export function useProgressMetrics(userId?: string) {
   const [selectedMetric, setSelectedMetric] = useState<string>("");
   const [period, setPeriod] = useState<PeriodFilter>('30d');
@@ -113,6 +129,38 @@ export function useProgressMetrics(userId?: string) {
     enabled: !!userId
   });
 
+  // Fetch available wellness activities from workouts
+  const { data: wellnessActivities } = useQuery({
+    queryKey: ['user-wellness-activities', userId],
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('workouts')
+        .select('workout_type')
+        .eq('user_id', userId)
+        .in('workout_type', WELLNESS_ACTIVITY_CODES);
+      
+      if (error) throw error;
+      
+      const uniqueTypes = [...new Set(data?.map(d => d.workout_type).filter(Boolean) || [])];
+      return uniqueTypes.map(type => {
+        const meta = WELLNESS_ACTIVITY_TYPES[type];
+        return {
+          name: type,
+          value: `activity:${type}`,
+          label: meta?.label || type,
+          icon: meta?.icon || '🏃',
+          unit: 'мин',
+          category: 'wellness' as const,
+          isActivity: true
+        };
+      });
+    },
+    enabled: !!userId
+  });
+
   // Fetch available body metrics
   const { data: bodyMetrics } = useQuery({
     queryKey: ['user-body-metrics', userId],
@@ -149,13 +197,14 @@ export function useProgressMetrics(userId?: string) {
       case 'strength':
         return userExercises || [];
       case 'wellness':
-        return wellnessMetrics || [];
+        // Combine wellness metrics and activities
+        return [...(wellnessMetrics || []), ...(wellnessActivities || [])];
       case 'body':
         return bodyMetrics || [];
       default:
         return [];
     }
-  }, [category, userExercises, wellnessMetrics, bodyMetrics]);
+  }, [category, userExercises, wellnessMetrics, wellnessActivities, bodyMetrics]);
 
   // Set default selection when category or metrics change
   useEffect(() => {
@@ -165,6 +214,10 @@ export function useProgressMetrics(userId?: string) {
       setSelectedMetric("");
     }
   }, [availableMetrics]);
+
+  // Check if selected metric is a wellness activity
+  const isWellnessActivity = selectedMetric.startsWith('activity:');
+  const activityType = isWellnessActivity ? selectedMetric.replace('activity:', '') : null;
 
   // Fetch data based on category
   const { data: workoutData } = useQuery({
@@ -188,8 +241,20 @@ export function useProgressMetrics(userId?: string) {
         
         if (error) throw error;
         return data || [];
+      } else if (isWellnessActivity && activityType) {
+        // Fetch from workouts table for wellness activities
+        const { data, error } = await supabase
+          .from('workouts')
+          .select('workout_type, start_time, duration_minutes')
+          .eq('user_id', userId)
+          .eq('workout_type', activityType)
+          .gte('start_time', startDate)
+          .order('start_time', { ascending: true });
+        
+        if (error) throw error;
+        return data || [];
       } else {
-        // Fetch from unified_metrics for wellness/body
+        // Fetch from unified_metrics for wellness/body metrics
         const { data, error } = await supabase
           .from('unified_metrics')
           .select('metric_name, value, measurement_date, unit')
@@ -239,8 +304,30 @@ export function useProgressMetrics(userId?: string) {
         weight: d.maxWeight,
         reps: d.maxReps
       }));
+    } else if (isWellnessActivity) {
+      // For wellness activities - group by date and sum duration
+      const byDate: Record<string, { date: Date; totalMinutes: number; count: number }> = {};
+      
+      for (const log of workoutData as { start_time: string; duration_minutes: number }[]) {
+        if (!log.start_time) continue;
+        
+        const dateKey = format(new Date(log.start_time), 'yyyy-MM-dd');
+        if (!byDate[dateKey]) {
+          byDate[dateKey] = { date: new Date(log.start_time), totalMinutes: 0, count: 0 };
+        }
+        byDate[dateKey].totalMinutes += log.duration_minutes || 0;
+        byDate[dateKey].count += 1;
+      }
+      
+      const sorted = Object.values(byDate).sort((a, b) => a.date.getTime() - b.date.getTime());
+      
+      return sorted.map(d => ({
+        date: format(d.date, 'd MMM', { locale: ru }),
+        value: Math.round(d.totalMinutes),
+        count: d.count
+      }));
     } else {
-      // For wellness/body - group by date and take average per day
+      // For wellness/body metrics - group by date and take average per day
       const byDate: Record<string, { date: Date; values: number[] }> = {};
       
       for (const log of workoutData as { measurement_date: string; value: number }[]) {
@@ -262,7 +349,7 @@ export function useProgressMetrics(userId?: string) {
       
       return sorted;
     }
-  }, [workoutData, category]);
+  }, [workoutData, category, isWellnessActivity]);
 
   const metrics = useMemo(() => {
     if (chartData.length === 0) {
