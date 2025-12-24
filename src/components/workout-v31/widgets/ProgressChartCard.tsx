@@ -12,10 +12,12 @@ import {
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { chartColors } from '@/lib/chart-colors';
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle, rechartsTooltipItemStyle } from '@/lib/chart-styles';
-import { Dumbbell, Heart, Scale } from "lucide-react";
+import { Dumbbell, Heart, Scale, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PeriodFilter } from "@/hooks/useProgressMetrics";
 
 interface WorkoutHistoryItem {
   id: string;
@@ -43,6 +45,8 @@ interface ProgressMetrics {
   min: number;
   max: number;
   avg: number;
+  change?: number;
+  changePercent?: number;
 }
 
 type MetricCategory = 'strength' | 'wellness' | 'body';
@@ -54,7 +58,16 @@ interface ProgressChartCardProps {
   availableMetrics: Array<{ value: string; label: string; category?: MetricCategory }>;
   workouts: WorkoutHistoryItem[];
   metrics?: ProgressMetrics;
+  period?: PeriodFilter;
+  onPeriodChange?: (period: PeriodFilter) => void;
 }
+
+const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
+  { value: '7d', label: '7 дн' },
+  { value: '30d', label: '30 дн' },
+  { value: '90d', label: '90 дн' },
+  { value: 'all', label: 'Всё' },
+];
 
 const CATEGORY_CONFIG = {
   strength: {
@@ -83,7 +96,9 @@ export function ProgressChartCard({
   chartData: propChartData,
   availableMetrics,
   workouts,
-  metrics: propsMetrics
+  metrics: propsMetrics,
+  period = '30d',
+  onPeriodChange
 }: ProgressChartCardProps) {
   const [category, setCategory] = useState<MetricCategory>('strength');
   
@@ -101,12 +116,6 @@ export function ProgressChartCard({
   // Filter by current category
   const filteredMetrics = categorizedMetrics.filter(m => m.category === category);
   
-  // Auto-select first metric of category when category changes
-  const currentMetricInCategory = filteredMetrics.find(m => m.value === selectedMetric);
-  if (!currentMetricInCategory && filteredMetrics.length > 0) {
-    // This will be handled by parent, just show first available
-  }
-  
   // Use props data directly instead of recalculating
   const chartData = propChartData && propChartData.length > 0 
     ? propChartData 
@@ -116,15 +125,22 @@ export function ProgressChartCard({
   const metrics: ProgressMetrics = propsMetrics || (() => {
     const values = chartData.map(d => d.value).filter(v => v > 0);
     if (values.length === 0) {
-      return { start: 0, current: 0, min: 0, max: 0, avg: 0 };
+      return { start: 0, current: 0, min: 0, max: 0, avg: 0, change: 0, changePercent: 0 };
     }
 
+    const start = chartData[0].value;
+    const current = chartData[chartData.length - 1].value;
+    const change = current - start;
+    const changePercent = start > 0 ? Math.round((change / start) * 100) : 0;
+
     return {
-      start: chartData[0].value,
-      current: chartData[chartData.length - 1].value,
+      start,
+      current,
       min: Math.min(...values),
       max: Math.max(...values),
-      avg: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+      avg: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+      change,
+      changePercent
     };
   })();
 
@@ -181,6 +197,10 @@ export function ProgressChartCard({
   const chartColor = category === 'strength' ? chartColors.rose : 
                      category === 'wellness' ? chartColors.purple : chartColors.cyan;
 
+  const changePercent = metrics.changePercent || 0;
+  const TrendIcon = changePercent > 0 ? TrendingUp : changePercent < 0 ? TrendingDown : Minus;
+  const trendColor = changePercent > 0 ? 'text-green-400' : changePercent < 0 ? 'text-red-400' : 'text-muted-foreground';
+
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
       <CardContent className="pt-6">
@@ -204,11 +224,39 @@ export function ProgressChartCard({
           </TabsList>
         </Tabs>
 
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <categoryConfig.icon className={cn("h-5 w-5", categoryConfig.color)} />
-            Прогресс
-          </h3>
+        {/* Period switcher */}
+        {onPeriodChange && (
+          <div className="flex items-center gap-1 mb-4">
+            {PERIOD_OPTIONS.map((opt) => (
+              <Button
+                key={opt.value}
+                variant={period === opt.value ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => onPeriodChange(opt.value)}
+                className={cn(
+                  "h-7 px-3 text-xs",
+                  period === opt.value && "bg-primary/20 text-primary"
+                )}
+              >
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <categoryConfig.icon className={cn("h-5 w-5", categoryConfig.color)} />
+              Прогресс
+            </h3>
+            {chartData.length > 1 && (
+              <div className={cn("flex items-center gap-1 text-sm", trendColor)}>
+                <TrendIcon className="h-4 w-4" />
+                <span>{changePercent > 0 ? '+' : ''}{changePercent}%</span>
+              </div>
+            )}
+          </div>
         
           <Select value={selectedMetric} onValueChange={onMetricChange}>
             <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">

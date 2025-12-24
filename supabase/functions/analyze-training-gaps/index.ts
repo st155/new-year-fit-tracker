@@ -11,12 +11,12 @@ const MUSCLE_GROUPS = {
   chest: {
     name: 'Грудь',
     icon: '💪',
-    keywords: ['chest', 'грудь', 'pec', 'bench', 'жим лежа', 'push-up', 'отжимания', 'fly', 'разводка']
+    keywords: ['chest', 'грудь', 'pec', 'bench', 'жим лежа', 'push-up', 'отжимания', 'fly', 'разводка', 'incline', 'decline']
   },
   back: {
     name: 'Спина',
     icon: '🔙',
-    keywords: ['back', 'спина', 'lat', 'row', 'тяга', 'pull-up', 'подтягивания', 'deadlift', 'становая']
+    keywords: ['back', 'спина', 'lat', 'row', 'тяга', 'pull-up', 'pullup', 'подтягивания', 'deadlift', 'становая', 'chinup', 'chin-up', 'hyperextension', 'гиперэкстензия', 'bent']
   },
   legs: {
     name: 'Ноги',
@@ -26,17 +26,17 @@ const MUSCLE_GROUPS = {
   shoulders: {
     name: 'Плечи',
     icon: '🎯',
-    keywords: ['shoulder', 'плеч', 'delt', 'overhead', 'жим стоя', 'lateral', 'raise', 'махи', 'шраги', 'shrug']
+    keywords: ['shoulder', 'плеч', 'delt', 'overhead', 'жим стоя', 'lateral', 'raise', 'махи', 'шраги', 'shrug', 'press barbell', 'press dumbbell']
   },
   arms: {
     name: 'Руки',
     icon: '💪',
-    keywords: ['arm', 'рук', 'bicep', 'бицепс', 'tricep', 'трицепс', 'curl', 'extension', 'французский']
+    keywords: ['arm', 'рук', 'bicep', 'бицепс', 'tricep', 'трицепс', 'curl', 'extension', 'французский', 'dips', 'cable']
   },
   core: {
     name: 'Кор',
     icon: '🔥',
-    keywords: ['core', 'кор', 'abs', 'пресс', 'plank', 'планка', 'crunch', 'скручивания', 'oblique']
+    keywords: ['core', 'кор', 'abs', 'пресс', 'plank', 'планка', 'crunch', 'скручивания', 'oblique', 'sit-up', 'situp', 'hanging', 'raise']
   }
 };
 
@@ -53,7 +53,7 @@ const WELLNESS_ACTIVITIES = {
 };
 
 function normalizeText(text: string): string {
-  return text.toLowerCase().replace(/[^a-zа-яё0-9\s]/g, '').trim();
+  return text.toLowerCase().replace(/[^a-zа-яё0-9\s-]/g, '').trim();
 }
 
 function mapExerciseToMuscleGroups(exerciseName: string): string[] {
@@ -99,22 +99,25 @@ serve(async (req) => {
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - lookbackDays);
-    const startDateStr = startDate.toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString();
 
     console.log(`Analyzing training gaps for user ${user.id} from ${startDateStr}`);
 
-    // Получаем историю тренировок
+    // Получаем историю тренировок из workout_logs
+    // Каждая строка - это один сет с performed_at и exercise_name
     const { data: workoutLogs, error: workoutError } = await supabaseClient
       .from('workout_logs')
-      .select('id, workout_date, exercises, workout_type, duration_minutes')
+      .select('id, performed_at, exercise_name, workout_name, actual_weight, actual_reps')
       .eq('user_id', user.id)
-      .gte('workout_date', startDateStr)
-      .order('workout_date', { ascending: false });
+      .gte('performed_at', startDateStr)
+      .order('performed_at', { ascending: false });
 
     if (workoutError) {
       console.error('Error fetching workout logs:', workoutError);
       throw workoutError;
     }
+
+    console.log(`Found ${workoutLogs?.length || 0} workout log entries`);
 
     // Получаем wellness активности
     const { data: wellnessActivities, error: wellnessError } = await supabaseClient
@@ -122,7 +125,7 @@ serve(async (req) => {
       .select('id, activity_type, scheduled_date, is_completed, duration_minutes')
       .eq('user_id', user.id)
       .eq('is_completed', true)
-      .gte('scheduled_date', startDateStr)
+      .gte('scheduled_date', startDateStr.split('T')[0])
       .order('scheduled_date', { ascending: false });
 
     if (wellnessError) {
@@ -153,30 +156,44 @@ serve(async (req) => {
       };
     }
 
-    // Анализируем тренировки
-    for (const workout of workoutLogs || []) {
-      const exercises = workout.exercises as Array<{ name: string }> | null;
-      if (!exercises) continue;
+    // Группируем логи по датам для подсчета уникальных тренировок
+    const workoutsByDate = new Map<string, Set<string>>();
 
-      const workoutDate = workout.workout_date;
+    // Анализируем тренировки - каждая строка это сет упражнения
+    for (const log of workoutLogs || []) {
+      const exerciseName = log.exercise_name;
+      if (!exerciseName) continue;
 
-      for (const exercise of exercises) {
-        const muscleGroups = mapExerciseToMuscleGroups(exercise.name);
-        
-        for (const group of muscleGroups) {
-          if (muscleAnalysis[group]) {
-            muscleAnalysis[group].trainedCount++;
-            if (!muscleAnalysis[group].exercises.includes(exercise.name)) {
-              muscleAnalysis[group].exercises.push(exercise.name);
-            }
-            
-            if (!muscleAnalysis[group].lastTrained || workoutDate > muscleAnalysis[group].lastTrained) {
-              muscleAnalysis[group].lastTrained = workoutDate;
-            }
+      const performedAt = log.performed_at;
+      if (!performedAt) continue;
+
+      const dateKey = performedAt.split('T')[0];
+      
+      // Группируем упражнения по датам
+      if (!workoutsByDate.has(dateKey)) {
+        workoutsByDate.set(dateKey, new Set());
+      }
+      workoutsByDate.get(dateKey)!.add(exerciseName);
+
+      // Маппим упражнение на группы мышц
+      const muscleGroups = mapExerciseToMuscleGroups(exerciseName);
+      
+      for (const group of muscleGroups) {
+        if (muscleAnalysis[group]) {
+          muscleAnalysis[group].trainedCount++;
+          if (!muscleAnalysis[group].exercises.includes(exerciseName)) {
+            muscleAnalysis[group].exercises.push(exerciseName);
+          }
+          
+          // Обновляем дату последней тренировки
+          if (!muscleAnalysis[group].lastTrained || dateKey > muscleAnalysis[group].lastTrained) {
+            muscleAnalysis[group].lastTrained = dateKey;
           }
         }
       }
     }
+
+    console.log(`Processed ${workoutsByDate.size} unique workout days`);
 
     // Вычисляем статус для каждой группы мышц
     for (const group of Object.keys(muscleAnalysis)) {
@@ -308,10 +325,10 @@ serve(async (req) => {
 
     // Статистика за период
     const stats = {
-      totalWorkouts: workoutLogs?.length || 0,
+      totalWorkouts: workoutsByDate.size,
       totalWellnessActivities: wellnessActivities?.length || 0,
       periodDays: lookbackDays,
-      avgWorkoutsPerWeek: Math.round(((workoutLogs?.length || 0) / lookbackDays) * 7 * 10) / 10
+      avgWorkoutsPerWeek: Math.round((workoutsByDate.size / lookbackDays) * 7 * 10) / 10
     };
 
     const result = {
@@ -323,7 +340,7 @@ serve(async (req) => {
       analyzedAt: new Date().toISOString()
     };
 
-    console.log(`Analysis complete: ${Object.keys(muscleAnalysis).length} muscle groups, ${recommendations.length} recommendations`);
+    console.log(`Analysis complete: ${Object.keys(muscleAnalysis).length} muscle groups, ${recommendations.length} recommendations, ${stats.totalWorkouts} workouts`);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

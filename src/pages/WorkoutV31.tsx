@@ -19,6 +19,7 @@ import { FileText, Calendar, Sparkles, Plane } from "lucide-react";
 import { ProgressChartCard } from "@/components/workout-v31/widgets/ProgressChartCard";
 import { MicroTrackerCard } from "@/components/workout-v31/widgets/MicroTrackerCard";
 import { LogbookSnippetCard } from "@/components/workout-v31/widgets/LogbookSnippetCard";
+import Logbook from "@/components/workout/Logbook";
 
 // Wellness components
 import { CreateWellnessPlanDialog } from "@/components/wellness/CreateWellnessPlanDialog";
@@ -59,7 +60,9 @@ export default function WorkoutV31() {
     setSelectedMetric, 
     availableMetrics, 
     chartData, 
-    metrics 
+    metrics,
+    period,
+    setPeriod
   } = useProgressMetrics(user?.id);
 
   // Button handlers
@@ -228,6 +231,8 @@ export default function WorkoutV31() {
                   metrics={metrics}
                   availableMetrics={availableMetrics}
                   workouts={workouts}
+                  period={period}
+                  onPeriodChange={setPeriod}
                 />
                 <WeeklyGapAnalysis 
                   onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
@@ -288,12 +293,14 @@ export default function WorkoutV31() {
                 metrics={metrics}
                 availableMetrics={availableMetrics}
                 workouts={workouts}
+                period={period}
+                onPeriodChange={setPeriod}
               />
               <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
             </TabsContent>
 
-            <TabsContent value="logbook" className="space-y-6 mt-0">
-              <LogbookSnippetCard workouts={workouts} />
+            <TabsContent value="logbook" className="mt-0">
+              <Logbook />
             </TabsContent>
           </>
         )}
