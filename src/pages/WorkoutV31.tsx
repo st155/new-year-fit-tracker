@@ -13,6 +13,8 @@ import { ru } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import WorkoutDayNavigator from "@/components/workout/WorkoutDayNavigator";
 import { WorkoutV31Skeleton } from "@/components/workout-v31/WorkoutV31Skeleton";
+import { ManualWorkoutDialog } from "@/components/workout/manual/ManualWorkoutDialog";
+import { FileText } from "lucide-react";
 
 import { AIInsightCard } from "@/components/workout-v31/widgets/AIInsightCard";
 import { CTAButtons } from "@/components/workout-v31/widgets/CTAButtons";
@@ -25,6 +27,7 @@ import { LogbookSnippetCard } from "@/components/workout-v31/widgets/LogbookSnip
 export default function WorkoutV31() {
   const [activeTab, setActiveTab] = useState("today");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+  const [manualWorkoutOpen, setManualWorkoutOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -165,15 +168,37 @@ export default function WorkoutV31() {
     }
   };
 
+  const handleManualWorkoutSuccess = () => {
+    // Refetch workout history after saving
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 p-6">
+      <ManualWorkoutDialog 
+        open={manualWorkoutOpen} 
+        onOpenChange={setManualWorkoutOpen}
+        onSuccess={handleManualWorkoutSuccess}
+      />
+      
       <div className="max-w-[1800px] mx-auto mb-6">
-        <WorkoutDayNavigator
-          planName={dailyWorkout?.plan_name || "План тренировок"}
-          weekNumber={dailyWorkout?.week_number || 1}
-          dayOfWeek={selectedDay}
-          onDayChange={setSelectedDay}
-        />
+        <div className="flex items-center justify-between mb-4">
+          <WorkoutDayNavigator
+            planName={dailyWorkout?.plan_name || "План тренировок"}
+            weekNumber={dailyWorkout?.week_number || 1}
+            dayOfWeek={selectedDay}
+            onDayChange={setSelectedDay}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setManualWorkoutOpen(true)}
+            className="hidden sm:flex items-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+          >
+            <FileText className="w-4 h-4" />
+            Записать тренировку
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-[1800px] mx-auto">
@@ -229,6 +254,15 @@ export default function WorkoutV31() {
                   startLabel={startLabel}
                   startDisabled={startDisabled}
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setManualWorkoutOpen(true)}
+                  className="w-full sm:hidden flex items-center justify-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                >
+                  <FileText className="w-4 h-4" />
+                  Записать тренировку
+                </Button>
                 {!hasPlan && (
                   <Card className="bg-gradient-to-br from-green-900/20 to-cyan-900/20 border border-green-500/30">
                     <CardContent className="pt-6">
