@@ -10,8 +10,6 @@ import {
   TooltipProps 
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, subDays, startOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { chartColors } from '@/lib/chart-colors';
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle, rechartsTooltipItemStyle } from '@/lib/chart-styles';
 
@@ -61,51 +59,12 @@ export function ProgressChartCard({
   metrics: propsMetrics
 }: ProgressChartCardProps) {
   
-  // Process chart data for last 7 days
-  const chartData = (() => {
-    const today = startOfDay(new Date());
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = subDays(today, 6 - i);
-      return {
-        date: format(date, 'dd MMM', { locale: ru }),
-        fullDate: date,
-        value: 0,
-        change: 0
-      };
-    });
+  // Use props data directly instead of recalculating
+  const chartData = propChartData && propChartData.length > 0 
+    ? propChartData 
+    : [];
 
-    workouts.forEach(workout => {
-      const workoutDate = startOfDay(new Date(workout.date));
-      const dayIndex = last7Days.findIndex(d => 
-        d.fullDate.getTime() === workoutDate.getTime()
-      );
-      
-      if (dayIndex !== -1) {
-        switch (selectedMetric) {
-          case 'calories':
-            last7Days[dayIndex].value += workout.calories;
-            break;
-          case 'duration':
-            last7Days[dayIndex].value += workout.duration;
-            break;
-          case 'count':
-            last7Days[dayIndex].value += 1;
-            break;
-        }
-      }
-    });
-
-    // Calculate percentage changes
-    last7Days.forEach((day, index) => {
-      if (index > 0 && last7Days[index - 1].value > 0) {
-        day.change = ((day.value - last7Days[index - 1].value) / last7Days[index - 1].value) * 100;
-      }
-    });
-
-    return last7Days;
-  })();
-
-  // Calculate metrics
+  // Use provided metrics or calculate from chart data
   const metrics: ProgressMetrics = propsMetrics || (() => {
     const values = chartData.map(d => d.value).filter(v => v > 0);
     if (values.length === 0) {
@@ -117,13 +76,20 @@ export function ProgressChartCard({
       current: chartData[chartData.length - 1].value,
       min: Math.min(...values),
       max: Math.max(...values),
-      avg: values.reduce((a, b) => a + b, 0) / values.length
+      avg: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
     };
   })();
 
   const formatValue = (value: number) => {
-    // Ensure we have a valid number and format it properly
     const safeValue = Number.isFinite(value) ? value : 0;
+    
+    // For 1RM metrics, show as kg
+    if (selectedMetric.includes('1rm') || selectedMetric.includes('press') || 
+        selectedMetric.includes('squat') || selectedMetric.includes('deadlift') ||
+        selectedMetric.includes('lunges') || selectedMetric.includes('biceps') ||
+        selectedMetric.includes('dips')) {
+      return `${Math.round(safeValue)} кг`;
+    }
     
     switch (selectedMetric) {
       case 'calories':
@@ -173,36 +139,46 @@ export function ProgressChartCard({
         </Select>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-          <defs>
-            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={chartColors.rose} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={chartColors.rose} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-          <XAxis 
-            dataKey="date" 
-            stroke="hsl(var(--muted-foreground))"
-            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-          />
-          <YAxis 
-            stroke="hsl(var(--muted-foreground))"
-            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Line 
-            type="monotone" 
-            dataKey="value" 
-            stroke={chartColors.rose}
-            strokeWidth={3}
-            fill="url(#colorValue)"
-            dot={{ fill: chartColors.rose, r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-            activeDot={{ r: 6, strokeWidth: 2 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      {chartData.length === 0 ? (
+        <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <p className="text-sm">Нет данных по этому упражнению</p>
+            <p className="text-xs mt-1">Запишите тренировку чтобы увидеть прогресс</p>
+          </div>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={chartColors.rose} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={chartColors.rose} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <XAxis 
+              dataKey="date" 
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+            />
+            <YAxis 
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              domain={['dataMin - 5', 'dataMax + 5']}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line 
+              type="monotone" 
+              dataKey="value" 
+              stroke={chartColors.rose}
+              strokeWidth={3}
+              fill="url(#colorValue)"
+              dot={{ fill: chartColors.rose, r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+              activeDot={{ r: 6, strokeWidth: 2 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
 
       <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
         <div>
