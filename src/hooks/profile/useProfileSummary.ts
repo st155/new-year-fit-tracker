@@ -177,7 +177,7 @@ export function useProfileSummary() {
       });
       
       // Process activity feed
-      const recentActivity: ActivityItem[] = (activityResult.data || []).map(a => ({
+      let recentActivity: ActivityItem[] = (activityResult.data || []).map(a => ({
         id: a.id,
         type: mapActionType(a.action_type),
         title: a.action_text,
@@ -186,6 +186,44 @@ export function useProfileSummary() {
         source: a.source_table,
         metadata: a.metadata as Record<string, any> || {}
       }));
+      
+      // Enrich manual trainer workouts with WHOOP calories
+      const manualWorkoutActivities = recentActivity.filter(
+        a => a.type === 'workout' && a.metadata?.source === 'manual_trainer'
+      );
+      
+      if (manualWorkoutActivities.length > 0) {
+        const { data: whoopWorkouts } = await supabase
+          .from('workouts')
+          .select('start_time, calories_burned')
+          .eq('user_id', user.id)
+          .eq('source', 'whoop')
+          .in('workout_type', ['0', '1', '48', '63', '44', '47', '82', '71'])
+          .not('calories_burned', 'is', null);
+        
+        if (whoopWorkouts && whoopWorkouts.length > 0) {
+          const caloriesMap = new Map<string, number>();
+          whoopWorkouts.forEach(w => {
+            if (w.start_time && w.calories_burned) {
+              const date = w.start_time.split('T')[0];
+              caloriesMap.set(date, w.calories_burned);
+            }
+          });
+          
+          recentActivity = recentActivity.map(a => {
+            if (a.type === 'workout' && a.metadata?.source === 'manual_trainer') {
+              const date = (a.metadata?.start_time || a.timestamp)?.split('T')[0];
+              if (date && caloriesMap.has(date)) {
+                return {
+                  ...a,
+                  metadata: { ...a.metadata, calories: caloriesMap.get(date) }
+                };
+              }
+            }
+            return a;
+          });
+        }
+      }
       
       // Calculate streak (consecutive days with activity)
       const streakDays = await calculateStreak(user.id);
