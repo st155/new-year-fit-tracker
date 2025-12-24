@@ -52,24 +52,51 @@ export default function TerraCallback() {
     return false;
   };
 
-  // Helper to log connection attempt
+  // Helper to log connection attempt with ALL available data
   const logConnectionAttempt = async (
     userId: string, 
     provider: string, 
-    status: 'callback_received' | 'success' | 'error',
+    status: 'callback_received' | 'success' | 'error' | 'waiting_webhook',
     errorMessage?: string,
     metadata?: Record<string, any>
   ) => {
     try {
+      // Capture ALL URL parameters
       const urlParams = Object.fromEntries(searchParams.entries());
+      
+      // Extract known Terra callback params
+      const terraUserId = searchParams.get('user') || searchParams.get('user_id') || null;
+      const referenceId = searchParams.get('reference') || searchParams.get('reference_id') || null;
+      const resource = searchParams.get('resource') || searchParams.get('provider') || null;
+      const sessionId = searchParams.get('session_id') || null;
+      
+      console.log('📝 Logging connection attempt:', {
+        userId,
+        provider,
+        status,
+        terraUserId,
+        referenceId,
+        resource,
+        sessionId,
+        urlParams,
+      });
+      
       await supabase.from('terra_connection_attempts').insert({
         user_id: userId,
         provider: provider.toUpperCase(),
         status,
         error_message: errorMessage,
         url_params: urlParams,
-        terra_user_id: searchParams.get('user') || searchParams.get('user_id') || null,
-        metadata: { ...metadata, callback_url: window.location.href }
+        session_id: sessionId,
+        terra_user_id: terraUserId,
+        metadata: { 
+          ...metadata, 
+          callback_url: window.location.href,
+          reference_id: referenceId,
+          resource,
+          timestamp: new Date().toISOString(),
+          user_agent: navigator.userAgent,
+        }
       });
       console.log(`📝 Logged connection attempt: ${status} for ${provider}`);
     } catch (e) {
@@ -233,6 +260,13 @@ export default function TerraCallback() {
         searchParams.get('widget_success') === 'true';
 
       if (widgetSuccess) {
+        // Log callback received BEFORE any processing
+        await logConnectionAttempt(uid, providerParam, 'callback_received', undefined, { 
+          widgetSuccess: true,
+          successParam: success,
+          statusParam
+        });
+        
         // Создаем запись в terra_tokens сразу же
         try {
           const { data: userRes } = await supabase.auth.getUser();
@@ -264,6 +298,12 @@ export default function TerraCallback() {
                   last_sync_date: null, // Will be filled after first sync
                 });
               }
+
+              // Log that we're waiting for webhook
+              await logConnectionAttempt(uid, providerParam, 'waiting_webhook', undefined, { 
+                tokenCreated: true,
+                waitingForTerraUserId: true
+              });
 
               setStatus('success');
               setMessage(`${PROVIDER_NAMES[providerParam] || providerParam} подключён! Ожидаем данные от Terra...`);

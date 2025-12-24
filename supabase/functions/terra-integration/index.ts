@@ -606,6 +606,282 @@ serve(async (req) => {
       );
     }
 
+    // List all Terra users (для диагностики и восстановления потерянных подключений)
+    if (action === 'list-terra-users') {
+      console.log('📋 Fetching all Terra users from API...');
+      
+      try {
+        const response = await fetch('https://api.tryterra.co/v2/subscriptions', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'dev-id': terraDevId,
+            'x-api-key': terraApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Terra subscriptions API error:', response.status, errorText);
+          throw new Error(`Terra API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Terra users fetched:', data.users?.length || 0);
+
+        // Get our local terra_tokens to compare
+        const { data: localTokens, error: tokensError } = await supabase
+          .from('terra_tokens')
+          .select('user_id, terra_user_id, provider, is_active, created_at');
+
+        if (tokensError) {
+          console.error('❌ Error fetching local tokens:', tokensError);
+        }
+
+        // Create a map of terra_user_id -> our user_id
+        const terraToLocalMap: Record<string, any> = {};
+        localTokens?.forEach((token: any) => {
+          if (token.terra_user_id) {
+            terraToLocalMap[token.terra_user_id] = token;
+          }
+        });
+
+        // Enrich Terra users with local data
+        const enrichedUsers = data.users?.map((terraUser: any) => ({
+          ...terraUser,
+          local_user_id: terraToLocalMap[terraUser.user_id]?.user_id || null,
+          is_linked: !!terraToLocalMap[terraUser.user_id],
+          local_is_active: terraToLocalMap[terraUser.user_id]?.is_active || false,
+        })) || [];
+
+        // Find orphaned Terra users (not linked to any local user)
+        const orphanedUsers = enrichedUsers.filter((u: any) => !u.is_linked);
+        
+        // Find local tokens without terra_user_id
+        const pendingTokens = localTokens?.filter((t: any) => !t.terra_user_id && t.is_active) || [];
+
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            terra_users: enrichedUsers,
+            orphaned_count: orphanedUsers.length,
+            orphaned_users: orphanedUsers,
+            pending_local_tokens: pendingTokens,
+            total_terra_users: enrichedUsers.length,
+            total_local_tokens: localTokens?.length || 0,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: any) {
+        console.error('❌ Error listing Terra users:', error);
+        throw error;
+      }
+    }
+
+    // Check connection status - проверяет статус подключения и пытается восстановить если webhook не пришёл
+    if (action === 'check-connection-status') {
+      console.log('🔍 Checking connection status for user:', user.id, 'provider:', provider);
+      
+      if (!provider) {
+        throw new Error('Provider is required for check-connection-status');
+      }
+
+      const normalizedProvider = provider.toUpperCase();
+
+      // Check local terra_tokens
+      const { data: localToken, error: tokenError } = await supabase
+        .from('terra_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', normalizedProvider)
+        .maybeSingle();
+
+      if (tokenError) {
+        console.error('❌ Error fetching local token:', tokenError);
+        throw tokenError;
+      }
+
+      // If we have terra_user_id, connection is complete
+      if (localToken?.terra_user_id) {
+        console.log('✅ Connection is complete:', localToken.terra_user_id);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            status: 'connected',
+            terra_user_id: localToken.terra_user_id,
+            provider: normalizedProvider,
+            last_sync: localToken.last_sync_date,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // If we have a token but no terra_user_id, try to find it from Terra API
+      console.log('⏳ Token exists but no terra_user_id, checking Terra API...');
+      
+      try {
+        const response = await fetch('https://api.tryterra.co/v2/subscriptions', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'dev-id': terraDevId,
+            'x-api-key': terraApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Terra API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Find user by reference_id (our user_id)
+        const terraUser = data.users?.find((u: any) => 
+          u.reference_id === user.id && 
+          u.provider?.toUpperCase() === normalizedProvider
+        );
+
+        if (terraUser) {
+          console.log('✅ Found Terra user via API, linking:', terraUser.user_id);
+          
+          // Update local token with terra_user_id
+          const { error: updateError } = await supabase
+            .from('terra_tokens')
+            .update({ 
+              terra_user_id: terraUser.user_id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
+            .eq('provider', normalizedProvider);
+
+          if (updateError) {
+            console.error('❌ Error updating token:', updateError);
+            throw updateError;
+          }
+
+          // Log successful recovery
+          await supabase.from('terra_connection_attempts').insert({
+            user_id: user.id,
+            provider: normalizedProvider,
+            status: 'recovered_via_api',
+            terra_user_id: terraUser.user_id,
+            metadata: { 
+              recovery_method: 'check-connection-status',
+              terra_user_data: terraUser
+            }
+          });
+
+          return new Response(
+            JSON.stringify({ 
+              success: true,
+              status: 'recovered',
+              terra_user_id: terraUser.user_id,
+              provider: normalizedProvider,
+              message: 'Connection recovered via Terra API',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // No matching user found
+        console.log('⚠️ No matching Terra user found for:', user.id, normalizedProvider);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            status: 'pending',
+            provider: normalizedProvider,
+            message: 'Webhook not yet received, no matching Terra user found',
+            has_local_token: !!localToken,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      } catch (apiError: any) {
+        console.error('❌ Terra API error:', apiError);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            status: 'error',
+            error: apiError.message,
+            has_local_token: !!localToken,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Manual link terra_user_id (для админов)
+    if (action === 'manual-link-terra-user') {
+      const { targetUserId, terraUserId: manualTerraUserId } = body;
+      
+      if (!targetUserId || !manualTerraUserId || !provider) {
+        throw new Error('targetUserId, terraUserId, and provider are required');
+      }
+
+      console.log('🔗 Manual linking:', { targetUserId, manualTerraUserId, provider });
+
+      const normalizedProvider = provider.toUpperCase();
+
+      // Check if token exists
+      const { data: existingToken } = await supabase
+        .from('terra_tokens')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .eq('provider', normalizedProvider)
+        .maybeSingle();
+
+      if (existingToken) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('terra_tokens')
+          .update({ 
+            terra_user_id: manualTerraUserId,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingToken.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Create new
+        const { error: insertError } = await supabase
+          .from('terra_tokens')
+          .insert({
+            user_id: targetUserId,
+            terra_user_id: manualTerraUserId,
+            provider: normalizedProvider,
+            is_active: true,
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Log manual link
+      await supabase.from('terra_connection_attempts').insert({
+        user_id: targetUserId,
+        provider: normalizedProvider,
+        status: 'manual_linked',
+        terra_user_id: manualTerraUserId,
+        metadata: { 
+          linked_by: user.id,
+          method: 'manual-link-terra-user'
+        }
+      });
+
+      console.log('✅ Manual link successful');
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Terra user manually linked',
+          target_user_id: targetUserId,
+          terra_user_id: manualTerraUserId,
+          provider: normalizedProvider,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     throw new Error('Unknown action');
 
   } catch (error: any) {
