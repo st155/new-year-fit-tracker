@@ -24,22 +24,19 @@ function getPeriodDays(period: PeriodFilter): number {
   }
 }
 
-// Wellness metrics from unified_metrics
-const WELLNESS_METRICS = [
+// Body metrics from unified_metrics (body composition + health metrics)
+const BODY_METRICS = [
+  // Состав тела
+  { name: 'Weight', label: 'Вес', unit: 'кг' },
+  { name: 'Body Fat Percentage', label: 'Процент жира', unit: '%' },
+  { name: 'Muscle Mass', label: 'Мышечная масса', unit: 'кг' },
+  // Метрики здоровья
   { name: 'Recovery Score', label: 'Восстановление', unit: '%' },
   { name: 'Sleep Duration', label: 'Продолжительность сна', unit: 'ч' },
   { name: 'HRV', label: 'Вариабельность пульса (HRV)', unit: 'мс' },
   { name: 'Resting Heart Rate', label: 'Пульс покоя', unit: 'уд/мин' },
   { name: 'Sleep Efficiency', label: 'Эффективность сна', unit: '%' },
 ];
-
-// Body metrics from unified_metrics
-const BODY_METRICS = [
-  { name: 'Weight', label: 'Вес', unit: 'кг' },
-  { name: 'Body Fat Percentage', label: 'Процент жира', unit: '%' },
-  { name: 'Muscle Mass', label: 'Мышечная масса', unit: 'кг' },
-];
-
 // Wellness activities from workouts table (Whoop activity types)
 const WELLNESS_ACTIVITY_TYPES: Record<string, { label: string; icon: string }> = {
   'Массаж': { label: 'Массаж', icon: '💆' },
@@ -99,35 +96,6 @@ export function useProgressMetrics(userId?: string) {
     enabled: !!userId
   });
 
-  // Fetch available wellness metrics
-  const { data: wellnessMetrics } = useQuery({
-    queryKey: ['user-wellness-metrics', userId],
-    staleTime: 10 * 60 * 1000,
-    queryFn: async () => {
-      if (!userId) return [];
-      
-      const { data, error } = await supabase
-        .from('unified_metrics')
-        .select('metric_name')
-        .eq('user_id', userId)
-        .in('metric_name', WELLNESS_METRICS.map(m => m.name));
-      
-      if (error) throw error;
-      
-      const uniqueMetrics = [...new Set(data?.map(d => d.metric_name) || [])];
-      return uniqueMetrics.map(name => {
-        const meta = WELLNESS_METRICS.find(m => m.name === name);
-        return {
-          name,
-          value: name,
-          label: meta?.label || name,
-          unit: meta?.unit || '',
-          category: 'wellness' as const
-        };
-      });
-    },
-    enabled: !!userId
-  });
 
   // Fetch available wellness activities from workouts
   const { data: wellnessActivities } = useQuery({
@@ -197,14 +165,14 @@ export function useProgressMetrics(userId?: string) {
       case 'strength':
         return userExercises || [];
       case 'wellness':
-        // Combine wellness metrics and activities
-        return [...(wellnessMetrics || []), ...(wellnessActivities || [])];
+        // Only wellness activities (massage, meditation, yoga, etc.)
+        return wellnessActivities || [];
       case 'body':
         return bodyMetrics || [];
       default:
         return [];
     }
-  }, [category, userExercises, wellnessMetrics, wellnessActivities, bodyMetrics]);
+  }, [category, userExercises, wellnessActivities, bodyMetrics]);
 
   // Set default selection when category or metrics change
   useEffect(() => {
