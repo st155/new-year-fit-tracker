@@ -115,7 +115,7 @@ export function ManualWorkoutDialog({
             exercise_name: exercise.name,
             set_number: setIndex + 1,
             actual_weight: set.weight || 0,
-            actual_reps: set.reps || 0,
+            actual_reps: Math.round(set.reps || 0), // Ensure integer for database
             actual_rpe: 7,
             superset_group: exercise.supersetGroup?.toString() || null,
             performed_at: startTime.toISOString(),
