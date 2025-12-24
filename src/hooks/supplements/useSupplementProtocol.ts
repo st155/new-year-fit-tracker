@@ -62,7 +62,7 @@ export function useSupplementProtocol(userId: string | undefined) {
           *,
           protocol_items(
             *,
-            supplement_products(*)
+            supplement_products!protocol_items_product_id_fkey(*)
           )
         `)
         .eq("user_id", userId)
@@ -99,7 +99,7 @@ export function useSupplementProtocol(userId: string | undefined) {
           *,
           protocol_items(
             *,
-            supplement_products(*)
+            supplement_products!protocol_items_product_id_fkey(*)
           )
         `)
         .eq("user_id", userId)
