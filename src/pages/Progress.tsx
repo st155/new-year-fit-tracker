@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useChallengeGoals } from '@/hooks/useChallengeGoals';
+import { useChallengeGoals, ChallengeGoal } from '@/hooks/useChallengeGoals';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
@@ -8,6 +8,7 @@ import { CompactProgressSummary } from '@/components/progress/CompactProgressSum
 import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialChart';
 import { BaselineComparisonCard } from '@/components/progress/BaselineComparisonCard';
 import { PointsImpactCard } from '@/components/progress/PointsImpactCard';
+import { QuickAddMeasurementDialog } from '@/components/progress/QuickAddMeasurementDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Trophy, BarChart3, Users } from 'lucide-react';
@@ -28,6 +29,13 @@ export default function Progress() {
   const navigate = useNavigate();
   const { data: goals, isLoading, error, refetch } = useChallengeGoals(user?.id);
   const [showLoader, setShowLoader] = useState(true);
+  const [selectedGoal, setSelectedGoal] = useState<ChallengeGoal | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+
+  const handleAddMeasurement = (goal: ChallengeGoal) => {
+    setSelectedGoal(goal);
+    setShowAddDialog(true);
+  };
 
   // Show loader for max 2.5 seconds
   useEffect(() => {
@@ -244,6 +252,7 @@ export default function Progress() {
                     <EnhancedProgressCard
                       goal={goal}
                       onClick={() => navigate(`/goals/${goal.id}`)}
+                      onAddMeasurement={handleAddMeasurement}
                     />
                   </motion.div>
                 ))}
@@ -252,6 +261,19 @@ export default function Progress() {
           </>
         )}
       </div>
+
+      {/* Quick Add Measurement Dialog */}
+      {selectedGoal && (
+        <QuickAddMeasurementDialog
+          goal={selectedGoal}
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onSuccess={() => {
+            refetch();
+            setShowAddDialog(false);
+          }}
+        />
+      )}
     </AnimatedPage>
   );
 }

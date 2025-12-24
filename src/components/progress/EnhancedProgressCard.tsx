@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { LineChart, Line, ResponsiveContainer, Tooltip, YAxis } from "recharts";
-import { TrendingUp, TrendingDown, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Plus } from "lucide-react";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { cn, formatTimeDisplay, isTimeUnit } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
@@ -12,6 +13,7 @@ import { useMemo } from "react";
 interface EnhancedProgressCardProps {
   goal: ChallengeGoal;
   onClick?: () => void;
+  onAddMeasurement?: (goal: ChallengeGoal) => void;
 }
 
 const goalTypeIcons: Record<string, any> = {
@@ -56,7 +58,7 @@ const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
   return badges[source];
 };
 
-export function EnhancedProgressCard({ goal, onClick }: EnhancedProgressCardProps) {
+export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: EnhancedProgressCardProps) {
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
@@ -140,6 +142,19 @@ export function EnhancedProgressCard({ goal, onClick }: EnhancedProgressCardProp
                 )}
                 <span>{Math.abs(goal.trend_percentage).toFixed(0)}%</span>
               </div>
+            )}
+            {onAddMeasurement && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full hover:bg-primary/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddMeasurement(goal);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>
