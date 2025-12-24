@@ -12,6 +12,8 @@
  * - superset: (marks start of superset group)
  */
 
+import { normalizeExerciseName, isBodyweightExercise, type NormalizedExercise } from './exercises-aliases';
+
 export interface ParsedSet {
   reps?: number;
   weight?: number;
@@ -23,9 +25,13 @@ export interface ParsedSet {
 
 export interface ParsedExercise {
   name: string;
+  displayName: string;
+  displayNameRu: string;
+  wasNormalized: boolean;
   sets: ParsedSet[];
   supersetGroup?: number;
   totalVolume?: number;
+  isBodyweight?: boolean;
 }
 
 export interface ParsedWorkout {
@@ -283,8 +289,16 @@ export function parseWorkoutText(text: string): ParsedWorkout {
         exercises.push(currentExercise);
       }
       
+      // Normalize the exercise name
+      const normalized = normalizeExerciseName(line);
+      const isBodyweight = isBodyweightExercise(line);
+      
       currentExercise = {
-        name: line,
+        name: normalized.canonicalName,
+        displayName: normalized.displayName,
+        displayNameRu: normalized.displayNameRu,
+        wasNormalized: normalized.matched,
+        isBodyweight,
         sets: [],
         supersetGroup: inSuperset ? currentSupersetGroup : undefined,
       };
@@ -299,6 +313,9 @@ export function parseWorkoutText(text: string): ParsedWorkout {
       // Sets without exercise name - use generic name
       currentExercise = {
         name: 'Упражнение',
+        displayName: 'Упражнение',
+        displayNameRu: 'Упражнение',
+        wasNormalized: false,
         sets: sets,
         supersetGroup: inSuperset ? currentSupersetGroup : undefined,
       };
