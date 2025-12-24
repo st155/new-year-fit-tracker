@@ -13,6 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { chartColors } from '@/lib/chart-colors';
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle, rechartsTooltipItemStyle } from '@/lib/chart-styles';
 import { Dumbbell, Heart, Scale, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -63,6 +64,7 @@ interface ProgressChartCardProps {
   category?: MetricCategory;
   onCategoryChange?: (category: MetricCategory) => void;
   isBodyweightExercise?: boolean;
+  isLoading?: boolean;
 }
 
 const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
@@ -93,6 +95,36 @@ const CATEGORY_CONFIG = {
   }
 };
 
+function ProgressChartSkeleton() {
+  return (
+    <Card className="bg-neutral-900 border border-neutral-800">
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-1 mb-4">
+          <Skeleton className="h-9 w-full" />
+        </div>
+        <div className="flex items-center gap-1 mb-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-7 w-14" />
+          ))}
+        </div>
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-10 w-44" />
+        </div>
+        <Skeleton className="h-[280px] w-full" />
+        <div className="grid grid-cols-5 gap-4 mt-6 pt-4 border-t border-neutral-800">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i}>
+              <Skeleton className="h-3 w-12 mb-1" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ProgressChartCard({
   selectedMetric,
   onMetricChange,
@@ -104,8 +136,14 @@ export function ProgressChartCard({
   onPeriodChange,
   category = 'strength',
   onCategoryChange,
-  isBodyweightExercise = false
+  isBodyweightExercise = false,
+  isLoading = false
 }: ProgressChartCardProps) {
+  
+  // Show skeleton during loading
+  if (isLoading) {
+    return <ProgressChartSkeleton />;
+  }
   
   // Use props data directly
   const chartData = propChartData && propChartData.length > 0 

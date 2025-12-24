@@ -99,10 +99,7 @@ export default function WorkoutV31() {
     { date: "Вс", value: 87 }
   ], []);
 
-  // Show skeleton during initial load
-  if ((isDailyLoading && !dailyWorkout) || isHistoryLoading) {
-    return <WorkoutV31Skeleton />;
-  }
+  // Note: removed blocking skeleton - each widget shows its own loading state
 
   const handleManualWorkoutSuccess = () => {
     // Cache invalidation happens inside the dialog
@@ -247,10 +244,9 @@ export default function WorkoutV31() {
                   />
                 </div>
 
-                {/* Column 3: Week Schedule & Journal */}
                 <div className="space-y-6">
                   <WellnessWeekView compact />
-                  <LogbookSnippetCard workouts={workouts} />
+                  <LogbookSnippetCard workouts={workouts} isLoading={isHistoryLoading} />
                 </div>
               </div>
             </TabsContent>

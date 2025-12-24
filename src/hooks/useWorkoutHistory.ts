@@ -26,6 +26,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
   const { data: workouts = [], isLoading, error } = useQuery({
     queryKey: ['workout-history', filter],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+    placeholderData: (previousData) => previousData, // Keep previous data while refetching
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
