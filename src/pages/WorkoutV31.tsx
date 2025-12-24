@@ -64,7 +64,8 @@ export default function WorkoutV31() {
     period,
     setPeriod,
     category,
-    setCategory
+    setCategory,
+    isBodyweightExercise
   } = useProgressMetrics(user?.id);
 
   // Button handlers
@@ -238,6 +239,7 @@ export default function WorkoutV31() {
                     onPeriodChange={setPeriod}
                     category={category}
                     onCategoryChange={setCategory}
+                    isBodyweightExercise={isBodyweightExercise}
                   />
                   <WeeklyGapAnalysis 
                     onGenerateWorkout={() => setTravelWorkoutOpen(true)} 
@@ -267,6 +269,7 @@ export default function WorkoutV31() {
                   onPeriodChange={setPeriod}
                   category={category}
                   onCategoryChange={setCategory}
+                  isBodyweightExercise={isBodyweightExercise}
                 />
                 <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
               </div>
@@ -327,6 +330,7 @@ export default function WorkoutV31() {
                 onPeriodChange={setPeriod}
                 category={category}
                 onCategoryChange={setCategory}
+                isBodyweightExercise={isBodyweightExercise}
               />
               <WeeklyGapAnalysis onGenerateWorkout={() => setTravelWorkoutOpen(true)} />
             </TabsContent>

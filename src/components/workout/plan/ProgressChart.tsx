@@ -10,6 +10,7 @@ interface ProgressData {
   reps: number;
   volume: number;
   isPR: boolean;
+  isBodyweight?: boolean;
 }
 
 interface ProgressChartProps {
@@ -18,9 +19,10 @@ interface ProgressChartProps {
     direction: 'up' | 'down' | 'stable';
     percentage: number;
   };
+  isBodyweight?: boolean;
 }
 
-export default function ProgressChart({ data, trend }: ProgressChartProps) {
+export default function ProgressChart({ data, trend, isBodyweight = false }: ProgressChartProps) {
   if (data.length === 0) {
     return (
       <div className="glass-card p-6 rounded-lg text-center">
@@ -34,13 +36,17 @@ export default function ProgressChart({ data, trend }: ProgressChartProps) {
     );
   }
 
+  // For bodyweight: show reps; for weighted: show weight
+  const primaryValue = isBodyweight ? 'Повторы' : 'Вес';
+  const primaryUnit = isBodyweight ? 'повт' : 'кг';
+  
   const chartData = data.map(entry => ({
     date: format(new Date(entry.date), 'dd MMM', { locale: ru }),
-    Вес: entry.weight,
+    [primaryValue]: isBodyweight ? entry.reps : entry.weight,
     Объем: entry.volume,
   }));
 
-  const maxWeight = Math.max(...data.map(d => d.weight));
+  const maxPrimaryValue = Math.max(...data.map(d => isBodyweight ? d.reps : d.weight));
   const prCount = data.filter(d => d.isPR).length;
 
   const TrendIcon = trend.direction === 'up' ? TrendingUp : 
@@ -58,7 +64,7 @@ export default function ProgressChart({ data, trend }: ProgressChartProps) {
           {prCount} PR
         </Badge>
         <Badge variant="secondary" className="flex items-center gap-1">
-          Макс: {maxWeight}кг
+          Макс: {maxPrimaryValue}{primaryUnit}
         </Badge>
         {trend.direction !== 'stable' && (
           <Badge variant="outline" className={`flex items-center gap-1 ${trendColor}`}>
@@ -75,7 +81,7 @@ export default function ProgressChart({ data, trend }: ProgressChartProps) {
           data={chartData}
           config={{
             xKey: 'date',
-            yKey: 'Вес',
+            yKey: primaryValue,
             color: 'hsl(var(--primary))',
             showGrid: true,
             showTooltip: true,
@@ -103,7 +109,9 @@ export default function ProgressChart({ data, trend }: ProgressChartProps) {
                     {format(new Date(pr.date), 'dd MMM yyyy', { locale: ru })}
                   </span>
                   <span className="font-semibold text-primary">
-                    {pr.weight}кг × {pr.reps}
+                    {isBodyweight 
+                      ? `${pr.reps} повт` 
+                      : `${pr.weight}кг × ${pr.reps}`}
                   </span>
                 </div>
               ))}

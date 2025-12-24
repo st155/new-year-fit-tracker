@@ -35,12 +35,14 @@ export function ExerciseDetailSheet({
     });
   }, []);
 
-  const { data: progressData, isLoading } = useExerciseProgress(
+  const { data: progressResult, isLoading } = useExerciseProgress(
     exercise?.exercise_name || '',
     userId || undefined
   );
 
-  const trend = progressData ? calculateTrend(progressData) : { direction: 'stable' as const, percentage: 0 };
+  const progressData = progressResult?.data || [];
+  const isBodyweight = progressResult?.isBodyweight || false;
+  const trend = progressData.length > 0 ? calculateTrend(progressData, isBodyweight) : { direction: 'stable' as const, percentage: 0 };
 
   if (!exercise) return null;
 
@@ -133,8 +135,8 @@ export function ExerciseDetailSheet({
                 <Skeleton className="h-[200px] w-full" />
                 <Skeleton className="h-20 w-full" />
               </div>
-            ) : progressData && progressData.length > 0 ? (
-              <ProgressChart data={progressData} trend={trend} />
+            ) : progressData.length > 0 ? (
+              <ProgressChart data={progressData} trend={trend} isBodyweight={isBodyweight} />
             ) : (
               <div className="glass-card p-6 rounded-lg text-center">
                 <p className="text-sm text-muted-foreground">
