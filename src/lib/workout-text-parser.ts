@@ -58,8 +58,10 @@ function extractSide(str: string): { cleaned: string; side?: 'left' | 'right' } 
 
 /**
  * Parse a single set string like "10x20kg", "10", "45sec", "1m", "60x10x3"
+ * @param setStr - The set string to parse
+ * @param isBodyweightExercise - If true, interpret "NxM" as "N reps x M sets" for small M
  */
-function parseSetString(setStr: string): ParsedSet | null {
+function parseSetString(setStr: string, isBodyweightExercise: boolean = false): ParsedSet | null {
   // Extract side indicator first
   const { cleaned, side } = extractSide(setStr);
   const trimmed = cleaned.trim().toLowerCase();
@@ -96,10 +98,13 @@ function parseSetString(setStr: string): ParsedSet | null {
     const a = parseFloat(tripleMatch[1]);
     const b = parseInt(tripleMatch[2]);
     const c = parseInt(tripleMatch[3]);
+    
+    // For bodyweight exercises: NxMxK means N reps x M sets x K rounds (treat as reps x sets)
+    if (isBodyweightExercise) {
+      return { reps: Math.round(a), setCount: b * c, isBodyweight: true, side };
+    }
+    
     // Heuristic: format is typically weight x reps x sets
-    // If a > b, it's weight x reps x sets
-    // If a <= b, could be reps x weight x sets (less common)
-    // Always round reps to integer
     if (a > b) {
       return { weight: a, reps: Math.round(b), setCount: c, side };
     } else {
@@ -113,6 +118,7 @@ function parseSetString(setStr: string): ParsedSet | null {
     return {
       reps: parseInt(repsOnlyXMatch[1]),
       weight: undefined, // will inherit from previous
+      isBodyweight: isBodyweightExercise,
       side
     };
   }
@@ -136,10 +142,10 @@ function parseSetString(setStr: string): ParsedSet | null {
     const a = parseFloat(twoNumMatch[1]);
     const b = parseFloat(twoNumMatch[2]);
     
-    // Heuristic: if first number is significantly larger (2x or more), it's weight x reps
-    // e.g., 60x10 → weight=60, reps=10
-    // e.g., 10x60 → reps=10, weight=60
-    // e.g., 12x3 → ambiguous, could be 12 reps x 3 sets (bodyweight) or 12 reps x 3kg
+    // For bodyweight exercises: "12x3" = 12 reps x 3 sets (when second number is small)
+    if (isBodyweightExercise && b <= 10) {
+      return { reps: Math.round(a), setCount: Math.round(b), isBodyweight: true, side };
+    }
     
     // If first number is decimal, it's likely weight (17.5x12 = 17.5kg x 12 reps)
     if (a % 1 !== 0) {
@@ -155,7 +161,6 @@ function parseSetString(setStr: string): ParsedSet | null {
     } else {
       // Numbers are similar - could be reps x sets for bodyweight
       // or reps x weight for light weights
-      // Default to reps x weight but mark as potentially bodyweight
       if (b <= 5) {
         // Small second number likely means sets, not weight
         return { reps: Math.round(a), setCount: Math.round(b), isBodyweight: true, side };
@@ -235,15 +240,17 @@ function applyWeightInheritance(sets: ParsedSet[]): void {
 
 /**
  * Parse multiple sets from a line like "1m 1m" or "10x20kg 10x25"
+ * @param line - The line containing sets
+ * @param isBodyweightExercise - If true, interpret "NxM" as "N reps x M sets" for small M
  */
-function parseSetsFromLine(line: string): ParsedSet[] {
+function parseSetsFromLine(line: string, isBodyweightExercise: boolean = false): ParsedSet[] {
   const sets: ParsedSet[] = [];
   
   // Split by spaces but keep set patterns together
   const parts = line.split(/\s+/).filter(Boolean);
   
   for (const part of parts) {
-    const parsed = parseSetString(part);
+    const parsed = parseSetString(part, isBodyweightExercise);
     if (parsed) {
       sets.push(parsed);
     }
@@ -325,8 +332,9 @@ export function parseWorkoutText(text: string): ParsedWorkout {
       continue;
     }
     
-    // Try to parse as sets
-    const sets = parseSetsFromLine(line);
+    // Try to parse as sets - pass isBodyweight context from current exercise
+    const isBodyweight = currentExercise?.isBodyweight ?? false;
+    const sets = parseSetsFromLine(line, isBodyweight);
     if (sets.length > 0 && currentExercise) {
       currentExercise.sets.push(...sets);
     } else if (sets.length > 0 && !currentExercise) {
