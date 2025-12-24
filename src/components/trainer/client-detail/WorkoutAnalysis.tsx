@@ -28,6 +28,24 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
     );
   }, [metrics, thirtyDaysAgo]);
 
+  // Normalize activity types - group similar ones
+  const normalizeActivityType = (type: string): string => {
+    // Group numeric "Активность N" types
+    if (/^Активность \d+$/.test(type)) return 'Другая активность';
+    // Group unknown types
+    if (type === 'Тренировка' || type === 'Unknown') return 'Другая активность';
+    return type;
+  };
+
+  // Core workout types to prioritize (filter out non-workout activities)
+  const isRealWorkout = (type: string): boolean => {
+    const nonWorkoutTypes = [
+      'Медитация', 'Массаж', 'Сценическое выступление', 'Кэдди',
+      'Другая активность', 'Дыхательная практика', 'Сон'
+    ];
+    return !nonWorkoutTypes.includes(type);
+  };
+
   // Group workouts by type
   const workoutsByType = useMemo(() => {
     const typeMap = new Map<string, number>();
@@ -36,14 +54,24 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
       .filter(m => m.metric_name === 'Workout Type')
       .forEach(m => {
         // Convert numeric codes to readable names
-        const typeName = mapTerraActivityType(m.value, m.source);
+        let typeName = mapTerraActivityType(m.value, m.source);
+        // Normalize the type
+        typeName = normalizeActivityType(typeName);
         typeMap.set(typeName, (typeMap.get(typeName) || 0) + 1);
       });
 
+    // Sort by count and prioritize real workouts
     return Array.from(typeMap.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
+      .map(([name, count]) => ({ name, count, isReal: isRealWorkout(name) }))
+      .sort((a, b) => {
+        // Real workouts first
+        if (a.isReal && !b.isReal) return -1;
+        if (!a.isReal && b.isReal) return 1;
+        // Then by count
+        return b.count - a.count;
+      })
+      .slice(0, 6)
+      .map(({ name, count }) => ({ name, count }));
   }, [workoutMetrics]);
 
   // Prepare strain intensity data
