@@ -99,10 +99,11 @@ function parseSetString(setStr: string): ParsedSet | null {
     // Heuristic: format is typically weight x reps x sets
     // If a > b, it's weight x reps x sets
     // If a <= b, could be reps x weight x sets (less common)
+    // Always round reps to integer
     if (a > b) {
-      return { weight: a, reps: b, setCount: c, side };
+      return { weight: a, reps: Math.round(b), setCount: c, side };
     } else {
-      return { reps: a, weight: b, setCount: c, side };
+      return { reps: Math.round(a), weight: b, setCount: c, side };
     }
   }
 
@@ -116,14 +117,17 @@ function parseSetString(setStr: string): ParsedSet | null {
     };
   }
 
-  // Weight format with explicit kg: 10x20kg, 10x20кг
-  const explicitKgMatch = trimmed.match(/^(\d+)\s*[xх×]\s*(\d+(?:\.\d+)?)\s*(kg|кг)$/i);
+  // Weight format with explicit kg: 10x20kg, 10x20кг, 17.5x12kg (decimal weight)
+  const explicitKgMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*[xх×]\s*(\d+(?:\.\d+)?)\s*(kg|кг)$/i);
   if (explicitKgMatch) {
-    return {
-      reps: parseInt(explicitKgMatch[1]),
-      weight: parseFloat(explicitKgMatch[2]),
-      side
-    };
+    const a = parseFloat(explicitKgMatch[1]);
+    const b = parseFloat(explicitKgMatch[2]);
+    // If first number is decimal, it's weight (17.5x12kg = 17.5kg x 12 reps)
+    // Otherwise first is reps (10x20kg = 10 reps x 20kg)
+    if (a % 1 !== 0) {
+      return { weight: a, reps: Math.round(b), side };
+    }
+    return { reps: Math.round(a), weight: b, side };
   }
 
   // Two number format without kg: use heuristic
@@ -137,21 +141,26 @@ function parseSetString(setStr: string): ParsedSet | null {
     // e.g., 10x60 → reps=10, weight=60
     // e.g., 12x3 → ambiguous, could be 12 reps x 3 sets (bodyweight) or 12 reps x 3kg
     
+    // If first number is decimal, it's likely weight (17.5x12 = 17.5kg x 12 reps)
+    if (a % 1 !== 0) {
+      return { weight: a, reps: Math.round(b), side };
+    }
+    
     if (a > b * 1.5) {
       // First number much larger: weight x reps (60x10)
-      return { weight: a, reps: b, side };
+      return { weight: a, reps: Math.round(b), side };
     } else if (b > a * 1.5) {
       // Second number much larger: reps x weight (10x60)
-      return { reps: a, weight: b, side };
+      return { reps: Math.round(a), weight: b, side };
     } else {
       // Numbers are similar - could be reps x sets for bodyweight
       // or reps x weight for light weights
       // Default to reps x weight but mark as potentially bodyweight
       if (b <= 5) {
         // Small second number likely means sets, not weight
-        return { reps: a, setCount: b, isBodyweight: true, side };
+        return { reps: Math.round(a), setCount: Math.round(b), isBodyweight: true, side };
       }
-      return { reps: a, weight: b, side };
+      return { reps: Math.round(a), weight: b, side };
     }
   }
 
