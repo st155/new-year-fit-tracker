@@ -14,20 +14,23 @@ import { useNavigate } from "react-router-dom";
 import WorkoutDayNavigator from "@/components/workout/WorkoutDayNavigator";
 import { WorkoutV31Skeleton } from "@/components/workout-v31/WorkoutV31Skeleton";
 import { ManualWorkoutDialog } from "@/components/workout/manual/ManualWorkoutDialog";
-import { FileText } from "lucide-react";
+import { FileText, Calendar, Sparkles } from "lucide-react";
 
-import { AIInsightCard } from "@/components/workout-v31/widgets/AIInsightCard";
-import { CTAButtons } from "@/components/workout-v31/widgets/CTAButtons";
-import { TodaysPlanCard } from "@/components/workout-v31/widgets/TodaysPlanCard";
 import { ProgressChartCard } from "@/components/workout-v31/widgets/ProgressChartCard";
 import { MicroTrackerCard } from "@/components/workout-v31/widgets/MicroTrackerCard";
-import { WeeklySplitCard } from "@/components/workout-v31/widgets/WeeklySplitCard";
 import { LogbookSnippetCard } from "@/components/workout-v31/widgets/LogbookSnippetCard";
+
+// Wellness components
+import { CreateWellnessPlanDialog } from "@/components/wellness/CreateWellnessPlanDialog";
+import { QuickActivityLogger } from "@/components/wellness/QuickActivityLogger";
+import { WellnessWeekView } from "@/components/wellness/WellnessWeekView";
+import { TodayActivitiesCard } from "@/components/wellness/TodayActivitiesCard";
 
 export default function WorkoutV31() {
   const [activeTab, setActiveTab] = useState("today");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
   const [manualWorkoutOpen, setManualWorkoutOpen] = useState(false);
+  const [wellnessPlanOpen, setWellnessPlanOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -77,50 +80,6 @@ export default function WorkoutV31() {
     navigate('/workouts/live-logger');
   };
 
-  const handleSkipWorkout = () => {
-    toast.info("Тренировка пропущена", {
-      description: "Старайтесь быть последовательным в тренировках!"
-    });
-  };
-
-  const handlePreviewWorkout = () => {
-    toast.success("Режим просмотра", {
-      description: "Ознакомьтесь со всеми упражнениями перед началом"
-    });
-  };
-
-  // Prepare data for widgets
-  const todayData = useMemo(() => {
-    if (!dailyWorkout) return { exercises: [], recoveryScore: 0, message: "" };
-    
-    return {
-      exercises: dailyWorkout.adjusted_exercises || [],
-      recoveryScore: dailyWorkout.readiness?.total_score || 0,
-      message: dailyWorkout.ai_rationale || "AI анализирует ваше восстановление"
-    };
-  }, [dailyWorkout]);
-
-  // Get weekly schedule from plan workouts
-  const weeklySchedule = useMemo(() => {
-    // This would ideally come from the plan data, but for now we'll create a placeholder
-    // The actual schedule will be loaded in TodaysPlanCard via PlanViewerDialog
-    if (!dailyWorkout?.assigned_plan_id) return [];
-    
-    // Return empty for now - the TodaysPlanCard will handle showing schedule
-    return [];
-  }, [dailyWorkout]);
-
-  const weeklyDays = useMemo(() => {
-    const today = new Date().getDay();
-    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    
-    return daysOfWeek.map((day, index) => ({
-      name: `${day}: ${index === 0 || index === 3 || index === 6 ? 'Отдых' : 'Тренировка'}`,
-      completed: index < today,
-      isToday: index === today
-    }));
-  }, []);
-
   const vitalData = useMemo(() => [
     { date: "Пн", value: 85 },
     { date: "Вт", value: 78 },
@@ -131,45 +90,12 @@ export default function WorkoutV31() {
     { date: "Вс", value: 87 }
   ], []);
 
-  const logbookEntries = useMemo(() => {
-    return workouts.slice(0, 5).map(w => {
-      const hasPR = w.volume ? w.volume > 5000 : false;
-      
-      return {
-        date: format(new Date(w.date), 'dd MMM', { locale: ru }),
-        workout: w.name || "Тренировка",
-        hasPR,
-        prDetails: hasPR ? `Объём ${w.volume?.toFixed(0)} кг` : undefined
-      };
-    });
-  }, [workouts]);
-
   // Show skeleton during initial load
   if ((isDailyLoading && !dailyWorkout) || isHistoryLoading) {
     return <WorkoutV31Skeleton />;
   }
 
-  // Determine plan and rest day status
-  const hasPlan = !!dailyWorkout?.assigned_plan_id || !!dailyWorkout?.success;
-  const isRestDay = !!dailyWorkout?.is_rest_day;
-
-  // Dynamic CTA button props
-  const startLabel = !hasPlan ? "Создать план" : isRestDay ? "День отдыха" : "Начать тренировку";
-  const startDisabled = !hasPlan || isRestDay;
-  const handleStartClick = () => {
-    if (!hasPlan) {
-      navigate('/workouts/manage');
-    } else if (isRestDay) {
-      toast.info("Сегодня день отдыха", {
-        description: "Используйте это время для восстановления"
-      });
-    } else {
-      handleStartWorkout();
-    }
-  };
-
   const handleManualWorkoutSuccess = () => {
-    // Refetch workout history after saving
     window.location.reload();
   };
 
@@ -181,23 +107,40 @@ export default function WorkoutV31() {
         onSuccess={handleManualWorkoutSuccess}
       />
       
+      <CreateWellnessPlanDialog
+        open={wellnessPlanOpen}
+        onOpenChange={setWellnessPlanOpen}
+        onSuccess={() => {}}
+      />
+      
       <div className="max-w-[1800px] mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
           <WorkoutDayNavigator
-            planName={dailyWorkout?.plan_name || "План тренировок"}
+            planName={dailyWorkout?.plan_name || "Тренировки"}
             weekNumber={dailyWorkout?.week_number || 1}
             dayOfWeek={selectedDay}
             onDayChange={setSelectedDay}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setManualWorkoutOpen(true)}
-            className="hidden sm:flex items-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-          >
-            <FileText className="w-4 h-4" />
-            Записать тренировку
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setWellnessPlanOpen(true)}
+              className="hidden sm:flex items-center gap-2 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+            >
+              <Calendar className="w-4 h-4" />
+              Wellness-план
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setManualWorkoutOpen(true)}
+              className="hidden sm:flex items-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+            >
+              <FileText className="w-4 h-4" />
+              Записать тренировку
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -227,67 +170,37 @@ export default function WorkoutV31() {
           // Desktop: 3-column grid inside "today" tab
           <TabsContent value="today" className="mt-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Column 1: Today */}
+              {/* Column 1: Today - Actions */}
               <div className="space-y-6">
-                {isRestDay && (
-                  <Card className="bg-neutral-900 border border-blue-500/30">
-                    <CardHeader>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        🧘 День отдыха
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-                <AIInsightCard 
-                  recoveryScore={todayData.recoveryScore} 
-                  message={todayData.message}
-                />
-                <CTAButtons 
-                  onStart={handleStartClick}
-                  onSkip={handleSkipWorkout}
-                  onPreview={handlePreviewWorkout}
-                  startLabel={startLabel}
-                  startDisabled={startDisabled}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setManualWorkoutOpen(true)}
-                  className="w-full sm:hidden flex items-center justify-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-                >
-                  <FileText className="w-4 h-4" />
-                  Записать тренировку
-                </Button>
-                {!hasPlan && (
-                  <Card className="bg-gradient-to-br from-green-900/20 to-cyan-900/20 border border-green-500/30">
-                    <CardContent className="pt-6">
-                      <h3 className="text-lg font-semibold mb-2">Нет активного плана</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Создайте тренировочный план для начала работы
-                      </p>
-                      <Button 
-                        className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
-                        onClick={() => navigate('/workouts/manage')}
-                      >
-                        Создать план
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-                <TodaysPlanCard 
-                  exercises={todayData.exercises}
-                  workoutName={dailyWorkout?.workout_name}
-                  planId={dailyWorkout?.assigned_plan_id}
-                  planName={dailyWorkout?.plan_name}
-                  weekNumber={dailyWorkout?.week_number}
-                  totalWeeks={dailyWorkout?.total_weeks}
-                  weeklySchedule={weeklySchedule}
-                />
+                {/* Quick Actions Card */}
+                <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Записать активность</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button
+                      onClick={() => setManualWorkoutOpen(true)}
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Записать силовую тренировку
+                    </Button>
+                    <Button
+                      onClick={() => setWellnessPlanOpen(true)}
+                      variant="outline"
+                      className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Создать Wellness-расписание
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Today's scheduled activities */}
+                <TodayActivitiesCard />
+
+                {/* Quick activity logger */}
+                <QuickActivityLogger />
               </div>
 
               {/* Column 2: Progress */}
@@ -308,9 +221,9 @@ export default function WorkoutV31() {
                 />
               </div>
 
-              {/* Column 3: Logbook */}
+              {/* Column 3: Week Schedule & Journal */}
               <div className="space-y-6">
-                <WeeklySplitCard days={weeklyDays} />
+                <WellnessWeekView compact />
                 <LogbookSnippetCard workouts={workouts} />
               </div>
             </div>
@@ -319,57 +232,30 @@ export default function WorkoutV31() {
           // Mobile: Tab-based content switching
           <>
             <TabsContent value="today" className="space-y-6 mt-0">
-              {isRestDay && (
-                <Card className="bg-neutral-900 border border-blue-500/30">
-                  <CardHeader>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      🧘 День отдыха
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Сегодня день восстановления. Используйте это время для отдыха и восстановления мышц.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-              <AIInsightCard 
-                recoveryScore={todayData.recoveryScore} 
-                message={todayData.message}
-              />
-              <CTAButtons 
-                onStart={handleStartClick}
-                onSkip={handleSkipWorkout}
-                onPreview={handlePreviewWorkout}
-                startLabel={startLabel}
-                startDisabled={startDisabled}
-              />
-              {!hasPlan && (
-                <Card className="bg-gradient-to-br from-green-900/20 to-cyan-900/20 border border-green-500/30">
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-semibold mb-2">Нет активного плана</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Создайте тренировочный план для начала работы
-                    </p>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 text-neutral-950 font-semibold"
-                      onClick={() => navigate('/workouts/manage')}
-                    >
-                      Создать план
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-              <TodaysPlanCard 
-                exercises={todayData.exercises}
-                workoutName={dailyWorkout?.workout_name}
-                planId={dailyWorkout?.assigned_plan_id}
-                planName={dailyWorkout?.plan_name}
-                weekNumber={dailyWorkout?.week_number}
-                totalWeeks={dailyWorkout?.total_weeks}
-                weeklySchedule={weeklySchedule}
-              />
-              <WeeklySplitCard days={weeklyDays} />
+              {/* Mobile quick actions */}
+              <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
+                <CardContent className="pt-6 space-y-3">
+                  <Button
+                    onClick={() => setManualWorkoutOpen(true)}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Записать силовую
+                  </Button>
+                  <Button
+                    onClick={() => setWellnessPlanOpen(true)}
+                    variant="outline"
+                    className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Wellness-расписание
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <TodayActivitiesCard />
+              <QuickActivityLogger />
+              <WellnessWeekView compact />
             </TabsContent>
 
             <TabsContent value="progress" className="space-y-6 mt-0">
