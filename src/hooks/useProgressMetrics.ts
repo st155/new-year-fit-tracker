@@ -1,19 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
 import { ru } from "date-fns/locale";
-
-// Mapping exercise names from dropdown to actual exercise names in DB
-const EXERCISE_MAPPING: Record<string, string[]> = {
-  bench_press: ['Bench Press', 'Bench press', 'bench press', 'Жим лежа', 'жим лежа', 'Bench incline press', 'Bench incline'],
-  squat: ['Squat', 'squat', 'Squats', 'Приседания', 'приседания', 'Back Squat'],
-  deadlift: ['Deadlift', 'deadlift', 'Становая тяга', 'становая тяга', 'Romanian Deadlift'],
-  overhead_press: ['Overhead Press', 'overhead press', 'Overhead press barbell', 'Жим стоя', 'жим стоя', 'Military Press'],
-  lunges: ['Lunges', 'lunges', 'Lunges alternating', 'Выпады'],
-  biceps: ['Biceps', 'biceps', 'Biceps dumbbell', 'Biceps cable', 'Bicep Curl', 'Подъем на бицепс'],
-  dips: ['Dips', 'dips', 'Отжимания на брусьях'],
-};
 
 export type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
@@ -35,30 +24,63 @@ function getPeriodDays(period: PeriodFilter): number {
 }
 
 export function useProgressMetrics(userId?: string) {
-  const [selectedMetric, setSelectedMetric] = useState("overhead_press");
+  const [selectedMetric, setSelectedMetric] = useState<string>("");
   const [period, setPeriod] = useState<PeriodFilter>('30d');
 
-  const availableMetrics = [
-    { value: "overhead_press", label: "Overhead Press (1RM)" },
-    { value: "bench_press", label: "Bench Press (1RM)" },
-    { value: "squat", label: "Squat (1RM)" },
-    { value: "deadlift", label: "Deadlift (1RM)" },
-    { value: "lunges", label: "Lunges (1RM)" },
-    { value: "biceps", label: "Biceps (1RM)" },
-    { value: "dips", label: "Dips (1RM)" },
-  ];
-
   const periodDays = getPeriodDays(period);
+
+  // Fetch unique exercises user has performed
+  const { data: userExercises } = useQuery({
+    queryKey: ['user-unique-exercises', userId],
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('workout_logs')
+        .select('exercise_name, actual_reps')
+        .eq('user_id', userId)
+        .gt('actual_weight', 0);
+      
+      if (error) throw error;
+      
+      // Group by exercise and find min reps (to detect 1RM)
+      const exerciseMap = new Map<string, number>();
+      data?.forEach(log => {
+        if (!log.exercise_name) return;
+        const existing = exerciseMap.get(log.exercise_name);
+        if (existing === undefined || log.actual_reps < existing) {
+          exerciseMap.set(log.exercise_name, log.actual_reps);
+        }
+      });
+      
+      return Array.from(exerciseMap.entries()).map(([name, minReps]) => ({
+        name,
+        minReps,
+        value: name, // use exact name as value
+        label: minReps === 1 ? `${name} (1RM)` : name
+      }));
+    },
+    enabled: !!userId
+  });
+
+  const availableMetrics = useMemo(() => {
+    return userExercises || [];
+  }, [userExercises]);
+
+  // Set default selection to first exercise when data loads
+  useEffect(() => {
+    if (availableMetrics.length > 0 && !selectedMetric) {
+      setSelectedMetric(availableMetrics[0].value);
+    }
+  }, [availableMetrics, selectedMetric]);
 
   // Fetch workout logs for selected exercise
   const { data: workoutData } = useQuery({
     queryKey: ['exercise-progress', selectedMetric, userId, period],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      if (!userId) return [];
-      
-      const exerciseNames = EXERCISE_MAPPING[selectedMetric] || [];
-      if (exerciseNames.length === 0) return [];
+      if (!userId || !selectedMetric) return [];
       
       const startDate = subDays(new Date(), periodDays).toISOString();
       
@@ -66,23 +88,16 @@ export function useProgressMetrics(userId?: string) {
         .from('workout_logs')
         .select('exercise_name, actual_weight, actual_reps, performed_at')
         .eq('user_id', userId)
+        .eq('exercise_name', selectedMetric)
         .gte('performed_at', startDate)
         .gt('actual_weight', 0)
         .order('performed_at', { ascending: true });
       
       if (error) throw error;
       
-      // Filter to matching exercises (case-insensitive partial match)
-      const filtered = (data || []).filter(log => 
-        exerciseNames.some(name => 
-          log.exercise_name?.toLowerCase().includes(name.toLowerCase()) ||
-          name.toLowerCase().includes(log.exercise_name?.toLowerCase() || '')
-        )
-      );
-      
-      return filtered;
+      return data || [];
     },
-    enabled: !!userId
+    enabled: !!userId && !!selectedMetric
   });
 
   // Transform data for chart - group by date and take best 1RM per day
