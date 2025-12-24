@@ -182,7 +182,7 @@ export function useProfileSummary() {
         type: mapActionType(a.action_type),
         title: a.action_text,
         description: a.source_table || '',
-        timestamp: a.created_at,
+        timestamp: a.measurement_date || a.created_at,
         source: a.source_table,
         metadata: a.metadata as Record<string, any> || {}
       }));

@@ -64,7 +64,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
         .from('workouts')
         .select('*')
         .eq('user_id', user.id)
-        .in('source', ['whoop', 'oura', 'garmin', 'withings', 'google', 'apple'])
+        .in('source', ['whoop', 'oura', 'garmin', 'withings', 'google', 'apple', 'manual_trainer'])
         .order('start_time', { ascending: false })
         .limit(50);
 
@@ -116,6 +116,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
 function getSourceLabel(source: string): string {
   const labels: Record<string, string> = {
     'manual': 'Вручную',
+    'manual_trainer': 'От тренера',
     'whoop': 'Whoop',
     'withings': 'Withings',
     'terra': 'Terra',
