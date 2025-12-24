@@ -61,6 +61,7 @@ export function useProgressMetrics(userId?: string) {
   const periodDays = getPeriodDays(period);
 
   // Fetch unique exercises user has performed (for strength category)
+  // Now counts data points per exercise to select the best one by default
   const { data: userExercises } = useQuery({
     queryKey: ['user-unique-exercises', userId],
     staleTime: 10 * 60 * 1000,
@@ -69,29 +70,44 @@ export function useProgressMetrics(userId?: string) {
       
       const { data, error } = await supabase
         .from('workout_logs')
-        .select('exercise_name, actual_reps')
-        .eq('user_id', userId)
-        .gt('actual_weight', 0);
+        .select('exercise_name, actual_reps, performed_at')
+        .eq('user_id', userId);
       
       if (error) throw error;
       
-      // Group by exercise and find min reps (to detect 1RM)
-      const exerciseMap = new Map<string, number>();
+      // Group by exercise: count unique dates and find min reps (to detect 1RM)
+      const exerciseMap = new Map<string, { minReps: number; uniqueDates: Set<string> }>();
       data?.forEach(log => {
         if (!log.exercise_name) return;
+        const dateKey = log.performed_at.split('T')[0];
         const existing = exerciseMap.get(log.exercise_name);
-        if (existing === undefined || log.actual_reps < existing) {
-          exerciseMap.set(log.exercise_name, log.actual_reps);
+        
+        if (!existing) {
+          exerciseMap.set(log.exercise_name, { 
+            minReps: log.actual_reps || 0, 
+            uniqueDates: new Set([dateKey]) 
+          });
+        } else {
+          existing.uniqueDates.add(dateKey);
+          if (log.actual_reps && log.actual_reps < existing.minReps) {
+            existing.minReps = log.actual_reps;
+          }
         }
       });
       
-      return Array.from(exerciseMap.entries()).map(([name, minReps]) => ({
-        name,
-        minReps,
-        value: name,
-        label: minReps === 1 ? `${name} (1RM)` : name,
-        category: 'strength' as const
-      }));
+      // Convert to array and sort by data points count (descending)
+      const exercises = Array.from(exerciseMap.entries())
+        .map(([name, { minReps, uniqueDates }]) => ({
+          name,
+          minReps,
+          value: name,
+          dataPoints: uniqueDates.size,
+          label: `${name}${minReps === 1 ? ' (1RM)' : ''} (${uniqueDates.size})`,
+          category: 'strength' as const
+        }))
+        .sort((a, b) => b.dataPoints - a.dataPoints);
+      
+      return exercises;
     },
     enabled: !!userId
   });
