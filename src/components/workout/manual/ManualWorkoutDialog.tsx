@@ -1,0 +1,301 @@
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { parseWorkoutText, ParsedWorkout } from "@/lib/workout-text-parser";
+import { ParsedWorkoutPreview } from "./ParsedWorkoutPreview";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Loader2, FileText, Calendar, Clock, User } from "lucide-react";
+import { format } from "date-fns";
+
+interface ManualWorkoutDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+const PLACEHOLDER_TEXT = `Пример ввода:
+
+Lunges alternating 
+10x20kg
+10x40kg
+8x50kg
+
+Overhead press barbell 
+10x20kg
+8x40kg
+
+superset:
+Dips
+10
+10x20kg
+
+Biceps dumbbell 
+10x20kg
+10x25
+
+Plank 3x45sec
+Side Plank
+1m 1m`;
+
+export function ManualWorkoutDialog({ 
+  open, 
+  onOpenChange,
+  onSuccess 
+}: ManualWorkoutDialogProps) {
+  const { user } = useAuth();
+  const [workoutText, setWorkoutText] = useState("");
+  const [workoutName, setWorkoutName] = useState("Тренировка с тренером");
+  const [workoutDate, setWorkoutDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [duration, setDuration] = useState("60");
+  const [trainerName, setTrainerName] = useState("");
+  const [parsedWorkout, setParsedWorkout] = useState<ParsedWorkout | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [step, setStep] = useState<'input' | 'preview'>('input');
+
+  const handleParse = () => {
+    if (!workoutText.trim()) {
+      toast.error("Введите текст тренировки");
+      return;
+    }
+    
+    const parsed = parseWorkoutText(workoutText);
+    if (parsed.exercises.length === 0) {
+      toast.error("Не удалось распознать упражнения", {
+        description: "Проверьте формат ввода"
+      });
+      return;
+    }
+    
+    setParsedWorkout(parsed);
+    setStep('preview');
+  };
+
+  const handleSave = async () => {
+    if (!user?.id || !parsedWorkout) return;
+
+    setIsSaving(true);
+    try {
+      const startTime = new Date(`${workoutDate}T10:00:00`);
+      const notes = trainerName ? `Тренировка с ${trainerName}` : workoutName;
+
+      // Create workout record
+      const { data: workout, error: workoutError } = await supabase
+        .from("workouts")
+        .insert({
+          user_id: user.id,
+          workout_type: "strength",
+          start_time: startTime.toISOString(),
+          duration_minutes: parseInt(duration) || 60,
+          source: "manual_trainer",
+          notes: notes,
+        })
+        .select()
+        .single();
+
+      if (workoutError) throw workoutError;
+
+      // Create workout logs for each set
+      const logs = [];
+      for (const exercise of parsedWorkout.exercises) {
+        for (let setIndex = 0; setIndex < exercise.sets.length; setIndex++) {
+          const set = exercise.sets[setIndex];
+          logs.push({
+            user_id: user.id,
+            exercise_name: exercise.name,
+            set_number: setIndex + 1,
+            actual_weight: set.weight || null,
+            actual_reps: set.reps || null,
+            superset_group: exercise.supersetGroup?.toString() || null,
+            performed_at: startTime.toISOString(),
+            notes: set.duration_seconds 
+              ? `Duration: ${set.duration_seconds}s` 
+              : null,
+          });
+        }
+      }
+
+      if (logs.length > 0) {
+        const { error: logsError } = await supabase
+          .from("workout_logs")
+          .insert(logs);
+
+        if (logsError) throw logsError;
+      }
+
+      toast.success("Тренировка сохранена!", {
+        description: `${parsedWorkout.exercises.length} упражнений, ${parsedWorkout.totalSets} сетов`
+      });
+
+      // Reset form
+      setWorkoutText("");
+      setParsedWorkout(null);
+      setStep('input');
+      onOpenChange(false);
+      onSuccess?.();
+
+    } catch (error) {
+      console.error("Error saving workout:", error);
+      toast.error("Ошибка сохранения", {
+        description: "Попробуйте ещё раз"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClose = () => {
+    setStep('input');
+    setParsedWorkout(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-neutral-900 border-neutral-800">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <FileText className="w-5 h-5 text-cyan-400" />
+            Записать тренировку
+          </DialogTitle>
+          <DialogDescription>
+            Вставьте текст тренировки из блокнота — система автоматически распознает упражнения и сеты
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === 'input' ? (
+          <div className="space-y-4">
+            {/* Workout metadata */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="workout-name" className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  Название
+                </Label>
+                <Input
+                  id="workout-name"
+                  value={workoutName}
+                  onChange={(e) => setWorkoutName(e.target.value)}
+                  placeholder="Тренировка с тренером"
+                  className="bg-neutral-800 border-neutral-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trainer-name" className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5" />
+                  Тренер
+                </Label>
+                <Input
+                  id="trainer-name"
+                  value={trainerName}
+                  onChange={(e) => setTrainerName(e.target.value)}
+                  placeholder="Антон"
+                  className="bg-neutral-800 border-neutral-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="workout-date" className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Дата
+                </Label>
+                <Input
+                  id="workout-date"
+                  type="date"
+                  value={workoutDate}
+                  onChange={(e) => setWorkoutDate(e.target.value)}
+                  className="bg-neutral-800 border-neutral-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Длительность (мин)
+                </Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="60"
+                  className="bg-neutral-800 border-neutral-700"
+                />
+              </div>
+            </div>
+
+            {/* Workout text input */}
+            <div className="space-y-2">
+              <Label htmlFor="workout-text">Текст тренировки</Label>
+              <Textarea
+                id="workout-text"
+                value={workoutText}
+                onChange={(e) => setWorkoutText(e.target.value)}
+                placeholder={PLACEHOLDER_TEXT}
+                className="min-h-[300px] font-mono text-sm bg-neutral-800 border-neutral-700"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleClose}>
+                Отмена
+              </Button>
+              <Button 
+                onClick={handleParse}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              >
+                Распознать
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Parsed workout preview */}
+            {parsedWorkout && (
+              <ParsedWorkoutPreview 
+                workout={parsedWorkout}
+                workoutName={trainerName ? `${workoutName} (${trainerName})` : workoutName}
+                date={workoutDate}
+                duration={parseInt(duration) || 60}
+              />
+            )}
+
+            <div className="flex justify-between gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setStep('input')}
+              >
+                ← Редактировать
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  "Сохранить тренировку"
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
