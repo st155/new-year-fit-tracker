@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSupplementProtocol } from "@/hooks/supplements/useSupplementProtocol";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, Power, Trash2, Sparkles, Calendar, Package } from "lucide-react";
+import { Eye, Power, Trash2, Sparkles, Calendar, Package, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProtocolProgress {
@@ -46,8 +46,17 @@ export function ProtocolHistory() {
     protocolHistory, 
     isLoading,
     activateProtocol,
-    deleteProtocol 
+    deleteProtocol,
+    refetchAll
   } = useSupplementProtocol(user?.id);
+
+  // Force refetch on mount to ensure fresh data
+  useEffect(() => {
+    if (user?.id) {
+      console.log('📍 [ProtocolHistory] Component mounted, refetching protocols...');
+      refetchAll();
+    }
+  }, [user?.id]);
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedProtocol, setSelectedProtocol] = useState<any>(null);
@@ -243,12 +252,20 @@ export function ProtocolHistory() {
       )}
 
       {!activeProtocol && inactiveProtocols.length === 0 && (
-        <div className="text-center py-12 space-y-2">
+        <div className="text-center py-12 space-y-4">
           <Package className="h-12 w-12 mx-auto text-muted-foreground/50" />
           <p className="text-muted-foreground">Протоколы не найдены</p>
           <p className="text-sm text-muted-foreground">
             Создайте свой первый протокол во вкладке "Import Protocol"
           </p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => refetchAll()}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Обновить
+          </Button>
         </div>
       )}
 
