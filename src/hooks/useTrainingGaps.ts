@@ -137,27 +137,44 @@ export function useSaveGeneratedWorkout() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Преобразуем упражнения в формат для сохранения
-      const exercises = workout.exercises.map((ex, idx) => ({
-        exercise_name: ex.name,
-        sets: ex.sets,
-        actual_reps: parseInt(ex.reps) || 10,
-        actual_weight: ex.weight ? parseFloat(ex.weight) : 0,
-        actual_rpe: 7
-      }));
+      // Flatten exercises into individual set rows (workout_logs stores one row per set)
+      const rows: Array<{
+        user_id: string;
+        workout_date: string;
+        workout_type: string;
+        exercise_name: string;
+        set_number: number;
+        actual_reps: number;
+        actual_weight: number;
+        actual_rpe: number;
+        duration_minutes: number;
+        notes: string;
+      }> = [];
+
+      for (const ex of workout.exercises) {
+        const reps = parseInt(ex.reps) || 10;
+        const weight = ex.weight ? parseFloat(ex.weight) : 0;
+        
+        for (let setNum = 1; setNum <= ex.sets; setNum++) {
+          rows.push({
+            user_id: user.id,
+            workout_date: new Date().toISOString().split('T')[0],
+            workout_type: 'Travel',
+            exercise_name: ex.name,
+            set_number: setNum,
+            actual_reps: reps,
+            actual_weight: weight,
+            actual_rpe: 7,
+            duration_minutes: workout.duration_minutes,
+            notes: `🏋️ ${workout.workout_name}`
+          });
+        }
+      }
 
       const { data, error } = await supabase
         .from('workout_logs')
-        .insert(exercises.map(ex => ({
-          ...ex,
-          user_id: user.id,
-          workout_date: new Date().toISOString().split('T')[0],
-          workout_type: 'Travel',
-          duration_minutes: workout.duration_minutes,
-          notes: `🏋️ ${workout.workout_name}`
-        })))
-        .select()
-        .single();
+        .insert(rows)
+        .select();
 
       if (error) throw error;
       return data;
