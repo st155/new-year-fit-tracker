@@ -45,6 +45,10 @@ export function ProtocolHistory() {
     activeProtocol, 
     protocolHistory, 
     isLoading,
+    isLoadingActive,
+    isLoadingHistory,
+    errorActive,
+    errorHistory,
     activateProtocol,
     deleteProtocol,
     refetchAll
@@ -54,6 +58,8 @@ export function ProtocolHistory() {
   useEffect(() => {
     if (user?.id) {
       console.log('📍 [ProtocolHistory] Component mounted, refetching protocols...');
+      console.log('📍 [ProtocolHistory] User ID:', user.id);
+      console.log('📍 [ProtocolHistory] User email:', user.email);
       refetchAll();
     }
   }, [user?.id]);
@@ -213,6 +219,20 @@ export function ProtocolHistory() {
     );
   };
 
+  // Not logged in state
+  if (!user) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <Package className="h-12 w-12 mx-auto text-muted-foreground/50" />
+        <p className="text-muted-foreground">Войдите в аккаунт</p>
+        <p className="text-sm text-muted-foreground">
+          Для просмотра протоколов необходимо авторизоваться
+        </p>
+      </div>
+    );
+  }
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -224,10 +244,37 @@ export function ProtocolHistory() {
     );
   }
 
+  // Error state
+  if (errorActive || errorHistory) {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <Package className="h-12 w-12 mx-auto text-destructive/50" />
+        <p className="text-destructive">Ошибка загрузки</p>
+        <p className="text-sm text-muted-foreground">
+          {(errorActive as Error)?.message || (errorHistory as Error)?.message}
+        </p>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => refetchAll()}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Повторить
+        </Button>
+      </div>
+    );
+  }
+
   const inactiveProtocols = protocolHistory?.filter((p: any) => !p.is_active) || [];
 
   return (
     <div className="space-y-8">
+      {/* Diagnostic info - small text for debugging */}
+      <div className="text-xs text-muted-foreground/50 bg-muted/30 p-2 rounded font-mono">
+        🔍 User: {user.email} | ID: {user.id?.slice(0, 8)}... | 
+        Protocols: {protocolHistory?.length || 0} | Active: {activeProtocol ? 'yes' : 'no'}
+      </div>
+
       {/* Active Protocol Section */}
       {activeProtocol && (
         <div className="space-y-4">
