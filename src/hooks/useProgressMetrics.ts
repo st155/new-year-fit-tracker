@@ -1,70 +1,124 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
+import { ru } from "date-fns/locale";
+
+// Mapping exercise names from dropdown to actual exercise names in DB
+const EXERCISE_MAPPING: Record<string, string[]> = {
+  bench_press: ['Bench Press', 'Bench press', 'bench press', 'Жим лежа', 'жим лежа'],
+  squat: ['Squat', 'squat', 'Squats', 'Приседания', 'приседания', 'Back Squat'],
+  deadlift: ['Deadlift', 'deadlift', 'Становая тяга', 'становая тяга', 'Romanian Deadlift'],
+  overhead_press: ['Overhead Press', 'overhead press', 'Overhead press barbell', 'Жим стоя', 'жим стоя', 'Military Press'],
+  lunges: ['Lunges', 'lunges', 'Lunges alternating', 'Выпады'],
+  biceps: ['Biceps', 'biceps', 'Biceps dumbbell', 'Bicep Curl', 'Подъем на бицепс'],
+  dips: ['Dips', 'dips', 'Отжимания на брусьях'],
+};
+
+// Calculate estimated 1RM using Epley formula: 1RM = weight × (1 + reps/30)
+function calculateEstimated1RM(weight: number, reps: number): number {
+  if (reps <= 0 || weight <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
 
 export function useProgressMetrics(userId?: string) {
-  const [selectedMetric, setSelectedMetric] = useState("bench_press_1rm");
+  const [selectedMetric, setSelectedMetric] = useState("overhead_press");
 
   const availableMetrics = [
-    { value: "bench_press_1rm", label: "Bench Press (1RM)" },
-    { value: "squat_1rm", label: "Squat (1RM)" },
-    { value: "deadlift_1rm", label: "Deadlift (1RM)" },
-    { value: "overhead_press_1rm", label: "Overhead Press (1RM)" },
-    { value: "body_weight", label: "Body Weight" },
+    { value: "overhead_press", label: "Overhead Press (1RM)" },
+    { value: "bench_press", label: "Bench Press (1RM)" },
+    { value: "squat", label: "Squat (1RM)" },
+    { value: "deadlift", label: "Deadlift (1RM)" },
+    { value: "lunges", label: "Lunges (1RM)" },
+    { value: "biceps", label: "Biceps (1RM)" },
+    { value: "dips", label: "Dips (1RM)" },
   ];
 
-  // Fetch real data from unified_metrics
-  const { data: metricsData } = useQuery({
-    queryKey: ['progress-metrics', selectedMetric, userId],
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
-    placeholderData: (previousData) => previousData, // Keep old data while fetching
+  // Fetch workout logs for selected exercise
+  const { data: workoutData } = useQuery({
+    queryKey: ['exercise-progress', selectedMetric, userId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       if (!userId) return [];
       
+      const exerciseNames = EXERCISE_MAPPING[selectedMetric] || [];
+      if (exerciseNames.length === 0) return [];
+      
+      // Get last 60 days of data
+      const startDate = subDays(new Date(), 60).toISOString();
+      
       const { data, error } = await supabase
-        .from('unified_metrics')
-        .select('*')
+        .from('workout_logs')
+        .select('exercise_name, actual_weight, actual_reps, performed_at')
         .eq('user_id', userId)
-        .eq('metric_name', selectedMetric)
-        .order('measurement_date', { ascending: true })
-        .limit(12);
+        .gte('performed_at', startDate)
+        .gt('actual_weight', 0)
+        .order('performed_at', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      
+      // Filter to matching exercises (case-insensitive partial match)
+      const filtered = (data || []).filter(log => 
+        exerciseNames.some(name => 
+          log.exercise_name?.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(log.exercise_name?.toLowerCase() || '')
+        )
+      );
+      
+      return filtered;
     },
     enabled: !!userId
   });
 
-  // Transform data for chart or use mock data
+  // Transform data for chart - group by date and take best 1RM per day
   const chartData = useMemo(() => {
-    if (metricsData && metricsData.length > 0) {
-      return metricsData.map(m => ({
-        date: format(new Date(m.measurement_date), 'dd MMM'),
-        value: m.value
-      }));
+    if (!workoutData || workoutData.length === 0) {
+      return [];
+    }
+
+    // Group by date and calculate max estimated 1RM per day
+    const byDate: Record<string, { date: Date; maxWeight: number; maxReps: number; estimated1RM: number }> = {};
+    
+    for (const log of workoutData) {
+      if (!log.performed_at) continue;
+      
+      const dateKey = format(new Date(log.performed_at), 'yyyy-MM-dd');
+      const estimated1RM = calculateEstimated1RM(log.actual_weight, log.actual_reps);
+      
+      if (!byDate[dateKey] || estimated1RM > byDate[dateKey].estimated1RM) {
+        byDate[dateKey] = {
+          date: new Date(log.performed_at),
+          maxWeight: log.actual_weight,
+          maxReps: log.actual_reps,
+          estimated1RM
+        };
+      }
     }
     
-    // Fallback to mock data if no real data
-    const baseValue = selectedMetric === "bench_press_1rm" ? 100 : 
-                      selectedMetric === "squat_1rm" ? 140 :
-                      selectedMetric === "deadlift_1rm" ? 160 : 
-                      selectedMetric === "body_weight" ? 80 : 70;
+    // Convert to array and sort by date
+    const sorted = Object.values(byDate).sort((a, b) => a.date.getTime() - b.date.getTime());
     
-    return Array.from({ length: 12 }, (_, i) => ({
-      date: `Week ${i + 1}`,
-      value: baseValue + (i * 2.5) + (Math.random() * 5 - 2.5)
+    return sorted.map(d => ({
+      date: format(d.date, 'd MMM', { locale: ru }),
+      value: d.estimated1RM,
+      weight: d.maxWeight,
+      reps: d.maxReps
     }));
-  }, [metricsData, selectedMetric]);
+  }, [workoutData]);
 
   const metrics = useMemo(() => {
+    if (chartData.length === 0) {
+      return { start: 0, current: 0, min: 0, max: 0, avg: 0 };
+    }
+    
     const values = chartData.map(d => d.value);
     return {
       start: values[0],
       current: values[values.length - 1],
       min: Math.min(...values),
       max: Math.max(...values),
-      avg: values.reduce((a, b) => a + b, 0) / values.length
+      avg: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
     };
   }, [chartData]);
 
@@ -73,6 +127,7 @@ export function useProgressMetrics(userId?: string) {
     setSelectedMetric,
     availableMetrics,
     chartData,
-    metrics
+    metrics,
+    hasData: chartData.length > 0
   };
 }
