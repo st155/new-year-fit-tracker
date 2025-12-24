@@ -45,9 +45,10 @@ export function useSupplementProtocol(userId: string | undefined) {
     return 'serving';
   };
 
-  const { data: activeProtocol, isLoading } = useQuery({
+  const { data: activeProtocol, isLoading, refetch: refetchActiveProtocol } = useQuery({
     queryKey: ["active-protocol", userId],
     queryFn: async () => {
+      console.log('🔍 [useSupplementProtocol] Fetching active protocol for userId:', userId);
       if (!userId) return null;
       
       const { data, error } = await supabase
@@ -65,27 +66,44 @@ export function useSupplementProtocol(userId: string | undefined) {
         .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [useSupplementProtocol] Active protocol error:', error);
+        throw error;
+      }
+      console.log('✅ [useSupplementProtocol] Active protocol result:', data?.id || 'null');
       return data;
     },
     enabled: !!userId,
+    staleTime: 0, // Always refetch
   });
 
-  const { data: protocolHistory } = useQuery({
+  const { data: protocolHistory, refetch: refetchHistory } = useQuery({
     queryKey: ["protocol-history", userId],
     queryFn: async () => {
+      console.log('🔍 [useSupplementProtocol] Fetching protocol history for userId:', userId);
       if (!userId) return [];
       
       const { data, error } = await supabase
         .from("protocols")
-        .select("*")
+        .select(`
+          *,
+          protocol_items(
+            *,
+            supplement_products(*)
+          )
+        `)
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [useSupplementProtocol] Protocol history error:', error);
+        throw error;
+      }
+      console.log('✅ [useSupplementProtocol] Protocol history count:', data?.length || 0);
       return data;
     },
     enabled: !!userId,
+    staleTime: 0, // Always refetch
   });
 
   const createProtocol = useMutation({
@@ -350,6 +368,11 @@ export function useSupplementProtocol(userId: string | undefined) {
     },
   });
 
+  const refetchAll = async () => {
+    console.log('🔄 [useSupplementProtocol] Refetching all protocols...');
+    await Promise.all([refetchActiveProtocol(), refetchHistory()]);
+  };
+
   return {
     activeProtocol,
     protocolHistory,
@@ -359,5 +382,6 @@ export function useSupplementProtocol(userId: string | undefined) {
     activateProtocol,
     deactivateProtocol,
     deleteProtocol,
+    refetchAll,
   };
 }
