@@ -345,7 +345,7 @@ export function useProgressMetrics(userId?: string) {
 
   const metrics = useMemo(() => {
     if (chartData.length === 0) {
-      return { start: 0, current: 0, min: 0, max: 0, avg: 0, change: 0, changePercent: 0 };
+      return { start: 0, current: 0, min: 0, max: 0, avg: 0, change: 0, changePercent: 0, totalSessions: 0, totalMinutes: 0 };
     }
     
     const values = chartData.map(d => d.value);
@@ -354,6 +354,14 @@ export function useProgressMetrics(userId?: string) {
     const change = current - start;
     const changePercent = start > 0 ? Math.round((change / start) * 100) : 0;
     
+    // For wellness activities, calculate total sessions and total minutes
+    let totalSessions = 0;
+    let totalMinutes = 0;
+    if (isWellnessActivity) {
+      totalSessions = chartData.reduce((sum, d: any) => sum + (d.count || 1), 0);
+      totalMinutes = chartData.reduce((sum, d) => sum + d.value, 0);
+    }
+    
     return {
       start,
       current,
@@ -361,9 +369,11 @@ export function useProgressMetrics(userId?: string) {
       max: Math.max(...values),
       avg: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
       change,
-      changePercent
+      changePercent,
+      totalSessions,
+      totalMinutes
     };
-  }, [chartData]);
+  }, [chartData, isWellnessActivity]);
 
   // Check if current exercise is bodyweight based on chart data
   const isBodyweightExercise = useMemo(() => {
