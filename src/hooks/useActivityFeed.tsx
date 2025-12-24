@@ -88,9 +88,13 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
               measurement_date: w.start_time?.split('T')[0] || null,
             }));
             
-            // Merge with existing activities and sort by created_at
+            // Merge with existing activities and sort by measurement_date
             filtered = [...workoutActivities, ...filtered]
-              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .sort((a, b) => {
+                const dateA = a.measurement_date || a.created_at;
+                const dateB = b.measurement_date || b.created_at;
+                return new Date(dateB).getTime() - new Date(dateA).getTime();
+              })
               .slice(0, PAGE_SIZE);
           }
         }
@@ -106,9 +110,11 @@ export function useActivityFeed(userId?: string, filterType?: string | null) {
               map.set(key, a);
             }
           }
-          filtered = Array.from(map.values()).sort(
-            (x, y) => new Date(y.created_at).getTime() - new Date(x.created_at).getTime()
-          );
+          filtered = Array.from(map.values()).sort((x, y) => {
+            const dateX = x.measurement_date || x.created_at;
+            const dateY = y.measurement_date || y.created_at;
+            return new Date(dateY).getTime() - new Date(dateX).getTime();
+          });
         }
         
         // Fetch profiles for filtered activities
