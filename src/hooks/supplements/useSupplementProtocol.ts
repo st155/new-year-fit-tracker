@@ -45,7 +45,12 @@ export function useSupplementProtocol(userId: string | undefined) {
     return 'serving';
   };
 
-  const { data: activeProtocol, isLoading, refetch: refetchActiveProtocol } = useQuery({
+  const { 
+    data: activeProtocol, 
+    isLoading: isLoadingActive, 
+    error: errorActive,
+    refetch: refetchActiveProtocol 
+  } = useQuery({
     queryKey: ["active-protocol", userId],
     queryFn: async () => {
       console.log('🔍 [useSupplementProtocol] Fetching active protocol for userId:', userId);
@@ -77,7 +82,12 @@ export function useSupplementProtocol(userId: string | undefined) {
     staleTime: 0, // Always refetch
   });
 
-  const { data: protocolHistory, refetch: refetchHistory } = useQuery({
+  const { 
+    data: protocolHistory = [], 
+    isLoading: isLoadingHistory, 
+    error: errorHistory,
+    refetch: refetchHistory 
+  } = useQuery({
     queryKey: ["protocol-history", userId],
     queryFn: async () => {
       console.log('🔍 [useSupplementProtocol] Fetching protocol history for userId:', userId);
@@ -100,11 +110,14 @@ export function useSupplementProtocol(userId: string | undefined) {
         throw error;
       }
       console.log('✅ [useSupplementProtocol] Protocol history count:', data?.length || 0);
-      return data;
+      return data || [];
     },
     enabled: !!userId,
     staleTime: 0, // Always refetch
   });
+
+  // Combined loading state
+  const isLoading = isLoadingActive || isLoadingHistory;
 
   const createProtocol = useMutation({
     mutationFn: async (protocol: any) => {
@@ -374,9 +387,13 @@ export function useSupplementProtocol(userId: string | undefined) {
   };
 
   return {
-    activeProtocol,
+    activeProtocol: activeProtocol ?? null,
     protocolHistory,
     isLoading,
+    isLoadingActive,
+    isLoadingHistory,
+    errorActive,
+    errorHistory,
     createProtocol,
     createProtocolFromParsed,
     activateProtocol,
