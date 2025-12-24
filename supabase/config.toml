@@ -243,3 +243,9 @@ verify_jwt = true
 
 [functions.auto-link-biomarkers]
 verify_jwt = true
+
+[functions.analyze-training-gaps]
+verify_jwt = true
+
+[functions.generate-travel-workout]
+verify_jwt = true
