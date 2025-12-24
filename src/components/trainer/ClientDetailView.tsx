@@ -55,6 +55,7 @@ import { AIGoalSuggestions } from './client-detail/AIGoalSuggestions';
 import { ClientAssignedPlans } from './client-detail/ClientAssignedPlans';
 import { AssignTrainingPlanDialog } from './AssignTrainingPlanDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { ClientWorkoutsList } from './client-detail/ClientWorkoutsList';
 
 interface Client {
   id: string;
@@ -670,6 +671,9 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             clientId={client.user_id}
             onAssignPlan={() => setShowAssignPlanDialog(true)}
           />
+          
+          {/* Full Workouts List */}
+          <ClientWorkoutsList clientId={client.user_id} />
           
           <WorkoutAnalysis 
             metrics={unifiedMetrics} 
