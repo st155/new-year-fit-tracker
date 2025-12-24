@@ -102,19 +102,17 @@ export function ProgressChartCard({
 }: ProgressChartCardProps) {
   const [category, setCategory] = useState<MetricCategory>('strength');
   
-  // Categorize metrics
+  // All workout exercises are strength, use category from availableMetrics
   const categorizedMetrics = availableMetrics.map(m => ({
     ...m,
-    category: (m.category || 
-      (m.value.includes('1rm') || m.value.includes('press') || m.value.includes('squat') || 
-       m.value.includes('deadlift') || m.value.includes('lunges') || m.value.includes('biceps') ||
-       m.value.includes('dips') ? 'strength' : 
-       m.value.includes('weight') || m.value.includes('bodyfat') || m.value.includes('muscle') ? 'body' :
-       'wellness')) as MetricCategory
+    category: m.category || 'strength' as MetricCategory
   }));
 
-  // Filter by current category
-  const filteredMetrics = categorizedMetrics.filter(m => m.category === category);
+  // Filter by current category - for now all exercises are strength
+  // Wellness and Body tabs will show placeholder until we add those metrics
+  const filteredMetrics = category === 'strength' 
+    ? categorizedMetrics 
+    : [];
   
   // Use props data directly instead of recalculating
   const chartData = propChartData && propChartData.length > 0 
@@ -270,11 +268,11 @@ export function ProgressChartCard({
                   </SelectItem>
                 ))
               ) : (
-                availableMetrics.map(metric => (
-                  <SelectItem key={metric.value} value={metric.value}>
-                    {metric.label}
-                  </SelectItem>
-                ))
+                <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                  {category === 'wellness' ? 'Подключите Whoop/Garmin для данных о сне и восстановлении' :
+                   category === 'body' ? 'Добавьте замеры тела для отслеживания прогресса' :
+                   'Нет данных в этой категории'}
+                </div>
               )}
             </SelectContent>
           </Select>

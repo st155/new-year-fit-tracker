@@ -57,8 +57,9 @@ export function useProgressMetrics(userId?: string) {
       return Array.from(exerciseMap.entries()).map(([name, minReps]) => ({
         name,
         minReps,
-        value: name, // use exact name as value
-        label: minReps === 1 ? `${name} (1RM)` : name
+        value: name,
+        label: minReps === 1 ? `${name} (1RM)` : name,
+        category: 'strength' as const // All workout exercises are strength
       }));
     },
     enabled: !!userId
