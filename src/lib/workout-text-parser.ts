@@ -65,6 +65,17 @@ function parseSetString(setStr: string): ParsedSet | null {
   const trimmed = cleaned.trim().toLowerCase();
   if (!trimmed) return null;
 
+  // Duration with multiplier: 40sec x 4, 30s x 3, 60сек x 2
+  const durationMultiplierMatch = trimmed.match(/^(\d+)\s*(sec|s|сек|с)\s*[xх×]\s*(\d+)$/i);
+  if (durationMultiplierMatch) {
+    return { 
+      duration_seconds: parseInt(durationMultiplierMatch[1]), 
+      setCount: parseInt(durationMultiplierMatch[3]),
+      isBodyweight: true,
+      side 
+    };
+  }
+
   // Duration format: 45sec, 45s, 3x45sec
   const secMatch = trimmed.match(/^(\d+)x?(\d+)?\s*(sec|s|сек)$/i);
   if (secMatch) {

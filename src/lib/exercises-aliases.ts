@@ -22,7 +22,10 @@ export const EXERCISES_DATABASE: ExerciseDefinition[] = [
     canonicalName: 'Bench press',
     displayName: 'Bench Press',
     displayNameRu: 'Жим лёжа',
-    aliases: ['bench press', 'bench', 'жим лежа', 'жим лёжа', 'жим штанги лежа'],
+    aliases: [
+      'bench press', 'bench', 'bench press barbell', 'barbell bench press', 'bp',
+      'flat bench', 'flat bench press', 'жим лежа', 'жим лёжа', 'жим штанги лежа'
+    ],
     category: 'chest',
     muscleGroups: ['chest', 'triceps', 'shoulders'],
     equipment: 'barbell'
@@ -241,7 +244,8 @@ export const EXERCISES_DATABASE: ExerciseDefinition[] = [
     displayNameRu: 'Подъём штанги на бицепс',
     aliases: [
       'biceps barbell', 'barbell curl', 'bb curl', 'ez curl', 'ez bar curl',
-      'подъем штанги на бицепс', 'бицепс со штангой'
+      'biceps curl barbell', 'barbell bicep curl', 'bicep curl barbell',
+      'подъем штанги на бицепс', 'бицепс со штангой', 'бицепс штанга'
     ],
     category: 'arms',
     muscleGroups: ['biceps'],
@@ -303,6 +307,19 @@ export const EXERCISES_DATABASE: ExerciseDefinition[] = [
     equipment: 'barbell'
   },
   {
+    id: 'squat_dumbbell',
+    canonicalName: 'Squat dumbbell',
+    displayName: 'Goblet Squat',
+    displayNameRu: 'Приседания с гантелями',
+    aliases: [
+      'squat dumbbell', 'dumbbell squat', 'goblet squat', 'db squat',
+      'dumbbell squats', 'приседания с гантелями', 'гоблет присед', 'присед с гантелями'
+    ],
+    category: 'legs',
+    muscleGroups: ['quads', 'glutes', 'core'],
+    equipment: 'dumbbell'
+  },
+  {
     id: 'leg_press',
     canonicalName: 'Leg press',
     displayName: 'Leg Press',
@@ -319,7 +336,8 @@ export const EXERCISES_DATABASE: ExerciseDefinition[] = [
     displayNameRu: 'Выпады',
     aliases: [
       'lunges alternating', 'lunges', 'lunge', 'walking lunges', 'forward lunges',
-      'выпады', 'выпады попеременные', 'шагающие выпады'
+      'lunges alternating dumbbell', 'dumbbell lunges', 'alternating lunges',
+      'выпады', 'выпады попеременные', 'шагающие выпады', 'выпады с гантелями'
     ],
     category: 'legs',
     muscleGroups: ['quads', 'glutes'],
@@ -393,6 +411,7 @@ export const EXERCISES_DATABASE: ExerciseDefinition[] = [
     displayNameRu: 'Подъём ног в висе',
     aliases: [
       'legs hanging raise', 'hanging leg raise', 'leg raise', 'hanging raises',
+      'leg hanging raise', 'hanging leg raises', 'knee raises', 'knee raise',
       'подъем ног', 'подъём ног', 'подъем ног в висе', 'ноги в висе'
     ],
     category: 'core',
