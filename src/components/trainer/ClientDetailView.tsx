@@ -56,6 +56,7 @@ import { ClientAssignedPlans } from './client-detail/ClientAssignedPlans';
 import { AssignTrainingPlanDialog } from './AssignTrainingPlanDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { ClientWorkoutsList } from './client-detail/ClientWorkoutsList';
+import { ClientStrengthWorkouts } from './client-detail/ClientStrengthWorkouts';
 
 interface Client {
   id: string;
@@ -672,7 +673,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             onAssignPlan={() => setShowAssignPlanDialog(true)}
           />
           
-          {/* Full Workouts List */}
+          {/* Strength Workouts from workout_logs */}
+          <ClientStrengthWorkouts clientId={client.user_id} />
+          
+          {/* Cardio/Health Workouts from workouts table (Whoop/Garmin) */}
           <ClientWorkoutsList clientId={client.user_id} />
           
           <WorkoutAnalysis 
