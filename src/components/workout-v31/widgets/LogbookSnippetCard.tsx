@@ -7,6 +7,7 @@ import { getWorkoutIcon } from "@/lib/workout-icons";
 import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,7 @@ interface WorkoutHistoryItem {
 interface LogbookSnippetCardProps {
   entries?: LogEntry[];
   workouts?: WorkoutHistoryItem[];
+  isLoading?: boolean;
 }
 
 // Categorize workouts
@@ -80,7 +82,36 @@ function formatDateLabel(date: Date): string {
   return format(date, 'dd MMMM', { locale: ru });
 }
 
-export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProps) {
+function LogbookSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i}>
+          <div className="flex items-center gap-2 mb-2">
+            <Skeleton className="w-3 h-3 rounded" />
+            <Skeleton className="h-4 w-20" />
+            <div className="flex-1 h-px bg-neutral-800" />
+          </div>
+          <div className="space-y-2 pl-2">
+            <div className="border-l-2 border-neutral-700 pl-4 py-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Skeleton className="w-6 h-6 rounded" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-16 ml-auto" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnippetCardProps) {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<'recent' | 'strain' | 'duration'>('recent');
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({
@@ -214,7 +245,9 @@ export function LogbookSnippetCard({ entries, workouts }: LogbookSnippetCardProp
           </div>
         </div>
         
-        {Object.keys(groupedWorkouts).length === 0 ? (
+        {isLoading ? (
+          <LogbookSkeleton />
+        ) : Object.keys(groupedWorkouts).length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             Нет тренировок с выбранными фильтрами
           </div>
