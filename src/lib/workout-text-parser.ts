@@ -99,12 +99,9 @@ function parseSetString(setStr: string, isBodyweightExercise: boolean = false): 
     const b = parseInt(tripleMatch[2]);
     const c = parseInt(tripleMatch[3]);
     
-    // For bodyweight exercises: NxMxK means N reps x M sets x K rounds (treat as reps x sets)
-    if (isBodyweightExercise) {
-      return { reps: Math.round(a), setCount: b * c, isBodyweight: true, side };
-    }
-    
-    // Heuristic: format is typically weight x reps x sets
+    // AxBxC ALWAYS means weight x reps x sets
+    // Even for bodyweight exercises - if user specified 3 numbers, they added weight
+    // Heuristic: if a > b, format is weight x reps x sets, otherwise reps x weight x sets
     if (a > b) {
       return { weight: a, reps: Math.round(b), setCount: c, side };
     } else {
