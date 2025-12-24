@@ -6229,6 +6229,101 @@ export type Database = {
         }
         Relationships: []
       }
+      wellness_activities: {
+        Row: {
+          activity_type: string
+          completed_at: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          is_completed: boolean | null
+          name: string | null
+          notes: string | null
+          plan_id: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_completed?: boolean | null
+          name?: string | null
+          notes?: string | null
+          plan_id?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_completed?: boolean | null
+          name?: string | null
+          notes?: string | null
+          plan_id?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wellness_activities_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "wellness_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wellness_plans: {
+        Row: {
+          activities_config: Json | null
+          created_at: string | null
+          description: string | null
+          duration_weeks: number | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activities_config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activities_config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       whoop_tokens: {
         Row: {
           access_token: string
