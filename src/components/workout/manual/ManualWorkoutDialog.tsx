@@ -114,8 +114,9 @@ export function ManualWorkoutDialog({
             user_id: user.id,
             exercise_name: exercise.name,
             set_number: setIndex + 1,
-            actual_weight: set.weight || null,
-            actual_reps: set.reps || null,
+            actual_weight: set.weight || 0,
+            actual_reps: set.reps || 0,
+            actual_rpe: 7,
             superset_group: exercise.supersetGroup?.toString() || null,
             performed_at: startTime.toISOString(),
             notes: set.duration_seconds 
