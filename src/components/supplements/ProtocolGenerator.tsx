@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supplementsApiExtended } from "@/lib/api/client";
+import { supplementsApi } from "@/lib/api";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProtocolPreview } from "./ProtocolPreview";
@@ -76,7 +76,7 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
     setIsGenerating(true);
 
     try {
-      const { data, error } = await supplementsApiExtended.generateProtocol({
+      const { data, error } = await supplementsApi.generateProtocol({
         user_id: user?.id,
         goals: formData.goals,
         health_conditions: formData.health_conditions,

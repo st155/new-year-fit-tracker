@@ -53,11 +53,14 @@ export function useGenerateRecommendations() {
       const { data, error } = await supplementsApi.generateStack();
 
       if (error) throw error;
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to generate recommendations');
+      
+      // Cast to unknown first to handle flexible API response
+      const response = data as unknown as AnalysisResponse;
+      if (!response?.success) {
+        throw new Error(response?.message || 'Failed to generate recommendations');
       }
 
-      return data as AnalysisResponse;
+      return response;
     },
     onError: (error: any) => {
       toast({

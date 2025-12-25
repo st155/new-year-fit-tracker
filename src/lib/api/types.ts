@@ -142,6 +142,7 @@ export interface TerraBackfillParams {
   provider: string;
   terraUserId: string;
   startDaysAgo: number;
+  [key: string]: unknown;
 }
 
 // ============================================
@@ -300,6 +301,7 @@ export interface GenerateProtocolParams {
   health_conditions?: string[];
   dietary_restrictions?: string[];
   protocol_duration_days?: number;
+  [key: string]: unknown;
 }
 
 /** Protocol generation result */
@@ -567,6 +569,7 @@ export interface TrainerExecuteParams {
   clientId?: string;
   actions?: unknown[];
   autoConfirm?: boolean;
+  [key: string]: unknown;
 }
 
 /** Trainer AI execute result */
