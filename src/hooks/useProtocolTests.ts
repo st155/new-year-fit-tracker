@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { healthApi } from '@/lib/api';
 
 export function useRunProtocolTests() {
   return useMutation({
@@ -8,9 +9,7 @@ export function useRunProtocolTests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke('run-protocol-tests', {
-        body: { userId: user.id }
-      });
+      const { data, error } = await healthApi.runProtocolTests(user.id);
 
       if (error) throw error;
       return data;
@@ -36,9 +35,7 @@ export function useCleanProtocolTests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke('clean-protocol-tests', {
-        body: { userId: user.id }
-      });
+      const { data, error } = await healthApi.cleanProtocolTests(user.id);
 
       if (error) throw error;
       return data;

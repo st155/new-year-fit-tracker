@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { aiApi } from "@/lib/api";
 
 interface VO2MaxUploadProps {
   onDataExtracted?: (analysisResult: any) => void;
@@ -110,14 +111,12 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     try {
       console.log('Starting VO2Max AI analysis for:', imageUrl);
 
-      const { data, error } = await supabase.functions.invoke('analyze-fitness-data', {
-        body: {
-          imageUrl,
-          userId: user!.id,
-          measurementDate: new Date().toISOString().split('T')[0],
-          specializedAnalysis: 'vo2max' // Специальный флаг для анализа VO2Max
-        }
-      });
+      const { data, error } = await aiApi.analyzeFitnessData(
+        imageUrl, 
+        user!.id, 
+        undefined, 
+        new Date().toISOString().split('T')[0]
+      );
 
       if (error) {
         console.error('VO2Max analysis error:', error);

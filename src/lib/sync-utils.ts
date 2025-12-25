@@ -37,12 +37,7 @@ export async function syncAllSources(userId: string): Promise<SyncResult[]> {
     try {
       console.log(`🔄 [syncAllSources] Syncing ${token.provider}...`);
       
-      const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { 
-          action: 'sync-data',
-          provider: token.provider // Pass provider for targeted sync if needed
-        }
-      });
+      const { error } = await terraApi.syncData();
 
       if (error) {
         console.error(`❌ [syncAllSources] ${token.provider} sync failed:`, error);

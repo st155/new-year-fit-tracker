@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SupplementInfoCard } from "./SupplementInfoCard";
+import { supplementsApi } from "@/lib/api";
 
 interface BottleScannerProps {
   isOpen: boolean;
@@ -334,12 +335,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       setStep('enriching');
       
       try {
-        const { data: enrichData, error: enrichError } = await supabase.functions.invoke('enrich-supplement-info', {
-          body: { 
-            productId: newProductId,
-            labelData: extracted // Pass label data to enrichment
-          }
-        });
+        const { data: enrichData, error: enrichError } = await supplementsApi.enrich(newProductId, extracted);
 
         if (enrichError) {
           console.error('[BOTTLE-SCANNER] Enrichment error:', enrichError);
@@ -435,12 +431,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setTimeout(() => reject(new Error('Analysis timeout - please try again with better lighting')), 90000)
       );
 
-      const analyzePromise = supabase.functions.invoke('scan-supplement-bottle', {
-        body: { 
-          frontImageBase64: frontImage,
-          backImageBase64: backImage || undefined,
-        },
-      });
+      const analyzePromise = supplementsApi.scan(frontImage, backImage || undefined);
 
       const { data, error } = await Promise.race([analyzePromise, timeoutPromise]) as any;
 

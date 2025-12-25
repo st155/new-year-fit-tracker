@@ -2,9 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { healthApi } from '@/lib/api';
 
 interface ConfidenceFactors {
   sourceReliability: number;
@@ -42,9 +42,7 @@ export function DataQualityBadge({
 
     setIsRecalculating(true);
     try {
-      const { error } = await supabase.functions.invoke('recalculate-confidence', {
-        body: { user_id: userId, metric_name: metricName },
-      });
+      const { error } = await healthApi.recalculateConfidence(userId, metricName);
 
       if (error) throw error;
 
