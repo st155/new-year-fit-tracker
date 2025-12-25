@@ -161,7 +161,7 @@ export function useChallengeReport(
 
       const rank = (allPoints?.findIndex(p => p.user_id === userId) ?? -1) + 1;
 
-      // Fetch goals and measurements
+      // Fetch goals for THIS USER only
       const { data: goals } = await supabase
         .from("goals")
         .select(`
@@ -171,7 +171,8 @@ export function useChallengeReport(
           target_value,
           target_unit
         `)
-        .eq("challenge_id", challengeId);
+        .eq("challenge_id", challengeId)
+        .eq("user_id", userId);
 
       // Fetch baselines for goals
       const { data: baselines } = await supabase
