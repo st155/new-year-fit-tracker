@@ -20,7 +20,7 @@ export function useGoals(userId?: string) {
       // Fetch measurements separately
       const { data: measurements } = await supabase
         .from("measurements")
-        .select("goal_id, value, measurement_date")
+        .select("goal_id, value, measurement_date, source")
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
 
