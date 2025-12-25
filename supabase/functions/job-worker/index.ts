@@ -337,6 +337,114 @@ async function processTerraWebhookData(
           user_id,
         });
       }
+
+      // === GARMIN RUNNING PACE EXTRACTION ===
+      // For running activities (type 8 = Running, 1 = Treadmill), extract best 1km pace from lap_data
+      const isRunningActivity = metadata.type === 8 || metadata.type === 1;
+      const hasLapData = activity.lap_data?.laps?.length > 0;
+      
+      if (provider.toUpperCase() === 'GARMIN' && isRunningActivity && hasLapData) {
+        logger.info('🏃 Processing Garmin running data for pace extraction', {
+          userId: user_id,
+          workoutDate,
+          lapCount: activity.lap_data.laps.length,
+          laps: activity.lap_data.laps.map((l: any) => ({
+            distance: l.distance_meters,
+            avgSpeed: l.avg_speed_meters_per_second
+          }))
+        });
+
+        // Find laps approximately 1km (900m - 1100m)
+        const kmLaps = activity.lap_data.laps.filter(
+          (lap: any) => lap.distance_meters >= 900 && lap.distance_meters <= 1100 && lap.avg_speed_meters_per_second > 0
+        );
+
+        if (kmLaps.length > 0) {
+          // Find the best (fastest) lap - minimum time per 1km
+          const bestLap = kmLaps.reduce((best: any, lap: any) => {
+            const lapPace = 1000 / lap.avg_speed_meters_per_second; // time in seconds for 1km
+            const bestPace = 1000 / best.avg_speed_meters_per_second;
+            return lapPace < bestPace ? lap : best;
+          });
+
+          // Calculate pace in minutes (e.g., 3.95 = 3:57)
+          const paceSeconds = 1000 / bestLap.avg_speed_meters_per_second;
+          const paceMinutes = paceSeconds / 60;
+          const paceFormatted = `${Math.floor(paceMinutes)}:${String(Math.round((paceMinutes % 1) * 60)).padStart(2, '0')}`;
+
+          logger.info('🏃‍♂️ Best 1km pace calculated', {
+            userId: user_id,
+            workoutDate,
+            paceMinutes: Math.round(paceMinutes * 100) / 100,
+            paceFormatted,
+            bestLapDistance: bestLap.distance_meters,
+            bestLapSpeed: bestLap.avg_speed_meters_per_second
+          });
+
+          // Insert Best 1km Pace metric
+          metricsToInsert.push({
+            metric_name: 'Best 1km Pace',
+            category: 'workout',
+            value: Math.round(paceMinutes * 100) / 100,
+            measurement_date: workoutDate,
+            source: provider.toLowerCase(),
+            external_id: `${workoutId}_best_1km_pace`,
+            user_id,
+          });
+
+          // Auto-create measurement for "Бег 1 км" goal
+          const { data: runGoal } = await supabase
+            .from('goals')
+            .select('id, target_unit')
+            .eq('user_id', user_id)
+            .ilike('goal_name', '%Бег%1%км%')
+            .maybeSingle();
+
+          if (runGoal) {
+            logger.info('🎯 Found running goal, creating measurement', {
+              goalId: runGoal.id,
+              userId: user_id,
+              paceMinutes: Math.round(paceMinutes * 100) / 100
+            });
+
+            const { error: measurementError } = await supabase
+              .from('measurements')
+              .upsert({
+                goal_id: runGoal.id,
+                user_id: user_id,
+                value: Math.round(paceMinutes * 100) / 100,
+                measurement_date: workoutDate,
+                unit: runGoal.target_unit || 'мин',
+                source: 'garmin',
+                notes: `Auto-synced from Garmin: ${paceFormatted} min/km`
+              }, {
+                onConflict: 'goal_id,user_id,measurement_date,source',
+                ignoreDuplicates: false
+              });
+
+            if (measurementError) {
+              logger.error('Failed to insert running measurement', {
+                error: measurementError,
+                goalId: runGoal.id,
+                userId: user_id
+              });
+            } else {
+              logger.info('✅ Running measurement created from Garmin', {
+                goalId: runGoal.id,
+                userId: user_id,
+                pace: paceFormatted
+              });
+            }
+          } else {
+            logger.info('No running goal found for user', { userId: user_id });
+          }
+        } else {
+          logger.info('No ~1km laps found in this run', {
+            userId: user_id,
+            availableLaps: activity.lap_data.laps.map((l: any) => l.distance_meters)
+          });
+        }
+      }
     }
 
     // Insert workout count metrics
