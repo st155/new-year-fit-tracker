@@ -72,46 +72,46 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
       {
         name: 'Sleep Hours',
         type: 'recovery',
-        baseValue: 7.5,
+        baseValue: 8.0,
         unit: 'hours',
         scalingFactor: 1.0,
-        direction: 'target',
+        direction: 'higher', // Changed from 'target' - more sleep is better for recovery
         min: 6,
         max: 10,
-        benchmarkKey: 'sleep',
+        benchmarkKey: 'whoop_sleep', // WHOOP-compatible
       },
       {
         name: 'HRV (Heart Rate Variability)',
         type: 'recovery',
-        baseValue: 60,
+        baseValue: 70,
         unit: 'ms',
         scalingFactor: 1.3,
-        direction: 'higher',
+        direction: 'higher', // Higher HRV = better recovery
         min: 30,
         max: 150,
-        benchmarkKey: 'hrv',
+        benchmarkKey: 'whoop_hrv', // WHOOP-compatible
       },
       {
         name: 'Recovery Score',
         type: 'recovery',
-        baseValue: 70,
+        baseValue: 75,
         unit: '%',
         scalingFactor: 1.2,
-        direction: 'higher',
+        direction: 'higher', // Higher recovery = better
         min: 50,
         max: 100,
-        benchmarkKey: 'recovery_score',
+        benchmarkKey: 'whoop_recovery', // WHOOP-compatible
       },
       {
         name: 'Resting Heart Rate',
         type: 'recovery',
-        baseValue: 68,
+        baseValue: 58,
         unit: 'bpm',
         scalingFactor: 1.0,
-        direction: 'lower',
-        min: 40,
-        max: 90,
-        benchmarkKey: 'rhr',
+        direction: 'lower', // Lower RHR = better cardiovascular fitness
+        min: 38,
+        max: 75,
+        benchmarkKey: 'whoop_rhr', // WHOOP-compatible
       },
       {
         name: 'Body Fat Percentage',

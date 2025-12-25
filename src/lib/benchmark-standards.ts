@@ -138,6 +138,57 @@ export const BODYFAT_FEMALE_STANDARDS: BenchmarkStandard = {
   elite: { min: 14, target: 16, max: 17 }
 };
 
+// ============= WHOOP-Compatible Standards =============
+
+/**
+ * WHOOP Recovery Score Standards (%)
+ * Source: WHOOP performance analytics
+ * Green zone: 67%+, Yellow: 34-66%, Red: 0-33%
+ * Higher is better - indicates readiness for strain
+ */
+export const WHOOP_RECOVERY_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 50, target: 60, max: 66 },      // Yellow zone
+  intermediate: { min: 66, target: 75, max: 84 },  // Low green zone
+  advanced: { min: 84, target: 90, max: 95 },      // High green zone
+  elite: { min: 95, target: 97, max: 100 }         // Peak performance
+};
+
+/**
+ * WHOOP HRV Standards (ms)
+ * Source: WHOOP research, clinical HRV studies
+ * Higher is better - indicates better autonomic health and recovery
+ */
+export const WHOOP_HRV_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 30, target: 45, max: 55 },
+  intermediate: { min: 55, target: 70, max: 85 },
+  advanced: { min: 85, target: 100, max: 115 },
+  elite: { min: 115, target: 130, max: 150 }
+};
+
+/**
+ * WHOOP Resting Heart Rate Standards (bpm)
+ * Source: WHOOP data, athletic performance research
+ * Lower is better - indicates better cardiovascular fitness
+ */
+export const WHOOP_RHR_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 62, target: 68, max: 75 },
+  intermediate: { min: 52, target: 58, max: 62 },
+  advanced: { min: 45, target: 50, max: 52 },
+  elite: { min: 38, target: 42, max: 45 }
+};
+
+/**
+ * WHOOP Sleep Performance Standards (hours)
+ * Source: WHOOP sleep coach, sleep research
+ * Higher is better for athletes - 7-9+ hours optimal
+ */
+export const WHOOP_SLEEP_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 6.5, target: 7.0, max: 7.5 },
+  intermediate: { min: 7.5, target: 8.0, max: 8.3 },
+  advanced: { min: 8.3, target: 8.5, max: 9.0 },
+  elite: { min: 9.0, target: 9.5, max: 10.0 }
+};
+
 /**
  * Main lookup object for all standards
  */
@@ -151,7 +202,12 @@ export const BENCHMARK_STANDARDS: Record<string, BenchmarkStandard> = {
   steps: STEPS_STANDARDS,
   run_5k: RUN_5K_STANDARDS,
   bodyfat_male: BODYFAT_MALE_STANDARDS,
-  bodyfat_female: BODYFAT_FEMALE_STANDARDS
+  bodyfat_female: BODYFAT_FEMALE_STANDARDS,
+  // WHOOP-compatible standards
+  whoop_recovery: WHOOP_RECOVERY_STANDARDS,
+  whoop_hrv: WHOOP_HRV_STANDARDS,
+  whoop_rhr: WHOOP_RHR_STANDARDS,
+  whoop_sleep: WHOOP_SLEEP_STANDARDS
 };
 
 /**
@@ -178,24 +234,26 @@ export function calculateStandardBenchmark(
   difficultyLevel: number,
   direction: 'higher' | 'lower' | 'target' = 'higher'
 ): number {
-  const levelKey = AUDIENCE_LEVEL_LABELS[audienceLevel];
+  // Комбинируем audience и difficulty для определения эффективного уровня
+  // audienceLevel определяет базовый диапазон, difficultyLevel смещает внутри и между диапазонами
+  const combinedLevel = Math.min(3, Math.round((audienceLevel + difficultyLevel) / 2));
+  const levelKey = AUDIENCE_LEVEL_LABELS[combinedLevel];
   const range = standard[levelKey];
   
+  // Дополнительный сдвиг внутри диапазона на основе сложности
+  const inRangeRatio = difficultyLevel / 3; // 0.0 to 1.0
   const rangeSpan = range.max - range.min;
-  const difficultyRatio = difficultyLevel / 3; // 0.0 to 1.0
   
   let value: number;
   
   if (direction === 'lower') {
-    // For "lower is better": higher difficulty = lower value (closer to min)
-    // Invert logic: start from max and move to min
-    value = range.max - (rangeSpan * difficultyRatio);
-  } else if (direction === 'target') {
-    // For "target": always use target value regardless of difficulty
-    value = range.target;
+    // Для "lower is better" (RHR): выше сложность = ниже значение (лучше)
+    // При высокой сложности стремимся к min диапазона
+    value = range.max - (rangeSpan * inRangeRatio);
   } else {
-    // For "higher is better": higher difficulty = higher value (closer to max)
-    value = range.min + (rangeSpan * difficultyRatio);
+    // Для "higher is better" (HRV, Recovery, Sleep): выше сложность = выше значение
+    // При высокой сложности стремимся к max диапазона
+    value = range.min + (rangeSpan * inRangeRatio);
   }
   
   return Math.round(value * 10) / 10;
