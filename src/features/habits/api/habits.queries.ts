@@ -95,23 +95,22 @@ export const habitAnalyticsQueryOptions = (userId: string | undefined, days: num
 /**
  * Get all query keys to invalidate after habit mutations
  */
-export const getHabitInvalidationKeys = (userId: string, habitId?: string) => {
-  const keys: readonly unknown[][] = [
+export const getHabitInvalidationKeys = (userId: string, habitId?: string): readonly (readonly string[])[] => {
+  const baseKeys: readonly (readonly string[])[] = [
     HABIT_QUERY_KEYS.list(userId),
     HABIT_QUERY_KEYS.stats(userId),
     HABIT_QUERY_KEYS.streakHistory(userId),
     HABIT_QUERY_KEYS.feed(userId),
   ];
 
-  if (habitId) {
-    keys.push(
-      HABIT_QUERY_KEYS.detail(habitId),
-      HABIT_QUERY_KEYS.completions(habitId),
-      HABIT_QUERY_KEYS.attempts(habitId),
-      HABIT_QUERY_KEYS.measurements(habitId),
-      HABIT_QUERY_KEYS.habitStats(habitId)
-    );
-  }
+  if (!habitId) return baseKeys;
 
-  return keys;
+  return [
+    ...baseKeys,
+    HABIT_QUERY_KEYS.detail(habitId),
+    HABIT_QUERY_KEYS.completions(habitId),
+    HABIT_QUERY_KEYS.attempts(habitId),
+    HABIT_QUERY_KEYS.measurements(habitId),
+    HABIT_QUERY_KEYS.habitStats(habitId),
+  ];
 };
