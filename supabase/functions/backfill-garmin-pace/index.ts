@@ -119,21 +119,54 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Insert measurement
-          const { error: measurementError } = await supabase
+          // Check if measurement already exists for this goal/user/date/source
+          const { data: existingMeasurement } = await supabase
             .from('measurements')
-            .upsert({
-              goal_id: runGoal.id,
-              user_id: appUserId,
-              value: Math.round(paceMinutes * 100) / 100,
-              measurement_date: workoutDate,
-              unit: runGoal.target_unit || 'мин',
-              source: 'garmin',
-              notes: `Backfilled from Garmin: ${paceFormatted} min/km`
-            }, {
-              onConflict: 'goal_id,user_id,measurement_date,source',
-              ignoreDuplicates: false
-            });
+            .select('id, value')
+            .eq('goal_id', runGoal.id)
+            .eq('user_id', appUserId)
+            .eq('measurement_date', workoutDate)
+            .eq('source', 'garmin')
+            .maybeSingle();
+
+          const paceValue = Math.round(paceMinutes * 100) / 100;
+          
+          let measurementError: any = null;
+          
+          if (existingMeasurement) {
+            // Update if the new pace is better (lower = faster)
+            if (paceValue < existingMeasurement.value) {
+              const { error } = await supabase
+                .from('measurements')
+                .update({
+                  value: paceValue,
+                  notes: `Backfilled from Garmin: ${paceFormatted} min/km`
+                })
+                .eq('id', existingMeasurement.id);
+              measurementError = error;
+            } else {
+              // Skip - existing measurement is better
+              console.log('Skipping - existing measurement is better', { 
+                existing: existingMeasurement.value, 
+                new: paceValue 
+              });
+              continue;
+            }
+          } else {
+            // Insert new measurement
+            const { error } = await supabase
+              .from('measurements')
+              .insert({
+                goal_id: runGoal.id,
+                user_id: appUserId,
+                value: paceValue,
+                measurement_date: workoutDate,
+                unit: runGoal.target_unit || 'мин',
+                source: 'garmin',
+                notes: `Backfilled from Garmin: ${paceFormatted} min/km`
+              });
+            measurementError = error;
+          }
 
           if (measurementError) {
             console.error('Failed to insert measurement', measurementError);
