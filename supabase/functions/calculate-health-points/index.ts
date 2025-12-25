@@ -1,9 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { withHandler, jsonResponse, parseBody } from '../_shared/handler.ts';
 
 interface PointsBreakdown {
   performance: {
@@ -66,7 +61,7 @@ function calculateHealthPoints(userData: any): CalculationResult {
   
   // 2.2 Sleep Quality (150 points)
   const avgSleep = userData.avg_sleep_last_7d || 0;
-  const sleepDuration = Math.min((avgSleep / 8) * 100, 120); // Can go over 100
+  const sleepDuration = Math.min((avgSleep / 8) * 100, 120);
   
   const avgSleepEfficiency = userData.avg_sleep_efficiency || 0;
   const sleepEfficiency = (avgSleepEfficiency / 100) * 50;
@@ -92,8 +87,8 @@ function calculateHealthPoints(userData: any): CalculationResult {
   const streakDays = userData.streak_days || 0;
   const streakBonus = Math.min(streakDays * 2, 50);
   
-  // 3.3 Badge Bonus (50 points) - first 2 badges = 25 points each
-  const badgeBonus = 0; // Will be calculated separately from existing badge system
+  // 3.3 Badge Bonus (50 points)
+  const badgeBonus = 0;
   
   const synergyTotal = Math.round(balanceBonus + streakBonus + badgeBonus);
   
@@ -133,120 +128,101 @@ function calculateHealthPoints(userData: any): CalculationResult {
   };
 }
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+interface RequestBody {
+  user_id?: string;
+  challenge_id?: string;
+  recalculate_all?: boolean;
+}
 
-  try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+Deno.serve(withHandler(async ({ req, supabase }) => {
+  const { user_id, challenge_id, recalculate_all } = await parseBody<RequestBody>(req);
 
-    const { user_id, challenge_id, recalculate_all } = await req.json();
+  console.log('[Calculate Health Points] Request:', { user_id, challenge_id, recalculate_all });
 
-    console.log('[Calculate Health Points] Request:', { user_id, challenge_id, recalculate_all });
+  if (recalculate_all) {
+    // Recalculate for all users in all active challenges
+    const { data: challenges, error: challengesError } = await supabase
+      .from('challenges')
+      .select('id')
+      .eq('is_active', true);
 
-    if (recalculate_all) {
-      // Recalculate for all users in all active challenges
-      const { data: challenges, error: challengesError } = await supabase
-        .from('challenges')
-        .select('id')
-        .eq('is_active', true);
+    if (challengesError) throw challengesError;
 
-      if (challengesError) throw challengesError;
+    let totalUpdated = 0;
 
-      let totalUpdated = 0;
+    for (const challenge of challenges || []) {
+      const { data: leaderboardData, error: leaderboardError } = await supabase
+        .from('challenge_leaderboard_v2')
+        .select('*')
+        .eq('challenge_id', challenge.id);
 
-      for (const challenge of challenges || []) {
-        const { data: leaderboardData, error: leaderboardError } = await supabase
-          .from('challenge_leaderboard_v2')
-          .select('*')
-          .eq('challenge_id', challenge.id);
-
-        if (leaderboardError) {
-          console.error('[Calculate Health Points] Error fetching leaderboard:', leaderboardError);
-          continue;
-        }
-
-        for (const userData of leaderboardData || []) {
-          const result = calculateHealthPoints(userData);
-
-          const { error: updateError } = await supabase
-            .from('challenge_points')
-            .upsert({
-              user_id: userData.user_id,
-              challenge_id: challenge.id,
-              points: result.total_points,
-              performance_points: result.breakdown.performance.total,
-              recovery_points: result.breakdown.recovery.total,
-              synergy_points: result.breakdown.synergy.total,
-              points_breakdown: result.breakdown,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'user_id,challenge_id'
-            });
-
-          if (updateError) {
-            console.error('[Calculate Health Points] Error updating points:', updateError);
-          } else {
-            totalUpdated++;
-          }
-        }
+      if (leaderboardError) {
+        console.error('[Calculate Health Points] Error fetching leaderboard:', leaderboardError);
+        continue;
       }
 
-      return new Response(
-        JSON.stringify({ success: true, updated: totalUpdated }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      for (const userData of leaderboardData || []) {
+        const result = calculateHealthPoints(userData);
+
+        const { error: updateError } = await supabase
+          .from('challenge_points')
+          .upsert({
+            user_id: userData.user_id,
+            challenge_id: challenge.id,
+            points: result.total_points,
+            performance_points: result.breakdown.performance.total,
+            recovery_points: result.breakdown.recovery.total,
+            synergy_points: result.breakdown.synergy.total,
+            points_breakdown: result.breakdown,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,challenge_id'
+          });
+
+        if (updateError) {
+          console.error('[Calculate Health Points] Error updating points:', updateError);
+        } else {
+          totalUpdated++;
+        }
+      }
     }
 
-    // Single user calculation
-    if (!user_id || !challenge_id) {
-      throw new Error('user_id and challenge_id are required');
-    }
-
-    const { data: userData, error: dataError } = await supabase
-      .from('challenge_leaderboard_v2')
-      .select('*')
-      .eq('user_id', user_id)
-      .eq('challenge_id', challenge_id)
-      .single();
-
-    if (dataError) throw dataError;
-    if (!userData) throw new Error('User not found in leaderboard');
-
-    const result = calculateHealthPoints(userData);
-
-    const { error: updateError } = await supabase
-      .from('challenge_points')
-      .upsert({
-        user_id,
-        challenge_id,
-        points: result.total_points,
-        performance_points: result.breakdown.performance.total,
-        recovery_points: result.breakdown.recovery.total,
-        synergy_points: result.breakdown.synergy.total,
-        points_breakdown: result.breakdown,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,challenge_id'
-      });
-
-    if (updateError) throw updateError;
-
-    return new Response(
-      JSON.stringify({ success: true, ...result }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('[Calculate Health Points] Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    return jsonResponse({ success: true, updated: totalUpdated });
   }
-});
+
+  // Single user calculation
+  if (!user_id || !challenge_id) {
+    throw new Error('user_id and challenge_id are required');
+  }
+
+  const { data: userData, error: dataError } = await supabase
+    .from('challenge_leaderboard_v2')
+    .select('*')
+    .eq('user_id', user_id)
+    .eq('challenge_id', challenge_id)
+    .single();
+
+  if (dataError) throw dataError;
+  if (!userData) throw new Error('User not found in leaderboard');
+
+  const result = calculateHealthPoints(userData);
+
+  const { error: updateError } = await supabase
+    .from('challenge_points')
+    .upsert({
+      user_id,
+      challenge_id,
+      points: result.total_points,
+      performance_points: result.breakdown.performance.total,
+      recovery_points: result.breakdown.recovery.total,
+      synergy_points: result.breakdown.synergy.total,
+      points_breakdown: result.breakdown,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'user_id,challenge_id'
+    });
+
+  if (updateError) throw updateError;
+
+  return jsonResponse({ success: true, ...result });
+}));

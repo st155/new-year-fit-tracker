@@ -1,55 +1,30 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
-import { corsHeaders } from '../_shared/cors.ts';
+import { withAuth, jsonResponse, parseBody, corsHeaders } from '../_shared/handler.ts';
 
 const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // Helper function to normalize biomarker names for fuzzy matching
 function normalizeBiomarkerName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(withAuth(async ({ req, supabase, user }) => {
   console.log('[PARSE-LAB-REPORT] Starting lab report parsing');
 
-  try {
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    const { documentId } = await req.json();
+  const { documentId } = await parseBody<{ documentId: string }>(req);
 
     if (!documentId) {
       throw new Error('Document ID is required');
     }
 
-    console.log(`[PARSE-LAB-REPORT] Processing document ${documentId} for user ${user.id}`);
+    console.log(`[PARSE-LAB-REPORT] Processing document ${documentId} for user ${user!.id}`);
 
     // Fetch document
     const { data: document, error: docError } = await supabase
       .from('medical_documents')
       .select('*')
       .eq('id', documentId)
-      .eq('user_id', user.id)
+      .eq('user_id', user!.id)
       .single();
 
     if (docError || !document) {
