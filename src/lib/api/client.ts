@@ -1,25 +1,119 @@
 /**
  * Centralized API Client for Edge Functions
  * 
- * Benefits:
- * - Type-safe API calls
- * - Centralized error handling
- * - Automatic retry logic
- * - Consistent logging
+ * This module provides a type-safe, centralized API client for all Edge Function calls.
+ * 
+ * Features:
+ * - **Type-safe API calls**: All methods are fully typed with response interfaces
+ * - **Centralized error handling**: Errors are logged via ErrorLogger
+ * - **Automatic retry logic**: Failed requests are automatically retried
+ * - **Performance metrics**: Each call tracks duration and attempt count
+ * - **Consistent logging**: All errors are logged to the database
+ * 
+ * @example
+ * ```typescript
+ * import { terraApi } from '@/lib/api';
+ * 
+ * const { data, error, meta } = await terraApi.realtimeSync('WHOOP');
+ * if (data?.success) {
+ *   console.log(`Synced ${data.metricsWritten.length} metrics in ${meta?.duration}ms`);
+ * }
+ * ```
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { ErrorLogger } from '@/lib/error-logger';
+import type {
+  ApiResponse,
+  ApiResponseMeta,
+  ApiOptions,
+  // Terra types
+  TerraRealtimeSyncResult,
+  TerraSyncResult,
+  TerraDiagnosticsResult,
+  TerraHistoricalResult,
+  TerraIntegrationResult,
+  TerraWidgetResult,
+  TerraDeauthResult,
+  TerraPurgeResult,
+  TerraForceSyncResult,
+  WithingsBackfillResult,
+  TerraBackfillResult,
+  TerraBackfillParams,
+  // Supplements types
+  SupplementScanResult,
+  BarcodeScanResult,
+  SupplementEnrichResult,
+  CorrelationResult,
+  StackGenerationResult,
+  AutoLinkBiomarkersResult,
+  LibraryBackfillResult,
+  PhotoProcessResult,
+  EffectivenessAnalysis,
+  GenerateProtocolParams,
+  GenerateProtocolResult,
+  // Documents types
+  DocumentCompareResult,
+  BatchProcessResult,
+  ParseRecommendationsResult,
+  ParseLabReportResult,
+  RematchBiomarkersResult,
+  AnalyzeDocumentResult,
+  MigrateDocumentsResult,
+  ReclassifyImagingResult,
+  ClassifyDocumentResult,
+  RenameDocumentResult,
+  // Health types
+  HealthAnalysisResult,
+  HealthPointsResult,
+  SleepEfficiencyResult,
+  FixUnitConversionsResult,
+  FixDuplicateLabResultsResult,
+  HealthRecommendationsResult,
+  ParseProtocolMessageResult,
+  CheckCompletedProtocolsResult,
+  AppleHealthImportResult,
+  BiomarkerTrendAnalysis,
+  ProtocolLifecycleTestResult,
+  RecalculateConfidenceResult,
+  ProtocolTestsResult,
+  CleanProtocolTestsResult,
+  CleanupAppleHealthResult,
+  PopulateBiomarkerCorrelationsResult,
+  // AI Training types
+  GenerateTrainingPlanResult,
+  GenerateTravelWorkoutResult,
+  TrainingGapsAnalysisResult,
+  // Admin types
+  AdminTerraTokensListResult,
+  AdminTerraTokenCreateResult,
+  AdminTerraTokenUpdateResult,
+  AdminTerraTokenDeleteResult,
+  AdminTerraTokenCreateParams,
+  AdminTerraTokenUpdateParams,
+  TrainerSuggestAdjustmentsResult,
+  TrainerExecuteParams,
+  TrainerExecuteResult,
+  ReprocessWebhookResult,
+  SendBroadcastResult,
+  // AI types
+  ExecuteAIActionsResult,
+  GetDailyWorkoutResult,
+  AnalyzeFitnessDataResult,
+  AskAboutInBodyResult,
+  // InBody types
+  ParseInBodyResult,
+  // Jobs types
+  RetryJobResult,
+  ResetStuckJobsResult,
+  RetryStuckWebhooksResult,
+  TriggerJobWorkerResult,
+  // Habits types
+  DeleteHabitResult,
+} from './types';
 
-interface ApiResponse<T> {
-  data: T | null;
-  error: Error | null;
-}
-
-interface ApiOptions {
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-}
+// Re-export types for convenience
+export type { ApiResponse, ApiResponseMeta, ApiOptions } from './types';
 
 const DEFAULT_OPTIONS: ApiOptions = {
   retries: 2,
@@ -27,15 +121,33 @@ const DEFAULT_OPTIONS: ApiOptions = {
   timeout: 30000,
 };
 
+/**
+ * Invokes an Edge Function with automatic retry logic and performance tracking.
+ * 
+ * @template T - The expected response type
+ * @param functionName - Name of the Edge Function to invoke
+ * @param body - Optional request body
+ * @param options - Optional configuration (retries, delay, timeout)
+ * @returns Promise with typed data, error, and performance metadata
+ * 
+ * @example
+ * ```typescript
+ * const { data, error, meta } = await invokeWithRetry<MyResponse>('my-function', { param: 'value' });
+ * console.log(`Completed in ${meta?.duration}ms after ${meta?.attempts} attempt(s)`);
+ * ```
+ */
 async function invokeWithRetry<T>(
   functionName: string,
   body?: Record<string, unknown>,
   options: ApiOptions = {}
 ): Promise<ApiResponse<T>> {
   const { retries, retryDelay } = { ...DEFAULT_OPTIONS, ...options };
+  const startTime = performance.now();
   let lastError: Error | null = null;
+  let attempts = 0;
 
   for (let attempt = 0; attempt <= (retries || 0); attempt++) {
+    attempts++;
     try {
       const { data, error } = await supabase.functions.invoke(functionName, {
         body,
@@ -45,10 +157,26 @@ async function invokeWithRetry<T>(
         throw new Error(error.message || `Edge function ${functionName} failed`);
       }
 
-      return { data: data as T, error: null };
+      const duration = performance.now() - startTime;
+      const meta: ApiResponseMeta = { duration, attempts, functionName };
+      
+      return { data: data as T, error: null, meta };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
       console.warn(`[API] ${functionName} attempt ${attempt + 1} failed:`, lastError.message);
+      
+      // Log error on final attempt
+      if (attempt === (retries || 0)) {
+        await ErrorLogger.logAPIError(
+          `Edge function ${functionName} failed after ${attempts} attempts: ${lastError.message}`,
+          functionName,
+          { 
+            body: body ? Object.keys(body) : [], // Log only keys for privacy
+            attempts,
+            lastError: lastError.message 
+          }
+        );
+      }
       
       if (attempt < (retries || 0)) {
         await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -56,273 +184,782 @@ async function invokeWithRetry<T>(
     }
   }
 
-  console.error(`[API] ${functionName} failed after ${(retries || 0) + 1} attempts`);
-  return { data: null, error: lastError };
+  const duration = performance.now() - startTime;
+  const meta: ApiResponseMeta = { duration, attempts, functionName };
+  
+  console.error(`[API] ${functionName} failed after ${attempts} attempts`);
+  return { data: null, error: lastError, meta };
 }
 
 // ===== TERRA INTEGRATION =====
+/**
+ * Terra API - Wearable device integration endpoints
+ * 
+ * Handles synchronization with Terra-connected wearable devices like
+ * WHOOP, Garmin, Fitbit, Apple Health, and others.
+ * 
+ * @example
+ * ```typescript
+ * // Sync real-time data from WHOOP
+ * const { data } = await terraApi.realtimeSync('WHOOP');
+ * 
+ * // Get diagnostics for all providers
+ * const { data: diagnostics } = await terraApi.diagnostics();
+ * ```
+ */
 export const terraApi = {
+  /**
+   * Triggers a basic sync with Terra provider
+   * @param provider - Optional provider name (e.g., 'WHOOP', 'GARMIN')
+   */
   sync: (provider?: string) => 
-    invokeWithRetry<{ success: boolean; metrics?: number }>('sync-terra-realtime', { provider }),
+    invokeWithRetry<TerraSyncResult>('sync-terra-realtime', { provider }),
   
+  /**
+   * Triggers real-time synchronization with specified provider
+   * @param provider - Provider name (default: 'WHOOP')
+   * @returns Sync result with written metrics and any errors
+   */
   realtimeSync: (provider: string = 'WHOOP') =>
-    invokeWithRetry<{ success: boolean; metricsWritten: string[]; errors?: string[]; duration: number }>('sync-terra-realtime', { provider }),
+    invokeWithRetry<TerraRealtimeSyncResult>('sync-terra-realtime', { provider }),
   
+  /**
+   * Retrieves diagnostic information for Terra connections
+   * @param provider - Optional provider to filter diagnostics
+   * @returns Token status, webhook logs, and data availability
+   */
   diagnostics: (provider?: string) => 
-    invokeWithRetry<{ tokens?: unknown[]; webhooks?: unknown[]; date_range?: { start: string; end: string }; available_in_terra?: unknown; in_database?: unknown; missing_in_db?: unknown; webhook_logs?: unknown[] }>('terra-diagnostics', { provider }),
+    invokeWithRetry<TerraDiagnosticsResult>('terra-diagnostics', { provider }),
   
+  /**
+   * Requests historical data from Terra for a specific user
+   * @param terraUserId - Terra user ID
+   * @param days - Number of days of historical data (default: 30)
+   */
   requestHistorical: (terraUserId: string, days?: number) =>
-    invokeWithRetry<{ success: boolean }>('terra-request-historical', { terra_user_id: terraUserId, days }),
+    invokeWithRetry<TerraHistoricalResult>('terra-request-historical', { terra_user_id: terraUserId, days }),
   
+  /**
+   * Performs Terra integration actions (widget, sync, deauth)
+   * @param action - Action to perform
+   * @param provider - Optional provider for the action
+   */
   integrate: (action: string, provider?: string) =>
-    invokeWithRetry<{ url?: string; success?: boolean }>('terra-integration', { action, provider }),
+    invokeWithRetry<TerraIntegrationResult>('terra-integration', { action, provider }),
   
+  /**
+   * Generates a Terra widget session URL for device connection
+   * @param provider - Optional provider to pre-select
+   * @returns Widget URL for user authentication
+   */
   generateWidget: (provider?: string) =>
-    invokeWithRetry<{ url: string }>('terra-integration', { action: 'generate-widget-session', provider }),
+    invokeWithRetry<TerraWidgetResult>('terra-integration', { action: 'generate-widget-session', provider }),
   
+  /**
+   * Triggers a data sync across all connected providers
+   */
   syncData: () =>
-    invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'sync-data' }),
+    invokeWithRetry<TerraDeauthResult>('terra-integration', { action: 'sync-data' }),
   
+  /**
+   * Deauthenticates a specific provider connection
+   * @param provider - Provider to disconnect
+   */
   deauthenticate: (provider: string) =>
-    invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'deauthenticate-user', provider }),
+    invokeWithRetry<TerraDeauthResult>('terra-integration', { action: 'deauthenticate-user', provider }),
   
+  /**
+   * Purges all Terra users for a specific provider
+   * @param provider - Provider to purge users from
+   * @returns Count of users found and purged
+   */
   purgeUsers: (provider: string) =>
-    invokeWithRetry<{ success: boolean; terra_users_found?: number }>('terra-integration', { action: 'purge-terra-users', provider }),
+    invokeWithRetry<TerraPurgeResult>('terra-integration', { action: 'purge-terra-users', provider }),
   
+  /**
+   * Forces a sync with specific provider and data type
+   * @param provider - Provider to sync
+   * @param dataType - Optional specific data type to sync
+   */
   forceSync: (provider: string, dataType?: string) =>
-    invokeWithRetry<{ success: boolean }>('force-terra-sync', { provider, dataType }),
+    invokeWithRetry<TerraForceSyncResult>('force-terra-sync', { provider, dataType }),
   
+  /**
+   * Backfills historical data from Withings
+   * @param daysBack - Number of days to backfill (default: 30)
+   * @returns Count of metrics inserted
+   */
   withingsBackfill: (daysBack?: number) =>
-    invokeWithRetry<{ metricsInserted: number }>('withings-backfill', { daysBack }),
+    invokeWithRetry<WithingsBackfillResult>('withings-backfill', { daysBack }),
   
-  backfill: (params: { userId: string; provider: string; terraUserId: string; startDaysAgo: number }) =>
-    invokeWithRetry<{ success: boolean; jobId?: string }>('terra-backfill', params),
+  /**
+   * Initiates a background backfill job for historical data
+   * @param params - Backfill parameters including user, provider, and date range
+   * @returns Job ID for tracking
+   */
+  backfill: (params: TerraBackfillParams) =>
+    invokeWithRetry<TerraBackfillResult>('terra-backfill', params),
 };
 
 // ===== SUPPLEMENTS =====
+/**
+ * Supplements API - Supplement tracking and analysis endpoints
+ * 
+ * Provides functionality for scanning supplement bottles, managing supplement stacks,
+ * analyzing effectiveness, and generating AI-powered protocols.
+ * 
+ * @example
+ * ```typescript
+ * // Scan a supplement bottle
+ * const { data } = await supplementsApi.scan(frontImageBase64, backImageBase64);
+ * 
+ * // Generate an AI supplement protocol
+ * const { data: protocol } = await supplementsApi.generateProtocol({
+ *   goals: ['energy', 'focus'],
+ *   protocol_duration_days: 30
+ * });
+ * ```
+ */
 export const supplementsApi = {
+  /**
+   * Scans supplement bottle images to extract product information
+   * @param frontImageBase64 - Base64 encoded front label image
+   * @param backImageBase64 - Optional base64 encoded back label image
+   * @returns Extracted information and product suggestions
+   */
   scan: (frontImageBase64: string, backImageBase64?: string) =>
-    invokeWithRetry<{ success: boolean; extracted?: any; suggestions?: any; quick_match?: boolean; productId?: string; error?: string }>('scan-supplement-bottle', { frontImageBase64, backImageBase64 }),
+    invokeWithRetry<SupplementScanResult>('scan-supplement-bottle', { frontImageBase64, backImageBase64 }),
   
+  /**
+   * Looks up a supplement by barcode
+   * @param barcode - Product barcode
+   * @param createIfNotFound - Whether to create a new entry if not found
+   * @returns Product information if found
+   */
   scanBarcode: (barcode: string, createIfNotFound?: boolean) =>
-    invokeWithRetry<{ found: boolean; product?: any }>('scan-supplement-barcode', { barcode, create_if_not_found: createIfNotFound }),
+    invokeWithRetry<BarcodeScanResult>('scan-supplement-barcode', { barcode, create_if_not_found: createIfNotFound }),
   
-  enrich: (productId: string, labelData?: any) =>
-    invokeWithRetry<{ success: boolean; product?: any; enrichedData?: any; error?: string }>('enrich-supplement-info', { productId, labelData }),
+  /**
+   * Enriches supplement information with AI-generated data
+   * @param productId - Product ID to enrich
+   * @param labelData - Optional additional label data
+   * @returns Enriched product with benefits, warnings, and interactions
+   */
+  enrich: (productId: string, labelData?: unknown) =>
+    invokeWithRetry<SupplementEnrichResult>('enrich-supplement-info', { productId, labelData }),
   
+  /**
+   * Calculates correlation between supplement and biomarkers
+   * @param stackItemId - Stack item ID to analyze
+   * @param timeframeMonths - Analysis timeframe in months
+   * @returns Correlation data with affected biomarkers
+   */
   calculateCorrelation: (stackItemId: string, timeframeMonths?: number) =>
-    invokeWithRetry<unknown>('calculate-correlation', { stackItemId, timeframeMonths }),
+    invokeWithRetry<CorrelationResult>('calculate-correlation', { stackItemId, timeframeMonths }),
   
+  /**
+   * Generates a data-driven supplement stack based on biomarker deficiencies
+   * @returns Personalized recommendations based on health data
+   */
   generateStack: () =>
-    invokeWithRetry<{ success: boolean; recommendations?: unknown[]; message?: string; no_deficiencies?: boolean; error?: string; analysis?: unknown; deficiencies?: unknown[] }>('generate-data-driven-stack'),
+    invokeWithRetry<StackGenerationResult>('generate-data-driven-stack'),
   
+  /**
+   * Automatically links a supplement to relevant biomarkers
+   * @param stackItemId - Stack item to link
+   * @param supplementName - Name of the supplement
+   */
   autoLinkBiomarkers: (stackItemId: string, supplementName: string) =>
-    invokeWithRetry<{ success: boolean }>('auto-link-biomarkers', { stackItemId, supplementName }),
+    invokeWithRetry<AutoLinkBiomarkersResult>('auto-link-biomarkers', { stackItemId, supplementName }),
   
+  /**
+   * Backfills the supplement library with product data
+   * @returns Count of added and skipped items
+   */
   backfillLibrary: () =>
-    invokeWithRetry<{ success: boolean; addedCount: number; skippedCount: number }>('backfill-supplement-library'),
+    invokeWithRetry<LibraryBackfillResult>('backfill-supplement-library'),
   
+  /**
+   * Processes and optimizes a supplement photo
+   * @param imageBase64 - Base64 encoded image
+   * @returns Processed image ready for scanning
+   */
   processPhoto: (imageBase64: string) =>
-    invokeWithRetry<{ success: boolean; processedImage?: string; error?: string }>('process-supplement-photo', { image: imageBase64 }),
+    invokeWithRetry<PhotoProcessResult>('process-supplement-photo', { image: imageBase64 }),
   
+  /**
+   * Analyzes the effectiveness of a supplement based on biomarker changes
+   * @param stackItemId - Stack item to analyze
+   * @param userId - User ID for context
+   * @returns Effectiveness score and trend analysis
+   */
   analyzeEffectiveness: (stackItemId: string, userId: string) =>
-    invokeWithRetry<unknown>('analyze-supplement-effectiveness', { stackItemId, userId }),
+    invokeWithRetry<EffectivenessAnalysis>('analyze-supplement-effectiveness', { stackItemId, userId }),
+  
+  /**
+   * Generates an AI-powered supplement protocol based on goals and health conditions
+   * @param params - Protocol generation parameters
+   * @returns Complete protocol with supplements, dosages, and timing
+   * 
+   * @example
+   * ```typescript
+   * const { data } = await supplementsApi.generateProtocol({
+   *   goals: ['muscle_gain', 'recovery'],
+   *   health_conditions: ['vitamin_d_deficiency'],
+   *   dietary_restrictions: ['vegan'],
+   *   protocol_duration_days: 60
+   * });
+   * ```
+   */
+  generateProtocol: (params: GenerateProtocolParams) =>
+    invokeWithRetry<GenerateProtocolResult>('generate-supplement-protocol', params),
 };
 
 // ===== MEDICAL DOCUMENTS =====
+/**
+ * Documents API - Medical document processing endpoints
+ * 
+ * Handles parsing, analysis, and management of medical documents
+ * including lab reports, imaging, and doctor recommendations.
+ * 
+ * @example
+ * ```typescript
+ * // Parse a lab report
+ * const { data } = await documentsApi.parseLabReport(documentId);
+ * 
+ * // Compare multiple documents
+ * const { data: comparison } = await documentsApi.compare([doc1Id, doc2Id]);
+ * ```
+ */
 export const documentsApi = {
+  /**
+   * Compares multiple medical documents for trends and changes
+   * @param documentIds - Array of document IDs to compare
+   * @returns Analysis with similarities, differences, and trends
+   */
   compare: (documentIds: string[]) =>
-    invokeWithRetry<{ analysis: string; comparison?: unknown }>('compare-medical-documents', { documentIds }),
+    invokeWithRetry<DocumentCompareResult>('compare-medical-documents', { documentIds }),
   
+  /**
+   * Batch processes multiple documents
+   * @param documentIds - Array of document IDs to process
+   * @returns Processing results for each document
+   */
   batchProcess: (documentIds: string[]) =>
-    invokeWithRetry<{ results: unknown[] }>('batch-process-documents', { documentIds }),
+    invokeWithRetry<BatchProcessResult>('batch-process-documents', { documentIds }),
   
+  /**
+   * Extracts doctor recommendations from a document
+   * @param documentId - Document to parse
+   * @returns List of extracted recommendations
+   */
   parseRecommendations: (documentId: string) =>
-    invokeWithRetry<{ recommendations: unknown[] }>('parse-doctor-recommendations', { documentId }),
+    invokeWithRetry<ParseRecommendationsResult>('parse-doctor-recommendations', { documentId }),
   
+  /**
+   * Parses a lab report to extract biomarker values
+   * @param documentId - Lab report document ID
+   */
   parseLabReport: (documentId: string) =>
-    invokeWithRetry<{ success: boolean }>('parse-lab-report', { documentId }),
+    invokeWithRetry<ParseLabReportResult>('parse-lab-report', { documentId }),
   
+  /**
+   * Rematches unmatched biomarkers to master list
+   * @param documentId - Optional specific document to rematch
+   * @returns Count of rematched biomarkers
+   */
   rematchBiomarkers: (documentId?: string) =>
-    invokeWithRetry<{ rematchedCount: number; totalUnmatched: number }>('rematch-biomarkers', { documentId }),
+    invokeWithRetry<RematchBiomarkersResult>('rematch-biomarkers', { documentId }),
   
+  /**
+   * Analyzes a medical document with AI
+   * @param documentId - Document to analyze
+   */
   analyze: (documentId: string) =>
-    invokeWithRetry<{ success: boolean }>('analyze-medical-document', { documentId }),
+    invokeWithRetry<AnalyzeDocumentResult>('analyze-medical-document', { documentId }),
   
+  /**
+   * Migrates legacy documents to the medical_documents table
+   * @param action - Migration action to perform
+   * @returns Migration statistics
+   */
   migrateToMedicalDocuments: (action: string) =>
-    invokeWithRetry<{ total_migrated: number; inbody?: { migrated: number; total: number; errors?: unknown[] }; photos?: { migrated: number; total: number; errors?: unknown[] } }>('migrate-to-medical-documents', { action }),
+    invokeWithRetry<MigrateDocumentsResult>('migrate-to-medical-documents', { action }),
   
+  /**
+   * Reclassifies imaging documents with improved categorization
+   * @returns Count of reclassified documents
+   */
   reclassifyImaging: () =>
-    invokeWithRetry<{ reclassified: number }>('reclassify-imaging-documents'),
+    invokeWithRetry<ReclassifyImagingResult>('reclassify-imaging-documents'),
   
+  /**
+   * Classifies a document type using AI
+   * @param fileName - Name of the file
+   * @param fileContent - Optional file content for analysis
+   * @param mimeType - Optional MIME type
+   * @returns Document type, tags, and confidence score
+   */
   classifyDocument: (fileName: string, fileContent?: string, mimeType?: string) =>
-    invokeWithRetry<{ document_type: string; tags: string[]; suggested_date: string | null; confidence: number }>('ai-classify-document', { fileName, fileContent, mimeType }),
+    invokeWithRetry<ClassifyDocumentResult>('ai-classify-document', { fileName, fileContent, mimeType }),
   
+  /**
+   * Suggests a better filename for a document
+   * @param fileName - Current filename
+   * @param documentType - Detected document type
+   * @param fileContent - Optional content for context
+   * @returns Suggested new filename
+   */
   renameDocument: (fileName: string, documentType: string, fileContent?: string) =>
-    invokeWithRetry<{ suggestedName: string }>('ai-rename-document', { fileName, documentType, fileContent }),
+    invokeWithRetry<RenameDocumentResult>('ai-rename-document', { fileName, documentType, fileContent }),
 };
 
 // ===== HEALTH ANALYSIS =====
+/**
+ * Health API - Health analysis and recommendations endpoints
+ * 
+ * Provides comprehensive health analysis, biomarker tracking,
+ * and personalized recommendations.
+ * 
+ * @example
+ * ```typescript
+ * // Generate health analysis
+ * const { data } = await healthApi.generateAnalysis(userId);
+ * 
+ * // Calculate health points
+ * const { data: points } = await healthApi.calculateHealthPoints(userId);
+ * ```
+ */
 export const healthApi = {
+  /**
+   * Generates a comprehensive health analysis for a user
+   * @param userId - Optional user ID (uses authenticated user if not provided)
+   * @returns AI-generated health analysis
+   */
   generateAnalysis: (userId?: string) =>
-    invokeWithRetry<{ analysis: string }>('generate-health-analysis', { userId }),
+    invokeWithRetry<HealthAnalysisResult>('generate-health-analysis', { userId }),
   
+  /**
+   * Calculates health points score with breakdown by category
+   * @param userId - User ID to calculate for
+   * @returns Total points and breakdown by health area
+   */
   calculateHealthPoints: (userId: string) =>
-    invokeWithRetry<{ points: number; breakdown: unknown }>('calculate-health-points', { userId }),
+    invokeWithRetry<HealthPointsResult>('calculate-health-points', { userId }),
   
+  /**
+   * Calculates sleep efficiency percentage
+   * @param userId - User ID
+   * @returns Sleep efficiency score
+   */
   calculateSleepEfficiency: (userId: string) =>
-    invokeWithRetry<{ efficiency: number }>('calculate-sleep-efficiency', { userId }),
+    invokeWithRetry<SleepEfficiencyResult>('calculate-sleep-efficiency', { userId }),
   
+  /**
+   * Fixes unit conversion issues in biomarker data
+   * @returns Count of fixed records
+   */
   fixUnitConversions: () =>
-    invokeWithRetry<{ updated: number; skipped?: number; total?: number }>('fix-unit-conversions'),
+    invokeWithRetry<FixUnitConversionsResult>('fix-unit-conversions'),
   
+  /**
+   * Removes duplicate lab results
+   * @returns Count of deleted duplicates
+   */
   fixDuplicateLabResults: () =>
-    invokeWithRetry<{ deleted: number }>('fix-duplicate-lab-results'),
+    invokeWithRetry<FixDuplicateLabResultsResult>('fix-duplicate-lab-results'),
   
+  /**
+   * Generates personalized health recommendations
+   * @returns AI-generated recommendations with context
+   */
   generateRecommendations: () =>
-    invokeWithRetry<{ recommendations: string; context: unknown }>('generate-health-recommendations', {}),
+    invokeWithRetry<HealthRecommendationsResult>('generate-health-recommendations', {}),
   
+  /**
+   * Parses a text message to extract supplement information
+   * @param message - Text message to parse
+   * @returns Extracted supplement details
+   */
   parseProtocolMessage: (message: string) =>
-    invokeWithRetry<{ success: boolean; supplements: unknown[]; error?: string }>('parse-protocol-message', { message }),
+    invokeWithRetry<ParseProtocolMessageResult>('parse-protocol-message', { message }),
   
+  /**
+   * Checks for completed supplement protocols
+   * @returns Whether check was performed
+   */
   checkCompletedProtocols: () =>
-    invokeWithRetry<{ checked: boolean }>('check-completed-protocols'),
+    invokeWithRetry<CheckCompletedProtocolsResult>('check-completed-protocols'),
   
+  /**
+   * Imports Apple Health data from exported file
+   * @param userId - User ID to import for
+   * @param filePath - Path to the export file
+   * @returns Import statistics
+   */
   importAppleHealth: (userId: string, filePath: string) =>
-    invokeWithRetry<{ results: unknown }>('apple-health-import', { userId, filePath }),
+    invokeWithRetry<AppleHealthImportResult>('apple-health-import', { userId, filePath }),
   
+  /**
+   * Analyzes trends for a specific biomarker
+   * @param biomarkerId - Biomarker to analyze
+   * @returns Trend analysis with predictions
+   */
   analyzeBiomarkerTrends: (biomarkerId: string) =>
-    invokeWithRetry<any>('analyze-biomarker-trends', { biomarkerId }),
+    invokeWithRetry<BiomarkerTrendAnalysis>('analyze-biomarker-trends', { biomarkerId }),
   
+  /**
+   * Tests the complete protocol lifecycle
+   * @param userId - User ID for testing
+   * @returns Test results and summary
+   */
   testProtocolLifecycle: (userId: string) =>
-    invokeWithRetry<{ success: boolean; summary: unknown; results: unknown[]; timestamp: string }>('test-protocol-lifecycle', { userId }),
+    invokeWithRetry<ProtocolLifecycleTestResult>('test-protocol-lifecycle', { userId }),
   
+  /**
+   * Recalculates confidence scores for metrics
+   * @param userId - User ID
+   * @param metricName - Optional specific metric to recalculate
+   */
   recalculateConfidence: (userId: string, metricName?: string) =>
-    invokeWithRetry<{ success: boolean }>('recalculate-confidence', { user_id: userId, metric_name: metricName }),
+    invokeWithRetry<RecalculateConfidenceResult>('recalculate-confidence', { user_id: userId, metric_name: metricName }),
   
+  /**
+   * Runs protocol test suite
+   * @param userId - User ID for tests
+   * @returns Test data with counts
+   */
   runProtocolTests: (userId: string) =>
-    invokeWithRetry<{ test_data: { protocols_created: number; alerts_created: number } }>('run-protocol-tests', { userId }),
+    invokeWithRetry<ProtocolTestsResult>('run-protocol-tests', { userId }),
   
+  /**
+   * Cleans up protocol test data
+   * @param userId - User ID
+   * @returns Count of deleted test records
+   */
   cleanProtocolTests: (userId: string) =>
-    invokeWithRetry<{ deleted_count: number }>('clean-protocol-tests', { userId }),
+    invokeWithRetry<CleanProtocolTestsResult>('clean-protocol-tests', { userId }),
   
+  /**
+   * Cleans up Apple Health imported data
+   * @param userId - User ID
+   * @returns Count of deleted metrics
+   */
   cleanupAppleHealth: (userId: string) =>
-    invokeWithRetry<{ deletedMetrics: number }>('cleanup-apple-health', { userId }),
+    invokeWithRetry<CleanupAppleHealthResult>('cleanup-apple-health', { userId }),
   
+  /**
+   * Populates biomarker correlation data
+   * @returns Success status
+   */
   populateBiomarkerCorrelations: () =>
-    invokeWithRetry<{ success: boolean }>('populate-biomarker-correlations'),
+    invokeWithRetry<PopulateBiomarkerCorrelationsResult>('populate-biomarker-correlations'),
 };
 
 // ===== AI TRAINING =====
+/**
+ * AI Training API - AI-powered workout generation endpoints
+ * 
+ * Generates personalized training plans and workouts using AI.
+ * 
+ * @example
+ * ```typescript
+ * // Generate a training plan
+ * const { data } = await aiTrainingApi.generatePlan(userId);
+ * ```
+ */
 export const aiTrainingApi = {
+  /**
+   * Generates a complete AI training plan
+   * @param userId - User ID to generate plan for
+   * @returns Training program with workout count
+   */
   generatePlan: (userId: string) =>
-    invokeWithRetry<{ program_data: { program_name: string }; workout_count: number }>('generate-ai-training-plan', { user_id: userId }),
+    invokeWithRetry<GenerateTrainingPlanResult>('generate-ai-training-plan', { user_id: userId }),
   
+  /**
+   * Generates a travel-friendly workout
+   * @param params - Workout parameters (equipment, duration, etc.)
+   * @returns Customized travel workout
+   */
   generateTravelWorkout: (params: Record<string, unknown>) =>
-    invokeWithRetry<unknown>('generate-travel-workout', params),
+    invokeWithRetry<GenerateTravelWorkoutResult>('generate-travel-workout', params),
   
+  /**
+   * Analyzes training gaps and provides suggestions
+   * @param lookbackDays - Number of days to analyze
+   * @returns Gap analysis with recommendations
+   */
   analyzeGaps: (lookbackDays: number) =>
-    invokeWithRetry<unknown>('analyze-training-gaps', { lookbackDays }),
+    invokeWithRetry<TrainingGapsAnalysisResult>('analyze-training-gaps', { lookbackDays }),
 };
 
 // ===== ADMIN =====
+/**
+ * Admin API - Administrative and trainer endpoints
+ * 
+ * Provides administrative functions for managing Terra tokens,
+ * trainer operations, and system maintenance.
+ * 
+ * @example
+ * ```typescript
+ * // List all Terra tokens
+ * const { data } = await adminApi.terraTokens.list();
+ * 
+ * // Send a trainer broadcast
+ * const { data: result } = await adminApi.sendBroadcast(broadcastId);
+ * ```
+ */
 export const adminApi = {
+  /**
+   * Terra token management endpoints
+   */
   terraTokens: {
-    list: () => invokeWithRetry<{ tokens: unknown[] }>('admin-terra-tokens', { action: 'list' }),
-    create: (params: { user_id: string; terra_user_id: string; provider: string }) =>
-      invokeWithRetry<{ token: unknown }>('admin-terra-tokens', { action: 'create', data: params }),
-    update: (params: { id: string; is_active?: boolean }) =>
-      invokeWithRetry<{ token: unknown }>('admin-terra-tokens', { action: 'update', data: params }),
+    /**
+     * Lists all Terra tokens
+     * @returns Array of Terra tokens
+     */
+    list: () => invokeWithRetry<AdminTerraTokensListResult>('admin-terra-tokens', { action: 'list' }),
+    
+    /**
+     * Creates a new Terra token
+     * @param params - Token creation parameters
+     * @returns Created token
+     */
+    create: (params: AdminTerraTokenCreateParams) =>
+      invokeWithRetry<AdminTerraTokenCreateResult>('admin-terra-tokens', { action: 'create', data: params }),
+    
+    /**
+     * Updates an existing Terra token
+     * @param params - Token update parameters
+     * @returns Updated token
+     */
+    update: (params: AdminTerraTokenUpdateParams) =>
+      invokeWithRetry<AdminTerraTokenUpdateResult>('admin-terra-tokens', { action: 'update', data: params }),
+    
+    /**
+     * Deletes a Terra token
+     * @param id - Token ID to delete
+     */
     delete: (id: string) =>
-      invokeWithRetry<{ success: boolean }>('admin-terra-tokens', { action: 'delete', data: { id } }),
+      invokeWithRetry<AdminTerraTokenDeleteResult>('admin-terra-tokens', { action: 'delete', data: { id } }),
+    
+    /**
+     * Deauthenticates a specific Terra user
+     * @param terraUserId - Terra user ID
+     * @param provider - Optional provider filter
+     */
     deauthUser: (terraUserId: string, provider?: string) =>
-      invokeWithRetry<{ success: boolean }>('admin-terra-tokens', { 
+      invokeWithRetry<AdminTerraTokenDeleteResult>('admin-terra-tokens', { 
         action: 'deauth-user', 
         data: { terraUserId, provider } 
       }),
+    
+    /**
+     * Deauthenticates all tokens for a user
+     * @param targetUserId - User ID to deauth
+     * @param providerFilter - Optional provider filter
+     */
     deauthAll: (targetUserId: string, providerFilter?: string) =>
-      invokeWithRetry<{ success: boolean }>('admin-terra-tokens', { 
+      invokeWithRetry<AdminTerraTokenDeleteResult>('admin-terra-tokens', { 
         action: 'deauth-all', 
         data: { targetUserId, providerFilter } 
       }),
   },
   
+  /**
+   * Requests AI suggestions for client training adjustments
+   * @param clientId - Client ID to analyze
+   * @param forceRegenerate - Whether to force new analysis
+   * @returns Suggestions summary and count
+   */
   trainerSuggestAdjustments: (clientId: string, forceRegenerate?: boolean) =>
-    invokeWithRetry<{ analysis_summary?: string; suggestions_count?: number }>('trainer-ai-suggest-adjustments', { clientId, forceRegenerate }),
+    invokeWithRetry<TrainerSuggestAdjustmentsResult>('trainer-ai-suggest-adjustments', { clientId, forceRegenerate }),
   
-  trainerExecute: (params: { trainerId: string; clientId?: string; actions?: unknown[]; autoConfirm?: boolean }) =>
-    invokeWithRetry<{ success: boolean }>('trainer-ai-execute', params),
+  /**
+   * Executes trainer AI actions
+   * @param params - Execution parameters
+   * @returns Execution result
+   */
+  trainerExecute: (params: TrainerExecuteParams) =>
+    invokeWithRetry<TrainerExecuteResult>('trainer-ai-execute', params),
   
+  /**
+   * Reprocesses a failed webhook
+   * @param webhookId - Webhook ID to reprocess
+   */
   reprocessWebhook: (webhookId: string) =>
-    invokeWithRetry<{ success: boolean }>('reprocess-webhook', { webhookId }),
+    invokeWithRetry<ReprocessWebhookResult>('reprocess-webhook', { webhookId }),
   
+  /**
+   * Sends a trainer broadcast message
+   * @param broadcastId - Broadcast ID to send
+   * @returns Count of messages sent
+   */
   sendBroadcast: (broadcastId: string) =>
-    invokeWithRetry<{ sent_count: number }>('send-trainer-broadcast', { broadcastId }),
+    invokeWithRetry<SendBroadcastResult>('send-trainer-broadcast', { broadcastId }),
 };
 
 // ===== AI =====
+/**
+ * AI API - AI-powered features endpoints
+ * 
+ * Provides AI functionality for fitness analysis, workouts, and Q&A.
+ * 
+ * @example
+ * ```typescript
+ * // Analyze fitness data from an image
+ * const { data } = await aiApi.analyzeFitnessData(imageUrl, userId);
+ * ```
+ */
 export const aiApi = {
+  /**
+   * Executes pending AI actions
+   * @param pendingActionId - Action ID to execute
+   * @param conversationId - Optional conversation context
+   * @param actions - Optional specific actions to execute
+   * @returns Execution results
+   */
   executeActions: (pendingActionId: string, conversationId?: string, actions?: unknown[]) =>
-    invokeWithRetry<{ success: boolean; results: { success: boolean; message?: string }[] }>('execute-ai-actions', { 
+    invokeWithRetry<ExecuteAIActionsResult>('execute-ai-actions', { 
       pendingActionId, 
       conversationId, 
       actions 
     }),
   
+  /**
+   * Gets the daily AI-generated workout
+   * @param userId - User ID
+   * @param date - Optional date (defaults to today)
+   * @returns Daily workout details
+   */
   getDailyWorkout: (userId: string, date?: string) =>
-    invokeWithRetry<{ success: boolean; workout?: unknown }>('get-daily-ai-workout', { user_id: userId, date }),
+    invokeWithRetry<GetDailyWorkoutResult>('get-daily-ai-workout', { user_id: userId, date }),
   
+  /**
+   * Analyzes fitness data from an uploaded image
+   * @param imageUrl - URL of the image to analyze
+   * @param userId - User ID
+   * @param goalId - Optional goal to track progress against
+   * @param measurementDate - Optional measurement date
+   * @returns Analysis results and saved measurements
+   */
   analyzeFitnessData: (imageUrl: string, userId: string, goalId?: string, measurementDate?: string) =>
-    invokeWithRetry<{ success: boolean; saved?: boolean; message?: string; analysis?: unknown; savedMeasurements?: unknown[] }>('analyze-fitness-data', { 
+    invokeWithRetry<AnalyzeFitnessDataResult>('analyze-fitness-data', { 
       imageUrl, 
       userId, 
       goalId, 
       measurementDate 
     }),
   
+  /**
+   * Asks a question about an InBody analysis
+   * @param analysisId - InBody analysis ID
+   * @param question - Question to ask
+   * @returns AI-generated answer
+   */
   askAboutInBody: (analysisId: string, question: string) =>
-    invokeWithRetry<{ answer: string }>('ask-about-inbody', { analysisId, question }),
+    invokeWithRetry<AskAboutInBodyResult>('ask-about-inbody', { analysisId, question }),
 };
 
 // ===== INBODY =====
+/**
+ * InBody API - InBody scan parsing endpoints
+ * 
+ * Handles parsing of InBody body composition scan results.
+ * 
+ * @example
+ * ```typescript
+ * const { data } = await inbodyApi.parse(imagePages, uploadId);
+ * ```
+ */
 export const inbodyApi = {
+  /**
+   * Parses InBody scan images/PDF
+   * @param images - Array of base64 encoded page images
+   * @param uploadId - Upload ID for tracking
+   * @returns Parsed body composition analysis
+   */
   parse: (images: string[], uploadId: string) =>
-    invokeWithRetry<{ success: boolean; analysis?: unknown; error?: string }>('parse-inbody-pdf', { images, uploadId }),
+    invokeWithRetry<ParseInBodyResult>('parse-inbody-pdf', { images, uploadId }),
 };
 
 // ===== JOBS =====
+/**
+ * Jobs API - Background job management endpoints
+ * 
+ * Manages background jobs, webhooks, and system maintenance tasks.
+ * 
+ * @example
+ * ```typescript
+ * // Reset stuck jobs
+ * const { data } = await jobsApi.resetStuck();
+ * ```
+ */
 export const jobsApi = {
+  /**
+   * Retries a specific failed job
+   * @param jobId - Job ID to retry
+   */
   retry: (jobId: string) =>
-    invokeWithRetry<{ success: boolean }>('retry-jobs', { jobId }),
+    invokeWithRetry<RetryJobResult>('retry-jobs', { jobId }),
   
+  /**
+   * Resets all stuck jobs to pending state
+   * @returns Count of reset jobs
+   */
   resetStuck: () =>
-    invokeWithRetry<{ count: number }>('reset-stuck-jobs'),
+    invokeWithRetry<ResetStuckJobsResult>('reset-stuck-jobs'),
   
+  /**
+   * Retries all stuck webhook processing jobs
+   * @returns Count of processed webhooks
+   */
   retryStuckWebhooks: () =>
-    invokeWithRetry<{ processed: number }>('retry-stuck-webhooks'),
+    invokeWithRetry<RetryStuckWebhooksResult>('retry-stuck-webhooks'),
   
+  /**
+   * Triggers the background job worker
+   */
   trigger: () =>
-    invokeWithRetry<{ success: boolean }>('job-worker'),
+    invokeWithRetry<TriggerJobWorkerResult>('job-worker'),
 };
 
 // ===== HABITS =====
+/**
+ * Habits API - Habit tracking endpoints
+ * 
+ * Manages user habits and tracking.
+ * 
+ * @example
+ * ```typescript
+ * const { data } = await habitsApi.delete(habitId);
+ * ```
+ */
 export const habitsApi = {
+  /**
+   * Deletes a habit and all associated data
+   * @param habitId - Habit ID to delete
+   * @returns Deletion result with count of deleted records
+   */
   delete: (habitId: string) =>
-    invokeWithRetry<{ success: boolean; deletedCount?: number }>('delete-habit', { habitId }),
-};
-
-// ===== SUPPLEMENTS (additional) =====
-export const supplementsApiExtended = {
-  generateProtocol: (params: {
-    user_id?: string;
-    goals: string[];
-    health_conditions?: string[];
-    dietary_restrictions?: string[];
-    protocol_duration_days?: number;
-  }) => invokeWithRetry<{ protocol: unknown }>('generate-supplement-protocol', params),
+    invokeWithRetry<DeleteHabitResult>('delete-habit', { habitId }),
 };
 
 // ===== UNIFIED API OBJECT =====
+/**
+ * Unified API object providing access to all API namespaces
+ * 
+ * @example
+ * ```typescript
+ * import { api } from '@/lib/api';
+ * 
+ * // Access any API namespace
+ * await api.terra.realtimeSync('WHOOP');
+ * await api.supplements.generateStack();
+ * await api.health.generateAnalysis();
+ * ```
+ */
 export const api = {
   terra: terraApi,
   supplements: supplementsApi,
