@@ -102,19 +102,22 @@ export const supplementsApi = {
     invokeWithRetry<unknown>('calculate-correlation', { stackItemId, timeframeMonths }),
   
   generateStack: () =>
-    invokeWithRetry<{ recommendations: unknown[] }>('generate-data-driven-stack'),
+    invokeWithRetry<{ success: boolean; recommendations?: unknown[]; message?: string; no_deficiencies?: boolean; error?: string; analysis?: unknown; deficiencies?: unknown[] }>('generate-data-driven-stack'),
   
   autoLinkBiomarkers: (stackItemId: string, supplementName: string) =>
     invokeWithRetry<{ success: boolean }>('auto-link-biomarkers', { stackItemId, supplementName }),
   
   backfillLibrary: () =>
     invokeWithRetry<{ success: boolean; addedCount: number; skippedCount: number }>('backfill-supplement-library'),
+  
+  processPhoto: (imageBase64: string) =>
+    invokeWithRetry<{ success: boolean; processedImage?: string; error?: string }>('process-supplement-photo', { image: imageBase64 }),
 };
 
 // ===== MEDICAL DOCUMENTS =====
 export const documentsApi = {
   compare: (documentIds: string[]) =>
-    invokeWithRetry<{ comparison: unknown }>('compare-medical-documents', { documentIds }),
+    invokeWithRetry<{ analysis: string; comparison?: unknown }>('compare-medical-documents', { documentIds }),
   
   batchProcess: (documentIds: string[]) =>
     invokeWithRetry<{ results: unknown[] }>('batch-process-documents', { documentIds }),
@@ -130,6 +133,9 @@ export const documentsApi = {
   
   analyze: (documentId: string) =>
     invokeWithRetry<{ success: boolean }>('analyze-medical-document', { documentId }),
+  
+  migrateToMedicalDocuments: (action: string) =>
+    invokeWithRetry<{ total_migrated: number; inbody?: { migrated: number; total: number; errors?: unknown[] }; photos?: { migrated: number; total: number; errors?: unknown[] } }>('migrate-to-medical-documents', { action }),
 };
 
 // ===== HEALTH ANALYSIS =====
@@ -163,6 +169,12 @@ export const healthApi = {
   
   analyzeBiomarkerTrends: (biomarkerId: string) =>
     invokeWithRetry<any>('analyze-biomarker-trends', { biomarkerId }),
+  
+  testProtocolLifecycle: (userId: string) =>
+    invokeWithRetry<{ success: boolean; summary: unknown; results: unknown[]; timestamp: string }>('test-protocol-lifecycle', { userId }),
+  
+  recalculateConfidence: (userId: string, metricName?: string) =>
+    invokeWithRetry<{ success: boolean }>('recalculate-confidence', { user_id: userId, metric_name: metricName }),
 };
 
 // ===== AI TRAINING =====
