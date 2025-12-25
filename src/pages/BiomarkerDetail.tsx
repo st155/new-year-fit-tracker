@@ -54,18 +54,21 @@ export default function BiomarkerDetail() {
 
   // Calculate time in optimal zone - MUST be called before any conditional returns
   const timeInOptimalZone = useMemo(() => {
-    if (!analysis?.success) return null;
-    const { biomarker: bm, reference_ranges: refs } = analysis;
+    const analysisData = analysis as any;
+    if (!analysisData?.success) return null;
+    const bm = analysisData?.biomarker;
+    const refs = analysisData?.reference_ranges;
+    const historyData = analysisData?.history;
     const isQual = bm?.data_type === 'qualitative';
-    if (isQual || !analysis?.history || !refs?.optimal_min || !refs?.optimal_max) {
+    if (isQual || !historyData || !refs?.optimal_min || !refs?.optimal_max) {
       return null;
     }
     
-    const inOptimal = analysis.history.filter(
+    const inOptimal = historyData.filter(
       (h: any) => h.value >= refs.optimal_min! && h.value <= refs.optimal_max!
     ).length;
     
-    return Math.round((inOptimal / analysis.history.length) * 100);
+    return Math.round((inOptimal / historyData.length) * 100);
   }, [analysis]);
 
   // NOW we can have conditional returns - after all hooks
@@ -96,7 +99,8 @@ export default function BiomarkerDetail() {
   }
 
   // Show basic history if analysis failed but we have data
-  if ((!analysis || !analysis.success) && history && history.length > 0) {
+  const analysisAny = analysis as any;
+  if ((!analysisAny || !analysisAny.success) && history && history.length > 0) {
     const latestResult = history[0];
     const biomarkerName = latestResult.biomarker_master?.display_name || 'Биомаркер';
     
@@ -166,7 +170,7 @@ export default function BiomarkerDetail() {
     );
   }
 
-  if (!analysis || !analysis.success) {
+  if (!analysisAny || !analysisAny.success) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center">
@@ -179,7 +183,7 @@ export default function BiomarkerDetail() {
     );
   }
 
-  const { biomarker, statistics, zones, reference_ranges, insights } = analysis;
+  const { biomarker, statistics, zones, reference_ranges, insights } = analysisAny;
 
   // Check if biomarker is qualitative (text-based data)
   const isQualitative = biomarker.data_type === 'qualitative';
@@ -274,12 +278,12 @@ export default function BiomarkerDetail() {
                 <CardTitle>График изменений</CardTitle>
               </CardHeader>
               <CardContent>
-                <QualitativeTrendChart history={analysis.history} />
+                <QualitativeTrendChart history={analysisAny.history} />
               </CardContent>
             </Card>
           ) : (
             <BiomarkerTrendChart
-              data={analysis.history}
+              data={analysisAny.history}
               unit={biomarker.unit}
               referenceRanges={reference_ranges}
             />
@@ -534,8 +538,9 @@ export default function BiomarkerDetail() {
         <RecommendedSupplementsCard 
           biomarkerId={biomarkerId!}
           onAddToStack={(supplementName) => {
-            const correlation = analysis?.correlations?.find(
-              c => c.supplement_name === supplementName
+            const correlations = analysisAny?.correlations as any[] | undefined;
+            const correlation = correlations?.find(
+              (c: any) => c.supplement_name === supplementName
             );
             addToStack({
               supplementName,

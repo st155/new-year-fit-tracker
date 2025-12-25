@@ -51,7 +51,8 @@ export function useSupplementCorrelation(
       
       const { data, error } = await supplementsApi.calculateCorrelation(stackItemId, timeframeMonths);
       if (error) throw error;
-      return data as CorrelationData;
+      // Cast to unknown first to handle flexible API response
+      return data as unknown as CorrelationData;
     },
     enabled: !!stackItemId,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
