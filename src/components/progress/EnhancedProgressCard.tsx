@@ -93,7 +93,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
   const chartData = useMemo(() => {
     return goal.measurements
       .slice(0, 30)
-      .reverse()
+      .sort((a, b) => new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime())
       .map(m => ({
         date: m.measurement_date,
         value: m.value,
