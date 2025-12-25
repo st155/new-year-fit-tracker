@@ -190,6 +190,42 @@ export const WHOOP_SLEEP_STANDARDS: BenchmarkStandard = {
 };
 
 /**
+ * WHOOP Sleep Performance Standards (%)
+ * Source: WHOOP sleep analysis
+ * Higher is better - percentage of sleep need met
+ */
+export const WHOOP_SLEEP_PERFORMANCE_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 70, target: 80, max: 85 },
+  intermediate: { min: 85, target: 90, max: 93 },
+  advanced: { min: 93, target: 96, max: 98 },
+  elite: { min: 98, target: 99, max: 100 }
+};
+
+/**
+ * WHOOP Respiratory Rate Standards (breaths/min)
+ * Source: WHOOP sleep analysis, clinical research
+ * Lower is better during sleep - indicates relaxed state
+ */
+export const WHOOP_RESPIRATORY_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 14, target: 16, max: 18 },
+  intermediate: { min: 13, target: 14, max: 15 },
+  advanced: { min: 12, target: 13, max: 14 },
+  elite: { min: 11, target: 12, max: 13 }
+};
+
+/**
+ * WHOOP Sleep Consistency Standards (%)
+ * Source: WHOOP sleep coaching
+ * Higher is better - indicates regular sleep schedule
+ */
+export const WHOOP_SLEEP_CONSISTENCY_STANDARDS: BenchmarkStandard = {
+  beginner: { min: 60, target: 70, max: 75 },
+  intermediate: { min: 75, target: 82, max: 88 },
+  advanced: { min: 88, target: 93, max: 97 },
+  elite: { min: 97, target: 99, max: 100 }
+};
+
+/**
  * Main lookup object for all standards
  */
 export const BENCHMARK_STANDARDS: Record<string, BenchmarkStandard> = {
@@ -207,7 +243,10 @@ export const BENCHMARK_STANDARDS: Record<string, BenchmarkStandard> = {
   whoop_recovery: WHOOP_RECOVERY_STANDARDS,
   whoop_hrv: WHOOP_HRV_STANDARDS,
   whoop_rhr: WHOOP_RHR_STANDARDS,
-  whoop_sleep: WHOOP_SLEEP_STANDARDS
+  whoop_sleep: WHOOP_SLEEP_STANDARDS,
+  whoop_sleep_performance: WHOOP_SLEEP_PERFORMANCE_STANDARDS,
+  whoop_respiratory: WHOOP_RESPIRATORY_STANDARDS,
+  whoop_sleep_consistency: WHOOP_SLEEP_CONSISTENCY_STANDARDS
 };
 
 /**

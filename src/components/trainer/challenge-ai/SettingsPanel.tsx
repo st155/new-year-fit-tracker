@@ -1,15 +1,22 @@
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+
+interface Discipline {
+  name: string;
+  type: string;
+  unit: string;
+}
 
 interface SettingsPanelProps {
   duration: number;
   onDurationChange: (value: number) => void;
   difficulty: number;
   onDifficultyChange: (value: number) => void;
-  disciplineCount: number;
-  onDisciplineCountChange: (value: number) => void;
-  maxDisciplines: number;
+  selectedDisciplines: string[];
+  onSelectedDisciplinesChange: (disciplines: string[]) => void;
+  availableDisciplines: Discipline[];
   targetAudience: number;
   onTargetAudienceChange: (value: number) => void;
 }
@@ -22,12 +29,31 @@ export const SettingsPanel = ({
   onDurationChange,
   difficulty,
   onDifficultyChange,
-  disciplineCount,
-  onDisciplineCountChange,
-  maxDisciplines,
+  selectedDisciplines,
+  onSelectedDisciplinesChange,
+  availableDisciplines,
   targetAudience,
   onTargetAudienceChange,
 }: SettingsPanelProps) => {
+  const toggleDiscipline = (disciplineName: string) => {
+    if (selectedDisciplines.includes(disciplineName)) {
+      // Don't allow deselecting if only 1 discipline is selected
+      if (selectedDisciplines.length > 1) {
+        onSelectedDisciplinesChange(selectedDisciplines.filter(d => d !== disciplineName));
+      }
+    } else {
+      onSelectedDisciplinesChange([...selectedDisciplines, disciplineName]);
+    }
+  };
+
+  const selectAll = () => {
+    onSelectedDisciplinesChange(availableDisciplines.map(d => d.name));
+  };
+
+  const selectTop4 = () => {
+    onSelectedDisciplinesChange(availableDisciplines.slice(0, 4).map(d => d.name));
+  };
+
   return (
     <div className="space-y-4">
       <Card className="p-4 bg-card border-2 border-border/50">
@@ -85,20 +111,52 @@ export const SettingsPanel = ({
       <Card className="p-4 bg-card border-2 border-border/50">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <Label className="text-sm font-semibold">Number of Disciplines</Label>
-            <span className="text-base font-bold text-primary">{disciplineCount}</span>
+            <Label className="text-sm font-semibold">Select Disciplines</Label>
+            <div className="flex gap-2">
+              <button 
+                onClick={selectTop4}
+                className="text-xs text-primary hover:underline"
+              >
+                Top 4
+              </button>
+              <span className="text-muted-foreground">|</span>
+              <button 
+                onClick={selectAll}
+                className="text-xs text-primary hover:underline"
+              >
+                All
+              </button>
+            </div>
           </div>
-          <Slider
-            value={[disciplineCount]}
-            onValueChange={([value]) => onDisciplineCountChange(value)}
-            min={1}
-            max={maxDisciplines}
-            step={1}
-            className="w-full [&_[role=slider]]:border-purple-500 [&_[role=slider]]:shadow-purple-500/20"
-            style={{
-              '--slider-gradient': 'linear-gradient(to right, rgb(168, 85, 247), rgb(236, 72, 153))'
-            } as any}
-          />
+          <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">
+            {availableDisciplines.map((discipline, idx) => (
+              <div 
+                key={discipline.name}
+                className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
+                  selectedDisciplines.includes(discipline.name) 
+                    ? 'bg-primary/10 border border-primary/30' 
+                    : 'bg-muted/30 hover:bg-muted/50'
+                }`}
+              >
+                <Checkbox
+                  id={`discipline-${idx}`}
+                  checked={selectedDisciplines.includes(discipline.name)}
+                  onCheckedChange={() => toggleDiscipline(discipline.name)}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <label 
+                  htmlFor={`discipline-${idx}`}
+                  className="flex-1 text-sm font-medium cursor-pointer flex justify-between items-center"
+                >
+                  <span>{discipline.name}</span>
+                  <span className="text-xs text-muted-foreground">{discipline.unit}</span>
+                </label>
+              </div>
+            ))}
+          </div>
+          <div className="text-xs text-muted-foreground text-center">
+            {selectedDisciplines.length} of {availableDisciplines.length} selected
+          </div>
         </div>
       </Card>
 
