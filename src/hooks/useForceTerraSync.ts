@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { terraApi } from '@/lib/api';
 
 interface ForceSyncParams {
   provider: string;
@@ -12,10 +12,7 @@ export function useForceTerraSync() {
 
   return useMutation({
     mutationFn: async ({ provider, dataType = 'body' }: ForceSyncParams) => {
-      const { data, error } = await supabase.functions.invoke('force-terra-sync', {
-        body: { provider, dataType },
-      });
-
+      const { data, error } = await terraApi.forceSync(provider, dataType);
       if (error) throw error;
       return data;
     },

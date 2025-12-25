@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Search, ChevronDown, AlertCircle, CheckCircle, Clock, Copy, Loader2, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { terraApi } from '@/lib/api';
 
 interface TerraProviderDiagnosticsProps {
   provider: string;
@@ -70,9 +70,7 @@ export function TerraProviderDiagnostics({
     try {
       console.log('🔍 Fetching diagnostics for', provider);
       
-      const { data, error } = await supabase.functions.invoke('terra-diagnostics', {
-        body: { provider },
-      });
+      const { data, error } = await terraApi.diagnostics(provider);
 
       if (error) {
         if (error.message?.includes('timeout') || error.message?.includes('504')) {

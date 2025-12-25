@@ -8,9 +8,9 @@ import { useBloodTestTrends } from "@/hooks/medical-documents/useBloodTestTrends
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea } from "recharts";
 import { TrendingUp, TrendingDown, Minus, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { healthApi } from '@/lib/api';
 
 // Helper function to get standard unit for selected biomarkers
 function getStandardUnit(selectedBiomarkers: string[], biomarkers?: any[]): string {
@@ -60,11 +60,11 @@ export const BloodTestTrendsChart = () => {
 
   const recalculateUnitsMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('fix-unit-conversions');
+      const { data, error } = await healthApi.fixUnitConversions();
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "✅ Пересчёт завершён",
         description: `Обновлено: ${data.updated}, пропущено: ${data.skipped} из ${data.total}`,
@@ -82,11 +82,11 @@ export const BloodTestTrendsChart = () => {
 
   const fixDuplicatesMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('fix-duplicate-lab-results');
+      const { data, error } = await healthApi.fixDuplicateLabResults();
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "✅ Дубликаты очищены",
         description: `Удалено: ${data.deleted} неправильных записей`,

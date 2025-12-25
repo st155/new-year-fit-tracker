@@ -65,8 +65,8 @@ export const terraApi = {
   sync: (provider?: string) => 
     invokeWithRetry<{ success: boolean; metrics?: number }>('sync-terra-realtime', { provider }),
   
-  diagnostics: () => 
-    invokeWithRetry<{ tokens: unknown[]; webhooks: unknown[] }>('terra-diagnostics'),
+  diagnostics: (provider?: string) => 
+    invokeWithRetry<{ tokens?: unknown[]; webhooks?: unknown[]; date_range?: { start: string; end: string }; available_in_terra?: unknown; in_database?: unknown; missing_in_db?: unknown; webhook_logs?: unknown[] }>('terra-diagnostics', { provider }),
   
   requestHistorical: (terraUserId: string, days?: number) =>
     invokeWithRetry<{ success: boolean }>('terra-request-historical', { terra_user_id: terraUserId, days }),
@@ -82,6 +82,9 @@ export const terraApi = {
   
   deauthenticate: (provider: string) =>
     invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'deauthenticate-user', provider }),
+  
+  forceSync: (provider: string, dataType?: string) =>
+    invokeWithRetry<{ success: boolean }>('force-terra-sync', { provider, dataType }),
 };
 
 // ===== SUPPLEMENTS =====
@@ -93,13 +96,19 @@ export const supplementsApi = {
     invokeWithRetry<{ product: unknown }>('scan-supplement-barcode', { barcode }),
   
   enrich: (productId: string) =>
-    invokeWithRetry<{ enrichedData: unknown }>('enrich-supplement-info', { productId }),
+    invokeWithRetry<{ success: boolean; enrichedData: unknown; error?: string }>('enrich-supplement-info', { productId }),
   
   calculateCorrelation: (stackItemId: string, timeframeMonths?: number) =>
-    invokeWithRetry<{ correlation: unknown }>('calculate-correlation', { stackItemId, timeframeMonths }),
+    invokeWithRetry<unknown>('calculate-correlation', { stackItemId, timeframeMonths }),
   
   generateStack: () =>
     invokeWithRetry<{ recommendations: unknown[] }>('generate-data-driven-stack'),
+  
+  autoLinkBiomarkers: (stackItemId: string, supplementName: string) =>
+    invokeWithRetry<{ success: boolean }>('auto-link-biomarkers', { stackItemId, supplementName }),
+  
+  backfillLibrary: () =>
+    invokeWithRetry<{ success: boolean; addedCount: number; skippedCount: number }>('backfill-supplement-library'),
 };
 
 // ===== MEDICAL DOCUMENTS =====
@@ -116,8 +125,11 @@ export const documentsApi = {
   parseLabReport: (documentId: string) =>
     invokeWithRetry<{ success: boolean }>('parse-lab-report', { documentId }),
   
-  rematchBiomarkers: (documentId: string) =>
+  rematchBiomarkers: (documentId?: string) =>
     invokeWithRetry<{ rematchedCount: number; totalUnmatched: number }>('rematch-biomarkers', { documentId }),
+  
+  analyze: (documentId: string) =>
+    invokeWithRetry<{ success: boolean }>('analyze-medical-document', { documentId }),
 };
 
 // ===== HEALTH ANALYSIS =====
@@ -132,7 +144,10 @@ export const healthApi = {
     invokeWithRetry<{ efficiency: number }>('calculate-sleep-efficiency', { userId }),
   
   fixUnitConversions: () =>
-    invokeWithRetry<{ updated: number }>('fix-unit-conversions', {}),
+    invokeWithRetry<{ updated: number; skipped?: number; total?: number }>('fix-unit-conversions'),
+  
+  fixDuplicateLabResults: () =>
+    invokeWithRetry<{ deleted: number }>('fix-duplicate-lab-results'),
   
   generateRecommendations: () =>
     invokeWithRetry<{ recommendations: string; context: unknown }>('generate-health-recommendations', {}),
@@ -145,6 +160,9 @@ export const healthApi = {
   
   importAppleHealth: (userId: string, filePath: string) =>
     invokeWithRetry<{ results: unknown }>('apple-health-import', { userId, filePath }),
+  
+  analyzeBiomarkerTrends: (biomarkerId: string) =>
+    invokeWithRetry<any>('analyze-biomarker-trends', { biomarkerId }),
 };
 
 // ===== AI TRAINING =====
@@ -195,6 +213,14 @@ export const aiApi = {
   
   getDailyWorkout: (userId: string, date?: string) =>
     invokeWithRetry<{ success: boolean; workout?: unknown }>('get-daily-ai-workout', { user_id: userId, date }),
+  
+  analyzeFitnessData: (imageUrl: string, userId: string, goalId?: string, measurementDate?: string) =>
+    invokeWithRetry<{ success: boolean; saved?: boolean; message?: string; analysis?: unknown; savedMeasurements?: unknown[] }>('analyze-fitness-data', { 
+      imageUrl, 
+      userId, 
+      goalId, 
+      measurementDate 
+    }),
 };
 
 // ===== INBODY =====
@@ -213,6 +239,9 @@ export const jobsApi = {
   
   retryStuckWebhooks: () =>
     invokeWithRetry<{ processed: number }>('retry-stuck-webhooks'),
+  
+  trigger: () =>
+    invokeWithRetry<{ success: boolean }>('job-worker'),
 };
 
 // ===== UNIFIED API OBJECT =====

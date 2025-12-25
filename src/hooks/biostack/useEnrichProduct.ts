@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { supplementsApi } from '@/lib/api';
 
 export function useEnrichProduct() {
   const queryClient = useQueryClient();
@@ -9,9 +9,7 @@ export function useEnrichProduct() {
     mutationFn: async (productId: string) => {
       console.log('[ENRICH-PRODUCT] Starting enrichment for:', productId);
       
-      const { data, error } = await supabase.functions.invoke('enrich-supplement-info', {
-        body: { productId }
-      });
+      const { data, error } = await supplementsApi.enrich(productId);
 
       if (error) {
         console.error('[ENRICH-PRODUCT] Edge function error:', error);

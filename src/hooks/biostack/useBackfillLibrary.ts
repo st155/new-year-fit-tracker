@@ -1,17 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { supplementsApi } from '@/lib/api';
 
 export function useBackfillLibrary() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('backfill-supplement-library');
-      
+      const { data, error } = await supplementsApi.backfillLibrary();
       if (error) throw error;
-      if (!data.success) throw new Error('Backfill failed');
-      
+      if (!data?.success) throw new Error('Backfill failed');
       return data;
     },
     onSuccess: (data) => {

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, Moon, Zap, Activity, Calendar } from 'lucide-react';
 import { format, subDays, subMonths } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { terraApi } from '@/lib/api';
 
 interface WhoopMetric {
   metric_name: string;
@@ -139,7 +140,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
 
       if (!hasTodayRecovery && !syncAttempted) {
         try {
-          await supabase.functions.invoke('terra-integration', { body: { action: 'sync-data' } });
+          await terraApi.syncData();
           setSyncAttempted(true);
           // Дадим API немного времени и перечитаем
           setTimeout(() => fetchWhoopMetrics(), 1500);

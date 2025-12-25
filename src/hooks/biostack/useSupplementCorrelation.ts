@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supplementsApi } from '@/lib/api';
 
 interface CorrelationData {
   success: boolean;
@@ -49,12 +49,9 @@ export function useSupplementCorrelation(
     queryFn: async () => {
       if (!stackItemId) return { success: false, error: 'No stack item selected' };
       
-      const { data, error } = await supabase.functions.invoke('calculate-correlation', {
-        body: { stackItemId, timeframeMonths }
-      });
-      
+      const { data, error } = await supplementsApi.calculateCorrelation(stackItemId, timeframeMonths);
       if (error) throw error;
-      return data;
+      return data as CorrelationData;
     },
     enabled: !!stackItemId,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
