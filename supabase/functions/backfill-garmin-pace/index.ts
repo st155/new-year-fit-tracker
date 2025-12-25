@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     console.log('🏃 Starting Garmin pace backfill (sliding window)', { userId, limit });
 
     // Get Garmin running activity webhooks
+    // Note: userId filter uses reference_id in payload (app user_id), not user_id column (terra_user_id)
     let query = supabase
       .from('terra_webhooks_raw')
       .select('id, webhook_id, user_id, payload, created_at')
@@ -87,7 +88,8 @@ Deno.serve(async (req) => {
       .limit(limit);
 
     if (userId) {
-      query = query.eq('user_id', userId);
+      // Filter by reference_id in payload (app user_id)
+      query = query.eq('payload->user->>reference_id', userId);
     }
 
     const { data: webhooks, error: webhooksError } = await query;
