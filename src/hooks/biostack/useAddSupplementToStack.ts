@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { supplementsApi } from '@/lib/api';
 
 interface AddSupplementToStackParams {
   supplementName: string;
@@ -104,12 +105,7 @@ export function useAddSupplementToStack() {
       // Step 4: Auto-link biomarkers via edge function
       if (newStackItem?.id) {
         try {
-          await supabase.functions.invoke('auto-link-biomarkers', {
-            body: { 
-              stackItemId: newStackItem.id, 
-              supplementName: params.supplementName 
-            }
-          });
+          await supplementsApi.autoLinkBiomarkers(newStackItem.id, params.supplementName);
         } catch (e) {
           console.log('Auto-link attempted, continuing...', e);
         }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { documentsApi, healthApi } from '@/lib/api';
 
 export interface Biomarker {
   id: string;
@@ -91,14 +92,11 @@ export function useLabTestResults(documentId?: string) {
 
   const parseDocument = useMutation({
     mutationFn: async (documentId: string) => {
-      const { data, error } = await supabase.functions.invoke('parse-lab-report', {
-        body: { documentId }
-      });
-
+      const { data, error } = await documentsApi.parseLabReport(documentId);
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['lab-test-results'] });
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       toast({
@@ -117,14 +115,11 @@ export function useLabTestResults(documentId?: string) {
 
   const rematchBiomarkers = useMutation({
     mutationFn: async (documentId?: string) => {
-      const { data, error } = await supabase.functions.invoke('rematch-biomarkers', {
-        body: { documentId }
-      });
-
+      const { data, error } = await documentsApi.rematchBiomarkers(documentId);
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['lab-test-results'] });
       toast({
         title: 'Пересопоставление завершено',
@@ -157,10 +152,7 @@ export function useBiomarkerTrends(biomarkerId?: string) {
     queryFn: async () => {
       if (!biomarkerId) return null;
 
-      const { data, error } = await supabase.functions.invoke('analyze-biomarker-trends', {
-        body: { biomarkerId }
-      });
-
+      const { data, error } = await healthApi.analyzeBiomarkerTrends(biomarkerId);
       if (error) throw error;
       return data;
     },

@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DocumentCard } from './DocumentCard';
 import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect } from 'react';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { documentsApi } from '@/lib/api';
 
 interface DocumentsGridProps {
   filterType?: string;
@@ -52,9 +52,7 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
   // Retry mutation for lab reports
   const retryMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await supabase.functions.invoke('parse-lab-report', {
-        body: { documentId }
-      });
+      const { error } = await documentsApi.parseLabReport(documentId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -71,13 +69,11 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
   const parseRecommendationsMutation = useMutation({
     mutationFn: async (documentId: string) => {
       setParsingDocId(documentId);
-      const { error, data } = await supabase.functions.invoke('parse-doctor-recommendations', {
-        body: { documentId }
-      });
+      const { data, error } = await documentsApi.parseRecommendations(documentId);
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       queryClient.invalidateQueries({ queryKey: ['recommendations-counts'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });

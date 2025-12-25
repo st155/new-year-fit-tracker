@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { terraApi, jobsApi } from '@/lib/api';
 
 interface MetricData {
   name: string;
@@ -330,15 +331,12 @@ export function IntegrationsDataDisplay() {
         description: `Запрашиваем данные для ${getProviderDisplayName(provider)}...`,
       });
 
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'sync' },
-      });
-
+      const { error } = await terraApi.integrate('sync');
       if (error) throw error;
 
       // Trigger job-worker immediately
       try {
-        await supabase.functions.invoke('job-worker');
+        await jobsApi.trigger();
       } catch (e) {
         console.warn('Failed to trigger job-worker:', e);
       }

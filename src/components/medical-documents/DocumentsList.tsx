@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { DocumentComparison } from './DocumentComparison';
+import { documentsApi } from '@/lib/api';
 
 const documentTypeLabels: Record<DocumentType, string> = {
   inbody: 'InBody',
@@ -57,10 +57,7 @@ export const DocumentsList = () => {
   const handleAnalyze = async (documentId: string) => {
     setAnalyzingDoc(documentId);
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-medical-document', {
-        body: { documentId }
-      });
-
+      const { error } = await documentsApi.analyze(documentId);
       if (error) throw error;
 
       toast({

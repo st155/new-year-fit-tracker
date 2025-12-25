@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { aiApi } from '@/lib/api';
 
 interface AIPhotoUploadProps {
   onDataExtracted?: (analysisResult: any) => void;
@@ -131,14 +132,12 @@ export function AIPhotoUpload({
     try {
       console.log('Starting AI analysis for:', imageUrl);
 
-      const { data, error } = await supabase.functions.invoke('analyze-fitness-data', {
-        body: {
-          imageUrl,
-          userId: user!.id,
-          goalId,
-          measurementDate: new Date().toISOString().split('T')[0]
-        }
-      });
+      const { data, error } = await aiApi.analyzeFitnessData(
+        imageUrl,
+        user!.id,
+        goalId,
+        new Date().toISOString().split('T')[0]
+      );
 
       if (error) {
         console.error('AI analysis error:', error);

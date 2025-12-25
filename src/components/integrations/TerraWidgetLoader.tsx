@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { PageLoader } from '@/components/ui/page-loader';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw, ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
+import { terraApi } from '@/lib/api';
 
 const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 минут — реальный лимит Terra Widget
 
@@ -33,9 +33,7 @@ export function TerraWidgetLoader() {
     try {
       console.log('🔄 Loading Terra widget for provider:', provider);
       
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'generate-widget-session', provider },
-      });
+      const { data, error } = await terraApi.generateWidget(provider || undefined);
 
       if (error) {
         console.error('❌ Terra widget error:', error);
