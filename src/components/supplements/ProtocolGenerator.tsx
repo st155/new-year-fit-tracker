@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { supplementsApiExtended } from "@/lib/api/client";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -77,20 +76,16 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
     setIsGenerating(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "generate-supplement-protocol",
-        {
-          body: {
-            user_id: user?.id,
-            goals: formData.goals,
-            health_conditions: formData.health_conditions,
-            dietary_restrictions: formData.dietary_restrictions,
-            protocol_duration_days: formData.protocol_duration_days,
-          },
-        }
-      );
+      const { data, error } = await supplementsApiExtended.generateProtocol({
+        user_id: user?.id,
+        goals: formData.goals,
+        health_conditions: formData.health_conditions,
+        dietary_restrictions: formData.dietary_restrictions,
+        protocol_duration_days: formData.protocol_duration_days,
+      });
 
       if (error) throw error;
+      if (!data) throw new Error('No data returned');
 
       setGeneratedProtocol(data.protocol);
       toast({ title: "Protocol generated successfully!" });

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Download, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -91,13 +92,11 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase.functions.invoke('terra-backfill', {
-        body: {
-          userId: user.id,
-          provider,
-          terraUserId,
-          startDaysAgo: daysAgo,
-        },
+      const { data, error } = await terraApi.backfill({
+        userId: user.id,
+        provider,
+        terraUserId: terraUserId!,
+        startDaysAgo: daysAgo,
       });
 
       if (error) throw error;
