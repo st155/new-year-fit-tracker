@@ -5164,6 +5164,39 @@ export type Database = {
         }
         Relationships: []
       }
+      terra_user_id_history: {
+        Row: {
+          created_at: string | null
+          first_seen_at: string | null
+          id: string
+          last_seen_at: string | null
+          provider: string
+          terra_user_id: string
+          user_id: string
+          webhook_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          provider: string
+          terra_user_id: string
+          user_id: string
+          webhook_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          provider?: string
+          terra_user_id?: string
+          user_id?: string
+          webhook_count?: number | null
+        }
+        Relationships: []
+      }
       terra_users: {
         Row: {
           created_at: string
