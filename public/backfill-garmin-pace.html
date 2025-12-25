@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backfill Garmin Pace</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    h1 {
+      margin-top: 0;
+      color: #22c55e;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #94a3b8;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: #22c55e;
+    }
+    .hint {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    button {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    button:hover {
+      background: #16a34a;
+    }
+    button:disabled {
+      background: #475569;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    .success {
+      background: #065f46;
+      border: 1px solid #10b981;
+    }
+    .error {
+      background: #7f1d1d;
+      border: 1px solid #ef4444;
+    }
+    .loading {
+      background: #422006;
+      border: 1px solid #f59e0b;
+    }
+    pre {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .stat-card {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #22c55e;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #0f172a;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #22c55e;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏃 Backfill Garmin Pace</h1>
+    <p>Эта утилита пересчитывает темп (pace) для Garmin тренировок на основе данных из вебхуков Terra.</p>
+    
+    <div class="form-group">
+      <label for="userId">User ID (UUID)</label>
+      <input type="text" id="userId" placeholder="f9e07829-...">
+      <div class="hint">Оставьте пустым для обработки всех пользователей</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="limit">Лимит записей</label>
+      <input type="number" id="limit" value="50" min="1" max="500">
+      <div class="hint">Максимальное количество вебхуков для обработки (рекомендуется 50-100)</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="batchSize">Размер batch</label>
+      <input type="number" id="batchSize" value="5" min="1" max="10">
+      <div class="hint">Количество записей в одном batch (меньше = меньше памяти, макс 10)</div>
+    </div>
+    
+    <button id="runBtn" onclick="runBackfill()">🚀 Запустить Backfill</button>
+    
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://ueykmmzmguzjppdudvef.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVleWttbXptZ3V6anBwZHVkdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTAwNjEsImV4cCI6MjA3NDAyNjA2MX0.nSc_MFoU6rAsyw0c8Mv-BD0MPuGAsuDXUckvMUyYX94';
+
+    async function runBackfill() {
+      const btn = document.getElementById('runBtn');
+      const status = document.getElementById('status');
+      
+      const userId = document.getElementById('userId').value.trim();
+      const limit = parseInt(document.getElementById('limit').value) || 50;
+      const batchSize = parseInt(document.getElementById('batchSize').value) || 5;
+      
+      btn.disabled = true;
+      status.style.display = 'block';
+      status.className = 'loading';
+      status.innerHTML = `
+        ⏳ Выполняется backfill...
+        <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+        <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
+          Параметры: limit=${limit}, batchSize=${batchSize}${userId ? ', userId=' + userId.substring(0, 8) + '...' : ''}
+        </div>
+      `;
+      
+      const startTime = Date.now();
+      
+      try {
+        console.log('Starting backfill request...', { userId, limit, batchSize });
+        
+        const body = { limit, batchSize };
+        if (userId) body.userId = userId;
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/backfill-garmin-pace`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        
+        console.log('Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        
+        if (response.ok && data.success) {
+          status.className = 'success';
+          status.innerHTML = `
+            <strong>✅ Успешно завершено за ${duration}с</strong>
+            
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-value">${data.processed || 0}</div>
+                <div class="stat-label">Обработано</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${data.updated || 0}</div>
+                <div class="stat-label">Обновлено</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${data.batches || 0}</div>
+                <div class="stat-label">Batch-ей</div>
+              </div>
+            </div>
+            
+            ${data.errors && data.errors.length > 0 ? `
+              <div style="margin-top: 15px; color: #fbbf24;">
+                ⚠️ Ошибки (${data.errors.length}):
+                <pre>${data.errors.slice(0, 10).join('\n')}</pre>
+              </div>
+            ` : ''}
+            
+            <details style="margin-top: 15px;">
+              <summary style="cursor: pointer; color: #94a3b8;">Полный ответ</summary>
+              <pre>${JSON.stringify(data, null, 2)}</pre>
+            </details>
+          `;
+        } else {
+          throw new Error(data.error || data.message || JSON.stringify(data));
+        }
+      } catch (error) {
+        console.error('Backfill error:', error);
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        
+        status.className = 'error';
+        status.innerHTML = `
+          <strong>❌ Ошибка (${duration}с)</strong><br>
+          ${error.message || 'Network error'}
+          <pre>Возможные причины:
+1. Supabase временно недоступен
+2. Превышен лимит памяти (уменьшите batchSize)
+3. Нет данных для обработки
+
+Ошибка: ${error.toString()}</pre>
+        `;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
