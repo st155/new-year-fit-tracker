@@ -5,6 +5,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SupplementInfoCard } from "@/components/biostack/SupplementInfoCard";
+import { supplementsApi } from "@/lib/api";
 
 type ScanStep = 'idle' | 'processing' | 'enriching' | 'results';
 
@@ -30,19 +31,11 @@ export function BarcodeScanner() {
     setScanStep('processing');
     try {
       // Step 1: Scan barcode
-      const { data, error } = await supabase.functions.invoke(
-        "scan-supplement-barcode",
-        {
-          body: {
-            barcode,
-            create_if_not_found: true,
-          },
-        }
-      );
+      const { data, error } = await supplementsApi.scanBarcode(barcode, true);
 
       if (error) throw error;
 
-      if (data.found) {
+      if (data?.found) {
         setScannedProduct(data.product);
         
         // Add to library automatically
@@ -74,19 +67,14 @@ export function BarcodeScanner() {
         
         // Step 2: Enrich product data
         setScanStep('enriching');
-        const { data: enrichData, error: enrichError } = await supabase.functions.invoke(
-          "enrich-supplement-info",
-          {
-            body: { productId: data.product.id }
-          }
-        );
+        const { data: enrichData, error: enrichError } = await supplementsApi.enrich(data.product.id);
 
         if (enrichError) {
           console.error("Enrichment failed:", enrichError);
           // Continue with basic product data
           setEnrichedProduct(data.product);
         } else {
-          setEnrichedProduct(enrichData.product);
+          setEnrichedProduct(enrichData?.product);
         }
 
         setScanStep('results');

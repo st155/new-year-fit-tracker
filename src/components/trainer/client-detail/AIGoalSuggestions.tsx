@@ -19,6 +19,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { adminApi } from '@/lib/api';
 
 interface AIGoalSuggestion {
   id: string;
@@ -82,9 +83,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
   const generateSuggestions = async (force = false) => {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('trainer-ai-suggest-adjustments', {
-        body: { clientId, forceRegenerate: force }
-      });
+      const { data, error } = await adminApi.trainerSuggestAdjustments(clientId, force);
 
       if (error) throw error;
 
@@ -124,13 +123,11 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
         actionData.notes = 'Приостановлено по рекомендации AI';
       }
 
-      const { data, error } = await supabase.functions.invoke('trainer-ai-execute', {
-        body: {
-          trainerId,
-          clientId,
-          actions: [actionData],
-          autoConfirm: true
-        }
+      const { data, error } = await adminApi.trainerExecute({
+        trainerId,
+        clientId,
+        actions: [actionData],
+        autoConfirm: true
       });
 
       if (error) throw error;

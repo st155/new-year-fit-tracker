@@ -7,9 +7,9 @@ import { useImagingTimeline } from "@/hooks/medical-documents/useImagingTimeline
 import { Stethoscope, ChevronDown, MapPin, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { documentsApi } from "@/lib/api";
 
 const severityColors = {
   normal: 'bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-300',
@@ -32,7 +32,7 @@ export const ImagingTimeline = () => {
 
   const reclassifyMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('reclassify-imaging-documents');
+      const { data, error } = await documentsApi.reclassifyImaging();
       if (error) throw error;
       return data;
     },

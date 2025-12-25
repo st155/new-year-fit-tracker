@@ -1,15 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { healthApi } from '@/lib/api';
 
 export function useCleanupAppleHealth() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.functions.invoke('cleanup-apple-health', {
-        body: { userId },
-      });
+      const { data, error } = await healthApi.cleanupAppleHealth(userId);
 
       if (error) throw error;
       return data;

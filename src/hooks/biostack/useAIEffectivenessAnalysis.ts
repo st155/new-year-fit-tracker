@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { supplementsApi } from '@/lib/api';
 
 export interface BiomarkerComparison {
   biomarker: string;
@@ -41,23 +41,19 @@ export function useAIEffectivenessAnalysis() {
     setData(null);
 
     try {
-      const { data: result, error: fnError } = await supabase.functions.invoke(
-        'analyze-supplement-effectiveness',
-        {
-          body: { stackItemId, userId }
-        }
-      );
+      const { data: result, error: fnError } = await supplementsApi.analyzeEffectiveness(stackItemId, userId);
 
       if (fnError) {
         throw new Error(fnError.message);
       }
 
-      if (result.error) {
-        throw new Error(result.error);
+      const typedResult = result as AIAnalysisResult & { error?: string };
+      if (typedResult?.error) {
+        throw new Error(typedResult.error);
       }
 
-      setData(result as AIAnalysisResult);
-      return result as AIAnalysisResult;
+      setData(typedResult);
+      return typedResult;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ошибка анализа';
       setError(message);

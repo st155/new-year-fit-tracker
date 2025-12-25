@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorLogger } from '@/lib/error-logger';
+import { healthApi, aiApi } from '@/lib/api';
 
 interface TestResult {
   id: string;
@@ -380,12 +381,7 @@ export function AppTestSuite() {
 
   const testAppleHealthFunction = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('apple-health-import', {
-        body: {
-          userId: user?.id,
-          filePath: 'test/path'
-        }
-      });
+      const { data, error } = await healthApi.importAppleHealth(user!.id, 'test/path');
 
       if (error) {
         throw new Error(`Apple Health функция недоступна: ${error.message}`);
@@ -401,12 +397,7 @@ export function AppTestSuite() {
 
   const testAIAnalysisFunction = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-fitness-data', {
-        body: {
-          userId: user?.id,
-          imageUrl: 'test-url'
-        }
-      });
+      const { data, error } = await aiApi.analyzeFitnessData('test-url', user!.id);
 
       if (error && !error.message.includes('Missing imageUrl')) {
         throw new Error(`AI анализ недоступен: ${error.message}`);

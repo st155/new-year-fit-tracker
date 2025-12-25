@@ -89,14 +89,14 @@ export const terraApi = {
 
 // ===== SUPPLEMENTS =====
 export const supplementsApi = {
-  scan: (imageBase64: string) =>
-    invokeWithRetry<{ product: unknown; confidence: number }>('scan-supplement-bottle', { imageBase64 }),
+  scan: (frontImageBase64: string, backImageBase64?: string) =>
+    invokeWithRetry<{ success: boolean; extracted?: any; suggestions?: any; quick_match?: boolean; productId?: string; error?: string }>('scan-supplement-bottle', { frontImageBase64, backImageBase64 }),
   
-  scanBarcode: (barcode: string) =>
-    invokeWithRetry<{ product: unknown }>('scan-supplement-barcode', { barcode }),
+  scanBarcode: (barcode: string, createIfNotFound?: boolean) =>
+    invokeWithRetry<{ found: boolean; product?: any }>('scan-supplement-barcode', { barcode, create_if_not_found: createIfNotFound }),
   
-  enrich: (productId: string) =>
-    invokeWithRetry<{ success: boolean; enrichedData: unknown; error?: string }>('enrich-supplement-info', { productId }),
+  enrich: (productId: string, labelData?: any) =>
+    invokeWithRetry<{ success: boolean; product?: any; enrichedData?: any; error?: string }>('enrich-supplement-info', { productId, labelData }),
   
   calculateCorrelation: (stackItemId: string, timeframeMonths?: number) =>
     invokeWithRetry<unknown>('calculate-correlation', { stackItemId, timeframeMonths }),
@@ -112,6 +112,9 @@ export const supplementsApi = {
   
   processPhoto: (imageBase64: string) =>
     invokeWithRetry<{ success: boolean; processedImage?: string; error?: string }>('process-supplement-photo', { image: imageBase64 }),
+  
+  analyzeEffectiveness: (stackItemId: string, userId: string) =>
+    invokeWithRetry<unknown>('analyze-supplement-effectiveness', { stackItemId, userId }),
 };
 
 // ===== MEDICAL DOCUMENTS =====
@@ -136,6 +139,9 @@ export const documentsApi = {
   
   migrateToMedicalDocuments: (action: string) =>
     invokeWithRetry<{ total_migrated: number; inbody?: { migrated: number; total: number; errors?: unknown[] }; photos?: { migrated: number; total: number; errors?: unknown[] } }>('migrate-to-medical-documents', { action }),
+  
+  reclassifyImaging: () =>
+    invokeWithRetry<{ reclassified: number }>('reclassify-imaging-documents'),
 };
 
 // ===== HEALTH ANALYSIS =====
@@ -175,6 +181,15 @@ export const healthApi = {
   
   recalculateConfidence: (userId: string, metricName?: string) =>
     invokeWithRetry<{ success: boolean }>('recalculate-confidence', { user_id: userId, metric_name: metricName }),
+  
+  runProtocolTests: (userId: string) =>
+    invokeWithRetry<{ test_data: { protocols_created: number; alerts_created: number } }>('run-protocol-tests', { userId }),
+  
+  cleanProtocolTests: (userId: string) =>
+    invokeWithRetry<{ deleted_count: number }>('clean-protocol-tests', { userId }),
+  
+  cleanupAppleHealth: (userId: string) =>
+    invokeWithRetry<{ deletedMetrics: number }>('cleanup-apple-health', { userId }),
 };
 
 // ===== AI TRAINING =====
@@ -210,6 +225,13 @@ export const adminApi = {
         data: { targetUserId, providerFilter } 
       }),
   },
+  
+  trainerSuggestAdjustments: (clientId: string, forceRegenerate?: boolean) =>
+    invokeWithRetry<{ analysis_summary?: string; suggestions_count?: number }>('trainer-ai-suggest-adjustments', { clientId, forceRegenerate }),
+  
+  trainerExecute: (params: { trainerId: string; clientId?: string; actions?: unknown[]; autoConfirm?: boolean }) =>
+    invokeWithRetry<{ success: boolean }>('trainer-ai-execute', params),
+  
   reprocessWebhook: (webhookId: string) =>
     invokeWithRetry<{ success: boolean }>('reprocess-webhook', { webhookId }),
 };

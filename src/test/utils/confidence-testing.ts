@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { healthApi } from '@/lib/api';
 
 // Mock metric data for testing
 export const mockMetricData = {
@@ -45,12 +46,10 @@ export async function testConfidenceCalculation() {
     if (insertError) throw insertError;
 
     // 2. Trigger confidence calculation
-    const { error: calcError } = await supabase.functions.invoke('recalculate-confidence', {
-      body: {
-        user_id: mockMetricData.user_id,
-        metric_name: 'Test Metric',
-      },
-    });
+    const { error: calcError } = await healthApi.recalculateConfidence(
+      mockMetricData.user_id,
+      'Test Metric'
+    );
 
     if (calcError) throw calcError;
 
@@ -133,9 +132,7 @@ export async function testRateLimiting() {
   try {
     const results = await Promise.allSettled(
       requests.map(() =>
-        supabase.functions.invoke('recalculate-confidence', {
-          body: { user_id: mockMetricData.user_id },
-        })
+        healthApi.recalculateConfidence(mockMetricData.user_id)
       )
     );
 
@@ -158,15 +155,10 @@ export async function testRateLimiting() {
 // Test: Idempotency
 export async function testIdempotency() {
   try {
-    const requestBody = {
-      user_id: mockMetricData.user_id,
-      metric_name: 'Weight',
-    };
-
     // Send same request twice
     const [result1, result2] = await Promise.all([
-      supabase.functions.invoke('recalculate-confidence', { body: requestBody }),
-      supabase.functions.invoke('recalculate-confidence', { body: requestBody }),
+      healthApi.recalculateConfidence(mockMetricData.user_id, 'Weight'),
+      healthApi.recalculateConfidence(mockMetricData.user_id, 'Weight'),
     ]);
 
     // Check if only one job was created
