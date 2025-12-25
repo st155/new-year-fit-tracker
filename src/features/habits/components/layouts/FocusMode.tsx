@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatDuration, getTimeBasedTheme } from '@/lib/habit-utils-v3';
-import { HabitCelebration } from '@/components/habits/HabitCelebration';
+import { HabitCelebration } from '../legacy/HabitCelebration';
 
 interface FocusModeProps {
   habits: any[];

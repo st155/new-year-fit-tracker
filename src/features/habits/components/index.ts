@@ -31,7 +31,7 @@ export { XPIndicator } from './gamification/XPIndicator';
 // Widgets
 export { CircularProgress } from './widgets/CircularProgress';
 export { HabitSparklineWidget } from './widgets/HabitSparklineWidget';
-export { HabitWidgetCard } from './widgets/HabitWidgetCard';
+export { HabitWidgetCard as HabitWidgetCardV3 } from './widgets/HabitWidgetCard';
 export { DailyMeasurementInlineWidget } from './widgets/DailyMeasurementInlineWidget';
 export { DurationCounterInlineWidget } from './widgets/DurationCounterInlineWidget';
 export { FastingInlineWidget } from './widgets/FastingInlineWidget';
@@ -67,3 +67,6 @@ export { NotificationSettings } from './settings/NotificationSettings';
 
 // Other
 export { HabitsInsightBanner } from './HabitsInsightBanner';
+
+// Legacy components (from src/components/habits)
+export * from './legacy';

@@ -1,3 +1,18 @@
+/**
+ * @deprecated Use useHabitsQuery from '@/features/habits' instead.
+ * This hook will be removed in a future version.
+ * 
+ * Example migration:
+ * ```typescript
+ * // Before
+ * import { useHabits } from '@/hooks/useHabits';
+ * const { habits, isLoading } = useHabits(userId);
+ * 
+ * // After
+ * import { useHabitsQuery } from '@/features/habits';
+ * const { data: habits, isLoading } = useHabitsQuery({ enabled: !!userId });
+ * ```
+ */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
