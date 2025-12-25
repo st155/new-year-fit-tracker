@@ -10,5 +10,7 @@ export {
   healthApi, 
   aiTrainingApi, 
   adminApi, 
-  jobsApi 
+  jobsApi,
+  aiApi,
+  inbodyApi,
 } from './client';

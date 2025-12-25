@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { supplementsApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 import heic2any from 'heic2any';
 
@@ -362,9 +363,7 @@ export function useBulkScanSupplements() {
       );
 
       const { data: scanData, error: scanError } = await Promise.race([
-        supabase.functions.invoke('scan-supplement-bottle', {
-          body: { imageBase64: base64Image }
-        }),
+        supplementsApi.scan(base64Image),
         timeoutPromise
       ]) as any;
 
@@ -440,9 +439,7 @@ export function useBulkScanSupplements() {
       }
 
       // Trigger enrichment (fire and forget)
-      supabase.functions.invoke('enrich-supplement-info', {
-        body: { productId }
-      }).catch(e => console.error('[BULK-SCAN] Enrichment failed:', e));
+      supplementsApi.enrich(productId).catch(e => console.error('[BULK-SCAN] Enrichment failed:', e));
 
       setItems(prev => prev.map(i => 
         i.id === item.id 

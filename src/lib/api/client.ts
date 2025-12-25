@@ -70,6 +70,18 @@ export const terraApi = {
   
   requestHistorical: (terraUserId: string, days?: number) =>
     invokeWithRetry<{ success: boolean }>('terra-request-historical', { terra_user_id: terraUserId, days }),
+  
+  integrate: (action: string, provider?: string) =>
+    invokeWithRetry<{ url?: string; success?: boolean }>('terra-integration', { action, provider }),
+  
+  generateWidget: (provider?: string) =>
+    invokeWithRetry<{ url: string }>('terra-integration', { action: 'generate-widget-session', provider }),
+  
+  syncData: () =>
+    invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'sync-data' }),
+  
+  deauthenticate: (provider: string) =>
+    invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'deauthenticate-user', provider }),
 };
 
 // ===== SUPPLEMENTS =====
@@ -144,6 +156,27 @@ export const adminApi = {
         data: { targetUserId, providerFilter } 
       }),
   },
+  reprocessWebhook: (webhookId: string) =>
+    invokeWithRetry<{ success: boolean }>('reprocess-webhook', { webhookId }),
+};
+
+// ===== AI =====
+export const aiApi = {
+  executeActions: (pendingActionId: string, conversationId?: string, actions?: unknown[]) =>
+    invokeWithRetry<{ success: boolean; results: { success: boolean; message?: string }[] }>('execute-ai-actions', { 
+      pendingActionId, 
+      conversationId, 
+      actions 
+    }),
+  
+  getDailyWorkout: (userId: string, date?: string) =>
+    invokeWithRetry<{ success: boolean; workout?: unknown }>('get-daily-ai-workout', { user_id: userId, date }),
+};
+
+// ===== INBODY =====
+export const inbodyApi = {
+  parse: (images: string[], uploadId: string) =>
+    invokeWithRetry<{ success: boolean; analysis?: unknown; error?: string }>('parse-inbody-pdf', { images, uploadId }),
 };
 
 // ===== JOBS =====
@@ -167,6 +200,8 @@ export const api = {
   aiTraining: aiTrainingApi,
   admin: adminApi,
   jobs: jobsApi,
+  ai: aiApi,
+  inbody: inbodyApi,
 };
 
 export default api;

@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
@@ -181,12 +182,7 @@ export function TerraIntegration() {
       // Get Terra widget URL with provider specified
       console.log('🔄 Fetching Terra widget URL for provider:', provider);
       
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { 
-          action: 'generate-widget-session',
-          provider: provider, // Pass provider to get it in redirect URL
-        },
-      });
+      const { data, error } = await terraApi.generateWidget(provider);
       
       if (error) throw error;
       if (!data?.url) throw new Error('No widget URL received');
@@ -231,9 +227,7 @@ export function TerraIntegration() {
     });
     
     try {
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'generate-widget-session' },
-      });
+      const { data, error } = await terraApi.generateWidget();
       
       if (error) throw error;
       if (!data?.url) throw new Error('No widget URL received');
@@ -345,9 +339,7 @@ export function TerraIntegration() {
         description: 'Удаляем старый токен авторизации',
       });
       
-      const { error: deauthError } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'deauthenticate-user', provider },
-      });
+      const { error: deauthError } = await terraApi.deauthenticate(provider);
       
       if (deauthError) {
         console.warn('⚠️ Deauth before reconnect failed:', deauthError);
@@ -419,9 +411,7 @@ export function TerraIntegration() {
 
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'sync-data' },
-      });
+      const { data, error } = await terraApi.syncData();
 
       if (error) throw error;
 
@@ -485,9 +475,7 @@ export function TerraIntegration() {
 
     try {
       // Используем deauthenticate-user вместо disconnect для полного удаления
-      const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'deauthenticate-user', provider },
-      });
+      const { error } = await terraApi.deauthenticate(provider);
 
       if (error) throw error;
 
