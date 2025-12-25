@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dumbbell, Heart, TrendingUp, Weight, Activity, Target, Edit, Plus, Calendar } from 'lucide-react';
-import { formatMeasurement } from '@/lib/units';
+import { formatMeasurement, formatStrengthGoal, isStrengthWeightGoal } from '@/lib/units';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,9 @@ interface Goal {
   goal_type: string;
   target_value: number;
   target_unit: string;
+  target_reps?: number | null;
   current_value: number;
+  current_reps?: number | null;
   progress_percentage: number;
   last_measurement_date: string | null;
   measurements_count: number;
@@ -91,13 +93,17 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
             <div>
               <span className="text-muted-foreground">Текущее: </span>
               <span className="font-semibold">
-                {formatMeasurement(goal.current_value || 0, goal.target_unit)}
+                {isStrengthWeightGoal(goal.goal_type, goal.target_unit)
+                  ? formatStrengthGoal(goal.current_value || 0, goal.target_unit, goal.current_reps)
+                  : formatMeasurement(goal.current_value || 0, goal.target_unit)}
               </span>
             </div>
             <div>
               <span className="text-muted-foreground">Цель: </span>
               <span className="font-semibold">
-                {formatMeasurement(goal.target_value, goal.target_unit)}
+                {isStrengthWeightGoal(goal.goal_type, goal.target_unit)
+                  ? formatStrengthGoal(goal.target_value, goal.target_unit, goal.target_reps)
+                  : formatMeasurement(goal.target_value, goal.target_unit)}
               </span>
             </div>
           </div>

@@ -2187,6 +2187,7 @@ export type Database = {
           goal_type: string
           id: string
           is_personal: boolean | null
+          target_reps: number | null
           target_unit: string | null
           target_value: number | null
           updated_at: string
@@ -2199,6 +2200,7 @@ export type Database = {
           goal_type: string
           id?: string
           is_personal?: boolean | null
+          target_reps?: number | null
           target_unit?: string | null
           target_value?: number | null
           updated_at?: string
@@ -2211,6 +2213,7 @@ export type Database = {
           goal_type?: string
           id?: string
           is_personal?: boolean | null
+          target_reps?: number | null
           target_unit?: string | null
           target_value?: number | null
           updated_at?: string
@@ -3907,6 +3910,7 @@ export type Database = {
           measurement_date: string
           notes: string | null
           photo_url: string | null
+          reps: number | null
           screenshot_url: string | null
           source: string | null
           unit: string
@@ -3923,6 +3927,7 @@ export type Database = {
           measurement_date?: string
           notes?: string | null
           photo_url?: string | null
+          reps?: number | null
           screenshot_url?: string | null
           source?: string | null
           unit: string
@@ -3939,6 +3944,7 @@ export type Database = {
           measurement_date?: string
           notes?: string | null
           photo_url?: string | null
+          reps?: number | null
           screenshot_url?: string | null
           source?: string | null
           unit?: string

@@ -62,6 +62,26 @@ export function formatMeasurement(value: number, unit: string): string {
   return `${value} ${mapping.display}`;
 }
 
+/**
+ * Format strength goal with reps: "105 кг × 1" or "60 кг × 8"
+ */
+export function formatStrengthGoal(value: number, unit: string, reps?: number | null): string {
+  if (reps && (unit === 'кг' || unit === 'kg')) {
+    if (reps === 1) {
+      return `${value} кг (1RM)`;
+    }
+    return `${value} кг × ${reps}`;
+  }
+  return formatMeasurement(value, unit);
+}
+
+/**
+ * Check if a goal is a strength-type goal that uses weight × reps format
+ */
+export function isStrengthWeightGoal(goalType: string, unit: string): boolean {
+  return (goalType === 'strength' && (unit === 'кг' || unit === 'kg'));
+}
+
 export const COMMON_UNITS_BY_TYPE: Record<string, string[]> = {
   strength: ['раз', 'кг', 'сек'],
   cardio: ['мин', 'км', 'мл/кг/мин'],
