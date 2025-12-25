@@ -13,7 +13,7 @@ import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOv
 import { DifficultySelectorDialog } from "@/components/challenge/DifficultySelectorDialog";
 import { DifficultyBadge } from "@/components/challenge/DifficultyBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List } from "lucide-react";
+import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -259,7 +259,7 @@ export default function ChallengeDetail() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
                   <Calendar className="h-3.5 w-3.5" />
@@ -285,6 +285,21 @@ export default function ChallengeDetail() {
                 </div>
                 <p className="text-2xl font-bold text-white">9</p>
               </div>
+              {isParticipant && (
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(`/challenges/${id}/report${daysLeft > 0 ? '?preview=true' : ''}`)}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 h-auto flex flex-col items-start hover:bg-white/20"
+                >
+                  <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+                    <FileText className="h-3.5 w-3.5" />
+                    {daysLeft > 0 ? "Превью" : "Итоги"}
+                  </div>
+                  <p className="text-sm font-bold text-white">
+                    {daysLeft > 0 ? "Отчёт" : "Смотреть"}
+                  </p>
+                </Button>
+              )}
             </div>
           </div>
         </div>

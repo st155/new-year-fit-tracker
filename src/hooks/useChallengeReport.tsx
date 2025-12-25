@@ -77,9 +77,19 @@ export interface ChallengeReport {
   joinedAt: string;
 }
 
-export function useChallengeReport(challengeId: string | undefined, userId: string | undefined) {
+export interface ChallengeReportOptions {
+  preview?: boolean;
+}
+
+export function useChallengeReport(
+  challengeId: string | undefined, 
+  userId: string | undefined,
+  options?: ChallengeReportOptions
+) {
+  const isPreview = options?.preview ?? false;
+
   return useQuery({
-    queryKey: ["challenge-report", challengeId, userId],
+    queryKey: ["challenge-report", challengeId, userId, isPreview],
     queryFn: async (): Promise<ChallengeReport | null> => {
       if (!challengeId || !userId) return null;
 
@@ -109,7 +119,11 @@ export function useChallengeReport(challengeId: string | undefined, userId: stri
       }
 
       const startDate = new Date(challenge.start_date);
-      const endDate = new Date(challenge.end_date);
+      // In preview mode, use today's date as the effective end date
+      const effectiveEndDate = isPreview 
+        ? new Date().toISOString().split('T')[0]
+        : challenge.end_date;
+      const endDate = new Date(effectiveEndDate);
       const durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const totalParticipants = challenge.challenge_participants?.length || 0;
 
@@ -171,7 +185,7 @@ export function useChallengeReport(challengeId: string | undefined, userId: stri
         .select("goal_id, value, measurement_date")
         .eq("user_id", userId)
         .gte("measurement_date", challenge.start_date)
-        .lte("measurement_date", challenge.end_date)
+        .lte("measurement_date", effectiveEndDate)
         .order("measurement_date", { ascending: true });
 
       // Process goals
@@ -237,7 +251,7 @@ export function useChallengeReport(challengeId: string | undefined, userId: stri
         .select("metric_name, value, measurement_date")
         .eq("user_id", userId)
         .gte("measurement_date", challenge.start_date)
-        .lte("measurement_date", challenge.end_date)
+        .lte("measurement_date", effectiveEndDate)
         .in("metric_name", ["steps", "active_calories", "workouts"]);
 
       // Calculate activity stats
@@ -259,7 +273,7 @@ export function useChallengeReport(challengeId: string | undefined, userId: stri
         .select("metric_name, value, measurement_date")
         .eq("user_id", userId)
         .gte("measurement_date", challenge.start_date)
-        .lte("measurement_date", challenge.end_date)
+        .lte("measurement_date", effectiveEndDate)
         .in("metric_name", ["recovery_score", "sleep_hours", "hrv", "resting_hr", "strain", "sleep_efficiency"]);
 
       // Calculate health averages
@@ -318,7 +332,7 @@ export function useChallengeReport(challengeId: string | undefined, userId: stri
         title: challenge.title,
         description: challenge.description,
         startDate: challenge.start_date,
-        endDate: challenge.end_date,
+        endDate: effectiveEndDate,
         totalParticipants,
         durationDays,
 

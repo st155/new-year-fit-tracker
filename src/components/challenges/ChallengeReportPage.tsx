@@ -1,6 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,13 +10,16 @@ import { GoalsProgressSection } from "./report/GoalsProgressSection";
 import { ActivitySummaryCard } from "./report/ActivitySummaryCard";
 import { HealthSummaryCard } from "./report/HealthSummaryCard";
 import { BadgesSection } from "./report/BadgesSection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function ChallengeReportPage() {
   const { id: challengeId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: report, isLoading, error } = useChallengeReport(challengeId, user?.id);
+  const isPreview = searchParams.get("preview") === "true";
+  const { data: report, isLoading, error } = useChallengeReport(challengeId, user?.id, { preview: isPreview });
 
   const handleShare = async () => {
     if (!report) return;
@@ -92,6 +95,15 @@ export function ChallengeReportPage() {
         animate={{ opacity: 1 }}
         className="container mx-auto px-4 py-6 space-y-6 max-w-4xl"
       >
+        {isPreview && (
+          <Alert className="border-warning/50 bg-warning/10">
+            <Eye className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-warning">
+              Это предварительный отчёт. Челлендж ещё продолжается — данные актуальны на сегодня.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <ReportHeader report={report} />
         
         <GoalsProgressSection 
