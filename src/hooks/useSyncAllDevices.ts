@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface SyncResult {
@@ -32,12 +33,10 @@ export function useSyncAllDevices() {
         
         // Sync body data (weight, body fat, etc.)
         try {
-          const { error: bodyError } = await supabase.functions.invoke('force-terra-sync', {
-            body: { provider, dataType: 'body' },
-          });
+          const { error: bodyError } = await terraApi.forceSync(provider, 'body');
           if (bodyError) throw bodyError;
           results.push({ provider: `${token.provider} (body)`, success: true });
-        } catch (error) {
+        } catch (error: any) {
           results.push({ 
             provider: `${token.provider} (body)`, 
             success: false, 
@@ -47,12 +46,10 @@ export function useSyncAllDevices() {
 
         // Sync daily data (steps, calories, distance, etc.)
         try {
-          const { error: dailyError } = await supabase.functions.invoke('force-terra-sync', {
-            body: { provider, dataType: 'daily' },
-          });
+          const { error: dailyError } = await terraApi.forceSync(provider, 'daily');
           if (dailyError) throw dailyError;
           results.push({ provider: `${token.provider} (daily)`, success: true });
-        } catch (error) {
+        } catch (error: any) {
           results.push({ 
             provider: `${token.provider} (daily)`, 
             success: false, 
@@ -62,12 +59,10 @@ export function useSyncAllDevices() {
 
         // Sync activity data (workouts from last 14 days)
         try {
-          const { error: activityError } = await supabase.functions.invoke('force-terra-sync', {
-            body: { provider, dataType: 'activity' },
-          });
+          const { error: activityError } = await terraApi.forceSync(provider, 'activity');
           if (activityError) throw activityError;
           results.push({ provider: `${token.provider} (activity)`, success: true });
-        } catch (error) {
+        } catch (error: any) {
           results.push({ 
             provider: `${token.provider} (activity)`, 
             success: false, 

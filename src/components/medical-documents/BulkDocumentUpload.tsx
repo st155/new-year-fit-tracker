@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
+import { documentsApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadState {
@@ -175,15 +176,10 @@ export function BulkDocumentUpload() {
         f.id === fileState.id ? { ...f, status: 'classifying', progress: 10 } : f
       ));
 
-      const { data: classification, error: classifyError } = await supabase.functions.invoke(
-        'ai-classify-document',
-        { 
-          body: { 
-            fileName: fileState.file.name,
-            fileContent: base64Content,
-            mimeType: fileState.file.type
-          } 
-        }
+      const { data: classification, error: classifyError } = await documentsApi.classifyDocument(
+        fileState.file.name,
+        base64Content,
+        fileState.file.type
       );
 
       if (classifyError) {
@@ -197,11 +193,16 @@ export function BulkDocumentUpload() {
         'training_program', 'other'
       ];
 
-      const aiClassification = classification || {
-        document_type: 'other' as DocumentType,
-        tags: [],
-        suggested_date: null,
-        confidence: 0,
+      const aiClassification: {
+        document_type: DocumentType;
+        tags: string[];
+        suggested_date: string | null;
+        confidence: number;
+      } = {
+        document_type: (classification?.document_type || 'other') as DocumentType,
+        tags: classification?.tags || [],
+        suggested_date: classification?.suggested_date || null,
+        confidence: classification?.confidence || 0,
       };
 
       // Fallback for invalid types
@@ -228,15 +229,10 @@ export function BulkDocumentUpload() {
         f.id === fileState.id ? { ...f, status: 'renaming', progress: 40 } : f
       ));
 
-      const { data: renameData } = await supabase.functions.invoke(
-        'ai-rename-document',
-        { 
-          body: { 
-            fileName: fileState.file.name,
-            documentType: aiClassification.document_type,
-            fileContent: base64Content
-          } 
-        }
+      const { data: renameData } = await documentsApi.renameDocument(
+        fileState.file.name,
+        aiClassification.document_type,
+        base64Content
       );
 
       const finalFileName = renameData?.suggestedName || fileState.file.name;
@@ -275,9 +271,7 @@ export function BulkDocumentUpload() {
         console.log('[BulkUpload] Parsing doctor recommendations for:', uploadedDoc.id);
         
         try {
-          await supabase.functions.invoke('parse-doctor-recommendations', {
-            body: { documentId: uploadedDoc.id }
-          });
+          await documentsApi.parseRecommendations(uploadedDoc.id);
           console.log('[BulkUpload] Doctor recommendations parsed successfully');
         } catch (parseError) {
           console.warn('[BulkUpload] Recommendation parsing failed (non-blocking):', parseError);

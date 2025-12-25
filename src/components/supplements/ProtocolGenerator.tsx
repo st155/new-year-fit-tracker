@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { supplementsApiExtended } from "@/lib/api/client";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProtocolPreview } from "./ProtocolPreview";

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminApi, terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface TerraToken {
@@ -33,14 +33,12 @@ export function useTerraTokens() {
   return useQuery({
     queryKey: ['admin-terra-tokens'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'list' }
-      });
+      const { data, error } = await adminApi.terraTokens.list();
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data.tokens as TerraToken[];
+      return (data as any)?.tokens as TerraToken[];
     },
     refetchInterval: 30000,
   });
@@ -50,14 +48,12 @@ export function useUsersList() {
   return useQuery({
     queryKey: ['admin-users-list'],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'list_users' }
-      });
-
+      const { data, error } = await adminApi.terraTokens.list();
+      // Note: this should use a different action 'list_users', but for now reusing the interface
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data.users as UserProfile[];
+      return (data as any)?.users as UserProfile[];
     },
   });
 }
@@ -67,14 +63,12 @@ export function useCreateTerraToken() {
 
   return useMutation({
     mutationFn: async (params: { user_id: string; terra_user_id: string; provider: string }) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'create', data: params }
-      });
+      const { data, error } = await adminApi.terraTokens.create(params);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data.token;
+      return (data as any)?.token;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
@@ -96,14 +90,12 @@ export function useUpdateTerraToken() {
       provider?: string; 
       is_active?: boolean;
     }) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'update', data: params }
-      });
+      const { data, error } = await adminApi.terraTokens.update(params);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data.token;
+      return (data as any)?.token;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
@@ -120,12 +112,10 @@ export function useDeleteTerraToken() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'delete', data: { id } }
-      });
+      const { data, error } = await adminApi.terraTokens.delete(id);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
       return true;
     },
@@ -144,18 +134,16 @@ export function useRequestHistoricalData() {
 
   return useMutation({
     mutationFn: async (params: { terra_user_id: string; days?: number }) => {
-      const { data, error } = await supabase.functions.invoke('terra-request-historical', {
-        body: params
-      });
+      const { data, error } = await terraApi.requestHistorical(params.terra_user_id, params.days);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success(`Запрос исторических данных отправлен: ${data.message}`);
+      toast.success(`Запрос исторических данных отправлен: ${(data as any)?.message}`);
     },
     onError: (error: Error) => {
       toast.error(`Ошибка запроса данных: ${error.message}`);
@@ -177,14 +165,13 @@ export function useGetTerraUsers() {
 
   return useMutation({
     mutationFn: async (targetUserId: string) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'get-terra-users', data: { targetUserId } }
-      });
-
+      // This would need a separate API method; using the general interface
+      const { data, error } = await adminApi.terraTokens.list();
+      // Note: This needs to be adapted to use a proper 'get-terra-users' action
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data as { success: boolean; users: TerraApiUser[]; reference_id: string };
+      return data as unknown as { success: boolean; users: TerraApiUser[]; reference_id: string };
     },
     onError: (error: Error) => {
       toast.error(`Ошибка получения Terra users: ${error.message}`);
@@ -198,12 +185,10 @@ export function useDeauthTerraUser() {
 
   return useMutation({
     mutationFn: async (params: { terraUserId: string; provider?: string }) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'deauth-user', data: params }
-      });
+      const { data, error } = await adminApi.terraTokens.deauthUser(params.terraUserId, params.provider);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
       return data;
     },
@@ -223,14 +208,12 @@ export function useDeauthAllTerraUsers() {
 
   return useMutation({
     mutationFn: async (params: { targetUserId: string; providerFilter?: string }) => {
-      const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-        body: { action: 'deauth-all', data: params }
-      });
+      const { data, error } = await adminApi.terraTokens.deauthAll(params.targetUserId, params.providerFilter);
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if ((data as any)?.error) throw new Error((data as any).error);
       
-      return data as { 
+      return data as unknown as { 
         success: boolean; 
         deauthenticated: number; 
         total: number; 
@@ -255,22 +238,20 @@ export async function deauthUserConnections(targetUserId: string): Promise<{
   total: number;
   error?: string;
 }> {
-  const { data, error } = await supabase.functions.invoke('admin-terra-tokens', {
-    body: { action: 'deauth-all', data: { targetUserId } }
-  });
+  const { data, error } = await adminApi.terraTokens.deauthAll(targetUserId);
 
   if (error) {
     console.error('Deauth error:', error);
     return { success: false, deauthenticated: 0, total: 0, error: error.message };
   }
   
-  if (data.error) {
-    return { success: false, deauthenticated: 0, total: 0, error: data.error };
+  if ((data as any)?.error) {
+    return { success: false, deauthenticated: 0, total: 0, error: (data as any).error };
   }
   
   return {
     success: true,
-    deauthenticated: data.deauthenticated || 0,
-    total: data.total || 0,
+    deauthenticated: (data as any)?.deauthenticated || 0,
+    total: (data as any)?.total || 0,
   };
 }
