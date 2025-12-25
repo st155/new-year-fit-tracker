@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, FileText } from 'lucide-react';
@@ -28,13 +28,22 @@ export const CreateChallengeDialogAI = ({
   const [selectedPreset, setSelectedPreset] = useState<ChallengePreset | null>(null);
   const [duration, setDuration] = useState(8);
   const [difficulty, setDifficulty] = useState(1);
-  const [disciplineCount, setDisciplineCount] = useState(3);
+  const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [targetAudience, setTargetAudience] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
 
   const difficultyMultipliers = [0.7, 1.0, 1.4, 1.8];
   const audienceMultipliers = [0.8, 1.0, 1.3, 1.6];
+
+  // Update selected disciplines when preset changes
+  useEffect(() => {
+    if (selectedPreset) {
+      // Default to first 4 disciplines (or all if less than 4)
+      const defaultCount = Math.min(4, selectedPreset.disciplines.length);
+      setSelectedDisciplines(selectedPreset.disciplines.slice(0, defaultCount).map(d => d.name));
+    }
+  }, [selectedPreset]);
 
   const generateChallengeName = () => {
     if (!selectedPreset) return '';
@@ -90,12 +99,15 @@ export const CreateChallengeDialogAI = ({
   const generateDisciplines = () => {
     if (!selectedPreset) return [];
     
-    return selectedPreset.disciplines.slice(0, disciplineCount).map((disc) => ({
-      name: disc.name,
-      type: disc.type,
-      benchmarkValue: calculateBenchmark(disc, difficulty, targetAudience),
-      unit: disc.unit,
-    }));
+    // Filter disciplines by selected names, maintaining original order
+    return selectedPreset.disciplines
+      .filter(disc => selectedDisciplines.includes(disc.name))
+      .map((disc) => ({
+        name: disc.name,
+        type: disc.type,
+        benchmarkValue: calculateBenchmark(disc, difficulty, targetAudience),
+        unit: disc.unit,
+      }));
   };
 
   const handleCreate = async () => {
@@ -200,7 +212,6 @@ export const CreateChallengeDialogAI = ({
                   onSelect={() => {
                     setSelectedPreset(preset);
                     setDuration(preset.defaultDuration);
-                    setDisciplineCount(Math.min(3, preset.disciplines.length));
                   }}
                 />
               ))}
@@ -220,9 +231,13 @@ export const CreateChallengeDialogAI = ({
                     onDurationChange={setDuration}
                     difficulty={difficulty}
                     onDifficultyChange={setDifficulty}
-                    disciplineCount={disciplineCount}
-                    onDisciplineCountChange={setDisciplineCount}
-                    maxDisciplines={selectedPreset.disciplines.length}
+                    selectedDisciplines={selectedDisciplines}
+                    onSelectedDisciplinesChange={setSelectedDisciplines}
+                    availableDisciplines={selectedPreset.disciplines.map(d => ({
+                      name: d.name,
+                      type: d.type,
+                      unit: d.unit,
+                    }))}
                     targetAudience={targetAudience}
                     onTargetAudienceChange={setTargetAudience}
                   />
@@ -247,7 +262,7 @@ export const CreateChallengeDialogAI = ({
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreate} disabled={isCreating}>
+                <Button onClick={handleCreate} disabled={isCreating || selectedDisciplines.length === 0}>
                   {isCreating ? 'Creating...' : 'Create Challenge'}
                 </Button>
               </div>

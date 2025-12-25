@@ -69,16 +69,17 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
     category: 'Recovery',
     defaultDuration: 12,
     disciplines: [
+      // Priority 1: Primary WHOOP recovery metrics
       {
-        name: 'Sleep Hours',
+        name: 'Recovery Score',
         type: 'recovery',
-        baseValue: 8.0,
-        unit: 'hours',
-        scalingFactor: 1.0,
-        direction: 'higher', // Changed from 'target' - more sleep is better for recovery
-        min: 6,
-        max: 10,
-        benchmarkKey: 'whoop_sleep', // WHOOP-compatible
+        baseValue: 75,
+        unit: '%',
+        scalingFactor: 1.2,
+        direction: 'higher',
+        min: 50,
+        max: 100,
+        benchmarkKey: 'whoop_recovery',
       },
       {
         name: 'HRV (Heart Rate Variability)',
@@ -86,21 +87,10 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         baseValue: 70,
         unit: 'ms',
         scalingFactor: 1.3,
-        direction: 'higher', // Higher HRV = better recovery
+        direction: 'higher',
         min: 30,
         max: 150,
-        benchmarkKey: 'whoop_hrv', // WHOOP-compatible
-      },
-      {
-        name: 'Recovery Score',
-        type: 'recovery',
-        baseValue: 75,
-        unit: '%',
-        scalingFactor: 1.2,
-        direction: 'higher', // Higher recovery = better
-        min: 50,
-        max: 100,
-        benchmarkKey: 'whoop_recovery', // WHOOP-compatible
+        benchmarkKey: 'whoop_hrv',
       },
       {
         name: 'Resting Heart Rate',
@@ -108,10 +98,56 @@ export const CHALLENGE_PRESETS: ChallengePreset[] = [
         baseValue: 58,
         unit: 'bpm',
         scalingFactor: 1.0,
-        direction: 'lower', // Lower RHR = better cardiovascular fitness
+        direction: 'lower',
         min: 38,
         max: 75,
-        benchmarkKey: 'whoop_rhr', // WHOOP-compatible
+        benchmarkKey: 'whoop_rhr',
+      },
+      // Priority 2: Sleep metrics
+      {
+        name: 'Sleep Hours',
+        type: 'recovery',
+        baseValue: 8.0,
+        unit: 'hours',
+        scalingFactor: 1.0,
+        direction: 'higher',
+        min: 6,
+        max: 10,
+        benchmarkKey: 'whoop_sleep',
+      },
+      {
+        name: 'Sleep Performance',
+        type: 'recovery',
+        baseValue: 85,
+        unit: '%',
+        scalingFactor: 1.1,
+        direction: 'higher',
+        min: 50,
+        max: 100,
+        benchmarkKey: 'whoop_sleep_performance',
+      },
+      {
+        name: 'Sleep Consistency',
+        type: 'recovery',
+        baseValue: 80,
+        unit: '%',
+        scalingFactor: 1.1,
+        direction: 'higher',
+        min: 50,
+        max: 100,
+        benchmarkKey: 'whoop_sleep_consistency',
+      },
+      // Priority 3: Additional metrics
+      {
+        name: 'Respiratory Rate',
+        type: 'recovery',
+        baseValue: 14,
+        unit: 'breaths/min',
+        scalingFactor: 1.0,
+        direction: 'lower',
+        min: 10,
+        max: 20,
+        benchmarkKey: 'whoop_respiratory',
       },
       {
         name: 'Body Fat Percentage',
