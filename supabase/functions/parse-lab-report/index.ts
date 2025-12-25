@@ -717,7 +717,7 @@ Return ONLY valid JSON (no markdown):
 
         // Prepare data for inbody_analyses table
         const inbodyRecord = {
-          user_id: user.id,
+          user_id: user!.id,
           document_id: documentId,
           test_date: testDate,
           weight: normalizeNumber(metrics.weight),
@@ -763,7 +763,7 @@ Return ONLY valid JSON (no markdown):
 
         // Also save key metrics to body_composition table for unified tracking
         const bodyCompRecord = {
-          user_id: user.id,
+          user_id: user!.id,
           measurement_date: testDate.split('T')[0],
           weight: inbodyRecord.weight,
           body_fat_percentage: inbodyRecord.percent_body_fat,
@@ -941,7 +941,7 @@ Extract all available metrics. Common metric names:
           const { data: insertedResult, error: insertError } = await supabase
             .from('lab_test_results')
             .insert({
-              user_id: user.id,
+              user_id: user!.id,
               document_id: documentId,
               biomarker_id: biomarkerMaster?.id || null,
               raw_test_name: metric.name,
@@ -1095,7 +1095,7 @@ Extract all available metrics. Common metric names:
           const { data: insertedResult, error: insertError } = await supabase
             .from('lab_test_results')
             .insert({
-              user_id: user.id,
+              user_id: user!.id,
               document_id: documentId,
               biomarker_id: biomarkerMaster?.id || null,
               raw_test_name: biomarker.name,
@@ -1239,7 +1239,7 @@ Extract all available metrics. Common metric names:
         await supabase
           .from('biomarker_ai_analysis')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', user!.id)
           .in('biomarker_id', biomarkerIds);
         console.log(`[PARSE-LAB-REPORT] Invalidated AI cache for ${biomarkerIds.length} biomarkers`);
       }
@@ -1251,96 +1251,26 @@ Extract all available metrics. Common metric names:
     }
 
     // Enhanced response format
-    return new Response(
-      JSON.stringify({
-        success: true,
-        category: documentCategory,
-        ai_summary: aiSummary,
-        results: documentCategory === 'imaging_report' ? {
-          findings: results
-        } : {
-          biomarkers: results.map(r => ({
-            ...r,
-            matched_status: r.matched_status,
-            confidence_score: r.confidence_score,
-            is_qualitative: r.is_qualitative
-          }))
-        },
-        laboratory: extractedData.laboratory,
-        test_date: testDate,
-        statistics: {
-          total: results.length,
-          matched: matchedCount,
-          unmatched: unmatchedCount
-        }
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return jsonResponse({
+      success: true,
+      category: documentCategory,
+      ai_summary: aiSummary,
+      results: documentCategory === 'imaging_report' ? {
+        findings: results
+      } : {
+        biomarkers: results.map(r => ({
+          ...r,
+          matched_status: r.matched_status,
+          confidence_score: r.confidence_score,
+          is_qualitative: r.is_qualitative
+        }))
+      },
+      laboratory: extractedData.laboratory,
+      test_date: testDate,
+      statistics: {
+        total: results.length,
+        matched: matchedCount,
+        unmatched: unmatchedCount
       }
-    );
-
-  } catch (error: any) {
-    console.error('[PARSE-LAB-REPORT] ❌ Fatal Error:', error);
-    console.error('[PARSE-LAB-REPORT] 📊 Error type:', error.name);
-    console.error('[PARSE-LAB-REPORT] 📝 Error message:', error.message);
-    console.error('[PARSE-LAB-REPORT] 🔍 Stack trace:', error.stack);
-    
-    // Determine error type
-    let errorType: string = 'unknown';
-    if (error.message?.includes('Failed to download') || error.message?.includes('download')) {
-      errorType = 'pdf_download';
-    } else if (error.message?.includes('Invalid PDF') || error.message?.includes('PDF')) {
-      errorType = 'pdf_parse';
-    } else if (error.message?.includes('Gemini') || error.message?.includes('AI') || error.message?.includes('gateway')) {
-      errorType = 'gemini_api';
-    } else if (error.message?.includes('JSON') || error.message?.includes('parse')) {
-      errorType = 'json_parse';
-    } else if (error.message?.includes('database') || error.message?.includes('Supabase')) {
-      errorType = 'database_save';
-    }
-    
-    // Build detailed error object
-    const errorDetails: any = {
-      error_type: errorType,
-      error_message: error.message || error.toString(),
-      stack_trace: error.stack?.substring(0, 1000), // Limit stack trace
-      timestamp: new Date().toISOString(),
-    };
-    
-    // Try to get documentId from request
-    let documentId: string | undefined;
-    try {
-      const body = await req.json();
-      documentId = body.documentId;
-    } catch {
-      console.error('[PARSE-LAB-REPORT] Could not parse request body for documentId');
-    }
-    
-    // Update document with detailed error
-    if (documentId) {
-      console.log(`[PARSE-LAB-REPORT] 💾 Saving error details for document ${documentId}`);
-      
-      await supabase
-        .from('medical_documents')
-        .update({ 
-          processing_status: 'error',
-          processing_error: error.message || 'Unknown error occurred',
-          processing_error_details: errorDetails,
-          processing_completed_at: new Date().toISOString()
-        })
-        .eq('id', documentId);
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        error_type: errorType,
-        details: errorDetails
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-});
+    });
+}));
