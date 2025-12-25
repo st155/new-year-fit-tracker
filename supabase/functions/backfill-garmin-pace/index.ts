@@ -190,10 +190,10 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const { userId, limit = 50, batchSize = BATCH_SIZE } = await req.json().catch(() => ({}));
+    const { userId, limit = 50, batchSize = BATCH_SIZE, startDate, endDate } = await req.json().catch(() => ({}));
     const effectiveBatchSize = Math.min(batchSize, 10); // Cap at 10 to prevent memory issues
 
-    console.log('🏃 Starting Garmin pace backfill (optimized)', { userId, limit, batchSize: effectiveBatchSize });
+    console.log('🏃 Starting Garmin pace backfill (optimized)', { userId, limit, batchSize: effectiveBatchSize, startDate, endDate });
 
     let processed = 0;
     let measurementsCreated = 0;
@@ -218,6 +218,14 @@ Deno.serve(async (req) => {
 
       if (userId) {
         query = query.eq('payload->user->>reference_id', userId);
+      }
+      
+      // Apply date range filters
+      if (startDate) {
+        query = query.gte('created_at', startDate);
+      }
+      if (endDate) {
+        query = query.lte('created_at', endDate + 'T23:59:59.999Z');
       }
 
       const { data: webhookMeta, error: metaError } = await query;
