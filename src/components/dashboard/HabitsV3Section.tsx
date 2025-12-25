@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
 import { useUserLevel } from "@/hooks/useUserLevel";
-import { HabitCardV3 } from "@/components/habits-v3/core/HabitCardV3";
-import { LevelProgressBar } from "@/components/habits-v3/gamification/LevelProgressBar";
+import { HabitCardV3 } from "@/features/habits/components/core/HabitCardV3";
+import { LevelProgressBar } from "@/features/habits/components/gamification/LevelProgressBar";
 import { Target, Plus, ArrowRight, Flame, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useHabitFeed } from "@/hooks/useHabitFeed";
-import { HabitWidgetCard } from "@/components/habits-v3/widgets/HabitWidgetCard";
+import { HabitWidgetCard } from "@/features/habits/components/widgets/HabitWidgetCard";
 import { useMemo } from "react";
 
 export function HabitsV3Section() {

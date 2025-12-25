@@ -3,7 +3,7 @@ import { TimeSection } from './TimeSection';
 import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Plus } from 'lucide-react';
-import { HabitsProgressSection } from '@/components/habits-v3/sections/HabitsProgressSection';
+import { HabitsProgressSection } from '../sections/HabitsProgressSection';
 import { EmptyStateV3 } from '@/components/ui/empty-state-v3';
 
 interface SmartViewProps {

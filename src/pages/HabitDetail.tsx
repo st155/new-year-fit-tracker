@@ -12,7 +12,7 @@ import { ru } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
 import { HabitProgressChart } from '@/components/habits/HabitProgressChart';
 import { HabitCalendarHeatmap } from '@/components/habits/HabitCalendarHeatmap';
-import { HabitSocialSection } from '@/components/habits-v3/detail/HabitSocialSection';
+import { HabitSocialSection } from '@/features/habits/components/detail/HabitSocialSection';
 import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils';
 import { toast } from 'sonner';
 import { exportHabitToPDF } from '@/lib/exporters/pdf-exporter';

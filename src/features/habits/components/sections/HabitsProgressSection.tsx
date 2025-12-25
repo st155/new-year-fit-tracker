@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Award } from 'lucide-react';
-import { HabitMiniChart } from '@/components/habits-v3/charts/HabitMiniChart';
+import { HabitMiniChart } from '../charts/HabitMiniChart';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 

@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { calculateHabitXP, calculateStreakXPMultiplier, calculateLevel } from '@/lib/gamification/level-system';
 import { checkAndAwardAchievements, type AchievementCheckParams } from '@/lib/gamification/achievement-checker';
-import { AchievementUnlockedToast } from '@/components/habits-v3/gamification/AchievementUnlockedToast';
+import { AchievementUnlockedToast } from '@/features/habits/components/gamification/AchievementUnlockedToast';
 import { isNewMilestone } from '@/lib/gamification/streak-rewards';
 
 interface CompletionResult {

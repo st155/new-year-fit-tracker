@@ -24,8 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SmartView, AllHabitsView } from '@/components/habits-v3/layouts';
-import { SocialView } from '@/components/habits-v3/layouts/SocialView';
+import { SmartView, AllHabitsView } from '@/features/habits/components/layouts';
+import { SocialView } from '@/features/habits/components/layouts/SocialView';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
@@ -33,19 +33,19 @@ import { HabitCreateDialog } from '@/components/habits/HabitCreateDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
-import { HabitsV3Onboarding } from '@/components/habits-v3/onboarding/HabitsV3Onboarding';
+import { HabitsV3Onboarding } from '@/features/habits/components/onboarding/HabitsV3Onboarding';
 import { ScreenReaderAnnouncement } from '@/components/ui/screen-reader-announcement';
-import { HabitsInsightBanner } from '@/components/habits-v3/HabitsInsightBanner';
-import { LevelProgressBar } from '@/components/habits-v3/gamification/LevelProgressBar';
-import { LevelUpCelebration } from '@/components/habits-v3/gamification/LevelUpCelebration';
-import { AchievementsModal } from '@/components/habits-v3/gamification/AchievementsModal';
-import { NotificationCenter } from '@/components/habits-v3/social/NotificationCenter';
+import { HabitsInsightBanner } from '@/features/habits/components/HabitsInsightBanner';
+import { LevelProgressBar } from '@/features/habits/components/gamification/LevelProgressBar';
+import { LevelUpCelebration } from '@/features/habits/components/gamification/LevelUpCelebration';
+import { AchievementsModal } from '@/features/habits/components/gamification/AchievementsModal';
+import { NotificationCenter } from '@/features/habits/components/social/NotificationCenter';
 
 // Lazy load heavy components
-const CompactListView = lazy(() => import('@/components/habits-v3/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
-const FocusMode = lazy(() => import('@/components/habits-v3/layouts/FocusMode').then(m => ({ default: m.FocusMode })));
-const TimelineView = lazy(() => import('@/components/habits-v3/layouts/TimelineView').then(m => ({ default: m.TimelineView })));
-const AnalyticsView = lazy(() => import('@/components/habits-v3/layouts/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const CompactListView = lazy(() => import('@/features/habits/components/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
+const FocusMode = lazy(() => import('@/features/habits/components/layouts/FocusMode').then(m => ({ default: m.FocusMode })));
+const TimelineView = lazy(() => import('@/features/habits/components/layouts/TimelineView').then(m => ({ default: m.TimelineView })));
+const AnalyticsView = lazy(() => import('@/features/habits/components/layouts/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 
 const LoadingSkeleton = () => (
   <div className="space-y-4">
