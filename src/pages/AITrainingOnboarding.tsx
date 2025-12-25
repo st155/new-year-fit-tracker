@@ -5,6 +5,7 @@ import { ArrowLeft, Bot, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { aiTrainingApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { ONBOARDING_FLOW, type OnboardingStep } from '@/lib/ai-onboarding-flow';
 import { ConnectHealthButtons } from '@/components/workout/onboarding/ConnectHealthButtons';
@@ -180,15 +181,10 @@ export default function AITrainingOnboarding() {
 
       if (prefError) throw prefError;
 
-      const { data: fnData, error: funcError } = await supabase.functions.invoke(
-        'generate-ai-training-plan',
-        { body: { user_id: user.id } }
-      );
+      const { data: fnData, error: funcError } = await aiTrainingApi.generatePlan(user.id);
 
       if (funcError) {
-        // Extract detailed error message from server response
-        const serverMsg = (fnData as any)?.error || (funcError as any)?.context?.body || funcError.message;
-        throw new Error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg));
+        throw funcError;
       }
 
       toast.success('План создан!');

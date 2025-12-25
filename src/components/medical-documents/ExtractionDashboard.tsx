@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { documentsApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BiomarkerRow } from './BiomarkerRow';
@@ -69,15 +70,9 @@ export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboar
   const reprocessMutation = useMutation({
     mutationFn: async () => {
       setIsProcessing(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const response = await supabase.functions.invoke('parse-lab-report', {
-        body: { documentId },
-      });
-
-      if (response.error) throw response.error;
-      return response.data;
+      const { data, error } = await documentsApi.parseLabReport(documentId);
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lab-results', documentId] });

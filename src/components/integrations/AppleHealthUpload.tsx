@@ -7,6 +7,7 @@ import { Upload, FileX, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorLogger } from '@/lib/error-logger';
 import { supabase } from '@/integrations/supabase/client';
+import { healthApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AppleHealthUploadProps {
@@ -123,12 +124,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       // Отправляем файл на обработку в Edge Function
       console.log('Calling apple-health-import function...');
       
-      const { data: processData, error: processError } = await supabase.functions.invoke('apple-health-import', {
-        body: {
-          userId: user?.id,
-          filePath: uploadData.path
-        }
-      });
+      const { data: processData, error: processError } = await healthApi.importAppleHealth(user?.id!, uploadData.path);
 
       console.log('Function response:', { data: processData, error: processError });
 
@@ -138,7 +134,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       }
 
       // Отслеживаем прогресс фоновой обработки
-      const currentRequestId = processData?.results?.requestId;
+      const processResults = processData?.results as Record<string, unknown> | undefined;
+      const currentRequestId = processResults?.requestId as string | undefined;
       setRequestId(currentRequestId);
       
       if (currentRequestId) {

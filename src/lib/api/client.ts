@@ -112,6 +112,12 @@ export const documentsApi = {
   
   parseRecommendations: (documentId: string) =>
     invokeWithRetry<{ recommendations: unknown[] }>('parse-doctor-recommendations', { documentId }),
+  
+  parseLabReport: (documentId: string) =>
+    invokeWithRetry<{ success: boolean }>('parse-lab-report', { documentId }),
+  
+  rematchBiomarkers: (documentId: string) =>
+    invokeWithRetry<{ rematchedCount: number; totalUnmatched: number }>('rematch-biomarkers', { documentId }),
 };
 
 // ===== HEALTH ANALYSIS =====
@@ -124,15 +130,33 @@ export const healthApi = {
   
   calculateSleepEfficiency: (userId: string) =>
     invokeWithRetry<{ efficiency: number }>('calculate-sleep-efficiency', { userId }),
+  
+  fixUnitConversions: () =>
+    invokeWithRetry<{ updated: number }>('fix-unit-conversions', {}),
+  
+  generateRecommendations: () =>
+    invokeWithRetry<{ recommendations: string; context: unknown }>('generate-health-recommendations', {}),
+  
+  parseProtocolMessage: (message: string) =>
+    invokeWithRetry<{ success: boolean; supplements: unknown[]; error?: string }>('parse-protocol-message', { message }),
+  
+  checkCompletedProtocols: () =>
+    invokeWithRetry<{ checked: boolean }>('check-completed-protocols'),
+  
+  importAppleHealth: (userId: string, filePath: string) =>
+    invokeWithRetry<{ results: unknown }>('apple-health-import', { userId, filePath }),
 };
 
 // ===== AI TRAINING =====
 export const aiTrainingApi = {
   generatePlan: (userId: string) =>
-    invokeWithRetry<{ plan: unknown }>('generate-ai-training-plan', { user_id: userId }),
+    invokeWithRetry<{ program_data: { program_name: string }; workout_count: number }>('generate-ai-training-plan', { user_id: userId }),
   
   generateTravelWorkout: (params: Record<string, unknown>) =>
-    invokeWithRetry<{ workout: unknown }>('generate-travel-workout', params),
+    invokeWithRetry<unknown>('generate-travel-workout', params),
+  
+  analyzeGaps: (lookbackDays: number) =>
+    invokeWithRetry<unknown>('analyze-training-gaps', { lookbackDays }),
 };
 
 // ===== ADMIN =====

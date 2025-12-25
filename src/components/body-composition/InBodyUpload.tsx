@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { inbodyApi } from "@/lib/api";
 import { convertPdfToImages } from "@/lib/pdf-to-image";
 
 interface InBodyUploadProps {
@@ -151,21 +152,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
           console.log(`Converted ${images.length} pages, sending to AI for analysis...`);
 
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) throw new Error('No session');
-
-          const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
-            'parse-inbody-pdf',
-            {
-              body: {
-                images: images,
-                uploadId: uploadRecord.id
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`
-              }
-            }
-          );
+          const { data: analysisData, error: analysisError } = await inbodyApi.parse(images, uploadRecord.id);
 
           if (analysisError) {
             console.error('Analysis error:', analysisError);

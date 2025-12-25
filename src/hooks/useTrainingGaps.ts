@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { aiTrainingApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 
@@ -76,16 +77,14 @@ export function useTrainingGaps(lookbackDays = 21) {
   return useQuery({
     queryKey: ['training-gaps', userId, lookbackDays],
     queryFn: async (): Promise<GapAnalysisResult> => {
-      const { data, error } = await supabase.functions.invoke('analyze-training-gaps', {
-        body: { lookbackDays }
-      });
+      const { data, error } = await aiTrainingApi.analyzeGaps(lookbackDays);
 
       if (error) {
         console.error('Error analyzing training gaps:', error);
         throw error;
       }
 
-      return data;
+      return data as GapAnalysisResult;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 минут
@@ -104,16 +103,14 @@ export function useGenerateTravelWorkout() {
       focusMuscles?: string[];
       gapAnalysis?: GapAnalysisResult | null;
     }): Promise<GeneratedWorkout> => {
-      const { data, error } = await supabase.functions.invoke('generate-travel-workout', {
-        body: params
-      });
+      const { data, error } = await aiTrainingApi.generateTravelWorkout(params);
 
       if (error) {
         console.error('Error generating workout:', error);
         throw error;
       }
 
-      return data;
+      return data as GeneratedWorkout;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workout-logs'] });
