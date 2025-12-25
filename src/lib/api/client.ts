@@ -65,6 +65,9 @@ export const terraApi = {
   sync: (provider?: string) => 
     invokeWithRetry<{ success: boolean; metrics?: number }>('sync-terra-realtime', { provider }),
   
+  realtimeSync: (provider: string = 'WHOOP') =>
+    invokeWithRetry<{ success: boolean; metricsWritten: string[]; errors?: string[]; duration: number }>('sync-terra-realtime', { provider }),
+  
   diagnostics: (provider?: string) => 
     invokeWithRetry<{ tokens?: unknown[]; webhooks?: unknown[]; date_range?: { start: string; end: string }; available_in_terra?: unknown; in_database?: unknown; missing_in_db?: unknown; webhook_logs?: unknown[] }>('terra-diagnostics', { provider }),
   
@@ -91,6 +94,9 @@ export const terraApi = {
   
   withingsBackfill: (daysBack?: number) =>
     invokeWithRetry<{ metricsInserted: number }>('withings-backfill', { daysBack }),
+  
+  backfill: (params: { userId: string; provider: string; terraUserId: string; startDaysAgo: number }) =>
+    invokeWithRetry<{ success: boolean; jobId?: string }>('terra-backfill', params),
 };
 
 // ===== SUPPLEMENTS =====
@@ -307,8 +313,13 @@ export const habitsApi = {
 
 // ===== SUPPLEMENTS (additional) =====
 export const supplementsApiExtended = {
-  generateProtocol: (goals: string[], preferences: any, existingStack: any[]) =>
-    invokeWithRetry<{ protocol: unknown }>('generate-supplement-protocol', { goals, preferences, existingStack }),
+  generateProtocol: (params: {
+    user_id?: string;
+    goals: string[];
+    health_conditions?: string[];
+    dietary_restrictions?: string[];
+    protocol_duration_days?: number;
+  }) => invokeWithRetry<{ protocol: unknown }>('generate-supplement-protocol', params),
 };
 
 // ===== UNIFIED API OBJECT =====

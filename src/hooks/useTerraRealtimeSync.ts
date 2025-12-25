@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface RealtimeSyncResult {
@@ -14,11 +14,9 @@ export function useTerraRealtimeSync() {
 
   return useMutation({
     mutationFn: async (provider: string = 'WHOOP'): Promise<RealtimeSyncResult> => {
-      const { data, error } = await supabase.functions.invoke('sync-terra-realtime', {
-        body: { provider },
-      });
-
+      const { data, error } = await terraApi.realtimeSync(provider);
       if (error) throw error;
+      if (!data) throw new Error('No data returned from sync');
       return data;
     },
     onSuccess: (data) => {
