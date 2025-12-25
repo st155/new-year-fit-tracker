@@ -180,29 +180,44 @@ export function useChallengeReport(
         .select("goal_id, baseline_value")
         .eq("user_id", userId);
 
-      // Fetch measurements for goals
+      // Fetch ALL measurements for goals (including before challenge for baseline fallback)
       const { data: measurements } = await supabase
         .from("measurements")
         .select("goal_id, value, measurement_date")
         .eq("user_id", userId)
-        .gte("measurement_date", challenge.start_date)
-        .lte("measurement_date", effectiveEndDate)
         .order("measurement_date", { ascending: true });
 
       // Process goals
       const processedGoals: GoalReport[] = (goals || []).map(goal => {
-        const goalMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
+        const allGoalMeasurements = measurements?.filter(m => m.goal_id === goal.id) || [];
+        
+        // Filter measurements within challenge period for display
+        const challengeMeasurements = allGoalMeasurements.filter(
+          m => m.measurement_date >= challenge.start_date && m.measurement_date <= effectiveEndDate
+        );
+        
         const baseline = baselines?.find(b => b.goal_id === goal.id);
-        const baselineValue = baseline?.baseline_value ?? null;
-        const currentValue = goalMeasurements.length > 0 
-          ? goalMeasurements[goalMeasurements.length - 1].value 
+        // Fallback: use first measurement as baseline if goal_baselines is empty
+        const baselineValue = baseline?.baseline_value 
+          ?? (allGoalMeasurements.length > 0 ? allGoalMeasurements[0].value : null);
+        
+        // Use latest measurement from challenge period, or fallback to baseline
+        const currentValue = challengeMeasurements.length > 0 
+          ? challengeMeasurements[challengeMeasurements.length - 1].value 
           : baselineValue;
         const targetValue = goal.target_value;
 
-        // Determine if goal is "lower is better" type
-        const isLowerBetter = ['body_fat', 'weight', 'resting_hr'].some(
-          t => goal.goal_type.toLowerCase().includes(t) || goal.goal_name.toLowerCase().includes(t)
-        );
+        // Determine if goal is "lower is better" type (expanded for Russian names)
+        const lowerName = goal.goal_name.toLowerCase();
+        const lowerType = goal.goal_type.toLowerCase();
+        const isLowerBetter = 
+          lowerName.includes('бег') || 
+          lowerName.includes('жир') || 
+          lowerName.includes('вес') ||
+          lowerName.includes('run') ||
+          ['body_fat', 'weight', 'resting_hr', 'run', 'time'].some(
+            t => lowerType.includes(t) || lowerName.includes(t)
+          );
 
         // Calculate progress
         let progress = 0;
@@ -210,17 +225,22 @@ export function useChallengeReport(
         let trend: 'improved' | 'declined' | 'stable' = 'stable';
 
         if (baselineValue !== null && currentValue !== null && targetValue !== null) {
-          const totalChange = targetValue - baselineValue;
-          const actualChange = currentValue - baselineValue;
-          
-          if (totalChange !== 0) {
-            progress = Math.min(100, Math.max(0, (actualChange / totalChange) * 100));
-          }
-
           if (isLowerBetter) {
+            // For "lower is better": progress = how much we've decreased toward target
+            const totalChange = baselineValue - targetValue;
+            const actualChange = baselineValue - currentValue;
+            if (totalChange !== 0) {
+              progress = Math.max(0, (actualChange / totalChange) * 100);
+            }
             achieved = currentValue <= targetValue;
             trend = currentValue < baselineValue ? 'improved' : currentValue > baselineValue ? 'declined' : 'stable';
           } else {
+            // For "higher is better": allow progress > 100% for overachievement
+            const totalChange = targetValue - baselineValue;
+            const actualChange = currentValue - baselineValue;
+            if (totalChange !== 0) {
+              progress = Math.max(0, (actualChange / totalChange) * 100);
+            }
             achieved = currentValue >= targetValue;
             trend = currentValue > baselineValue ? 'improved' : currentValue < baselineValue ? 'declined' : 'stable';
           }
@@ -237,7 +257,7 @@ export function useChallengeReport(
           progress,
           achieved,
           trend,
-          measurements: goalMeasurements.map(m => ({
+          measurements: challengeMeasurements.map(m => ({
             date: m.measurement_date,
             value: m.value
           }))

@@ -42,9 +42,11 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
               <Target className="h-5 w-5 text-primary" />
               Прогресс по целям
             </CardTitle>
-            <Badge variant="outline" className="text-sm">
-              {goalsAchieved} / {goals.length} достигнуто
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-sm">
+                {goalsAchieved} / {goals.length} достигнуто
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -76,6 +78,11 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
                       )}
                       <span className="font-medium">{goal.name}</span>
                       {getTrendIcon(goal.trend)}
+                      {goal.progress > 100 && (
+                        <Badge variant="default" className="text-xs bg-success/80 text-success-foreground">
+                          🎯 Перевыполнено!
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 text-sm">
@@ -102,11 +109,16 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Прогресс</span>
-                        <span className="font-medium">{Math.round(goal.progress)}%</span>
+                        <span className={cn(
+                          "font-medium",
+                          goal.progress > 100 && "text-success"
+                        )}>
+                          {Math.round(goal.progress)}%
+                        </span>
                       </div>
                       <Progress 
                         value={Math.min(100, goal.progress)} 
-                        className="h-2"
+                        className={cn("h-2", goal.progress > 100 && "[&>div]:bg-success")}
                       />
                     </div>
                   </div>
