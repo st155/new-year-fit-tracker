@@ -39,6 +39,7 @@ export function QuickMeasurementDialog({
   const [value, setValue] = useState<string>('');
   const [date, setDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
@@ -116,7 +117,7 @@ export function QuickMeasurementDialog({
 
           <div className="space-y-2">
             <Label>Дата измерения</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left">
                   <Calendar className="mr-2 h-4 w-4" />
@@ -127,8 +128,14 @@ export function QuickMeasurementDialog({
                 <CalendarComponent
                   mode="single"
                   selected={date}
-                  onSelect={(date) => date && setDate(date)}
+                  onSelect={(d) => {
+                    if (d) {
+                      setDate(d);
+                      setCalendarOpen(false);
+                    }
+                  }}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
