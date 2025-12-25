@@ -11,6 +11,7 @@ import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn, parseTimeInput, isTimeUnit } from "@/lib/utils";
+import { isStrengthWeightGoal, formatStrengthGoal } from "@/lib/units";
 
 interface Goal {
   id: string;
@@ -18,6 +19,7 @@ interface Goal {
   goal_type: string;
   target_value: number;
   target_unit: string;
+  target_reps?: number | null;
 }
 
 interface QuickMeasurementDialogProps {
@@ -38,10 +40,13 @@ export function QuickMeasurementDialog({
   
   const [form, setForm] = useState({
     value: '',
+    reps: '',
     notes: '',
     measurement_date: new Date().toISOString().split('T')[0],
     photo_url: ''
   });
+  
+  const isStrength = isStrengthWeightGoal(goal.goal_type, goal.target_unit);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
@@ -162,6 +167,8 @@ export function QuickMeasurementDialog({
           user_id: user.id
         });
         
+        const repsValue = isStrength && form.reps ? parseInt(form.reps) : null;
+        
         const { data, error } = await supabase
           .from('measurements')
           .insert({
@@ -172,7 +179,8 @@ export function QuickMeasurementDialog({
             measurement_date: form.measurement_date,
             notes: form.notes.trim() || null,
             photo_url: form.photo_url || null,
-            source: 'manual' // явно указываем источник
+            source: 'manual',
+            reps: repsValue
           })
           .select()
           .single();
@@ -200,6 +208,7 @@ export function QuickMeasurementDialog({
         // Сбрасываем форму
         setForm({
           value: '',
+          reps: '',
           notes: '',
           measurement_date: new Date().toISOString().split('T')[0],
           photo_url: ''
@@ -309,29 +318,53 @@ export function QuickMeasurementDialog({
         <div className="space-y-3 pt-1 pb-2 overflow-y-auto max-h-[65vh]">
           {/* Goal Info */}
           <div className="text-sm text-muted-foreground">
-            🎯 Цель: {goal.target_value} {goal.target_unit}
+            🎯 Цель: {isStrength 
+              ? formatStrengthGoal(goal.target_value, goal.target_unit, goal.target_reps)
+              : `${goal.target_value} ${goal.target_unit}`}
           </div>
 
           {/* Result Input */}
-          <div>
-            <Label htmlFor="quick-value" className="text-sm">
-              Результат
-            </Label>
-            <Input
-              id="quick-value"
-              type="text"
-              placeholder={getValuePlaceholder()}
-              value={form.value}
-              onChange={(e) => setForm(prev => ({ ...prev, value: e.target.value }))}
-              className="text-2xl h-14 font-semibold"
-              autoFocus
-            />
+          <div className={isStrength ? "grid grid-cols-2 gap-3" : ""}>
+            <div>
+              <Label htmlFor="quick-value" className="text-sm">
+                {isStrength ? "Вес (кг)" : "Результат"}
+              </Label>
+              <Input
+                id="quick-value"
+                type="text"
+                placeholder={isStrength ? "Например: 100" : getValuePlaceholder()}
+                value={form.value}
+                onChange={(e) => setForm(prev => ({ ...prev, value: e.target.value }))}
+                className="text-2xl h-14 font-semibold"
+                autoFocus
+              />
+            </div>
+            
+            {isStrength && (
+              <div>
+                <Label htmlFor="quick-reps" className="text-sm">
+                  Повторения
+                </Label>
+                <Input
+                  id="quick-reps"
+                  type="number"
+                  min="1"
+                  placeholder={goal.target_reps ? `Цель: ${goal.target_reps}` : "1"}
+                  value={form.reps}
+                  onChange={(e) => setForm(prev => ({ ...prev, reps: e.target.value }))}
+                  className="text-2xl h-14 font-semibold"
+                />
+              </div>
+            )}
+          </div>
+          
+          {!isStrength && (
             <p className="text-xs text-muted-foreground mt-1">
               {goal.target_unit}
               {isTimeUnit(goal.target_unit) && 
                 " • Формат: ММ:СС (например: 4:40 = 4 мин 40 сек)"}
             </p>
-          </div>
+          )}
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
