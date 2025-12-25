@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GitCompare, Loader2 } from "lucide-react";
+import { documentsApi } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 
 interface MedicalDocument {
@@ -51,9 +51,7 @@ export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
     setComparisonResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('compare-medical-documents', {
-        body: { documentIds: selectedDocs }
-      });
+      const { data, error } = await documentsApi.compare(selectedDocs);
 
       if (error) throw error;
 

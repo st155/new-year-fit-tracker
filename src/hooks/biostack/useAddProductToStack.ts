@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { supplementsApi } from '@/lib/api';
 
 export function useAddProductToStack() {
   const { user } = useAuth();
@@ -58,13 +59,7 @@ export function useAddProductToStack() {
 
       // Auto-link biomarkers
       try {
-        await supabase.functions.invoke('auto-link-biomarkers', {
-          body: {
-            userId: user.id,
-            supplementName: product.name,
-            stackItemId: stackItem.id,
-          },
-        });
+        await supplementsApi.autoLinkBiomarkers(stackItem.id, product.name);
       } catch (e) {
         console.warn('Auto-link biomarkers failed:', e);
       }

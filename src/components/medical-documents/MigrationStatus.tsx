@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle, Database } from "lucide-react";
+import { documentsApi } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MigrationResult {
@@ -26,13 +26,11 @@ export const MigrationStatus = () => {
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('migrate-to-medical-documents', {
-        body: { action: 'migrate_all' }
-      });
+      const { data, error } = await documentsApi.migrateToMedicalDocuments('migrate_all');
 
       if (error) throw error;
 
-      setResult(data);
+      setResult(data as any);
       
       toast({
         title: "Миграция завершена",

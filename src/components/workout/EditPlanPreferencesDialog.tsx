@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { aiTrainingApi } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -62,10 +63,7 @@ export function EditPlanPreferencesDialog({
       if (prefError) throw prefError;
 
       // Step 2: Regenerate plan
-      const { data, error: functionError } = await supabase.functions.invoke(
-        'generate-ai-training-plan',
-        { body: { user_id: user.id } }
-      );
+      const { data, error: functionError } = await aiTrainingApi.generatePlan(user.id);
 
       if (functionError) throw functionError;
       return data;

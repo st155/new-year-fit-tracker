@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
+import { healthApi } from '@/lib/api';
 
 interface RecalculateConfidenceParams {
   user_id: string;
@@ -13,9 +13,7 @@ export function useConfidenceRecalculation() {
 
   const mutation = useMutation({
     mutationFn: async ({ user_id, metric_name }: RecalculateConfidenceParams) => {
-      const { data, error } = await supabase.functions.invoke('recalculate-confidence', {
-        body: { user_id, metric_name },
-      });
+      const { data, error } = await healthApi.recalculateConfidence(user_id, metric_name);
 
       if (error) throw error;
       return data;

@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { healthApi } from '@/lib/api';
 
 interface TestResult {
   name: string;
@@ -27,9 +28,7 @@ export function useRunLifecycleTests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke('test-protocol-lifecycle', {
-        body: { userId: user.id }
-      });
+      const { data, error } = await healthApi.testProtocolLifecycle(user.id);
 
       if (error) throw error;
       return data as TestResponse;

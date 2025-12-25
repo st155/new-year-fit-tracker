@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { aiTrainingApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
@@ -364,9 +365,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
       if (prefError) throw prefError;
       
       // Generate plan
-      const { data: planData, error } = await supabase.functions.invoke('generate-ai-training-plan', {
-        body: { user_id: user.id }
-      });
+      const { data: planData, error } = await aiTrainingApi.generatePlan(user.id);
       
       if (error) throw error;
       

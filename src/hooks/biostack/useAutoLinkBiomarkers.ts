@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { supplementsApi } from '@/lib/api';
 
 export interface SupplementCorrelation {
   biomarkerName: string;
@@ -31,9 +32,8 @@ export function useAutoLinkBiomarkers() {
 
   return useMutation({
     mutationFn: async ({ stackItemId, supplementName, userId }: AutoLinkParams): Promise<AutoLinkResult> => {
-      const { data, error } = await supabase.functions.invoke('auto-link-biomarkers', {
-        body: { stackItemId, supplementName, userId }
-      });
+      // Note: userId is passed but the API only uses stackItemId and supplementName
+      const { data, error } = await supplementsApi.autoLinkBiomarkers(stackItemId || '', supplementName);
 
       if (error) throw error;
       return data as AutoLinkResult;
@@ -65,9 +65,7 @@ export function useAutoLinkBiomarkers() {
 export function useGetSupplementCorrelations() {
   return useMutation({
     mutationFn: async (supplementName: string): Promise<AutoLinkResult> => {
-      const { data, error } = await supabase.functions.invoke('auto-link-biomarkers', {
-        body: { supplementName }
-      });
+      const { data, error } = await supplementsApi.autoLinkBiomarkers('', supplementName);
 
       if (error) throw error;
       return data as AutoLinkResult;

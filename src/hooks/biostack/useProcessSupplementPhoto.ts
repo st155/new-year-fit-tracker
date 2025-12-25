@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { supplementsApi } from '@/lib/api';
 
 export function useProcessSupplementPhoto() {
   const { toast } = useToast();
@@ -9,9 +9,7 @@ export function useProcessSupplementPhoto() {
     mutationFn: async (imageBase64: string) => {
       console.log('[PHOTO-PROCESSING] Sending image to Edge Function...');
       
-      const { data, error } = await supabase.functions.invoke('process-supplement-photo', {
-        body: { image: imageBase64 }
-      });
+      const { data, error } = await supplementsApi.processPhoto(imageBase64);
 
       if (error) {
         console.error('[PHOTO-PROCESSING] Edge Function error:', error);

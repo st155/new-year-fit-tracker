@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { supplementsApi } from '@/lib/api';
 
 interface Deficiency {
   biomarker_id: string;
@@ -49,7 +50,7 @@ export function useGenerateRecommendations() {
 
   return useMutation({
     mutationFn: async (): Promise<AnalysisResponse> => {
-      const { data, error } = await supabase.functions.invoke('generate-data-driven-stack');
+      const { data, error } = await supplementsApi.generateStack();
 
       if (error) throw error;
       if (!data.success) {

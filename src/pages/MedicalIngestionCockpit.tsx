@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { documentsApi } from '@/lib/api';
 import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { ExtractionDashboard } from '@/components/medical-documents/ExtractionDashboard';
 import { DetectedRxPanel } from '@/components/biostack/DetectedRxPanel';
@@ -59,9 +60,7 @@ const MedicalIngestionCockpit = () => {
         .eq('id', documentId);
       
       // Then invoke parse-lab-report
-      const { error } = await supabase.functions.invoke('parse-lab-report', {
-        body: { documentId }
-      });
+      const { error } = await documentsApi.parseLabReport(documentId);
 
       if (error) throw error;
     },
