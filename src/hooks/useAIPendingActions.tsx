@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { aiApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -102,14 +103,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
 
     setExecuting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('execute-ai-actions', {
-        body: {
-          pendingActionId,
-          conversationId,
-          actions
-        }
-      });
-
+      const { data, error } = await aiApi.executeActions(pendingActionId, conversationId, actions);
       if (error) throw error;
 
       // Invalidate all related queries to refresh UI

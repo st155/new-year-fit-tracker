@@ -1,6 +1,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { inbodyApi } from "@/lib/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Trash2, Eye, TrendingUp, TrendingDown, ScanLine, Loader2, RefreshCw, Download } from "lucide-react";
@@ -154,19 +155,13 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
       console.log(`Converted ${images.length} pages, sending to AI...`);
       toast.info('Анализируем с помощью AI...');
 
-      // Send images to edge function
-      const { data, error } = await supabase.functions.invoke('parse-inbody-pdf', {
-        body: {
-          images: images.slice(0, 2), // Only first 2 pages
-          uploadId: uploadId,
-        },
-      });
+      // Send images to edge function via API client
+      const { data, error } = await inbodyApi.parse(images.slice(0, 2), uploadId);
 
       if (error) {
         console.error('Edge function error:', error);
         throw new Error(`Ошибка AI анализа: ${error.message}`);
       }
-      if (data?.error) throw new Error(data.error);
 
       console.log('Analysis complete:', data);
       toast.success('Анализ успешно завершен!');

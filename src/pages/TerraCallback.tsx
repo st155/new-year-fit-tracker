@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 
 type Status = 'processing' | 'success' | 'error';
 
@@ -191,14 +192,11 @@ export default function TerraCallback() {
           setStatus('success');
           setMessage('Устройство подключено! Запускаем синхронизацию данных...');
           try {
-            const { data, error } = await supabase.functions.invoke('terra-integration', {
-              body: { action: 'sync-data' }
-            });
+            const { error } = await terraApi.syncData();
             if (error) {
               console.error('Sync error:', error);
               setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
             } else {
-              console.log('Sync initiated:', data);
               setMessage('Устройство подключено и данные синхронизированы!');
             }
           } catch (e) {
@@ -353,15 +351,12 @@ export default function TerraCallback() {
         try {
           setMessage('Синхронизируем данные...');
           
-          const { data, error } = await supabase.functions.invoke('terra-integration', {
-            body: { action: 'sync-data' }
-          });
+          const { error } = await terraApi.syncData();
           
           if (error) {
             console.error('Sync error:', error);
             setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
           } else {
-            console.log('Sync initiated:', data);
             setMessage('Устройство подключено и данные синхронизированы!');
           }
         } catch (e) {
@@ -410,15 +405,12 @@ export default function TerraCallback() {
             // Автоматически запускаем синхронизацию
             try {
               setMessage('Синхронизируем данные...');
-              const { data, error: syncError } = await supabase.functions.invoke('terra-integration', {
-                body: { action: 'sync-data' }
-              });
+              const { error: syncError } = await terraApi.syncData();
 
               if (syncError) {
                 console.error('Sync error:', syncError);
                 setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
               } else {
-              console.log('Sync initiated:', data);
               setMessage('Устройство подключено и данные синхронизированы!');
             }
           } catch (e) {

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { aiApi } from "@/lib/api/client";
 import { format } from "date-fns";
 
 export interface AdjustedExercise {
@@ -38,16 +38,13 @@ export interface DailyWorkoutResponse {
 export function useDailyWorkout(userId?: string, date?: string) {
   return useQuery<DailyWorkoutResponse>({
     queryKey: ['daily-ai-workout', userId, date || format(new Date(), 'yyyy-MM-dd')],
-    staleTime: 2 * 60 * 60 * 1000, // Cache for 2 hours
-    placeholderData: (previousData) => previousData, // Show old data while fetching
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    staleTime: 2 * 60 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('get-daily-ai-workout', {
-        body: { user_id: userId, date }
-      });
-      
+      const { data, error } = await aiApi.getDailyWorkout(userId!, date);
       if (error) throw error;
-      return data;
+      return data as DailyWorkoutResponse;
     },
     enabled: !!userId
   });

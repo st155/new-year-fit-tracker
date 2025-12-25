@@ -1,14 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { adminApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 export function useReprocessWebhook() {
   return useMutation({
     mutationFn: async (webhookId: string) => {
-      const { data, error } = await supabase.functions.invoke('reprocess-webhook', {
-        body: { webhookId }
-      });
-
+      const { data, error } = await adminApi.reprocessWebhook(webhookId);
       if (error) throw error;
       return data;
     },

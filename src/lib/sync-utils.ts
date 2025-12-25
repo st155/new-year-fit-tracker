@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from './api/client';
 
 export interface SyncResult {
   provider: string;
