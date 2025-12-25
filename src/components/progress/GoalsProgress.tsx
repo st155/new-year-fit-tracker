@@ -6,9 +6,11 @@ import { Target } from "lucide-react";
 interface Goal {
   id: string;
   goal_name: string;
+  goal_type?: string;
   target_value: number;
   target_unit: string;
-  measurements?: Array<{ value: number }>;
+  target_reps?: number | null;
+  measurements?: Array<{ value: number; reps?: number | null }>;
 }
 
 interface GoalsProgressProps {
@@ -42,7 +44,11 @@ export function GoalsProgress({ goals }: GoalsProgressProps) {
                 <div>
                   <div className="text-2xl font-bold">{currentValue.toFixed(1)}</div>
                   <div className="text-sm text-muted-foreground">
-                    of {goal.target_value} {goal.target_unit}
+                    of {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
+                      ? (goal.target_reps === 1 
+                          ? `${goal.target_value} кг (1RM)` 
+                          : `${goal.target_value} кг × ${goal.target_reps}`)
+                      : `${goal.target_value} ${goal.target_unit}`}
                   </div>
                 </div>
                 <div className="text-sm font-medium">{progress.toFixed(0)}%</div>

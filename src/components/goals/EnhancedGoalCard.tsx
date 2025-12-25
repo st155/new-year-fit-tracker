@@ -303,10 +303,16 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
               {/* Current Value */}
               <div className="mb-3">
                 <div className="text-3xl font-bold" style={{ color: theme.color }}>
-                  {goal.current_value.toFixed(1)} {goal.target_unit}
+                  {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
+                    ? `${goal.current_value.toFixed(1)} кг${goal.target_reps === 1 ? '' : ` × ${goal.target_reps}`}`
+                    : `${goal.current_value.toFixed(1)} ${goal.target_unit}`}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Цель: {goal.target_value} {goal.target_unit}
+                  Цель: {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
+                    ? (goal.target_reps === 1 
+                        ? `${goal.target_value} кг (1RM)` 
+                        : `${goal.target_value} кг × ${goal.target_reps}`)
+                    : `${goal.target_value} ${goal.target_unit}`}
                 </div>
               </div>
 

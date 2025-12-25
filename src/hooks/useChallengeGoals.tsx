@@ -10,6 +10,7 @@ export interface ChallengeGoal {
   goal_type: string;
   target_value: number | null;
   target_unit: string;
+  target_reps?: number | null;
   current_value: number;
   progress_percentage: number;
   trend: 'up' | 'down' | 'stable';
@@ -21,6 +22,7 @@ export interface ChallengeGoal {
     goal_id: string;
     value: number;
     measurement_date: string;
+    reps?: number | null;
   }>;
   source?: 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop';
   has_target: boolean;
@@ -454,6 +456,7 @@ export function useChallengeGoals(userId?: string) {
           goal_type: goal.goal_type,
           target_value: goal.target_value,
           target_unit: goal.target_unit,
+          target_reps: goal.target_reps || null,
           current_value: currentValue,
           progress_percentage: progress,
           trend,
