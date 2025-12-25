@@ -29,7 +29,7 @@ import { SocialView } from '@/features/habits/components/layouts/SocialView';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
-import { HabitCreateDialog } from '@/components/habits/HabitCreateDialog';
+import { HabitCreateDialog } from '@/features/habits/components/legacy/HabitCreateDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';

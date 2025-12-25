@@ -10,8 +10,8 @@ import { ArrowLeft, Flame, TrendingUp, Calendar, Target, Download, FileText } fr
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
-import { HabitProgressChart } from '@/components/habits/HabitProgressChart';
-import { HabitCalendarHeatmap } from '@/components/habits/HabitCalendarHeatmap';
+import { HabitProgressChart } from '@/features/habits/components/legacy/HabitProgressChart';
+import { HabitCalendarHeatmap } from '@/features/habits/components/legacy/HabitCalendarHeatmap';
 import { HabitSocialSection } from '@/features/habits/components/detail/HabitSocialSection';
 import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils';
 import { toast } from 'sonner';

@@ -11,7 +11,7 @@ import {
 import { useState, useMemo } from "react";
 import { QuickMeasurementDialog } from "./QuickMeasurementDialog";
 import { GoalEditDialog } from "./GoalEditDialog";
-import { HabitCreateDialog } from "../habits/HabitCreateDialog";
+import { HabitCreateDialog } from "@/features/habits/components/legacy/HabitCreateDialog";
 import { ChallengeGoal } from "@/hooks/useChallengeGoals";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

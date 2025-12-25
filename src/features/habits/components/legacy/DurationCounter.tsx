@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { AIMotivation } from "@/components/habits/AIMotivation";
+import { AIMotivation } from "./AIMotivation";
 import { 
   getHabitSentiment, 
   getHabitIcon,

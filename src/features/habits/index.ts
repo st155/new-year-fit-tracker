@@ -9,8 +9,92 @@ export { useHabitMutations } from './hooks';
 export { useCompleteHabit, type HabitCompletionResult } from './hooks';
 export { useUndoCompletion } from './hooks';
 
-// Components
-export * from './components';
+// Components (explicit exports to avoid conflicts)
+export {
+  // Core
+  HabitCardV3,
+  // Charts
+  SparklineChart,
+  HabitMiniChart,
+  // Layouts
+  SmartView,
+  AllHabitsView,
+  CompactListView,
+  FocusMode,
+  TimelineView,
+  AnalyticsView,
+  OverviewStats,
+  TimeSection,
+  SocialView,
+  // Gamification
+  AchievementBadge,
+  AchievementUnlockedToast,
+  AchievementsModal,
+  LevelProgressBar,
+  LevelUpCelebration,
+  XPIndicator,
+  // Widgets
+  CircularProgress,
+  HabitSparklineWidget,
+  HabitWidgetCardV3,
+  DailyMeasurementInlineWidget,
+  DurationCounterInlineWidget,
+  FastingInlineWidget,
+  NumericCounterInlineWidget,
+  // Analytics
+  AchievementProgress,
+  InsightCard,
+  StreakMilestoneTimeline,
+  // Sections
+  HabitsProgressSection,
+  // Social
+  TeamCard,
+  CreateTeamDialog,
+  AddTeamMemberDialog,
+  FeedEvent,
+  FriendsList,
+  NotificationCenter,
+  SocialOnboarding,
+  // Detail
+  FriendHabitCard,
+  HabitSocialSection,
+  TeamHabitCard,
+  // Onboarding
+  HabitsV3Onboarding,
+  // Settings
+  NotificationSettings,
+  // Other
+  HabitsInsightBanner,
+  // Legacy
+  HabitCard,
+  EnhancedHabitCard,
+  HabitCompactCard,
+  HabitDashboardCard,
+  HabitWidgetCard,
+  HabitCreateDialog,
+  HabitEditDialog,
+  HabitOptionsMenu,
+  HabitCelebration,
+  HabitCalendar,
+  HabitCalendarHeatmap,
+  HabitProgressChart,
+  HabitSparkline,
+  HabitHistory,
+  HabitsOverviewChart,
+  HabitsList,
+  FastingTracker,
+  FastingControlButton,
+  FastingHistory,
+  CircularFastingProgress,
+  IntermittentFastingWidget,
+  DurationCounter,
+  NumericCounter,
+  DailyMeasurement,
+  AIMotivation,
+} from './components';
+
+// Rename HabitStats from legacy to avoid conflict with type
+export { HabitStats as HabitStatsComponent } from './components';
 
 // Types
 export * from './types';
