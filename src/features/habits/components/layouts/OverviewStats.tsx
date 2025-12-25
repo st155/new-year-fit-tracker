@@ -3,7 +3,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Target, Flame, Trophy, TrendingUp } from 'lucide-react';
 import { CircularProgress } from '@/components/ui/circular-progress';
-import { SparklineChart } from '@/components/habits-v3/charts/SparklineChart';
+import { SparklineChart } from '../charts/SparklineChart';
 import { motion } from 'framer-motion';
 
 interface OverviewStatsProps {

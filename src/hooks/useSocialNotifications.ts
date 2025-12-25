@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitNotificationsRealtime } from '@/hooks/composite/realtime';
 import { supabase } from '@/integrations/supabase/client';
-import type { NotificationPreferences } from '@/components/habits-v3/settings/NotificationSettings';
+import type { NotificationPreferences } from '@/features/habits/components/settings/NotificationSettings';
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   friend_completions: true,

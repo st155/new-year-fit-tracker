@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HabitMiniChart } from '@/components/habits-v3/charts/HabitMiniChart';
+import { HabitMiniChart } from '../charts/HabitMiniChart';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, RotateCcw, Filter, ArrowUpDown } from 'lucide-react';
