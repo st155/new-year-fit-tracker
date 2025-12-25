@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { healthApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface RecommendationHistory {
@@ -43,10 +44,7 @@ export function useRecommendationsHistory() {
 
   const recalculateUnits = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('fix-unit-conversions', {
-        body: {}
-      });
-
+      const { data, error } = await healthApi.fixUnitConversions();
       if (error) throw error;
       return data;
     },
@@ -67,12 +65,8 @@ export function useRecommendationsHistory() {
 
   const generateRecommendation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('generate-health-recommendations', {
-        body: {}
-      });
-
+      const { data, error } = await healthApi.generateRecommendations();
       if (error) throw error;
-
       // Edge Function already saves to recommendations_history
       return data;
     },

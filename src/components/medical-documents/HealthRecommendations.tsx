@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { healthApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Loader2, Lightbulb, Calendar } from "lucide-react";
 
@@ -17,14 +17,12 @@ export const HealthRecommendations = () => {
     setIsGenerating(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-health-recommendations', {
-        body: {}
-      });
+      const { data, error } = await healthApi.generateRecommendations();
 
       if (error) throw error;
 
-      setRecommendations(data.recommendations);
-      setMetadata(data.context);
+      setRecommendations(data?.recommendations || null);
+      setMetadata(data?.context);
       
       toast({
         title: "Рекомендации готовы",

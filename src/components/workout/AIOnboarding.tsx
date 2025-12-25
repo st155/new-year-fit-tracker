@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { aiTrainingApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Target, Calendar, Dumbbell, AlertCircle } from "lucide-react";
 
@@ -48,9 +49,7 @@ export default function AIOnboarding({ open, onOpenChange, onSuccess }: AIOnboar
       if (prefError) throw prefError;
 
       // Generate plan
-      const { data, error } = await supabase.functions.invoke('generate-ai-training-plan', {
-        body: { user_id: user.id }
-      });
+      const { data, error } = await aiTrainingApi.generatePlan(user.id);
 
       if (error) throw error;
 

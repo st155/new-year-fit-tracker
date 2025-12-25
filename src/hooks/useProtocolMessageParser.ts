@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { healthApi } from "@/lib/api";
 
 export interface ParsedSupplement {
   supplement_name: string;
@@ -16,13 +16,10 @@ export interface ParsedSupplement {
 export function useProtocolMessageParser() {
   return useMutation({
     mutationFn: async (messageText: string) => {
-      const { data, error } = await supabase.functions.invoke(
-        'parse-protocol-message',
-        { body: { message: messageText } }
-      );
+      const { data, error } = await healthApi.parseProtocolMessage(messageText);
       
       if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Failed to parse protocol');
+      if (!data?.success) throw new Error(data?.error || 'Failed to parse protocol');
       
       return data.supplements as ParsedSupplement[];
     }

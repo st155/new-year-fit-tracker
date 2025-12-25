@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { documentsApi } from '@/lib/api';
 import { toast } from 'sonner';
 
 export function useExtractProtocols() {
@@ -30,9 +31,7 @@ export function useExtractProtocols() {
       for (let i = 0; i < docs.length; i++) {
         const doc = docs[i];
         try {
-          const { error } = await supabase.functions.invoke('parse-doctor-recommendations', {
-            body: { documentId: doc.id }
-          });
+          const { error } = await documentsApi.parseRecommendations(doc.id);
           
           if (error) {
             console.error(`Failed to parse ${doc.file_name}:`, error);

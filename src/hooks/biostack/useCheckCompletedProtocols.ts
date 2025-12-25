@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { healthApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
@@ -15,7 +15,7 @@ export function useCheckCompletedProtocols() {
     // Run once on mount (page load)
     const checkProtocols = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('check-completed-protocols');
+        const { data, error } = await healthApi.checkCompletedProtocols();
         if (error) {
           console.error('[LIFECYCLE] Error checking protocols:', error);
         } else {

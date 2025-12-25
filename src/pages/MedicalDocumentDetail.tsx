@@ -31,6 +31,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { documentsApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -268,9 +269,7 @@ export default function MedicalDocumentDetail() {
     setIsRematching(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('rematch-biomarkers', {
-        body: { documentId }
-      });
+      const { data, error } = await documentsApi.rematchBiomarkers(documentId);
 
       if (error) throw error;
 
@@ -278,7 +277,7 @@ export default function MedicalDocumentDetail() {
       
       showSuccessToast(
         'Пересопоставление завершено',
-        `Сопоставлено повторно: ${data.rematchedCount} из ${data.totalUnmatched} показателей`
+        `Сопоставлено повторно: ${data?.rematchedCount || 0} из ${data?.totalUnmatched || 0} показателей`
       );
     } catch (error: any) {
       showErrorToast('Ошибка пересопоставления', error.message);
