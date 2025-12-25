@@ -7,7 +7,11 @@ export {
   useLatestMetricsOnly, 
   useMetricHistory,
   useSingleMetric,
-  type MetricData 
+  // Backwards compatibility exports
+  useLatestMetrics,
+  useDeviceMetrics,
+  type MetricData,
+  type DeviceFilter,
 } from './useMetrics';
 
 export {

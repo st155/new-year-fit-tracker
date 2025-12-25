@@ -1,9 +1,14 @@
 export { useUnifiedMetricsQuery, metricsQueryKeys } from './useUnifiedMetricsQuery';
 export type { UnifiedMetric } from './useUnifiedMetricsQuery';
 export type { MetricWithConfidence } from '@/lib/data-quality';
-export { useLatestMetrics, useDeviceMetrics } from './useLatestMetrics';
-export type { DeviceFilter } from './useLatestMetrics';
-export { useLatestMetric } from './useLatestMetric';
+
+// Re-export from composite for backwards compatibility
+export { 
+  useLatestMetrics, 
+  useDeviceMetrics,
+  type DeviceFilter,
+} from '@/hooks/composite/data/useMetrics';
+
 export { useMetricMapping } from './useMetricMapping';
 export { useSystemStatus } from './useSystemStatus';
 export { useSmartWidgetsData } from './useSmartWidgetsData';

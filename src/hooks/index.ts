@@ -19,7 +19,11 @@ export {
   useLatestMetricsOnly, 
   useMetricHistory,
   useSingleMetric,
-  type MetricData 
+  // Backwards compatibility
+  useLatestMetrics,
+  useDeviceMetrics,
+  type MetricData,
+  type DeviceFilter,
 } from './composite/data/useMetrics';
 
 export { 
@@ -32,9 +36,7 @@ export {
 export { useDataQuality } from './useDataQuality';
 export { useConfidenceRecalculation } from './useConfidenceRecalculation';
 
-// Keep existing hooks that are not deprecated
-export { useLatestMetrics, useDeviceMetrics, type DeviceFilter } from './metrics/useLatestMetrics';
-export { useLatestMetric } from './metrics/useLatestMetric';
+// Low-level metrics query (prefer useMetrics instead)
 export { useUnifiedMetricsQuery, metricsQueryKeys, type UnifiedMetric } from './metrics/useUnifiedMetricsQuery';
 
 // ===== COMPOSITE HOOKS - Realtime =====
@@ -71,7 +73,6 @@ export { useActivityFeed } from './useActivityFeed';
 export { useActivityReactions } from './useActivityReactions';
 export { useBodyComposition as useBodyCompositionOld } from './useBodyComposition';
 export { useInBodyAnalyses } from './useInBodyAnalyses';
-export { useMetricData } from './useMetricData';
 export { useMedicalDocuments } from './useMedicalDocuments';
 export { useInBodyParser } from './useInBodyParser';
 export { useOptimizedQuery, useRealtimeQuery, useStaticQuery } from './useOptimizedQuery';

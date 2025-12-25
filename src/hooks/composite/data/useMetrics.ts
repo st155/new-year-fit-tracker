@@ -316,3 +316,56 @@ export function useSingleMetric(metricName: string) {
     ...rest,
   };
 }
+
+// ===== BACKWARDS COMPATIBILITY =====
+// These re-exports replace the old useLatestMetrics.tsx and useLatestMetric.tsx
+
+export type DeviceFilter = 'all' | 'whoop' | 'oura' | 'withings' | 'terra' | 'manual' | 'apple_health' | 'garmin' | 'ultrahuman';
+
+/**
+ * @deprecated Use useMetrics() instead
+ * Kept for backwards compatibility with existing components
+ */
+export function useLatestMetrics(userId: string | undefined) {
+  const { latest, isLoading, error } = useMetrics({
+    enabled: !!userId,
+  });
+  
+  // Convert to Record format expected by old consumers
+  const metrics = (latest as MetricData[]).reduce((acc, metric) => {
+    acc[metric.metric_name] = metric;
+    return acc;
+  }, {} as Record<string, MetricData>);
+  
+  const qualityMap = new Map<string, number>(
+    (latest as MetricData[]).map(m => [m.metric_name, 0])
+  );
+  
+  return { 
+    metrics, 
+    qualityMap,
+    loading: isLoading, 
+    error 
+  };
+}
+
+/**
+ * @deprecated Use useMetrics({ sourceFilter }) instead
+ * Kept for backwards compatibility
+ */
+export function useDeviceMetrics(
+  userId: string | undefined, 
+  deviceFilter: DeviceFilter
+) {
+  const { latest, isLoading, error, refetch } = useMetrics({
+    enabled: !!userId,
+    sourceFilter: deviceFilter,
+  });
+  
+  const metrics = (latest as MetricData[]).reduce((acc, metric) => {
+    acc[metric.metric_name] = metric;
+    return acc;
+  }, {} as Record<string, MetricData>);
+  
+  return { metrics, loading: isLoading, error, refetch };
+}
