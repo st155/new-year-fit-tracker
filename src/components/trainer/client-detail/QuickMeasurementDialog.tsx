@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { formatMeasurement } from '@/lib/units';
+import { formatMeasurement, isStrengthWeightGoal, formatStrengthGoal } from '@/lib/units';
 
 interface Goal {
   id: string;
@@ -19,6 +19,8 @@ interface Goal {
   target_value: number;
   target_unit: string;
   current_value: number;
+  goal_type?: string;
+  target_reps?: number | null;
 }
 
 interface QuickMeasurementDialogProps {
@@ -37,10 +39,13 @@ export function QuickMeasurementDialog({
   onSuccess 
 }: QuickMeasurementDialogProps) {
   const [value, setValue] = useState<string>('');
+  const [reps, setReps] = useState<string>('');
   const [date, setDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { toast } = useToast();
+  
+  const isStrength = isStrengthWeightGoal(goal.goal_type || '', goal.target_unit);
 
   const handleSubmit = async () => {
     const numValue = parseFloat(value);
@@ -56,6 +61,8 @@ export function QuickMeasurementDialog({
 
     setLoading(true);
     try {
+      const repsValue = isStrength && reps ? parseInt(reps) : null;
+      
       const { error } = await supabase
         .from('measurements')
         .insert({
@@ -64,18 +71,24 @@ export function QuickMeasurementDialog({
           value: numValue,
           measurement_date: date.toISOString().split('T')[0],
           unit: goal.target_unit,
-          source: 'trainer'
+          source: 'trainer',
+          reps: repsValue
         });
 
       if (error) throw error;
 
+      const displayValue = isStrength && repsValue
+        ? `${numValue} кг × ${repsValue}`
+        : formatMeasurement(numValue, goal.target_unit);
+
       toast({
         title: 'Готово',
-        description: `Измерение добавлено: ${formatMeasurement(numValue, goal.target_unit)}`
+        description: `Измерение добавлено: ${displayValue}`
       });
       
       onSuccess();
       setValue('');
+      setReps('');
     } catch (error) {
       console.error('Error adding measurement:', error);
       toast({
@@ -97,22 +110,40 @@ export function QuickMeasurementDialog({
         <DialogHeader>
           <DialogTitle>Добавить измерение</DialogTitle>
           <DialogDescription>
-            {goal.goal_name} (цель: {formatMeasurement(goal.target_value, goal.target_unit)})
+            {goal.goal_name} (цель: {isStrength
+              ? formatStrengthGoal(goal.target_value, goal.target_unit, goal.target_reps)
+              : formatMeasurement(goal.target_value, goal.target_unit)})
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="value">Значение ({goal.target_unit})</Label>
-            <Input
-              id="value"
-              type="number"
-              step="0.1"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder={`Введите значение в ${goal.target_unit}`}
-              autoFocus
-            />
+          <div className={isStrength ? "grid grid-cols-2 gap-3" : "space-y-2"}>
+            <div className="space-y-2">
+              <Label htmlFor="value">{isStrength ? "Вес (кг)" : `Значение (${goal.target_unit})`}</Label>
+              <Input
+                id="value"
+                type="number"
+                step="0.1"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={isStrength ? "Например: 100" : `Введите значение в ${goal.target_unit}`}
+                autoFocus
+              />
+            </div>
+            
+            {isStrength && (
+              <div className="space-y-2">
+                <Label htmlFor="reps">Повторения</Label>
+                <Input
+                  id="reps"
+                  type="number"
+                  min="1"
+                  value={reps}
+                  onChange={(e) => setReps(e.target.value)}
+                  placeholder={goal.target_reps ? `Цель: ${goal.target_reps}` : "1"}
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
