@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, FileText, AlertTriangle, Bell, Download } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -26,9 +27,7 @@ export function QuickActionsPanel() {
 
       // Trigger sync for each client
       const syncPromises = clients.map(client =>
-        supabase.functions.invoke('force-terra-sync', {
-          body: { user_id: client.client_id }
-        })
+        terraApi.forceSync(client.client_id)
       );
 
       await Promise.allSettled(syncPromises);

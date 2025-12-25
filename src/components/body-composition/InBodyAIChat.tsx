@@ -3,7 +3,7 @@ import { Send, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { aiApi } from "@/lib/api/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface InBodyAIChatProps {
@@ -33,13 +33,11 @@ export function InBodyAIChat({ analysisId }: InBodyAIChatProps) {
     setAnswer("");
 
     try {
-      const { data, error } = await supabase.functions.invoke('ask-about-inbody', {
-        body: { analysisId, question: q }
-      });
+      const { data, error } = await aiApi.askAboutInBody(analysisId, q);
 
       if (error) throw error;
 
-      setAnswer(data.answer);
+      setAnswer(data?.answer || '');
     } catch (error) {
       console.error('Error asking question:', error);
       toast({

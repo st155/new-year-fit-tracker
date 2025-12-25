@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Settings, Zap, RotateCcw, Sparkles } from 'lucide-react';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
+import { healthApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { ReprocessAllDocumentsDialog } from './ReprocessAllDocumentsDialog';
@@ -78,7 +79,7 @@ export const DocumentFilters = ({
         description: "Заполнение корреляций добавок и биомаркеров...",
       });
 
-      const { error } = await supabase.functions.invoke('populate-biomarker-correlations');
+      const { error } = await healthApi.populateBiomarkerCorrelations();
 
       if (error) throw error;
 

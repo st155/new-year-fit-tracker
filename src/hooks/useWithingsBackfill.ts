@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 interface BackfillParams {
@@ -11,16 +11,14 @@ export function useWithingsBackfill() {
 
   return useMutation({
     mutationFn: async ({ daysBack = 30 }: BackfillParams) => {
-      const { data, error } = await supabase.functions.invoke('withings-backfill', {
-        body: { daysBack },
-      });
+      const { data, error } = await terraApi.withingsBackfill(daysBack);
 
       if (error) throw error;
       return data;
     },
     onSuccess: (data, { daysBack = 30 }) => {
       toast.success('Данные Withings загружены', {
-        description: `Загружено ${data.metricsInserted} метрик за последние ${daysBack} дней`,
+        description: `Загружено ${data?.metricsInserted || 0} метрик за последние ${daysBack} дней`,
       });
       
       // Invalidate all relevant queries

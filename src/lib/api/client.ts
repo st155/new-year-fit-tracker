@@ -83,8 +83,14 @@ export const terraApi = {
   deauthenticate: (provider: string) =>
     invokeWithRetry<{ success: boolean }>('terra-integration', { action: 'deauthenticate-user', provider }),
   
+  purgeUsers: (provider: string) =>
+    invokeWithRetry<{ success: boolean; terra_users_found?: number }>('terra-integration', { action: 'purge-terra-users', provider }),
+  
   forceSync: (provider: string, dataType?: string) =>
     invokeWithRetry<{ success: boolean }>('force-terra-sync', { provider, dataType }),
+  
+  withingsBackfill: (daysBack?: number) =>
+    invokeWithRetry<{ metricsInserted: number }>('withings-backfill', { daysBack }),
 };
 
 // ===== SUPPLEMENTS =====
@@ -142,6 +148,12 @@ export const documentsApi = {
   
   reclassifyImaging: () =>
     invokeWithRetry<{ reclassified: number }>('reclassify-imaging-documents'),
+  
+  classifyDocument: (fileName: string, fileContent?: string, mimeType?: string) =>
+    invokeWithRetry<{ document_type: string; tags: string[]; suggested_date: string | null; confidence: number }>('ai-classify-document', { fileName, fileContent, mimeType }),
+  
+  renameDocument: (fileName: string, documentType: string, fileContent?: string) =>
+    invokeWithRetry<{ suggestedName: string }>('ai-rename-document', { fileName, documentType, fileContent }),
 };
 
 // ===== HEALTH ANALYSIS =====
@@ -190,6 +202,9 @@ export const healthApi = {
   
   cleanupAppleHealth: (userId: string) =>
     invokeWithRetry<{ deletedMetrics: number }>('cleanup-apple-health', { userId }),
+  
+  populateBiomarkerCorrelations: () =>
+    invokeWithRetry<{ success: boolean }>('populate-biomarker-correlations'),
 };
 
 // ===== AI TRAINING =====
@@ -234,6 +249,9 @@ export const adminApi = {
   
   reprocessWebhook: (webhookId: string) =>
     invokeWithRetry<{ success: boolean }>('reprocess-webhook', { webhookId }),
+  
+  sendBroadcast: (broadcastId: string) =>
+    invokeWithRetry<{ sent_count: number }>('send-trainer-broadcast', { broadcastId }),
 };
 
 // ===== AI =====
@@ -255,6 +273,9 @@ export const aiApi = {
       goalId, 
       measurementDate 
     }),
+  
+  askAboutInBody: (analysisId: string, question: string) =>
+    invokeWithRetry<{ answer: string }>('ask-about-inbody', { analysisId, question }),
 };
 
 // ===== INBODY =====
@@ -278,6 +299,18 @@ export const jobsApi = {
     invokeWithRetry<{ success: boolean }>('job-worker'),
 };
 
+// ===== HABITS =====
+export const habitsApi = {
+  delete: (habitId: string) =>
+    invokeWithRetry<{ success: boolean; deletedCount?: number }>('delete-habit', { habitId }),
+};
+
+// ===== SUPPLEMENTS (additional) =====
+export const supplementsApiExtended = {
+  generateProtocol: (goals: string[], preferences: any, existingStack: any[]) =>
+    invokeWithRetry<{ protocol: unknown }>('generate-supplement-protocol', { goals, preferences, existingStack }),
+};
+
 // ===== UNIFIED API OBJECT =====
 export const api = {
   terra: terraApi,
@@ -289,6 +322,7 @@ export const api = {
   jobs: jobsApi,
   ai: aiApi,
   inbody: inbodyApi,
+  habits: habitsApi,
 };
 
 export default api;

@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { terraApi } from '@/lib/api/client';
+import { terraApi, jobsApi } from '@/lib/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
@@ -417,7 +417,7 @@ export function TerraIntegration() {
 
       // Trigger job-worker immediately
       try {
-        await supabase.functions.invoke('job-worker');
+        await jobsApi.trigger();
       } catch (e) {
         console.warn('Failed to trigger job-worker:', e);
       }
@@ -520,9 +520,7 @@ export function TerraIntegration() {
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'deauthenticate-user', provider },
-      });
+      const { error } = await terraApi.deauthenticate(provider);
 
       if (error) throw error;
 
@@ -561,9 +559,7 @@ export function TerraIntegration() {
         description: 'Очищаем все сессии на стороне Terra...',
       });
       
-      const { data, error } = await supabase.functions.invoke('terra-integration', {
-        body: { action: 'purge-terra-users', provider },
-      });
+      const { data, error } = await terraApi.purgeUsers(provider);
 
       if (error) throw error;
 

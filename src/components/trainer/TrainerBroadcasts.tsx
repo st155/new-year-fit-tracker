@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Plus, Send, Mail, Users, Calendar, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { adminApi } from "@/lib/api/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -170,9 +171,7 @@ export function TrainerBroadcasts() {
     
     try {
       // Здесь можно вызвать edge function для отправки email
-      const { data, error } = await supabase.functions.invoke('send-trainer-broadcast', {
-        body: { broadcastId }
-      });
+      const { data, error } = await adminApi.sendBroadcast(broadcastId);
 
       if (error) throw error;
 

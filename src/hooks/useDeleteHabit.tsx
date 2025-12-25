@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { habitsApi } from "@/lib/api/client";
 import { toast } from "sonner";
 
 export function useDeleteHabit() {
@@ -8,9 +9,7 @@ export function useDeleteHabit() {
   const deleteHabit = useMutation({
     mutationFn: async (habitId: string) => {
       // Use Edge Function for reliable deletion with proper error handling
-      const { data, error } = await supabase.functions.invoke('delete-habit', {
-        body: { habitId },
-      });
+      const { data, error } = await habitsApi.delete(habitId);
 
       if (error) {
         console.error('Edge function error:', error);
@@ -18,7 +17,7 @@ export function useDeleteHabit() {
       }
 
       if (!data?.success) {
-        throw new Error(data?.error || 'Failed to delete habit');
+        throw new Error('Failed to delete habit');
       }
 
       return data;
