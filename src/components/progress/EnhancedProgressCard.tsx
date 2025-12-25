@@ -46,13 +46,15 @@ const getGoalIcon = (goalName: string, goalType: string) => {
   return goalTypeIcons[goalType] || Target;
 };
 
-const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual') => {
+const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop') => {
   if (!source) return null;
   
-  const badges = {
-    inbody: { label: 'InBody', variant: 'default' as const },
-    withings: { label: 'Withings', variant: 'secondary' as const },
-    manual: { label: 'Ручное', variant: 'outline' as const },
+  const badges: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+    inbody: { label: 'InBody', variant: 'default' },
+    withings: { label: 'Withings', variant: 'secondary' },
+    manual: { label: 'Ручное', variant: 'outline' },
+    garmin: { label: 'Garmin', variant: 'secondary' },
+    whoop: { label: 'WHOOP', variant: 'secondary' },
   };
   
   return badges[source];

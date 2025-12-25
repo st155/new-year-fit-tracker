@@ -22,7 +22,7 @@ export interface ChallengeGoal {
     value: number;
     measurement_date: string;
   }>;
-  source?: 'inbody' | 'withings' | 'manual';
+  source?: 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop';
   has_target: boolean;
   baseline_value?: number;
   subSources?: Array<{
@@ -106,7 +106,7 @@ export function useChallengeGoals(userId?: string) {
       const goalIds = goals.map(g => g.id);
       const { data: measurements } = await supabase
         .from("measurements")
-        .select("goal_id, value, measurement_date")
+        .select("goal_id, value, measurement_date, source")
         .in("goal_id", goalIds)
         .eq("user_id", userId)
         .order("measurement_date", { ascending: false });
@@ -139,8 +139,12 @@ export function useChallengeGoals(userId?: string) {
         
         // For body composition goals, use aggregated metrics
         let currentValue = 0;
-        let source: 'inbody' | 'withings' | 'manual' | undefined;
-        let sparklineData = allMeasurements.slice(0, 14);
+        let source: ChallengeGoal['source'];
+        let sparklineData: ChallengeGoal['measurements'] = allMeasurements.slice(0, 14).map(m => ({
+          goal_id: m.goal_id,
+          value: m.value,
+          measurement_date: m.measurement_date
+        }));
         let baselineValue: number | null = null;
 
         const isRecentDate = (dateStr?: string, days: number = 30) => {
@@ -348,7 +352,7 @@ export function useChallengeGoals(userId?: string) {
         } else {
           // Final fallback: use manual measurements
           currentValue = allMeasurements[0]?.value || 0;
-          source = 'manual';
+          source = (allMeasurements[0]?.source as ChallengeGoal['source']) || 'manual';
           
           // Use earliest measurement as baseline
           if (allMeasurements.length > 1) {
