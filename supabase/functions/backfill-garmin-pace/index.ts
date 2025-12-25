@@ -117,20 +117,16 @@ Deno.serve(async (req) => {
           const workoutDate = metadata.start_time?.split('T')[0];
           if (!workoutDate) continue;
 
-          // Get app user_id from terra_tokens
-          const { data: tokenData } = await supabase
-            .from('terra_tokens')
-            .select('user_id')
-            .eq('terra_user_id', payload.user?.user_id)
-            .eq('is_active', true)
-            .single();
-
-          if (!tokenData) {
-            console.log('No user found for terra_user_id:', payload.user?.user_id);
+          // Get app user_id from reference_id (this is the app_user_id set during Terra auth)
+          // This approach works even when terra_user_id changes (e.g., user reconnects with new device)
+          const referenceId = payload?.user?.reference_id;
+          
+          if (!referenceId) {
+            console.log('No reference_id in payload, skipping. terra_user_id:', payload.user?.user_id);
             continue;
           }
 
-          const appUserId = tokenData.user_id;
+          const appUserId = referenceId;
 
           // Calculate best 1km pace using sliding window
           const paceResult = extractBest1kmPace(activity);
