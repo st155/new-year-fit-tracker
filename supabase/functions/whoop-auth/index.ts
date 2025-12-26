@@ -70,19 +70,8 @@ serve(async (req) => {
     );
 
     if (action === 'get-auth-url') {
-      // Generate state token
+      // Generate state token (stored in URL, verified on callback via localStorage on client)
       const stateToken = crypto.randomUUID();
-      
-      // Store state in database for verification
-      await serviceClient
-        .from('whoop_tokens')
-        .upsert({
-          user_id: user.id,
-          oauth_state: stateToken,
-          is_active: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
 
       const authUrl = new URL(WHOOP_AUTH_URL);
       authUrl.searchParams.set('client_id', clientId);
