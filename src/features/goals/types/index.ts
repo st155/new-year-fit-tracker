@@ -2,7 +2,7 @@
 
 // ============= Base Types =============
 
-export type GoalSource = 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop';
+export type GoalSource = 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop' | 'oura' | 'google' | 'terra';
 export type GoalTrend = 'up' | 'down' | 'stable';
 
 // ============= Measurement Types =============

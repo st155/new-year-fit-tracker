@@ -44,7 +44,7 @@ export const getGoalIcon = (goalName: string, goalType: string): LucideIcon => {
 };
 
 // Source badge configuration
-export type SourceType = 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop';
+export type SourceType = 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop' | 'oura' | 'google' | 'terra';
 
 export interface SourceBadgeConfig {
   label: string;
@@ -60,6 +60,9 @@ export const getSourceBadge = (source?: SourceType): SourceBadgeConfig | null =>
     manual: { label: 'Ручное', variant: 'outline' },
     garmin: { label: 'Garmin', variant: 'secondary' },
     whoop: { label: 'WHOOP', variant: 'secondary' },
+    oura: { label: 'Oura', variant: 'secondary' },
+    google: { label: 'Google Fit', variant: 'secondary' },
+    terra: { label: 'Terra', variant: 'secondary' },
   };
   
   return badges[source];
