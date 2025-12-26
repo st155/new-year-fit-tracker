@@ -66,7 +66,7 @@ export default function WhoopOAuthCallback() {
 
       console.log('✅ [WhoopOAuthCallback] Token exchange successful');
       setStatus('success');
-      setMessage('Whoop connected successfully! Redirecting...');
+      setMessage('Whoop connected successfully!');
 
       // Trigger initial sync
       setMessage('Starting initial data sync...');
@@ -79,10 +79,21 @@ export default function WhoopOAuthCallback() {
         console.warn('⚠️ [WhoopOAuthCallback] Initial sync failed:', syncError);
       }
 
-      // Redirect after short delay
-      setTimeout(() => {
-        navigate('/fitness-data', { replace: true });
-      }, 2000);
+      // If opened as popup, notify parent and close
+      if (window.opener) {
+        console.log('📤 [WhoopOAuthCallback] Sending success message to parent window');
+        window.opener.postMessage({ type: 'whoop-connected', success: true }, '*');
+        setMessage('Whoop подключен! Окно закроется автоматически...');
+        setTimeout(() => {
+          window.close();
+        }, 1500);
+      } else {
+        // Redirect if not in popup
+        setMessage('Whoop подключен! Перенаправление...');
+        setTimeout(() => {
+          navigate('/fitness-data', { replace: true });
+        }, 2000);
+      }
 
     } catch (error: any) {
       console.error('❌ [WhoopOAuthCallback] Error:', error);

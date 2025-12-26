@@ -76,6 +76,25 @@ export function WhoopDirectIntegration() {
     }
   }, [user, isWhitelisted]);
 
+  // Listen for postMessage from OAuth popup
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'whoop-connected' && event.data?.success) {
+        console.log('✅ Whoop connected via popup');
+        setConnecting(false);
+        checkStatus();
+        toast({
+          title: 'Whoop подключен!',
+          description: 'Данные начнут синхронизироваться автоматически',
+        });
+        queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [toast, queryClient]);
+
   const checkStatus = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('whoop-auth', {
@@ -105,12 +124,30 @@ export function WhoopDirectIntegration() {
       sessionStorage.setItem('whoop_return_url', window.location.pathname);
 
       toast({
-        title: 'Переход на Whoop',
-        description: 'Авторизуйтесь в Whoop для подключения',
+        title: 'Открытие Whoop',
+        description: 'Авторизуйтесь в Whoop во всплывающем окне',
       });
 
-      // Redirect to Whoop auth
-      window.location.href = data.url;
+      // Open OAuth in popup window to bypass iframe restrictions
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const authWindow = window.open(
+        data.url, 
+        'whoop-oauth',
+        `width=${width},height=${height},left=${left},top=${top},popup=yes`
+      );
+      
+      // If popup was blocked, fall back to redirect
+      if (!authWindow || authWindow.closed) {
+        console.log('Popup blocked, falling back to redirect');
+        window.location.href = data.url;
+        return;
+      }
+
+      // Keep connecting state active - will be reset by postMessage
     } catch (error: any) {
       console.error('Failed to get auth URL:', error);
       toast({
