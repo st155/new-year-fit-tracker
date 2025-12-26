@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Calendar, TrendingUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface BaselineData {
   goalName: string;
@@ -28,13 +29,13 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          Baseline Comparison
+          Сравнение с базой
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {topImprovements.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No baseline data available yet
+            Нет данных о базовой линии
           </div>
         ) : (
           topImprovements.map((item) => (
@@ -47,7 +48,7 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
                   <h4 className="font-semibold text-sm mb-1">{item.goalName}</h4>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    Started {formatDistanceToNow(new Date(item.startDate), { addSuffix: true })}
+                    Начало {formatDistanceToNow(new Date(item.startDate), { addSuffix: true, locale: ru })}
                   </div>
                 </div>
                 <Badge 
@@ -61,7 +62,7 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
 
               <div className="flex items-center justify-between text-sm">
                 <div className="text-center">
-                  <div className="text-muted-foreground text-xs mb-1">Start</div>
+                  <div className="text-muted-foreground text-xs mb-1">Старт</div>
                   <div className="font-semibold">
                     {item.startValue} {item.unit}
                   </div>
@@ -70,7 +71,7 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 
                 <div className="text-center">
-                  <div className="text-muted-foreground text-xs mb-1">Current</div>
+                  <div className="text-muted-foreground text-xs mb-1">Текущее</div>
                   <div className="font-semibold text-primary">
                     {item.currentValue} {item.unit}
                   </div>
@@ -79,7 +80,7 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 
                 <div className="text-center">
-                  <div className="text-muted-foreground text-xs mb-1">Target</div>
+                  <div className="text-muted-foreground text-xs mb-1">Цель</div>
                   <div className="font-semibold">
                     {item.targetValue} {item.unit}
                   </div>
@@ -88,7 +89,7 @@ export const BaselineComparisonCard = ({ data }: BaselineComparisonCardProps) =>
 
               {item.projectedCompletionDate && (
                 <div className="text-xs text-muted-foreground pt-2 border-t">
-                  📅 Projected completion: {new Date(item.projectedCompletionDate).toLocaleDateString()}
+                  📅 Прогноз завершения: {new Date(item.projectedCompletionDate).toLocaleDateString('ru-RU')}
                 </div>
               )}
             </div>
