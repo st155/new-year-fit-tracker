@@ -193,12 +193,24 @@ export function WhoopDirectIntegration() {
 
       console.log('🪟 [WhoopConnect] Popup opened, waiting for result...');
 
+      // Allowed origins for postMessage
+      const allowedOrigins = [
+        window.location.origin,
+        'https://elite10.club',
+        'https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com',
+      ];
+
       // Listen for message from popup
+      let messageReceived = false;
       const handleMessage = async (event: MessageEvent) => {
-        // Verify origin
-        if (event.origin !== window.location.origin) return;
+        // Verify origin from allowlist
+        if (!allowedOrigins.includes(event.origin)) {
+          console.log('🚫 [WhoopConnect] Ignoring message from unknown origin:', event.origin);
+          return;
+        }
         
         if (event.data?.type === 'whoop-auth-result') {
+          messageReceived = true;
           console.log('📨 [WhoopConnect] Received result from popup:', event.data);
           window.removeEventListener('message', handleMessage);
           
@@ -229,14 +241,56 @@ export function WhoopDirectIntegration() {
 
       window.addEventListener('message', handleMessage);
 
-      // Also check if popup was closed manually
+      // Fallback: check status after popup closes if no message received
+      const checkStatusFallback = async (attempts: number = 0) => {
+        if (messageReceived) return; // Message was received, no fallback needed
+        
+        console.log(`🔍 [WhoopConnect] Fallback status check #${attempts + 1}`);
+        try {
+          const { data } = await supabase.functions.invoke('whoop-auth', {
+            body: { action: 'status' },
+          });
+          
+          if (data?.connected) {
+            console.log('✅ [WhoopConnect] Fallback: Connected!');
+            setStatus(data);
+            toast({
+              title: 'Whoop подключен!',
+              description: 'Данные начнут синхронизироваться автоматически',
+            });
+            queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+            queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+            return true;
+          }
+        } catch (e) {
+          console.warn('⚠️ [WhoopConnect] Fallback check failed:', e);
+        }
+        
+        // Retry up to 3 times with increasing delays
+        if (attempts < 2) {
+          setTimeout(() => checkStatusFallback(attempts + 1), (attempts + 1) * 1500);
+        } else {
+          console.log('⚠️ [WhoopConnect] Fallback checks exhausted, connection status unknown');
+          toast({
+            title: 'Проверьте подключение',
+            description: 'Откройте страницу снова, чтобы увидеть статус Whoop',
+          });
+        }
+        return false;
+      };
+
+      // Check if popup was closed and run fallback
       const checkPopupClosed = setInterval(() => {
         if (popup.closed) {
-          console.log('🪟 [WhoopConnect] Popup was closed');
+          console.log('🪟 [WhoopConnect] Popup was closed, messageReceived:', messageReceived);
           clearInterval(checkPopupClosed);
           window.removeEventListener('message', handleMessage);
           
-          // Only set connecting to false if we didn't get a result
+          // Run fallback status check after popup closes
+          setTimeout(() => {
+            checkStatusFallback();
+          }, 500);
+          
           setTimeout(() => {
             setConnecting(false);
             sessionStorage.removeItem('whoop_connecting');

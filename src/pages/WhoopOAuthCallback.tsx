@@ -164,48 +164,38 @@ export default function WhoopOAuthCallback() {
       console.log('📋 [WhoopCallback] Exchange params:', { 
         codePreview: code.substring(0, 10) + '...', 
         statePreview: state.substring(0, 20) + '...',
-        redirectUri 
+        redirectUri,
+        currentUrl: window.location.href,
+        isPopup,
+        hasOpener: !!window.opener,
       });
 
-      // Call edge function directly without auth header - user_id is in state
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whoop-auth`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            action: 'exchange-token',
-            code,
-            state,
-            redirect_uri: redirectUri,
-          }),
-        }
-      );
+      // Use supabase.functions.invoke - works reliably in Lovable
+      const { data, error } = await supabase.functions.invoke('whoop-auth', {
+        body: {
+          action: 'exchange-token',
+          code,
+          state,
+          redirect_uri: redirectUri,
+        },
+      });
 
-      const data = await response.json();
-      console.log('📋 [WhoopCallback] Exchange response:', { ok: response.ok, data });
+      console.log('📋 [WhoopCallback] Exchange response:', { data, error });
 
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Ошибка обмена токена');
+      if (error) {
+        throw new Error(error.message || 'Ошибка обмена токена');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       setMessage('Запуск начальной синхронизации...');
       console.log('✅ [WhoopCallback] Token exchange successful, starting sync...');
 
-      // Trigger initial sync (non-blocking) - this still needs auth
-      try {
-        await supabase.functions.invoke('whoop-sync', {
-          body: { days_back: 14 },
-        });
-        console.log('✅ [WhoopCallback] Initial sync completed');
-      } catch (syncError) {
-        console.warn('⚠️ [WhoopCallback] Initial sync failed (non-critical):', syncError);
-      }
-
-      handleSuccess(data.whoop_user_id);
+      // Trigger initial sync (non-blocking) - this still needs auth but popup may not have session
+      // The sync will happen on the main page anyway
+      handleSuccess(data?.whoop_user_id);
 
     } catch (error: any) {
       console.error('❌ [WhoopCallback] Exchange error:', error);
