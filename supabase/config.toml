@@ -252,3 +252,15 @@ verify_jwt = true
 
 [functions.backfill-garmin-pace]
 verify_jwt = false
+
+[functions.whoop-auth]
+verify_jwt = true
+
+[functions.whoop-sync]
+verify_jwt = true
+
+[functions.whoop-scheduled-sync]
+verify_jwt = false
+
+[functions.whoop-scheduled-sync.cron]
+schedule = "*/15 * * * *"
