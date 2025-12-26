@@ -251,6 +251,57 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           external_id: `whoop_rhr_${recovery.cycle_id}`,
         });
       }
+
+      // SpO2 - like Terra API
+      if (recovery.score?.spo2_percentage !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'SpO2',
+          metric_category: 'recovery',
+          value: recovery.score.spo2_percentage,
+          unit: '%',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_spo2_${recovery.cycle_id}`,
+        });
+      }
+
+      // Respiratory Rate - like Terra API
+      if (recovery.score?.respiratory_rate !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Respiratory Rate',
+          metric_category: 'sleep',
+          value: recovery.score.respiratory_rate,
+          unit: 'breaths/min',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_resp_${recovery.cycle_id}`,
+        });
+      }
+
+      // Skin Temperature Delta - if available
+      if (recovery.score?.skin_temp_celsius !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Skin Temperature',
+          metric_category: 'recovery',
+          value: recovery.score.skin_temp_celsius,
+          unit: '°C',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_skin_temp_${recovery.cycle_id}`,
+        });
+      }
     }
 
     // Fetch sleep data
@@ -296,20 +347,23 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
         });
       }
 
-      // Calculate sleep duration in hours from stage summary
+      // Calculate sleep duration and individual stages from stage summary
       const stages = sleep.score?.stage_summary;
       if (stages) {
-        const totalSleepMs = (stages.total_light_sleep_time_milli || 0) +
-                            (stages.total_rem_sleep_time_milli || 0) +
-                            (stages.total_slow_wave_sleep_time_milli || 0);
-        const sleepHours = totalSleepMs / 3600000;
+        const deepSleepHours = (stages.total_slow_wave_sleep_time_milli || 0) / 3600000;
+        const remSleepHours = (stages.total_rem_sleep_time_milli || 0) / 3600000;
+        const lightSleepHours = (stages.total_light_sleep_time_milli || 0) / 3600000;
+        const awakeHours = (stages.total_awake_time_milli || 0) / 3600000;
+        const totalSleepHours = deepSleepHours + remSleepHours + lightSleepHours;
+        const timeInBedHours = totalSleepHours + awakeHours;
 
-        if (sleepHours > 0) {
+        // Total Sleep Duration
+        if (totalSleepHours > 0) {
           metricsToInsert.push({
             user_id: userId,
             metric_name: 'Sleep Duration',
             metric_category: 'sleep',
-            value: Math.round(sleepHours * 10) / 10,
+            value: Math.round(totalSleepHours * 10) / 10,
             unit: 'hours',
             source: 'whoop',
             provider: 'whoop',
@@ -318,11 +372,96 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
             confidence_score: 95,
             external_id: `whoop_sleep_dur_${sleep.id}`,
             source_data: {
-              deep_sleep_duration: (stages.total_slow_wave_sleep_time_milli || 0) / 3600000,
-              rem_sleep_duration: (stages.total_rem_sleep_time_milli || 0) / 3600000,
-              light_sleep_duration: (stages.total_light_sleep_time_milli || 0) / 3600000,
-              awake_duration: (stages.total_awake_time_milli || 0) / 3600000,
+              deep_sleep_duration: deepSleepHours,
+              rem_sleep_duration: remSleepHours,
+              light_sleep_duration: lightSleepHours,
+              awake_duration: awakeHours,
             },
+          });
+        }
+
+        // Deep Sleep Duration - like Terra API
+        if (deepSleepHours > 0) {
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Deep Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(deepSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_deep_sleep_${sleep.id}`,
+          });
+        }
+
+        // REM Sleep Duration - like Terra API
+        if (remSleepHours > 0) {
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'REM Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(remSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_rem_sleep_${sleep.id}`,
+          });
+        }
+
+        // Light Sleep Duration - like Terra API
+        if (lightSleepHours > 0) {
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Light Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(lightSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_light_sleep_${sleep.id}`,
+          });
+        }
+
+        // Time Awake During Sleep - like Terra API
+        if (awakeHours > 0) {
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Awake Duration',
+            metric_category: 'sleep',
+            value: Math.round(awakeHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_awake_${sleep.id}`,
+          });
+        }
+
+        // Time in Bed - like Terra API
+        if (timeInBedHours > 0) {
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Time in Bed',
+            metric_category: 'sleep',
+            value: Math.round(timeInBedHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_time_in_bed_${sleep.id}`,
           });
         }
       }
@@ -415,15 +554,29 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
       108: 'Padel',
     };
 
+    // Track workouts by date for Workout Count metric
+    const workoutsByDate: Record<string, number> = {};
+
     for (const workout of workoutsData.records || []) {
       const startTime = workout.start;
       const endTime = workout.end;
       if (!startTime) continue;
 
+      const measurementDate = startTime.split('T')[0];
+
+      // Count workouts per day
+      workoutsByDate[measurementDate] = (workoutsByDate[measurementDate] || 0) + 1;
+
       // Calculate calories (convert from kJ to kcal) and round to integer
       const caloriesKcal = workout.score?.kilojoule 
         ? Math.round(workout.score.kilojoule / 4.184) 
         : null;
+
+      // Calculate duration in minutes
+      let durationMinutes: number | null = null;
+      if (startTime && endTime) {
+        durationMinutes = Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000);
+      }
 
       // Map sport_id to workout type name
       const workoutType = WHOOP_SPORTS[workout.sport_id ?? -1] || 'Unknown';
@@ -441,9 +594,8 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
         source_data: workout.score?.strain ? { strain: workout.score.strain } : null,
       });
 
-      // Also add workout strain to metrics
+      // Workout Strain metric
       if (workout.score?.strain !== undefined) {
-        const measurementDate = startTime.split('T')[0];
         metricsToInsert.push({
           user_id: userId,
           metric_name: 'Workout Strain',
@@ -458,6 +610,74 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           external_id: `whoop_workout_strain_${workout.id}`,
         });
       }
+
+      // Workout Calories metric - like Terra API
+      if (caloriesKcal !== null && caloriesKcal > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Workout Calories',
+          metric_category: 'workout',
+          value: caloriesKcal,
+          unit: 'kcal',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 2,
+          confidence_score: 95,
+          external_id: `whoop_workout_cal_${workout.id}`,
+        });
+      }
+
+      // Workout Time metric - like Terra API
+      if (durationMinutes !== null && durationMinutes > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Workout Time',
+          metric_category: 'workout',
+          value: durationMinutes,
+          unit: 'min',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 2,
+          confidence_score: 95,
+          external_id: `whoop_workout_time_${workout.id}`,
+        });
+      }
+
+      // Distance metric - like Terra API (if available)
+      if (workout.distance_meter !== undefined && workout.distance_meter > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Distance',
+          metric_category: 'workout',
+          value: Math.round(workout.distance_meter / 10) / 100, // meters to km, 2 decimals
+          unit: 'km',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 2,
+          confidence_score: 95,
+          external_id: `whoop_workout_dist_${workout.id}`,
+        });
+      }
+    }
+
+    // Add Workout Count metrics per day - like Terra API
+    for (const [date, count] of Object.entries(workoutsByDate)) {
+      metricsToInsert.push({
+        user_id: userId,
+        metric_name: 'Workout Count',
+        metric_category: 'activity',
+        value: count,
+        unit: 'count',
+        source: 'whoop',
+        provider: 'whoop',
+        measurement_date: date,
+        priority: 2,
+        confidence_score: 95,
+        external_id: `whoop_workout_count_${date}`,
+      });
     }
 
     // Batch insert metrics
