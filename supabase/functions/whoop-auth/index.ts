@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
-const REDIRECT_URI = 'https://whoop.elite10.club/auth/whoop/oauth2';
+const REDIRECT_URI = 'https://elite10.club/auth/whoop/oauth2';
 
 const SCOPES = [
   'offline',
