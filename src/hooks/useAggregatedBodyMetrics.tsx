@@ -2,11 +2,12 @@ import { useMemo } from 'react';
 import { useBodyMetricsFromInBody } from './body/useBodyMetricsFromInBody';
 import { useBodyMetricsFromWithings } from './body/useBodyMetricsFromWithings';
 import { useBodyMetricsFromManual } from './body/useBodyMetricsFromManual';
+import { useBodyMetricsFromUnified } from './body/useBodyMetricsFromUnified';
 
 export interface MetricData {
   value: number;
   unit: string;
-  source: 'inbody' | 'withings' | 'manual';
+  source: 'inbody' | 'withings' | 'manual' | string;
   date: string;
   trend?: number;
   trendPercent?: number;
@@ -48,77 +49,84 @@ export function useAggregatedBodyMetrics(userId?: string): AggregatedBodyMetrics
   const inbodyMetrics = useBodyMetricsFromInBody(userId);
   const withingsMetrics = useBodyMetricsFromWithings(userId);
   const manualMetrics = useBodyMetricsFromManual(userId);
+  const unifiedMetrics = useBodyMetricsFromUnified(userId);
 
-  // Memoize expensive computation
   return useMemo(() => {
     const metrics: AggregatedBodyMetrics = {};
 
-    // Weight: InBody (if recent) → Withings → Manual
+    // Weight: InBody (if recent) → Unified (WHOOP/Oura/Withings) → Withings hook → Manual
     if (inbodyMetrics?.weight && isRecent(inbodyMetrics.weight.date, 7)) {
       metrics.weight = inbodyMetrics.weight;
+    } else if (unifiedMetrics?.weight) {
+      metrics.weight = unifiedMetrics.weight as MetricData;
     } else if (withingsMetrics?.weight) {
       metrics.weight = withingsMetrics.weight;
     } else if (manualMetrics?.weight) {
       metrics.weight = manualMetrics.weight;
     }
 
-    // Body Fat: Get MINIMUM value from last 30 days across all sources
+    // Body Fat: Unified → InBody (with min logic for recent readings)
     const bodyFatSources = {
       ...(inbodyMetrics?.bodyFat?.sources || {}),
       ...(withingsMetrics?.bodyFat?.sources || {}),
       ...(manualMetrics?.bodyFat?.sources || {}),
     };
 
-    // Collect all body fat readings from all sources
-    const allBodyFatReadings: { value: number; date: string; source: 'inbody' | 'withings' | 'manual'; metric: MetricData }[] = [];
-    
-    if (inbodyMetrics?.bodyFat && isRecent(inbodyMetrics.bodyFat.date, 30)) {
-      allBodyFatReadings.push({
-        value: inbodyMetrics.bodyFat.value,
-        date: inbodyMetrics.bodyFat.date,
-        source: 'inbody',
-        metric: inbodyMetrics.bodyFat
-      });
-    }
-    if (withingsMetrics?.bodyFat && isRecent(withingsMetrics.bodyFat.date, 30)) {
-      allBodyFatReadings.push({
-        value: withingsMetrics.bodyFat.value,
-        date: withingsMetrics.bodyFat.date,
-        source: 'withings',
-        metric: withingsMetrics.bodyFat
-      });
-    }
-    if (manualMetrics?.bodyFat && isRecent(manualMetrics.bodyFat.date, 30)) {
-      allBodyFatReadings.push({
-        value: manualMetrics.bodyFat.value,
-        date: manualMetrics.bodyFat.date,
-        source: 'manual',
-        metric: manualMetrics.bodyFat
-      });
+    if (unifiedMetrics?.bodyFat) {
+      metrics.bodyFat = { ...unifiedMetrics.bodyFat, sources: bodyFatSources } as MetricData;
+    } else {
+      // Fallback to existing min-based logic
+      const allBodyFatReadings: { value: number; date: string; source: string; metric: MetricData }[] = [];
+      
+      if (inbodyMetrics?.bodyFat && isRecent(inbodyMetrics.bodyFat.date, 30)) {
+        allBodyFatReadings.push({
+          value: inbodyMetrics.bodyFat.value,
+          date: inbodyMetrics.bodyFat.date,
+          source: 'inbody',
+          metric: inbodyMetrics.bodyFat
+        });
+      }
+      if (withingsMetrics?.bodyFat && isRecent(withingsMetrics.bodyFat.date, 30)) {
+        allBodyFatReadings.push({
+          value: withingsMetrics.bodyFat.value,
+          date: withingsMetrics.bodyFat.date,
+          source: 'withings',
+          metric: withingsMetrics.bodyFat
+        });
+      }
+      if (manualMetrics?.bodyFat && isRecent(manualMetrics.bodyFat.date, 30)) {
+        allBodyFatReadings.push({
+          value: manualMetrics.bodyFat.value,
+          date: manualMetrics.bodyFat.date,
+          source: 'manual',
+          metric: manualMetrics.bodyFat
+        });
+      }
+
+      if (allBodyFatReadings.length > 0) {
+        const minReading = allBodyFatReadings.reduce((min, curr) => 
+          curr.value < min.value ? curr : min
+        );
+        metrics.bodyFat = { 
+          ...minReading.metric, 
+          value: minReading.value,
+          date: minReading.date,
+          source: minReading.source,
+          sources: bodyFatSources 
+        };
+      }
     }
 
-    // Find the minimum body fat value
-    if (allBodyFatReadings.length > 0) {
-      const minReading = allBodyFatReadings.reduce((min, curr) => 
-        curr.value < min.value ? curr : min
-      );
-      metrics.bodyFat = { 
-        ...minReading.metric, 
-        value: minReading.value,
-        date: minReading.date,
-        source: minReading.source,
-        sources: bodyFatSources 
-      };
-    }
-
-    // Muscle Mass: InBody → Manual
-    if (inbodyMetrics?.muscleMass) {
+    // Muscle Mass: Unified → InBody → Manual
+    if (unifiedMetrics?.muscleMass) {
+      metrics.muscleMass = unifiedMetrics.muscleMass as MetricData;
+    } else if (inbodyMetrics?.muscleMass) {
       metrics.muscleMass = inbodyMetrics.muscleMass;
     } else if (manualMetrics?.muscleMass) {
       metrics.muscleMass = manualMetrics.muscleMass;
     }
 
-    // InBody-only metrics (memoized separately for performance)
+    // InBody-only metrics
     if (inbodyMetrics?.bmr) metrics.bmr = inbodyMetrics.bmr;
     if (inbodyMetrics?.visceralFat) metrics.visceralFat = inbodyMetrics.visceralFat;
     if (inbodyMetrics?.bodyWater) metrics.bodyWater = inbodyMetrics.bodyWater;
@@ -127,10 +135,9 @@ export function useAggregatedBodyMetrics(userId?: string): AggregatedBodyMetrics
     if (inbodyMetrics?.segmental) metrics.segmental = inbodyMetrics.segmental;
 
     return metrics;
-  }, [inbodyMetrics, withingsMetrics, manualMetrics]);
+  }, [inbodyMetrics, withingsMetrics, manualMetrics, unifiedMetrics]);
 }
 
-// Helper function
 function isRecent(dateStr: string, days: number): boolean {
   const date = new Date(dateStr);
   const now = new Date();

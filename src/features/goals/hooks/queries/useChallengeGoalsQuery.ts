@@ -107,7 +107,7 @@ export function useChallengeGoalsQuery(userId?: string) {
           // Handle body composition goals using aggregated metrics
           else if (goalNameLower.includes('вес') || goalNameLower.includes('weight')) {
             currentValue = bodyMetrics.weight?.value || allMeasurements[0]?.value || 0;
-            source = bodyMetrics.weight?.source || 'manual';
+            source = (bodyMetrics.weight?.source || 'manual') as GoalSource;
             if (bodyMetrics.weight?.sparklineData) {
               sparklineData = bodyMetrics.weight.sparklineData.slice(0, 14).map(d => ({
                 goal_id: goal.id,
@@ -134,7 +134,7 @@ export function useChallengeGoalsQuery(userId?: string) {
 
             if (bodyMetrics.bodyFat?.value !== undefined && bodyMetrics.bodyFat?.value !== null) {
               currentValue = bodyMetrics.bodyFat.value;
-              source = bodyMetrics.bodyFat.source;
+              source = bodyMetrics.bodyFat.source as GoalSource;
             } else if (allMeasurements[0]?.value && isRecentDate(allMeasurements[0]?.measurement_date, 30)) {
               currentValue = allMeasurements[0].value;
               source = 'manual';
@@ -160,7 +160,7 @@ export function useChallengeGoalsQuery(userId?: string) {
           }
           else if (goalNameLower.includes('мышц') || goalNameLower.includes('muscle')) {
             currentValue = bodyMetrics.muscleMass?.value || allMeasurements[0]?.value || 0;
-            source = bodyMetrics.muscleMass?.source || 'manual';
+            source = (bodyMetrics.muscleMass?.source || 'manual') as GoalSource;
             if (bodyMetrics.muscleMass?.sparklineData) {
               sparklineData = bodyMetrics.muscleMass.sparklineData.slice(0, 14).map(d => ({
                 goal_id: goal.id,
