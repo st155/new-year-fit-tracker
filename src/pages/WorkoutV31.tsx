@@ -7,6 +7,8 @@ import { useDailyWorkout } from "@/hooks/useDailyWorkout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import { useProgressMetrics } from "@/hooks/useProgressMetrics";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useIsMobile } from "@/hooks";
+import { MobileWorkoutCenter } from "@/components/mobile-workout";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -31,6 +33,7 @@ import { WeeklyGapAnalysis } from "@/components/wellness/WeeklyGapAnalysis";
 import { GenerateTravelWorkoutDialog } from "@/components/wellness/GenerateTravelWorkoutDialog";
 
 export default function WorkoutV31() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("today");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
   const [manualWorkoutOpen, setManualWorkoutOpen] = useState(false);
@@ -39,6 +42,11 @@ export default function WorkoutV31() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Render mobile version
+  if (isMobile) {
+    return <MobileWorkoutCenter />;
+  }
 
   // Calculate date for selected day
   const getDateForDay = (dayOfWeek: number): Date => {
