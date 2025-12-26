@@ -12,6 +12,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/primitive";
+import { MobileGoalsHub } from "@/components/mobile-goals";
 
 // New imports from features/goals
 import { useChallengeGoalsQuery } from "@/features/goals/hooks";
@@ -25,6 +27,12 @@ import {
 type FilterType = 'all' | 'personal' | 'challenges';
 
 export default function Goals() {
+  const isMobile = useIsMobile();
+  
+  // Render mobile version
+  if (isMobile) {
+    return <MobileGoalsHub />;
+  }
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: goals, isLoading, refetch } = useChallengeGoalsQuery(user?.id);
