@@ -15,6 +15,12 @@ interface DisciplineRadialChartProps {
   disciplines: DisciplineData[];
 }
 
+const getPluralGoals = (count: number): string => {
+  if (count === 1) return 'цель';
+  if (count >= 2 && count <= 4) return 'цели';
+  return 'целей';
+};
+
 export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProps) => {
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return 'bg-success';
@@ -42,10 +48,10 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Discipline Breakdown</span>
+          <span>Разбивка по дисциплинам</span>
           {weakestDiscipline && (
             <Badge variant="outline" className="text-xs">
-              🎯 Focus: {weakestDiscipline.name}
+              🎯 Фокус: {weakestDiscipline.name}
             </Badge>
           )}
         </CardTitle>
@@ -53,7 +59,7 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
       <CardContent className="space-y-4">
         {disciplines.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No discipline data available
+            Нет данных по дисциплинам
           </div>
         ) : (
           disciplines.map((discipline) => (
@@ -62,7 +68,7 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{discipline.name}</span>
                   <Badge variant="secondary" className="text-xs">
-                    {discipline.goals} {discipline.goals === 1 ? 'goal' : 'goals'}
+                    {discipline.goals} {getPluralGoals(discipline.goals)}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
